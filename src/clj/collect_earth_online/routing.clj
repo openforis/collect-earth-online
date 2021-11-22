@@ -50,6 +50,7 @@
                                               :auth-type   :admin
                                               :auth-action :redirect}
    [:get  "/support"]                        {:handler     (render-page "/support")}
+   [:get  "/user-disagreement"]              {:handler     (render-page "/user-disagreement")}
    [:get  "/terms-of-service"]               {:handler     (render-page "/terms-of-service")}
    [:get  "/widget-layout-editor"]           {:handler     (render-page "/widget-layout-editor")
                                               :auth-type   :admin
@@ -85,6 +86,8 @@
                                               :auth-action :block}
    [:get  "/get-home-projects"]              {:handler     projects/get-home-projects}
    [:get  "/get-institution-projects"]       {:handler     projects/get-institution-projects}
+   [:get  "/get-institution-dash-projects"]  {:handler     projects/get-institution-dash-projects}
+   [:get  "/get-project-user-stats"]         {:handler     projects/get-project-user-stats}
    [:get  "/get-project-by-id"]              {:handler     projects/get-project-by-id}
    [:get  "/get-template-projects"]          {:handler     projects/get-template-projects}
    [:get  "/get-template-by-id"]             {:handler     projects/get-template-by-id}
@@ -105,17 +108,15 @@
                                               :auth-type   :admin
                                               :auth-action :block}
    ;; Plots API
-   [:get  "/get-next-plot"]                  {:handler     plots/get-next-plot
+   [:get  "/get-collection-plot"]            {:handler     plots/get-collection-plot
                                               :auth-type   :collect
                                               :auth-action :block}
-   [:get  "/get-plot-by-id"]                 {:handler     plots/get-plot-by-id
-                                              :auth-type   :collect
-                                              :auth-action :block}
-   [:get  "/get-prev-plot"]                  {:handler     plots/get-prev-plot
+   [:get  "/get-plot-disagreement"]          {:handler     plots/get-plot-disagreement}
+   [:get  "/get-plot-sample-geom"]           {:handler     plots/get-plot-sample-geom}
+   [:get  "/get-plotters"]                   {:handler     plots/get-plotters
                                               :auth-type   :collect
                                               :auth-action :block}
    [:get  "/get-project-plots"]              {:handler     plots/get-project-plots}
-   [:get  "/get-plot-sample-geom"]           {:handler     plots/get-plot-sample-geom}
    [:post "/add-user-samples"]               {:handler     plots/add-user-samples
                                               :auth-type   :collect
                                               :auth-action :block}

@@ -338,8 +338,8 @@ export class SurveyCollection extends React.Component {
                                     style={{
                                         boxShadow:
                                     `${(i === this.state.currentNodeIndex)
-                                        ? "0px 0px 2px 2px black inset,"
-                                        : ""}
+                                        ? "0 0 4px 2px rgba(0, 0, 0, 1), "
+                                        : "0 0 2px 1px rgba(0, 0, 0, 0.1), "}
                                     ${this.getTopColor(this.getNodeById(nodeId))}`
                                     }}
                                     title={removeEnumerator(this.getNodeById(nodeId).question)}
@@ -480,20 +480,22 @@ export class SurveyCollection extends React.Component {
                                     ? this.renderQuestions()
                                     : this.renderDrawTools()}
                                 {this.props.collectConfidence && !this.props.flagged && (
-                                    <div className="row mb-3">
-                                        <div className="col-12">
-                                            <div className="slide-container">
-                                                <input
-                                                    className="slider"
-                                                    max="100"
-                                                    min="0"
-                                                    onChange={e => this.props.setConfidence(parseInt(e.target.value))}
-                                                    type="range"
-                                                    value={this.props.confidence}
-                                                />
-                                                <label>Plot Confidence: {this.props.confidence}</label>
-                                            </div>
-                                        </div>
+                                    <div
+                                        className="row mb-3 mx-1 slide-container py-3"
+                                        style={{
+                                            borderRadius: "6px",
+                                            boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.15)"
+                                        }}
+                                    >
+                                        <input
+                                            className="slider"
+                                            max="100"
+                                            min="0"
+                                            onChange={e => this.props.setConfidence(parseInt(e.target.value))}
+                                            type="range"
+                                            value={this.props.confidence}
+                                        />
+                                        <label>Plot Confidence: {this.props.confidence}</label>
                                     </div>
                                 )}
                                 {this.renderFlagClearButtons()}
@@ -538,40 +540,50 @@ class SurveyQuestionTree extends React.Component {
                 : "0px 0px 6px 4px yellow inset";
 
         return (
-            <fieldset className="mb-1 justify-content-center text-center">
-                <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
-                    <button
-                        className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2 mr-1"
-                        onClick={this.toggleShowAnswers}
-                        type="button"
-                    >
-                        {showAnswers ? <span>-</span> : <span>+</span>}
-                    </button>
-                    <RulesCollectionModal surveyNodeId={surveyNode.id} surveyRules={surveyRules}/>
-                    <button
-                        className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
-                        onClick={() => setSelectedQuestion(surveyNode)}
-                        style={{
-                            boxShadow: `${(surveyNode.id === selectedQuestion.id)
-                                ? "0px 0px 2px 2px black inset,"
-                                : ""}
-                                    ${shadowColor}`
-                        }}
-                        title={removeEnumerator(surveyNode.question)}
-                        type="button"
-                    >
-                        {hierarchyLabel + removeEnumerator(surveyNode.question)}
-                    </button>
-                </div>
+            <>
+                <fieldset
+                    className="justify-content-center text-center"
+                    style={{
+                        border: "1px solid rgba(0, 0, 0, 0.2)",
+                        borderRadius: "6px",
+                        boxShadow: surveyNode.id === selectedQuestion.id
+                            ? "0 0 4px 2px rgba(0, 0, 0, 1)"
+                            : "0 0 2px 1px rgba(0, 0, 0, 0.15)",
+                        margin: "1rem 0",
+                        padding: ".5rem"
+                    }}
+                >
+                    <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
+                        <button
+                            className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2 mr-1"
+                            onClick={this.toggleShowAnswers}
+                            type="button"
+                        >
+                            {showAnswers ? <span>-</span> : <span>+</span>}
+                        </button>
+                        <RulesCollectionModal surveyNodeId={surveyNode.id} surveyRules={surveyRules}/>
+                        <button
+                            className="text-center btn btn-outline-lightgreen btn-sm col overflow-hidden text-truncate"
+                            onClick={() => setSelectedQuestion(surveyNode)}
+                            style={{
+                                boxShadow: shadowColor
+                            }}
+                            title={removeEnumerator(surveyNode.question)}
+                            type="button"
+                        >
+                            {hierarchyLabel + removeEnumerator(surveyNode.question)}
+                        </button>
+                    </div>
 
-                {showAnswers && (
-                    <SurveyAnswers
-                        selectedSampleId={selectedSampleId}
-                        surveyNode={surveyNode}
-                        surveyQuestions={surveyQuestions}
-                        validateAndSetCurrentValue={validateAndSetCurrentValue}
-                    />
-                )}
+                    {showAnswers && (
+                        <SurveyAnswers
+                            selectedSampleId={selectedSampleId}
+                            surveyNode={surveyNode}
+                            surveyQuestions={surveyQuestions}
+                            validateAndSetCurrentValue={validateAndSetCurrentValue}
+                        />
+                    )}
+                </fieldset>
                 {childNodes.map(childNode => (
                     <Fragment key={childNode.id}>
                         {surveyQuestions.find(sq => sq.id === childNode.id).visible.length > 0
@@ -588,14 +600,14 @@ class SurveyQuestionTree extends React.Component {
                         )}
                     </Fragment>
                 ))}
-            </fieldset>
+            </>
         );
     }
 }
 
 function AnswerButton({surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue}) {
     return (
-        <ul className="samplevalue justify-content-center">
+        <ul className="samplevalue justify-content-center my-1">
             {answers.map(ans => (
                 <li key={ans.id} className="mb-1">
                     <button

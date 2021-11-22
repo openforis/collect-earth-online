@@ -86,7 +86,9 @@ CREATE TABLE projects (
     options                jsonb NOT NULL DEFAULT '{}'::jsonb,
     imagery_rid            integer REFERENCES imagery (imagery_uid),
     allow_drawn_samples    boolean,
-    design_settings        jsonb NOT NULL DEFAULT '{}'::jsonb
+    design_settings        jsonb NOT NULL DEFAULT '{}'::jsonb,
+    plot_file_name         varchar(511),
+    sample_file_name       varchar(511)
 );
 
 -- Stores project imagery
@@ -98,15 +100,11 @@ CREATE TABLE project_imagery (
     CONSTRAINT per_project_per_imagery UNIQUE(project_rid, imagery_rid)
 );
 
--- 1 project -> many |plots ->                                     many samples|
---                   |plots -> many user_plots -> many sample_values <- samples|
---                                       ^- users|
-
+--            1 project -> many |plots ->                                       many samples|
+--                              |plots -> many user_plots -> 1 sample_values many <- samples|
+--  1 users -> many plot_assignments -^            ^- many users
 
 -- Stores plot information, including a reference to external plot data if it exists
--- 1 PROJECT -> MANY |PLOTS ->                                     many samples|
---                   |plots -> many user_plots -> many sample_values <- samples|
---                                       ^- users|
 CREATE TABLE plots (
     plot_uid           SERIAL PRIMARY KEY,
     project_rid        integer NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -116,9 +114,6 @@ CREATE TABLE plots (
 );
 
 -- Stores sample information, including a reference to external sample data if it exists
--- 1 project -> many |PLOTS ->                                     MANY SAMPLES|
---                   |plots -> many user_plots -> many sample_values <- samples|
---                                       ^- users|
 CREATE TABLE samples (
     sample_uid           SERIAL PRIMARY KEY,
     plot_rid             integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -137,10 +132,6 @@ CREATE TABLE ext_samples (
 );
 
 -- Stores information about a plot as data is collected, including the user who collected it
--- By other means we restrict it to 1 user_plot per plot
--- 1 project -> many |plots ->                                     many samples|
---                   |PLOTS -> MANY USER_PLOTS -> many sample_values <- samples|
---                                       ^- USERS|
 CREATE TABLE user_plots (
     user_plot_uid       SERIAL PRIMARY KEY,
     user_rid            integer NOT NULL REFERENCES users (user_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -154,10 +145,6 @@ CREATE TABLE user_plots (
 );
 
 -- Stores collected data for a single sample
--- By other means we restrict to 1 sample_value per sample
--- 1 project -> many |plots ->                                     many samples|
---                   |plots -> many USER_PLOTS -> MANY SAMPLE_VALUES <- SAMPLES|
---                                       ^- users|
 CREATE TABLE sample_values (
     sample_value_uid      SERIAL PRIMARY KEY,
     user_plot_rid         integer NOT NULL REFERENCES user_plots (user_plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -174,6 +161,14 @@ CREATE TABLE plot_locks (
     user_rid    integer NOT NULL REFERENCES users(user_uid),
     plot_rid    integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE,
     lock_end    timestamp,
+    PRIMARY KEY(user_rid, plot_rid)
+);
+
+-- Stores assigned user information for a plot
+-- many plots <-> many users
+CREATE TABLE plot_assignments (
+    user_rid    integer NOT NULL REFERENCES users(user_uid),
+    plot_rid    integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE,
     PRIMARY KEY(user_rid, plot_rid)
 );
 

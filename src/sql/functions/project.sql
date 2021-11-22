@@ -2,63 +2,6 @@
 -- REQUIRES: clear
 
 --
---  WIDGET FUNCTIONS
---
-
--- Adds a project_widget to the database
-CREATE OR REPLACE FUNCTION add_project_widget(_project_id integer, _dashboard_id uuid, _widget jsonb)
- RETURNS integer AS $$
-
-    INSERT INTO project_widgets
-        (project_rid, dashboard_id, widget)
-    VALUES
-        (_project_id, _dashboard_id , _widget)
-    RETURNING widget_uid
-
-$$ LANGUAGE SQL;
-
--- Deletes a project_widget from the database
-CREATE OR REPLACE FUNCTION delete_project_widget_by_widget_id(_widget_uid integer, _dashboard_id uuid)
- RETURNS integer AS $$
-
-    DELETE FROM project_widgets
-    WHERE dashboard_id = _dashboard_id
-        AND CAST(jsonb_extract_path_text(widget, 'id') as int) = _widget_uid
-    RETURNING widget_uid
-
-$$ LANGUAGE SQL;
-
--- Gets project widgets by project id from the database
-CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_id integer)
- RETURNS table (
-    widget_id        integer,
-    project_id       integer,
-    dashboard_id     uuid,
-    widget           jsonb,
-    project_title    text
- ) AS $$
-
-    SELECT widget_uid, project_uid, dashboard_id, widget, p.name
-    FROM project_widgets pw
-    INNER JOIN projects p
-        ON project_uid = project_rid
-    WHERE project_rid = _project_id
-
-$$ LANGUAGE SQL;
-
--- Updates a project_widget from the database
-CREATE OR REPLACE FUNCTION update_project_widget_by_widget_id(_widget_uid integer, _dash_id uuid, _widget jsonb)
- RETURNS integer AS $$
-
-    UPDATE project_widgets
-    SET widget = _widget
-    WHERE CAST(jsonb_extract_path_text(widget, 'id') as int) = _widget_uid
-        AND dashboard_id = _dash_id
-    RETURNING widget_uid
-
-$$ LANGUAGE SQL;
-
---
 --  MODIFY PROJECT FUNCTIONS
 --
 
@@ -75,9 +18,11 @@ CREATE OR REPLACE FUNCTION create_project(
     _plot_spacing           real,
     _plot_shape             text,
     _plot_size              real,
+    _plot_file_name         varchar,
     _sample_distribution    text,
     _samples_per_plot       integer,
     _sample_resolution      real,
+    _sample_file_name       varchar,
     _allow_drawn_samples    boolean,
     _survey_questions       jsonb,
     _survey_rules           jsonb,
@@ -99,9 +44,11 @@ CREATE OR REPLACE FUNCTION create_project(
         plot_spacing,
         plot_shape,
         plot_size,
+        plot_file_name,
         sample_distribution,
         samples_per_plot,
         sample_resolution,
+        sample_file_name,
         allow_drawn_samples,
         survey_questions,
         survey_rules,
@@ -122,9 +69,11 @@ CREATE OR REPLACE FUNCTION create_project(
         _plot_spacing,
         _plot_shape,
         _plot_size,
+        _plot_file_name,
         _sample_distribution,
         _samples_per_plot,
         _sample_resolution,
+        _sample_file_name,
         _allow_drawn_samples,
         _survey_questions,
         _survey_rules,
@@ -211,9 +160,11 @@ CREATE OR REPLACE FUNCTION update_project(
     _plot_spacing           real,
     _plot_shape             text,
     _plot_size              real,
+    _plot_file_name         varchar,
     _sample_distribution    text,
     _samples_per_plot       integer,
     _sample_resolution      real,
+    _sample_file_name       varchar,
     _allow_drawn_samples    boolean,
     _survey_questions       jsonb,
     _survey_rules           jsonb,
@@ -232,9 +183,11 @@ CREATE OR REPLACE FUNCTION update_project(
         plot_spacing = _plot_spacing,
         plot_shape = _plot_shape,
         plot_size = _plot_size,
+        plot_file_name = _plot_file_name,
         sample_distribution = _sample_distribution,
         samples_per_plot = _samples_per_plot,
         sample_resolution = _sample_resolution,
+        sample_file_name = _sample_file_name,
         allow_drawn_samples = _allow_drawn_samples,
         survey_questions = _survey_questions,
         survey_rules = _survey_rules,
@@ -262,12 +215,12 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
     SET num_plots = plots,
         samples_per_plot = samples
     FROM (
-        SELECT COUNT(DISTINCT plot_uid) as plots,
+        SELECT COUNT(DISTINCT plot_uid) AS plots,
             (CASE WHEN COUNT(DISTINCT plot_uid) = 0 THEN
                 0
             ELSE
                 COUNT(sample_uid) / COUNT(DISTINCT plot_uid)
-            END) as samples
+            END) AS samples
         FROM project_plots
     ) a
     WHERE project_uid = _project_id
@@ -280,7 +233,7 @@ CREATE OR REPLACE FUNCTION set_boundary(_project_id integer, _m_buffer real)
 
     UPDATE projects SET boundary = b
     FROM (
-        SELECT ST_Envelope(ST_Buffer(ST_SetSRID(ST_Extent(plot_geom) , 4326)::geography , _m_buffer)::geometry) as b
+        SELECT ST_Envelope(ST_Buffer(ST_SetSRID(ST_Extent(plot_geom) , 4326)::geography , _m_buffer)::geometry) AS b
         FROM plots
         WHERE project_rid = _project_id
     ) bb
@@ -296,8 +249,8 @@ CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_id integer, _
         SELECT plot_geom,
             visible_id,
             extra_plot_info,
-            plot_uid as plid_old,
-            row_number() OVER(order by plot_uid) as rowid
+            plot_uid AS plid_old,
+            row_number() OVER(order by plot_uid) AS rowid
         FROM projects p
         INNER JOIN plots pl
             ON project_rid = project_uid
@@ -307,9 +260,9 @@ CREATE OR REPLACE FUNCTION copy_project_plots_samples(_old_project_id integer, _
             (project_rid, plot_geom, visible_id, extra_plot_info)
         SELECT _new_project_id, plot_geom, visible_id, extra_plot_info
         FROM project_plots
-        RETURNING plot_uid as plid
+        RETURNING plot_uid AS plid
     ), new_ordered AS (
-        SELECT plid, row_number() OVER(order by plid) as rowid FROM inserting
+        SELECT plid, row_number() OVER(order by plid) AS rowid FROM inserting
     ), combined AS (
         SELECT * from new_ordered inner join project_plots USING (rowid)
     ), inserting_samples AS (
@@ -341,15 +294,24 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_id integer, _ne
         plot_spacing = n.plot_spacing,
         plot_shape = n.plot_shape,
         plot_size = n.plot_size,
+        plot_file_name = n.plot_file_name,
         sample_distribution = n.sample_distribution,
         samples_per_plot = n.samples_per_plot,
-        sample_resolution = n.sample_resolution
+        sample_resolution = n.sample_resolution,
+        sample_file_name = n.sample_file_name
     FROM (SELECT
-            boundary,             imagery_rid,
-            plot_distribution,    num_plots,
-            plot_spacing,         plot_shape,
-            plot_size,            sample_distribution,
-            samples_per_plot,     sample_resolution
+            boundary,
+            imagery_rid,
+            plot_distribution,
+            num_plots,
+            plot_spacing,
+            plot_shape,
+            plot_size,
+            plot_file_name,
+            sample_distribution,
+            samples_per_plot,
+            sample_resolution,
+            sample_file_name
          FROM projects
          WHERE project_uid = _old_project_id) n
     WHERE
@@ -441,9 +403,11 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     plot_spacing           real,
     plot_shape             text,
     plot_size              real,
+    plot_file_name         varchar,
     sample_distribution    text,
     samples_per_plot       integer,
     sample_resolution      real,
+    sample_file_name       varchar,
     allow_drawn_samples    boolean,
     survey_questions       jsonb,
     survey_rules           jsonb,
@@ -469,9 +433,11 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         plot_spacing,
         plot_shape,
         plot_size,
+        plot_file_name,
         sample_distribution,
         samples_per_plot,
         sample_resolution,
+        sample_file_name,
         allow_drawn_samples,
         survey_questions,
         survey_rules,
@@ -500,7 +466,7 @@ CREATE OR REPLACE FUNCTION user_project(_user_id integer, _role_id integer, _pri
                     OR (_user_id > 0 AND _privacy_level = 'users')
                     OR (_role_id = 2 AND _privacy_level = 'institution')))
 
-$$ LANGUAGE SQL IMMUTABLE;
+$$ LANGUAGE SQL STABLE;
 
 -- Returns all projects the user can see. This is used only on the home page
 CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
@@ -521,7 +487,7 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
         ST_AsGeoJSON(ST_Centroid(boundary)),
         num_plots,
         (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable
-    FROM projects as p
+    FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
@@ -536,14 +502,17 @@ CREATE OR REPLACE FUNCTION project_percent_complete(_project_id integer)
  RETURNS real AS $$
 
     SELECT (
-        CASE WHEN count(distinct(plot_uid)) > 0
-        THEN (100.0 * count(user_plot_uid) / count(distinct(plot_uid))::real)
+        CASE WHEN count(plot_uid) > 0
+        THEN (100.0 * count(user_plot_uid) / count(plot_uid)::real)
         ELSE 0
         END
     )::real
     FROM plots
-    LEFT JOIN user_plots
-        ON plot_uid = plot_rid
+    LEFT JOIN user_plots up
+        ON plot_uid = up.plot_rid
+    LEFT JOIN plot_assignments pa
+        ON plot_uid = pa.plot_rid
+        AND up.user_rid = pa.user_rid
     WHERE project_rid = _project_id
 
 $$ LANGUAGE SQL;
@@ -563,7 +532,85 @@ CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _instit
         num_plots,
         privacy_level,
         (SELECT project_percent_complete(project_uid))
-    FROM projects as p
+    FROM projects AS p
+    LEFT JOIN institution_users iu
+        ON user_rid = _user_id
+        AND p.institution_rid = iu.institution_rid
+    WHERE p.institution_rid = _institution_id
+        AND user_project(_user_id, role_rid, p.privacy_level, p.availability)
+    ORDER BY project_uid
+
+$$ LANGUAGE SQL;
+
+-- Returns stats needed to display on the institution dashboard
+CREATE OR REPLACE FUNCTION select_institution_project_stats(_project_id integer)
+ RETURNS table (
+    total_plots         integer,
+    flagged_plots       integer,
+    analyzed_plots      integer,
+    partial_plots       integer,
+    unanalyzed_plots    integer,
+    plot_assignments    integer,
+    contributors        integer,
+    users_assigned      integer
+ ) AS $$
+
+    WITH users_count AS (
+        SELECT count(DISTINCT up.user_rid)::int AS contributors,
+            count(DISTINCT pa.user_rid)::int AS users_assigned
+        FROM plots pl
+        LEFT JOIN user_plots up
+            ON up.plot_rid = plot_uid
+        LEFT JOIN plot_assignments pa
+            ON pa.plot_rid = plot_uid
+        WHERE project_rid = _project_id
+    ), plot_sum AS (
+        SELECT plot_uid,
+            coalesce(sum(flagged::int), 0) > 0 AS flagged,
+            coalesce(count(user_plot_uid), 0) AS analyzed,
+            coalesce(count(pa.user_rid), 0) AS assigned,
+            greatest(coalesce(count(pa.user_rid), 0), 1) AS needed
+        FROM users_count, plots pl
+        LEFT JOIN plot_assignments AS pa
+            ON pa.plot_rid = pl.plot_uid
+        LEFT JOIN user_plots up
+            ON up.plot_rid = pl.plot_uid
+            AND (pa.user_rid = up.user_rid OR (SELECT users_assigned FROM users_count) = 0)
+        GROUP BY project_rid, plot_uid
+        HAVING project_rid = _project_id
+    ), project_sum AS (
+        SELECT count(*)::int AS total_plots,
+            sum(ps.flagged::int)::int AS flagged_plots,
+            sum((needed = analyzed)::int)::int AS analyzed_plots,
+            sum((needed > analyzed and analyzed > 0)::int)::int AS partial_plots,
+            sum((analyzed = 0)::int)::int AS unanalyzed_plots,
+            sum(assigned)::int AS plot_assignments
+        FROM plot_sum ps
+    )
+
+    SELECT total_plots,
+        flagged_plots,
+        analyzed_plots,
+        partial_plots,
+        unanalyzed_plots,
+        plot_assignments,
+        contributors,
+        users_assigned
+    FROM users_count, project_sum
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION select_institution_dash_projects(_user_id integer, _institution_id integer)
+ RETURNS table (
+    project_id    integer,
+    name          text,
+    stats         jsonb
+ ) AS $$
+
+    SELECT project_uid,
+        name,
+        row_to_json((SELECT select_institution_project_stats(project_uid)))::jsonb
+    FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
@@ -580,7 +627,7 @@ CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
  ) AS $$
 
     SELECT project_uid, name
-    FROM projects as p
+    FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
@@ -597,640 +644,153 @@ CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
 
 $$ LANGUAGE SQL;
 
--- Returns project users (SQL helper functions)
-CREATE OR REPLACE FUNCTION select_project_users(_project_id integer)
- RETURNS table (
-    user_uid integer
- ) AS $$
-
-    WITH matching_projects AS (
-        SELECT *
-        FROM projects
-        WHERE project_uid = _project_id
-    ), matching_institutions AS (
-        SELECT *
-        FROM projects p
-        INNER JOIN institutions i
-            ON p.institution_rid = institution_uid
-        WHERE project_uid = _project_id
-    ), matching_institution_users AS (
-        SELECT *
-        FROM matching_institutions mi
-        INNER JOIN institution_users ui
-            ON mi.institution_uid = ui.institution_rid
-        INNER JOIN users u
-            ON user_uid = ui.user_rid
-        INNER JOIN roles r
-            ON role_uid = ui.role_rid
-    )
-
-    SELECT user_uid
-    FROM matching_projects
-    CROSS JOIN users
-    WHERE privacy_level = 'public'
-
-    UNION ALL
-    SELECT user_uid
-    FROM matching_institution_users
-    WHERE privacy_level = 'private'
-        AND title = 'admin'
-
-    UNION ALL
-    SELECT user_uid
-    FROM matching_institution_users
-    WHERE privacy_level = 'institution'
-        AND availability = 'published'
-        AND title = 'member'
-
-$$ LANGUAGE SQL;
-
--- Returns project statistics
--- Overlapping queries, consider condensing. Query time is not an issue.
+-- Returns project statistics for project dashboard
 CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
  RETURNS table (
+    total_plots         integer,
     flagged_plots       integer,
-    assigned_plots      integer,
-    unassigned_plots    integer,
-    members             integer,
-    contributors        integer,
+    analyzed_plots      integer,
+    partial_plots       integer,
+    unanalyzed_plots    integer,
+    plot_assignments    integer,
+    users_assigned      integer,
     created_date        date,
     published_date      date,
     closed_date         date,
-    archived_date       date,
-    user_stats          text
+    user_stats          jsonb
  ) AS $$
 
-    WITH project_plots AS (
-        SELECT project_uid,
-            plot_uid,
+    WITH user_plot_times AS (
+        SELECT plot_uid,
             (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0
-                ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) as seconds,
-            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0 ELSE 1 END) as timed,
-            u.email as email
-        FROM user_plots up
-        INNER JOIN plots pl
+                ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) AS seconds,
+            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0 ELSE 1 END) AS timed,
+            u.email AS email
+        FROM plots pl
+        INNER JOIN user_plots up
             ON up.plot_rid = plot_uid
-        INNER JOIN projects p
-            ON pl.project_rid = project_uid
         INNER JOIN users u
             ON up.user_rid = user_uid
-        WHERE project_uid = _project_id
-    ), user_groups AS (
+        WHERE project_rid = _project_id
+    ), users_grouped AS (
         SELECT email,
-            SUM(seconds)::int as seconds,
-            COUNT(plot_uid) as plots,
-            SUM(timed):: int as timedPlots
-        FROM project_plots
+            SUM(seconds)::int AS seconds,
+            COUNT(plot_uid) AS plots,
+            SUM(timed):: int AS timed_plots
+        FROM user_plot_times
         GROUP BY email
         ORDER BY email DESC
-    ), user_agg as (
-        SELECT
-            format('[%s]',
-                   string_agg(
-                       format('{"user":"%s", "seconds":%s, "plots":%s, "timedPlots":%s}'
-                              , email, seconds, plots, timedPlots), ', ')) as user_stats
-        FROM user_groups
-    ), members AS (
-        SELECT COUNT(distinct user_uid) as members
-        FROM select_project_users(_project_id)
-    ), plotsum AS (
-        SELECT SUM(coalesce(flagged::int, 0)) as flagged,
-            SUM((user_plot_uid IS NOT NULL)::int) as assigned,
-            plot_uid
-        FROM projects prj
-        INNER JOIN plots pl
-          ON project_uid = pl.project_rid
+    ), user_agg AS (
+        SELECT format('[%s]', string_agg(row_to_json(ug)::text, ','))::jsonb AS user_stats
+        FROM users_grouped ug
+    ), users_count AS (
+        SELECT count(DISTINCT pa.user_rid)::int AS users_assigned
+        FROM plots pl
+        LEFT JOIN plot_assignments pa
+            ON pa.plot_rid = plot_uid
+        WHERE project_rid = _project_id
+    ), plot_sum AS (
+        SELECT plot_uid,
+            coalesce(sum(flagged::int), 0) > 0 AS flagged,
+            coalesce(count(user_plot_uid), 0) AS analyzed,
+            coalesce(count(pa.user_rid), 0) AS assigned,
+            greatest(coalesce(count(pa.user_rid), 0), 1) AS needed
+        FROM users_count, plots pl
+        LEFT JOIN plot_assignments AS pa
+            ON pa.plot_rid = pl.plot_uid
         LEFT JOIN user_plots up
             ON up.plot_rid = pl.plot_uid
-        GROUP BY project_uid, plot_uid
-        HAVING project_uid = _project_id
-    ), sums AS (
-        SELECT MAX(prj.created_date) as created_date,
-            MAX(prj.published_date) as published_date,
-            MAX(prj.closed_date) as closed_date,
-            MAX(prj.archived_date) as archived_date,
-            (CASE WHEN SUM(ps.flagged::int) IS NULL THEN 0 ELSE SUM(ps.flagged::int) END) as flagged,
-            (CASE WHEN SUM(ps.assigned::int) IS NULL THEN 0 ELSE SUM(ps.assigned::int) END) as assigned,
-            COUNT(distinct pl.plot_uid) as plots
-        FROM projects prj
-        INNER JOIN plots pl
-          ON project_uid = pl.project_rid
-        LEFT JOIN plotsum ps
-          ON ps.plot_uid = pl.plot_uid
-        WHERE project_uid = _project_id
-    ), users_count AS (
-        SELECT COUNT (DISTINCT user_rid) as users
-        FROM projects prj
-        INNER JOIN plots pl
-          ON project_uid = pl.project_rid
-            AND project_uid = _project_id
-        LEFT JOIN user_plots up
-          ON up.plot_rid = plot_uid
+            AND (pa.user_rid = up.user_rid OR (SELECT users_assigned FROM users_count) = 0)
+        GROUP BY plot_uid
+        HAVING project_rid = _project_id
+    ), project_sum AS (
+        SELECT count(*)::int AS total_plots,
+            sum(ps.flagged::int)::int AS flagged_plots,
+            sum((needed = analyzed)::int)::int AS analyzed_plots,
+            sum((needed > analyzed and analyzed > 0)::int)::int AS partial_plots,
+            sum((analyzed = 0)::int)::int AS unanalyzed_plots,
+            sum(assigned)::int AS plot_assignments
+        FROM plot_sum ps
     )
 
-    SELECT CAST(flagged as int) as flagged_plots,
-        CAST(assigned as int) assigned_plots,
-        CAST(GREATEST(0, (plots-flagged-assigned)) as int) as unassigned_plots,
-        CAST(members as int) as members,
-        CAST(users_count.users as int) as contributors,
-        created_date, published_date, closed_date, archived_date,
+    SELECT total_plots,
+        flagged_plots,
+        analyzed_plots,
+        partial_plots,
+        unanalyzed_plots,
+        plot_assignments,
+        users_assigned,
+        created_date,
+        published_date,
+        closed_date,
         user_stats
-    FROM members, sums, users_count, user_agg
+    FROM projects, project_sum, users_count, user_agg
+    WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
 
---
---  PLOT FUNCTIONS
---
-
--- Flag plot
-CREATE OR REPLACE FUNCTION flag_plot(_plot_id integer, _user_id integer, _collection_start timestamp, _flagged_reason text)
- RETURNS integer AS $$
-
-    DELETE
-    FROM sample_values
-    WHERE user_plot_rid = (
-        SELECT user_plot_uid
-        FROM user_plots
-        WHERE user_rid = _user_id
-            AND plot_rid = _plot_id
-    );
-
-    INSERT INTO user_plots
-        (user_rid, plot_rid, flagged, collection_start, collection_time, flagged_reason)
-    VALUES
-        (_user_id, _plot_id, true, _collection_start, Now(), _flagged_reason)
-    ON CONFLICT (user_rid, plot_rid) DO
-        UPDATE
-        SET flagged = excluded.flagged,
-            user_rid = excluded.user_rid,
-            confidence = NULL,
-            collection_start = excluded.collection_start,
-            collection_time = Now(),
-            flagged_reason = excluded.flagged_reason
-
-    RETURNING _plot_id
-
-$$ LANGUAGE SQL;
-
--- Select plots but only return a maximum number
-CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer)
+-- Returns project user statistics for collection page
+CREATE OR REPLACE FUNCTION select_project_user_stats(_project_id integer, _user_id integer)
  RETURNS table (
-    plot_id     integer,
-    center      text,
-    flagged     boolean,
-    assigned    integer
+    total_plots       integer,
+    flagged_plots     integer,
+    analyzed_plots    integer,
+    user_assigned     integer,
+    user_stats        jsonb
  ) AS $$
 
-    SELECT plot_uid,
-        ST_AsGeoJSON(ST_Centroid(plot_geom)) as center,
-        CASE WHEN flagged IS NULL THEN FALSE ELSE flagged END,
-        CASE WHEN user_plot_uid IS NULL THEN 0 ELSE 1 END
-    FROM plots
-    LEFT JOIN user_plots
-        ON plot_uid = plot_rid
-    WHERE project_rid = _project_id
-    LIMIT _maximum;
-
-$$ LANGUAGE SQL;
-
--- Returns plot geom for the geodash
-CREATE OR REPLACE FUNCTION select_plot_geom(_plot_id integer)
- RETURNS text AS $$
-
-    SELECT ST_AsGeoJSON(plot_geom)
-    FROM plots p
-    WHERE p.plot_uid = _plot_id
-
-$$ LANGUAGE SQL;
-
--- Select plots
-CREATE OR REPLACE FUNCTION select_project_collection_plots(_project_id integer)
- RETURNS table (
-    plot_id            integer,
-    user_id            integer,
-    flagged            boolean,
-    flagged_reason     text,
-    confidence         integer,
-    visible_id         integer,
-    plot_geom          text,
-    extra_plot_info    jsonb
- ) AS $$
-
-    SELECT plot_uid,
-        user_rid,
-        flagged,
-        flagged_reason,
-        confidence,
-        visible_id,
-        ST_AsGeoJSON(plot_geom),
-        extra_plot_info
-    FROM plots pl
-    LEFT JOIN user_plots
-        ON plot_uid = plot_rid
-    WHERE project_rid = _project_id
-
-$$ LANGUAGE SQL;
-
--- Check if plot exists by visible_id
-CREATE OR REPLACE FUNCTION plot_exists(_project_id integer, _visible_id integer)
- RETURNS boolean AS $$
-
-    SELECT count(visible_id) > 0
-    FROM plots
-    WHERE project_rid = _project_id
-        AND visible_id = _visible_id
-
-$$ LANGUAGE SQL;
-
--- FIXME, I dont think we need 6 functions for navigating plots.
--- This return type is so the 6 functions match return types.
-DROP TYPE IF EXISTS collection_return;
-CREATE TYPE collection_return AS (
-    plot_id            integer,
-    flagged            boolean,
-    flagged_reason     text,
-    confidence         integer,
-    visible_id         integer,
-    plot_geom          text,
-    extra_plot_info    jsonb
-);
-
--- Returns next unanalyzed plot
-CREATE OR REPLACE FUNCTION select_next_unassigned_plot(_project_id integer, _visible_id integer)
- RETURNS setOf collection_return AS $$
-
-    SELECT plot_id,
-        flagged,
-        flagged_reason,
-        confidence,
-        visible_id,
-        plot_geom,
-        extra_plot_info
-    FROM select_project_collection_plots(_project_id)
-    LEFT JOIN plot_locks pl
-        ON plot_id = pl.plot_rid
-    WHERE visible_id > _visible_id
-        AND user_id IS NULL
-        AND (pl.lock_end IS NULL
-            OR localtimestamp > pl.lock_end)
-    ORDER BY visible_id ASC
-    LIMIT 1
-
-$$ LANGUAGE SQL;
-
--- Returns next user analyzed plot
-CREATE OR REPLACE FUNCTION select_next_user_plot(
-    _project_id    integer,
-    _visible_id    integer,
-    _user_id       integer,
-    _review_all    boolean
- ) RETURNS setOf collection_return AS $$
-
-    SELECT plot_id,
-        flagged,
-        flagged_reason,
-        confidence,
-        visible_id,
-        plot_geom,
-        extra_plot_info
-    FROM select_project_collection_plots(_project_id)
-    WHERE visible_id > _visible_id
-        AND ((_review_all AND user_id IS NOT NULL)
-             OR user_id = _user_id)
-    ORDER BY visible_id ASC
-    LIMIT 1
-
-$$ LANGUAGE SQL;
-
--- Returns prev unanalyzed plot
-CREATE OR REPLACE FUNCTION select_prev_unassigned_plot(_project_id integer, _visible_id integer)
- RETURNS setOf collection_return AS $$
-
-    SELECT plot_id,
-        flagged,
-        flagged_reason,
-        confidence,
-        visible_id,
-        plot_geom,
-        extra_plot_info
-    FROM select_project_collection_plots(_project_id)
-    LEFT JOIN plot_locks pl
-        ON plot_id = pl.plot_rid
-    WHERE visible_id < _visible_id
-        AND user_id IS NULL
-        AND (pl.lock_end IS NULL
-            OR localtimestamp > pl.lock_end)
-    ORDER BY visible_id DESC
-    LIMIT 1
-
-$$ LANGUAGE SQL;
-
--- Returns prev user analyzed plot
-CREATE OR REPLACE FUNCTION select_prev_user_plot(
-    _project_id    integer,
-    _visible_id    integer,
-    _user_id       integer,
-    _review_all    boolean
- ) RETURNS setOf collection_return AS $$
-
-    SELECT plot_id,
-        flagged,
-        flagged_reason,
-        confidence,
-        visible_id,
-        plot_geom,
-        extra_plot_info
-    FROM select_project_collection_plots(_project_id) as spp
-    WHERE visible_id < _visible_id
-        AND ((_review_all AND user_id IS NOT NULL)
-             OR user_id = _user_id)
-    ORDER BY visible_id DESC
-    LIMIT 1
-
-$$ LANGUAGE SQL;
-
--- Returns unanalyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_by_id_unassigned_plot(_project_id integer, _visible_id integer)
- RETURNS setOf collection_return AS $$
-
-    SELECT plot_id,
-        flagged,
-        flagged_reason,
-        confidence,
-        visible_id,
-        plot_geom,
-        extra_plot_info
-    FROM select_project_collection_plots(_project_id) as spp
-    LEFT JOIN plot_locks pl
-        ON plot_id = pl.plot_rid
-    WHERE visible_id = _visible_id
-        AND user_id IS NULL
-        AND (pl.lock_end IS NULL
-            OR localtimestamp > pl.lock_end)
-
-$$ LANGUAGE SQL;
-
--- Returns user analyzed plots by plot id
-CREATE OR REPLACE FUNCTION select_by_id_user_plot(
-    _project_id    integer,
-    _visible_id    integer,
-    _user_id       integer,
-    _review_all    boolean
- ) RETURNS setOf collection_return AS $$
-
-    SELECT plot_id,
-        flagged,
-        flagged_reason,
-        confidence,
-        visible_id,
-        plot_geom,
-        extra_plot_info
-    FROM select_project_collection_plots(_project_id)
-    WHERE visible_id = _visible_id
-        AND ((_review_all AND user_id IS NOT NULL)
-             OR user_id = _user_id)
-
-$$ LANGUAGE SQL;
-
--- Lock plot to user
-CREATE OR REPLACE FUNCTION lock_plot(_plot_id integer, _user_id integer, _lock_end timestamp)
- RETURNS VOID AS $$
-
-    INSERT INTO plot_locks
-        (user_rid, plot_rid, lock_end)
-    VALUES
-        (_user_id, _plot_id, _lock_end)
-
-$$ LANGUAGE SQL;
-
--- Reset time on lock
-CREATE OR REPLACE FUNCTION lock_plot_reset(_plot_id integer, _user_id integer, _lock_end timestamp)
- RETURNS VOID AS $$
-
-    UPDATE plot_locks pl
-    SET lock_end = _lock_end
-    WHERE pl.plot_rid = _plot_id
-        AND pl.user_rid = _user_id
-
-$$ LANGUAGE SQL;
-
--- Remove all locks from user and old locks
-CREATE OR REPLACE FUNCTION unlock_plots(_user_id integer)
- RETURNS VOID AS $$
-
-    DELETE FROM plot_locks pl
-    WHERE pl.user_rid = _user_id
-        OR pl.lock_end < localtimestamp
-
-$$ LANGUAGE SQL;
-
---
---  SAMPLE FUNCTIONS
---
-
--- Create project plot sample with no external file data
-CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_geom jsonb)
- RETURNS integer AS $$
-
-    INSERT INTO samples
-        (plot_rid, sample_geom)
-    VALUES
-        (_plot_id, ST_SetSRID(ST_GeomFromGeoJSON(_sample_geom), 4326))
-    RETURNING sample_uid
-
-$$ LANGUAGE SQL;
-
--- Select samples for a plot.
-CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer)
- RETURNS table (
-    sample_id        integer,
-    sample_geom      text,
-    saved_answers    jsonb
- ) AS $$
-
-    SELECT sample_uid,
-        ST_AsGeoJSON(sample_geom) as sample_geom,
-        (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END)
-    FROM samples
-    LEFT JOIN sample_values sv
-        ON sample_uid = sv.sample_rid
-    WHERE samples.plot_rid = _plot_id
-
-$$ LANGUAGE SQL;
-
--- Select just sample geoms.
-CREATE OR REPLACE FUNCTION select_plot_sample_geoms(_plot_id integer)
- RETURNS table (sample_geom text) AS $$
-
-    SELECT ST_AsGeoJSON(sample_geom)
-    FROM samples s
-    WHERE s.plot_rid = _plot_id
-
-$$ LANGUAGE SQL;
-
--- FIXME this can probably be eliminate with a rewrite to update_user_samples
--- Returns user plots table id if available
-CREATE OR REPLACE FUNCTION check_user_plots(_plot_id integer)
- RETURNS integer AS $$
-
-    SELECT user_plot_uid
-    FROM user_plots up
-    WHERE up.plot_rid = _plot_id
-
-$$ LANGUAGE SQL;
-
--- FIXME _project_id is not used
--- Add user sample value selections
-CREATE OR REPLACE FUNCTION add_user_samples(
-    _project_id          integer,
-    _plot_id             integer,
-    _user_id             integer,
-    _confidence          integer,
-    _collection_start    timestamp,
-    _samples             jsonb,
-    _images              jsonb
- ) RETURNS integer AS $$
-
-    WITH user_plot_table AS (
-        INSERT INTO user_plots
-            (user_rid, plot_rid, confidence, collection_start, collection_time)
-        VALUES
-            (_user_id, _plot_id, _confidence, _collection_start, Now())
-        RETURNING user_plot_uid
-    ), new_sample_values AS (
-        SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_samples)
-    ), image_values AS (
-        SELECT sample_id, id as imagery_id, attributes as imagery_attributes
-        FROM (SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_images)) a
-        CROSS JOIN LATERAL
-        jsonb_to_record(a.value) as (id int, attributes text)
+    WITH user_plot_times AS (
+        SELECT plot_uid,
+            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0
+                ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) AS seconds,
+            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0 ELSE 1 END) AS timed,
+            u.email AS email
+        FROM plots pl
+        INNER JOIN user_plots up
+            ON up.plot_rid = plot_uid
+        INNER JOIN users u
+            ON up.user_rid = user_uid
+        WHERE project_rid = _project_id
+            AND user_rid = _user_id
+    ), user_stats AS (
+        SELECT jsonb_build_object(
+            'seconds', SUM(seconds)::int,
+            'plots', COUNT(plot_uid),
+            'timed_plots', SUM(timed):: int
+        ) as user_stats
+        FROM user_plot_times
+    ), user_count AS (
+        SELECT count(pa.user_rid)::int AS user_assigned
+        FROM plots pl
+        LEFT JOIN plot_assignments pa
+            ON pa.plot_rid = plot_uid
+        WHERE project_rid = _project_id
+            AND pa.user_rid = _user_id
+    ), plot_sum AS (
+        SELECT plot_uid,
+            coalesce(flagged, false) as flagged,
+            user_plot_uid IS NOT NULL AS analyzed
+        FROM plots pl
+        LEFT JOIN plot_assignments AS pa
+            ON pa.plot_rid = pl.plot_uid
+            AND pa.user_rid = _user_id
+        LEFT JOIN user_plots up
+            ON up.plot_rid = pl.plot_uid
+            AND up.user_rid = _user_id
+        WHERE project_rid = _project_id
+    ), project_sum AS (
+        SELECT count(*)::int as total_plots,
+            sum(flagged::int)::int AS flagged_plots,
+            sum(analyzed::int)::int AS analyzed_plots
+        FROM plot_sum
     )
 
-    INSERT INTO sample_values
-        (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, saved_answers)
-    (SELECT user_plot_uid, nsv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, nsv.value
-        FROM user_plot_table AS upt, samples AS s
-            INNER JOIN new_sample_values as nsv
-                ON sample_uid = nsv.sample_id
-            INNER JOIN image_values as iv
-                ON sample_uid = iv.sample_id
-        WHERE s.plot_rid = _plot_id)
-
-    RETURNING sample_value_uid
-
-$$ LANGUAGE SQL;
-
--- FIXME _project_id is not used
--- Update user sample value selections
-CREATE OR REPLACE FUNCTION update_user_samples(
-    _user_plots_uid      integer,
-    _project_id          integer,
-    _plot_id             integer,
-    _user_id             integer,
-    _confidence          integer,
-    _collection_start    timestamp,
-    _samples             jsonb,
-    _images              jsonb
- ) RETURNS integer AS $$
-
-    WITH user_plot_table AS (
-        UPDATE user_plots
-            SET confidence = _confidence,
-                collection_start = _collection_start,
-                collection_time = localtimestamp,
-                flagged = FALSE,
-                flagged_reason = null
-        WHERE user_plot_uid = _user_plots_uid
-        RETURNING user_plot_uid
-    ), new_sample_values AS (
-        SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_samples)
-    ), image_values AS (
-        SELECT sample_id, id as imagery_id, attributes as imagery_attributes
-        FROM (SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_images)) a
-        CROSS JOIN LATERAL
-        jsonb_to_record(a.value) as (id int, attributes text)
-    ), plot_samples AS (
-        SELECT user_plot_uid, nsv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, nsv.value
-        FROM user_plot_table AS upt, samples AS s
-        INNER JOIN new_sample_values as nsv ON sample_uid = nsv.sample_id
-        INNER JOIN image_values as iv ON sample_uid = iv.sample_id
-        WHERE s.plot_rid = _plot_id
-    )
-
-    INSERT INTO sample_values
-        (user_plot_rid, sample_rid, imagery_rid, imagery_attributes, saved_answers)
-        (SELECT user_plot_uid, sample_id, imagery_id, imagery_attributes, value FROM plot_samples)
-    ON CONFLICT (user_plot_rid, sample_rid) DO
-        UPDATE
-        SET user_plot_rid = excluded.user_plot_rid,
-            imagery_rid = excluded.imagery_rid,
-            imagery_attributes = excluded.imagery_attributes,
-            saved_answers = excluded.saved_answers
-
-    RETURNING sample_values.sample_rid
-
-$$ LANGUAGE SQL;
-
---
---  RESETTING COLLECTION
---
-
--- For clearing user plots for a single plot
-CREATE OR REPLACE FUNCTION delete_user_plot_by_plot(_plot_id integer)
- RETURNS void AS $$
-
-    DELETE FROM user_plots WHERE plot_rid = _plot_id
-
-$$ LANGUAGE SQL;
-
--- For clearing samples for a single plot
-CREATE OR REPLACE FUNCTION delete_samples_by_plot(_plot_id integer)
- RETURNS void AS $$
-
-    DELETE FROM samples WHERE plot_rid = _plot_id
-
-$$ LANGUAGE SQL;
-
--- For clearing all plots in a project
-CREATE OR REPLACE FUNCTION delete_plots_by_project(_project_id integer)
- RETURNS void AS $$
-
-    DELETE FROM plots WHERE project_rid = _project_id
-
-$$ LANGUAGE SQL;
-
--- For clearing all user plots in a project
-CREATE OR REPLACE FUNCTION delete_user_plots_by_project(_project_id integer)
- RETURNS void AS $$
-
-    DELETE FROM user_plots WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id)
-
-$$ LANGUAGE SQL;
-
--- For clearing all samples in a project
-CREATE OR REPLACE FUNCTION delete_all_samples_by_project(_project_id integer)
- RETURNS void AS $$
-
-    DELETE FROM samples WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id)
-
-$$ LANGUAGE SQL;
-
--- Get all plots and centers to recreate samples.
-CREATE OR REPLACE FUNCTION get_plot_centers_by_project(_project_id integer)
- RETURNS table (
-    plot_id       integer,
-    visible_id    integer,
-    lon           double precision,
-    lat           double precision
- ) AS $$
-
-    SELECT plot_uid,
-        visible_id,
-        ST_X(ST_Centroid(plot_geom)) AS lon,
-        ST_Y(ST_Centroid(plot_geom)) AS lat
-    FROM plots
-    WHERE project_rid = _project_id
+    SELECT total_plots,
+        flagged_plots,
+        analyzed_plots,
+        user_assigned,
+        user_stats
+    FROM project_sum, user_stats, user_count
 
 $$ LANGUAGE SQL;
 
@@ -1239,10 +799,9 @@ $$ LANGUAGE SQL;
 --
 
 -- Returns project aggregate data
--- TODO, return WKT geom
 CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
  RETURNS table (
-    plotid                     integer,
+    plot_id                    integer,
     center_lon                 double precision,
     center_lat                 double precision,
     size_m                     text,
@@ -1259,7 +818,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     extra_plot_info            jsonb
  ) AS $$
 
-    SELECT pl.visible_id,
+    SELECT plot_uid,
         ST_X(ST_Centroid(plot_geom)) AS lon,
         ST_Y(ST_Centroid(plot_geom)) AS lat,
         plot_shape,
@@ -1289,9 +848,80 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
         ON up.plot_rid = pl.plot_uid
     LEFT JOIN sample_values sv
         ON sv.sample_rid = s.sample_uid
+        AND user_plot_uid = sv.user_plot_rid
     LEFT JOIN users u
         ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
+    GROUP BY project_uid, plot_uid, user_plot_uid, email, extra_plot_info
+    ORDER BY plot_uid
+
+$$ LANGUAGE SQL;
+
+-- Returns project aggregate QA/QC data
+CREATE OR REPLACE FUNCTION dump_project_plot_qaqc_data(_project_id integer)
+ RETURNS table (
+    plotid                     integer,
+    center_lon                 double precision,
+    center_lat                 double precision,
+    shape                      text,
+    size_m                     real,
+    email                      text,
+    flagged                    boolean,
+    flagged_reason             text,
+    confidence                 integer,
+    collection_time            timestamp,
+    analysis_duration          numeric,
+    samples                    text,
+    common_securewatch_date    text,
+    total_securewatch_dates    integer,
+    extra_plot_info            jsonb
+ ) AS $$
+
+    WITH assigned_count AS (
+        SELECT pa.plot_rid AS plot_rid, count(pa.user_rid) users
+        FROM plots, plot_assignments pa
+        WHERE project_rid = _project_id
+            AND plot_uid = pa.plot_rid
+        GROUP BY pa.plot_rid
+    )
+
+    SELECT plot_uid,
+        ST_X(ST_Centroid(plot_geom)) AS lon,
+        ST_Y(ST_Centroid(plot_geom)) AS lat,
+        plot_shape,
+        plot_size,
+        email,
+        flagged,
+        flagged_reason,
+        confidence,
+        collection_time,
+        ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
+        FORMAT('[%s]', STRING_AGG(
+            (CASE WHEN saved_answers IS NULL THEN
+                FORMAT('{"%s":"%s"}', 'id', sample_uid)
+            ELSE
+                FORMAT('{"%s":"%s", "%s":%s}', 'id', sample_uid, 'saved_answers', saved_answers)
+            END),', '
+        )) AS samples,
+        MODE() WITHIN GROUP (ORDER BY imagery_attributes->>'imagerySecureWatchDate') AS common_securewatch_date,
+        COUNT(DISTINCT(imagery_attributes->>'imagerySecureWatchDate'))::int AS total_securewatch_dates,
+        extra_plot_info
+    FROM projects p
+    INNER JOIN plots pl
+        ON project_uid = pl.project_rid
+    INNER JOIN assigned_count ac
+        ON pl.plot_uid = ac.plot_rid
+    INNER JOIN samples s
+        ON s.plot_rid = pl.plot_uid
+    LEFT JOIN user_plots up
+        ON up.plot_rid = pl.plot_uid
+    LEFT JOIN sample_values sv
+        ON sv.sample_rid = s.sample_uid
+        AND user_plot_uid = sv.user_plot_rid
+    LEFT JOIN users u
+        ON u.user_uid = up.user_rid
+    WHERE project_rid = _project_id
+        AND ac.users > 1
     GROUP BY project_uid, plot_uid, user_plot_uid, email, extra_plot_info
     ORDER BY plot_uid
 
@@ -1337,6 +967,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         ON up.plot_rid = pl.plot_uid
     LEFT JOIN sample_values sv
         ON sample_uid = sv.sample_rid
+        AND user_plot_uid = sv.user_plot_rid
     LEFT JOIN imagery
         ON imagery_uid = sv.imagery_rid
     LEFT JOIN users u

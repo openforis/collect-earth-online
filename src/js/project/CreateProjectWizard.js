@@ -1,4 +1,5 @@
 import React from "react";
+import _ from "lodash";
 
 import {ImagerySelection} from "./ImagerySelection";
 import {Overview, OverviewIntro} from "./Overview";
@@ -55,6 +56,7 @@ export default class CreateProjectWizard extends React.Component {
                         <PlotDesign
                             boundary={this.context.boundary}
                             getTotalPlots={this.getTotalPlots}
+                            institutionUserList={this.context.institutionUserList}
                         />
                     )),
                 helpDescription: "Collection Map Preview",
@@ -111,7 +113,11 @@ export default class CreateProjectWizard extends React.Component {
     /// Lifecycle Methods
 
     componentDidMount() {
-        this.getTemplateProjects();
+        Promise.all([this.getTemplateProjects(), this.getInstitutionUserList()])
+            .catch(error => {
+                console.error(error);
+                alert("Error retrieving the project data. See console for details.");
+            });
         if (this.context.name !== "" || this.context.description !== "") this.checkAllSteps();
     }
 
@@ -124,10 +130,19 @@ export default class CreateProjectWizard extends React.Component {
                 ? data
                 : [{id: -1, name: "No template projects found"}]
         }))
-        .catch(response => {
-            console.log(response);
+        .catch(error => {
             this.setState({templateProjectList: [{id: -1, name: "Failed to load"}]});
+            Promise.reject(error);
         });
+
+    getInstitutionUserList = () => {
+        const {institutionId} = this.context;
+        if (institutionId > 0) {
+            fetch(`/get-institution-users?institutionId=${institutionId}`)
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
+                .then(data => this.context.setContextState({institutionUserList: data}));
+        }
+    };
 
     getTemplateProject = projectId => Promise.all(
         [this.getTemplateById(projectId),
@@ -135,10 +150,10 @@ export default class CreateProjectWizard extends React.Component {
          this.getProjectImagery(projectId)]
     )
         .then(() => this.context.setProjectDetails({templateProjectId: projectId}))
-        .catch(response => {
-            console.log(response);
+        .catch(error => {
             this.setState({templatePlots: [], templateProject: {}});
             this.context.setProjectDetails({templateProjectId: -1});
+            console.error(error);
             alert("Error getting complete template info. See console for details.");
         });
 
@@ -156,10 +171,6 @@ export default class CreateProjectWizard extends React.Component {
                 useTemplatePlots: true,
                 useTemplateWidgets: true
             }, this.checkAllSteps);
-        })
-        .catch(error => {
-            console.log(error);
-            Promise.reject("Get project info failed.");
         });
 
     getProjectPlots = projectId => fetch(`/get-project-plots?projectId=${projectId}`)
@@ -167,10 +178,6 @@ export default class CreateProjectWizard extends React.Component {
         .then(data => {
             this.setState({templatePlots: data});
             this.context.setProjectDetails({plots: data});
-        })
-        .catch(error => {
-            console.log(error);
-            Promise.reject("Error retrieving plot list. See console for details.");
         });
 
     // TODO: just return with the project info because we only need the integer ID
@@ -181,10 +188,6 @@ export default class CreateProjectWizard extends React.Component {
             this.context.setProjectDetails({
                 projectImageryList: data.map(i => i.id).filter(id => institutionImageryIds.includes(id))
             });
-        })
-        .catch(error => {
-            console.log(error);
-            Promise.reject("Error retrieving imagery list. See console for details.");
         });
 
     /// Validations
@@ -256,7 +259,11 @@ export default class CreateProjectWizard extends React.Component {
             plotSize,
             plotFileName,
             useTemplatePlots,
-            originalProject
+            originalProject,
+            designSettings: {
+                userAssignment: {userMethod, users, percents},
+                qaqcAssignment: {qaqcMethod, smes, percent, timesToReview}
+            }
         } = this.context;
         const totalPlots = this.getTotalPlots();
         const plotFileNeeded = !useTemplatePlots
@@ -275,7 +282,28 @@ export default class CreateProjectWizard extends React.Component {
             (plotDistribution === "shp" && plotFileNeeded && !(plotFileName || "").includes(".zip"))
                 && "A plot SHP (.zip) file is required.",
             (totalPlots > plotLimit)
-                && "The plot size limit has been exceeded. Check the Plot Design section for detailed info."
+                && "The plot size limit has been exceeded. Check the Plot Design section for detailed info.",
+            (["equal", "percent"].includes(userMethod) && users.length === 0)
+                && "At least one user must be added to the plot assignment.",
+            (userMethod === "percent" && percents.reduce((acc, p) => acc + p, 0) !== 100)
+                && "The assigned plot percentages must equal 100%.",
+            (userMethod === "percent" && percents.reduce((acc, p) => (acc || p === 0), false))
+                && "All plot assignment percentages must be greater than 0%.",
+            (["overlap", "sme"].includes(qaqcMethod) && percent === 0)
+                && "The assigned Quality Control percentage must be greater than 0%.",
+            (["random", "gridded"].includes(plotDistribution) && qaqcMethod === "overlap" && users.length > Math.round((totalPlots * (percent / 100)) / users.length))
+                && `Too few plots per user for Quality Control Overlap. Each user must have at least ${users.length} plots.`,
+            (qaqcMethod === "sme" && smes.length === 0)
+                && "At least one user must be added as an SME.",
+            (qaqcMethod === "overlap" && users.length === 1)
+                    && "At least two assigned users are required for overlap mode.",
+            (qaqcMethod === "overlap" && timesToReview < 2)
+                && "# of Reviews must be at least 2.",
+            (qaqcMethod === "overlap" && timesToReview > users.length && users.length > 1)
+                && "# of Reviews cannot be greater than the number of assigned users.",
+            (userMethod !== "none" && qaqcMethod === "sme" && (_.intersection(users, smes)).length > 0)
+                && "Users cannot be an Assigned User and an SME. Please remove the duplicate users."
+
         ];
         return errorList.filter(e => e);
     };

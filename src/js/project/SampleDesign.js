@@ -61,6 +61,7 @@ export class SampleDesign extends React.Component {
         const {sampleGeometries} = this.context.designSettings;
         this.context.setProjectDetails({
             designSettings: {
+                ...this.context.designSettings,
                 sampleGeometries: {...sampleGeometries, [geometry]: !sampleGeometries[geometry]}
             }
         });
@@ -69,13 +70,14 @@ export class SampleDesign extends React.Component {
     render() {
         const {
             allowDrawnSamples,
-            designSettings: {sampleGeometries},
+            designSettings: {sampleGeometries, qaqcAssignment: {qaqcMethod}},
             plotDistribution,
             sampleDistribution,
             setProjectDetails
         } = this.context;
         const totalPlots = this.props.getTotalPlots();
         const samplesPerPlot = this.props.getSamplesPerPlot();
+        const qaqcEnabled = qaqcMethod !== "none";
 
         const sampleOptions = {
             random: {
@@ -110,8 +112,8 @@ export class SampleDesign extends React.Component {
             none: {
                 display: "None",
                 description: "Do not predefine any samples. Requires users to draw their own samples during collection.",
-                inputs: [() => <h3>Users will draw samples at collection time.</h3>]
-
+                inputs: [() => <h3>Users will draw samples at collection time.</h3>],
+                disabled: qaqcEnabled
             }
         };
 
@@ -143,6 +145,7 @@ export class SampleDesign extends React.Component {
                                 allowDrawnSamples: (newDistributionType === "none") || allowDrawnSamples,
                                 sampleDistribution: newDistributionType,
                                 designSettings: {
+                                    ...this.context.designSettings,
                                     sampleGeometries: {
                                         ...sampleGeometries,
                                         points: points || pointRequired
@@ -193,7 +196,7 @@ export class SampleDesign extends React.Component {
                         <input
                             checked={allowDrawnSamples || sampleDistribution === "none"}
                             className="form-check-input"
-                            disabled={sampleDistribution === "none"}
+                            disabled={sampleDistribution === "none" || qaqcEnabled}
                             id="allow-drawn-samples"
                             onChange={() => setProjectDetails({allowDrawnSamples: !allowDrawnSamples})}
                             type="checkbox"
@@ -209,6 +212,12 @@ export class SampleDesign extends React.Component {
                         - Enable this to allow users to draw and label points, lines,
                         and polygons during data collection.
                     </p>
+                    {qaqcEnabled && (
+                        <p className="font-italic ml-2 small">
+                            - When Quality Control is enabled, the project can no longer support User Drawn samples.
+                            Set Quality Control to &quot;None&quot; to re-enable User-Drawn Samples.
+                        </p>
+                    )}
                     {allowDrawnSamples && (
                         <div className="form-group">
                             <label

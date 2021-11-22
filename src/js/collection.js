@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import _ from "lodash";
 
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {SurveyCollection} from "./components/SurveyCollection";
@@ -13,8 +14,13 @@ import {
     GEEImageCollectionMenu
 } from "./imagery/collectionMenuControls";
 import {CollapsibleTitle} from "./components/FormComponents";
+import Modal from "./components/Modal";
+import Select from "./components/Select";
+import Switch from "./components/Switch";
+import {ButtonSvgIcon} from "./components/SvgIcon";
 
-import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage} from "./utils/generalUtils";
+import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
+import {getProjectPreferences, setProjectPreferences} from "./utils/preferences";
 import {mercator} from "./utils/mercator";
 
 class Collection extends React.Component {
@@ -25,19 +31,22 @@ class Collection extends React.Component {
             currentProject: {surveyQuestions: [], institution: ""},
             currentImagery: {id: "", sourceConfig: {}},
             currentPlot: {},
+            currentUserId: -1,
             // attribution for showing in the map
             imageryAttribution: "",
             // attributes to record when sample is saved
             imageryAttributes: {},
             imageryList: [],
+            inReviewMode: false,
             mapConfig: null,
-            nextPlotButtonDisabled: false,
+            messageBox: null,
             plotList: [],
-            prevPlotButtonDisabled: false,
+            plotters: [],
             unansweredColor: "black",
             selectedQuestion: {id: 0, question: "", answers: []},
             selectedSampleId: -1,
             userSamples: {},
+            originalUserSamples: {},
             userImages: {},
             storedInterval: null,
             KMLFeatures: null,
@@ -45,12 +54,14 @@ class Collection extends React.Component {
             showQuitModal: false,
             answerMode: "question",
             modalMessage: null,
-            navigationMode: "unanalyzed"
+            navigationMode: "natural",
+            threshold: 90
         };
     }
 
     componentDidMount() {
-        window.name = "_ceocollection";
+        window.name = "_ceo_collection";
+        window.addEventListener("beforeunload", this.unsavedWarning, {capture: true});
 
         fetch(
             `/release-plot-locks?projectId=${this.props.projectId}`,
@@ -132,6 +143,10 @@ class Collection extends React.Component {
         }
     }
 
+    componentWillUnmount() {
+        window.removeEventListener("beforeunload", this.unsavedWarning, {capture: true});
+    }
+
     setImageryAttribution = attributionSuffix => this.setState({
         imageryAttribution: this.state.currentImagery.attribution + attributionSuffix
     });
@@ -145,18 +160,41 @@ class Collection extends React.Component {
         )
     ));
 
+    showAlert = ({title, body, closeText = "Close"}) => this.setState({
+        messageBox: {
+            body,
+            closeText,
+            title,
+            type: "alert"
+        }
+    });
+
     getProjectData = () => this.processModal(
         "Loading project details",
         () => Promise.all([
             this.getProjectById(),
             this.getProjectPlots(),
-            this.getImageryList()
+            this.getImageryList(),
+            this.getPlotters()
         ])
             .then(() => {
+                const reviewWarning = this.state.inReviewMode ? "You are currently in 'Review Mode.'" : "";
                 if (this.state.currentProject.availability === "unpublished") {
-                    alert("This project is in draft mode. Only admins can collect. Any plot collections will be erased when the project is published.");
+                    this.showAlert({
+                        title: "Warning: Draft Mode",
+                        body: "This project is in draft mode. Only admins can collect. Any plot collections will be erased when the project is published.\n" + reviewWarning,
+                        closeText: "OK, I understand"
+                    });
                 } else if (this.state.currentProject.availability === "closed") {
-                    alert("This project has been closed. Admins can make corrections to any plot.");
+                    this.showAlert({
+                        title: "Project Closed",
+                        body: "This project has been closed. Admins can make corrections to any plot.\n " + reviewWarning
+                    });
+                } else if (this.state.inReviewMode) {
+                    this.showAlert({
+                        title: "Review Mode",
+                        body: reviewWarning
+                    });
                 }
             })
             .catch(response => {
@@ -171,6 +209,9 @@ class Collection extends React.Component {
             // TODO This logic is currently invalid since this route can never return an archived project.
             if (project.id > 0 && project.availability !== "archived") {
                 this.setState({currentProject: project});
+                const {inReviewMode} = getProjectPreferences(project.id);
+                this.setReviewMode(project.isProjectAdmin
+                    && (inReviewMode || (project.availability === "closed" && inReviewMode !== false)));
                 return Promise.resolve("resolved");
             } else {
                 return Promise.reject(
@@ -204,6 +245,17 @@ class Collection extends React.Component {
             }
         });
 
+    getPlotters = () => fetch(`/get-plotters?projectId=${this.props.projectId}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => {
+            if (isArray(data)) {
+                this.setState({plotters: data});
+                return Promise.resolve("resolved");
+            } else {
+                return Promise.reject("Error getting plotter data.");
+            }
+        });
+
     initializeProjectMap = () => {
         const mapConfig = mercator.createMap("image-analysis-pane",
                                              [0.0, 0.0],
@@ -226,10 +278,7 @@ class Collection extends React.Component {
         mercator.addPlotLayer(this.state.mapConfig,
                               this.state.plotList,
                               feature => {
-                                  this.setState({
-                                      prevPlotButtonDisabled: false
-                                  });
-                                  this.getPlotData(feature.get("features")[0].get("plotId"));
+                                  this.getPlotData(feature.get("features")[0].get("plotId"), "id");
                               });
     };
 
@@ -270,101 +319,84 @@ class Collection extends React.Component {
         }
     };
 
-    getPlotData = visibleId => this.processModal(
-        `Getting plot ${visibleId}`,
-        () => fetch("/get-plot-by-id?" + getQueryString({
-            visibleId,
-            projectId: this.props.projectId,
-            navigationMode: this.state.navigationMode
-        }))
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                if (data === "done") {
-                    alert(this.state.navigationMode !== "unanalyzed"
-                        ? "This plot was analyzed by someone else. You are logged in as " + this.props.userName + "."
-                        : "This plot has already been analyzed.");
-                } else if (data === "not-found") {
-                    alert("Plot " + visibleId + " not found.");
-                } else {
-                    this.setState({
-                        currentPlot: data,
-                        ...this.newPlotValues(data),
-                        prevPlotButtonDisabled: false,
-                        nextPlotButtonDisabled: false,
-                        answerMode: "question"
-                    });
-                    this.warnOnNoSamples(data);
-                }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            })
-    );
-
-    getNextPlotData = visibleId => this.processModal(
-        visibleId >= 0 ? "Getting next plot" : "Getting first plot",
-        () => fetch("/get-next-plot?" + getQueryString({
-            visibleId,
-            projectId: this.props.projectId,
-            navigationMode: this.state.navigationMode
-        }))
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                if (data === "done") {
-                    if (visibleId === -1) {
-                        alert(this.state.navigationMode !== "unanalyzed"
-                            ? "You have not reviewed any plots. You are logged in as " + this.props.userName + "."
-                            : "All plots have been analyzed for this project.");
+    getPlotData = (visibleId, direction, forcedNavMode = null) => {
+        const {currentUserId, navigationMode, inReviewMode, threshold} = this.state;
+        const {projectId} = this.props;
+        this.processModal(
+            "Getting plot",
+            () => fetch("/get-collection-plot?" + getQueryString({
+                visibleId,
+                projectId,
+                navigationMode: forcedNavMode || navigationMode,
+                direction,
+                inReviewMode,
+                threshold,
+                currentUserId
+            }))
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
+                .then(data => {
+                    if (data === "not-found") {
+                        alert((direction === "id" ? "Plot not" : "No more plots") + " found for this navigation mode.");
                     } else {
-                        this.setState({nextPlotButtonDisabled: true});
-                        alert("You have reached the end of the plot list.");
+                        this.setState({
+                            userPlotList: data,
+                            currentPlot: data[0],
+                            currentUserId: data[0].userId,
+                            ...this.newPlotValues(data[0]),
+                            answerMode: "question"
+                        });
+                        // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
+                        this.warnOnNoSamples(data[0]);
                     }
-                } else {
-                    this.setState({
-                        currentPlot: data,
-                        ...this.newPlotValues(data),
-                        prevPlotButtonDisabled: visibleId === -1,
-                        answerMode: "question"
-                    });
-                    this.warnOnNoSamples(data);
-                }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            })
+                })
+                .catch(response => {
+                    console.error(response);
+                    alert("Error retrieving plot data. See console for details.");
+                })
+        );
+    };
+
+    hasChanged = () => !(_.isEqual(this.state.userSamples, this.state.originalUserSamples));
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
+    unsavedWarning = e => {
+        if (this.hasChanged()) {
+            e.preventDefault();
+            e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+            return "You have unsaved changes. Are you sure you want to leave?";
+        }
+    };
+
+    confirmUnsaved = () => !this.hasChanged()
+        || confirm("You have unsaved changes. Any unsaved responses will be lost. Are you sure you want to continue?");
+
+    navToFirstPlot = () => this.getPlotData(
+        -10000000,
+        "next",
+        this.state.navigationMode === "natural" && "unanalyzed"
     );
 
-    getPrevPlotData = visibleId => this.processModal(
-        "Getting previous plot",
-        () => fetch("/get-prev-plot?" + getQueryString({
-            visibleId,
-            projectId: this.props.projectId,
-            navigationMode: this.state.navigationMode
-        }))
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                if (data === "done") {
-                    this.setState({prevPlotButtonDisabled: true});
-                    alert(this.state.navigationMode !== "unanalyzed"
-                        ? "No previous plots were analyzed by you. You are logged in as " + this.props.userName + "."
-                        : "All previous plots have been analyzed.");
-                } else {
-                    this.setState({
-                        currentPlot: data,
-                        ...this.newPlotValues(data),
-                        nextPlotButtonDisabled: false,
-                        answerMode: "question"
-                    });
-                    this.warnOnNoSamples(data);
-                }
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving plot data. See console for details.");
-            })
-    );
+    navToNextPlot = ignoreCheck => {
+        if (ignoreCheck || this.confirmUnsaved()) {
+            this.getPlotData(this.state.currentPlot.visibleId, "next");
+        }
+    };
+
+    navToPrevPlot = () => {
+        if (this.confirmUnsaved()) {
+            this.getPlotData(this.state.currentPlot.visibleId, "previous");
+        }
+    };
+
+    navToPlot = newPlot => {
+        if (!isNaN(newPlot)) {
+            if (this.confirmUnsaved()) {
+                this.getPlotData(newPlot, "id");
+            }
+        } else {
+            alert("Please enter a number to go to plot.");
+        }
+    };
 
     resetPlotLock = () => {
         fetch("/reset-plot-lock",
@@ -387,13 +419,22 @@ class Collection extends React.Component {
             });
     };
 
-    resetPlotValues = () => this.setState(this.newPlotValues(this.state.currentPlot, false));
+    resetPlotValues = () => {
+        this.setState(this.newPlotValues(this.state.currentPlot, false));
+        this.resetUnsavedWarning();
+    };
 
     newPlotValues = (newPlot, copyValues = true) => ({
         newPlotInput: newPlot.visibleId,
         userSamples: newPlot.samples
             ? newPlot.samples.reduce((acc, cur) =>
                 ({...acc, [cur.id]: copyValues ? (cur.savedAnswers || {}) : {}}), {})
+            : {},
+        originalUserSamples: newPlot.samples
+            ? copyValues
+                ? newPlot.samples.reduce((acc, cur) =>
+                    ({...acc, [cur.id]: (cur.savedAnswers || {})}), {})
+                : this.state.originalUserSamples
             : {},
         userImages: newPlot.samples
             ? newPlot.samples.reduce((acc, cur) =>
@@ -531,55 +572,73 @@ class Collection extends React.Component {
         });
     };
 
-    navToFirstPlot = () => this.getNextPlotData(-10000000);
+    setNavigationMode = newMode => this.setState({navigationMode: newMode});
 
-    navToNextPlot = () => this.getNextPlotData(this.state.currentPlot.visibleId);
-
-    navToPrevPlot = () => this.getPrevPlotData(this.state.currentPlot.visibleId);
-
-    navToPlot = newPlot => {
-        if (!isNaN(newPlot)) {
-            this.getPlotData(newPlot);
-        } else {
-            alert("Please enter a number to go to plot.");
+    setReviewMode = inReviewMode => {
+        const {currentProject} = this.state;
+        this.setState({inReviewMode});
+        setProjectPreferences(currentProject.id, {inReviewMode});
+        if (inReviewMode && this.state.navigationMode === "natural") {
+            this.setNavigationMode("analyzed");
+        } else if (!inReviewMode && ["qaqc", "user"].includes(this.state.navigationMode)) {
+            this.setNavigationMode("natural");
         }
     };
 
-    setNavigationMode = newMode => this.setState({
-        navigationMode: newMode,
-        prevPlotButtonDisabled: false,
-        nextPlotButtonDisabled: false
-    });
+    setThreshold = threshold => this.setState({threshold});
+
+    setCurrentUserId = currentUserId => {
+        const {userPlotList} = this.state;
+        const newPlot = (userPlotList || []).find(p => p.userId === currentUserId);
+        if (newPlot) {
+            this.setState({
+                currentUserId,
+                currentPlot: newPlot,
+                ...this.newPlotValues(newPlot)
+            });
+        } else {
+            this.setState({currentUserId});
+        }
+    };
+
+    hasAnswers = () => _.some(Object.values(this.state.userSamples), sample => !(_.isEmpty(sample)))
+        || _.some(Object.values(this.state.userSamples), sample => !(_.isEmpty(sample)));
+
+    confirmFlag = () => !this.hasAnswers() || confirm("Flagging this plot will delete your previous answers. Are you sure you want to continue?");
 
     postValuesToDB = () => {
         if (this.state.currentPlot.flagged) {
-            this.processModal(
-                "Saving flagged plot",
-                () => fetch(
-                    "/flag-plot",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Accept": "application/json",
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            projectId: this.props.projectId,
-                            plotId: this.state.currentPlot.id,
-                            collectionStart: this.state.collectionStart,
-                            flaggedReason: this.state.currentPlot.flaggedReason
-                        })
-                    }
-                )
-                    .then(response => {
-                        if (response.ok) {
-                            return this.navToNextPlot();
-                        } else {
-                            console.log(response);
-                            alert("Error flagging plot as bad. See console for details.");
+            if (this.confirmFlag()) {
+                this.processModal(
+                    "Saving flagged plot",
+                    () => fetch(
+                        "/flag-plot",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Accept": "application/json",
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                projectId: this.props.projectId,
+                                plotId: this.state.currentPlot.id,
+                                collectionStart: this.state.collectionStart,
+                                flaggedReason: this.state.currentPlot.flaggedReason,
+                                inReviewMode: this.state.inReviewMode,
+                                currentUserId: this.state.currentUserId
+                            })
                         }
-                    })
-            );
+                    )
+                        .then(response => {
+                            if (response.ok) {
+                                return this.navToNextPlot(true);
+                            } else {
+                                console.log(response);
+                                alert("Error flagging plot as bad. See console for details.");
+                            }
+                        })
+                );
+            }
         } else {
             this.processModal(
                 "Saving plot answers",
@@ -601,13 +660,15 @@ class Collection extends React.Component {
                             userSamples: this.state.userSamples,
                             userImages: this.state.userImages,
                             plotSamples: this.state.currentProject.allowDrawnSamples
-                                && this.state.currentPlot.samples
+                                && this.state.currentPlot.samples,
+                            inReviewMode: this.state.inReviewMode,
+                            currentUserId: this.state.currentUserId
                         })
                     }
                 )
                     .then(response => {
                         if (response.ok) {
-                            return this.navToNextPlot();
+                            return this.navToNextPlot(true);
                         } else {
                             console.log(response);
                             alert("Error saving your assignments to the database. See console for details.");
@@ -794,11 +855,9 @@ class Collection extends React.Component {
 
     toggleQuitModal = () => this.setState({showQuitModal: !this.state.showQuitModal});
 
-    toggleFlagged = () => {
-        this.setState({
-            currentPlot: {...this.state.currentPlot, flagged: !this.state.currentPlot.flagged}
-        });
-    };
+    toggleFlagged = () => this.setState({
+        currentPlot: {...this.state.currentPlot, flagged: !this.state.currentPlot.flagged}
+    });
 
     setUnansweredColor = newColor => this.setState({unansweredColor: newColor});
 
@@ -814,13 +873,9 @@ class Collection extends React.Component {
         }
     };
 
-    setConfidence = confidence => {
-        this.setState({currentPlot: {...this.state.currentPlot, confidence}});
-    };
+    setConfidence = confidence => this.setState({currentPlot: {...this.state.currentPlot, confidence}});
 
-    setFlaggedReason = flaggedReason => {
-        this.setState({currentPlot: {...this.state.currentPlot, flaggedReason}});
-    };
+    setFlaggedReason = flaggedReason => this.setState({currentPlot: {...this.state.currentPlot, flaggedReason}});
 
     render() {
         return (
@@ -856,7 +911,7 @@ class Collection extends React.Component {
                 <SideBar
                     answerMode={this.state.answerMode}
                     currentPlot={this.state.currentPlot}
-                    isProjectAdmin={this.state.currentProject.isProjectAdmin}
+                    inReviewMode={this.state.inReviewMode}
                     postValuesToDB={this.postValuesToDB}
                     projectId={this.props.projectId}
                     projectName={this.state.currentProject.name}
@@ -865,18 +920,27 @@ class Collection extends React.Component {
                     userName={this.props.userName}
                 >
                     <PlotNavigation
+                        collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
                         currentPlot={this.state.currentPlot}
+                        currentUserId={this.state.currentUserId}
+                        hasAssignedPlots={this.state.currentProject.designSettings?.userAssignment?.userMethod !== "none"}
+                        inReviewMode={this.state.inReviewMode}
                         isProjectAdmin={this.state.currentProject.isProjectAdmin}
+                        isQAQCEnabled={this.state.currentProject.designSettings?.qaqcAssignment?.qaqcMethod !== "none"}
                         loadingPlots={this.state.plotList.length === 0}
                         navigationMode={this.state.navigationMode}
                         navToFirstPlot={this.navToFirstPlot}
                         navToNextPlot={this.navToNextPlot}
                         navToPlot={this.navToPlot}
                         navToPrevPlot={this.navToPrevPlot}
-                        nextPlotButtonDisabled={this.state.nextPlotButtonDisabled}
-                        prevPlotButtonDisabled={this.state.prevPlotButtonDisabled}
+                        plotters={this.state.plotters}
+                        plotUsers={(this.state.userPlotList || []).filter(p => p.userId)}
+                        projectId={this.props.projectId}
+                        setCurrentUserId={this.setCurrentUserId}
                         setNavigationMode={this.setNavigationMode}
-                        showNavButtons={this.state.currentPlot.id}
+                        setReviewMode={this.setReviewMode}
+                        setThreshold={this.setThreshold}
+                        threshold={this.state.threshold}
                     />
                     <ExternalTools
                         currentPlot={this.state.currentPlot}
@@ -935,6 +999,14 @@ class Collection extends React.Component {
                             </fieldset>
                         )}
                 </SideBar>
+                {this.state.messageBox && (
+                    <Modal
+                        {...this.state.messageBox}
+                        onClose={() => this.setState({messageBox: null})}
+                    >
+                        <p>{this.state.messageBox.body}</p>
+                    </Modal>
+                )}
                 {this.state.showQuitModal && (
                     <QuitMenu
                         projectId={this.props.projectId}
@@ -959,17 +1031,18 @@ function ImageAnalysisPane({imageryAttribution}) {
 
 class SideBar extends React.Component {
     checkCanSave = () => {
-        const noneAnswered = this.props.surveyQuestions.every(sq => safeLength(sq.answered) === 0);
-        const hasSamples = safeLength(this.props.currentPlot.samples) > 0;
-        const allAnswered = this.props.surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
-        if (this.props.answerMode !== "question") {
+        const {answerMode, currentPlot, inReviewMode, surveyQuestions} = this.props;
+        const noneAnswered = surveyQuestions.every(sq => safeLength(sq.answered) === 0);
+        const hasSamples = safeLength(currentPlot.samples) > 0;
+        const allAnswered = surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
+        if (answerMode !== "question") {
             alert("You must be in question mode to save the collection.");
             return false;
-        } else if (this.props.currentPlot.flagged) {
+        } else if (currentPlot.flagged) {
             return true;
-        } else if (this.props.isProjectAdmin) {
+        } else if (inReviewMode) {
             if (!(noneAnswered || allAnswered)) {
-                alert("Admins can only save the plot if all questions are answered or the answers are cleared.");
+                alert("In review mode, plots can only be saved if all questions are answered or the answers are cleared.");
                 return false;
             } else {
                 return true;
@@ -1015,6 +1088,7 @@ class SideBar extends React.Component {
                 style={{overflowY: "scroll", overflowX: "hidden"}}
             >
                 <ProjectTitle
+                    inReviewMode={this.props.inReviewMode}
                     projectId={this.props.projectId}
                     projectName={this.props.projectName || ""}
                     userName={this.props.userName}
@@ -1069,21 +1143,17 @@ class PlotNavigation extends React.Component {
         <div className="row justify-content-center mb-2" id="plot-nav">
             <button
                 className="btn btn-outline-lightgreen btn-sm"
-                disabled={this.props.prevPlotButtonDisabled}
                 onClick={this.props.navToPrevPlot}
-                style={{opacity: this.props.prevPlotButtonDisabled ? "0.25" : "1.0"}}
                 type="button"
             >
-                <UnicodeIcon icon="leftCaret"/>
+                <ButtonSvgIcon icon="leftArrow" size="0.9rem"/>
             </button>
             <button
                 className="btn btn-outline-lightgreen btn-sm mx-1"
-                disabled={this.props.nextPlotButtonDisabled}
-                onClick={this.props.navToNextPlot}
-                style={{opacity: this.props.nextPlotButtonDisabled ? "0.25" : "1.0"}}
+                onClick={() => this.props.navToNextPlot()}
                 type="button"
             >
-                <UnicodeIcon icon="rightCaret"/>
+                <ButtonSvgIcon icon="rightArrow" size="0.9rem"/>
             </button>
             <input
                 autoComplete="off"
@@ -1098,33 +1168,154 @@ class PlotNavigation extends React.Component {
                 onClick={() => this.props.navToPlot(this.state.newPlotInput)}
                 type="button"
             >
-                Go to plot
+                {this.state.newPlotInput === this.props.currentPlot.visibleId
+                    && this.props.inReviewMode
+                    ? "Refresh"
+                    : "Go to plot"}
             </button>
         </div>
     );
 
-    render() {
-        const {setNavigationMode, navigationMode, loadingPlots, isProjectAdmin, showNavButtons} = this.props;
-        return (
-            <div className="text-center mt-2">
-                <div className="d-flex align-items-center my-2">
-                    <h3 className="w-100">Navigate Through:</h3>
-                    <select
-                        className="form-control form-control-sm mr-2"
-                        onChange={e => setNavigationMode(e.target.value)}
-                        style={{flex: "1 1 auto"}}
-                        value={navigationMode}
-                    >
-                        <option value="unanalyzed">Unanalyzed plots</option>
-                        <option value="analyzed">My analyzed plots</option>
-                        {isProjectAdmin && <option value="all">All analyzed plots</option>}
-                    </select>
+    reviewMode = (inReviewMode, setReviewMode) => (
+        <div className="row my-2">
+            <div className="col-5 text-right">
+                <label htmlFor="review-mode">Review Mode:</label>
+            </div>
+            <div className="col-6 px-0">
+                <Switch
+                    checked={inReviewMode}
+                    id="review-mode"
+                    onChange={() => setReviewMode(!inReviewMode)}
+                />
+            </div>
+        </div>
+    );
+
+    thresholdSlider = (label, threshold, setThreshold) => (
+        <div className="row my-2">
+            <div className="col-5 text-right">
+                <label htmlFor="threshold">{label}:</label>
+            </div>
+            <div className="col-6 px-0 d-flex align-items-center">
+                <input
+                    id="threshold"
+                    max="100"
+                    min="0"
+                    onChange={e => setThreshold(parseInt(e.target.value))}
+                    step="5"
+                    style={{width: "80%"}}
+                    type="range"
+                    value={threshold}
+                />
+                <div className="ml-2" style={{fontSize: "0.8rem", width: "20%"}}>
+                    {`${threshold}%`}
                 </div>
-                {loadingPlots
-                    ? <h3>Loading plot data...</h3>
-                    : showNavButtons
-                        ? this.navButtons()
-                        : this.gotoButton()}
+            </div>
+        </div>
+    );
+
+    selectUser = (users, currentUserId, onChange) => (
+        <div className="row my-2 text-right">
+            <Select
+                disabled={users.length <= 1}
+                label="User:"
+                labelKey="email"
+                onChange={e => onChange(parseInt(e.target.value))}
+                options={users.length > 0 ? users : ["No users to select"]}
+                value={currentUserId}
+                valueKey="userId"
+            />
+        </div>
+    );
+
+    render() {
+        const {
+            currentUserId,
+            currentPlot,
+            collectConfidence,
+            inReviewMode,
+            hasAssignedPlots,
+            isProjectAdmin,
+            isQAQCEnabled,
+            loadingPlots,
+            navigationMode,
+            plotters,
+            plotUsers,
+            projectId,
+            setReviewMode,
+            setCurrentUserId,
+            setNavigationMode,
+            setThreshold,
+            threshold
+        } = this.props;
+        return (
+            <div className="mt-2">
+                <div
+                    className="p-1"
+                    style={{
+                        border: "1px solid lightgray",
+                        borderRadius: "6px",
+                        boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.15)"
+                    }}
+                >
+                    <div className="row my-2">
+                        <div className="col-5 text-right">
+                            <label htmlFor="navigate">Navigate:</label>
+                        </div>
+                        <select
+                            className="form-control form-control-sm mr-2 col-6"
+                            id="navigate"
+                            onChange={e => setNavigationMode(e.target.value)}
+                            style={{flex: "1 1 auto"}}
+                            value={navigationMode}
+                        >
+                            {!inReviewMode && (<option value="natural">{hasAssignedPlots ? "Assigned" : "Default"}</option>)}
+                            <option value="unanalyzed">Unanalyzed plots</option>
+                            <option value="analyzed">Analyzed plots</option>
+                            <option value="flagged">Flagged plots</option>
+                            {collectConfidence && (<option value="confidence">Low Confidence</option>)}
+                            {inReviewMode && (<option value="user">By User</option>)}
+                            {inReviewMode && isQAQCEnabled && (<option value="qaqc">Disagreement</option>)}
+                        </select>
+                    </div>
+                    {isProjectAdmin && this.reviewMode(inReviewMode, setReviewMode)}
+                    {navigationMode === "confidence" && this.thresholdSlider("Confidence", threshold, setThreshold)}
+                    {navigationMode === "qaqc" && this.thresholdSlider("Disagreement", threshold, setThreshold)}
+                    {navigationMode === "qaqc" && currentPlot.id && (
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                padding: ".5rem",
+                                width: "100%"
+                            }}
+                        >
+                            <button
+                                className="btn btn-secondary btn-sm"
+                                onClick={() =>
+                                    window.open(
+                                        `/user-disagreement?projectId=${projectId}&plotId=${currentPlot.id}&threshold=${threshold}`,
+                                        `disagreement_${projectId}`
+                                    )}
+                                type="button"
+                            >
+                                View Disagreements
+                            </button>
+                        </div>
+                    )}
+                    {inReviewMode && this.selectUser(
+                        navigationMode === "user" ? plotters : plotUsers,
+                        currentUserId,
+                        setCurrentUserId
+                    )}
+                </div>
+                <div className="mt-2">
+                    {loadingPlots
+                        ? <h3>Loading plot data...</h3>
+                        : currentPlot?.id
+                            ? this.navButtons()
+                            : this.gotoButton()}
+                </div>
             </div>
         );
     }
@@ -1349,7 +1540,7 @@ class ProjectTitle extends React.Component {
     }
 
     render() {
-        const {props} = this;
+        const {projectName, inReviewMode, projectId, userName} = this.props;
         return (
             <div
                 onClick={() => this.setState({showStats: !this.state.showStats})}
@@ -1358,16 +1549,125 @@ class ProjectTitle extends React.Component {
                 <h2
                     className="header overflow-hidden text-truncate"
                     style={{height: "100%", marginBottom: "0"}}
-                    title={props.projectName}
+                    title={projectName}
                 >
-                    <UnicodeIcon icon="downCaret"/>{" " + props.projectName}
+                    <UnicodeIcon icon="downCaret"/>{" " + projectName}
                 </h2>
-                {this.state.showStats && (
-                    <ProjectStats
-                        projectId={this.props.projectId}
-                        userName={this.props.userName}
-                    />
+                {this.state.showStats && (inReviewMode
+                    ? (
+                        <ProjectStats
+                            projectId={projectId}
+                            userName={userName}
+                        />
+                    ) : (
+                        <UserProjectStats
+                            projectId={projectId}
+                            userName={userName}
+                        />
+                    )
+
                 )}
+            </div>
+        );
+    }
+}
+
+class UserProjectStats extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            stats: {}
+        };
+    }
+
+    componentDidMount() {
+        this.getProjectStats();
+    }
+
+    getProjectStats() {
+        fetch(`/get-project-user-stats?projectId=${this.props.projectId}`)
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => this.setState({stats: data}))
+            .catch(response => {
+                console.error(response);
+                alert("Error getting project stats. See console for details.");
+            });
+    }
+
+    renderPercent = (val, total) => (
+        <span>
+            {`${val} (${asPercentage(val, total)}%)`}
+        </span>
+    );
+
+    render() {
+        const {stats} = this.state;
+        const aveTime = stats.userStats?.timedPlots > 0
+            ? (stats.userStats?.seconds
+                / stats.userStats?.timedPlots
+                / 1.0)
+            : 0;
+        const numPlots = stats.userAssigned > 0 ? stats.userAssigned : stats.totalPlots;
+
+        return (
+            <div
+                className="row"
+                style={{
+                    backgroundColor: "#f1f1f1",
+                    boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)",
+                    cursor: "default",
+                    marginLeft: "2rem",
+                    overflow: "auto",
+                    position: "absolute",
+                    zIndex: "10"
+                }}
+            >
+                <div className="col-lg-12">
+                    <fieldset className="projNoStats" id="projStats">
+                        <table className="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td className="small pl-4">My Plots Completed</td>
+                                </tr>
+                                <tr>
+                                    <td className="small pl-4">-- {stats.userAssigned > 0
+                                        ? "Assigned to Me" : "Total Project Plots"}
+                                    </td>
+                                    <td className="small">
+                                        {numPlots}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td className="small pl-4">-- Analyzed</td>
+                                    <td className="small">
+                                        {this.renderPercent(stats.analyzedPlots, numPlots)}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td className="small pl-4">-- Unanalyzed</td>
+                                    <td className="small">
+                                        {this.renderPercent(numPlots - stats.analyzedPlots, numPlots)}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td className="small pl-4">-- Flagged</td>
+                                    <td className="small">
+                                        {this.renderPercent(stats.flaggedPlots, numPlots)}
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td className="small pl-4">-- My Average Time</td>
+                                    <td className="small">
+                                        {aveTime > 0
+                                            ? `${aveTime.toFixed(2)} secs`
+                                            : "untimed"}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </fieldset>
+                </div>
             </div>
         );
     }
@@ -1390,15 +1690,26 @@ class ProjectStats extends React.Component {
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => this.setState({stats: data}))
             .catch(response => {
-                console.log(response);
+                console.error(response);
                 alert("Error getting project stats. See console for details.");
             });
     }
 
+    renderPercent = (val, total) => (
+        <span>
+            {`${val} (${asPercentage(val, total)}%)`}
+        </span>
+    );
+
     render() {
         const {stats} = this.state;
-        const userStats = stats.userStats && stats.userStats.find(user => user.user === this.props.userName);
-        const numPlots = stats.flaggedPlots + stats.analyzedPlots + stats.unanalyzedPlots;
+        const numTimedPlots = stats.userStats ? stats.userStats.reduce((p, c) => p + c.timedPlots, 0) : 0;
+        const aveTime = numTimedPlots > 0
+            ? (stats.userStats.reduce((p, c) => p + c.seconds, 0)
+                / stats.userStats.reduce((p, c) => p + c.timedPlots, 0)
+                / 1.0)
+            : 0;
+
         return (
             <div
                 className="row"
@@ -1417,62 +1728,70 @@ class ProjectStats extends React.Component {
                         <table className="table table-sm">
                             <tbody>
                                 <tr>
-                                    <td className="small pl-4">My Plots Completed</td>
-                                    <td className="small">
-                                        {(userStats && userStats.plots) || "0"}
-                                        ({asPercentage((userStats && userStats.plots) || 0, numPlots)}%)
-                                    </td>
+                                    <td className="small pl-4">Project Plots</td>
                                 </tr>
                                 <tr>
-                                    <td className="small pl-4">-- My Average Time</td>
+                                    <td className="small pl-4">-- Total</td>
                                     <td className="small">
-                                        {userStats && userStats.timedPlots
-                                            ? `${(userStats.seconds / userStats.timedPlots / 1.0).toFixed(2)} secs`
-                                            : "untimed"}
+                                        {stats.totalPlots}
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td className="small pl-4">Project Plots Completed</td>
-                                    <td className="small">
-                                        {stats.analyzedPlots + stats.flaggedPlots || ""}
-                                        ({asPercentage(stats.analyzedPlots + stats.flaggedPlots, numPlots)}%)
-                                    </td>
-                                </tr>
+                                {stats.plotAssignments > 0 && (
+                                    <tr>
+                                        <td className="small pl-4">-- Plot Assignments</td>
+                                        <td className="small">
+                                            {stats.plotAssignments}
+                                        </td>
+                                    </tr>
+                                )}
                                 <tr>
                                     <td className="small pl-4">-- Analyzed</td>
                                     <td className="small">
-                                        {stats.analyzedPlots || ""}
-                                        ({asPercentage(stats.analyzedPlots, numPlots)}%)
+                                        {this.renderPercent(stats.analyzedPlots, stats.totalPlots)}
+                                    </td>
+                                </tr>
+                                {stats.plotAssignments > 0 && (
+                                    <tr>
+                                        <td className="small pl-4">-- Partial</td>
+                                        <td className="small">
+                                            {this.renderPercent(stats.partialPlots, stats.totalPlots)}
+                                        </td>
+                                    </tr>
+                                )}
+                                <tr>
+                                    <td className="small pl-4">-- Unanalyzed</td>
+                                    <td className="small">
+                                        {this.renderPercent(stats.unanalyzedPlots, stats.totalPlots)}
                                     </td>
                                 </tr>
                                 <tr>
                                     <td className="small pl-4">-- Flagged</td>
                                     <td className="small">
-                                        {stats.flaggedPlots || ""}
-                                        ({asPercentage(stats.flaggedPlots, numPlots)}%)
+                                        {this.renderPercent(stats.flaggedPlots, stats.totalPlots)}
                                     </td>
                                 </tr>
+                                {stats.usersAssigned > 0
+                                    ? (
+                                        <tr>
+                                            <td className="small pl-4">-- Users Assigned</td>
+                                            <td className="small">
+                                                {stats.usersAssigned}
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        <tr>
+                                            <td className="small pl-4">-- Total Contributors</td>
+                                            <td className="small">
+                                                {stats.userStats?.length}
+                                            </td>
+                                        </tr>
+                                    )}
                                 <tr>
-                                    <td className="small pl-4">-- Total contributors</td>
+                                    <td className="small pl-4">-- Users Average Time</td>
                                     <td className="small">
-                                        {stats.userStats ? stats.userStats.length : 0}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- Users Average time</td>
-                                    <td className="small">
-                                        {stats.userStats
-                                            && stats.userStats.reduce((p, c) => p + c.timedPlots, 0) > 0
-                                            ? `${(stats.userStats.reduce((p, c) => p + c.seconds, 0)
-                                                    / stats.userStats.reduce((p, c) => p + c.timedPlots, 0)
-                                                    / 1.0).toFixed(2)} secs`
+                                        {aveTime > 0
+                                            ? `${aveTime.toFixed(2)} secs`
                                             : "untimed"}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">Project Plots Total</td>
-                                    <td className="small">
-                                        {numPlots || ""}
                                     </td>
                                 </tr>
                             </tbody>
@@ -1511,7 +1830,7 @@ function QuitMenu({projectId, toggleQuitModal}) {
                         </button>
                     </div>
                     <div className="modal-body">
-                        <p>Are you sure you want to stop collecting data? Any answered questions will be lost.</p>
+                        <p>Are you sure you want to stop collecting data? Any unsaved responses will be lost.</p>
                     </div>
                     <div className="modal-footer">
                         <button

@@ -29,8 +29,8 @@ export class CollapsibleSectionBlock extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showContent: false,
-            height: "0px",
+            showContent: props.showContent || false,
+            height: props.showContent ? "auto" : "0px",
             myRef: null
         };
     }
@@ -59,15 +59,21 @@ export class CollapsibleSectionBlock extends React.Component {
         return (
             <div>
                 <h2
-                    className="header px-0"
+                    className="header"
                     onClick={() => this.toggleOpenClose()}
-                    style={{fontSize: "1.25rem", padding: ".75rem", cursor: "pointer"}}
+                    style={{
+                        textAlign: "left",
+                        fontSize: "1.25rem",
+                        padding: ".75rem",
+                        cursor: "pointer",
+                        margin: "0 0 .5rem 0"
+                    }}
                 >
                     {title}
                     <span
                         style={{
-                            transition: "transform 250ms linear 0s",
-                            transform: this.state.showContent ? "rotateZ(180deg)" : "rotateZ(0deg)",
+                            transition: "transform 150ms linear 0s",
+                            transform: this.state.showContent && "scaleY(-1)",
                             float: "right",
                             marginRight: "2rem"
                         }}

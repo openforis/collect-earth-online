@@ -3,6 +3,8 @@ import React from "react";
 import {formatNumberWithCommas, encodeFileAsBase64, truncate} from "../utils/generalUtils";
 import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator";
+import AssignPlots from "./AssignPlots";
+import QualityControl from "./QualityControl";
 
 export class PlotDesign extends React.Component {
     constructor(props) {
@@ -243,6 +245,7 @@ export class PlotDesign extends React.Component {
 
     render() {
         const {plotDistribution, plotShape} = this.context;
+        const {institutionUserList} = this.props;
         const totalPlots = this.props.getTotalPlots();
         const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
 
@@ -280,7 +283,7 @@ export class PlotDesign extends React.Component {
         return (
             <div id="plot-design">
                 <div className="row">
-                    <div className="col mb-3" id="plot-design-col1">
+                    <div className="col" id="plot-design-col1">
                         <h2 className="mb-3">Plot Generation</h2>
                         <div className="d-flex">
                             <div className="d-flex flex-column">
@@ -314,7 +317,6 @@ export class PlotDesign extends React.Component {
                 <p
                     className="font-italic ml-2 small"
                     style={{
-                        marginTop: "10px",
                         color: totalPlots > plotLimit ? "#8B0000" : "#006400",
                         fontSize: "1rem",
                         whiteSpace: "pre-line"
@@ -324,6 +326,10 @@ export class PlotDesign extends React.Component {
                     {totalPlots > 0 && totalPlots > plotLimit
                         && `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
                 </p>
+                <div className="row mr-1">
+                    <AssignPlots institutionUserList={institutionUserList} totalPlots={totalPlots}/>
+                    <QualityControl institutionUserList={institutionUserList} totalPlots={totalPlots}/>
+                </div>
             </div>
         );
     }

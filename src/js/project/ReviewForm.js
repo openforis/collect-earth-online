@@ -8,6 +8,8 @@ import {SampleReview} from "./SampleDesign";
 import SurveyCardList from "./SurveyCardList";
 import {SurveyRulesList} from "./SurveyRules";
 import SvgIcon from "../components/SvgIcon";
+import UserAssignmentReview from "./UserAssignmentReview";
+import QAQCReview from "./QAQCReview";
 
 import {ProjectContext} from "./constants";
 
@@ -73,6 +75,25 @@ export default function ReviewForm() {
                         <SampleReview/>
                     </div>
                 </div>
+                {context.designSettings?.userAssignment?.userMethod !== "none"
+                    && (
+                        <div className="row" style={{borderTop: "1px solid lightgray"}}>
+                            <div className="col-6 pt-3" style={{borderRight: "1px solid lightgray"}}>
+                                <h2>User Assignment</h2>
+                                <UserAssignmentReview
+                                    designSettings={context.designSettings}
+                                    institutionUserList={context.institutionUserList}
+                                />
+                            </div>
+                            <div className="col-6 pt-3">
+                                <h2>Quality Control</h2>
+                                <QAQCReview
+                                    designSettings={context.designSettings}
+                                    institutionUserList={context.institutionUserList}
+                                />
+                            </div>
+                        </div>
+                    )}
             </div>
             {renderSectionHeader("Survey Questions", "questions")}
             <div id="survey-review">

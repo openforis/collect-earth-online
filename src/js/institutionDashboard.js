@@ -1,100 +1,91 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import {NavigationBar} from "./components/PageComponents";
+import {LoadingModal, NavigationBar} from "./components/PageComponents";
 
 class InstitutionDashboard extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            details: []
+            projectList: [],
+            modalMessage: null
         };
     }
 
+    /// Lifecycle
+
     componentDidMount() {
-        this.getProjectList();
+        this.processModal(
+            "Loading project list",
+            this.getProjectList()
+                .catch(response => {
+                    console.error(response);
+                    alert("Error retrieving the project list. See console for details.");
+                })
+        );
     }
 
-    getProjectList = () => {
-        fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                this.setDetails(data);
-            })
-            .catch(response => {
-                console.log(response);
-                alert("Error retrieving the project info. See console for details.");
-            });
-    };
+    /// API Calls
 
-    setDetails = projects => {
-        const {details} = this.state;
-        projects.forEach(proj => {
-            fetch(`/get-project-stats?projectId=${proj.id}`)
-                .then(response => (response.ok ? response.json() : Promise.reject(response)))
-                .then(data => {
-                    details.push({
-                        id: proj.id,
-                        name: proj.name,
-                        numPlots: proj.numPlots,
-                        unanalyzedPlots: data.unanalyzedPlots,
-                        analyzedPlots: data.analyzedPlots,
-                        flaggedPlots: data.flaggedPlots,
-                        contributors: data.contributors,
-                        members: data.members
-                    });
-                    this.setState({details});
-                })
-                .catch(response => {
-                    console.log(response);
-                    alert("Error retrieving the project stats. See console for details.");
-                });
-        });
-    };
+    getProjectList = () =>
+        fetch(`/get-institution-dash-projects?institutionId=${this.props.institutionId}`)
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => this.setState({projectList: data}));
+
+    /// Helpers
+
+    processModal = (message, promise) => this.setState(
+        {modalMessage: message},
+        () => promise.finally(() => this.setState({modalMessage: null}))
+    );
 
     render() {
+        const {projectList} = this.state;
         return (
-            <div className="row justify-content-center">
+            <div className="row justify-content-center" id="institution-dashboard">
+                {this.state.modalMessage && <LoadingModal message={this.state.modalMessage}/>}
                 <div
                     className="bg-darkgreen mb-3 no-container-margin"
                     style={{width: "100%", margin: "0 10px 0 10px"}}
                 >
                     <h1>Institution Dashboard</h1>
                 </div>
-                <table id="srd" style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}>
-                    <thead>
-                        <tr>
-                            <th>Project Id</th>
-                            <th>Project Name</th>
-                            <th>Members</th>
-                            <th>Contributors</th>
-                            <th>Total Plots</th>
-                            <th>Flagged Plots</th>
-                            <th>Analyzed Plots</th>
-                            <th>Unanalyzed Plots</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <ProjectList details={this.state.details}/>
-                    </tbody>
-                </table>
+                {projectList.length > 0 && (
+                    <table id="srd" style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}>
+                        <thead>
+                            <tr >
+                                <th style={{paddingRight: "1rem", whiteSpace: "nowrap"}}>Project Id</th>
+                                <th style={{paddingRight: "1rem", whiteSpace: "nowrap"}}>Project Name</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Users Assigned</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Contributors</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Total Plots</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Plot Assignments</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Flagged Plots</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Analyzed Plots</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Partial Plots</th>
+                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Unanalyzed Plots</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {projectList && projectList.map(({id, name, stats}) => (
+                                <tr key={id}>
+                                    <td>{id}</td>
+                                    <td style={{minWidth: "15rem"}}>{name}</td>
+                                    <td style={{textAlign: "center"}}>{stats.usersAssigned}</td>
+                                    <td style={{textAlign: "center"}}>{stats.contributors}</td>
+                                    <td style={{textAlign: "center"}}>{stats.totalPlots}</td>
+                                    <td style={{textAlign: "center"}}>{stats.plotAssignments}</td>
+                                    <td style={{textAlign: "center"}}>{stats.flaggedPlots}</td>
+                                    <td style={{textAlign: "center"}}>{stats.analyzedPlots}</td>
+                                    <td style={{textAlign: "center"}}>{stats.partialPlots}</td>
+                                    <td style={{textAlign: "center"}}>{stats.unanalyzedPlots}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
         );
     }
-}
-
-function ProjectList(props) {
-    return props.details.map(project => (
-        <tr key={project.id}>
-            <td>{project.id}</td>
-            <td>{project.name}</td>
-            <td>{project.members}</td>
-            <td>{project.contributors}</td>
-            <td>{project.numPlots}</td>
-            <td>{project.flaggedPlots}</td>
-            <td>{project.analyzedPlots}</td>
-            <td>{project.unanalyzedPlots}</td>
-        </tr>
-    ));
 }
 
 export function pageInit(args) {

@@ -17,6 +17,17 @@ class Project extends React.Component {
             name: "",
             description: "",
             designSettings: {
+                userAssignment: {
+                    userMethod: "none",
+                    users: [],
+                    percents: []
+                },
+                qaqcAssignment: {
+                    qaqcMethod: "none",
+                    percent: 0,
+                    smes: [],
+                    timesToReview: 2
+                },
                 sampleGeometries: {
                     points: true,
                     lines: true,
@@ -60,6 +71,7 @@ class Project extends React.Component {
             projectDetails: {...this.blankProject, privacyLevel: "institution"},
             originalProject: {},
             institutionImagery: [],
+            institutionUserList: [],
             designMode: "loading",
             modalMessage: null,
             wizardStep: "overview"
@@ -145,6 +157,7 @@ class Project extends React.Component {
                     originalProject: this.state.originalProject,
                     designMode: this.state.designMode,
                     institutionImagery: this.state.institutionImagery,
+                    institutionUserList: this.state.institutionUserList,
                     setProjectDetails: this.setProjectDetails,
                     setContextState: this.setContextState,
                     resetProject: this.resetProject,

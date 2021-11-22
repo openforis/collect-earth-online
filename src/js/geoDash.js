@@ -17,6 +17,7 @@ import {getArea as sphereGetArea} from "ol/sphere";
 import {mercator} from "./utils/mercator";
 import {UnicodeIcon, formatDateISO} from "./utils/generalUtils";
 import {GeoDashNavigationBar} from "./components/PageComponents";
+import Switch from "./components/Switch";
 
 function getGatewayPath(widget, collectionName) {
     const fts = {
@@ -1209,10 +1210,7 @@ class MapWidget extends React.Component {
         <div className="col-6" style={{display: this.props.isDegradation ? "block" : "none"}}>
             <span className="ctrl-text font-weight-bold">Data: </span>
             <span className="ctrl-text">LANDSAT </span>
-            <label className="switch">
-                <input onChange={evt => this.toggleDegDataType(evt.target.checked)} type="checkbox"/>
-                <span className="switchslider round"/>
-            </label>
+            <Switch onChange={evt => this.toggleDegDataType(evt.target.checked)}/>
             <span className="ctrl-text"> SAR</span>
         </div>
     );
