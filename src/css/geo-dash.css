@@ -119,7 +119,7 @@
     margin-bottom: 30px;
     text-align: center;
     display: grid;
-    grid-auto-columns: 8.33%;
+    grid-template-columns: repeat(12, 1fr);
     grid-auto-rows: 22rem;
     gap: 1rem;
 }
@@ -339,8 +339,5 @@
     }
     .row.placeholders {
         display: block;
-    }
-    .columnSpan3 {
-        max-width: 98% !important;
     }
 }

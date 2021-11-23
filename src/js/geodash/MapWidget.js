@@ -166,7 +166,6 @@ export default class MapWidget extends React.Component {
 
     initMap = () => {
         const {widget} = this.props;
-        const {plotExtent} = this.props;
         const {sourceConfig, id, attribution, isProxied} = this.props.imageryList.find(imagery =>
             imagery.id === widget.basemapId)
             || this.props.imageryList.find(imagery => imagery.title === "Open Street Map")
@@ -201,16 +200,17 @@ export default class MapWidget extends React.Component {
         map.on("movestart", this.pauseGeeLayer);
         map.on("moveend", e => {
             this.props.setCenterAndZoom(e.map.getView().getCenter(), e.map.getView().getZoom());
-            this.resumeGeeLayer(e);
+            this.resumeGeeLayer();
         });
 
+        plotSampleLayer.getSource().getExtent();
+
         map.getView().fit(
-            projTransform(
-                [plotExtent[0], plotExtent[1]], "EPSG:4326", "EPSG:3857"
-            ).concat(projTransform(
-                [plotExtent[2], plotExtent[3]], "EPSG:4326", "EPSG:3857"
-            )),
-            map.getSize()
+            plotSampleLayer.getSource().getExtent(),
+            {
+                size: map.getSize(),
+                padding: [16, 16, 16, 16]
+            }
         );
 
         if (!this.props.mapCenter) {
@@ -247,7 +247,7 @@ export default class MapWidget extends React.Component {
         if (mapRef) {
             const layers = mapRef.getLayers().getArray();
             const updateTimeOutRefs = layers.map(layer => {
-                const to = 10 * (layer.get("idx") || 0);
+                const to = 50 * (layer.get("idx") || 0) + 250;
                 return window.setTimeout(() => { layer.setVisible(true); }, to);
             });
             this.setState({updateTimeOutRefs});

@@ -44,7 +44,6 @@ export default class DegradationWidget extends React.Component {
                     isFullScreen={this.props.isFullScreen}
                     mapCenter={this.props.mapCenter}
                     mapZoom={this.props.mapZoom}
-                    plotExtent={this.props.plotExtent}
                     plotExtentPolygon={this.props.plotExtentPolygon}
                     resetCenterAndZoom={this.props.resetCenterAndZoom}
                     sarGraphBand={this.state.sarGraphBand}

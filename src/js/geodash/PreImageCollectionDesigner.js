@@ -14,6 +14,7 @@ export default function PreImageCollectionDesigner() {
             <BaseMapSelector/>
             <GDSelect
                 dataKey="indexName"
+                defaultSelection="NDVI"
                 items={[
                     "NDVI",
                     "EVI",
@@ -29,7 +30,6 @@ export default function PreImageCollectionDesigner() {
             <GDDateRange/>
             {["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(widgetDesign.indexName) && (
                 <>
-                    {/* FIXME set to defaults */}
                     <GDInput dataKey="bands" placeholder="XX,XX,XX" title="Bands"/>
                     <GDInput dataKey="min" placeholder="-1,0.5,0.7" title="Min"/>
                     <GDInput dataKey="max" placeholder="10,11,15" title="Max"/>

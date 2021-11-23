@@ -28,8 +28,8 @@ export default function ImageCollectionAssetDesigner() {
             />
             <GDSelect
                 dataKey="reducer"
-                defaultSelection="median"
-                items={["Median", "Mosaic"]}
+                defaultSelection="Median"
+                items={["Min", "Max", "Mean", "Median", "Mode", "Mosaic"]}
                 lowerCase
                 title="Collection Reducer"
             />

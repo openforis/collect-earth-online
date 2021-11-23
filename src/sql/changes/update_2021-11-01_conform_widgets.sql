@@ -85,7 +85,7 @@ SET widget = jsonb_build_object(
     'indexName', widget->'properties'->4,
     'assetName', widget->'properties'->1,
     'band', widget->'graphBand',
-    'reducer', LOWER(widget->>'graphReducer'),
+    'reducer', widget->>'graphReducer',
     'startDate', TRIM(widget->'properties'->>2),
     'endDate', TRIM(widget->'properties'->>3)
 )
@@ -141,7 +141,7 @@ SET widget = jsonb_build_object(
     'layout', widget->'layout',
     'basemapId', widget->'basemapId',
     'assetName', widget->'properties'->>1,
-    'reducer', 'cloud',
+    'reducer', 'Cloud',
     'visParams', CASE WHEN widget->'min' IS NULL
         THEN jsonb_build_object(
             'bands', widget->'properties'->>4
@@ -166,7 +166,7 @@ SET widget = jsonb_build_object(
     'layout', widget->'layout',
     'basemapId', widget->'basemapId',
     'assetName', widget->'properties'->>1,
-    'reducer', 'mean',
+    'reducer', 'Mean',
     'visParams', widget->'visParams',
     'startDate', TRIM(widget->'properties'->>2),
     'endDate', TRIM(widget->'properties'->>3)
@@ -181,7 +181,7 @@ SET widget = jsonb_build_object(
     'name', widget->>'name',
     'layout', widget->'layout',
     'assetName', widget->'ImageCollectionAsset',
-    'reducer', 'mosaic',
+    'reducer', 'Mosaic',
     'visParams', widget->'visParams',
     'startDate', '',
     'endDate', ''

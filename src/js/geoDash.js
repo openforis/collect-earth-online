@@ -40,7 +40,6 @@ class WidgetContainer extends React.Component {
                     isFullScreen={this.state.isFullScreen}
                     mapCenter={this.props.mapCenter}
                     mapZoom={this.props.mapZoom}
-                    plotExtent={this.props.plotExtent}
                     plotExtentPolygon={this.props.plotExtentPolygon}
                     resetCenterAndZoom={this.props.resetCenterAndZoom}
                     setCenterAndZoom={this.props.setCenterAndZoom}
@@ -76,7 +75,6 @@ class WidgetContainer extends React.Component {
                     isFullScreen={this.state.isFullScreen}
                     mapCenter={this.props.mapCenter}
                     mapZoom={this.props.mapZoom}
-                    plotExtent={this.props.plotExtent}
                     plotExtentPolygon={this.props.plotExtentPolygon}
                     resetCenterAndZoom={this.props.resetCenterAndZoom}
                     setCenterAndZoom={this.props.setCenterAndZoom}
@@ -288,7 +286,6 @@ class Geodash extends React.Component {
                             initCenter={this.mapCenter}
                             mapCenter={this.state.mapCenter}
                             mapZoom={this.state.mapZoom}
-                            plotExtent={JSON.parse(this.props.plotExtent)}
                             plotExtentPolygon={this.extentToPolygon(this.props.plotExtent)}
                             resetCenterAndZoom={this.resetCenterAndZoom}
                             setCenterAndZoom={this.setCenterAndZoom}
@@ -298,7 +295,7 @@ class Geodash extends React.Component {
                         />
                     ))
                     ) : (
-                        <div className="placeholder columnSpan3 rowSpan2" style={{gridArea: "1 / 1 / span 2 / span 12"}}>
+                        <div className="placeholder" style={{gridArea: "1 / 1 / span 2 / span 12"}}>
                             <h1 id="noWidgetMessage">
                                 Retrieving Geo-Dash configuration for this project
                             </h1>

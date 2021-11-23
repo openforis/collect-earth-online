@@ -209,11 +209,8 @@ class WidgetLayoutEditor extends React.PureComponent {
         });
     };
 
-    // TODO, add middleware conditions
-    // type change
-    // -  reset bands?
     setWidgetDesign = (dataKey, val) => {
-        this.setState({widgetDesign: {...this.state.widgetDesign, [dataKey]: val}});
+        this.setState(prevState => ({widgetDesign: {...prevState.widgetDesign, [dataKey]: val}}));
     };
 
     updateTitle = newTitle => {
