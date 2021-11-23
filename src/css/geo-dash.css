@@ -90,6 +90,16 @@
 }
 
 /*
+ * Dual Image slider
+ */
+.toggleSwitchContainer {
+    align-content: center;
+    padding: 5px;
+    width: 80px;
+    float: left;
+}
+
+/*
  * Main content
  */
 #geodash .row {
