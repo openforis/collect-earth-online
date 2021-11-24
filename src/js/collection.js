@@ -659,7 +659,7 @@ class Collection extends React.Component {
                             collectionStart: this.state.collectionStart,
                             userSamples: this.state.userSamples,
                             userImages: this.state.userImages,
-                            plotSamples: this.state.currentProject.allowDrawnSamples
+                            newPlotSamples: this.state.currentProject.allowDrawnSamples
                                 && this.state.currentPlot.samples,
                             inReviewMode: this.state.inReviewMode,
                             currentUserId: this.state.currentUserId

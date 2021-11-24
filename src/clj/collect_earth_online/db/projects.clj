@@ -305,9 +305,8 @@
                                 sample-file-name
                                 sample-file-base64
                                 allow-drawn-samples?
-                                design-settings]
-  (let [plots      (call-sql "get_plot_centers_by_project" project-id)
-        plot-count (count plots)
+                                plots]
+  (let [plot-count (count plots)
         samples    (if (#{"csv" "shp"} sample-distribution)
                      (generate-file-samples plots
                                             plot-count
@@ -331,9 +330,7 @@
                             (count bad-plots)
                             " plots have no samples. The first 10 PLOTIDs are: ["
                             (str/join ", " (take 10 bad-plots))
-                            "]"))))
-    (when-let [assigned-plots (assign-user-plots plots design-settings)]
-      (p-insert-rows! "plot_assignments" (assign-qaqc assigned-plots design-settings)))))
+                            "]"))))))
 
 (defn- create-project-plots! [project-id
                               lon-min
@@ -377,21 +374,24 @@
                                    project-id
                                    (if (= plot-distribution "shp") 0 plot-size))
                         "SQL Error: cannot create a project AOI."))
+
   (when-not (sql-primitive (call-sql "valid_project_boundary" project-id))
     (pu/init-throw (str "The project boundary is invalid. "
                         "This can come from improper coordinates or projection when uploading shape or csv data.")))
 
-  ;; Create samples from plots
-  (create-project-samples! project-id
-                           plot-shape
-                           plot-size
-                           sample-distribution
-                           samples-per-plot
-                           sample-resolution
-                           sample-file-name
-                           sample-file-base64
-                           allow-drawn-samples?
-                           design-settings)
+  (let [saved-plots (call-sql "get_plot_centers_by_project" project-id)]
+    (when-let [assigned-plots (assign-user-plots saved-plots design-settings)]
+      (p-insert-rows! "plot_assignments" (assign-qaqc assigned-plots design-settings)))
+    (create-project-samples! project-id
+                             plot-shape
+                             plot-size
+                             sample-distribution
+                             samples-per-plot
+                             sample-resolution
+                             sample-file-name
+                             sample-file-base64
+                             allow-drawn-samples?
+                             saved-plots))
 
   ;; Final clean up
   (call-sql "update_project_counts" project-id))
@@ -530,8 +530,7 @@
       (let [plot-shape        (:plot_shape project)
             plot-size         (tc/val->float (:plot_size project))
             samples-per-plot  (tc/val->int (:samples_per_plot project))
-            sample-resolution (tc/val->float (:sample_resolution project))
-            design-settings   (tc/jsonb->clj (:design_settings project))]
+            sample-resolution (tc/val->float (:sample_resolution project))]
         (call-sql "delete_all_samples_by_project" project-id)
         (create-project-samples! project-id
                                  plot-shape
@@ -542,7 +541,7 @@
                                  nil
                                  nil
                                  allow-drawn-samples?
-                                 design-settings)))))
+                                 (call-sql "get_plot_centers_by_project" project-id))))))
 
 (defn- exterior-ring [coords]
   (map (fn [[a b]] [(tc/val->double a) (tc/val->double b)])
@@ -657,7 +656,7 @@
                                      sample-file-name
                                      sample-file-base64
                                      allow-drawn-samples?
-                                     design-settings))
+                                     (call-sql "get_plot_centers_by_project" project-id)))
 
           ;; NOTE: Old stored questions can have a different format than when passed from the UI.
           ;;       This is why we check whether the survey questions are different on the front (for now).
