@@ -801,7 +801,7 @@ $$ LANGUAGE SQL;
 -- Returns project aggregate data
 CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
  RETURNS table (
-    plot_id                    integer,
+    plotid                    integer,
     center_lon                 double precision,
     center_lat                 double precision,
     size_m                     text,
@@ -818,7 +818,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     extra_plot_info            jsonb
  ) AS $$
 
-    SELECT plot_uid,
+    SELECT pl.visible_id,
         ST_X(ST_Centroid(plot_geom)) AS lon,
         ST_Y(ST_Centroid(plot_geom)) AS lat,
         plot_shape,
@@ -885,7 +885,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_qaqc_data(_project_id integer)
         GROUP BY pa.plot_rid
     )
 
-    SELECT plot_uid,
+    SELECT pl.visible_id,
         ST_X(ST_Centroid(plot_geom)) AS lon,
         ST_Y(ST_Centroid(plot_geom)) AS lat,
         plot_shape,
