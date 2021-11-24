@@ -11,7 +11,8 @@ CREATE TABLE users (
     password         varchar(72) NOT NULL,
     administrator    boolean DEFAULT FALSE,
     reset_key        text DEFAULT NULL,
-    verified         boolean DEFAULT FALSE
+    verified         boolean DEFAULT FALSE,
+    created_date     date DEFAULT NOW(),
 );
 
 -- Stores information about institutions
