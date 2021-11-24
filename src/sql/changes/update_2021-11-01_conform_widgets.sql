@@ -2,6 +2,9 @@
 -- This includes all widgets that were "dualLayer", ie the precursor to dualImageWidget
 SELECT delete_project(project_uid) FROM projects WHERE project_uid IN (4998, 1057, 1054, 1080);
 
+ALTER TABLE project_widgets ADD COLUMN widget_bk jsonb;
+UPDATE project_widgets SET widget_bk = widget;
+
 -- Update Stats widgets
 UPDATE project_widgets
 SET widget = jsonb_build_object(
@@ -180,6 +183,7 @@ SET widget = jsonb_build_object(
     'type', 'imageCollectionAsset',
     'name', widget->>'name',
     'layout', widget->'layout',
+    'basemapId', widget->'basemapId',
     'assetName', widget->'ImageCollectionAsset',
     'reducer', 'Mosaic',
     'visParams', widget->'visParams',
@@ -188,6 +192,10 @@ SET widget = jsonb_build_object(
 )
 WHERE widget->'ImageCollectionAsset' IS NOT NULL
     AND widget->>'ImageCollectionAsset' <> '';
+
+---------------------------------------------------
+--- Dual Imagery ----------------------------------
+---------------------------------------------------
 
 -- Update Dual Imagery widgets, step 1
 UPDATE project_widgets
@@ -201,6 +209,131 @@ SET widget = jsonb_build_object(
     'image2', widget->'dualImageCollection'->1
 )
 WHERE widget->>'dualImageCollection' IS NOT NULL;
+
+--- ImageAsset
+
+CREATE OR REPLACE FUNCTION build_image_asset(_widget jsonb)
+ RETURNS jsonb AS $$
+
+    SELECT jsonb_build_object(
+        'type', 'imageAsset',
+        'assetName', _widget->>'imageAsset',
+        'visParams', _widget->'visParams'
+    )
+
+$$ LANGUAGE SQL;
+
+UPDATE project_widgets
+SET widget = jsonb_set(widget, '{"image1"}', build_image_asset(widget->'image1'))
+WHERE widget->>'type' = 'dualImagery'
+    AND widget->'image1'->>'collectionType' = 'ImageCollectionimageAsset';
+
+UPDATE project_widgets
+SET widget = jsonb_set(widget, '{"image2"}', build_image_asset(widget->'image2'))
+WHERE widget->>'type' = 'dualImagery'
+    AND widget->'image2'->>'collectionType' = 'ImageCollectionimageAsset';
+
+--- Image collection assets
+
+CREATE OR REPLACE FUNCTION build_collection_asset(_widget jsonb)
+ RETURNS jsonb AS $$
+
+    SELECT jsonb_build_object(
+        'type', 'imageCollectionAsset',
+        'assetName', _widget->'ImageCollectionAsset',
+        'reducer', 'Mosaic',
+        'visParams', _widget->'visParams',
+        'startDate', _widget->>'startDate',
+        'endDate', _widget->>'startDate'
+    )
+
+$$ LANGUAGE SQL;
+
+UPDATE project_widgets
+SET widget = jsonb_set(widget, '{"image1"}', build_collection_asset(widget->'image1'))
+WHERE widget->>'type' = 'dualImagery'
+    AND widget->'image1'->>'collectionType' = 'ImageCollectionimageCollectionAsset';
+
+UPDATE project_widgets
+SET widget = jsonb_set(widget, '{"image2"}', build_collection_asset(widget->'image2'))
+WHERE widget->>'type' = 'dualImagery'
+    AND widget->'image2'->>'collectionType' = 'ImageCollectionimageCollectionAsset';
+
+-- Update Pre Image Collection -> emodis widgets
+
+CREATE OR REPLACE FUNCTION build_index_widgets(_widget jsonb)
+ RETURNS jsonb AS $$
+
+    SELECT jsonb_build_object(
+        'indexName', REPLACE(_widget->>'collectionType', 'ImageCollection', ''),
+        'startDate', _widget->>'startDate',
+        'endDate', _widget->>'endDate'
+    )
+
+$$ LANGUAGE SQL;
+
+UPDATE project_widgets
+SET widget = jsonb_set(widget, '{"image1"}', build_collection_asset(widget->'image1'))
+WHERE widget->>'type' = 'dualImagery'
+    AND widget->'image1'->>'collectionType' in (
+        'ImageCollectionNDVI',
+        'ImageCollectionEVI',
+        'ImageCollectionEVI2',
+        'ImageCollectionNDWI',
+        'ImageCollectionNDMI'
+    );
+
+UPDATE project_widgets
+SET widget = jsonb_set(widget, '{"image2"}', build_collection_asset(widget->'image2'))
+WHERE widget->>'type' = 'dualImagery'
+    AND widget->'image2'->>'collectionType' in (
+        'ImageCollectionNDVI',
+        'ImageCollectionEVI',
+        'ImageCollectionEVI2',
+        'ImageCollectionNDWI',
+        'ImageCollectionNDMI'
+    );
+
+-- Update Pre Image Collection -> landsat / sentinel widgets
+
+CREATE OR REPLACE FUNCTION build_landsat_widgets(_widget jsonb)
+ RETURNS jsonb AS $$
+
+    SELECT jsonb_build_object(
+        'indexName', _widget->'filterType',
+        'bands', _widget->'visParams'->'bands',
+        'min', _widget->'visParams'->'min',
+        'max', _widget->'visParams'->'max',
+        'cloudLessThan', _widget->'visParams'->'cloudLessThan',
+        'startDate', _widget->>'startDate',
+        'endDate', _widget->>'endDate'
+    )
+
+$$ LANGUAGE SQL;
+
+UPDATE project_widgets
+SET widget = jsonb_set(widget, '{"image1"}', build_landsat_widgets(widget->'image1'))
+WHERE widget->>'type' = 'dualImagery'
+    AND widget->'image1'->>'collectionType' in (
+        'ImageCollectionLANDSAT5',
+        'ImageCollectionLANDSAT7',
+        'ImageCollectionLANDSAT8',
+        'ImageCollectionSentinel2'
+    );
+
+UPDATE project_widgets
+SET widget = jsonb_set(widget, '{"image2"}', build_landsat_widgets(widget->'image2'))
+WHERE widget->>'type' = 'dualImagery'
+    AND widget->'image2'->>'collectionType' in (
+        'ImageCollectionLANDSAT5',
+        'ImageCollectionLANDSAT7',
+        'ImageCollectionLANDSAT8',
+        'ImageCollectionSentinel2'
+    );
+
+---------------------------------------------------
+--- Post processing -------------------------------
+---------------------------------------------------
 
 -- Clean visParams
 CREATE OR REPLACE FUNCTION clean_json_string(_str text)
@@ -230,24 +363,18 @@ UPDATE project_widgets
 SET widget = jsonb_set(widget, '{"visParams"}', try_parse_json(widget->>'visParams'))
 WHERE widget->'visParams' IS NOT NULL;
 
--- Sanity check.  108
-select widget from project_widgets
-where widget->>'visParams' = '{}'
-and widget->>'dualImageCollection' is null
-order by widget->>'type';
-
--- remove invalid widgets. 43
-delete from project_widgets
+-- Remove invalid widgets.
+DELETE FROM project_widgets
 WHERE widget->'type' IS NULL
-and widget->>'dualImageCollection' is null;
+
+DELETE FROM project_widgets
+WHERE widget->>'type' = 'dualImagery'
+    AND (widget->'image1'-> 'type' IS NULL
+         OR widget->'image2'-> 'type' IS NULL)
 
 -- Clean up missing basemapId
--- FIXME, set to OSM
+-- FIXME, double check this one.  The test run seemed high, but could have been a manual error.
 UPDATE project_widgets
-SET widget = widget - 'basemapId'
-WHERE widget->>'basemapId' IS NULL;
-
--- FIXME, split out title, type, layout, design
--- Change name -> title to match
-UPDATE project_widgets
-SET widget = jsonb_set(widget, '{"title"}', widget->'name') - 'name';
+SET widget = jsonb_set(widget, '{"basemapId"}', to_jsonb(select_public_osm()))
+WHERE widget->>'basemapId' IS NULL
+    AND widget ? 'basemapId' = TRUE;
