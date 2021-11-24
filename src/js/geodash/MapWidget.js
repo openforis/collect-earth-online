@@ -2,7 +2,6 @@ import React from "react";
 
 import {Map, View} from "ol";
 import {Tile as TileLayer, Vector as VectorLayer} from "ol/layer";
-import {transform as projTransform} from "ol/proj";
 import {XYZ} from "ol/source";
 import {Style, Stroke} from "ol/style";
 
@@ -14,9 +13,9 @@ export default class MapWidget extends React.Component {
         this.state = {
             mapRef: null,
             updateTimeOutRefs: [],
-            opacity: 1.0,
-            sliderType: this.props.widget.swipeAsDefault ? "swipe" : "opacity",
-            swipeValue: 1.0
+            swipeValue: 0,
+            opacityValue: 100,
+            sliderType: this.props.widget.swipeAsDefault ? "swipe" : "opacity"
         };
     }
 
@@ -71,12 +70,26 @@ export default class MapWidget extends React.Component {
 
     /// State
 
-    // TODO, move to degradation widget
-    toggleDegDataType = checked => this.props.handleDegDataType(checked ? "sar" : "landsat");
-
     updateOpacity = newOpacity => {
-        this.setState({opacity: newOpacity});
+        this.setState({opacityValue: newOpacity});
         this.setOpacity(newOpacity);
+    };
+
+    updateSwipe = newSwipe => {
+        this.setState({swipeValue: newSwipe});
+        this.state.mapRef.render();
+    };
+
+    toggleSliderType = () => {
+        const {sliderType, opacityValue} = this.state;
+        const newSliderType = sliderType === "opacity" ? "swipe" : "opacity";
+        this.setState({sliderType: newSliderType});
+        if (newSliderType === "opacity") {
+            this.setOpacity(opacityValue);
+        } else {
+            this.setOpacity(100);
+        }
+        this.state.mapRef.render();
     };
 
     /// Get widget URL
@@ -128,12 +141,12 @@ export default class MapWidget extends React.Component {
         const {widget, idx} = this.props;
         if (widget.type === "dualImagery") {
             const [url1, url2] = await Promise.all([this.wrapCache(widget.image1), this.wrapCache(widget.image2)]);
-            this.upsertTileSource(url1, widget.id, idx);
-            this.upsertTileSource(url1, widget.id, idx);
-            this.addSecondTileServer(url2, widget.id, idx);
+            this.upsertFirstTileSource(url1, widget.id, idx);
+            this.upsertFirstTileSource(url1, widget.id, idx);
+            this.upsertSecondTileSource(url2, widget.id, idx);
         } else {
             const url = await this.wrapCache(widget);
-            this.upsertTileSource(url, widget.id, idx);
+            this.upsertFirstTileSource(url, widget.id, idx);
         }
         this.resumeGeeLayer();
     };
@@ -275,7 +288,7 @@ export default class MapWidget extends React.Component {
         return layer;
     };
 
-    upsertTileSource = (url, widgetId, idx) => {
+    upsertFirstTileSource = (url, widgetId, idx) => {
         const {mapRef} = this.state;
         const layerId = "layer-" + widgetId;
         const existingLayer = this.getLayerById(layerId);
@@ -287,7 +300,7 @@ export default class MapWidget extends React.Component {
         }
     };
 
-    addSecondTileServer = (url, widgetId, idx) => {
+    upsertSecondTileSource = (url, widgetId, idx) => {
         const {mapRef} = this.state;
         const layerId = "layer-" + widgetId + "-2";
         const existingLayer = this.getLayerById(layerId);
@@ -295,14 +308,23 @@ export default class MapWidget extends React.Component {
             existingLayer.getSource().setUrl(url);
         } else if (url) {
             const layer = this.addNewLayer(url, layerId, idx);
-            const {swipe} = this.props;
             layer.on("prerender", event => {
+                const {swipeValue, sliderType} = this.state;
                 const ctx = event.context;
-                const width = ctx.canvas.width * swipe;
-                ctx.save();
-                ctx.beginPath();
-                ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
-                ctx.clip();
+                if (sliderType === "opacity") {
+                    ctx.restore();
+                } else {
+                    const width = Math.abs(ctx.canvas.width * (swipeValue / 100.0));
+                    ctx.save();
+                    ctx.beginPath();
+                    if (swipeValue >= 0) {
+                        ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
+                    } else {
+                        // Secret code just in case.  It may not be as useful as I thought.
+                        ctx.rect(0, 0, ctx.canvas.width - width, ctx.canvas.height);
+                    }
+                    ctx.clip();
+                }
             });
 
             layer.on("postrender", event => {
@@ -312,12 +334,6 @@ export default class MapWidget extends React.Component {
 
             mapRef.addLayer(layer);
         }
-
-        // FIXME, move this to updateSwipe / consolidate to one updateFn and 1 slider
-        const swipe = document.getElementById("swipeWidget_" + widgetId);
-        swipe.addEventListener("input", () => {
-            this.state.mapRef.render();
-        }, false);
     };
 
     setOpacity = newOpacity => {
@@ -326,7 +342,7 @@ export default class MapWidget extends React.Component {
             // Also just use mercator.getLayerById
             const layerId = lyr.get("layerId") || "";
             if (layerId.includes(this.props.widget.id)) {
-                lyr.setOpacity(newOpacity);
+                lyr.setOpacity(newOpacity / 100.0);
             }
         });
     };
@@ -334,77 +350,48 @@ export default class MapWidget extends React.Component {
     /// Render functions
 
     renderSliderControl = () => {
-        const {sliderType, opacity, swipeValue} = this.state;
+        const {sliderType, swipeValue, opacityValue} = this.state;
         const {widget} = this.props;
 
-        if (widget.type === "dualImagery") {
-            return (
-                <div style={{flex: 0}}>
+        return (
+            <div className="d-flex">
+                {widget.type === "dualImagery" && (
                     <div className="toggleSwitchContainer">
                         <img
-                            alt="Opacity"
+                            alt="toggle opacity"
                             height="20px"
-                            onClick={() => this.setState({sliderType: "opacity"})}
-                            src="img/geodash/opacity.png"
-                            style={{
-                                opacity: sliderType === "opacity" ? "1.0" : "0.25",
-                                cursor: "pointer"
-                            }}
+                            onClick={this.toggleSliderType}
+                            src={sliderType === "opacity" ? "img/geodash/opacity.png" : "img/geodash/swipe.png"}
+                            style={{cursor: "pointer"}}
                             title="Opacity"
                             width="40px"
                         />
-                        <br/>
-                        <img
-                            alt="Swipe"
-                            height="20px"
-                            onClick={() => this.setState({sliderType: "opacity"})}
-                            src="img/geodash/swipe.png"
-                            style={{
-                                opacity: sliderType === "swipe" ? "1.0" : "0.25",
-                                cursor: "pointer"
-                            }}
-                            title="Swipe"
-                            width="40px"
-                        />
                     </div>
-                    <input
-                        className="mapRange dual"
-                        id={"rangeWidget_" + widget.id}
-                        max="1"
-                        min="0"
-                        onChange={e => this.updateOpacity(parseFloat(e.target.value))}
-                        step=".05"
-                        style={{display: sliderType === "opacity" ? "block" : "none"}}
-                        type="range"
-                        value={opacity}
-                    />
-                    <input
-                        className="mapRange dual"
-                        id={"swipeWidget_" + widget.id}
-                        max="1"
-                        min="0"
-                        onChange={e => this.setState({swipeValue: parseFloat(e.target.value)})}
-                        step=".05"
-                        style={{display: sliderType === "swipe" ? "block" : "none"}}
-                        type="range"
-                        value={swipeValue}
-                    />
-                </div>
-            );
-        } else {
-            return (
-                <input
-                    className="mapRange"
-                    id={"rangeWidget_" + widget.id}
-                    max="1"
-                    min="0"
-                    onChange={e => this.updateOpacity(parseFloat(e.target.value))}
-                    step=".05"
-                    type="range"
-                    value={opacity}
-                />
-            );
-        }
+                )}
+                {sliderType === "opacity"
+                    ? (
+                        <input
+                            className="mapRange"
+                            max="100"
+                            min="0"
+                            onChange={e => this.updateOpacity(parseInt(e.target.value))}
+                            step="1"
+                            type="range"
+                            value={opacityValue}
+                        />
+                    ) : (
+                        <input
+                            className="mapRange"
+                            max="100"
+                            min="0"
+                            onChange={e => this.updateSwipe(parseInt(e.target.value))}
+                            step="1"
+                            type="range"
+                            value={swipeValue}
+                        />
+                    )}
+            </div>
+        );
     };
 
     render() {

@@ -9,15 +9,16 @@ import GetBands from "./form/GetBands";
 import {EditorContext} from "./constants";
 import GDSelect from "./form/GDSelect";
 
-export default function ImageCollectionAssetDesigner() {
+export default function ImageCollectionAssetDesigner({isDual = false, prefixPath = ""}) {
     const [bands, setBands] = useState(null);
     const {widgetDesign} = useContext(EditorContext);
     return (
         <>
-            <BaseMapSelector/>
+            {!isDual && <BaseMapSelector/>}
             <GDInput
                 dataKey="assetName"
                 placeholder="LANDSAT/LC8_L1T_TOA"
+                prefixPath={prefixPath}
                 title="GEE Image Collection Asset Name"
             />
             <GetBands
@@ -30,15 +31,16 @@ export default function ImageCollectionAssetDesigner() {
                 dataKey="reducer"
                 defaultSelection="Median"
                 items={["Min", "Max", "Mean", "Median", "Mode", "Mosaic"]}
-                lowerCase
+                prefixPath={prefixPath}
                 title="Collection Reducer"
             />
             <GDTextArea
                 dataKey="visParams"
                 placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
+                prefixPath={prefixPath}
                 title="Image Parameters (json format)"
             />
-            <GDDateRange optional/>
+            <GDDateRange optional prefixPath={prefixPath}/>
         </>
     );
 }

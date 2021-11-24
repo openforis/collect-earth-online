@@ -3,7 +3,7 @@ import React, {useContext} from "react";
 import {EditorContext} from "../constants";
 
 export default function BaseMapSelector() {
-    const {setWidgetDesign, widgetDesign, imagery, getInstitutionImagery, institutionId} = useContext(EditorContext);
+    const {setWidgetDesign, getWidgetDesign, imagery, getInstitutionImagery, institutionId} = useContext(EditorContext);
     return (
         <div className="form-group">
             <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
@@ -21,7 +21,7 @@ export default function BaseMapSelector() {
                 id="basemap-select"
                 name="basemap-select"
                 onChange={e => setWidgetDesign("basemapId", parseInt(e.target.value))}
-                value={widgetDesign.basemapId}
+                value={getWidgetDesign("basemapId")}
             >
                 {(imagery || [])
                     .map(({id, title}) => <option key={id} value={id}>{title}</option>)}

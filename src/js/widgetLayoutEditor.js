@@ -209,8 +209,24 @@ class WidgetLayoutEditor extends React.PureComponent {
         });
     };
 
-    setWidgetDesign = (dataKey, val) => {
-        this.setState(prevState => ({widgetDesign: {...prevState.widgetDesign, [dataKey]: val}}));
+    parsePrefix = pathPrefix => {
+        if (_.isArray(pathPrefix)) {
+            return pathPrefix;
+        } else if (_.isNumber(pathPrefix) || (_.isString(pathPrefix) && pathPrefix.length > 0)) {
+            return [pathPrefix];
+        } else {
+            return [];
+        }
+    };
+
+    setWidgetDesign = (dataKey, val, pathPrefix = "") => {
+        const path = [...this.parsePrefix(pathPrefix), dataKey];
+        this.setState(prevState => ({widgetDesign: _.set(_.cloneDeep(prevState.widgetDesign), path, val)}));
+    };
+
+    getWidgetDesign = (dataKey, pathPrefix = "") => {
+        const path = [...this.parsePrefix(pathPrefix), dataKey];
+        return _.get(this.state.widgetDesign, path);
     };
 
     updateTitle = newTitle => {
@@ -420,6 +436,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                 value={{
                     projectId: this.props.projectId,
                     institutionId: this.props.institutionId,
+                    getWidgetDesign: this.getWidgetDesign,
                     setWidgetDesign: this.setWidgetDesign,
                     widgetDesign: this.state.widgetDesign,
                     imagery: this.state.imagery,
