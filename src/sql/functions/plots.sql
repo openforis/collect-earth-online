@@ -36,7 +36,7 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _ma
                 ON pa.plot_rid = pl.plot_uid
         LEFT JOIN user_plots up
             ON up.plot_rid = pl.plot_uid
-            AND (pa.user_rid = up.user_rid OR NOT (project_has_assigned(_project_id)))
+            AND (pa.user_rid = up.user_rid OR NOT (SELECT project_has_assigned(_project_id)))
         GROUP BY plot_uid
         HAVING project_rid = _project_id
         LIMIT _maximum
@@ -136,7 +136,7 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
         ON plot_uid = pa.plot_rid
     LEFT JOIN user_plots up
         ON plot_uid = up.plot_rid
-        AND (pa.user_rid = up.user_rid OR NOT (project_has_assigned(_project_id)))
+        AND (pa.user_rid = up.user_rid OR NOT (SELECT project_has_assigned(_project_id)))
     LEFT JOIN plot_locks pl
         ON plot_uid = pl.plot_rid
     LEFT JOIN users u
