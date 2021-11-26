@@ -245,52 +245,55 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     generateNewWidget = () => {
-        const {title: name, type, widgetDesign, basemapId} = this.state;
-        const maxY = Math.max(...this.state.widgets.map(o => (o.layout.y || 0)));
-        const yval = maxY > -1 ? maxY + 1 : 0; // This yval add the new widget to the bottom
-        const baseWidget = {
-            type,
-            name,
-            layout:{
-                x: 0,
-                y: yval,
-                w: 3,
-                h: 1
-            }
-        };
-        // FIXME, keep widgetDesign as its own key
-        // FIXME, potential reduction in this logic if we save the parse visParams when checking.
+        const {title, type, widgetDesign, basemapId} = this.state;
+        if (title) {
+            const maxY = Math.max(...this.state.widgets.map(o => (o.layout.y || 0)), 0);
+            const baseWidget = {
+                layout:{
+                    x: 0,
+                    y: maxY + 1, // This adds the new widget to the bottom
+                    w: 3,
+                    h: 1
+                },
+                name: title,
+                type
+            };
+            // FIXME, keep widgetDesign as its own key
+            // FIXME, potential reduction in this logic if we save the parse visParams when checking.
 
-        // Base widget + widget design
-        if (["statistics", "timeSeries"].includes(type)) {
-            return {
-                ...baseWidget,
-                ...widgetDesign
-            };
-        // Base widget + basemap + widget design
-        } else if (["degradationTool", "preImageCollection", "dualImagery"].includes(type)) {
-            return {
-                ...baseWidget,
-                basemapId,
-                ...widgetDesign
-            };
-        // Base widget + widget design, vixParams parsed
-        } else if (["imageAsset", "imageElevation"].includes(type)) {
-            const {visParams} = widgetDesign;
-            return {
-                ...baseWidget,
-                ...widgetDesign,
-                visParams: JSON.parse(visParams || "{}")
-            };
-        // Base widget + basemap + widget design, vixParams parsed
-        } else if (["polygonCompare", "imageCollectionAsset"].includes(type)) {
-            const {visParams} = widgetDesign;
-            return {
-                ...baseWidget,
-                basemapId,
-                ...widgetDesign,
-                visParams: JSON.parse(visParams || "{}")
-            };
+            // Base widget + widget design
+            if (["statistics", "timeSeries"].includes(type)) {
+                return {
+                    ...baseWidget,
+                    ...widgetDesign
+                };
+            // Base widget + basemap + widget design
+            } else if (["degradationTool", "preImageCollection", "dualImagery"].includes(type)) {
+                return {
+                    ...baseWidget,
+                    basemapId,
+                    ...widgetDesign
+                };
+            // Base widget + widget design, visParams parsed
+            } else if (["imageAsset", "imageElevation"].includes(type)) {
+                const {visParams} = widgetDesign;
+                return {
+                    ...baseWidget,
+                    ...widgetDesign,
+                    visParams: JSON.parse(visParams || "{}")
+                };
+            // Base widget + basemap + widget design, visParams parsed
+            } else if (["polygonCompare", "imageCollectionAsset"].includes(type)) {
+                const {visParams} = widgetDesign;
+                return {
+                    ...baseWidget,
+                    basemapId,
+                    ...widgetDesign,
+                    visParams: JSON.parse(visParams || "{}")
+                };
+            } else {
+                return null;
+            }
         } else {
             return null;
         }
@@ -327,7 +330,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     alert("Error creating widget. See console for details.");
                 });
         } else {
-            alert("Invalid selection, unable to generate new widget.");
+            alert("Invalid selections, unable to generate new widget.");
         }
     };
 
@@ -396,6 +399,18 @@ class WidgetLayoutEditor extends React.PureComponent {
         return (
             <form>
                 <div className="form-group">
+                    <label htmlFor="widgetTitle">Title</label>
+                    <input
+                        className="form-control"
+                        id="widgetTitle"
+                        name="widgetTitle"
+                        onChange={e => this.updateTitle(e.target.value)}
+                        placeholder="Enter title"
+                        type="text"
+                        value={this.state.title}
+                    />
+                </div>
+                <div className="form-group">
                     <label htmlFor="widgetTypeSelect">Widget Type</label>
                     <select
                         className="form-control"
@@ -410,18 +425,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                                    <option key={key} value={key}>{title}</option>
                                ))}
                     </select>
-                </div>
-                <div className="form-group">
-                    <label htmlFor="widgetTitle">Title</label>
-                    <input
-                        className="form-control"
-                        id="widgetTitle"
-                        name="widgetTitle"
-                        onChange={e => this.updateTitle(e.target.value)}
-                        placeholder="Enter title"
-                        type="text"
-                        value={this.state.title}
-                    />
                 </div>
                 {WidgetDesigner && <WidgetDesigner/>}
             </form>

@@ -8,18 +8,18 @@ UPDATE project_widgets SET widget_bk = widget;
 -- Update Stats widgets
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'statistics',
+    'layout', widget->'layout',
     'name', widget->'name',
-    'layout', widget->'layout'
+    'type', 'statistics'
 )
 WHERE widget->'properties'->>0 = 'getStats';
 
 -- Update Elevation widgets
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'imageElevation',
-    'name', widget->'name',
     'layout', widget->'layout',
+    'name', widget->'name',
+    'type', 'imageElevation',
     'basemapId', widget->'basemapId',
     'assetName', widget->>'ImageAsset',
     'visParams', widget->'visParams'
@@ -30,9 +30,9 @@ WHERE widget->>'ImageAsset' is not null
 -- Update Image Asset widgets
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'imageAsset',
-    'name', widget->'name',
     'layout', widget->'layout',
+    'name', widget->'name',
+    'type', 'imageAsset',
     'basemapId', widget->'basemapId',
     'assetName', widget->>'ImageAsset',
     'visParams', widget->'visParams'
@@ -43,9 +43,9 @@ WHERE widget->>'ImageAsset' is not null
 -- Update Degradation widgets
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'degradationTool',
-    'name', widget->'name',
     'layout', widget->'layout',
+    'name', widget->'name',
+    'type', 'degradationTool',
     'basemapId', widget->'basemapId',
     'band', widget->'graphBand',
     'startDate', widget->'startDate',
@@ -56,9 +56,9 @@ WHERE widget->'properties'->>0 = 'DegradationTool';
 -- Update Polygon widgets
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'polygonCompare',
-    'name', widget->'name',
     'layout', widget->'layout',
+    'name', widget->'name',
+    'type', 'polygonCompare',
     'basemapId', widget->'basemapId',
     'assetName', widget->>'featureCollection',
     'field', widget->'field',
@@ -69,22 +69,22 @@ WHERE widget->'properties'->>0 = 'featureCollection';
 -- Update Time Series widgets not custom
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'timeSeries',
-    'name', widget->'name',
     'layout', widget->'layout',
+    'name', widget->'name',
+    'type', 'timeSeries',
     'indexName', widget->'properties'->4,
     'startDate', TRIM(widget->'properties'->>2),
     'endDate', TRIM(widget->'properties'->>3)
 )
-WHERE widget->'properties'->>0 ilike '%timeseries%';
-    AND widget->'properties'->>4 <> 'Custom'
+WHERE widget->'properties'->>0 ilike '%timeseries%'
+    AND widget->'properties'->>4 <> 'Custom';
 
 -- Update Time Series widgets custom
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'timeSeries',
-    'name', widget->'name',
     'layout', widget->'layout',
+    'name', widget->'name',
+    'type', 'timeSeries',
     'indexName', widget->'properties'->4,
     'assetName', widget->'properties'->1,
     'band', widget->'graphBand',
@@ -92,15 +92,15 @@ SET widget = jsonb_build_object(
     'startDate', TRIM(widget->'properties'->>2),
     'endDate', TRIM(widget->'properties'->>3)
 )
-WHERE widget->'properties'->>0 ilike '%timeseries%';
-    AND widget->'properties'->>4 = 'Custom'
+WHERE widget->'properties'->>0 ilike '%timeseries%'
+    AND widget->'properties'->>4 = 'Custom';
 
 -- Update Pre Image Collection -> emodis widgets
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'preImageCollection',
-    'name', widget->>'name',
     'layout', widget->'layout',
+    'name', widget->>'name',
+    'type', 'preImageCollection',
     'basemapId', widget->'basemapId',
     'indexName', widget->'properties'->4,
     'startDate', TRIM(widget->'properties'->>2),
@@ -117,9 +117,9 @@ WHERE widget->'properties'->>0 in (
 -- Update Pre Image Collection -> landsat / sentinel widgets
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'preImageCollection',
-    'name', widget->>'name',
     'layout', widget->'layout',
+    'name', widget->>'name',
+    'type', 'preImageCollection',
     'basemapId', widget->'basemapId',
     'indexName', widget->'properties'->>4,
     'bands', widget->'visParams'->'bands',
@@ -139,9 +139,9 @@ WHERE widget->'properties'->>0 in (
 -- Update Image Collection -> cloud filter
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'imageCollectionAsset',
-    'name', widget->>'name',
     'layout', widget->'layout',
+    'name', widget->>'name',
+    'type', 'imageCollectionAsset',
     'basemapId', widget->'basemapId',
     'assetName', widget->'properties'->>1,
     'reducer', 'Cloud',
@@ -164,9 +164,9 @@ WHERE widget->'properties'->>0 = 'addImageCollection'
 -- Update Image Collection -> Custom
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'imageCollectionAsset',
-    'name', widget->>'name',
     'layout', widget->'layout',
+    'name', widget->>'name',
+    'type', 'imageCollectionAsset',
     'basemapId', widget->'basemapId',
     'assetName', widget->'properties'->>1,
     'reducer', 'Mean',
@@ -180,9 +180,9 @@ WHERE widget->'properties'->>0 = 'ImageCollectionCustom'
 -- Update Image Collection Asset
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'imageCollectionAsset',
-    'name', widget->>'name',
     'layout', widget->'layout',
+    'name', widget->>'name',
+    'type', 'imageCollectionAsset',
     'basemapId', widget->'basemapId',
     'assetName', widget->'ImageCollectionAsset',
     'reducer', 'Mosaic',
@@ -200,9 +200,9 @@ WHERE widget->'ImageCollectionAsset' IS NOT NULL
 -- Update Dual Imagery widgets, step 1
 UPDATE project_widgets
 SET widget = jsonb_build_object(
-    'type', 'dualImagery',
-    'name', widget->>'name',
     'layout', widget->'layout',
+    'name', widget->>'name',
+    'type', 'dualImagery',
     'basemapId', widget->'basemapId',
     'swipeAsDefault', coalesce(widget->>'swipeAsDefault', 'false')::jsonb,
     'image1', widget->'dualImageCollection'->0,
@@ -365,15 +365,14 @@ WHERE widget->'visParams' IS NOT NULL;
 
 -- Remove invalid widgets.
 DELETE FROM project_widgets
-WHERE widget->'type' IS NULL
+WHERE widget->'type' IS NULL;
 
 DELETE FROM project_widgets
 WHERE widget->>'type' = 'dualImagery'
     AND (widget->'image1'-> 'type' IS NULL
-         OR widget->'image2'-> 'type' IS NULL)
+         OR widget->'image2'-> 'type' IS NULL);
 
 -- Clean up missing basemapId
--- FIXME, double check this one.  The test run seemed high, but could have been a manual error.
 UPDATE project_widgets
 SET widget = jsonb_set(widget, '{"basemapId"}', to_jsonb(select_public_osm()))
 WHERE widget->>'basemapId' IS NULL
