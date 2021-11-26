@@ -1,11 +1,22 @@
-#content {
+/*
+ * General
+ */
+ #content {
     overflow-x: auto;
+}
+.btn.btn-primary {
+    backface-visibility: unset !important;
+}
+.btn-primary.disabled, .btn-primary:disabled {
+    cursor: not-allowed;
+}
+.ol-control button {
+    background-color: rgb(49, 186, 176);
 }
 
 /*
  * React grid layout
  */
-
 .react-grid-item > .react-resizable-handle {
     position: absolute;
     width: 20px;
@@ -43,7 +54,6 @@
     transition: all 200ms ease;
     transition-property: left, top;
 }
-
 .react-grid-item.cssTransforms {
     transition-property: transform;
 }
@@ -114,23 +124,25 @@
 /*
  * Widget Grid
  */
-
 .grid-layout {
-    margin-bottom: 30px;
+    margin-bottom: 3rem;
     text-align: center;
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    grid-auto-rows: 22rem;
+    grid-auto-rows: 350px;
     gap: 1rem;
 }
-.grid-item {
+
+/*
+ * Widget Grid Container
+ */
+.widget-container {
     border: 1px solid transparent;
     border-radius: 6px;
     overflow: hidden;
     -webkit-box-shadow: 3px 3px 6px 0px  rgba(0,0,0,.5);
     box-shadow: 3px 3px 6px 0px  rgba(0,0,0,.5);
-}
-.widget-container {
+
     background-color: #ffffff;
     display: flex;
     flex-direction: column;
@@ -153,7 +165,11 @@
     padding: .5rem;
     position: relative;
 }
-.full-screen{
+
+/*
+ * Fill Screen Widget
+ */
+.full-screen {
     background-color: rgba(0, 0, 0, 0.4);
     position: fixed;
     top: 0;
@@ -174,6 +190,10 @@
     width: auto;
     z-index: 2000;
 }
+
+/*
+ * Map Control Slider
+ */
 .mapRange {
     -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
     width: 100%; /* Specific width is required for Firefox. */
@@ -195,7 +215,6 @@
     border-color: transparent;
     color: transparent;
 }
-
 /* Special styling for WebKit/Blink */
 .mapRange::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -208,7 +227,6 @@
     margin-top: -14px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
     box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; /* Add cool effects to your sliders! */
 }
-
 /* All the same stuff for Firefox */
 .mapRange::-moz-range-thumb {
     box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
@@ -219,7 +237,6 @@
     background: #ffffff;
     cursor: pointer;
 }
-
 /* All the same stuff for IE */
 .mapRange::-ms-thumb {
     box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
@@ -282,7 +299,6 @@
 /*
  * Degradation Widget
  */
-
 .settings-block {
     display: flex;
     justify-content: space-between;
@@ -304,40 +320,4 @@
     font-size: .85rem;
     height: 2rem;
     white-space: nowrap;
-}
-
-
-.btn.btn-primary {
-    backface-visibility: unset !important;
-}
-.btn-primary.disabled, .btn-primary:disabled {
-    cursor: not-allowed;
-}
-.flip-container {
-    height: 100%;
-}
-.full .panel .flip-container .back {
-    height: 100% !important;
-}
-.panel-default {
-    border-color: #ddd;
-    webkit-box-shadow: 8px -10px 3px rgba(0,0,0,.45);
-    box-shadow: 8px 5px 3px rgba(0,0,0,.45);
-}
-.panel.panel-default {
-    overflow:hidden;
-}
-.ol-control button {
-    background-color: rgb(49, 186, 176);
-}
-.list-inline {
-    margin-bottom: 0px;
-}
-@media (max-width: 600px) {
-    #geodash .row {
-        display: block;
-    }
-    .row.placeholders {
-        display: block;
-    }
 }

@@ -19,6 +19,7 @@ import PolygonDesigner from "./geodash/PolygonDesigner";
 import PreImageCollectionDesigner from "./geodash/PreImageCollectionDesigner";
 
 import {EditorContext, graphWidgetList, mapWidgetList} from "./geodash/constants";
+import WidgetContainer from "./geodash/WidgetContainer";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -468,37 +469,36 @@ class WidgetLayoutEditor extends React.PureComponent {
                         isDraggable
                         isResizable
                         onLayoutChange={this.onLayoutChange}
-                        rowHeight={300}
+                        rowHeight={350}
                     >
                         {widgets.map(widget => (
                             <div
                                 key={widget.id}
                                 data-grid={{...widget.layout, minW: 3, w: Math.max(widget.layout.w, 3)}}
-                                style={{
-                                    backgroundImage: "url(" + this.getImageByType(widget.type) + ")",
-                                    backgroundSize: "cover"
-                                }}
                             >
-                                <h3
-                                    className="px-2 d-flex justify-content-between"
-                                    style={{
-                                        backgroundColor: "#31bab0",
-                                        color: "white",
-                                        lineHeight:" 26px",
-                                        minHeight: "26px"
-                                    }}
+                                <WidgetContainer
+                                    title={widget.name}
+                                    titleButtons={(
+                                        <div
+                                            onClick={() => this.removeLayoutItem(widget.id)}
+                                            style={{cursor: "pointer"}}
+                                        >
+                                            X
+                                        </div>
+                                    )}
                                 >
-                                    {widget.name}
                                     <div
-                                        onClick={() => this.removeLayoutItem(widget.id)}
-                                        style={{cursor: "pointer"}}
+                                        style={{
+                                            backgroundImage: "url(" + this.getImageByType(widget.type) + ")",
+                                            backgroundSize: "cover",
+                                            height: "100%"
+                                        }}
                                     >
-                                        X
+                                        <div className="text text-danger text-center w-100 font-weight-bold mt-2">
+                                            Sample Image
+                                        </div>
                                     </div>
-                                </h3>
-                                <div className="text text-danger text-center w-100 font-weight-bold">
-                                    Sample Image
-                                </div>
+                                </WidgetContainer>
                             </div>
                         ))}
                     </ReactGridLayout>

@@ -1,6 +1,5 @@
 (ns collect-earth-online.db.geodash
-  (:require [clojure.string  :as str]
-            [clj-http.client :as client]
+  (:require [clj-http.client :as client]
             [triangulum.database :refer [call-sql]]
             [triangulum.type-conversion :as tc]
             [collect-earth-online.views :refer [data-response]]))
