@@ -1,7 +1,6 @@
 import React from "react";
 
 export default function WidgetContainer({title, titleButtons, children}) {
-    console.log(titleButtons);
     return (
         <div className="widget-container">
             <div className="widget-container-heading">

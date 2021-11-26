@@ -14,7 +14,6 @@ export default function PreImageCollectionDesigner({isDual = false, prefixPath =
             {!isDual && <BaseMapSelector/>}
             <GDSelect
                 dataKey="indexName"
-                defaultSelection="NDVI"
                 items={[
                     "NDVI",
                     "EVI",

@@ -4,7 +4,6 @@ import {EditorContext} from "../constants";
 
 export default function GDCheck({title, dataKey, prefixPath = "", defaultCheck = false}) {
     const {setWidgetDesign, getWidgetDesign} = useContext(EditorContext);
-    useEffect(() => setWidgetDesign(dataKey, defaultCheck, prefixPath), []);
 
     return (
         <div className="form-group mx-4">

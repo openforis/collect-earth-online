@@ -10,7 +10,6 @@ export default function DegradationDesigner() {
             <BaseMapSelector/>
             <GDSelect
                 dataKey="band"
-                defaultSelection="NDFI"
                 items={[
                     "NDFI",
                     "SWIR1",

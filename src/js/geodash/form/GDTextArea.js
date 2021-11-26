@@ -1,11 +1,9 @@
-import React, {useContext, useEffect} from "react";
+import React, {useContext} from "react";
 
 import {EditorContext} from "../constants";
 
-export default function GDTextArea({title, placeholder, dataKey, defaultText = "", prefixPath = ""}) {
+export default function GDTextArea({title, placeholder, dataKey, prefixPath = ""}) {
     const {setWidgetDesign, getWidgetDesign} = useContext(EditorContext);
-    useEffect(() => setWidgetDesign(dataKey, defaultText, prefixPath), []);
-
     return (
         <div className="form-group">
             <label htmlFor={dataKey}>{title}</label>
@@ -16,7 +14,7 @@ export default function GDTextArea({title, placeholder, dataKey, defaultText = "
                 placeholder={placeholder}
                 rows="4"
                 style={{overflow: "hidden", overflowWrap: "break-word", resize: "vertical"}}
-                value={getWidgetDesign(dataKey, prefixPath) || defaultText}
+                value={getWidgetDesign(dataKey, prefixPath)}
             />
         </div>
     );

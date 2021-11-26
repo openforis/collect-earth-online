@@ -30,49 +30,73 @@ class WidgetLayoutEditor extends React.PureComponent {
             // Page state
             widgets: [],
             imagery: [],
-            basemapId: -1,
             projectTemplateList: [],
+
             // Widget specific state
-            type: "-1",
             title: "",
+            type: "-1",
+            basemapId: -1,
             widgetDesign: {}
         };
 
         this.widgetTypes = {
             degradationTool: {
                 title: "Degradation Tool",
+                blankWidget: {band: "NDFI", endDate: "", startDate: ""},
                 WidgetDesigner: DegradationDesigner
             },
             dualImagery: {
                 title: "Dual Imagery",
+                blankWidget: {
+                    image1: {assetName: "", type: "imageAsset", visParams: ""},
+                    image2: {assetName: "", type: "imageAsset", visParams: ""},
+                    swipeAsDefault: false
+                },
                 WidgetDesigner: DualImageryDesigner
             },
             imageAsset: {
                 title: "Image Asset",
+                blankWidget: {assetName: "", visParams: ""},
                 WidgetDesigner: ImageAssetDesigner
             },
             imageCollectionAsset: {
                 title: "Image Collection Asset",
+                blankWidget: {
+                    assetName: "",
+                    endDate: "",
+                    reducer: "Median",
+                    startDate: "",
+                    visParams: ""
+                },
                 WidgetDesigner: ImageCollectionAssetDesigner
             },
             polygonCompare: {
                 title: "Polygon Compare",
+                blankWidget: {
+                    assetName: "",
+                    field: "",
+                    visParams: "{\"max\": 1, \"palette\": [\"red\"]}"
+                },
                 WidgetDesigner: PolygonDesigner
             },
             preImageCollection: {
                 title: "Preloaded Image Collections",
+                blankWidget: {endDate: "", indexName: "NDVI", startDate: ""},
                 WidgetDesigner: PreImageCollectionDesigner
             },
             imageElevation: {
                 title: "SRTM Digital Elevation Data 30m",
+                blankWidget: {assetName: "USGS/SRTMGL1_003", visParams: ""},
                 WidgetDesigner: ImageElevationDesigner
             },
             statistics: {
                 title: "Statistics",
+                blankWidget: {},
                 WidgetDesigner: StatsDesigner
             },
             timeSeries: {
                 title: "Time Series Graph",
+                blankWidget: {endDate: "", indexName: "NDVI", startDate: ""},
                 WidgetDesigner: TimeSeriesDesigner
             }
         };
@@ -237,7 +261,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     updateType = newType => this.setState({
         type: newType,
         title: "",
-        widgetDesign: {}
+        widgetDesign: this.widgetTypes[newType].blankWidget
     });
 
     cancelNewWidget = () => {
@@ -396,7 +420,6 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     dialogBody = () => {
         const {WidgetDesigner} = this.widgetTypes[this.state.type] || {};
-        console.log(this.widgetTypes[this.state.type]);
         return (
             <form>
                 <div className="form-group">
@@ -448,7 +471,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     getBandsFromGateway: this.getBandsFromGateway
                 }}
             >
-                <div>
+                <div className="mb-3">
                     {addDialog && (
                         <GeoDashModal
                             body={this.dialogBody()}

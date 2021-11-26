@@ -1,4 +1,4 @@
-import React, {useContext, useEffect} from "react";
+import React, {useContext} from "react";
 import {isString} from "../../utils/generalUtils";
 
 import {EditorContext} from "../constants";
@@ -7,10 +7,8 @@ function cleanString(str) {
     return str.replace(/ |-/, "");
 }
 
-export default function GDSelect({title, items, dataKey, defaultSelection = "-1", prefixPath = ""}) {
+export default function GDSelect({title, items, dataKey, prefixPath = ""}) {
     const {setWidgetDesign, getWidgetDesign} = useContext(EditorContext);
-    useEffect(() => setWidgetDesign(dataKey, defaultSelection, prefixPath), []);
-
     const val = getWidgetDesign(dataKey, prefixPath);
     return (
         <div className="form-group">

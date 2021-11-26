@@ -14,7 +14,6 @@ export default function TimeSeriesDesigner() {
         <>
             <GDSelect
                 dataKey="indexName"
-                defaultSelection="NDVI"
                 items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI", "Custom"]}
                 title="Data Type"
             />
@@ -35,7 +34,6 @@ export default function TimeSeriesDesigner() {
                     <GDSelect dataKey="band" disabled items={bands} title="Band to graph"/>
                     <GDSelect
                         dataKey="reducer"
-                        defaultSelection="Min"
                         items={["Min", "Max", "Mean", "Median", "Mode", "Mosaic"]}
                         title="Reducer"
                     />

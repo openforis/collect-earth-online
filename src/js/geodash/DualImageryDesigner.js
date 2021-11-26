@@ -47,12 +47,13 @@ export default function DualImageryDesigner() {
                     {step1 ? "Next Image" : "Previous Image" }
                 </button>
             </div>
+            {/* FIXME, changing this type wont correctly reset widget design */}
+            {/* I probably got too clever with the path thing.  Look at middleware or specific set dual function. */}
             {step1
                 ? (
                     <GDSelect
                         key="image1"
                         dataKey="type"
-                        defaultSelection="imageAsset"
                         items={widgetSelectList}
                         prefixPath="image1"
                         title="Bottom Imagery Type"
@@ -61,7 +62,6 @@ export default function DualImageryDesigner() {
                     <GDSelect
                         key="image2"
                         dataKey="type"
-                        defaultSelection="imageCollectionAsset"
                         items={widgetSelectList}
                         prefixPath="image2"
                         title="Top Imagery Type"

@@ -29,7 +29,6 @@ export default function ImageCollectionAssetDesigner({isDual = false, prefixPath
             />
             <GDSelect
                 dataKey="reducer"
-                defaultSelection="Median"
                 items={["Min", "Max", "Mean", "Median", "Mode", "Mosaic"]}
                 prefixPath={prefixPath}
                 title="Collection Reducer"

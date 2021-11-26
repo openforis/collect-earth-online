@@ -20,7 +20,6 @@ export default function PolygonDesigner() {
             />
             <GDTextArea
                 dataKey="visParams"
-                defaultText={"{\"max\": 1, \"palette\": [\"red\"]}"}
                 title="Image Parameters (json format)"
             />
         </>

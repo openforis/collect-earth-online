@@ -10,7 +10,6 @@ export default function ImageElevationDesigner() {
             <BaseMapSelector/>
             <GDInput
                 dataKey="assetName"
-                defaultText="USGS/SRTMGL1_003"
                 disabled
                 title="GEE Image Asset Name"
             />

@@ -5,7 +5,6 @@ import {isArray} from "../../utils/generalUtils";
 
 export default function GetBands({bands, setBands, asset, type, hideLabel}) {
     const {getBandsFromGateway} = useContext(EditorContext);
-
     return (
         <>
             <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
