@@ -12,6 +12,7 @@ import {mercator} from "./utils/mercator";
 import {isArray, isNumber} from "./utils/generalUtils";
 import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
 import WidgetGridItem from "./geodash/WidgetGridItem";
+import {gridRowHeight} from "./geodash/constants";
 
 class Geodash extends React.Component {
     constructor(props) {
@@ -109,32 +110,32 @@ class Geodash extends React.Component {
     /// Helpers
 
     extentToPolygon = extent => {
-        // FIXME, probably dont need to decode.
-        // TODO, does the geodash link need to add []?
-        const theSplit = decodeURI(extent)
-            .replace("[", "")
-            .replace("]", "")
-            .split(",");
-        // FIXME, I can probably just build the array here
-        return JSON.parse("[["
-        + theSplit[0] + ","
-        + theSplit[1] + "],["
-        + theSplit[2] + ","
-        + theSplit[1] + "],["
-        + theSplit[2] + ","
-        + theSplit[3] + "],["
-        + theSplit[0] + ","
-        + theSplit[3] + "],["
-        + theSplit[0] + ","
-        + theSplit[1] + "]]");
+        const extentArray = JSON.parse(decodeURI(extent));
+        return [
+            [extentArray[0], extentArray[1]],
+            [extentArray[2], extentArray[1]],
+            [extentArray[2], extentArray[3]],
+            [extentArray[0], extentArray[3]],
+            [extentArray[0], extentArray[1]]
+        ];
     };
 
     /// Render
 
     render() {
         const {widgets} = this.state;
+        const plotExtentPolygon = this.extentToPolygon(this.props.plotExtent);
         return (
-            <div className="grid-layout container-fluid">
+            <div
+                style={{
+                    margin: ".75rem 1rem 3rem",
+                    textAlign: "center",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(12, 1fr)",
+                    gridAutoRows: `${gridRowHeight}px`,
+                    gap: ".5rem"
+                }}
+            >
                 {widgets.length > 0
                     ? (widgets.map((widget, idx) => (
                         <WidgetGridItem
@@ -144,7 +145,7 @@ class Geodash extends React.Component {
                             initCenter={this.mapCenter}
                             mapCenter={this.state.mapCenter}
                             mapZoom={this.state.mapZoom}
-                            plotExtentPolygon={this.extentToPolygon(this.props.plotExtent)}
+                            plotExtentPolygon={plotExtentPolygon}
                             resetCenterAndZoom={this.resetCenterAndZoom}
                             setCenterAndZoom={this.setCenterAndZoom}
                             vectorSource={this.state.vectorSource}

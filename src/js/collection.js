@@ -546,7 +546,7 @@ class Collection extends React.Component {
                     + `&projectId=${this.props.projectId}`
                     + `&visiblePlotId=${currentPlot.visibleId}`
                     + `&plotId=${currentPlot.id}`
-                    + `&plotExtent=${encodeURIComponent(`[${mercator.getViewExtent(mapConfig)}]`)}`
+                    + `&plotExtent=${encodeURIComponent(JSON.stringify(mercator.getViewExtent(mapConfig)))}`
                     + `&plotShape=${currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon"}`
                     + `&center=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}`
                     + `&radius=${plotRadius}`,

@@ -1,4 +1,5 @@
 import "../css/geo-dash.css";
+import "react-grid-layout/css/styles.css";
 
 import React from "react";
 import ReactDOM from "react-dom";
@@ -18,7 +19,7 @@ import TimeSeriesDesigner from "./geodash/TimeSeriesDesigner";
 import PolygonDesigner from "./geodash/PolygonDesigner";
 import PreImageCollectionDesigner from "./geodash/PreImageCollectionDesigner";
 
-import {EditorContext, graphWidgetList, mapWidgetList} from "./geodash/constants";
+import {EditorContext, graphWidgetList, gridRowHeight, mapWidgetList} from "./geodash/constants";
 import WidgetContainer from "./geodash/WidgetContainer";
 import SvgIcon from "./components/SvgIcon";
 
@@ -34,6 +35,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             projectTemplateList: [],
 
             // Widget specific state
+            // TODO, move type and basemapid into widget design.
             title: "",
             type: "-1",
             basemapId: -1,
@@ -509,7 +511,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     getBandsFromGateway: this.getBandsFromGateway
                 }}
             >
-                <div className="mb-3">
+                <div style={{marginBottom: `${gridRowHeight}px`}}>
                     {addDialog && (
                         <GeoDashModal
                             body={this.dialogBody()}
@@ -527,15 +529,14 @@ class WidgetLayoutEditor extends React.PureComponent {
                     )}
                     <ReactGridLayout
                         cols={12}
-                        isDraggable
-                        isResizable
                         onLayoutChange={this.onLayoutChange}
-                        rowHeight={350}
+                        resizeHandles={["e", "s", "se"]}
+                        rowHeight={gridRowHeight}
                     >
                         {widgets.map(widget => (
                             <div
                                 key={widget.id}
-                                data-grid={{...widget.layout, minW: 3, w: Math.max(widget.layout.w, 3)}}
+                                data-grid={{...widget.layout, minW: 3}}
                             >
                                 <WidgetContainer
                                     title={widget.name}
@@ -562,7 +563,15 @@ class WidgetLayoutEditor extends React.PureComponent {
                                             height: "100%"
                                         }}
                                     >
-                                        <div className="text text-danger text-center w-100 font-weight-bold mt-2">
+                                        <div
+                                            className="text text-danger mx-auto font-weight-bold mt-2"
+                                            style={{
+                                                background: "#f1f1f1",
+                                                borderRadius: ".5rem",
+                                                padding: "0 .5rem",
+                                                width: "fit-content"
+                                            }}
+                                        >
                                             Sample Image
                                         </div>
                                     </div>

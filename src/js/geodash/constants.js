@@ -12,3 +12,5 @@ export const mapWidgetList = [
 ];
 
 export const graphWidgetList = ["timeSeries"];
+
+export const gridRowHeight = 350;
