@@ -33,13 +33,15 @@ class WidgetLayoutEditor extends React.PureComponent {
             widgets: [],
             imagery: [],
             projectTemplateList: [],
+            editDialog: false,
 
             // Widget specific state
             // TODO, move type and basemapid into widget design.
             title: "",
             type: "-1",
             basemapId: -1,
-            widgetDesign: {}
+            widgetDesign: {},
+            originalWidget: {}
         };
 
         this.widgetTypes = {
@@ -270,6 +272,17 @@ class WidgetLayoutEditor extends React.PureComponent {
         });
     };
 
+    editWidgetDesign = widget => {
+        const {id, layout, name, type, ...widgetDesign} = widget;
+        this.setState({
+            type,
+            title: name,
+            ...widgetDesign,
+            editDialog: true,
+            originalWidget: widget
+        });
+    };
+
     parsePrefix = pathPrefix => {
         if (_.isArray(pathPrefix)) {
             return pathPrefix;
@@ -296,12 +309,16 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     updateType = newType => this.setState({
         type: newType,
-        title: "",
         widgetDesign: this.widgetTypes[newType].blankWidget
     });
 
     cancelNewWidget = () => {
         this.props.closeDialogs();
+        this.resetWidgetDesign();
+    };
+
+    cancelEditWidget = () => {
+        this.setState({editDialog: false});
         this.resetWidgetDesign();
     };
 
@@ -399,6 +416,18 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.postNewWidget(newWidget);
     };
 
+    saveWidgetEdits = () => {
+        const {originalWidget} = this.state;
+        this.updateWidget(
+            "update-widget",
+            {
+                ...originalWidget,
+                ...this.generateNewWidget()
+            }
+        );
+        this.setState({editDialog: false});
+    };
+
     /// ReactGridLayout
 
     removeLayoutItem = widgetId => {
@@ -438,7 +467,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     // Create new widget main form
 
-    dialogButtons = () => (
+    createDialogButtons = () => (
         <>
             <button
                 className="btn btn-secondary"
@@ -454,6 +483,26 @@ class WidgetLayoutEditor extends React.PureComponent {
                 type="button"
             >
                 Create
+            </button>
+        </>
+    );
+
+    editDialogButtons = () => (
+        <>
+            <button
+                className="btn btn-secondary"
+                data-dismiss="modal"
+                onClick={this.cancelEditWidget}
+                type="button"
+            >
+                Cancel
+            </button>
+            <button
+                className="btn btn-primary"
+                onClick={this.saveWidgetEdits}
+                type="button"
+            >
+                Update
             </button>
         </>
     );
@@ -496,7 +545,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     render() {
-        const {widgets, projectTemplateList} = this.state;
+        const {widgets, projectTemplateList, editDialog} = this.state;
         const {addDialog, copyDialog, closeDialogs} = this.props;
         return (
             <EditorContext.Provider
@@ -515,9 +564,17 @@ class WidgetLayoutEditor extends React.PureComponent {
                     {addDialog && (
                         <GeoDashModal
                             body={this.dialogBody()}
-                            closeDialogs={this.props.closeDialogs}
-                            footer={this.dialogButtons()}
+                            closeDialogs={this.cancelNewWidget}
+                            footer={this.createDialogButtons()}
                             title="Create Widget"
+                        />
+                    )}
+                    {editDialog && (
+                        <GeoDashModal
+                            body={this.dialogBody()}
+                            closeDialogs={this.cancelEditWidget}
+                            footer={this.editDialogButtons()}
+                            title="Edit Widget"
                         />
                     )}
                     {copyDialog && (
@@ -545,7 +602,9 @@ class WidgetLayoutEditor extends React.PureComponent {
                                             <div onClick={() => this.copyWidget(widget)}>
                                                 <SvgIcon color="currentColor" icon="copy" size="1.5rem"/>
                                             </div>
-                                            <div>
+                                            <div
+                                                onClick={() => this.editWidgetDesign(widget)}
+                                            >
                                                 <SvgIcon color="currentColor" icon="edit" size="1.5rem"/>
                                             </div>
                                             <div
