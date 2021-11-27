@@ -270,17 +270,30 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.resetWidgetDesign();
     };
 
+    getNextLayout = () => {
+        const {widgets} = this.state;
+        const layouts = widgets.map(w => w.layout);
+        const maxY = Math.max(...layouts.map(l => (l.y || 0)), 0);
+        const emptyXY = _.range(maxY + 1).map(y => {
+            const row = layouts.filter(l => l.y === y);
+            const emptyX = _.range(10)
+                .filter(x => row.every(l => (x < l.x && x + 3 <= l.x)
+                    || (x >= l.x + l.w && x + 3 >= l.x + l.w)));
+            return {x: _.first(emptyX), y};
+        }).find(({x}) => _.isNumber(x)) || {x: 0, y: maxY + 1};
+
+        return {
+            ...emptyXY,
+            w: 3,
+            h: 1
+        };
+    };
+
     generateNewWidget = () => {
         const {title, type, widgetDesign, basemapId} = this.state;
         if (title) {
-            const maxY = Math.max(...this.state.widgets.map(o => (o.layout.y || 0)), 0);
             const baseWidget = {
-                layout:{
-                    x: 0,
-                    y: maxY + 1, // This adds the new widget to the bottom
-                    w: 3,
-                    h: 1
-                },
+                layout: this.getNextLayout(),
                 name: title,
                 type
             };
