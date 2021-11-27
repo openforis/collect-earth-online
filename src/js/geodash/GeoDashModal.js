@@ -1,4 +1,5 @@
 import React from "react";
+import SvgIcon from "../components/SvgIcon";
 
 export default function GeoDashModal({title, body, footer, closeDialogs}) {
     return (
@@ -20,7 +21,7 @@ export default function GeoDashModal({title, body, footer, closeDialogs}) {
                                 onClick={closeDialogs}
                                 type="button"
                             >
-                                <span aria-hidden="true">X</span>
+                                <SvgIcon color="currentColor" icon="close" size="1.5rem"/>
                             </button>
                         </div>
                         <div className="modal-body">

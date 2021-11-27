@@ -20,6 +20,7 @@ import PreImageCollectionDesigner from "./geodash/PreImageCollectionDesigner";
 
 import {EditorContext, graphWidgetList, mapWidgetList} from "./geodash/constants";
 import WidgetContainer from "./geodash/WidgetContainer";
+import SvgIcon from "./components/SvgIcon";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -502,11 +503,18 @@ class WidgetLayoutEditor extends React.PureComponent {
                                 <WidgetContainer
                                     title={widget.name}
                                     titleButtons={(
-                                        <div
-                                            onClick={() => this.removeLayoutItem(widget.id)}
-                                            style={{cursor: "pointer"}}
-                                        >
-                                            X
+                                        <div className="d-flex" style={{gap: ".5rem"}}>
+                                            <div >
+                                                <SvgIcon color="currentColor" icon="copy" size="1.5rem"/>
+                                            </div>
+                                            <div >
+                                                <SvgIcon color="currentColor" icon="edit" size="1.5rem"/>
+                                            </div>
+                                            <div
+                                                onClick={() => this.removeLayoutItem(widget.id)}
+                                            >
+                                                <SvgIcon color="currentColor" icon="delete" size="1.5rem"/>
+                                            </div>
                                         </div>
                                     )}
                                 >

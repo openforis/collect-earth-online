@@ -1,6 +1,6 @@
 import React from "react";
 
-import {UnicodeIcon} from "../utils/generalUtils";
+import SvgIcon from "../components/SvgIcon";
 
 import StatsWidget from "./StatsWidget";
 import {graphWidgetList, mapWidgetList} from "./constants";
@@ -27,32 +27,30 @@ export default class WidgetGridItem extends React.Component {
         const {isFullScreen} = this.state;
         const {widget} = this.props;
         return (
-            <>
+            <div className="d-flex" style={{gap: ".5rem"}}>
                 {mapWidgetList.includes(widget.type) && (
                     <button
-                        className="btn ml-2 p-0"
+                        className="btn p-0"
                         onClick={() => this.props.resetCenterAndZoom()}
-                        style={{left: "1rem"}}
+                        style={{color: "inherit"}}
                         title="Recenter"
                         type="button"
                     >
-                        <img
-                            alt="Collect Earth Online"
-                            src="img/geodash/ceoicon.png"
-                            style={{height: "1.5rem"}}
-                        />
+                        <SvgIcon color="currentColor" icon="center" size="1.5rem"/>
                     </button>
                 )}
                 <button
-                    className="btn ml-2 p-0"
+                    className="btn p-0"
                     onClick={() => this.setState({isFullScreen: !this.state.isFullScreen})}
                     style={{color: "inherit"}}
                     title="Toggle Fullscreen"
                     type="button"
                 >
-                    {isFullScreen ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
+                    {isFullScreen
+                        ? <SvgIcon color="currentColor" icon="collapse" size="1.5rem"/>
+                        : <SvgIcon color="currentColor" icon="expand" size="1.5rem"/>}
                 </button>
-            </>
+            </div>
         );
     };
 

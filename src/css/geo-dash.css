@@ -125,7 +125,7 @@
  * Widget Grid
  */
 .grid-layout {
-    margin-bottom: 3rem;
+    margin: 1rem 0 3rem 0;
     text-align: center;
     display: grid;
     grid-template-columns: repeat(12, 1fr);
