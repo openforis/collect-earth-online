@@ -36,10 +36,9 @@ class WidgetLayoutEditor extends React.PureComponent {
             editDialog: false,
 
             // Widget specific state
-            // TODO, move type and basemapid into widget design.
+            // TODO, move type into widget design.
             title: "",
             type: "-1",
-            basemapId: -1,
             widgetDesign: {},
             originalWidget: {}
         };
@@ -47,12 +46,13 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.widgetTypes = {
             degradationTool: {
                 title: "Degradation Tool",
-                blankWidget: {band: "NDFI", endDate: "", startDate: ""},
+                blankWidget: {basemapId: "-1", band: "NDFI", endDate: "", startDate: ""},
                 WidgetDesigner: DegradationDesigner
             },
             dualImagery: {
                 title: "Dual Imagery",
                 blankWidget: {
+                    basemapId: "-1",
                     image1: {assetName: "", type: "imageAsset", visParams: ""},
                     image2: {assetName: "", type: "imageAsset", visParams: ""},
                     swipeAsDefault: false
@@ -61,12 +61,13 @@ class WidgetLayoutEditor extends React.PureComponent {
             },
             imageAsset: {
                 title: "Image Asset",
-                blankWidget: {assetName: "", visParams: ""},
+                blankWidget: {basemapId: "-1", assetName: "", visParams: ""},
                 WidgetDesigner: ImageAssetDesigner
             },
             imageCollectionAsset: {
                 title: "Image Collection Asset",
                 blankWidget: {
+                    basemapId: "-1",
                     assetName: "",
                     endDate: "",
                     reducer: "Median",
@@ -78,6 +79,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             polygonCompare: {
                 title: "Polygon Compare",
                 blankWidget: {
+                    basemapId: "-1",
                     assetName: "",
                     field: "",
                     visParams: "{\"max\": 1, \"palette\": [\"red\"]}"
@@ -86,12 +88,17 @@ class WidgetLayoutEditor extends React.PureComponent {
             },
             preImageCollection: {
                 title: "Preloaded Image Collections",
-                blankWidget: {endDate: "", indexName: "NDVI", startDate: ""},
+                blankWidget: {
+                    basemapId: "-1",
+                    endDate: "",
+                    indexName: "NDVI",
+                    startDate: ""
+                },
                 WidgetDesigner: PreImageCollectionDesigner
             },
             imageElevation: {
                 title: "SRTM Digital Elevation Data 30m",
-                blankWidget: {assetName: "USGS/SRTMGL1_003", visParams: ""},
+                blankWidget: {basemapId: "-1", assetName: "USGS/SRTMGL1_003", visParams: ""},
                 WidgetDesigner: ImageElevationDesigner
             },
             statistics: {
@@ -128,12 +135,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     getInstitutionImagery = () => {
         fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                this.setState({
-                    imagery: data,
-                    basemapId: data[0].id
-                });
-            })
+            .then(data => this.setState({imagery: data}))
             .catch(error => {
                 console.error(error);
                 alert("Error downloading the imagery list. See console for details.");
@@ -277,7 +279,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.setState({
             type,
             title: name,
-            ...widgetDesign,
+            widgetDesign,
             editDialog: true,
             originalWidget: widget
         });
@@ -307,10 +309,26 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.setState({title: newTitle});
     };
 
-    updateType = newType => this.setState({
-        type: newType,
-        widgetDesign: this.widgetTypes[newType].blankWidget
-    });
+    updateType = newType => {
+        const {widgets, imagery} = this.state;
+        const widgetDesign = this.widgetTypes[newType].blankWidget;
+        const getWidgetDesign = () => {
+            if (widgetDesign.hasOwnProperty("basemapId")) {
+                const lastBasemapId = (_.last(widgets.filter(w => w.hasOwnProperty("basemapId"))) || {}).basemapId;
+                return {
+                    ...widgetDesign,
+                    basemapId: lastBasemapId || imagery[0].id || "-1"
+                };
+            } else {
+                return widgetDesign;
+            }
+        };
+
+        this.setState({
+            type: newType,
+            widgetDesign: getWidgetDesign()
+        });
+    };
 
     cancelNewWidget = () => {
         this.props.closeDialogs();

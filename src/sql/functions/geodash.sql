@@ -15,6 +15,7 @@ CREATE OR REPLACE FUNCTION get_project_widgets_by_project_id(_project_id integer
     SELECT widget_uid, widget
     FROM project_widgets
     WHERE project_rid = _project_id
+    ORDER BY widget_uid
 
 $$ LANGUAGE SQL;
 
