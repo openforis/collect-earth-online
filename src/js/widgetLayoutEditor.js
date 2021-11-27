@@ -175,7 +175,40 @@ class WidgetLayoutEditor extends React.PureComponent {
         }
     };
 
-    serveItUp = (route, widget) => {
+    postNewWidget = newWidget => {
+        if (newWidget) {
+            fetch(
+                "/geo-dash/create-widget",
+                {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        projectId: this.props.projectId,
+                        widgetJSON: JSON.stringify(newWidget)
+                    })
+                }
+            )
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
+                .then(data => {
+                    this.setState({
+                        widgets: data
+                    });
+                    this.props.closeDialogs();
+                    this.resetWidgetDesign();
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert("Error creating widget. See console for details.");
+                });
+        } else {
+            alert("Invalid selections, unable to generate new widget.");
+        }
+    };
+
+    updateWidget = (route, widget) => {
         fetch(
             `/geo-dash/${route}`,
             {
@@ -199,7 +232,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     deleteWidgetFromServer = widget => {
-        this.serveItUp("delete-widget", widget);
+        this.updateWidget("delete-widget", widget);
     };
 
     copyProjectWidgets = templateId => {
@@ -270,25 +303,38 @@ class WidgetLayoutEditor extends React.PureComponent {
         this.resetWidgetDesign();
     };
 
-    getNextLayout = () => {
+    /// Widget Creation
+
+    getNextLayout = (width = 3, height = 1) => {
         const {widgets} = this.state;
         const layouts = widgets.map(w => w.layout);
         const maxY = Math.max(...layouts.map(l => (l.y || 0)), 0);
-        const emptyXY = _.range(maxY + 1).map(y => {
-            const row = layouts.filter(l => l.y === y);
-            const emptyX = _.range(10)
-                .filter(x => row.every(l => (x < l.x && x + 3 <= l.x)
-                    || (x >= l.x + l.w && x + 3 >= l.x + l.w)));
-            return {x: _.first(emptyX), y};
-        }).find(({x}) => _.isNumber(x)) || {x: 0, y: maxY + 1};
 
-        return {
-            ...emptyXY,
-            w: 3,
-            h: 1
-        };
+        if (height === 1) {
+            const emptyXY = _.range(maxY + 1).map(y => {
+                const row = layouts.filter(l => l.y === y);
+                const emptyX = _.range(10)
+                    .filter(x => row.every(l => (x < l.x && x + width <= l.x)
+                    || (x >= l.x + l.w && x + width >= l.x + l.w)));
+                return {x: _.first(emptyX), y};
+            }).find(({x}) => _.isNumber(x)) || {x: 0, y: maxY + 1};
+
+            return {
+                ...emptyXY,
+                w: width,
+                h: 1
+            };
+        } else {
+            return {
+                x: 0,
+                y: maxY + 1,
+                w: width,
+                h: height
+            };
+        }
     };
 
+    // FIXME, validate widget
     generateNewWidget = () => {
         const {title, type, widgetDesign, basemapId} = this.state;
         if (title) {
@@ -339,38 +385,16 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     createNewWidget = () => {
-        // FIXME, verify widget design first
-        const newWidget = this.generateNewWidget();
-        if (newWidget) {
-            fetch(
-                "/geo-dash/create-widget",
-                {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        projectId: this.props.projectId,
-                        widgetJSON: JSON.stringify(newWidget)
-                    })
-                }
-            )
-                .then(response => (response.ok ? response.json() : Promise.reject(response)))
-                .then(data => {
-                    this.setState({
-                        widgets: data
-                    });
-                    this.props.closeDialogs();
-                    this.resetWidgetDesign();
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert("Error creating widget. See console for details.");
-                });
-        } else {
-            alert("Invalid selections, unable to generate new widget.");
-        }
+        this.postNewWidget(this.generateNewWidget());
+    };
+
+    copyWidget = existingWidget => {
+        const newWidget = {
+            ...existingWidget,
+            layout: this.getNextLayout(existingWidget.layout.w, existingWidget.layout.h),
+            name: existingWidget.name + " - copy"
+        };
+        this.postNewWidget(newWidget);
     };
 
     /// ReactGridLayout
@@ -390,7 +414,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         if (!this.sameLayout(stateWidget.layout, layout[idx])) {
             const {x, y, h, w} = layout[idx];
             const newWidget = {...stateWidget, layout: {x, y, h, w}};
-            this.serveItUp("update-widget", newWidget);
+            this.updateWidget("update-widget", newWidget);
         }
     });
 
@@ -517,10 +541,10 @@ class WidgetLayoutEditor extends React.PureComponent {
                                     title={widget.name}
                                     titleButtons={(
                                         <div className="d-flex" style={{gap: ".5rem"}}>
-                                            <div >
+                                            <div onClick={() => this.copyWidget(widget)}>
                                                 <SvgIcon color="currentColor" icon="copy" size="1.5rem"/>
                                             </div>
-                                            <div >
+                                            <div>
                                                 <SvgIcon color="currentColor" icon="edit" size="1.5rem"/>
                                             </div>
                                             <div
