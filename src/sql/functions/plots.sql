@@ -147,7 +147,7 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
                 AND (pl.lock_end IS NULL
                      OR localtimestamp > pl.lock_end)) -- unlocked
              OR pa.user_rid = _user_id                 -- assigned
-             OR _review_mode)                           -- admin TODO, CEO-208 should admin be able to visit a locked plot? probably.
+             OR _review_mode)                          -- admin TODO, CEO-208 should admin be able to visit a locked plot? probably.
     ORDER BY visible_id ASC
 
 $$ LANGUAGE SQL;
