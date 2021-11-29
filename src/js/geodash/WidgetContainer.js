@@ -5,7 +5,7 @@ export default function WidgetContainer({title, titleButtons, children}) {
         <div className="widget-container">
             <div className="widget-container-heading">
                 <label style={{margin: 0}}>{title}</label>
-                <div style={{right: "1rem", position: "absolute"}}>
+                <div>
                     {titleButtons}
                 </div>
             </div>

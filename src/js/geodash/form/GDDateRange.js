@@ -1,4 +1,5 @@
-import React, {useContext, useEffect} from "react";
+import React, {useContext} from "react";
+import {get} from "lodash";
 
 import {EditorContext} from "../constants";
 
@@ -11,7 +12,7 @@ export default function GDDateRange({title, optional, prefixPath = ""}) {
                 <input
                     className="form-control"
                     id="startDate"
-                    onChange={e => setWidgetDesign("startDate", e.target ? e.target.value : "", prefixPath)}
+                    onChange={e => setWidgetDesign("startDate", get(e, "target.value", ""), prefixPath)}
                     type="date"
                     value={getWidgetDesign("startDate", prefixPath)}
                 />
@@ -19,7 +20,7 @@ export default function GDDateRange({title, optional, prefixPath = ""}) {
                 <input
                     className="form-control"
                     id="endDate"
-                    onChange={e => setWidgetDesign("endDate", e.target ? e.target.value : "", prefixPath)}
+                    onChange={e => setWidgetDesign("endDate", get(e, "target.value", ""), prefixPath)}
                     type="date"
                     value={getWidgetDesign("endDate", prefixPath)}
                 />

@@ -22,7 +22,7 @@ SET widget = jsonb_build_object(
     'type', 'imageElevation',
     'basemapId', widget->'basemapId',
     'assetName', widget->>'ImageAsset',
-    'visParams', widget->'visParams'
+    'visParams', widget->>'visParams'
 )
 WHERE widget->>'ImageAsset' is not null
     AND widget->>'ImageAsset' = 'USGS/SRTMGL1_003';
@@ -35,7 +35,7 @@ SET widget = jsonb_build_object(
     'type', 'imageAsset',
     'basemapId', widget->'basemapId',
     'assetName', widget->>'ImageAsset',
-    'visParams', widget->'visParams'
+    'visParams', widget->>'visParams'
 )
 WHERE widget->>'ImageAsset' is not null
     AND widget->>'ImageAsset' <> 'USGS/SRTMGL1_003';
@@ -62,7 +62,7 @@ SET widget = jsonb_build_object(
     'basemapId', widget->'basemapId',
     'assetName', widget->>'featureCollection',
     'field', widget->'field',
-    'visParams', widget->'visParams'
+    'visParams', widget->>'visParams'
 )
 WHERE widget->'properties'->>0 = 'featureCollection';
 
@@ -115,6 +115,8 @@ WHERE widget->'properties'->>0 in (
 );
 
 -- Update Pre Image Collection -> landsat / sentinel widgets
+-- It looks like the old code is broken and visParams are not split up.
+-- This may cause some widgets to act different than before.
 UPDATE project_widgets
 SET widget = jsonb_build_object(
     'layout', widget->'layout',
@@ -122,10 +124,10 @@ SET widget = jsonb_build_object(
     'type', 'preImageCollection',
     'basemapId', widget->'basemapId',
     'indexName', widget->'properties'->>4,
-    'bands', widget->'visParams'->'bands',
-    'min', widget->'visParams'->'min',
-    'max', widget->'visParams'->'max',
-    'cloudLessThan', widget->'cloudLessThan',
+    'bands', coalesce(widget->'visParams'->>'bands', ''),
+    'min', coalesce(widget->'visParams'->>'min', ''),
+    'max', coalesce(widget->'visParams'->>'max', ''),
+    'cloudLessThan', coalesce(widget->>'cloudLessThan', '90')::int,
     'startDate', TRIM(widget->'properties'->>2),
     'endDate', TRIM(widget->'properties'->>3)
 )
@@ -147,12 +149,12 @@ SET widget = jsonb_build_object(
     'reducer', 'Cloud',
     'visParams', CASE WHEN widget->'min' IS NULL
         THEN jsonb_build_object(
-            'bands', widget->'properties'->>4
+            'bands', coalesce(widget->'properties'->>4, '')
         )
         ELSE jsonb_build_object(
-            'min', widget->'min',
-            'max', widget->'max',
-            'bands', widget->'properties'->>4
+            'min', coalesce(widget->>'min', ''),
+            'max', coalesce(widget->>'max', ''),
+            'bands', coalesce(widget->'properties'->>4, '')
         )
         END,
     'startDate', TRIM(widget->'properties'->>2),
@@ -170,7 +172,7 @@ SET widget = jsonb_build_object(
     'basemapId', widget->'basemapId',
     'assetName', widget->'properties'->>1,
     'reducer', 'Mean',
-    'visParams', widget->'visParams',
+    'visParams', widget->>'visParams',
     'startDate', TRIM(widget->'properties'->>2),
     'endDate', TRIM(widget->'properties'->>3)
 )
@@ -186,7 +188,7 @@ SET widget = jsonb_build_object(
     'basemapId', widget->'basemapId',
     'assetName', widget->'ImageCollectionAsset',
     'reducer', 'Mosaic',
-    'visParams', widget->'visParams',
+    'visParams', widget->>'visParams',
     'startDate', '',
     'endDate', ''
 )
@@ -218,7 +220,7 @@ CREATE OR REPLACE FUNCTION build_image_asset(_widget jsonb)
     SELECT jsonb_build_object(
         'type', 'imageAsset',
         'assetName', _widget->>'imageAsset',
-        'visParams', _widget->'visParams'
+        'visParams', _widget->>'visParams'
     )
 
 $$ LANGUAGE SQL;
@@ -242,7 +244,7 @@ CREATE OR REPLACE FUNCTION build_collection_asset(_widget jsonb)
         'type', 'imageCollectionAsset',
         'assetName', _widget->'ImageCollectionAsset',
         'reducer', 'Mosaic',
-        'visParams', _widget->'visParams',
+        'visParams', _widget->>'visParams',
         'startDate', _widget->>'startDate',
         'endDate', _widget->>'startDate'
     )
@@ -301,10 +303,11 @@ CREATE OR REPLACE FUNCTION build_landsat_widgets(_widget jsonb)
 
     SELECT jsonb_build_object(
         'indexName', _widget->'filterType',
-        'bands', _widget->'visParams'->'bands',
-        'min', _widget->'visParams'->'min',
-        'max', _widget->'visParams'->'max',
-        'cloudLessThan', _widget->'visParams'->'cloudLessThan',
+        'bands', coalesce(_widget->'visParams'->>'bands', ''),
+        'min', coalesce(_widget->'visParams'->>'min', ''),
+        'max', coalesce(_widget->'visParams'->>'max', ''),
+        'cloudLessThan', CASE WHEN _widget->'visParams'->>'cloudLessThan' = '' THEN 90
+            ELSE coalesce(_widget->'visParams'->>'cloudLessThan', '90')::int END,
         'startDate', _widget->>'startDate',
         'endDate', _widget->>'endDate'
     )
@@ -334,34 +337,6 @@ WHERE widget->>'type' = 'dualImagery'
 ---------------------------------------------------
 --- Post processing -------------------------------
 ---------------------------------------------------
-
--- Clean visParams
-CREATE OR REPLACE FUNCTION clean_json_string(_str text)
- RETURNS text AS $$
-
-    SELECT regexp_replace(
-        regexp_replace(_str, '”|“', '"', 'g'),
-        '[^"]:', '":'
-    )
-
-$$ LANGUAGE sql;
-
-CREATE OR REPLACE FUNCTION try_parse_json(_str text)
- RETURNS jsonb AS $$
-
- DECLARE
- BEGIN
-    RETURN(SELECT clean_json_string(_str)::jsonb);
- EXCEPTION WHEN OTHERS THEN
-    RAISE NOTICE '%', _str;
-    RETURN '{}';
- END
-
-$$ LANGUAGE plpgsql;
-
-UPDATE project_widgets
-SET widget = jsonb_set(widget, '{"visParams"}', try_parse_json(widget->>'visParams'))
-WHERE widget->'visParams' IS NOT NULL;
 
 -- Remove invalid widgets.
 DELETE FROM project_widgets

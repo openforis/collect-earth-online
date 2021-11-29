@@ -9,8 +9,7 @@ import {EditorContext} from "./constants";
 
 export default function ImageAssetDesigner({isDual = false, prefixPath = ""}) {
     const [bands, setBands] = useState(null);
-    const {widgetDesign} = useContext(EditorContext);
-
+    const {getWidgetDesign} = useContext(EditorContext);
     return (
         <>
             {!isDual && <BaseMapSelector/>}
@@ -21,9 +20,8 @@ export default function ImageAssetDesigner({isDual = false, prefixPath = ""}) {
                 title="GEE Image Asset Name"
             />
             <GetBands
-                asset={widgetDesign.assetName}
+                asset={getWidgetDesign("assetName")}
                 bands={bands}
-                prefixPath={prefixPath}
                 setBands={setBands}
                 type="image"
             />

@@ -22,6 +22,7 @@ import PreImageCollectionDesigner from "./geodash/PreImageCollectionDesigner";
 import {EditorContext, graphWidgetList, gridRowHeight, mapWidgetList} from "./geodash/constants";
 import WidgetContainer from "./geodash/WidgetContainer";
 import SvgIcon from "./components/SvgIcon";
+import {cleanJSON} from "./utils/generalUtils";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -117,37 +118,30 @@ class WidgetLayoutEditor extends React.PureComponent {
     /// Lifecycle
 
     componentDidMount() {
-        this.fetchProject();
-        this.getInstitutionImagery();
-        this.getProjectTemplateList();
+        Promise.all([this.fetchProjectWidgets(), this.getInstitutionImagery(), this.getProjectTemplateList()])
+            .catch(error => {
+                console.error(error);
+                alert("Error loading widget designer.  See console for details.");
+            });
     }
 
     /// API Calls
 
-    fetchProject = () => fetch(`/geo-dash/get-project-widgets?projectId=${this.props.projectId}`)
-        .then(response => (response.ok ? response.json() : Promise.reject(response)))
-        .then(data => this.setState({widgets: data}))
-        .catch(error => {
-            console.error(error);
-            alert("Error downloading the widget list. See console for details.");
-        });
+    fetchProjectWidgets = () =>
+        fetch(`/geo-dash/get-project-widgets?projectId=${this.props.projectId}`)
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(data => this.setState({widgets: data}));
 
-    getInstitutionImagery = () => {
+    getInstitutionImagery = () =>
         fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => this.setState({imagery: data}))
-            .catch(error => {
-                console.error(error);
-                alert("Error downloading the imagery list. See console for details.");
-            });
-    };
+            .then(data => this.setState({imagery: data}));
 
-    getProjectTemplateList = () => {
+    getProjectTemplateList = () =>
         fetch("/get-template-projects")
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
             .then(data => this.setState({projectTemplateList: data}))
             .catch(error => console.error(error));
-    };
 
     getBandsFromGateway = (assetName, assetType, callback) => {
         if (assetName && assetName !== "") {
@@ -285,23 +279,25 @@ class WidgetLayoutEditor extends React.PureComponent {
         });
     };
 
-    parsePrefix = pathPrefix => {
-        if (_.isArray(pathPrefix)) {
-            return pathPrefix;
-        } else if (_.isNumber(pathPrefix) || (_.isString(pathPrefix) && pathPrefix.length > 0)) {
-            return [pathPrefix];
+    setWidgetDesign = (dataKey, val, pathPrefix = "") => {
+        // pathPrefix to be "image1" or "image2" for dual imagery
+        const {widgetDesign} = this.state;
+        if ((pathPrefix === "image1" || pathPrefix === "image2")) {
+            if (dataKey === "type") {
+                const {basemapId, ...blankWidget} = this.widgetTypes[val].blankWidget;
+                this.setState({widgetDesign: {...widgetDesign, [pathPrefix]: {...blankWidget, type: val}}});
+            } else {
+                this.setState({
+                    widgetDesign: {...widgetDesign, [pathPrefix]: {...widgetDesign[pathPrefix], [dataKey]: val}}
+                });
+            }
         } else {
-            return [];
+            this.setState({widgetDesign: {...widgetDesign, [dataKey]: val}});
         }
     };
 
-    setWidgetDesign = (dataKey, val, pathPrefix = "") => {
-        const path = [...this.parsePrefix(pathPrefix), dataKey];
-        this.setState(prevState => ({widgetDesign: _.set(_.cloneDeep(prevState.widgetDesign), path, val)}));
-    };
-
     getWidgetDesign = (dataKey, pathPrefix = "") => {
-        const path = [...this.parsePrefix(pathPrefix), dataKey];
+        const path = pathPrefix.length ? [pathPrefix, dataKey] : [dataKey];
         return _.get(this.state.widgetDesign, path);
     };
 
@@ -314,7 +310,11 @@ class WidgetLayoutEditor extends React.PureComponent {
         const widgetDesign = this.widgetTypes[newType].blankWidget;
         const getWidgetDesign = () => {
             if (widgetDesign.hasOwnProperty("basemapId")) {
-                const lastBasemapId = (_.last(widgets.filter(w => w.hasOwnProperty("basemapId"))) || {}).basemapId;
+                const lastBasemapId = _.get(
+                    _.last(widgets.filter(w => w.hasOwnProperty("basemapId"))),
+                    "basemapId",
+                    {}
+                );
                 return {
                     ...widgetDesign,
                     basemapId: lastBasemapId || imagery[0].id || "-1"
@@ -372,57 +372,30 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     // FIXME, validate widget
-    generateNewWidget = () => {
-        const {title, type, widgetDesign, basemapId} = this.state;
+    buildNewWidget = () => {
+        const {title, type, widgetDesign} = this.state;
         if (title) {
-            const baseWidget = {
-                layout: this.getNextLayout(),
+            return {
                 name: title,
-                type
+                type,
+                ...Object.assign(
+                    widgetDesign,
+                    widgetDesign.hasOwnProperty("visParams") && {visParams: cleanJSON(widgetDesign.visParams)}
+                )
             };
-            // FIXME, keep widgetDesign as its own key
-            // FIXME, potential reduction in this logic if we save the parse visParams when checking.
-
-            // Base widget + widget design
-            if (["statistics", "timeSeries"].includes(type)) {
-                return {
-                    ...baseWidget,
-                    ...widgetDesign
-                };
-            // Base widget + basemap + widget design
-            } else if (["degradationTool", "preImageCollection", "dualImagery"].includes(type)) {
-                return {
-                    ...baseWidget,
-                    basemapId,
-                    ...widgetDesign
-                };
-            // Base widget + widget design, visParams parsed
-            } else if (["imageAsset", "imageElevation"].includes(type)) {
-                const {visParams} = widgetDesign;
-                return {
-                    ...baseWidget,
-                    ...widgetDesign,
-                    visParams: JSON.parse(visParams || "{}")
-                };
-            // Base widget + basemap + widget design, visParams parsed
-            } else if (["polygonCompare", "imageCollectionAsset"].includes(type)) {
-                const {visParams} = widgetDesign;
-                return {
-                    ...baseWidget,
-                    basemapId,
-                    ...widgetDesign,
-                    visParams: JSON.parse(visParams || "{}")
-                };
-            } else {
-                return null;
-            }
         } else {
             return null;
         }
     };
 
     createNewWidget = () => {
-        this.postNewWidget(this.generateNewWidget());
+        const newWidget = this.buildNewWidget();
+        if (newWidget) {
+            this.postNewWidget({
+                layout: this.getNextLayout(),
+                ...newWidget
+            });
+        }
     };
 
     copyWidget = existingWidget => {
@@ -435,15 +408,19 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     saveWidgetEdits = () => {
-        const {originalWidget} = this.state;
-        this.updateWidget(
-            "update-widget",
-            {
-                ...originalWidget,
-                ...this.generateNewWidget()
-            }
-        );
-        this.setState({editDialog: false});
+        const {originalWidget: {id, layout}} = this.state;
+        const newWidget = this.buildNewWidget();
+        if (newWidget) {
+            this.updateWidget(
+                "update-widget",
+                {
+                    id,
+                    layout,
+                    ...this.buildNewWidget()
+                }
+            );
+            this.setState({editDialog: false, originalWidget: null});
+        }
     };
 
     /// ReactGridLayout

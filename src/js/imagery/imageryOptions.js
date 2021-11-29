@@ -1,4 +1,4 @@
-import {partition} from "../utils/generalUtils";
+import {cleanJSON, isValidJSON} from "../utils/generalUtils";
 
 export const nicfiLayers = [
     "2015-12_2016-05",
@@ -37,15 +37,6 @@ const urlValidator = url => /^(?:http|https):\/\/[\w.-]+(?:\.[\w-]+)+[\w\-.,@?^=
 
 const olProjectionValidator = value => !/crs|srs|epsg|wgs/mi.test(value);
 
-const isValidJSON = str => {
-    try {
-        JSON.parse(str);
-        return true;
-    } catch (e) {
-        return false;
-    }
-};
-
 export const imageryOptions = [
     // Note optionalProxy is for optionally proxied imagery. optionalProxy = false && defaultProxy = true are always proxied.
     // Default type is text, default parent is none, a referenced parent must be entered as a json string
@@ -72,18 +63,7 @@ export const imageryOptions = [
                 display: "Additional WMS Params (JSON format)",
                 required: false,
                 type: "JSON",
-                sanitizer: value => {
-                    const params = value
-                        .replace(/\n/g, ",")
-                        .replace(/[{} "']/g, "")
-                        .split(/[,:]/)
-                        .filter(u => u !== "");
-                    return params.length % 2 === 0
-                        ? `{${partition(params, 2)
-                            .map(([k, v]) => `"${k}": "${v}"`)
-                            .join(",")}}`
-                        : value;
-                },
+                sanitizer: cleanJSON,
                 validator: value => (!isValidJSON(value)
                     ? "Invalid JSON in the \"Visualization Parameters\" field."
                     : !olProjectionValidator(value)
@@ -356,6 +336,7 @@ export const imageryOptions = [
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 0-100, \"max\": 2800-3200}"},
+                sanitizer: cleanJSON,
                 validator: value => (!isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "")
             }
         ]
@@ -388,6 +369,7 @@ export const imageryOptions = [
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0-100, \"max\": 2800-3200}"},
+                sanitizer: cleanJSON,
                 validator: value => (!isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "")
             }
         ],

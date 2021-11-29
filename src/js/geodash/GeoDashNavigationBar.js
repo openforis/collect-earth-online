@@ -55,7 +55,7 @@ export default class GeoDashNavigationBar extends React.Component {
                             {editor
                                 ? (
                                     <>
-                                        <li className="nav-item my-auto ml-1" id="copyWidgetLayout">
+                                        <li className="nav-item my-auto ml-1">
                                             <button
                                                 alt="This will remove any existing widgets currently configured."
                                                 className="btn btn-outline-lightgreen btn-sm"
