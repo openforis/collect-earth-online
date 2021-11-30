@@ -172,13 +172,13 @@ mercator.maybeParseJson = text => {
 
 // [Side Effects] Makes an AJAX call to get the GEE mapid and token
 // and then updates the temporary XYZ layer's source URL.
+// TODO, wrap request in cache function
 mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
-    const geeLayer = new XYZ({
-        url: "https://earthengine.googleapis.com/v1alpha/projects/earthengine-legacy/maps/temp/tiles/{z}/{x}/{y}",
+    const geeSource = new XYZ({
+        url: "", // TODO, get a loading image for URL
         id: imageryId,
         attributions: attribution
     });
-    geeLayer.setProperties({id: imageryId});
     fetch("/geo-dash/gateway-request", {
         method: "POST",
         headers: {
@@ -190,15 +190,7 @@ mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
         .then(res => (res.ok ? res.json() : Promise.reject()))
         .then(data => {
             if (data && data.hasOwnProperty("url")) {
-                const newLayer = new XYZ({
-                    url: data.url,
-                    attributions: attribution
-                });
-                mercator.currentMap.getLayers().forEach(lyr => {
-                    if (imageryId === lyr.getSource().get("id")) {
-                        lyr.setSource(newLayer);
-                    }
-                });
+                geeSource.setUrl(data.url);
             } else {
                 console.warn("Wrong Data Returned");
             }
@@ -206,7 +198,7 @@ mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
             console.error("Error loading " + sourceConfig.type + " imagery: ");
             console.error(response);
         });
-    return geeLayer;
+    return geeSource;
 };
 
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig is invalid.
@@ -235,7 +227,7 @@ mercator.createSource = (sourceConfig,
         } else {
             return new XYZ({url: "img/source-not-found.png"});
         }
-    } else if (sourceConfig.type === "Planet") {
+    } else if (type === "Planet") {
         return new XYZ({
             url: "https://tiles{0-3}.planet.com/basemaps/v1/global_monthly_"
                 + `${sourceConfig.year}_${sourceConfig.month}`
@@ -243,7 +235,7 @@ mercator.createSource = (sourceConfig,
                 + `?api_key=${sourceConfig.accessToken}`,
             attributions: attribution
         });
-    } else if (sourceConfig.type === "PlanetNICFI") {
+    } else if (type === "PlanetNICFI") {
         return new XYZ({
             url: "https://tiles{0-3}.planet.com/basemaps/v1/planet-tiles/planet_medres_normalized_analytic_"
                 + sourceConfig.time
@@ -252,7 +244,7 @@ mercator.createSource = (sourceConfig,
                 + `&proc=${sourceConfig.band}`,
             attributions: attribution
         });
-    } else if (sourceConfig.type === "PlanetDaily") {
+    } else if (type === "PlanetDaily") {
         // make ajax call to get layerid then add xyz layer
         const theJson = {
             path: "getPlanetTile",
@@ -262,13 +254,12 @@ mercator.createSource = (sourceConfig,
             layerCount: 20, // FIXME: what should this optimally be?
             geometry: extent
         };
-        const planetLayer = new XYZ({
+        const planetSource = new XYZ({
             // some random tiles to be replaced later
             url: "https://tiles0.planet.com/data/v1/layers/DkTnYnMW_G7i-E6Nj6lb9s7PaG8PG-Hy23Iyug/{z}/{x}/{y}.png",
             attributions: attribution
         });
-        planetLayer.setProperties({id: imageryId});
-        console.log("Calling out to /geo-dash/gateway-request with this JSON:\n\n" + JSON.stringify(theJson));
+        planetSource.setProperties({id: imageryId});
         fetch("/geo-dash/gateway-request", {
             method: "POST",
             headers: {
@@ -304,6 +295,7 @@ mercator.createSource = (sourceConfig,
                     }),
                     title: d.date
                 }));
+                // FIXME, dont use mercator.currentMap
                 const dummyPlanetLayer = mercator.currentMap.getLayers().getArray()
                     .find(lyr => imageryId === lyr.getSource().get("id"));
                 mercator.currentMap.removeLayer(dummyPlanetLayer);
@@ -315,6 +307,7 @@ mercator.createSource = (sourceConfig,
                 });
                 mercator.currentMap.addLayer(layerGroup);
                 const layerGroupArrays = layerGroup.getLayers().getArray();
+                // FIXME CEO-125, move to planet control so it is only shown when planet is selected
                 if (layerGroupArrays.length > 0) {
                     mercator.currentMap.addControl(
                         new PlanetLayerSwitcher({layers: layerGroupArrays})
@@ -323,126 +316,67 @@ mercator.createSource = (sourceConfig,
             }).catch(response => {
                 console.error("Error loading Planet Daily imagery: ", response);
             });
-        return planetLayer;
-    } else if (sourceConfig.type === "BingMaps") {
+        return planetSource;
+    } else if (type === "BingMaps") {
         return new BingMaps({
             imagerySet: sourceConfig.imageryId,
             key: sourceConfig.accessToken,
             maxZoom: 19,
             attributions: attribution
         });
-    } else if (sourceConfig.type === "GeoServer") {
+    } else if (type === "GeoServer") {
         return new TileWMS({
             url: sourceConfig.geoserverUrl,
             params: sourceConfig.geoserverParams,
             attributions: attribution
         });
-    } else if (sourceConfig.type === "xyz") {
+    } else if (type === "xyz") {
         return new XYZ({url: sourceConfig.url});
-    } else if (sourceConfig.type === "Sentinel2" || sourceConfig.type === "Sentinel1") {
-        const bandCombination = sourceConfig.bandCombination;
-        const bands = sourceConfig.type === "Sentinel1" ? bandCombination
-            : bandCombination === "FalseColorInfrared" ? "B8,B4,B3"
-                : bandCombination === "FalseColorUrban" ? "B12,B11,B4"
-                    : bandCombination === "Agriculture" ? "B11,B8,B2"
-                        : bandCombination === "HealthyVegetation" ? "B8,B11,B2"
-                            : bandCombination === "ShortWaveInfrared" ? "B12,B8A,B4"
-                                : "B4,B3,B2";
-
+    } else if (type === "Sentinel2" || type === "Sentinel1") {
+        const {bandCombination} = sourceConfig;
+        const getBands = bc => {
+            if (type === "Sentinel1") {
+                return bc;
+            } else if (bc === "FalseColorInfrared") {
+                return "B8,B4,B3";
+            } else if (bc === "FalseColorUrban") {
+                return "B12,B11,B4";
+            } else if (bc === "Agriculture") {
+                return "B11,B8,B2";
+            } else if (bc === "HealthyVegetation") {
+                return "B8,B11,B2";
+            } else if (bc === "ShortWaveInfrared") {
+                return "B12,B8A,B4";
+            } else { return "B4,B3,B2"; }
+        };
+        const bands = getBands(bandCombination);
         const endDate = new Date(sourceConfig.year, sourceConfig.month, 0);
         const theJson = {
-            path: sourceConfig.type === "Sentinel2" ? "FilteredSentinel2" : "FilteredSentinelSAR",
+            path: type === "Sentinel2" ? "filteredSentinel2" : "filteredSentinelSAR",
             bands,
             min: sourceConfig.min,
             max: sourceConfig.max,
-            cloudLessThan: sourceConfig.type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null,
-            dateFrom: sourceConfig.year + "-" + (sourceConfig.month.length === 1 ? "0" : "") + sourceConfig.month + "-01",
-            dateTo : formatDateISO(endDate)
+            cloudLessThan: type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null,
+            startDate: sourceConfig.year + "-" + (sourceConfig.month.length === 1 ? "0" : "") + sourceConfig.month + "-01",
+            endDate : formatDateISO(endDate)
         };
         return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
-    } else if (sourceConfig.type === "GEEImage") {
+    } else if (type === "GEEImage") {
         const theJson = {
             path: "image",
-            imageName: sourceConfig.imageId,
-            visParams: mercator.maybeParseJson(sourceConfig.imageVisParams)
+            ...sourceConfig,
+            visParams: mercator.maybeParseJson(sourceConfig.visParams)
+
         };
         return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
-    } else if (sourceConfig.type === "GEEImageCollection") {
+    } else if (type === "GEEImageCollection") {
         const theJson = {
-            path: "meanImageByMosaicCollection",
-            collectionName: sourceConfig.collectionId,
-            visParams: mercator.maybeParseJson(sourceConfig.collectionVisParams),
-            dateFrom: sourceConfig.startDate,
-            dateTo: sourceConfig.endDate
+            path: "imageCollection",
+            ...sourceConfig,
+            visParams: mercator.maybeParseJson((sourceConfig.visParams)
         };
         return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
-    } else if (sourceConfig.type === "GeeGateway") {
-        // get variables and make ajax call to get mapid and token
-        // then add xyz layer
-        // const fts = {'LANDSAT5': 'Landsat5Filtered', 'LANDSAT7': 'Landsat7Filtered', 'LANDSAT8':'Landsat8Filtered',
-        //              'Sentinel2': 'FilteredSentinel'};
-        // const url = "http://collect.earth:8888/" + fts[sourceConfig.geeParams.filterType];
-        const url = (sourceConfig.path) ? "thegateway" : sourceConfig.geeUrl;
-        const cloudVar = sourceConfig.geeParams.visParams.cloudLessThan ? parseInt(sourceConfig.geeParams.visParams.cloudLessThan) : "";
-        const visParams = mercator.maybeParseJson(sourceConfig.geeParams.visParams);
-        const theJson = {
-            dateFrom: sourceConfig.geeParams.startDate,
-            dateTo: sourceConfig.geeParams.endDate,
-            bands: sourceConfig.geeParams.visParams.bands,
-            min: sourceConfig.geeParams.visParams.min,
-            max: sourceConfig.geeParams.visParams.max,
-            cloudLessThan: cloudVar,
-            visParams,
-            path: sourceConfig.geeParams.path
-        };
-        if (sourceConfig.geeParams.ImageAsset) {
-            theJson.imageName = sourceConfig.geeParams.ImageAsset;
-        } else if (sourceConfig.geeParams.ImageCollectionAsset) {
-            theJson.imageName = sourceConfig.geeParams.ImageCollectionAsset;
-        }
-        const theID = Math.random().toString(36).substr(2, 16) + "_" + Math.random().toString(36).substr(2, 9);
-        const geeLayer = new XYZ({
-            url: "https://earthengine.googleapis.com/map/temp/{z}/{x}/{y}?token=",
-            id: theID,
-            attributions: attribution
-        });
-        geeLayer.setProperties({id: theID});
-        if (sourceConfig.create) {
-            fetch(url, {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
-                    mapConfig: sourceConfig,
-                    LayerId: theID
-                },
-                body: JSON.stringify(theJson)
-            })
-                .then(res => {
-                    if (res.ok) {
-                        return res.json();
-                    } else {
-                        Promise.reject();
-                    }
-                })
-                .then(data => {
-                    if (data.hasOwnProperty("mapid")) {
-                        const newLayer = new XYZ({
-                            url: "https://earthengine.googleapis.com/map/" + data.mapid + "/{z}/{x}/{y}?token=" + data.token,
-                            attributions: attribution
-                        });
-                        mercator.currentMap.getLayers().forEach(lyr => {
-                            if (theID === lyr.getSource().get("id")) {
-                                lyr.setSource(newLayer);
-                            }
-                        });
-                    } else {
-                        console.warn("Wrong Data Returned");
-                    }
-                }).catch(response => console.error("Error loading EE imagery: ", response));
-        }
-        return geeLayer;
-    } else if (sourceConfig.type === "MapBoxRaster") {
+    } else if (type === "MapBoxRaster") {
         return new XYZ({
             url: "https://api.mapbox.com/v4/"
                  + sourceConfig.layerName
@@ -451,7 +385,7 @@ mercator.createSource = (sourceConfig,
             attributions: mapboxAttributionText,
             attributionsCollapsible: false
         });
-    } else if (sourceConfig.type === "MapBoxStatic") {
+    } else if (type === "MapBoxStatic") {
         return new XYZ({
             url: "https://api.mapbox.com/styles/v1/"
                  + sourceConfig.userName + "/"
@@ -461,7 +395,7 @@ mercator.createSource = (sourceConfig,
             attributions:  mapboxAttributionText,
             attributionsCollapsible: false
         });
-    } else if (sourceConfig.type === "OSM") {
+    } else if (type === "OSM") {
         return new OSM();
     } else {
         return new XYZ({url: "img/source-not-found.png"});
@@ -470,7 +404,6 @@ mercator.createSource = (sourceConfig,
 
 // [Pure] Returns a new TileLayer object or null if the layerConfig is invalid.
 mercator.createLayer = (layerConfig, projectAOI, show = false) => {
-    layerConfig.sourceConfig.create = true; // FIXME: Remove this once updating GEE layers is moved to geo-dash.js.
     const source = mercator.createSource(
         layerConfig.sourceConfig,
         layerConfig.id,

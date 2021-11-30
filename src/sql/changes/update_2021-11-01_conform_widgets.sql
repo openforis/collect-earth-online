@@ -5,6 +5,9 @@ SELECT delete_project(project_uid) FROM projects WHERE project_uid IN (4998, 105
 ALTER TABLE project_widgets ADD COLUMN widget_bk jsonb;
 UPDATE project_widgets SET widget_bk = widget;
 
+ALTER TABLE imagery ADD COLUMN sc_bk jsonb;
+UPDATE imagery SET sc_bk = source_config;
+
 -- Update Stats widgets
 UPDATE project_widgets
 SET widget = jsonb_build_object(
@@ -352,3 +355,57 @@ UPDATE project_widgets
 SET widget = jsonb_set(widget, '{"basemapId"}', to_jsonb(select_public_osm()))
 WHERE widget->>'basemapId' IS NULL
     AND widget ? 'basemapId' = TRUE;
+
+---------------------------------------------------
+--- Conform Imagery -------------------------------
+---------------------------------------------------
+
+UPDATE imagery
+SET source_config = jsonb_build_object(
+    'type', 'GEEImage',
+    'assetName', source_config->>'imageId',
+    'visParams', source_config->>'imageVisParams'
+)
+WHERE source_config->>'type' = 'GEEImage';
+
+UPDATE imagery
+SET source_config = jsonb_build_object(
+    'type', 'GEEImageCollection',
+    'assetName', source_config->'collectionId',
+    'visParams', source_config->>'collectionVisParams',
+    'startDate', source_config->>'startDate',
+    'endDate', source_config->>'endDate',
+    'reducer', 'Mean'
+)
+WHERE source_config->>'type' = 'GEEImageCollection';
+
+-- Old style
+
+UPDATE imagery
+SET source_config = jsonb_build_object(
+    'type', 'GEEImage',
+    'assetName', source_config->'geeParams'->>'ImageAsset',
+    'visParams', source_config->'geeParams'->>'visParams'
+)
+WHERE source_config->>'type' = 'GeeGateway'
+    AND ((source_config->>'geeUrl' = '/geo-dash/gateway-request'
+            AND source_config->'geeParams'->>'path' = 'image')
+        OR source_config->>'geeUrl' LIKE '%:8888/image');
+
+UPDATE imagery
+SET source_config = jsonb_build_object(
+    'type', 'GEEImageCollection',
+    'assetName', source_config->'geeParams'->>'ImageCollectionAsset',
+    'visParams', source_config->'geeParams'->>'visParams',
+    'startDate', source_config->'geeParams'->>'startDate',
+    'endDate', source_config->'geeParams'->>'endDate',
+    'reducer', 'Mean'
+)
+WHERE source_config->>'type' = 'GeeGateway'
+    AND (source_config->>'geeUrl' = '/geo-dash/gateway-request'
+    AND source_config->'geeParams'->>'path' = 'ImageCollectionAsset');
+
+-- Remove remaining which were created in error
+SELECT archive_imagery(imagery_uid)
+FROM imagery
+WHERE source_config->>'type' = 'GeeGateway';

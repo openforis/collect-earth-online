@@ -327,12 +327,12 @@ export const imageryOptions = [
         defaultProxy: false,
         params: [
             {
-                key: "imageId",
-                display: "Asset ID",
+                key: "assetName",
+                display: "Asset Name",
                 options: {placeholder: "USDA/NAIP/DOQQ/n_4207309_se_18_1_20090525"}
             },
             {
-                key: "imageVisParams",
+                key: "visParams",
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 0-100, \"max\": 2800-3200}"},
@@ -348,8 +348,8 @@ export const imageryOptions = [
         defaultProxy: false,
         params: [
             {
-                key: "collectionId",
-                display: "Asset ID",
+                key: "assetName",
+                display: "Asset Name",
                 options: {placeholder: "LANDSAT/LC08/C01/T1_SR"}
             },
             {
@@ -365,7 +365,7 @@ export const imageryOptions = [
                 options: {max: new Date().toJSON().split("T")[0]}
             },
             {
-                key: "collectionVisParams",
+                key: "visParams",
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0-100, \"max\": 2800-3200}"},
