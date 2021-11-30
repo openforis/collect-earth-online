@@ -34,7 +34,7 @@ export default function TimeSeriesDesigner() {
                     <GDSelect dataKey="band" disabled items={bands} title="Band to graph"/>
                     <GDSelect
                         dataKey="reducer"
-                        items={["Min", "Max", "Mean", "Median", "Mode", "Mosaic"]}
+                        items={["Min", "Max", "Mean", "Median", "Mode"]}
                         title="Reducer"
                     />
                 </>
