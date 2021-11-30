@@ -11,7 +11,7 @@ import GDSelect from "./form/GDSelect";
 
 export default function ImageCollectionAssetDesigner({isDual = false, prefixPath = ""}) {
     const [bands, setBands] = useState(null);
-    const {widgetDesign} = useContext(EditorContext);
+    const {getWidgetDesign} = useContext(EditorContext);
     return (
         <>
             {!isDual && <BaseMapSelector/>}
@@ -22,10 +22,10 @@ export default function ImageCollectionAssetDesigner({isDual = false, prefixPath
                 title="GEE Image Collection Asset Name"
             />
             <GetBands
-                asset={widgetDesign.assetName}
+                assetName={getWidgetDesign("assetName")}
+                assetType="imageCollection"
                 bands={bands}
                 setBands={setBands}
-                type="imageCollection"
             />
             <GDSelect
                 dataKey="reducer"

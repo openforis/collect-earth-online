@@ -143,38 +143,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             .then(data => this.setState({projectTemplateList: data}))
             .catch(error => console.error(error));
 
-    getBandsFromGateway = (assetName, assetType, callback) => {
-        if (assetName && assetName !== "") {
-            const postObject = {
-                path: "getAvailableBands",
-                assetName,
-                assetType
-            };
-            fetch("/geo-dash/gateway-request", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(postObject)
-            })
-                .then(res => (res.ok ? res.json() : Promise.reject()))
-                .then(data => {
-                    if (data.hasOwnProperty("bands")) {
-                        callback(data.bands);
-                    } else if (data.hasOwnProperty("errMsg")) {
-                        callback(data.errMsg);
-                    } else {
-                        callback(null);
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                    callback(null);
-                });
-        }
-    };
-
     postNewWidget = newWidget => {
         if (newWidget) {
             fetch(
@@ -551,8 +519,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                     setWidgetDesign: this.setWidgetDesign,
                     widgetDesign: this.state.widgetDesign,
                     imagery: this.state.imagery,
-                    getInstitutionImagery: this.getInstitutionImagery,
-                    getBandsFromGateway: this.getBandsFromGateway
+                    getInstitutionImagery: this.getInstitutionImagery
                 }}
             >
                 <div style={{marginBottom: `${gridRowHeight}px`}}>

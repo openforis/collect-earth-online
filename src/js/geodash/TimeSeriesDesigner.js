@@ -9,7 +9,7 @@ import GDInput from "./form/GDInput";
 
 export default function TimeSeriesDesigner() {
     const [bands, setBands] = useState(null);
-    const {widgetDesign} = useContext(EditorContext);
+    const {getWidgetDesign} = useContext(EditorContext);
     return (
         <>
             <GDSelect
@@ -17,7 +17,7 @@ export default function TimeSeriesDesigner() {
                 items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI", "Custom"]}
                 title="Data Type"
             />
-            {widgetDesign.indexName === "Custom" && (
+            {getWidgetDesign("indexName") === "Custom" && (
                 <>
                     <GDInput
                         dataKey="assetName"
@@ -25,11 +25,11 @@ export default function TimeSeriesDesigner() {
                         title="GEE Image Collection Asset Name"
                     />
                     <GetBands
-                        asset={widgetDesign.imageCollection}
+                        assetName={getWidgetDesign("assetName")}
+                        assetType="imageCollection"
                         bands={bands}
                         hideLabel
                         setBands={setBands}
-                        type="imageCollection"
                     />
                     <GDSelect dataKey="band" disabled items={bands} title="Band to graph"/>
                     <GDSelect

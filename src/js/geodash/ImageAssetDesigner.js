@@ -20,10 +20,10 @@ export default function ImageAssetDesigner({isDual = false, prefixPath = ""}) {
                 title="GEE Image Asset Name"
             />
             <GetBands
-                asset={getWidgetDesign("assetName")}
+                assetName={getWidgetDesign("assetName")}
+                assetType="image"
                 bands={bands}
                 setBands={setBands}
-                type="image"
             />
             <GDTextArea
                 dataKey="visParams"
