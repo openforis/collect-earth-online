@@ -1,8 +1,71 @@
 (ns collect-earth-online.db.geodash
-  (:require [clj-http.client :as client]
+  (:require [libpython-clj2.require :refer [require-python]]
+            [libpython-clj2.python  :refer [py. get-attr] :as py]
+            [libpython-clj2.python.copy  :refer [*item-tuple-cutoff*]]
             [triangulum.database :refer [call-sql]]
             [triangulum.type-conversion :as tc]
-            [collect-earth-online.views :refer [data-response]]))
+            [triangulum.config :refer [get-config]]
+            [collect-earth-online.views :refer [data-response]]
+            [clojure.string :as str]))
+
+;;; Constants
+
+(def ^:private max-age (* 24 60 1000)) ; Once a day
+
+;;; GEE Python interface
+
+(require-python '[sys :bind-ns])
+(py. (get-attr sys "path") "append" "src/py")
+(require-python '[gee.routes :as gee]
+                '[gee.utils :refer [initialize]])
+
+(defonce last-initialized (atom 0))
+
+(defn- check-initialized []
+  (when (> (- (System/currentTimeMillis) @last-initialized) max-age)
+    (let [{:keys [ee-account ee-key-path]} (get-config :gee)]
+      (initialize ee-account ee-key-path)
+      (reset! last-initialized (System/currentTimeMillis)))))
+
+(check-initialized)
+
+(defn- parse-py-errors [e]
+  (let [error-parts (as-> e %
+                      (ex-message %)
+                      (str/split % #"\n")
+                      (last %)
+                      (str/split % #": "))]
+    {:errType  (first error-parts)
+     :errMsg   (->> error-parts
+                    (rest)
+                    (str/join ": "))}))
+
+(def path->python
+  {"degradationTimeSeries"  gee/degradationTimeSeries
+   "degradationTileUrl"     gee/degradationTileUrl
+   "featureCollection"      gee/featureCollection
+   "filteredLandsat"        gee/filteredLandsat
+   "filteredSentinel2"      gee/filteredSentinel2
+   "filteredSentinelSAR"    gee/filteredSentinelSAR
+   "getAvailableBands"      gee/getAvailableBands
+   "getPlanetTile"          gee/getPlanetTile
+   "image"                  gee/image
+   "imageCollection"        gee/imageCollection
+   "imageCollectionByIndex" gee/imageCollectionByIndex
+   "statistics"             gee/statistics
+   "timeSeriesByAsset"      gee/timeSeriesByAsset
+   "timeSeriesByIndex"      gee/timeSeriesByIndex})
+
+(defn gateway-request [{:keys [params json-params]}]
+  (check-initialized)
+  (data-response
+   (if-let [py-fn (some-> params :path path->python)]
+     (binding [*item-tuple-cutoff* 0]
+       (try (py-fn json-params)
+            (catch Exception e (parse-py-errors e))))
+     {:errMsg (str "No GEE function defined for path " (:path params) ".")})))
+
+;;; Widget Routes
 
 (defn- return-widgets [project-id]
   (mapv (fn [{:keys [widget_id widget]}]
@@ -45,10 +108,3 @@
     (call-sql "delete_project_widgets" project-id)
     (call-sql "copy_project_widgets" template-id project-id)
     (data-response (return-widgets project-id))))
-
-(defn gateway-request [{:keys [params json-params server-name]}]
-  (let [path (:path params)]
-    (client/post (str "http://" server-name ":8888/" path)
-                 {:body (tc/clj->json json-params)
-                  :content-type :json
-                  :accept :json})))

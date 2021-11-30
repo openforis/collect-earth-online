@@ -12,6 +12,7 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 - [[https://postgis.net/install/][PostGIS (version 3)]]
 - [[https://www.7-zip.org/][p7zip]]
 - [[https://nodejs.org/en/][node 10]]
+- [[https://www.python.org/downloads/][Python 3]]
 
 ** Application Configuration
 
@@ -136,7 +137,25 @@ Replace *X* with the PostgreSQL version installed on your computer.
 Copy ~config.default.edn~ to ~config.edn~ and update any settings that you wish.
 The base set of defaults should be sufficient to run CEO in a development setting.
 
+** Python dependencies
+
+Use pip to install dependencies.  The python / clj interop does not support virtual environments.
+
+#+begin_src sh
+pip install -r requirements.txt
+pip install earthengine-api --upgrade
+#+end_src
+
 ** Development Web Server
+
+*** Google Earth Engine authentication
+
+For GEE requests to work from the dev environment, you must store local
+authentication information with:
+
+#+begin_src sh
+earthengine authenticate
+#+end_src
 
 *** Compile and run
 
@@ -206,13 +225,15 @@ server details to the file, replacing the values with your own.
 View the [[https://github.com/sig-gis/triangulum#triangulumhttps][Triangulum HTTPS]]
 page for further instructions on enabling HTTPS.
 
-*** Building GEE-Gateway
+*** Google Earth Engine service account
 
-In order to use the Geo-Dash portion of CEO, we need to install an
-application to communicate with Google Earth Engine called
-GEE-Gateway. To build and launch GEE-Gateway, download its source code
-from https://github.com/openforis/gee-gateway and follow the steps in
-its README file.
+For production it is recommended that you use a service account with a key file.
+Set the service account and key path in the optional ~:gee~ section of config.edn.
+
+#+begin_src text
+`:gee {:ee-account  "example@gmail.com"
+       :ee-key-path "path/to/file.json"}
+#+end_src
 
 *** Launching the Web Server
 
@@ -223,7 +244,7 @@ project directory and run:
 npm install
 npm run webpack-prod
 clojure -M:build-db functions -d ceo
-clojure -M:server start -m [dev|prod] [-p 8080] [-P 8443]
+clojure -M:server start -m [dev|prod] [-p 8080] [-P 8443] [-r]
 #+end_src
 
 The website will then be available at http://localhost:8080 unless a

@@ -364,16 +364,14 @@ mercator.createSource = (sourceConfig,
     } else if (type === "GEEImage") {
         const theJson = {
             path: "image",
-            ...sourceConfig,
-            visParams: mercator.maybeParseJson(sourceConfig.visParams)
+            ...sourceConfig
 
         };
         return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
     } else if (type === "GEEImageCollection") {
         const theJson = {
             path: "imageCollection",
-            ...sourceConfig,
-            visParams: mercator.maybeParseJson((sourceConfig.visParams)
+            ...sourceConfig
         };
         return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
     } else if (type === "MapBoxRaster") {

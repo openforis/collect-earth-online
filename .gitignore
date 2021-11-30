@@ -16,6 +16,9 @@ target/
 config.edn
 package-lock.json
 announcement.txt
+__pycache__
+classes
 
 # MacOS X Backups
 .DS_Store
+ceo-gee-key.json

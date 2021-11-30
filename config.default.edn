@@ -13,4 +13,6 @@
                :mode      "prod"
                :log-dir   "logs"}
  :ga-id       nil
- :session-key "changeme12345678"}
+ :session-key "changeme12345678"
+ :gee         {:ee-account  "example@gmail.com"
+               :ee-key-path "ceo-gee-key.json"}}
