@@ -27,7 +27,10 @@
                                 :userRole (if (:administrator user) "admin" "user")}})))) ; TODO user 1 is the only superuser
 
 (defn- get-register-errors [email password password-confirmation]
-  (cond (not (email? email))
+  (cond (sql-primitive (call-sql "email_taken" email -1))
+        (str "Account " email " already exists.")
+
+        (not (email? email))
         (str email " is not a valid email address.")
 
         (< (count password) 8)
@@ -35,9 +38,6 @@
 
         (not= password password-confirmation)
         "Password and Password confirmation do not match."
-
-        (sql-primitive (call-sql "email_taken" email -1))
-        (str "Account " email " already exists.")
 
         :else nil))
 
