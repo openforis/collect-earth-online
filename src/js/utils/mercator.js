@@ -365,14 +365,14 @@ mercator.createSource = (sourceConfig,
         const theJson = {
             path: "image",
             imageName: sourceConfig.imageId,
-            visParams: JSON.parse(sourceConfig.imageVisParams)
+            visParams: mercator.maybeParseJson(sourceConfig.imageVisParams)
         };
         return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
     } else if (sourceConfig.type === "GEEImageCollection") {
         const theJson = {
             path: "meanImageByMosaicCollection",
             collectionName: sourceConfig.collectionId,
-            visParams: JSON.parse(sourceConfig.collectionVisParams),
+            visParams: mercator.maybeParseJson(sourceConfig.collectionVisParams),
             dateFrom: sourceConfig.startDate,
             dateTo: sourceConfig.endDate
         };
