@@ -313,8 +313,8 @@ class SimpleCollection extends React.Component {
                                 : this.localeText.navPrevEnd);
                     } else {
                         this.setState({
-                            currentPlot: data,
-                            ...this.newPlotValues(data)
+                            currentPlot: data[0],
+                            ...this.newPlotValues(data[0])
                         });
                     }
                 })
