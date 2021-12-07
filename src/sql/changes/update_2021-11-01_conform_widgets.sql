@@ -17,19 +17,6 @@ SET widget = jsonb_build_object(
 )
 WHERE widget->'properties'->>0 = 'getStats';
 
--- Update Elevation widgets
-UPDATE project_widgets
-SET widget = jsonb_build_object(
-    'layout', widget->'layout',
-    'name', widget->'name',
-    'type', 'imageElevation',
-    'basemapId', widget->'basemapId',
-    'assetName', widget->>'ImageAsset',
-    'visParams', widget->>'visParams'
-)
-WHERE widget->>'ImageAsset' is not null
-    AND widget->>'ImageAsset' = 'USGS/SRTMGL1_003';
-
 -- Update Image Asset widgets
 UPDATE project_widgets
 SET widget = jsonb_build_object(
@@ -41,7 +28,6 @@ SET widget = jsonb_build_object(
     'visParams', widget->>'visParams'
 )
 WHERE widget->>'ImageAsset' is not null
-    AND widget->>'ImageAsset' <> 'USGS/SRTMGL1_003';
 
 -- Update Degradation widgets
 UPDATE project_widgets

@@ -13,7 +13,6 @@ import GeoDashModal from "./geodash/GeoDashModal";
 import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
 import ImageAssetDesigner from "./geodash/ImageAssetDesigner";
 import ImageCollectionAssetDesigner from "./geodash/ImageCollectionAssetDesigner";
-import ImageElevationDesigner from "./geodash/ImageElevationDesigner";
 import StatsDesigner from "./geodash/StatsDesigner";
 import TimeSeriesDesigner from "./geodash/TimeSeriesDesigner";
 import PolygonDesigner from "./geodash/PolygonDesigner";
@@ -96,11 +95,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                     startDate: ""
                 },
                 WidgetDesigner: PreImageCollectionDesigner
-            },
-            imageElevation: {
-                title: "SRTM Digital Elevation Data 30m",
-                blankWidget: {basemapId: "-1", assetName: "USGS/SRTMGL1_003", visParams: ""},
-                WidgetDesigner: ImageElevationDesigner
             },
             statistics: {
                 title: "Statistics",

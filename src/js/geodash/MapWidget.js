@@ -96,7 +96,7 @@ export default class MapWidget extends React.Component {
 
     // TODO update widget to {name, type, params}
     getPostObject = widget => {
-        if (widget.type === "imageAsset" || widget.type === "imageElevation") {
+        if (widget.type === "imageAsset") {
             return {path: "image", ...widget};
         } else if (widget.type === "degradationTool") {
             const {stretch, imageDate, degDataType, plotExtentPolygon} = this.props;

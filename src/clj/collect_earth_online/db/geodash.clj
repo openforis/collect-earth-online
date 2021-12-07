@@ -1,7 +1,7 @@
 (ns collect-earth-online.db.geodash
   (:require [libpython-clj2.require :refer [require-python]]
             [libpython-clj2.python  :refer [py. get-attr] :as py]
-            [libpython-clj2.python.copy  :refer [*item-tuple-cutoff*]]
+            [libpython-clj2.python.copy :refer [*item-tuple-cutoff*]]
             [triangulum.database :refer [call-sql]]
             [triangulum.type-conversion :as tc]
             [triangulum.config :refer [get-config]]
