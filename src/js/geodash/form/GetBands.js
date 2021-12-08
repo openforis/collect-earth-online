@@ -54,7 +54,7 @@ export default function GetBands({bands, setBands, assetName, assetType, hideLab
                     {bands === null
                         ? "Click on refresh to see the Available Bands."
                         : isArray(bands)
-                            ? bands.join(",")
+                            ? bands.join(", ")
                             : bands }
                 </label>
             )}
