@@ -21,7 +21,7 @@ import PreImageCollectionDesigner from "./geodash/PreImageCollectionDesigner";
 import {EditorContext, graphWidgetList, gridRowHeight, mapWidgetList} from "./geodash/constants";
 import WidgetContainer from "./geodash/WidgetContainer";
 import SvgIcon from "./components/SvgIcon";
-import {cleanJSON} from "./utils/generalUtils";
+import {cleanJSON, isValidJSON} from "./utils/generalUtils";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -137,40 +137,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             .then(data => this.setState({projectTemplateList: data}))
             .catch(error => console.error(error));
 
-    postNewWidget = newWidget => {
-        if (newWidget) {
-            fetch(
-                "/geo-dash/create-widget",
-                {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        projectId: this.props.projectId,
-                        widgetJSON: JSON.stringify(newWidget)
-                    })
-                }
-            )
-                .then(response => (response.ok ? response.json() : Promise.reject(response)))
-                .then(data => {
-                    this.setState({
-                        widgets: data
-                    });
-                    this.props.closeDialogs();
-                    this.resetWidgetDesign();
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert("Error creating widget. See console for details.");
-                });
-        } else {
-            alert("Invalid selections, unable to generate new widget.");
-        }
-    };
-
-    updateWidget = (route, widget) => {
+    widgetAPIWrapper = (route, widget) => {
         fetch(
             `/geo-dash/${route}`,
             {
@@ -189,12 +156,8 @@ class WidgetLayoutEditor extends React.PureComponent {
             .then(data => this.setState({widgets: data}))
             .catch(error => {
                 console.error(error);
-                alert("Error loading updating widgets. See console for details.");
+                alert("Error loading updated widgets. See console for details.");
             });
-    };
-
-    deleteWidgetFromServer = widget => {
-        this.updateWidget("delete-widget", widget);
     };
 
     copyProjectWidgets = templateId => {
@@ -292,15 +255,9 @@ class WidgetLayoutEditor extends React.PureComponent {
         });
     };
 
-    cancelNewWidget = () => {
-        this.props.closeDialogs();
-        this.resetWidgetDesign();
-    };
+    cancelNewWidget = () => this.props.closeDialogs();
 
-    cancelEditWidget = () => {
-        this.setState({editDialog: false});
-        this.resetWidgetDesign();
-    };
+    cancelEditWidget = () => this.setState({editDialog: false});
 
     /// Widget Creation
 
@@ -333,30 +290,46 @@ class WidgetLayoutEditor extends React.PureComponent {
         }
     };
 
+    getWidgetErrors = () => {
+        const {title, widgetDesign} = this.state;
+        return [
+            !title.length && "You must add a title for the widget.",
+            widgetDesign.hasOwnProperty("visParams")
+                && !isValidJSON(widgetDesign.visParams)
+                && "You have entered invalid JSON for Image Parameters",
+            widgetDesign.hasOwnProperty("assetName")
+                && !widgetDesign.assetName
+                && "Asset Name is required."
+        ].filter(e => e);
+    };
+
     // FIXME, validate widget
     buildNewWidget = () => {
         const {title, type, widgetDesign} = this.state;
-        if (title) {
-            return {
-                name: title,
-                type,
-                ...Object.assign(
-                    widgetDesign,
-                    widgetDesign.hasOwnProperty("visParams") && {visParams: cleanJSON(widgetDesign.visParams)}
-                )
-            };
-        } else {
-            return null;
-        }
+        return {
+            name: title,
+            type,
+            ...Object.assign(
+                widgetDesign,
+                widgetDesign.hasOwnProperty("visParams") && {visParams: cleanJSON(widgetDesign.visParams)}
+            )
+        };
     };
 
     createNewWidget = () => {
-        const newWidget = this.buildNewWidget();
-        if (newWidget) {
-            this.postNewWidget({
-                layout: this.getNextLayout(),
-                ...newWidget
-            });
+        const errors = this.getWidgetErrors();
+        if (errors.length) {
+            alert(errors.join("\n\n"));
+        } else {
+            this.widgetAPIWrapper(
+                "create-widget",
+                {
+                    layout: this.getNextLayout(),
+                    ...this.buildNewWidget()
+                }
+            );
+            this.props.closeDialogs();
+            this.resetWidgetDesign();
         }
     };
 
@@ -366,14 +339,16 @@ class WidgetLayoutEditor extends React.PureComponent {
             layout: this.getNextLayout(existingWidget.layout.w, existingWidget.layout.h),
             name: existingWidget.name + " - copy"
         };
-        this.postNewWidget(newWidget);
+        this.widgetAPIWrapper("create-widget", newWidget);
     };
 
     saveWidgetEdits = () => {
         const {originalWidget: {id, layout}} = this.state;
-        const newWidget = this.buildNewWidget();
-        if (newWidget) {
-            this.updateWidget(
+        const errors = this.getWidgetErrors();
+        if (errors.length) {
+            alert(errors.join("\n\n"));
+        } else {
+            this.widgetAPIWrapper(
                 "update-widget",
                 {
                     id,
@@ -390,7 +365,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     removeLayoutItem = widgetId => {
         const {widgets} = this.state;
         const removedWidget = widgets.find(w => w.id === parseInt(widgetId));
-        this.deleteWidgetFromServer(removedWidget);
+        this.widgetAPIWrapper("delete-widget", removedWidget);
     };
 
     sameLayout = (layout1, layout2) => layout1.x === layout2.x
@@ -402,7 +377,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         if (!this.sameLayout(stateWidget.layout, layout[idx])) {
             const {x, y, h, w} = layout[idx];
             const newWidget = {...stateWidget, layout: {x, y, h, w}};
-            this.updateWidget("update-widget", newWidget);
+            this.widgetAPIWrapper("update-widget", newWidget);
         }
     });
 
