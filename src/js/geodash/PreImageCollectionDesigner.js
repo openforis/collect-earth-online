@@ -9,6 +9,14 @@ import {EditorContext} from "./constants";
 
 export default function PreImageCollectionDesigner({isDual = false, prefixPath = ""}) {
     const {getWidgetDesign} = useContext(EditorContext);
+    const currentIndex = getWidgetDesign("indexName", prefixPath);
+    const availableBands = {
+        "LANDSAT5": "B1, B2, B3, B4, B5, B6, B7, BQA",
+        "LANDSAT7": "B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8, BQA",
+        "LANDSAT8": "B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, BQA",
+        "Sentinel2": "B1, B2, B3, B4, B5, B6, B7, B8, B8A, B9, B10, B11, B12, QA10, QA20, QA60"
+    };
+
     return (
         <>
             {!isDual && <BaseMapSelector/>}
@@ -28,8 +36,10 @@ export default function PreImageCollectionDesigner({isDual = false, prefixPath =
                 title="Data Type"
             />
             <GDDateRange prefixPath={prefixPath}/>
-            {["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(getWidgetDesign("indexName", prefixPath)) && (
+            {["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(currentIndex) && (
                 <>
+                    <label>Available Bands</label>
+                    <label>{availableBands[currentIndex]}</label>
                     <GDInput
                         dataKey="bands"
                         placeholder="XX,XX,XX"
