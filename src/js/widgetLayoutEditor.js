@@ -53,22 +53,22 @@ class WidgetLayoutEditor extends React.PureComponent {
                 title: "Dual Imagery",
                 blankWidget: {
                     basemapId: "-1",
-                    image1: {assetName: "", type: "imageAsset", visParams: ""},
-                    image2: {assetName: "", type: "imageAsset", visParams: ""},
+                    image1: {assetId: "", type: "imageAsset", visParams: ""},
+                    image2: {assetId: "", type: "imageAsset", visParams: ""},
                     swipeAsDefault: false
                 },
                 WidgetDesigner: DualImageryDesigner
             },
             imageAsset: {
                 title: "Image Asset",
-                blankWidget: {basemapId: "-1", assetName: "", visParams: ""},
+                blankWidget: {basemapId: "-1", assetId: "", visParams: ""},
                 WidgetDesigner: ImageAssetDesigner
             },
             imageCollectionAsset: {
                 title: "Image Collection Asset",
                 blankWidget: {
                     basemapId: "-1",
-                    assetName: "",
+                    assetId: "",
                     endDate: "",
                     reducer: "Median",
                     startDate: "",
@@ -80,7 +80,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                 title: "Polygon Compare",
                 blankWidget: {
                     basemapId: "-1",
-                    assetName: "",
+                    assetId: "",
                     field: "",
                     visParams: "{\"max\": 1, \"palette\": [\"red\"]}"
                 },
@@ -297,9 +297,9 @@ class WidgetLayoutEditor extends React.PureComponent {
             widgetDesign.hasOwnProperty("visParams")
                 && !isValidJSON(widgetDesign.visParams)
                 && "You have entered invalid JSON for Image Parameters",
-            widgetDesign.hasOwnProperty("assetName")
-                && !widgetDesign.assetName
-                && "Asset Name is required."
+            widgetDesign.hasOwnProperty("assetId")
+                && !widgetDesign.assetId
+                && "Asset ID is required."
         ].filter(e => e);
     };
 

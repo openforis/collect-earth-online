@@ -24,7 +24,7 @@ SET widget = jsonb_build_object(
     'name', widget->'name',
     'type', 'imageAsset',
     'basemapId', widget->'basemapId',
-    'assetName', widget->>'ImageAsset',
+    'assetId', widget->>'ImageAsset',
     'visParams', widget->>'visParams'
 )
 WHERE widget->>'ImageAsset' is not null
@@ -49,7 +49,7 @@ SET widget = jsonb_build_object(
     'name', widget->'name',
     'type', 'polygonCompare',
     'basemapId', widget->'basemapId',
-    'assetName', widget->>'featureCollection',
+    'assetId', widget->>'featureCollection',
     'field', widget->'field',
     'visParams', widget->>'visParams'
 )
@@ -75,7 +75,7 @@ SET widget = jsonb_build_object(
     'name', widget->'name',
     'type', 'timeSeries',
     'indexName', widget->'properties'->4,
-    'assetName', widget->'properties'->1,
+    'assetId', widget->'properties'->1,
     'band', widget->'graphBand',
     'reducer', widget->>'graphReducer',
     'startDate', TRIM(widget->'properties'->>2),
@@ -134,7 +134,7 @@ SET widget = jsonb_build_object(
     'name', widget->>'name',
     'type', 'imageCollectionAsset',
     'basemapId', widget->'basemapId',
-    'assetName', widget->'properties'->>1,
+    'assetId', widget->'properties'->>1,
     'reducer', 'Cloud',
     'visParams', CASE WHEN widget->'min' IS NULL
         THEN jsonb_build_object(
@@ -159,7 +159,7 @@ SET widget = jsonb_build_object(
     'name', widget->>'name',
     'type', 'imageCollectionAsset',
     'basemapId', widget->'basemapId',
-    'assetName', widget->'properties'->>1,
+    'assetId', widget->'properties'->>1,
     'reducer', 'Mean',
     'visParams', widget->>'visParams',
     'startDate', TRIM(widget->'properties'->>2),
@@ -175,7 +175,7 @@ SET widget = jsonb_build_object(
     'name', widget->>'name',
     'type', 'imageCollectionAsset',
     'basemapId', widget->'basemapId',
-    'assetName', widget->'ImageCollectionAsset',
+    'assetId', widget->'ImageCollectionAsset',
     'reducer', 'Mosaic',
     'visParams', widget->>'visParams',
     'startDate', '',
@@ -208,7 +208,7 @@ CREATE OR REPLACE FUNCTION build_image_asset(_widget jsonb)
 
     SELECT jsonb_build_object(
         'type', 'imageAsset',
-        'assetName', _widget->>'imageAsset',
+        'assetId', _widget->>'imageAsset',
         'visParams', _widget->>'visParams'
     )
 
@@ -231,7 +231,7 @@ CREATE OR REPLACE FUNCTION build_collection_asset(_widget jsonb)
 
     SELECT jsonb_build_object(
         'type', 'imageCollectionAsset',
-        'assetName', _widget->'ImageCollectionAsset',
+        'assetId', _widget->'ImageCollectionAsset',
         'reducer', 'Mosaic',
         'visParams', _widget->>'visParams',
         'startDate', _widget->>'startDate',
@@ -349,7 +349,7 @@ WHERE widget->>'basemapId' IS NULL
 UPDATE imagery
 SET source_config = jsonb_build_object(
     'type', 'GEEImage',
-    'assetName', source_config->>'imageId',
+    'assetId', source_config->>'imageId',
     'visParams', source_config->>'imageVisParams'
 )
 WHERE source_config->>'type' = 'GEEImage';
@@ -357,7 +357,7 @@ WHERE source_config->>'type' = 'GEEImage';
 UPDATE imagery
 SET source_config = jsonb_build_object(
     'type', 'GEEImageCollection',
-    'assetName', source_config->'collectionId',
+    'assetId', source_config->'collectionId',
     'visParams', source_config->>'collectionVisParams',
     'startDate', source_config->>'startDate',
     'endDate', source_config->>'endDate',
@@ -370,7 +370,7 @@ WHERE source_config->>'type' = 'GEEImageCollection';
 UPDATE imagery
 SET source_config = jsonb_build_object(
     'type', 'GEEImage',
-    'assetName', source_config->'geeParams'->>'ImageAsset',
+    'assetId', source_config->'geeParams'->>'ImageAsset',
     'visParams', source_config->'geeParams'->>'visParams'
 )
 WHERE source_config->>'type' = 'GeeGateway'
@@ -381,7 +381,7 @@ WHERE source_config->>'type' = 'GeeGateway'
 UPDATE imagery
 SET source_config = jsonb_build_object(
     'type', 'GEEImageCollection',
-    'assetName', source_config->'geeParams'->>'ImageCollectionAsset',
+    'assetId', source_config->'geeParams'->>'ImageCollectionAsset',
     'visParams', source_config->'geeParams'->>'visParams',
     'startDate', source_config->'geeParams'->>'startDate',
     'endDate', source_config->'geeParams'->>'endDate',

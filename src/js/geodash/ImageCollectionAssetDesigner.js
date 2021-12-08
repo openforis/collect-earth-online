@@ -16,13 +16,13 @@ export default function ImageCollectionAssetDesigner({isDual = false, prefixPath
         <>
             {!isDual && <BaseMapSelector/>}
             <GDInput
-                dataKey="assetName"
+                dataKey="assetId"
                 placeholder="LANDSAT/LC8_L1T_TOA"
                 prefixPath={prefixPath}
-                title="GEE Image Collection Asset Name"
+                title="GEE Image Collection Asset ID"
             />
             <GetBands
-                assetName={getWidgetDesign("assetName")}
+                assetId={getWidgetDesign("assetId")}
                 assetType="imageCollection"
                 bands={bands}
                 setBands={setBands}

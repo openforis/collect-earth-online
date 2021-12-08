@@ -69,8 +69,8 @@ def imageToMapId(image, visParams):
 ########## ee.ImageCollection ##########
 
 
-def imageCollectionToMapId(assetName, visParams, reducer, dateFrom, dateTo):
-    eeCollection = ee.ImageCollection(assetName)
+def imageCollectionToMapId(assetId, visParams, reducer, dateFrom, dateTo):
+    eeCollection = ee.ImageCollection(assetId)
     if (dateFrom and dateTo):
         eeFilterDate = ee.Filter.date(dateFrom, dateTo)
         eeCollection = eeCollection.filter(eeFilterDate)
@@ -83,10 +83,10 @@ def imageCollectionToMapId(assetName, visParams, reducer, dateFrom, dateTo):
 # TODO, should we allow user to select first cloud free image again?
 
 
-def firstCloudFreeImageInMosaicToMapId(assetName, visParams, dateFrom, dateTo):
+def firstCloudFreeImageInMosaicToMapId(assetId, visParams, dateFrom, dateTo):
     skipCloudMask = False
-    eeCollection = ee.ImageCollection(assetName)
-    lowerAsset = assetName.lower()
+    eeCollection = ee.ImageCollection(assetId)
+    lowerAsset = assetId.lower()
     if("b2" not in visParams["bands"].lower()):
         skipCloudMask = True
     elif ("lc8" in lowerAsset):
@@ -310,8 +310,8 @@ def filteredImageByIndexToMapId(startDate, endDate, index):
         return filteredImageNDWIToMapId(startDate, endDate)
 
 
-def filteredImageCompositeToMapId(assetName, visParams, dateFrom, dateTo, metadataCloudCoverMax, simpleCompositeVariable):
-    eeCollection = ee.ImageCollection(assetName)
+def filteredImageCompositeToMapId(assetId, visParams, dateFrom, dateTo, metadataCloudCoverMax, simpleCompositeVariable):
+    eeCollection = ee.ImageCollection(assetId)
     if (dateFrom and dateTo):
         eeCollection = eeCollection.filterDate(dateFrom, dateTo)
     eeCollection.filterMetadata(
@@ -381,7 +381,7 @@ def filteredSentinelSARComposite(visParams, dateFrom, dateTo):
 ########## Time Series ##########
 
 
-def getTimeSeriesByCollectionAndIndex(assetName, indexName, scale, coords, dateFrom, dateTo, reducer):
+def getTimeSeriesByCollectionAndIndex(assetId, indexName, scale, coords, dateFrom, dateTo, reducer):
     geometry = None
     indexCollection = None
     if isinstance(coords[0], list):
@@ -389,14 +389,14 @@ def getTimeSeriesByCollectionAndIndex(assetName, indexName, scale, coords, dateF
     else:
         geometry = ee.Geometry.Point(coords)
     if indexName != None:
-        print("collection: " + assetName +
+        print("collection: " + assetId +
                      " - indexName: " + indexName)
-        indexCollection = ee.ImageCollection(assetName).filterDate(
+        indexCollection = ee.ImageCollection(assetId).filterDate(
             dateFrom, dateTo).select(indexName)
     else:
         print("indexName missing")
         indexCollection = ee.ImageCollection(
-            assetName).filterDate(dateFrom, dateTo)
+            assetId).filterDate(dateFrom, dateTo)
 
     def getIndex(image):
         theReducer = getReducer(reducer)

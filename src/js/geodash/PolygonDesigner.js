@@ -9,7 +9,7 @@ export default function PolygonDesigner() {
         <>
             <BaseMapSelector/>
             <GDInput
-                dataKey="assetName"
+                dataKey="assetId"
                 placeholder="users/username/collectionName"
                 title="GEE Feature Collection Asset"
             />

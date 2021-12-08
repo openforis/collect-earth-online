@@ -586,9 +586,9 @@ export class GEEImageMenu extends React.Component {
 
     updateImageryInformation = () => {
         if (this.props.visible) {
-            this.props.setImageryAttribution(` | ${this.props.sourceConfig.assetName}`);
+            this.props.setImageryAttribution(` | ${this.props.sourceConfig.assetId}`);
             this.props.setImageryAttributes({
-                geeImageryAssetId: this.props.sourceConfig.assetName
+                geeImageryAssetId: this.props.sourceConfig.assetId
             });
         }
     };
@@ -655,9 +655,9 @@ export class GEEImageCollectionMenu extends React.Component {
 
     updateImageryInformation = () => {
         if (this.props.visible) {
-            this.props.setImageryAttribution(` | ${this.props.sourceConfig.assetName}`);
+            this.props.setImageryAttribution(` | ${this.props.sourceConfig.assetId}`);
             this.props.setImageryAttributes({
-                geeImageCollectionAssetId: this.props.sourceConfig.assetName,
+                geeImageCollectionAssetId: this.props.sourceConfig.assetId,
                 geeImageCollectionStartDate: this.state.startDate,
                 geeImageCollectionEndDate: this.state.endDate
             });

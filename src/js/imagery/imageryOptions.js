@@ -327,8 +327,8 @@ export const imageryOptions = [
         defaultProxy: false,
         params: [
             {
-                key: "assetName",
-                display: "Asset Name",
+                key: "assetId",
+                display: "Asset ID",
                 options: {placeholder: "USDA/NAIP/DOQQ/n_4207309_se_18_1_20090525"}
             },
             {
@@ -348,8 +348,8 @@ export const imageryOptions = [
         defaultProxy: false,
         params: [
             {
-                key: "assetName",
-                display: "Asset Name",
+                key: "assetId",
+                display: "Asset ID",
                 options: {placeholder: "LANDSAT/LC08/C01/T1_SR"}
             },
             {

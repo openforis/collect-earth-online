@@ -2,13 +2,13 @@ import React, {} from "react";
 
 import {isArray} from "../../utils/generalUtils";
 
-export default function GetBands({bands, setBands, assetName, assetType, hideLabel}) {
+export default function GetBands({bands, setBands, assetId, assetType, hideLabel}) {
     const getBandsFromGateway = () => {
-        console.log(assetName);
-        if (assetName.length) {
+        console.log(assetId);
+        if (assetId.length) {
             const postObject = {
                 path: "getAvailableBands",
-                assetName,
+                assetId,
                 assetType
             };
             fetch("/geo-dash/gateway-request", {

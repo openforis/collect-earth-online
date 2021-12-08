@@ -27,7 +27,7 @@ def getDefault(dict, key, default=None):
 
 def getAvailableBands(requestDict):
     values = listAvailableBands(
-        getDefault(requestDict, 'assetName'),
+        getDefault(requestDict, 'assetId'),
         getDefault(requestDict, 'assetType')
     )
     return values
@@ -37,7 +37,7 @@ def getAvailableBands(requestDict):
 
 def image(requestDict):
     values = imageToMapId(
-        getDefault(requestDict, 'assetName'),
+        getDefault(requestDict, 'assetId'),
         getDefault(requestDict, 'visParams', {})
     )
     return values
@@ -47,7 +47,7 @@ def image(requestDict):
 
 def imageCollection(requestDict):
     values = imageCollectionToMapId(
-        getDefault(requestDict, 'assetName', None),
+        getDefault(requestDict, 'assetId', None),
         getDefault(requestDict, 'visParams', None),
         getDefault(requestDict, 'reducer', None),
         getDefault(requestDict, 'startDate', None),
@@ -137,7 +137,7 @@ def featureCollection(requestDict):
     visParams = getDefault(requestDict, 'visParams', {})
     values = {
         "url": getFeatureCollectionTileUrl(
-            getDefault(requestDict, 'assetName', None),
+            getDefault(requestDict, 'assetId', None),
             getDefault(requestDict, 'field', 'PLOTID'),
             int(getDefault(requestDict, 'matchID', 1)),
             {'max': 1, 'palette': ['red']} if visParams == {} else visParams
@@ -168,7 +168,7 @@ def getPlanetTile(requestDict):
 def timeSeriesByAsset(requestDict):
     values = {
         'timeseries': getTimeSeriesByCollectionAndIndex(
-            getDefault(requestDict, 'assetName', None),
+            getDefault(requestDict, 'assetId', None),
             getDefault(requestDict, 'band', None),
             float(getDefault(requestDict, 'scale', 30)),
             getDefault(requestDict, 'geometry'),

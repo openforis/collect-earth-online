@@ -20,12 +20,12 @@ export default function TimeSeriesDesigner() {
             {getWidgetDesign("indexName") === "Custom" && (
                 <>
                     <GDInput
-                        dataKey="assetName"
+                        dataKey="assetId"
                         placeholder="LANDSAT/LC8_L1T_TOA"
-                        title="GEE Image Collection Asset Name"
+                        title="GEE Image Collection Asset ID"
                     />
                     <GetBands
-                        assetName={getWidgetDesign("assetName")}
+                        assetId={getWidgetDesign("assetId")}
                         assetType="imageCollection"
                         bands={bands}
                         hideLabel
