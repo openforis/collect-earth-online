@@ -576,17 +576,9 @@ class NewImagery extends React.Component {
     }
 
     componentDidMount() {
-        const {id, title, attribution, isProxied, sourceConfig} = this.props.imageryToEdit;
+        const {id} = this.props.imageryToEdit;
         if (id !== -1) {
-            const {type, ...imageryParams} = sourceConfig;
-            const selectedType = imageryOptions.findIndex(io => io.type === type);
-            this.setState({
-                selectedType,
-                imageryTitle: title,
-                imageryAttribution: attribution,
-                isProxied,
-                imageryParams: this.getImageryParams(type, imageryParams)
-            });
+            this.setImageryToEdit();
         } else {
             this.imageryTypeChangeHandler(0);
         }
@@ -835,6 +827,19 @@ class NewImagery extends React.Component {
                             ? "Open Street Map"
                             : "");
 
+    setImageryToEdit = () => {
+        const {title, attribution, isProxied, sourceConfig} = this.props.imageryToEdit;
+        const {type, ...imageryParams} = sourceConfig;
+        const selectedType = imageryOptions.findIndex(io => io.type === type);
+        this.setState({
+            selectedType,
+            imageryTitle: title,
+            imageryAttribution: attribution,
+            isProxied,
+            imageryParams: this.getImageryParams(type, imageryParams)
+        });
+    };
+
     imageryTypeChangeHandler = val => {
         const {type, params, defaultProxy} = imageryOptions[val];
         const defaultState = params.reduce((acc, cur) => ({
@@ -999,7 +1004,7 @@ function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProj
                     ? <h3>There are no projects</h3>
                     : projectList.map((project, uid) => (
                         <Project
-                            key={uid}
+                            key={uid} // eslint-disable-line react/no-array-index-key
                             deleteProject={deleteProject}
                             isAdmin={isAdmin}
                             project={project}

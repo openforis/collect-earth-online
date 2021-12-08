@@ -14,20 +14,17 @@ class Home extends React.Component {
             institutions: [],
             showSidePanel: true,
             userInstitutions: [],
-            modalMessage: null
+            modalMessage: "Loading institutions"
         };
     }
 
     componentDidMount() {
-        // Fetch projects
-        this.setState({modalMessage: "Loading institutions"}, () => {
-            Promise.all([this.getImagery(), this.getInstitutions(), this.getProjects()])
-                .catch(response => {
-                    console.log(response);
-                    alert("Error retrieving the collection data. See console for details.");
-                })
-                .finally(() => this.setState({modalMessage: null}));
-        });
+        Promise.all([this.getImagery(), this.getInstitutions(), this.getProjects()])
+            .catch(response => {
+                console.log(response);
+                alert("Error retrieving the collection data. See console for details.");
+            })
+            .finally(() => this.setState({modalMessage: null}));
     }
 
     getProjects = () => fetch("/get-home-projects")
@@ -117,20 +114,27 @@ class MapPanel extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (this.state.mapConfig === null && this.props.imagery.length > 0 && prevProps.imagery.length === 0) {
-            const homePageLayer = this.props.imagery.find(
-                imagery => imagery.title === "Mapbox Satellite w/ Labels"
-            ) || this.props.imagery[0];
-            const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
-            mercator.setVisibleLayer(mapConfig, homePageLayer.id);
-            this.setState({mapConfig});
+            this.initializeMap();
         }
+
         if (this.state.mapConfig && this.props.projects.length > 0
             && (!prevState.mapConfig || prevProps.projects.length === 0)) {
-            this.addProjectMarkers(this.state.mapConfig,
-                                   this.props.projects,
-                                   40); // clusterDistance = 40, use null to disable clustering
+            this.addProjectMarkers(
+                this.state.mapConfig,
+                this.props.projects,
+                40
+            ); // clusterDistance = 40, use null to disable clustering
         }
     }
+
+    initializeMap = () => {
+        const homePageLayer = this.props.imagery.find(
+            imagery => imagery.title === "Mapbox Satellite w/ Labels"
+        ) || this.props.imagery[0];
+        const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
+        mercator.setVisibleLayer(mapConfig, homePageLayer.id);
+        this.setState({mapConfig});
+    };
 
     addProjectMarkers(mapConfig, projects, clusterDistance) {
         const projectSource = mercator.projectsToVectorSource(projects.filter(project => project.centroid));
@@ -614,8 +618,8 @@ class ProjectPopup extends React.Component {
                 <div className="cContent" style={{padding: "10px", overflow: "auto"}}>
                     <table className="table table-sm" style={{tableLayout: "fixed"}}>
                         <tbody>
-                            {this.props.features.map((feature, uid) => (
-                                <React.Fragment key={uid}>
+                            {this.props.features.map(feature => (
+                                <React.Fragment key={feature.get("projectId")}>
                                     <tr className="d-flex" style={{borderTop: "1px solid gray"}}>
                                         <td className="small col-6 px-0 my-auto">Name</td>
                                         <td className="small col-6 pr-0">
