@@ -168,6 +168,7 @@ export class SampleDesign extends React.Component {
                 </p>
                 <div style={{display: "flex"}}>
                     {sampleOptions[sampleDistribution].inputs.map((i, idx) => (
+                        // eslint-disable-next-line react/no-array-index-key
                         <div key={idx} className="mr-3">
                             {i()}
                         </div>

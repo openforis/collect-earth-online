@@ -74,19 +74,16 @@ class Project extends React.Component {
             institutionUserList: [],
             designMode: "loading",
             modalMessage: null,
-            wizardStep: "overview"
+            wizardStep: this.props.projectId > 0 ? "manage" : "wizard"
         };
     }
 
     /// Lifecycle Methods
 
     componentDidMount() {
-        if (this.props.projectId > 0) {
-            this.setState({designMode: "manage"});
-        } else if (this.props.institutionId > 0) {
-            this.setState({designMode: "wizard"});
+        if (this.props.institutionId > 0) {
             this.getInstitutionImagery(this.props.institutionId);
-        } else {
+        } else if (!this.props.projectId > 0) {
             alert("Invalid URL.");
             window.location = "/home";
         }

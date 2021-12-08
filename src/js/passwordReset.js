@@ -6,15 +6,11 @@ class PasswordReset extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            email: "",
-            passwordResetKey: "",
+            email: this.props.email,
+            passwordResetKey: this.props.passwordResetKey,
             password: "",
             passwordConfirmation: ""
         };
-    }
-
-    componentDidMount() {
-        this.setState({email: this.props.email, passwordResetKey: this.props.passwordResetKey});
     }
 
     resetPassword = () => {

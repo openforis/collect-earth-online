@@ -139,7 +139,7 @@ module.exports = {
         "react/no-danger": 1,
         "react/no-danger-with-children": 1,
         "react/no-deprecated": 1,
-        "react/no-did-mount-set-state": 1,
+        "react/no-did-mount-set-state": 2,
         "react/no-did-update-set-state": 1,
         "react/no-multi-comp": 0,
         "react/no-set-state": 0,

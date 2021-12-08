@@ -977,18 +977,15 @@ export class PlanetNICFIMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectedTime: "",
-            selectedBand: ""
-        };
-    }
-
-    componentDidMount() {
-        this.setState({
             selectedTime: this.props.sourceConfig.time === "newest"
                 ? last(nicfiLayers)
                 : this.props.sourceConfig.time,
             selectedBand: this.props.sourceConfig.band
-        }, () => this.updatePlanetLayer());
+        };
+    }
+
+    componentDidMount() {
+        this.updatePlanetLayer();
     }
 
     componentDidUpdate(prevProps) {
