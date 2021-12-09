@@ -139,15 +139,22 @@ project directory and run:
 #+begin_src sh
 npm install
 npm run webpack-dev
-clojure -M:build-db functions
+#+end_src
+
+Now, in a separate terminal window (because webpack needs to be running in the background), run the following commands:
+
+#+begin_src sh
+npm run build-db-functions
+psql -U ceo -f src/sql/dev_data/dev_data.sql
 clojure -M:server start [-m dev] [-p 8080] [-P 8443]
 #+end_src
 
+This will build the proper database functions as well as add some dummy development data to the website.
 The website will then be available at http://localhost:8080 unless a
 port is specified. These can also be configured using the ~:server~ section in
 your ~config.edn~ file. An http port can be specified with -p and an https
 port can be specified with -P. In dev mode, server-side exceptions
-will be displayed in the browser and Clojure source files will be
+will be displayed in the browser and JavaScript source files will be
 reloaded whenever you refresh the page.
 
 *** Checking for Reflection Warnings
