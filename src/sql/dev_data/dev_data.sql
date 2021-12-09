@@ -2,10 +2,10 @@
 
 -- Adds an administrator and a user
 INSERT INTO users
-    (user_uid, email, password, administrator, reset_key)
+    (user_uid, email, password, administrator, reset_key, verified)
 VALUES
-    (1, 'admin@ceo.dev', crypt('admin', gen_salt('bf')), TRUE, null),
-    (2, 'user@ceo.dev', crypt('user', gen_salt('bf')), FALSE, null);
+    (1, 'admin@ceo.dev', crypt('admin', gen_salt('bf')), TRUE, null, TRUE),
+    (2, 'user@ceo.dev', crypt('user', gen_salt('bf')), FALSE, null, TRUE);
 
 SELECT setval(pg_get_serial_sequence('users', 'user_uid'), (SELECT MAX(user_uid) FROM users) + 1);
 
@@ -101,7 +101,7 @@ VALUES
     (1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[102.999659597506,22.0468036237562]}'), 4326), 2),
     (1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[102.999501703938,22.0467991514296]}'), 4326), 3),
     (1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[102.998949185863,22.0466248615901]}'), 4326), 4),
-    (1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[102.99966198978,22.0466084221078]}'), 4326)), 5,
+    (1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[102.99966198978,22.0466084221078]}'), 4326), 5),
     (1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[102.999566464554,22.0463120389197]}'), 4326), 6),
     (1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[102.999740489714,22.0468942725417]}'), 4326), 7),
     (1, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[102.999223221942,22.0465117917509]}'), 4326), 8),
