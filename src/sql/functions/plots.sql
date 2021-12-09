@@ -5,16 +5,6 @@
 --  PLOT FUNCTIONS
 --
 
-CREATE OR REPLACE FUNCTION project_has_assigned(_project_id integer)
- RETURNS boolean AS $$
-
-    SELECT count(*) > 0
-    FROM plots, plot_assignments
-    WHERE project_rid = _project_id
-        AND plot_uid = plot_rid
-
-$$ LANGUAGE SQL;
-
 -- Select plots but only return a maximum number
 -- TODO, CEO-32 update to only show users available plots
 CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer)

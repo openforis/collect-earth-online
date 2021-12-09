@@ -322,7 +322,6 @@ mercator.createSource = (sourceConfig,
                 }
             }).catch(response => {
                 console.error("Error loading Planet Daily imagery: ", response);
-                alert("Error loading Planet Daily imagery. Check console for details.");
             });
         return planetLayer;
     } else if (sourceConfig.type === "BingMaps") {
