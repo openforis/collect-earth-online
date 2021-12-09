@@ -72,9 +72,9 @@ class Project extends React.Component {
             originalProject: {},
             institutionImagery: [],
             institutionUserList: [],
-            designMode: "loading",
+            designMode: this.props.projectId > 0 ? "manage" : "wizard",
             modalMessage: null,
-            wizardStep: this.props.projectId > 0 ? "manage" : "wizard"
+            wizardStep: "overview"
         };
     }
 
