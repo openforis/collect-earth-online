@@ -323,29 +323,27 @@ function InstitutionList({
 }) {
     const filterTextLower = filterText.toLocaleLowerCase();
 
-    const filteredProjects = projects
-        .filter(proj => filterInstitution
-                        || (useFirstLetter
-                            ? proj.name.toLocaleLowerCase().startsWith(filterTextLower)
-                            : proj.name.toLocaleLowerCase().includes(filterTextLower)));
+    const filterString = str => filterTextLower.length === 0
+        || (useFirstLetter
+            ? str.toLocaleLowerCase().startsWith(filterTextLower)
+            : str.toLocaleLowerCase().includes(filterTextLower));
 
-    const filterString = inst => (useFirstLetter
-        ? inst.name.toLocaleLowerCase().startsWith(filterTextLower)
-        : inst.name.toLocaleLowerCase().includes(filterTextLower));
+    const filteredProjects = filterInstitution
+        ? projects
+        : projects.filter(proj => filterString(proj.name));
 
-    const filterHasProj = inst => filteredProjects.some(proj => inst.id === proj.institutionId)
+    const filterHasProj = inst => inst.projects.length > 0
                                     || showEmptyInstitutions
                                     || inst.isMember;
 
     const filteredInstitutions = institutions
+        .map(inst => ({...inst, projects: filteredProjects.filter(proj => inst.id === proj.institutionId)}))
         // Filtering by institution, contains search string and contains projects or user is member
-        .filter(inst => !filterInstitution || filterString(inst))
-        .filter(inst => !filterInstitution || filterTextLower.length > 0 || filterHasProj(inst))
+        .filter(inst => !filterInstitution || (filterHasProj(inst) && filterString(inst.name)))
         // Filtering by projects, and has projects to show
-        .filter(inst => filterInstitution || filteredProjects.some(proj => inst.id === proj.institutionId))
+        .filter(inst => filterInstitution || inst.projects.length > 0)
         .sort((a, b) => (sortByNumber
-            ? projects.filter(proj => b.id === proj.institutionId).length
-                                - projects.filter(proj => a.id === proj.institutionId).length
+            ? b.projects.length - a.projects.length
             : sortAlphabetically(a.name, b.name)));
 
     const userInstStyle = institutionListType === "user" ? {maxHeight: "fit-content"} : {};
@@ -368,8 +366,7 @@ function InstitutionList({
                         forceInstitutionExpand={!filterInstitution && filterText.length > 0}
                         id={institution.id}
                         name={institution.name}
-                        projects={filteredProjects
-                            .filter(project => project.institutionId === institution.id)}
+                        projects={institution.projects}
                     />
                 ))}
             </ul>
