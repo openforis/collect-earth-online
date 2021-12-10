@@ -3,7 +3,7 @@ import React, {Fragment} from "react";
 import {UnicodeIcon, removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
 import RulesCollectionModal from "./RulesCollectionModal";
-import SvgIcon from "./SvgIcon";
+import SvgIcon from "./svg/SvgIcon";
 import {mercator} from "../utils/mercator";
 import RequiredInput from "./RequiredInput";
 

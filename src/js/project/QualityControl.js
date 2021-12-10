@@ -4,7 +4,7 @@ import {ProjectContext} from "./constants";
 import Select from "../components/Select";
 import UserSelect from "../components/UserSelect";
 import {formatNumberWithCommas} from "../utils/generalUtils";
-import {ButtonSvgIcon} from "../components/SvgIcon";
+import {ButtonSvgIcon} from "../components/svg/SvgIcon";
 
 export default class QualityControl extends React.Component {
     getAssignment = () => this.context.designSettings.qaqcAssignment;

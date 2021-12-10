@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {mercator} from "./utils/mercator";
 import {sortAlphabetically, UnicodeIcon} from "./utils/generalUtils";
-import SvgIcon from "./components/SvgIcon";
+import SvgIcon from "./components/svg/SvgIcon";
 
 class Home extends React.Component {
     constructor(props) {

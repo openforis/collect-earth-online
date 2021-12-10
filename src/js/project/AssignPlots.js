@@ -4,7 +4,7 @@ import {ProjectContext} from "./constants";
 import Select from "../components/Select";
 import UserSelect from "../components/UserSelect";
 import {formatNumberWithCommas, removeAtIndex} from "../utils/generalUtils";
-import {ButtonSvgIcon} from "../components/SvgIcon";
+import {ButtonSvgIcon} from "../components/svg/SvgIcon";
 
 export default class AssignPlots extends React.Component {
     getQaqcAssignment = () => this.context.designSettings.qaqcAssignment;

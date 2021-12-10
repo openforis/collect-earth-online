@@ -1,7 +1,7 @@
 import "../../css/custom.css";
 
 import React from "react";
-import SvgIcon from "./SvgIcon";
+import SvgIcon from "./svg/SvgIcon";
 import {getLanguage, capitalizeFirst} from "../utils/generalUtils";
 import {getPreference, setPreference} from "../utils/preferences";
 
