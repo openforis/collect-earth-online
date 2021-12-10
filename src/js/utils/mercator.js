@@ -1222,6 +1222,7 @@ mercator.samplesToVectorSource = samples =>
         features: samples.map(
             sample => new Feature({
                 sampleId: sample.id,
+                visibleId: sample.visibleId,
                 geometry: mercator.parseGeoJson(sample.sampleGeom, true)
             })
         )
