@@ -15,8 +15,8 @@ import {
 } from "./imagery/collectionMenuControls";
 import {CollapsibleTitle} from "./components/FormComponents";
 import Modal from "./components/Modal";
+import RadioButton from "./components/RadioButton";
 import Select from "./components/Select";
-import Switch from "./components/Switch";
 import {ButtonSvgIcon} from "./components/svg/SvgIcon";
 
 import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
@@ -1179,13 +1179,20 @@ class PlotNavigation extends React.Component {
     reviewMode = (inReviewMode, setReviewMode) => (
         <div className="row my-2">
             <div className="col-5 text-right">
-                <label htmlFor="review-mode">Review Mode:</label>
+                <label htmlFor="review-mode">Mode:</label>
             </div>
             <div className="col-6 px-0">
-                <Switch
-                    checked={inReviewMode}
+                <RadioButton
+                    id="collect-mode"
+                    label="Collect"
+                    onChange={() => setReviewMode(false)}
+                    selected={!inReviewMode}
+                />
+                <RadioButton
                     id="review-mode"
-                    onChange={() => setReviewMode(!inReviewMode)}
+                    label="Admin Review"
+                    onChange={() => setReviewMode(true)}
+                    selected={inReviewMode}
                 />
             </div>
         </div>
