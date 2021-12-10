@@ -9,7 +9,7 @@ import {SurveyRuleDesign} from "./SurveyRules";
 import AOIMap from "./AOIMap";
 import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
-import SvgIcon from "../components/SvgIcon";
+import SvgIcon from "../components/svg/SvgIcon";
 import {mercator} from "../utils/mercator";
 import {last, removeFromSet} from "../utils/generalUtils";
 import {ProjectContext, plotLimit, perPlotLimit, sampleLimit} from "./constants";

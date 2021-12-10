@@ -17,7 +17,7 @@ import {CollapsibleTitle} from "./components/FormComponents";
 import Modal from "./components/Modal";
 import RadioButton from "./components/RadioButton";
 import Select from "./components/Select";
-import {ButtonSvgIcon} from "./components/SvgIcon";
+import {ButtonSvgIcon} from "./components/svg/SvgIcon";
 
 import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
 import {getProjectPreferences, setProjectPreferences} from "./utils/preferences";

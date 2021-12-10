@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 import {LoadingModal} from "./components/PageComponents";
-import SvgIcon from "./components/SvgIcon";
+import SvgIcon from "./components/svg/SvgIcon";
 
 import {nicfiLayers} from "./imagery/imageryOptions";
 import {
