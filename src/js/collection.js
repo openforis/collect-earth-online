@@ -1185,13 +1185,13 @@ class PlotNavigation extends React.Component {
                 <RadioButton
                     id="collect-mode"
                     label="Collect"
-                    onChange={() => setReviewMode(!inReviewMode)}
+                    onChange={() => setReviewMode(false)}
                     selected={!inReviewMode}
                 />
                 <RadioButton
                     id="review-mode"
                     label="Admin Review"
-                    onChange={() => setReviewMode(!inReviewMode)}
+                    onChange={() => setReviewMode(true)}
                     selected={inReviewMode}
                 />
             </div>
