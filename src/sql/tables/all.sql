@@ -12,7 +12,7 @@ CREATE TABLE users (
     administrator    boolean DEFAULT FALSE,
     reset_key        text DEFAULT NULL,
     verified         boolean DEFAULT FALSE,
-    created_date     date DEFAULT NOW(),
+    created_date     date DEFAULT NOW()
 );
 
 -- Stores information about institutions
