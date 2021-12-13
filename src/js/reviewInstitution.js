@@ -1253,7 +1253,7 @@ class User extends React.Component {
                                     const confirmBox = window.confirm("Do you really want to update the role of this user?");
                                     if (confirmBox) updateUserInstitutionRole(user.id, null, this.state.userRole);
                                 }}
-                                type="submit"
+                                type="button"
                             >
                                 Update
                             </button>
@@ -1265,7 +1265,7 @@ class User extends React.Component {
                                     const confirmBox = window.confirm("Do you really want to remove this user from the institution?");
                                     if (confirmBox) updateUserInstitutionRole(user.id, null, "not-member");
                                 }}
-                                type="submit"
+                                type="button"
                             >
                                 Remove
                             </button>
