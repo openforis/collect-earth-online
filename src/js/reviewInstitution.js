@@ -305,7 +305,7 @@ class InstitutionDescription extends React.Component {
                     url={this.state.newInstitutionDetails.url}
                 />
             ) : (
-                <div className="row justify-content-center" id="institution-details">
+                <div className="row justify-content-center mt-3" id="institution-details">
                     <div className="col-8" id="institution-view">
                         <div className="row mb-4">
                             <div className="col-md-3" id="institution-logo-container">
@@ -1191,7 +1191,7 @@ class UserList extends React.Component {
                     .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
                     .map(iu => (
                         <User
-                            key={iu}
+                            key={iu.email}
                             isAdmin={this.props.isAdmin}
                             updateUserInstitutionRole={this.updateUserInstitutionRole}
                             user={iu}
@@ -1202,43 +1202,79 @@ class UserList extends React.Component {
     }
 }
 
-function User({user, isAdmin, updateUserInstitutionRole}) {
-    return (
-        <div className="row">
-            {!isAdmin && (
-                <div className="col-2 mb-1 pr-0">
-                    <div className="btn btn-sm btn-outline-lightgreen btn-block">
-                        {capitalizeFirst(user.institutionRole)}
+class User extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            userRole: props.user.institutionRole
+        };
+    }
+
+    render() {
+        const {isAdmin, updateUserInstitutionRole, user} = this.props;
+
+        return (
+            <div className="row">
+                {!isAdmin && (
+                    <div className="col-2 mb-1 pr-0">
+                        <div className="btn btn-sm btn-outline-lightgreen btn-block">
+                            {capitalizeFirst(user.institutionRole)}
+                        </div>
                     </div>
-                </div>
-            )}
-            <div className="col mb-1 overflow-hidden">
-                <button
-                    className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-                    onClick={() => window.location.assign(`/account?accountId=${user.id}`)}
-                    title={user.email}
-                    type="button"
-                >
-                    {user.email}
-                </button>
-            </div>
-            {isAdmin && (
-                <div className="col-lg-3 mb-1 pl-0">
-                    <select
-                        className="custom-select custom-select-sm"
-                        onChange={e => updateUserInstitutionRole(user.id, null, e.target.value)}
-                        size="1"
-                        value={user.institutionRole}
+                )}
+                <div className="col mb-1 overflow-hidden">
+                    <button
+                        className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
+                        onClick={() => window.location.assign(`/account?accountId=${user.id}`)}
+                        title={user.email}
+                        type="button"
                     >
-                        {user.institutionRole === "pending" && <option value="pending">Pending</option>}
-                        <option value="member">Member</option>
-                        <option value="admin">Admin</option>
-                        <option value="not-member">Remove</option>
-                    </select>
+                        {user.email}
+                    </button>
                 </div>
-            )}
-        </div>
-    );
+                {isAdmin && (
+                    <>
+                        <div className="col-2 mb-1 pl-0 pr-1">
+                            <select
+                                className="custom-select custom-select-sm"
+                                onChange={e => this.setState({userRole: e.target.value})}
+                                size="1"
+                                value={this.state.userRole}
+                            >
+                                {this.state.userRole === "pending" && <option value="pending">Pending</option>}
+                                <option value="member">Member</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div className="col-2 mb-1 pl-0 pr-1">
+                            <button
+                                className="btn btn-sm btn-outline-yellow btn-block"
+                                onClick={() => {
+                                    const confirmBox = window.confirm("Do you really want to update the role of this user?");
+                                    if (confirmBox) updateUserInstitutionRole(user.id, null, this.state.userRole);
+                                }}
+                                type="button"
+                            >
+                                Update
+                            </button>
+                        </div>
+                        <div className="col-2 mb-1 pl-0 pr-2">
+                            <button
+                                className="btn btn-sm btn-outline-red btn-block"
+                                onClick={() => {
+                                    const confirmBox = window.confirm("Do you really want to remove this user from the institution?");
+                                    if (confirmBox) updateUserInstitutionRole(user.id, null, "not-member");
+                                }}
+                                type="button"
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
+        );
+    }
 }
 
 class NewUserButtons extends React.Component {
@@ -1268,7 +1304,7 @@ class NewUserButtons extends React.Component {
             <>
                 {this.props.isAdmin && (
                     <div className="row mb-1">
-                        <div className="col-9 pr-3">
+                        <div className="col-8 pr-3">
                             <input
                                 autoComplete="off"
                                 className="form-control form-control-sm py-2"
@@ -1278,7 +1314,7 @@ class NewUserButtons extends React.Component {
                                 value={this.state.newUserEmail}
                             />
                         </div>
-                        <div className="col-3 pl-0">
+                        <div className="col-4 pl-0 pr-2">
                             <button
                                 className="btn btn-sm btn-outline-yellow btn-block py-2 font-weight-bold"
                                 onClick={() => this.checkUserEmail() && this.addUser()}
