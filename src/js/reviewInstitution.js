@@ -11,7 +11,7 @@ import {
     safeLength
 } from "./utils/generalUtils";
 import {imageryOptions} from "./imagery/imageryOptions";
-import SvgIcon, {ButtonSvgIcon} from "./components/svg/SvgIcon";
+import {ButtonSvgIcon} from "./components/svg/SvgIcon";
 
 class ReviewInstitution extends React.Component {
     constructor(props) {
