@@ -1,6 +1,5 @@
 import React from "react";
 import {ButtonSvgIcon} from "./svg/SvgIcon";
-import {UnicodeIcon} from "../utils/generalUtils";
 
 export function FormLayout({title, children}) {
     return (
@@ -73,13 +72,11 @@ export class CollapsibleSectionBlock extends React.Component {
                     {title}
                     <span
                         style={{
-                            transition: "transform 150ms linear 0s",
-                            transform: this.state.showContent && "scaleY(-1)",
                             float: "right",
-                            marginRight: "2rem"
+                            marginRight: "1rem"
                         }}
                     >
-                        <UnicodeIcon icon="downCaret"/>
+                        {this.state.showContent ? <ButtonSvgIcon icon="upCaret" size="1rem"/> : <ButtonSvgIcon icon="downCaret" size="1rem"/>}
                     </span>
                 </h2>
                 <div

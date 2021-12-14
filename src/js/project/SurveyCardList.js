@@ -1,6 +1,7 @@
 import React from "react";
 
-import {UnicodeIcon, removeEnumerator} from "../utils/generalUtils";
+import SvgIcon, {ButtonSvgIcon} from "../components/svg/SvgIcon";
+import {removeEnumerator} from "../utils/generalUtils";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = props.surveyQuestions
@@ -71,11 +72,11 @@ class SurveyCard extends React.Component {
                     <div className="SurveyCard__card-description row">
                         <div className="col-10 d-flex pl-1">
                             <button
-                                className="btn btn-outline-lightgreen my-1 px-3 py-0"
+                                className="btn btn-outline-lightgreen my-2"
                                 onClick={() => this.setState({showQuestions: !this.state.showQuestions})}
                                 type="button"
                             >
-                                <span className="font-weight-bold">{this.state.showQuestions ? "-" : "+"}</span>
+                                {this.state.showQuestions ? <ButtonSvgIcon icon="minus" size="0.9rem"/> : <ButtonSvgIcon icon="plus" size="0.9rem"/>}
                             </button>
                             <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
                             <h3 className="m-3">
@@ -94,7 +95,7 @@ class SurveyCard extends React.Component {
                                     style={{opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0"}}
                                     type="button"
                                 >
-                                    <UnicodeIcon icon="upCaret"/>
+                                    <ButtonSvgIcon icon="upCaret" size="1rem"/>
                                 </button>
                                 <button
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
@@ -103,7 +104,7 @@ class SurveyCard extends React.Component {
                                     style={{opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1] ? "0.25" : "1.0"}}
                                     type="button"
                                 >
-                                    <UnicodeIcon icon="downCaret"/>
+                                    <ButtonSvgIcon icon="downCaret" size="1rem"/>
                                 </button>
                             </div>
                         )}
@@ -146,8 +147,8 @@ function SurveyQuestionTree({
         <>
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">
                 {[...Array(indentLevel)].map(l => (
-                    <div key={l} className="pl-4">
-                        <UnicodeIcon icon="rightArrow"/>
+                    <div key={l} className="pl-5" style={{cursor: "default"}}>
+                        <SvgIcon icon="downRightArrow" size="1.4rem"/>
                     </div>
                 ))}
                 <div className="Question__answers container mb-2">
@@ -158,7 +159,7 @@ function SurveyQuestionTree({
                                 onClick={() => removeQuestion(surveyQuestion.id)}
                                 type="button"
                             >
-                                <span className="font-weight-bold">X</span>
+                                <ButtonSvgIcon icon="trash" size="1rem"/>
                             </button>
                         )}
                         <h3 className="font-weight-bold">
@@ -259,7 +260,7 @@ function ExistingAnswer({answer, color, removeAnswer}) {
                         onClick={removeAnswer}
                         type="button"
                     >
-                        <span className="font-weight-bold">X</span>
+                        <ButtonSvgIcon icon="trash" size="1rem"/>
                     </button>
                 )}
                 <div className="ExistingAnswer__circle">
