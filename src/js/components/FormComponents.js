@@ -1,4 +1,5 @@
 import React from "react";
+import {ButtonSvgIcon} from "./svg/SvgIcon";
 import {UnicodeIcon} from "../utils/generalUtils";
 
 export function FormLayout({title, children}) {
@@ -199,21 +200,18 @@ export class ExpandableImage extends React.Component {
 }
 
 export function CollapsibleTitle({title, showGroup, toggleShow}) {
-    const commonStyle = {width: "1.5rem", height: "1.5rem", marginBottom: "0"};
-    const buttonDownStyle = {...commonStyle, paddingTop: "1px", paddingLeft: "3px"};
-    const buttonRightStyle = {...commonStyle, paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem"};
     return (
         <div
             className="CollapsibleTitle__Title row p-1"
             style={{borderBottom: "2px solid black", margin: "0 0 .5rem 0"}}
         >
-            <h3
-                className="btn btn-sm btn-outline-darkgray"
+            <button
+                className="btn btn-outline-darkgray btn-sm"
                 onClick={toggleShow}
-                style={showGroup ? buttonDownStyle : buttonRightStyle}
+                type="button"
             >
-                {showGroup ? <UnicodeIcon icon="downCaret"/> : <UnicodeIcon icon="rightCaret"/>}
-            </h3>
+                {showGroup ? <ButtonSvgIcon icon="downCaret" size="0.9rem"/> : <ButtonSvgIcon icon="rightCaret" size="0.9rem"/>}
+            </button>
             <h3 className="ml-2" style={{marginBottom: "0"}}>{title}</h3>
         </div>
     );

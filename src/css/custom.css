@@ -255,7 +255,7 @@ h4 {font-size: 0.8rem;}
     transition: background-color 50ms linear;
 }
 .btn-outline-yellow:hover {
-    color: black;
+    color: white;
     background-color: #fccf07;
     border-color: #fccf07;
 }

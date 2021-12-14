@@ -1,6 +1,8 @@
 import React from "react";
+import {cancelIcon} from "./cancelIcon";
 import {checkIcon} from "./checkIcon";
 import {closeIcon} from "./closeIcon";
+import {downCaretIcon} from "./downCaretIcon";
 import {drawIcon} from "./drawIcon";
 import {editIcon} from "./editIcon";
 import {helpIcon} from "./helpIcon";
@@ -13,12 +15,18 @@ import {pointIcon} from "./pointIcon";
 import {polygonIcon} from "./polygonIcon";
 import {questionIcon} from "./questionIcon";
 import {rightArrowIcon} from "./rightArrowIcon";
+import {rightCaretIcon} from "./rightCaretIcon";
 import {rightDoubleIcon} from "./rightDoubleIcon";
 import {ruleIcon} from "./ruleIcon";
+import {saveIcon} from "./saveIcon";
+import {trashIcon} from "./trashIcon";
+import {zoomInIcon} from "./zoomInIcon";
 
 const iconMap = {
+    "cancel": cancelIcon,
     "check": checkIcon,
     "close": closeIcon,
+    "downCaret": downCaretIcon,
     "draw": drawIcon,
     "edit": editIcon,
     "help": helpIcon,
@@ -31,8 +39,12 @@ const iconMap = {
     "polygon": polygonIcon,
     "question": questionIcon,
     "rightArrow": rightArrowIcon,
+    "rightCaret": rightCaretIcon,
     "rightDouble": rightDoubleIcon,
-    "rule": ruleIcon
+    "rule": ruleIcon,
+    "save": saveIcon,
+    "trash": trashIcon,
+    "zoomIn": zoomInIcon
 };
 
 export default function SvgIcon({icon, color, size}) {
