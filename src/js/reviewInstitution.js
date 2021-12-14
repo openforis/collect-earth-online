@@ -296,8 +296,8 @@ class InstitutionDescription extends React.Component {
                     }}
                     type="button"
                 >
-                    <ButtonSvgIcon icon="trash" size="1rem"/>
-                    &nbsp;Discard Changes
+                    <ButtonSvgIcon icon="cancel" size="1rem"/>
+                    &nbsp;Cancel Changes
                 </button>
             </div>
         </div>
@@ -548,7 +548,7 @@ class ImageryList extends React.Component {
                             <div className="row">
                                 <div className="col-lg-12 mb-3">
                                     <button
-                                        className="btn btn-sm btn-block btn-success py-2 font-weight-bold"
+                                        className="btn btn-sm btn-block btn-lightgreen py-2 font-weight-bold"
                                         id="add-imagery-button"
                                         onClick={this.selectAddImagery}
                                         style={{
@@ -937,7 +937,7 @@ class NewImagery extends React.Component {
                 <div className="row">
                     <div className="col-6">
                         <button
-                            className="btn btn-sm btn-block btn-outline-success btn-group py-2 font-weight-bold"
+                            className="btn btn-sm btn-block btn-outline-lightgreen btn-group py-2 font-weight-bold"
                             id="add-imagery-button"
                             onClick={() => this.uploadCustomImagery(isNewImagery)}
                             style={{
@@ -963,8 +963,8 @@ class NewImagery extends React.Component {
                             }}
                             type="button"
                         >
-                            <ButtonSvgIcon icon="trash" size="1rem"/>
-                              &nbsp;Discard Changes
+                            <ButtonSvgIcon icon="cancel" size="1rem"/>
+                            &nbsp;Cancel Changes
                         </button>
                     </div>
                 </div>
@@ -1045,7 +1045,7 @@ function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProj
                 <div className="row mb-3">
                     <div className="col">
                         <button
-                            className="btn btn-sm btn-block btn-success py-2 font-weight-bold"
+                            className="btn btn-sm btn-block btn-lightgreen py-2 font-weight-bold"
                             id="create-project"
                             onClick={() => window.location.assign(`/create-project?institutionId=${institutionId}`)}
                             style={{
@@ -1404,7 +1404,7 @@ class NewUserButtons extends React.Component {
                         </div>
                         <div className="col-4 pl-0">
                             <button
-                                className="btn btn-sm btn-success btn-block py-2 font-weight-bold"
+                                className="btn btn-sm btn-lightgreen btn-block py-2 font-weight-bold"
                                 onClick={() => this.checkUserEmail() && this.addUser()}
                                 style={{
                                     alignItems: "center",
@@ -1422,7 +1422,7 @@ class NewUserButtons extends React.Component {
                 {(this.props.userId > 0 && !this.props.currentIsInstitutionMember) && (
                     <div>
                         <button
-                            className="btn btn-sm btn-success btn-block mb-3"
+                            className="btn btn-sm btn-lightgreen btn-block mb-3"
                             id="request-membership-button"
                             onClick={this.props.requestMembership}
                             style={{

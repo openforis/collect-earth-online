@@ -210,7 +210,7 @@ export function CollapsibleTitle({title, showGroup, toggleShow}) {
                 onClick={toggleShow}
                 type="button"
             >
-                {showGroup ? <ButtonSvgIcon icon="downArrow" size="0.9rem"/> : <ButtonSvgIcon icon="rightArrow" size="0.9rem"/>}
+                {showGroup ? <ButtonSvgIcon icon="downCaret" size="0.9rem"/> : <ButtonSvgIcon icon="rightCaret" size="0.9rem"/>}
             </button>
             <h3 className="ml-2" style={{marginBottom: "0"}}>{title}</h3>
         </div>
