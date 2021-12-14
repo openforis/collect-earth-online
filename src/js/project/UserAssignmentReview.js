@@ -19,18 +19,10 @@ function ReviewRow({title, content}) {
 
 export default function UserAssignmentReview({designSettings, institutionUserList = []}) {
     const {userAssignment: {userMethod, users, percents}} = designSettings;
-    const userPercents = Object.fromEntries(users.map((id, index) => [id, percents[index]]));
 
-    const renderUser = ({id, email, percent}) => {
-        const content = email + (userMethod === "percent" ? ` - ${percent}%` : "");
-        return (
-            <Badge key={id}>{content}</Badge>
-        );
-    };
-
-    const assignedUsers = institutionUserList
-        .filter(u => users.includes(u.id))
-        .map(user => ({...user, percent: userPercents[user.id]}));
+    const renderUser = (id, email, percent) => (
+        <Badge key={id}>{email + (userMethod === "percent" ? ` - ${percent}%` : "")}</Badge>
+    );
 
     return (
         <div className="d-flex">
@@ -41,7 +33,10 @@ export default function UserAssignmentReview({designSettings, institutionUserLis
                         <tr>
                             <td className="w-80 pr-5">Users</td>
                             <td className="w-20 text-center">
-                                {assignedUsers.map(renderUser)}
+                                {users.map((userId, idx) => {
+                                    const {email} = (institutionUserList.find(({id}) => userId === id) || {});
+                                    return renderUser(userId, email, percents[idx]);
+                                })}
                             </td>
                         </tr>
                     </tbody>

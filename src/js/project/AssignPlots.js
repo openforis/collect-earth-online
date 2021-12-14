@@ -6,12 +6,16 @@ import UserSelect from "../components/UserSelect";
 import {formatNumberWithCommas, removeAtIndex} from "../utils/generalUtils";
 import {ButtonSvgIcon} from "../components/svg/SvgIcon";
 
+// TODO, two arrays for user and percent is probably not the best data structure.
+//      Originally we had the percent array only added for by percent assignments.
+//      Since making the component generic, we send percent for all type.  Therefore
+//      There is no meaningful separate and a single array of objects makes more sense.
 export default class AssignPlots extends React.Component {
     getQaqcAssignment = () => this.context.designSettings.qaqcAssignment;
 
     getUserAssignment = () => this.context.designSettings.userAssignment;
 
-    setUserAssignment = (newUserAssignment, newQaqcAssignment) => {
+    setUserAssignment = (newUserAssignment, newQaqcAssignment = {}) => {
         const qaqcAssignment = this.getQaqcAssignment();
         const userAssignment = this.getUserAssignment();
         this.context.setProjectDetails({
@@ -30,8 +34,8 @@ export default class AssignPlots extends React.Component {
 
     addUser = userId => {
         const {users, percents} = this.getUserAssignment();
-        const newUsers = [...users, userId];
-        const newPercents = [...percents, 0];
+        const newUsers = [userId, ...users];
+        const newPercents = [0, ...percents];
         this.setUserAssignment({users: newUsers, percents: newPercents});
     };
 
@@ -45,69 +49,62 @@ export default class AssignPlots extends React.Component {
         });
     };
 
-    assignPlotPercent = (userIndex, percent) => {
+    assignPlotPercent = (userIdx, percent) => {
         const {percents} = this.getUserAssignment();
-        percents[userIndex] = percent;
+        percents[userIdx] = percent;
         this.setUserAssignment({percents});
     };
 
-    renderAssignedUsers = (assignedUsers, isPercentage, percents, totalPlots) => (
-        <div>
-            {assignedUsers.map(({id, email}, userIndex) => {
-                const numPlots = Math.round((percents[userIndex] / 100) * totalPlots);
-                return (
-                    <div key={id} className="form-row mt-1">
-                        <div className="col-5">
-                            {isPercentage && (
-                                <div className="d-flex flex-column">
-                                    <div className="ml-2">
-                                        <input
-                                            className="form-control form-control-sm"
-                                            max="100"
-                                            min="0"
-                                            onChange={e => this.assignPlotPercent(userIndex, parseInt(e.target.value))}
-                                            placeholder="%"
-                                            style={{display: "inline-block", width: "3.5rem"}}
-                                            type="number"
-                                            value={percents[userIndex]}
-                                        />
-                                        &#37;
-                                    </div>
-                                    <div className="font-italic small ml-2">
-                                        ~{formatNumberWithCommas(numPlots)} plots
-                                    </div>
-                                </div>
-                            )}
+    renderUserRow = (idx, id, email, userMethod, percent = 0, totalPlots = 0) => (
+        <div key={id} className="form-row mt-1">
+            <div className="col-5">
+                {userMethod === "percent" && (
+                    <div className="d-flex flex-column">
+                        <div className="ml-2">
+                            <input
+                                className="form-control form-control-sm"
+                                max="100"
+                                min="0"
+                                onChange={e => this.assignPlotPercent(idx, parseInt(e.target.value))}
+                                placeholder="%"
+                                style={{display: "inline-block", width: "3.5rem"}}
+                                type="number"
+                                value={percent}
+                            />
+                                &#37;
                         </div>
-                        <div className="col-6">
-                            <div
-                                style={{
-                                    background: "white",
-                                    border: "1px solid #ced4da",
-                                    borderRadius: ".25rem",
-                                    fontSize: ".875rem",
-                                    overflow: "hidden",
-                                    padding: ".25rem .5rem",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap"
-                                }}
-                            >
-                                {email}
-                            </div>
-                        </div>
-                        <div className="col-1">
-                            <button
-                                className="btn btn-sm btn-danger"
-                                onClick={() => this.removeUser(id)}
-                                title={`Remove ${email}`}
-                                type="button"
-                            >
-                                <ButtonSvgIcon icon="minus" size="0.9rem"/>
-                            </button>
+                        <div className="font-italic small ml-2">
+                                ~{formatNumberWithCommas(Math.round((percent / 100) * totalPlots))} plots
                         </div>
                     </div>
-                );
-            })}
+                )}
+            </div>
+            <div className="col-6">
+                <div
+                    style={{
+                        background: "white",
+                        border: "1px solid #ced4da",
+                        borderRadius: ".25rem",
+                        fontSize: ".875rem",
+                        overflow: "hidden",
+                        padding: ".25rem .5rem",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap"
+                    }}
+                >
+                    {email}
+                </div>
+            </div>
+            <div className="col-1">
+                <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => this.removeUser(id)}
+                    title={`Remove ${email}`}
+                    type="button"
+                >
+                    <ButtonSvgIcon icon="minus" size="0.9rem"/>
+                </button>
+            </div>
         </div>
     );
 
@@ -124,8 +121,6 @@ export default class AssignPlots extends React.Component {
             {id: -1, email: "Select user..."},
             ...institutionUserList.filter(u => !users.includes(u.id) && (qaqcMethod !== "sme" || !smes.includes(u.id)))
         ];
-        const assignedUsers = institutionUserList.filter(u => users.includes(u.id));
-        const plotsPerUser = Math.round(totalPlots / users.length);
 
         return (
             <div className="col-6">
@@ -147,10 +142,24 @@ export default class AssignPlots extends React.Component {
                             label="Assigned Users"
                             possibleUsers={possibleUsers}
                         />
-                        {this.renderAssignedUsers(assignedUsers, userMethod === "percent", percents, totalPlots)}
-                        {userMethod === "equal" && assignedUsers.length > 0 && (
+                        <div>
+                            {users.map((userId, idx) => {
+                                const {email} = (institutionUserList.find(({id}) => userId === id) || {});
+                                return this.renderUserRow(
+                                    idx,
+                                    userId,
+                                    email,
+                                    userMethod,
+                                    percents[idx],
+                                    totalPlots
+                                );
+                            })}
+                        </div>
+                        {userMethod === "equal" && users.length > 0 && (
                             <p className="font-italic ml-2 mt-2 small">
-                                - Each user will be assigned ~{formatNumberWithCommas(plotsPerUser)} plots
+                                {`- Each user will be assigned ~${
+                                    formatNumberWithCommas(Math.round(totalPlots / users.length))
+                                    } plots.`}
                             </p>
                         )}
                     </div>
