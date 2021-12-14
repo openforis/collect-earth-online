@@ -5,7 +5,8 @@ INSERT INTO users
     (user_uid, email, password, administrator, reset_key, verified)
 VALUES
     (1, 'admin@ceo.dev', crypt('admin', gen_salt('bf')), TRUE, null, TRUE),
-    (2, 'user@ceo.dev', crypt('user', gen_salt('bf')), FALSE, null, TRUE);
+    (2, 'user@ceo.dev', crypt('user', gen_salt('bf')), FALSE, null, TRUE),
+    (3, 'obaldwinedwards@sig-gis.com', crypt('oliver', gen_salt('bf')), FALSE, null, TRUE);
 
 SELECT setval(pg_get_serial_sequence('users', 'user_uid'), (SELECT MAX(user_uid) FROM users) + 1);
 

@@ -2,8 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {mercator} from "./utils/mercator";
-import {sortAlphabetically, UnicodeIcon} from "./utils/generalUtils";
-import SvgIcon from "./components/svg/SvgIcon";
+import {sortAlphabetically} from "./utils/generalUtils";
+import SvgIcon, {ButtonSvgIcon} from "./components/svg/SvgIcon";
 
 class Home extends React.Component {
     constructor(props) {
@@ -484,13 +484,25 @@ function InstitutionFilter(props) {
 
 function CreateInstitutionButton() {
     return (
-        <div className="btn-yellow text-center p-2">
+        <div
+            className="text-center p-2"
+            style={{
+                backgroundColor: "#fccf07",
+                display: "flex",
+                justifyContent: "center"
+            }}
+        >
             <a
-                className="create-institution"
+                className="create-institution btn btn-lightgreen btn-md"
                 href="/create-institution"
-                style={{display:"block"}}
+                style={{
+                    alignItems: "center",
+                    display:"flex",
+                    justifyContent: "center"
+                }}
             >
-                <UnicodeIcon backgroundColor="#31BAB0" icon="add"/> Create New Institution
+                <ButtonSvgIcon icon="plus" size="1rem"/>
+                &nbsp;Create New Institution
             </a>
         </div>
     );
@@ -588,9 +600,14 @@ function Project(props) {
                 <a
                     className="edit-project btn btn-sm btn-outline-yellow btn-block"
                     href={`/review-project?projectId=${props.id}`}
-                    style={{width: "50px"}}
+                    style={{
+                        alignItems: "center",
+                        display: "flex",
+                        justifyContent: "center",
+                        width: "40px"
+                    }}
                 >
-                    EDIT
+                    <ButtonSvgIcon icon="edit" size="1rem"/>
                 </a>
             )}
         </div>
@@ -652,13 +669,16 @@ class ProjectPopup extends React.Component {
                     className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
                     id="zoomToCluster"
                     style={{
+                        alignItems: "center",
                         cursor: "pointer",
+                        justifyContent: "center",
                         minWidth: "350px",
-                        display: this.props.features.length > 1 ? "block" : "none"
+                        display: this.props.features.length > 1 ? "flex" : "none"
                     }}
                     type="button"
                 >
-                    <UnicodeIcon icon="magnify"/> Zoom to cluster
+                    <ButtonSvgIcon icon="zoomIn" size="1rem"/>
+                    &nbsp;Zoom to cluster
                 </button>
             </div>
         );
