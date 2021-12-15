@@ -282,7 +282,7 @@ class InstitutionDescription extends React.Component {
                     type="button"
                 >
                     <ButtonSvgIcon icon="save" size="1rem"/>
-                    &nbsp;Save Changes
+                    <span style={{marginLeft: "0.4rem"}}>Save Changes</span>
                 </button>
             </div>
             <div className="col-6">
@@ -297,7 +297,7 @@ class InstitutionDescription extends React.Component {
                     type="button"
                 >
                     <ButtonSvgIcon icon="cancel" size="1rem"/>
-                    &nbsp;Cancel Changes
+                    <span style={{marginLeft: "0.4rem"}}>Cancel Changes</span>
                 </button>
             </div>
         </div>
@@ -357,7 +357,7 @@ class InstitutionDescription extends React.Component {
                                         type="button"
                                     >
                                         <ButtonSvgIcon icon="edit" size="1rem"/>
-                                        &nbsp;Edit Institution
+                                        <span style={{marginLeft: "0.4rem"}}>Edit Institution</span>
                                     </button>
                                 </div>
                                 <div className="col-3">
@@ -373,7 +373,7 @@ class InstitutionDescription extends React.Component {
                                         type="button"
                                     >
                                         <ButtonSvgIcon icon="trash" size="1rem"/>
-                                        &nbsp;Delete Institution
+                                        <span style={{marginLeft: "0.4rem"}}>Delete Institution</span>
                                     </button>
                                 </div>
                                 <div className="col-3">
@@ -559,7 +559,7 @@ class ImageryList extends React.Component {
                                         type="button"
                                     >
                                         <ButtonSvgIcon icon="plus" size="1rem"/>
-                                        &nbsp;Add New Imagery
+                                        <span style={{marginLeft: "0.4rem"}}>Add New Imagery</span>
                                     </button>
 
                                 </div>
@@ -948,8 +948,18 @@ class NewImagery extends React.Component {
                             type="button"
                         >
                             {isNewImagery
-                                ? <><ButtonSvgIcon icon="plus" size="1rem"/>&nbsp;Add New Imagery</>
-                                : <><ButtonSvgIcon icon="save" size="1rem"/>&nbsp;Save Imagery Changes</>}
+                                ? (
+                                    <>
+                                        <ButtonSvgIcon icon="plus" size="1rem"/>
+                                        <span style={{marginLeft: "0.4rem"}}>Add New Imagery</span>
+                                    </>
+                                )
+                                : (
+                                    <>
+                                        <ButtonSvgIcon icon="save" size="1rem"/>
+                                        <span style={{marginLeft: "0.4rem"}}>Save Imagery Changes</span>
+                                    </>
+                                )}
                         </button>
                     </div>
                     <div className="col-6">
@@ -964,7 +974,7 @@ class NewImagery extends React.Component {
                             type="button"
                         >
                             <ButtonSvgIcon icon="cancel" size="1rem"/>
-                            &nbsp;Cancel Changes
+                            <span style={{marginLeft: "0.4rem"}}>Cancel Changes</span>
                         </button>
                     </div>
                 </div>
@@ -1034,6 +1044,40 @@ function Imagery({title, canEdit, visibility, toggleVisibility, selectEditImager
 }
 
 function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProject}) {
+    function renderProjects() {
+        let message = "";
+        const noProjects = msg => (
+            <div style={{display: "flex"}}>
+                <SvgIcon icon="alert" size="1.2rem"/>
+                <p style={{marginLeft: "0.4rem"}}>
+                    {msg}
+                </p>
+            </div>
+        );
+
+        switch (true) {
+        case (projectList === null):
+            return <h3>Loading projects...</h3>;
+        case (projectList.length === 0 && isAdmin):
+            message = "There are no projects yet. Click 'Create New Project' to get started.";
+            return noProjects(message);
+        case (projectList.length === 0):
+            message = "There are no public projects.";
+            return noProjects(message);
+        default:
+            return (
+                projectList.map((project, uid) => (
+                    <Project
+                        key={uid} // eslint-disable-line react/no-array-index-key
+                        deleteProject={deleteProject}
+                        isAdmin={isAdmin}
+                        project={project}
+                    />
+                ))
+            );
+        }
+    }
+
     return (
         <div style={!isVisible ? {display: "none"} : {}}>
             <div className="mb-3">
@@ -1056,31 +1100,12 @@ function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProj
                             type="button"
                         >
                             <ButtonSvgIcon icon="plus" size="1rem"/>
-                            &nbsp;Create New Project
+                            <span style={{marginLeft: "0.4rem"}}>Create New Project</span>
                         </button>
                     </div>
                 </div>
             )}
-            {projectList === null
-                ? <h3>Loading projects...</h3>
-                : projectList.length === 0
-                    ? (
-                        <div style={{display: "flex"}}>
-                            <SvgIcon icon="alert" size="1.2rem"/>
-                            <p>
-                              &nbsp;There are no projects yet.
-                              If you are an Admin click &quot;Create New Project&quot; to get started.
-                            </p>
-                        </div>
-                    )
-                    : projectList.map((project, uid) => (
-                        <Project
-                            key={uid} // eslint-disable-line react/no-array-index-key
-                            deleteProject={deleteProject}
-                            isAdmin={isAdmin}
-                            project={project}
-                        />
-                    ))}
+            {renderProjects()}
         </div>
     );
 }
@@ -1422,7 +1447,7 @@ class NewUserButtons extends React.Component {
                                 type="button"
                             >
                                 <ButtonSvgIcon icon="plus" size="1rem"/>
-                                &nbsp;Add User
+                                <span style={{marginLeft: "0.4rem"}}>Add User</span>
                             </button>
                         </div>
                     </div>
@@ -1441,7 +1466,7 @@ class NewUserButtons extends React.Component {
                             type="button"
                         >
                             <ButtonSvgIcon icon="plus" size="1rem"/>
-                            &nbsp;Request Membership
+                            <span style={{marginLeft: "0.4rem"}}>Request Membership</span>
                         </button>
                     </div>
                 )}

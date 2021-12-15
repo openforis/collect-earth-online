@@ -87,8 +87,8 @@ class InstitutionDashboard extends React.Component {
                     ) : (
                         <div className="mx-4 d-flex">
                             <SvgIcon icon="alert" size="1.2rem"/>
-                            <p>
-                              &nbsp;Your dashboard is empty.
+                            <p style={{marginLeft: "0.4rem"}}>
+                              Your dashboard is empty.
                               In order to view project data here, please create a new project.
                             </p>
                         </div>
