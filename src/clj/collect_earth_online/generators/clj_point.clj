@@ -102,7 +102,6 @@
                     visible-offset (-> (dec visible_id)
                                        (* samples-per-plot)
                                        (inc))]
-                (println samples-per-plot)
                 (map-indexed (fn [idx [lon lat]]
                                {:plot_rid    plot_id
                                 :visible_id  (+ idx visible-offset)
