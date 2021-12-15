@@ -1,9 +1,9 @@
 import React, {Fragment} from "react";
 
-import {UnicodeIcon, removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
+import {removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
 import RulesCollectionModal from "./RulesCollectionModal";
-import SvgIcon from "./svg/SvgIcon";
+import SvgIcon, {ButtonSvgIcon} from "./svg/SvgIcon";
 import {mercator} from "../utils/mercator";
 import RequiredInput from "./RequiredInput";
 
@@ -846,19 +846,12 @@ class AnswerDropDown extends React.Component {
                             ))}
                     </div>
                     <button
-                        className="dropbtn"
+                        className="btn btn-lightgreen btn-sm"
                         onBlur={() => this.setState({showDropdown: false})}
                         onClick={this.toggleDropDown}
-                        style={{
-                            backgroundColor: "#31BAB0",
-                            color: "white",
-                            padding: "8px 16px",
-                            border: "none",
-                            cursor: "pointer"
-                        }}
                         type="button"
                     >
-                        <UnicodeIcon icon="downCaret"/>
+                        <ButtonSvgIcon icon="downCaret" size="1rem"/>
                     </button>
                 </div>
                 <div

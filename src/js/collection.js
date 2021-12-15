@@ -17,9 +17,9 @@ import {CollapsibleTitle} from "./components/FormComponents";
 import Modal from "./components/Modal";
 import RadioButton from "./components/RadioButton";
 import Select from "./components/Select";
-import {ButtonSvgIcon} from "./components/svg/SvgIcon";
+import SvgIcon, {ButtonSvgIcon} from "./components/svg/SvgIcon";
 
-import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
+import {getQueryString, safeLength, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
 import {getProjectPreferences, setProjectPreferences} from "./utils/preferences";
 import {mercator} from "./utils/mercator";
 
@@ -885,7 +885,7 @@ class Collection extends React.Component {
                     imageryAttribution={this.state.imageryAttribution}
                 />
                 <div
-                    className="d-xl-none btn btn-lightgreen"
+                    className="d-lg-none btn btn-lightgreen"
                     onClick={() => this.setState({showSidebar: !this.state.showSidebar}, () => {
                         if (this.state.showSidebar) {
                             window.location = "#sidebar";
@@ -896,6 +896,7 @@ class Collection extends React.Component {
                     })}
                     style={{
                         position: "fixed",
+                        boxShadow: "1px 1px 5px rgba(0, 0, 0, 0.3)",
                         zIndex: 99999,
                         right: "1rem",
                         top: "calc(60px + 1rem)",
@@ -904,8 +905,8 @@ class Collection extends React.Component {
                 >
                     <div style={{padding: ".5rem", color: "white"}}>
                         {this.state.showSidebar
-                            ? <UnicodeIcon icon="upCaret"/>
-                            : <UnicodeIcon icon="downCaret"/>}
+                            ? <ButtonSvgIcon icon="upCaret" size="1rem"/>
+                            : <ButtonSvgIcon icon="downCaret" size="1rem"/>}
                     </div>
                 </div>
                 <SideBar
@@ -1021,7 +1022,7 @@ class Collection extends React.Component {
 function ImageAnalysisPane({imageryAttribution}) {
     return (
         // Mercator hooks into image-analysis-pane
-        <div className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height" id="image-analysis-pane">
+        <div className="col-lg-9 col-md-12 pl-0 pr-0 full-height" id="image-analysis-pane">
             <div className="row" id="imagery-info" style={{justifyContent: "center"}}>
                 <p style={{fontSize: ".9rem", marginBottom: "0"}}>{imageryAttribution}</p>
             </div>
@@ -1083,9 +1084,9 @@ class SideBar extends React.Component {
     render() {
         return (
             <div
-                className="col-xl-3 border-left full-height"
+                className="col-lg-3 border-left full-height"
                 id="sidebar"
-                style={{overflowY: "scroll", overflowX: "hidden"}}
+                style={{overflowY: "auto", overflowX: "hidden"}}
             >
                 <ProjectTitle
                     inReviewMode={this.props.inReviewMode}
@@ -1550,30 +1551,49 @@ class ProjectTitle extends React.Component {
         const {projectName, inReviewMode, projectId, userName} = this.props;
         return (
             <div
-                onClick={() => this.setState({showStats: !this.state.showStats})}
-                style={{height: "3rem", cursor: "default"}}
+                style={{
+                    alignItems: "center",
+                    background: "#31bab0",
+                    display: "flex",
+                    marginLeft: "-15px",
+                    marginRight: "-15px"
+                }}
             >
-                <h2
-                    className="header overflow-hidden text-truncate"
-                    style={{height: "100%", marginBottom: "0"}}
-                    title={projectName}
+                <div
+                    onClick={() => this.setState({showStats: !this.state.showStats})}
+                    style={{flex: 0, marginLeft: "1rem"}}
                 >
-                    <UnicodeIcon icon="downCaret"/>{" " + projectName}
-                </h2>
-                {this.state.showStats && (inReviewMode
-                    ? (
-                        <ProjectStats
-                            projectId={projectId}
-                            userName={userName}
-                        />
-                    ) : (
-                        <UserProjectStats
-                            projectId={projectId}
-                            userName={userName}
-                        />
-                    )
-
-                )}
+                    <SvgIcon color="#ffffff" icon="info" size="1.25rem"/>
+                </div>
+                <div
+                    style={{cursor: "default", flex: 1, height: "3rem"}}
+                >
+                    <h2
+                        className="header overflow-hidden text-truncate"
+                        style={{
+                            display: "flex",
+                            height: "100%",
+                            justifyContent: "center",
+                            margin: "0"
+                        }}
+                        title={projectName}
+                    >
+                        {projectName}
+                    </h2>
+                    {this.state.showStats && (inReviewMode
+                        ? (
+                            <ProjectStats
+                                projectId={projectId}
+                                userName={userName}
+                            />
+                        ) : (
+                            <UserProjectStats
+                                projectId={projectId}
+                                userName={userName}
+                            />
+                        )
+                    )}
+                </div>
             </div>
         );
     }
