@@ -138,6 +138,7 @@ class ProjectDashboard extends React.Component {
                         <ProjectStats
                             availability={this.state.projectDetails.availability}
                             isProjectAdmin={this.state.projectDetails.isProjectAdmin}
+                            projectDetails={this.state.projectDetails}
                             stats={this.state.stats}
                             userName={this.props.userName}
                         />
@@ -158,10 +159,12 @@ function ProjectStats(props) {
             partialPlots,
             unanalyzedPlots,
             flaggedPlots,
+            userStats
+        },
+        projectDetails: {
             closedDate,
             createdDate,
-            publishedDate,
-            userStats
+            publishedDate
         },
         isProjectAdmin,
         userName

@@ -167,24 +167,9 @@
                     :partialPlots    (:partial_plots stats)
                     :analyzedPlots   (:analyzed_plots stats)
                     :unanalyzedPlots (:unanalyzed_plots stats)
-                    :createdDate     (str (:created_date stats))
-                    :publishedDate   (str (:published_date stats))
-                    :closedDate      (str (:closed_date stats))
                     :userStats       (->> (:user_stats stats)
                                           (tc/jsonb->clj)
                                           (map #(set/rename-keys % {:timed_plots :timedPlots})))})))
-
-(defn get-project-user-stats [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))
-        user-id    (:userId params -1)
-        stats      (first (call-sql "select_project_user_stats" project-id user-id))]
-    (data-response {:totalPlots    (:total_plots stats)
-                    :userAssigned  (:user_assigned stats)
-                    :flaggedPlots  (:flagged_plots stats)
-                    :analyzedPlots (:analyzed_plots stats)
-                    :userStats     (-> (:user_stats stats)
-                                       (tc/jsonb->clj)
-                                       (set/rename-keys {:timed_plots :timedPlots}))})))
 
 ;;;
 ;;; Create project helper functions

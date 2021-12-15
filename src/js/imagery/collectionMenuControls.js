@@ -371,8 +371,8 @@ export class SecureWatchMenu extends React.Component {
                         }
                     })
                     .catch(response => {
-                        console.log(response);
-                        alert("It is likely that your Connect ID for Securewatch imagery is expired. See console for more details.");
+                        console.error(response);
+                        console.error("It is likely that your Connect ID for Securewatch imagery is expired. See console for more details.");
                         return {features: []};
                     })
                     .then(data => {

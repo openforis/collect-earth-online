@@ -1548,7 +1548,7 @@ class ProjectTitle extends React.Component {
     }
 
     render() {
-        const {projectName, inReviewMode, projectId, userName} = this.props;
+        const {projectName, projectId, userName} = this.props;
         return (
             <div
                 style={{
@@ -1580,131 +1580,22 @@ class ProjectTitle extends React.Component {
                     >
                         {projectName}
                     </h2>
-                    {this.state.showStats && (inReviewMode
-                        ? (
-                            <ProjectStats
-                                projectId={projectId}
-                                userName={userName}
-                            />
-                        ) : (
-                            <UserProjectStats
-                                projectId={projectId}
-                                userName={userName}
-                            />
-                        )
+                    {this.state.showStats && (
+                        <ProjectStats
+                            projectId={projectId}
+                            userName={userName}
+                        />
                     )}
                 </div>
             </div>
         );
     }
 }
-
-class UserProjectStats extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            stats: {}
-        };
-    }
-
-    componentDidMount() {
-        this.getProjectStats();
-    }
-
-    getProjectStats() {
-        fetch(`/get-project-user-stats?projectId=${this.props.projectId}`)
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => this.setState({stats: data}))
-            .catch(response => {
-                console.error(response);
-                alert("Error getting project stats. See console for details.");
-            });
-    }
-
-    renderPercent = (val, total) => (
-        <span>
-            {`${val} (${asPercentage(val, total)}%)`}
-        </span>
-    );
-
-    render() {
-        const {stats} = this.state;
-        const aveTime = stats.userStats?.timedPlots > 0
-            ? (stats.userStats?.seconds
-                / stats.userStats?.timedPlots
-                / 1.0)
-            : 0;
-        const numPlots = stats.userAssigned > 0 ? stats.userAssigned : stats.totalPlots;
-
-        return (
-            <div
-                className="row"
-                style={{
-                    backgroundColor: "#f1f1f1",
-                    boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)",
-                    cursor: "default",
-                    marginLeft: "2rem",
-                    overflow: "auto",
-                    position: "absolute",
-                    zIndex: "10"
-                }}
-            >
-                <div className="col-lg-12">
-                    <fieldset className="projNoStats" id="projStats">
-                        <table className="table table-sm">
-                            <tbody>
-                                <tr>
-                                    <td className="small pl-4">My Plots Completed</td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- {stats.userAssigned > 0
-                                        ? "Assigned to Me" : "Total Project Plots"}
-                                    </td>
-                                    <td className="small">
-                                        {numPlots}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- Analyzed</td>
-                                    <td className="small">
-                                        {this.renderPercent(stats.analyzedPlots, numPlots)}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- Unanalyzed</td>
-                                    <td className="small">
-                                        {this.renderPercent(numPlots - stats.analyzedPlots, numPlots)}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- Flagged</td>
-                                    <td className="small">
-                                        {this.renderPercent(stats.flaggedPlots, numPlots)}
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td className="small pl-4">-- My Average Time</td>
-                                    <td className="small">
-                                        {aveTime > 0
-                                            ? `${aveTime.toFixed(2)} secs`
-                                            : "untimed"}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </fieldset>
-                </div>
-            </div>
-        );
-    }
-}
-
 class ProjectStats extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            stats: {}
+            stats: null
         };
     }
 
@@ -1728,103 +1619,98 @@ class ProjectStats extends React.Component {
         </span>
     );
 
-    render() {
+    renderHeader = title => (
+        <tr>
+            <td className="small pl-4 font-weight-bold">{title}</td>
+        </tr>
+    );
+
+    renderRow = (title, val, total = null) => (
+        <tr>
+            <td className="small pl-4">{`-- ${title}`}</td>
+            <td className="small">
+                {total ? this.renderPercent(val, total) : val}
+            </td>
+        </tr>
+    );
+
+    renderStats = () => {
         const {stats} = this.state;
-        const numTimedPlots = stats.userStats ? stats.userStats.reduce((p, c) => p + c.timedPlots, 0) : 0;
+        const {userName} = this.props;
+        // Totals
+        const numTimedPlots = stats.userStats
+            ? stats.userStats.reduce((acc, cur) => acc + cur.timedPlots, 0)
+            : 0;
         const aveTime = numTimedPlots > 0
-            ? (stats.userStats.reduce((p, c) => p + c.seconds, 0)
-                / stats.userStats.reduce((p, c) => p + c.timedPlots, 0)
-                / 1.0)
+            ? (stats.userStats.reduce((acc, cur) => acc + cur.seconds, 0) / numTimedPlots / 1.0)
             : 0;
 
+        // This user
+        const thisUser = stats.userStats.find(u => u.email === userName);
+        const {flagged, analyzed, assigned, timedPlots, seconds} = thisUser || {};
+        const userAveTime = timedPlots > 0
+            ? (seconds / timedPlots / 1.0)
+            : 0;
+        const userPlots = assigned > 0 ? assigned : null;
+
+        return (
+            <table className="table table-sm mb-0">
+                <tbody>
+                    {this.renderHeader("Project Statistics")}
+                    {this.renderRow("Total", stats.totalPlots)}
+                    {stats.plotAssignments > stats.totalPlots && this.renderRow("Plot Assignments", stats.plotAssignments)}
+                    {this.renderRow("Analyzed", stats.analyzedPlots, stats.totalPlots)}
+                    {stats.plotAssignments > 0
+                        && this.renderRow("Partial", stats.partialPlots, stats.totalPlots)}
+                    {this.renderRow("Unanalyzed", stats.unanalyzedPlots, stats.totalPlots)}
+                    {this.renderRow("Flagged", stats.flaggedPlots, stats.totalPlots)}
+                    {stats.usersAssigned > 0
+                        ? this.renderRow("Users Assigned", stats.usersAssigned)
+                        : this.renderRow("Total Contributors", stats.userStats?.length)}
+                    {this.renderRow(
+                        "Average Collection Time",
+                        aveTime > 0
+                            ? `${aveTime.toFixed(2)} secs`
+                            : "untimed"
+                    )}
+                    {this.renderHeader("My Statistics")}
+                    {thisUser
+                        ? (
+                            <>
+                                {stats.userAssigned > 0 && this.renderRow("Assigned to Me", userPlots)}
+                                {this.renderRow("Analyzed", analyzed, userPlots)}
+                                {assigned > 0 && this.renderRow("Unanalyzed", assigned - analyzed, userPlots)}
+                                {this.renderRow("Flagged", flagged, userPlots)}
+                                {this.renderRow("My Average Time", userAveTime > 0
+                                    ? `${userAveTime.toFixed(2)} secs`
+                                    : "untimed")}
+                            </>
+                        ) : (
+                            this.renderRow("You have not collected on this project.")
+                        )}
+                </tbody>
+            </table>
+        );
+    };
+
+    render() {
+        const {stats} = this.state;
         return (
             <div
-                className="row"
                 style={{
                     backgroundColor: "#f1f1f1",
                     boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)",
                     cursor: "default",
-                    marginLeft: "2rem",
+                    marginLeft: "1rem",
                     overflow: "auto",
+                    padding: ".5rem",
                     position: "absolute",
                     zIndex: "10"
                 }}
             >
-                <div className="col-lg-12">
-                    <fieldset className="projNoStats" id="projStats">
-                        <table className="table table-sm">
-                            <tbody>
-                                <tr>
-                                    <td className="small pl-4">Project Plots</td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- Total</td>
-                                    <td className="small">
-                                        {stats.totalPlots}
-                                    </td>
-                                </tr>
-                                {stats.plotAssignments > 0 && (
-                                    <tr>
-                                        <td className="small pl-4">-- Plot Assignments</td>
-                                        <td className="small">
-                                            {stats.plotAssignments}
-                                        </td>
-                                    </tr>
-                                )}
-                                <tr>
-                                    <td className="small pl-4">-- Analyzed</td>
-                                    <td className="small">
-                                        {this.renderPercent(stats.analyzedPlots, stats.totalPlots)}
-                                    </td>
-                                </tr>
-                                {stats.plotAssignments > 0 && (
-                                    <tr>
-                                        <td className="small pl-4">-- Partial</td>
-                                        <td className="small">
-                                            {this.renderPercent(stats.partialPlots, stats.totalPlots)}
-                                        </td>
-                                    </tr>
-                                )}
-                                <tr>
-                                    <td className="small pl-4">-- Unanalyzed</td>
-                                    <td className="small">
-                                        {this.renderPercent(stats.unanalyzedPlots, stats.totalPlots)}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- Flagged</td>
-                                    <td className="small">
-                                        {this.renderPercent(stats.flaggedPlots, stats.totalPlots)}
-                                    </td>
-                                </tr>
-                                {stats.usersAssigned > 0
-                                    ? (
-                                        <tr>
-                                            <td className="small pl-4">-- Users Assigned</td>
-                                            <td className="small">
-                                                {stats.usersAssigned}
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        <tr>
-                                            <td className="small pl-4">-- Total Contributors</td>
-                                            <td className="small">
-                                                {stats.userStats?.length}
-                                            </td>
-                                        </tr>
-                                    )}
-                                <tr>
-                                    <td className="small pl-4">-- Users Average Time</td>
-                                    <td className="small">
-                                        {aveTime > 0
-                                            ? `${aveTime.toFixed(2)} secs`
-                                            : "untimed"}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </fieldset>
-                </div>
+                {stats
+                    ? this.renderStats()
+                    : <label className="p-3">Loading...</label>}
             </div>
         );
     }
