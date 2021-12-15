@@ -403,7 +403,7 @@ function InstitutionFilter(props) {
             </div>
             {props.showFilters && (
                 <>
-                    <div className="d-inlineflex">
+                    <div className="d-inlineflex ml-1">
                         <div className="form-check form-check-inline">
                             Filter By:
                         </div>
@@ -440,7 +440,7 @@ function InstitutionFilter(props) {
                             Match from beginning
                         </div>
                     </div>
-                    <div className="d-inlineflex">
+                    <div className="d-inlineflex ml-1">
                         <div className="form-check form-check-inline">
                             Sort By:
                         </div>
