@@ -9,7 +9,7 @@ import {editIcon} from "./editIcon";
 import {helpIcon} from "./helpIcon";
 import {infoIcon} from "./infoIcon";
 import {leftArrowIcon} from "./leftArrowIcon";
-import {leftDoubleIcon} from "./leftDoubleIcon";
+import LeftDoubleIcon from "./leftDoubleIcon.svg";
 import {lineStringIcon} from "./lineStringIcon";
 import {minus} from "./minus";
 import {plus} from "./plus";
@@ -37,7 +37,7 @@ const iconMap = {
     "help": helpIcon,
     "info": infoIcon,
     "leftArrow": leftArrowIcon,
-    "leftDouble": leftDoubleIcon,
+    "leftDouble": LeftDoubleIcon,
     "lineString": lineStringIcon,
     "minus": minus,
     "plus": plus,
@@ -56,20 +56,23 @@ const iconMap = {
 };
 
 export default function SvgIcon({icon, color, size}) {
-    return (
-        <div
-            style={{
-                color: color || "black",
-                fill: color || "black",
-                height: size,
-                maxHeight: size,
-                maxWidth: size,
-                width: size
-            }}
-        >
-            {iconMap[icon]}
-        </div>
-    );
+    const Icon = iconMap[icon];
+    return icon === "leftDouble"
+        ? <Icon color="red" fill="red" height="1rem" width="1rem"/>
+        : (
+            <div
+                style={{
+                    color: color || "black",
+                    fill: color || "black",
+                    height: size,
+                    maxHeight: size,
+                    maxWidth: size,
+                    width: size
+                }}
+            >
+                {iconMap[icon]}
+            </div>
+        );
 }
 
 export function ButtonSvgIcon({icon, size}) {
