@@ -10,9 +10,6 @@
         y-steps (+ (Math/floor (/ y-range spacing)) 1)]
     (* x-steps y-steps)))
 
-(defn- count-gridded-sample-set [plot-size sample-resolution]
-  (Math/pow (Math/floor (/ plot-size sample-resolution)) 2))
-
 ;; Create random and gridded points
 
 (defn- random-with-buffer [side size buffer]
@@ -37,7 +34,7 @@
          (map #(EPSG:3857->4326 %)))))
 
 ;; TODO Use postGIS so arbitrary bounds can be set
-(defn- create-gridded-points-in-bounds [left bottom right top spacing]
+(defn- create-gridded-plots-in-bounds [left bottom right top spacing]
   (let [x-range   (- right left)
         y-range   (- top bottom)
         x-steps   (Math/floor (/ x-range spacing))
@@ -77,8 +74,8 @@
           bottom  (- center-y radius)
           steps   (Math/floor (/ plot-size sample-resolution))
           padding (/ (- plot-size (* steps sample-resolution)) 2.0)]
-      (->> (for [x (range (+ 1 steps))
-                 y (range (+ 1 steps))]
+      (->> (for [x (range (inc steps))
+                 y (range (inc steps))]
              [(+ (* x sample-resolution) left padding) (+ (* y sample-resolution) bottom padding)])
            (filter (fn [[x y]] (or (= "square" plot-shape)
                                    (< (distance center-x center-y x y) radius))))
@@ -92,7 +89,7 @@
                               samples-per-plot
                               sample-resolution]
   (let [samples-per-plot (case sample-distribution
-                           "gridded" (count-gridded-sample-set plot-size sample-resolution)
+                           "gridded" (count (create-gridded-sample-set [45 45] plot-shape plot-size sample-resolution))
                            "random"  samples-per-plot
                            "center"  1.0
                            "none"    1.0)]
@@ -142,5 +139,5 @@
                     :visible_id  (inc idx)
                     :plot_geom   (tc/str->pg (make-wkt-point lon lat) "geometry")})
                  (if (= "gridded" plot-distribution)
-                   (create-gridded-points-in-bounds left bottom right top plot-spacing)
+                   (create-gridded-plots-in-bounds left bottom right top plot-spacing)
                    (create-random-points-in-bounds left bottom right top num-plots)))))

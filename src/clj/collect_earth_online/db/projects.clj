@@ -376,10 +376,7 @@
                              sample-file-name
                              sample-file-base64
                              allow-drawn-samples?
-                             saved-plots))
-
-  ;; Final clean up
-  (call-sql "update_project_counts" project-id))
+                             saved-plots)))
 
 (defn create-project! [{:keys [params]}]
   (let [institution-id       (tc/val->int (:institutionId params))
@@ -463,10 +460,14 @@
                                sample-file-base64
                                allow-drawn-samples?
                                design-settings))
+      ;; Final clean up
+      (call-sql "update_project_counts" project-id)
+
       ;; Save project imagery
       (if-let [imagery-list (:projectImageryList params)]
         (insert-project-imagery! project-id imagery-list)
         (call-sql "add_all_institution_imagery" project-id)) ; API backwards compatibility
+
       ;; Copy template widgets
       ;; TODO this can be a simple SQL query once we drop the dashboard ID
       (when (and (pos? project-template) use-template-widgets)
@@ -670,6 +671,8 @@
                   survey-rules
                   project-options
                   design-settings)
+        ;; Final clean up
+        (call-sql "update_project_counts" project-id)
         (data-response "")
         (catch Exception e
           (let [causes (:causes (ex-data e))]
