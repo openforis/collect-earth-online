@@ -1,4 +1,5 @@
 import React from "react";
+import {alertIcon} from "./alertIcon";
 import {cancelIcon} from "./cancelIcon";
 import {checkIcon} from "./checkIcon";
 import {closeIcon} from "./closeIcon";
@@ -28,6 +29,7 @@ import {upCaretIcon} from "./upCaretIcon";
 import {zoomInIcon} from "./zoomInIcon";
 
 const iconMap = {
+    "alert": alertIcon,
     "cancel": cancelIcon,
     "check": checkIcon,
     "close": closeIcon,

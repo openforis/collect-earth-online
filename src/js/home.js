@@ -500,7 +500,7 @@ function CreateInstitutionButton() {
                 }}
             >
                 <ButtonSvgIcon icon="plus" size="1rem"/>
-                &nbsp;Create New Institution
+                <span style={{marginLeft: "0.4rem"}}>Create New Institution</span>
             </a>
         </div>
     );
@@ -527,15 +527,23 @@ class Institution extends React.Component {
                 >
                     <div className="d-flex justify-content-between align-items-center">
                         <div style={{flex: "0 0 1rem"}}>
-                            {props.projects && props.projects.length > 0 && (
-                                props.forceInstitutionExpand || this.state.showProjectList
-                                    ? "\u25BC"
-                                    : "\u25BA"
-                            )}
+                            <div
+                                style={{
+                                    display: "inline-block",
+                                    veritcalAlign: "middle"
+                                }}
+                            >
+                                {props.projects && props.projects.length > 0 && (
+                                    props.forceInstitutionExpand || this.state.showProjectList
+                                        ? <ButtonSvgIcon color="white" icon="downCaret" size="0.9rem"/>
+                                        : <ButtonSvgIcon color="white" icon="rightCaret" size="0.9rem"/>
+                                )}
+                            </div>
                         </div>
                         <div
                             style={{
                                 flex: 1,
+                                marginLeft: "0.4rem",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap"
@@ -676,7 +684,7 @@ class ProjectPopup extends React.Component {
                     type="button"
                 >
                     <ButtonSvgIcon icon="zoomIn" size="1rem"/>
-                    &nbsp;Zoom to cluster
+                    <span style={{marginLeft: "0.4rem"}}>Zoom to cluster</span>
                 </button>
             </div>
         );

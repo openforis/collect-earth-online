@@ -11,7 +11,7 @@ import {
     safeLength
 } from "./utils/generalUtils";
 import {imageryOptions} from "./imagery/imageryOptions";
-import {ButtonSvgIcon} from "./components/svg/SvgIcon";
+import SvgIcon, {ButtonSvgIcon} from "./components/svg/SvgIcon";
 
 class ReviewInstitution extends React.Component {
     constructor(props) {
@@ -283,7 +283,7 @@ class InstitutionDescription extends React.Component {
                     type="button"
                 >
                     <ButtonSvgIcon icon="trash" size="1rem"/>
-                &nbsp;Delete Institution
+                    <span style={{marginLeft: "0.4rem"}}>Delete Institution</span>
                 </button>
             </div>
             <div className="col-4">
@@ -298,7 +298,7 @@ class InstitutionDescription extends React.Component {
                     type="button"
                 >
                     <ButtonSvgIcon icon="cancel" size="1rem"/>
-                    &nbsp;Cancel Changes
+                    <span style={{marginLeft: "0.4rem"}}>Cancel Changes</span>
                 </button>
             </div>
             <div className="col-4">
@@ -313,7 +313,7 @@ class InstitutionDescription extends React.Component {
                     type="button"
                 >
                     <ButtonSvgIcon icon="save" size="1rem"/>
-                    &nbsp;Save Changes
+                    <span style={{marginLeft: "0.4rem"}}>Save Changes</span>
                 </button>
             </div>
         </div>
@@ -329,7 +329,7 @@ class InstitutionDescription extends React.Component {
                     description={this.state.newInstitutionDetails.description}
                     name={this.state.newInstitutionDetails.name}
                     setInstitutionDetails={this.updateNewInstitutionDetails}
-                    title="Create New Institution"
+                    title="Edit Institution"
                     url={this.state.newInstitutionDetails.url}
                 />
             ) : (
@@ -373,7 +373,7 @@ class InstitutionDescription extends React.Component {
                                         type="button"
                                     >
                                         <ButtonSvgIcon icon="edit" size="1rem"/>
-                                        &nbsp;Edit Institution
+                                        <span style={{marginLeft: "0.4rem"}}>Edit Institution</span>
                                     </button>
                                 </div>
                                 <div className="col-4">
@@ -383,7 +383,7 @@ class InstitutionDescription extends React.Component {
                                         onClick={this.gotoInstitutionDashboard}
                                         type="button"
                                     >
-                                Go to Dashboard
+                                    Go to Dashboard
                                     </button>
                                 </div>
                             </div>
@@ -559,7 +559,7 @@ class ImageryList extends React.Component {
                                         type="button"
                                     >
                                         <ButtonSvgIcon icon="plus" size="1rem"/>
-                                        &nbsp;Add New Imagery
+                                        <span style={{marginLeft: "0.4rem"}}>Add New Imagery</span>
                                     </button>
 
                                 </div>
@@ -948,8 +948,18 @@ class NewImagery extends React.Component {
                             type="button"
                         >
                             {isNewImagery
-                                ? <><ButtonSvgIcon icon="plus" size="1rem"/>&nbsp;Add New Imagery</>
-                                : <><ButtonSvgIcon icon="save" size="1rem"/>&nbsp;Save Imagery Changes</>}
+                                ? (
+                                    <>
+                                        <ButtonSvgIcon icon="plus" size="1rem"/>
+                                        <span style={{marginLeft: "0.4rem"}}>Add New Imagery</span>
+                                    </>
+                                )
+                                : (
+                                    <>
+                                        <ButtonSvgIcon icon="save" size="1rem"/>
+                                        <span style={{marginLeft: "0.4rem"}}>Save Imagery Changes</span>
+                                    </>
+                                )}
                         </button>
                     </div>
                     <div className="col-6">
@@ -964,7 +974,7 @@ class NewImagery extends React.Component {
                             type="button"
                         >
                             <ButtonSvgIcon icon="cancel" size="1rem"/>
-                            &nbsp;Cancel Changes
+                            <span style={{marginLeft: "0.4rem"}}>Cancel Changes</span>
                         </button>
                     </div>
                 </div>
@@ -1034,6 +1044,36 @@ function Imagery({title, canEdit, visibility, toggleVisibility, selectEditImager
 }
 
 function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProject}) {
+    const noProjects = msg => (
+        <div style={{display: "flex"}}>
+            <SvgIcon icon="alert" size="1.2rem"/>
+            <p style={{marginLeft: "0.4rem"}}>
+                {msg}
+            </p>
+        </div>
+    );
+
+    const renderProjects = () => {
+        if (projectList === null) {
+            return <h3>Loading projects...</h3>;
+        } else if (projectList.length === 0 && isAdmin) {
+            return noProjects("There are no projects yet. Click 'Create New Project' to get started.");
+        } else if (projectList.length === 0) {
+            return noProjects("There are no public projects.");
+        } else {
+            return (
+                projectList.map((project, uid) => (
+                    <Project
+                        key={uid} // eslint-disable-line react/no-array-index-key
+                        deleteProject={deleteProject}
+                        isAdmin={isAdmin}
+                        project={project}
+                    />
+                ))
+            );
+        }
+    };
+
     return (
         <div style={!isVisible ? {display: "none"} : {}}>
             <div className="mb-3">
@@ -1056,23 +1096,12 @@ function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProj
                             type="button"
                         >
                             <ButtonSvgIcon icon="plus" size="1rem"/>
-                            &nbsp;Create New Project
+                            <span style={{marginLeft: "0.4rem"}}>Create New Project</span>
                         </button>
                     </div>
                 </div>
             )}
-            {projectList === null
-                ? <h3>Loading projects...</h3>
-                : projectList.length === 0
-                    ? <h3>There are no projects</h3>
-                    : projectList.map((project, uid) => (
-                        <Project
-                            key={uid} // eslint-disable-line react/no-array-index-key
-                            deleteProject={deleteProject}
-                            isAdmin={isAdmin}
-                            project={project}
-                        />
-                    ))}
+            {renderProjects()}
         </div>
     );
 }
@@ -1414,7 +1443,7 @@ class NewUserButtons extends React.Component {
                                 type="button"
                             >
                                 <ButtonSvgIcon icon="plus" size="1rem"/>
-                                &nbsp;Add User
+                                <span style={{marginLeft: "0.4rem"}}>Add User</span>
                             </button>
                         </div>
                     </div>
@@ -1433,7 +1462,7 @@ class NewUserButtons extends React.Component {
                             type="button"
                         >
                             <ButtonSvgIcon icon="plus" size="1rem"/>
-                            &nbsp;Request membership
+                            <span style={{marginLeft: "0.4rem"}}>Request Membership</span>
                         </button>
                     </div>
                 )}

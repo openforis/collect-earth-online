@@ -146,7 +146,7 @@ export const imageryOptions = [
             },
             {key: "accessToken", display: "Access Token"}
         ],
-        url: "https://developers.planet.com/docs/quickstart/getting-started/"
+        url: "https://developers.planet.com/docs/apis/data/"
     },
     {
         type: "PlanetDaily",
@@ -159,7 +159,7 @@ export const imageryOptions = [
             {key: "endDate", display: "End Date", type: "date"}
         ],
         validator: dateRangeValidator,
-        url: "https://developers.planet.com/docs/quickstart/getting-started/"
+        url: "https://developers.planet.com/docs/apis/data/"
     },
     {
         type: "PlanetNICFI",
