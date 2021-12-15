@@ -270,10 +270,11 @@ class InstitutionDescription extends React.Component {
 
     renderEditButtonGroup = () => (
         <div className="row">
-            <div className="col-6">
+            <div className="col-4">
                 <button
-                    className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                    onClick={this.updateInstitution}
+                    className="btn btn-sm btn-red btn-block mt-0"
+                    id="delete-institution"
+                    onClick={this.deleteInstitution}
                     style={{
                         alignItems: "center",
                         display: "flex",
@@ -281,11 +282,11 @@ class InstitutionDescription extends React.Component {
                     }}
                     type="button"
                 >
-                    <ButtonSvgIcon icon="save" size="1rem"/>
-                    &nbsp;Save Changes
+                    <ButtonSvgIcon icon="trash" size="1rem"/>
+                &nbsp;Delete Institution
                 </button>
             </div>
-            <div className="col-6">
+            <div className="col-4">
                 <button
                     className="btn btn-sm btn-outline-red btn-block mt-0"
                     onClick={this.toggleEditMode}
@@ -298,6 +299,21 @@ class InstitutionDescription extends React.Component {
                 >
                     <ButtonSvgIcon icon="cancel" size="1rem"/>
                     &nbsp;Cancel Changes
+                </button>
+            </div>
+            <div className="col-4">
+                <button
+                    className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
+                    onClick={this.updateInstitution}
+                    style={{
+                        alignItems: "center",
+                        display: "flex",
+                        justifyContent: "center"
+                    }}
+                    type="button"
+                >
+                    <ButtonSvgIcon icon="save" size="1rem"/>
+                    &nbsp;Save Changes
                 </button>
             </div>
         </div>
@@ -344,7 +360,7 @@ class InstitutionDescription extends React.Component {
                         </div>
                         {this.props.isAdmin && (
                             <div className="row justify-content-center mb-2" id="institution-controls">
-                                <div className="col-3">
+                                <div className="col-4">
                                     <button
                                         className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
                                         id="edit-institution"
@@ -360,23 +376,7 @@ class InstitutionDescription extends React.Component {
                                         &nbsp;Edit Institution
                                     </button>
                                 </div>
-                                <div className="col-3">
-                                    <button
-                                        className="btn btn-sm btn-outline-red btn-block mt-0"
-                                        id="delete-institution"
-                                        onClick={this.deleteInstitution}
-                                        style={{
-                                            alignItems: "center",
-                                            display: "flex",
-                                            justifyContent: "center"
-                                        }}
-                                        type="button"
-                                    >
-                                        <ButtonSvgIcon icon="trash" size="1rem"/>
-                                        &nbsp;Delete Institution
-                                    </button>
-                                </div>
-                                <div className="col-3">
+                                <div className="col-4">
                                     <button
                                         className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
                                         id="institution-dashboard"
