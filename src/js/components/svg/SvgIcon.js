@@ -21,6 +21,7 @@ import {rightCaretIcon} from "./rightCaretIcon";
 import {rightDoubleIcon} from "./rightDoubleIcon";
 import {ruleIcon} from "./ruleIcon";
 import {saveIcon} from "./saveIcon";
+import {settingsIcon} from "./settingsIcon";
 import {trashIcon} from "./trashIcon";
 import {upArrowIcon} from "./upArrowIcon";
 import {upCaretIcon} from "./upCaretIcon";
@@ -49,6 +50,7 @@ const iconMap = {
     "rightDouble": rightDoubleIcon,
     "rule": ruleIcon,
     "save": saveIcon,
+    "settings": settingsIcon,
     "trash": trashIcon,
     "upArrow": upArrowIcon,
     "upCaret": upCaretIcon,
