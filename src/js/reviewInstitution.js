@@ -270,10 +270,11 @@ class InstitutionDescription extends React.Component {
 
     renderEditButtonGroup = () => (
         <div className="row">
-            <div className="col-6">
+            <div className="col-4">
                 <button
-                    className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                    onClick={this.updateInstitution}
+                    className="btn btn-sm btn-red btn-block mt-0"
+                    id="delete-institution"
+                    onClick={this.deleteInstitution}
                     style={{
                         alignItems: "center",
                         display: "flex",
@@ -281,11 +282,11 @@ class InstitutionDescription extends React.Component {
                     }}
                     type="button"
                 >
-                    <ButtonSvgIcon icon="save" size="1rem"/>
-                    <span style={{marginLeft: "0.4rem"}}>Save Changes</span>
+                    <ButtonSvgIcon icon="trash" size="1rem"/>
+                    <span style={{marginLeft: "0.4rem"}}>Delete Institution</span>
                 </button>
             </div>
-            <div className="col-6">
+            <div className="col-4">
                 <button
                     className="btn btn-sm btn-outline-red btn-block mt-0"
                     onClick={this.toggleEditMode}
@@ -298,6 +299,21 @@ class InstitutionDescription extends React.Component {
                 >
                     <ButtonSvgIcon icon="cancel" size="1rem"/>
                     <span style={{marginLeft: "0.4rem"}}>Cancel Changes</span>
+                </button>
+            </div>
+            <div className="col-4">
+                <button
+                    className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
+                    onClick={this.updateInstitution}
+                    style={{
+                        alignItems: "center",
+                        display: "flex",
+                        justifyContent: "center"
+                    }}
+                    type="button"
+                >
+                    <ButtonSvgIcon icon="save" size="1rem"/>
+                    <span style={{marginLeft: "0.4rem"}}>Save Changes</span>
                 </button>
             </div>
         </div>
@@ -344,7 +360,7 @@ class InstitutionDescription extends React.Component {
                         </div>
                         {this.props.isAdmin && (
                             <div className="row justify-content-center mb-2" id="institution-controls">
-                                <div className="col-3">
+                                <div className="col-4">
                                     <button
                                         className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
                                         id="edit-institution"
@@ -360,30 +376,14 @@ class InstitutionDescription extends React.Component {
                                         <span style={{marginLeft: "0.4rem"}}>Edit Institution</span>
                                     </button>
                                 </div>
-                                <div className="col-3">
-                                    <button
-                                        className="btn btn-sm btn-outline-red btn-block mt-0"
-                                        id="delete-institution"
-                                        onClick={this.deleteInstitution}
-                                        style={{
-                                            alignItems: "center",
-                                            display: "flex",
-                                            justifyContent: "center"
-                                        }}
-                                        type="button"
-                                    >
-                                        <ButtonSvgIcon icon="trash" size="1rem"/>
-                                        <span style={{marginLeft: "0.4rem"}}>Delete Institution</span>
-                                    </button>
-                                </div>
-                                <div className="col-3">
+                                <div className="col-4">
                                     <button
                                         className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
                                         id="institution-dashboard"
                                         onClick={this.gotoInstitutionDashboard}
                                         type="button"
                                     >
-                                Go to Dashboard
+                                    Go to Dashboard
                                     </button>
                                 </div>
                             </div>

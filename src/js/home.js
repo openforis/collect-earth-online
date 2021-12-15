@@ -392,15 +392,13 @@ function InstitutionFilter(props) {
                     type="text"
                     value={props.filterText}
                 />
-                <button onClick={props.toggleShowFilters} type="button">
-                    <img
-                        alt="Show/Hide Filters"
-                        height="40"
-                        src={props.showFilters ? "/img/hidefilter.png" : "/img/showfilter.png"}
-                        style={{padding: "5px"}}
-                        title="show/hide filters"
-                        width="40"
-                    />
+                <button
+                    className="btn btn-sm btn-secondary"
+                    onClick={props.toggleShowFilters}
+                    title="Show/hide filter settings"
+                    type="button"
+                >
+                    <ButtonSvgIcon icon="settings" size="1.25rem"/>
                 </button>
             </div>
             {props.showFilters && (
@@ -464,7 +462,7 @@ function InstitutionFilter(props) {
                                 onChange={props.toggleSortByNumber}
                                 type="radio"
                             />
-                            ABC..
+                            A to Z
                         </div>
                         <div className="form-check form-check-inline">
                             <input
