@@ -233,12 +233,19 @@ class NewQuestionDesigner extends React.Component {
                     </tr>
                     <tr>
                         <td>
-                            <input
+                            <button
                                 className="btn btn-sm btn-success"
                                 onClick={this.addSurveyQuestion}
+                                style={{
+                                    alignItems: "center",
+                                    display: "flex",
+                                    justifyContent: "center"
+                                }}
                                 type="button"
-                                value="+ Add Survey Question"
-                            />
+                            >
+                                <ButtonSvgIcon icon="plus" size="0.9rem"/>
+                                &nbsp;&nbsp;Add Survey Question
+                            </button>
                         </td>
                         <td/>
                     </tr>

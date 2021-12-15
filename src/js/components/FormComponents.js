@@ -58,27 +58,32 @@ export class CollapsibleSectionBlock extends React.Component {
         const {title, children} = this.props;
         return (
             <div>
-                <h2
-                    className="header"
+                <div
+                    className="bg-lightgreen mb-2"
                     onClick={() => this.toggleOpenClose()}
                     style={{
-                        textAlign: "left",
-                        fontSize: "1.25rem",
-                        padding: ".75rem",
+                        alignContent: "center",
+                        borderRadius: ".25rem",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "1rem 1.5rem",
                         cursor: "pointer",
-                        margin: "0 0 .5rem 0"
+                        width: "100%"
                     }}
                 >
-                    {title}
-                    <span
+                    <div style={{textAlign: "left", fontSize: "1.25rem", flex: 1, lineHeight: "1.5rem"}}>
+                        {title}
+                    </div>
+                    <div
                         style={{
-                            float: "right",
-                            marginRight: "1rem"
+                            flex: "0",
+                            transition: "transform 150ms linear 0s",
+                            transform: this.state.showContent && "scaleY(-1)"
                         }}
                     >
-                        {this.state.showContent ? <ButtonSvgIcon icon="upCaret" size="1rem"/> : <ButtonSvgIcon icon="downCaret" size="1rem"/>}
-                    </span>
-                </h2>
+                        <ButtonSvgIcon icon="downCaret" size="1.5rem"/>
+                    </div>
+                </div>
                 <div
                     ref={this.setInnerRef}
                     onTransitionEnd={() => this.updateAfterTransition()}

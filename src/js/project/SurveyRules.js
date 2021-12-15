@@ -31,7 +31,7 @@ export class SurveyRulesList extends React.Component {
     // TODO update the remove buttons with SVG
     removeButton = ruleId => (
         <button
-            className="btn btn-sm btn-red mt-0 mr-3 mb-3"
+            className="btn btn-sm btn-outline-red mt-0 mr-3 mb-3"
             onClick={() => this.deleteSurveyRule(ruleId)}
             title="Delete Rule"
             type="button"

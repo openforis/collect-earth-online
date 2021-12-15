@@ -64,7 +64,6 @@ export default function SvgIcon({icon, color, size}) {
                 height: size,
                 maxHeight: size,
                 maxWidth: size,
-                cursor: "auto",
                 width: size
             }}
         >

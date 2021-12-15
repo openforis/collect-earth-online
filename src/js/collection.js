@@ -1550,9 +1550,23 @@ class ProjectTitle extends React.Component {
     render() {
         const {projectName, inReviewMode, projectId, userName} = this.props;
         return (
-            <div>
+            <div
+                style={{
+                    alignItems: "center",
+                    background: "#31bab0",
+                    display: "flex",
+                    marginLeft: "-15px",
+                    marginRight: "-15px"
+                }}
+            >
                 <div
-                    style={{height: "3rem", cursor: "default"}}
+                    onClick={() => this.setState({showStats: !this.state.showStats})}
+                    style={{flex: 0, marginLeft: "1rem"}}
+                >
+                    <SvgIcon color="#ffffff" icon="info" size="1.25rem"/>
+                </div>
+                <div
+                    style={{cursor: "default", flex: 1, height: "3rem"}}
                 >
                     <h2
                         className="header overflow-hidden text-truncate"
@@ -1560,7 +1574,7 @@ class ProjectTitle extends React.Component {
                             display: "flex",
                             height: "100%",
                             justifyContent: "center",
-                            marginBottom: "0"
+                            margin: "0"
                         }}
                         title={projectName}
                     >
@@ -1579,12 +1593,6 @@ class ProjectTitle extends React.Component {
                             />
                         )
                     )}
-                </div>
-                <div
-                    onClick={() => this.setState({showStats: !this.state.showStats})}
-                    style={{position: "absolute", left: "14px", top: "14px"}}
-                >
-                    <SvgIcon color="#ffffff" icon="info" size="1.25rem"/>
                 </div>
             </div>
         );
