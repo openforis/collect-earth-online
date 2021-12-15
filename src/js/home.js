@@ -393,9 +393,9 @@ function InstitutionFilter(props) {
                     value={props.filterText}
                 />
                 <button
-                    className="btn btn-sm btn-darkgray"
+                    className="btn btn-sm btn-secondary"
                     onClick={props.toggleShowFilters}
-                    title="Show/Hide Filters"
+                    title="Show/hide filter settings"
                     type="button"
                 >
                     <ButtonSvgIcon icon="settings" size="1.25rem"/>
@@ -462,7 +462,7 @@ function InstitutionFilter(props) {
                                 onChange={props.toggleSortByNumber}
                                 type="radio"
                             />
-                            ABC...
+                            A to Z
                         </div>
                         <div className="form-check form-check-inline">
                             <input

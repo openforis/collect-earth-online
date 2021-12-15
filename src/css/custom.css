@@ -171,18 +171,6 @@ h4 {font-size: 0.8rem;}
 .btn-lightgray:hover {
     background-color: #dadcdf;
 }
-.btn-darkgray {
-    background-color: #5e5f60;
-    color: #ffff;
-    -webkit-transition: background-color 50ms linear;
-    -ms-transition: background-color 50ms linear;
-    transition: background-color 50ms linear;
-}
-.btn-darkgray:hover {
-    background-color: #ffff;
-    color: #5e5f60;
-    border-color: #5e5f60;
-}
 .btn-yellow {
     background-color: #fccf07;
     color: #279b93;
