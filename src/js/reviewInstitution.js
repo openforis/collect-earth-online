@@ -1044,27 +1044,23 @@ function Imagery({title, canEdit, visibility, toggleVisibility, selectEditImager
 }
 
 function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProject}) {
-    function renderProjects() {
-        let message = "";
-        const noProjects = msg => (
-            <div style={{display: "flex"}}>
-                <SvgIcon icon="alert" size="1.2rem"/>
-                <p style={{marginLeft: "0.4rem"}}>
-                    {msg}
-                </p>
-            </div>
-        );
+    const noProjects = msg => (
+        <div style={{display: "flex"}}>
+            <SvgIcon icon="alert" size="1.2rem"/>
+            <p style={{marginLeft: "0.4rem"}}>
+                {msg}
+            </p>
+        </div>
+    );
 
-        switch (true) {
-        case (projectList === null):
+    const renderProjects = () => {
+        if (projectList === null) {
             return <h3>Loading projects...</h3>;
-        case (projectList.length === 0 && isAdmin):
-            message = "There are no projects yet. Click 'Create New Project' to get started.";
-            return noProjects(message);
-        case (projectList.length === 0):
-            message = "There are no public projects.";
-            return noProjects(message);
-        default:
+        } else if (projectList.length === 0 && isAdmin) {
+            return noProjects("There are no projects yet. Click 'Create New Project' to get started.");
+        } else if (projectList.length === 0) {
+            return noProjects("There are no public projects.");
+        } else {
             return (
                 projectList.map((project, uid) => (
                     <Project
@@ -1076,7 +1072,7 @@ function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProj
                 ))
             );
         }
-    }
+    };
 
     return (
         <div style={!isVisible ? {display: "none"} : {}}>
