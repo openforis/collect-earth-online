@@ -529,11 +529,18 @@ class Institution extends React.Component {
                 >
                     <div className="d-flex justify-content-between align-items-center">
                         <div style={{flex: "0 0 1rem"}}>
-                            {props.projects && props.projects.length > 0 && (
-                                props.forceInstitutionExpand || this.state.showProjectList
-                                    ? "\u25BC"
-                                    : "\u25BA"
-                            )}
+                            <span
+                                style={{
+                                    display: "inline-block",
+                                    veritcalAlign: "middle"
+                                }}
+                            >
+                                {props.projects && props.projects.length > 0 && (
+                                    props.forceInstitutionExpand || this.state.showProjectList
+                                        ? <ButtonSvgIcon color="white" icon="downCaret" size="0.9rem"/>
+                                        : <ButtonSvgIcon color="white" icon="rightCaret" size="0.9rem"/>
+                                )}
+                            </span>
                         </div>
                         <div
                             style={{
@@ -543,7 +550,7 @@ class Institution extends React.Component {
                                 whiteSpace: "nowrap"
                             }}
                         >
-                            {props.name}
+                            &nbsp;{props.name}
                         </div>
                         <div
                             className="btn btn-sm visit-btn"

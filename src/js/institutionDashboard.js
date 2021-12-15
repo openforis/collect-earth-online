@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
+import SvgIcon from "./components/svg/SvgIcon";
 
 class InstitutionDashboard extends React.Component {
     constructor(props) {
@@ -49,40 +50,49 @@ class InstitutionDashboard extends React.Component {
                 >
                     <h1>Institution Dashboard</h1>
                 </div>
-                {projectList.length > 0 && (
-                    <table id="srd" style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}>
-                        <thead>
-                            <tr >
-                                <th style={{paddingRight: "1rem", whiteSpace: "nowrap"}}>Project Id</th>
-                                <th style={{paddingRight: "1rem", whiteSpace: "nowrap"}}>Project Name</th>
-                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Users Assigned</th>
-                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Contributors</th>
-                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Total Plots</th>
-                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Plot Assignments</th>
-                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Flagged Plots</th>
-                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Analyzed Plots</th>
-                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Partial Plots</th>
-                                <th style={{textAlign: "center", paddingRight: "1rem"}}>Unanalyzed Plots</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {projectList && projectList.map(({id, name, stats}) => (
-                                <tr key={id}>
-                                    <td>{id}</td>
-                                    <td style={{minWidth: "15rem"}}>{name}</td>
-                                    <td style={{textAlign: "center"}}>{stats.usersAssigned}</td>
-                                    <td style={{textAlign: "center"}}>{stats.contributors}</td>
-                                    <td style={{textAlign: "center"}}>{stats.totalPlots}</td>
-                                    <td style={{textAlign: "center"}}>{stats.plotAssignments}</td>
-                                    <td style={{textAlign: "center"}}>{stats.flaggedPlots}</td>
-                                    <td style={{textAlign: "center"}}>{stats.analyzedPlots}</td>
-                                    <td style={{textAlign: "center"}}>{stats.partialPlots}</td>
-                                    <td style={{textAlign: "center"}}>{stats.unanalyzedPlots}</td>
+                {projectList.length > 0
+                    ? (
+                        <table id="srd" style={{width: "1000px", margin: "10px", color: "rgb(49, 186, 176)"}}>
+                            <thead>
+                                <tr >
+                                    <th style={{paddingRight: "1rem", whiteSpace: "nowrap"}}>Project Id</th>
+                                    <th style={{paddingRight: "1rem", whiteSpace: "nowrap"}}>Project Name</th>
+                                    <th style={{textAlign: "center", paddingRight: "1rem"}}>Users Assigned</th>
+                                    <th style={{textAlign: "center", paddingRight: "1rem"}}>Contributors</th>
+                                    <th style={{textAlign: "center", paddingRight: "1rem"}}>Total Plots</th>
+                                    <th style={{textAlign: "center", paddingRight: "1rem"}}>Plot Assignments</th>
+                                    <th style={{textAlign: "center", paddingRight: "1rem"}}>Flagged Plots</th>
+                                    <th style={{textAlign: "center", paddingRight: "1rem"}}>Analyzed Plots</th>
+                                    <th style={{textAlign: "center", paddingRight: "1rem"}}>Partial Plots</th>
+                                    <th style={{textAlign: "center", paddingRight: "1rem"}}>Unanalyzed Plots</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+                            </thead>
+                            <tbody>
+                                {projectList && projectList.map(({id, name, stats}) => (
+                                    <tr key={id}>
+                                        <td>{id}</td>
+                                        <td style={{minWidth: "15rem"}}>{name}</td>
+                                        <td style={{textAlign: "center"}}>{stats.usersAssigned}</td>
+                                        <td style={{textAlign: "center"}}>{stats.contributors}</td>
+                                        <td style={{textAlign: "center"}}>{stats.totalPlots}</td>
+                                        <td style={{textAlign: "center"}}>{stats.plotAssignments}</td>
+                                        <td style={{textAlign: "center"}}>{stats.flaggedPlots}</td>
+                                        <td style={{textAlign: "center"}}>{stats.analyzedPlots}</td>
+                                        <td style={{textAlign: "center"}}>{stats.partialPlots}</td>
+                                        <td style={{textAlign: "center"}}>{stats.unanalyzedPlots}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div className="mx-4 d-flex">
+                            <SvgIcon icon="alert" size="1.2rem"/>
+                            <p>
+                              &nbsp;Your dashboard is empty.
+                              In order to view project data here, please create a new project.
+                            </p>
+                        </div>
+                    )}
             </div>
         );
     }

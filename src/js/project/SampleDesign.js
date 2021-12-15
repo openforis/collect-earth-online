@@ -332,8 +332,8 @@ export function SamplePreview() {
                                 : (
                                     <div>
                                         <h3>
-                                            The following is a mock up of a {plotShape}
-                                            plot with {sampleDistribution} samples.
+                                            The following is a mock up of a {plotShape} plot
+                                            with {sampleDistribution} samples.
                                         </h3>
                                         <img
                                             alt="distribution"

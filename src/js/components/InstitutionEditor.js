@@ -73,7 +73,7 @@ export default function InstitutionEditor({
                             type="checkbox"
                         />
                         <label className="form-check-label" htmlFor="tos-check">
-                            <span style={{color: "red"}}>*</span>I agree to the <a href="/terms" target="_blank">Terms of Service</a>.
+                            <span style={{color: "red"}}>*</span>I agree to the <a href="/terms-of-service" target="_blank">Terms of Service</a>.
                         </label>
                     </div>
                 )}

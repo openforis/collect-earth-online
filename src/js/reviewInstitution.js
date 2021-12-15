@@ -11,7 +11,7 @@ import {
     safeLength
 } from "./utils/generalUtils";
 import {imageryOptions} from "./imagery/imageryOptions";
-import {ButtonSvgIcon} from "./components/svg/SvgIcon";
+import SvgIcon, {ButtonSvgIcon} from "./components/svg/SvgIcon";
 
 class ReviewInstitution extends React.Component {
     constructor(props) {
@@ -313,7 +313,7 @@ class InstitutionDescription extends React.Component {
                     description={this.state.newInstitutionDetails.description}
                     name={this.state.newInstitutionDetails.name}
                     setInstitutionDetails={this.updateNewInstitutionDetails}
-                    title="Create New Institution"
+                    title="Edit Institution"
                     url={this.state.newInstitutionDetails.url}
                 />
             ) : (
@@ -1064,7 +1064,15 @@ function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProj
             {projectList === null
                 ? <h3>Loading projects...</h3>
                 : projectList.length === 0
-                    ? <h3>There are no projects</h3>
+                    ? (
+                        <div style={{display: "flex"}}>
+                            <SvgIcon icon="alert" size="1.2rem"/>
+                            <p>
+                              &nbsp;There are no projects yet.
+                              If you are an Admin click &quot;Create New Project&quot; to get started.
+                            </p>
+                        </div>
+                    )
                     : projectList.map((project, uid) => (
                         <Project
                             key={uid} // eslint-disable-line react/no-array-index-key
@@ -1433,7 +1441,7 @@ class NewUserButtons extends React.Component {
                             type="button"
                         >
                             <ButtonSvgIcon icon="plus" size="1rem"/>
-                            &nbsp;Request membership
+                            &nbsp;Request Membership
                         </button>
                     </div>
                 )}

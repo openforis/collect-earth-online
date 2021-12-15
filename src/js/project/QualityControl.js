@@ -104,8 +104,8 @@ export default class QualityControl extends React.Component {
                   - SME: Subject Matter Expert
                 </p>
                 {allowDrawnSamples ? (
-                    <p className="font-italic mt-2 small">
-                        When User-Drawn samples are enabled, the project cannot support Quality Control of plots.
+                    <p className="font-italic ml-2 mt-2 small">
+                        - When User-Drawn samples are enabled, the project cannot support Quality Control of plots.
                         Disable User-Drawn samples to re-enable Quality Control.
                     </p>
                 ) : userMethod === "none" && (
