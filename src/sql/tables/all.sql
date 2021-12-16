@@ -102,7 +102,7 @@ CREATE TABLE project_imagery (
 );
 
 --            1 project -> many |plots ->                                       many samples|
---                              |plots -> many user_plots -> 1 sample_values many <- samples|
+--                              |plots -> many user_plots -> many sample_values 1 <- samples|
 --  1 users -> many plot_assignments -^            ^- many users
 
 -- Stores plot information, including a reference to external plot data if it exists
