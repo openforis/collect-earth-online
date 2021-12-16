@@ -404,7 +404,7 @@ export function PlotReview() {
                                             </tr>
                                         </>
                                     )}
-                                    {plotFileName && (
+                                    {["shp", "csv"].includes(plotDistribution) && (
                                         <tr>
                                             <td className="w-80">Plot file</td>
                                             <td className="w-20 text-center">
