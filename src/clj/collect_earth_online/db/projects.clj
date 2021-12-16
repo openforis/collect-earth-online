@@ -632,6 +632,7 @@
                 (or (not= samples-per-plot (:samples_per_plot original-project))
                     (not= sample-resolution (:sample_resolution original-project)))))
           (do
+            (call-sql "delete_user_plots_by_project" project-id)
             (call-sql "delete_all_samples_by_project" project-id)
             (create-project-samples! project-id
                                      plot-shape

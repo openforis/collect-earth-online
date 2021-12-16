@@ -287,14 +287,27 @@ $$ LANGUAGE SQL;
 --  SAMPLE FUNCTIONS
 --
 
+CREATE OR REPLACE FUNCTION get_next_sample_id(_plot_id integer)
+ RETURNS integer AS $$
+
+    SELECT max(s.visible_id) + 1
+    FROM samples s, plots
+    WHERE plot_uid = plot_rid
+        AND project_rid = (SELECT project_rid FROM plots WHERE plot_uid = _plot_id)
+
+$$ LANGUAGE SQL;
+
 -- Create project plot sample with no external file data
-CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _sample_geom jsonb)
+CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _visible_id integer, _sample_geom jsonb)
  RETURNS integer AS $$
 
     INSERT INTO samples
-        (plot_rid, sample_geom)
-    VALUES
-        (_plot_id, ST_SetSRID(ST_GeomFromGeoJSON(_sample_geom), 4326))
+        (plot_rid, visible_id, sample_geom)
+    VALUES (
+        _plot_id,
+        coalesce(_visible_id, (SELECT get_next_sample_id(_plot_id))),
+        ST_SetSRID(ST_GeomFromGeoJSON(_sample_geom), 4326)
+    )
     RETURNING sample_uid
 
 $$ LANGUAGE SQL;
@@ -303,6 +316,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id integer)
  RETURNS table (
     sample_id        integer,
+    visible_id       integer,
     sample_geom      text,
     saved_answers    jsonb
  ) AS $$
@@ -314,6 +328,7 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id intege
     )
 
     SELECT sample_uid,
+        visible_id,
         ST_AsGeoJSON(sample_geom) AS sample_geom,
         (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END)
     FROM samples s

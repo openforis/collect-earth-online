@@ -515,23 +515,14 @@ class Collection extends React.Component {
         const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
         const existingIds = allFeatures.map(f => f.get("sampleId")).filter(id => id);
         const getMax = samples => Math.max(0, ...existingIds, ...samples.map(s => s.id));
-        const newSamples = allFeatures.reduce((acc, cur) => {
-            const sampleId = cur.get("sampleId");
-            if (sampleId) {
-                return [...acc,
-                        {
-                            id: sampleId,
-                            sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857")
-                        }];
-            } else {
-                const nextId = getMax(acc) + 1;
-                return [...acc,
-                        {
-                            id: nextId,
-                            sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857")
-                        }];
+        const newSamples = allFeatures.reduce((acc, cur) => [
+            ...acc,
+            {
+                id: cur.get("sampleId") || getMax(acc) + 1,
+                visibleId: cur.get("visibleId"),
+                sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857")
             }
-        }, []);
+        ], []);
 
         this.setState({
             currentPlot: {...currentPlot, samples: newSamples},
@@ -606,46 +597,14 @@ class Collection extends React.Component {
 
     confirmFlag = () => !this.hasAnswers() || confirm("Flagging this plot will delete your previous answers. Are you sure you want to continue?");
 
-    postValuesToDB = () => {
-        if (this.state.currentPlot.flagged) {
-            if (this.confirmFlag()) {
-                this.processModal(
-                    "Saving flagged plot",
-                    () => fetch(
-                        "/flag-plot",
-                        {
-                            method: "POST",
-                            headers: {
-                                "Accept": "application/json",
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                projectId: this.props.projectId,
-                                plotId: this.state.currentPlot.id,
-                                collectionStart: this.state.collectionStart,
-                                flaggedReason: this.state.currentPlot.flaggedReason,
-                                inReviewMode: this.state.inReviewMode,
-                                currentUserId: this.state.currentUserId
-                            })
-                        }
-                    )
-                        .then(response => {
-                            if (response.ok) {
-                                return this.navToNextPlot(true);
-                            } else {
-                                console.log(response);
-                                alert("Error flagging plot as bad. See console for details.");
-                            }
-                        })
-                );
-            }
-        } else {
+    flagPlot = () => {
+        if (this.confirmFlag()) {
             this.processModal(
-                "Saving plot answers",
+                "Saving flagged plot",
                 () => fetch(
-                    "/add-user-samples",
+                    "/flag-plot",
                     {
-                        method: "post",
+                        method: "POST",
                         headers: {
                             "Accept": "application/json",
                             "Content-Type": "application/json"
@@ -653,14 +612,8 @@ class Collection extends React.Component {
                         body: JSON.stringify({
                             projectId: this.props.projectId,
                             plotId: this.state.currentPlot.id,
-                            confidence: this.state.currentProject.projectOptions.collectConfidence
-                                ? this.state.currentPlot.confidence
-                                : -1,
                             collectionStart: this.state.collectionStart,
-                            userSamples: this.state.userSamples,
-                            userImages: this.state.userImages,
-                            newPlotSamples: this.state.currentProject.allowDrawnSamples
-                                && this.state.currentPlot.samples,
+                            flaggedReason: this.state.currentPlot.flaggedReason,
                             inReviewMode: this.state.inReviewMode,
                             currentUserId: this.state.currentUserId
                         })
@@ -671,10 +624,56 @@ class Collection extends React.Component {
                             return this.navToNextPlot(true);
                         } else {
                             console.log(response);
-                            alert("Error saving your assignments to the database. See console for details.");
+                            alert("Error flagging plot as bad. See console for details.");
                         }
                     })
             );
+        }
+    };
+
+    savePlotAnswers = () => {
+        this.processModal(
+            "Saving plot answers",
+            () => fetch(
+                "/add-user-samples",
+                {
+                    method: "post",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        projectId: this.props.projectId,
+                        plotId: this.state.currentPlot.id,
+                        confidence: this.state.currentProject.projectOptions.collectConfidence
+                            ? this.state.currentPlot.confidence
+                            : -1,
+                        collectionStart: this.state.collectionStart,
+                        userSamples: this.state.userSamples,
+                        userImages: this.state.userImages,
+                        newPlotSamples: this.state.currentProject.allowDrawnSamples
+                            && this.state.currentPlot.samples,
+                        inReviewMode: this.state.inReviewMode,
+                        currentUserId: this.state.currentUserId
+                    })
+                }
+            )
+                .then(response => {
+                    if (response.ok) {
+                        return this.navToNextPlot(true);
+                    } else {
+                        console.log(response);
+                        alert("Error saving your assignments to the database. See console for details.");
+                    }
+                })
+        );
+    };
+
+    postValuesToDB = () => {
+        if (this.state.currentPlot.flagged) {
+            this.flagPlot();
+        } else {
+            this.savePlotAnswers();
         }
     };
 
