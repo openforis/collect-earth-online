@@ -115,6 +115,7 @@ export default class AssignPlots extends React.Component {
             ["percent", "Percentage of plots"]
         ];
         const {institutionUserList, totalPlots} = this.props;
+        const {plotDistribution} = this.context;
         const {userMethod, users, percents} = this.getUserAssignment();
         const {qaqcMethod, smes} = this.getQaqcAssignment();
         const possibleUsers = [
@@ -157,9 +158,11 @@ export default class AssignPlots extends React.Component {
                         </div>
                         {userMethod === "equal" && users.length > 0 && (
                             <p className="font-italic ml-2 mt-2 small">
-                                {`- Each user will be assigned ~${
-                                    formatNumberWithCommas(Math.round(totalPlots / users.length))
-                                    } plots.`}
+                                {["shp", "csv"].includes(plotDistribution)
+                                    ? "- Unable to estimate assignments for external files."
+                                    : `- Each user will be assigned ~${
+                                            formatNumberWithCommas(Math.round(totalPlots / users.length))
+                                            } plots.`}
                             </p>
                         )}
                     </div>
