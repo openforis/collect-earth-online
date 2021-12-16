@@ -4,7 +4,7 @@ import {ProjectContext} from "./constants";
 import Select from "../components/Select";
 import UserSelect from "../components/UserSelect";
 import {formatNumberWithCommas} from "../utils/generalUtils";
-import {ButtonSvgIcon} from "../components/svg/SvgIcon";
+import SvgIcon from "../components/svg/SvgIcon";
 
 export default class QualityControl extends React.Component {
     getAssignment = () => this.context.designSettings.qaqcAssignment;
@@ -61,7 +61,7 @@ export default class QualityControl extends React.Component {
                             title={`Remove ${email}`}
                             type="button"
                         >
-                            <ButtonSvgIcon icon="minus" size="0.9rem"/>
+                            <SvgIcon icon="minus" size="0.9rem"/>
                         </button>
                     </div>
                 </div>

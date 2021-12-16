@@ -2,7 +2,7 @@ import React from "react";
 
 import SurveyCardList from "./SurveyCardList";
 import {SurveyCollection} from "../components/SurveyCollection";
-import {ButtonSvgIcon} from "../components/svg/SvgIcon";
+import SvgIcon from "../components/svg/SvgIcon";
 
 import {removeEnumerator} from "../utils/generalUtils";
 import {ProjectContext} from "./constants";
@@ -243,7 +243,7 @@ class NewQuestionDesigner extends React.Component {
                                 }}
                                 type="button"
                             >
-                                <ButtonSvgIcon icon="plus" size="0.9rem"/>
+                                <SvgIcon icon="plus" size="0.9rem"/>
                                 &nbsp;&nbsp;Add Survey Question
                             </button>
                         </td>
@@ -292,7 +292,7 @@ class NewAnswerDesigner extends React.Component {
                         onClick={this.addSurveyAnswer}
                         type="button"
                     >
-                        <ButtonSvgIcon icon="plus" size="0.9rem"/>
+                        <SvgIcon icon="plus" size="0.9rem"/>
                     </button>
                     <input
                         className="value-color mx-2 mt-1"

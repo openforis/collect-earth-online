@@ -1,5 +1,5 @@
 import React from "react";
-import {ButtonSvgIcon} from "./svg/SvgIcon";
+import SvgIcon from "./svg/SvgIcon";
 
 export function FormLayout({title, children}) {
     return (
@@ -81,7 +81,7 @@ export class CollapsibleSectionBlock extends React.Component {
                             transform: this.state.showContent && "scaleY(-1)"
                         }}
                     >
-                        <ButtonSvgIcon icon="downCaret" size="1.5rem"/>
+                        <SvgIcon icon="downCaret" size="1.5rem"/>
                     </div>
                 </div>
                 <div
@@ -212,7 +212,7 @@ export function CollapsibleTitle({title, showGroup, toggleShow}) {
                 onClick={toggleShow}
                 type="button"
             >
-                {showGroup ? <ButtonSvgIcon icon="downCaret" size="0.9rem"/> : <ButtonSvgIcon icon="rightCaret" size="0.9rem"/>}
+                {showGroup ? <SvgIcon icon="upCaret" size="0.9rem"/> : <SvgIcon icon="downCaret" size="0.9rem"/>}
             </button>
             <h3 className="ml-2" style={{marginBottom: "0"}}>{title}</h3>
         </div>

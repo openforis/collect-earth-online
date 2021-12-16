@@ -59,33 +59,17 @@ const iconMap = {
     "zoomIn": zoomInIcon
 };
 
-export default function SvgIcon({icon, color, size}) {
-    return (
-        <div
-            style={{
-                color: color || "black",
-                fill: color || "black",
-                height: size,
-                maxHeight: size,
-                maxWidth: size,
-                width: size
-            }}
-        >
-            {iconMap[icon]}
-        </div>
-    );
-}
-
-export function ButtonSvgIcon({icon, size}) {
+export default function SvgIcon({icon, color = "currentColor", cursor = "default", size}) {
     return (
         <div
             className="svg-icon"
             style={{
-                fill: "currentColor",
+                color,
+                cursor,
+                fill: color,
                 height: size,
                 maxHeight: size,
                 maxWidth: size,
-                cursor: "pointer",
                 width: size
             }}
         >

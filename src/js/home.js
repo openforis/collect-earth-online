@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {mercator} from "./utils/mercator";
 import {sortAlphabetically} from "./utils/generalUtils";
-import SvgIcon, {ButtonSvgIcon} from "./components/svg/SvgIcon";
+import SvgIcon from "./components/svg/SvgIcon";
 
 class Home extends React.Component {
     constructor(props) {
@@ -398,7 +398,7 @@ function InstitutionFilter(props) {
                     title="Show/hide filter settings"
                     type="button"
                 >
-                    <ButtonSvgIcon icon="settings" size="1.25rem"/>
+                    <SvgIcon icon="settings" size="1.25rem"/>
                 </button>
             </div>
             {props.showFilters && (
@@ -499,7 +499,7 @@ function CreateInstitutionButton() {
                     justifyContent: "center"
                 }}
             >
-                <ButtonSvgIcon icon="plus" size="1rem"/>
+                <SvgIcon icon="plus" size="1rem"/>
                 <span style={{marginLeft: "0.4rem"}}>Create New Institution</span>
             </a>
         </div>
@@ -535,8 +535,8 @@ class Institution extends React.Component {
                             >
                                 {props.projects && props.projects.length > 0 && (
                                     props.forceInstitutionExpand || this.state.showProjectList
-                                        ? <ButtonSvgIcon color="white" icon="downCaret" size="0.9rem"/>
-                                        : <ButtonSvgIcon color="white" icon="rightCaret" size="0.9rem"/>
+                                        ? <SvgIcon color="white" icon="downCaret" size="0.9rem"/>
+                                        : <SvgIcon color="white" icon="rightCaret" size="0.9rem"/>
                                 )}
                             </div>
                         </div>
@@ -613,7 +613,7 @@ function Project(props) {
                         width: "40px"
                     }}
                 >
-                    <ButtonSvgIcon icon="edit" size="1rem"/>
+                    <SvgIcon icon="edit" size="1rem"/>
                 </a>
             )}
         </div>
@@ -683,7 +683,7 @@ class ProjectPopup extends React.Component {
                     }}
                     type="button"
                 >
-                    <ButtonSvgIcon icon="zoomIn" size="1rem"/>
+                    <SvgIcon icon="zoomIn" size="1rem"/>
                     <span style={{marginLeft: "0.4rem"}}>Zoom to cluster</span>
                 </button>
             </div>

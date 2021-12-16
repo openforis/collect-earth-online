@@ -11,7 +11,7 @@ import {
     safeLength
 } from "./utils/generalUtils";
 import {imageryOptions} from "./imagery/imageryOptions";
-import SvgIcon, {ButtonSvgIcon} from "./components/svg/SvgIcon";
+import SvgIcon from "./components/svg/SvgIcon";
 
 class ReviewInstitution extends React.Component {
     constructor(props) {
@@ -282,7 +282,7 @@ class InstitutionDescription extends React.Component {
                     }}
                     type="button"
                 >
-                    <ButtonSvgIcon icon="trash" size="1rem"/>
+                    <SvgIcon icon="trash" size="1rem"/>
                     <span style={{marginLeft: "0.4rem"}}>Delete Institution</span>
                 </button>
             </div>
@@ -297,7 +297,7 @@ class InstitutionDescription extends React.Component {
                     }}
                     type="button"
                 >
-                    <ButtonSvgIcon icon="cancel" size="1rem"/>
+                    <SvgIcon icon="cancel" size="1rem"/>
                     <span style={{marginLeft: "0.4rem"}}>Cancel Changes</span>
                 </button>
             </div>
@@ -312,7 +312,7 @@ class InstitutionDescription extends React.Component {
                     }}
                     type="button"
                 >
-                    <ButtonSvgIcon icon="save" size="1rem"/>
+                    <SvgIcon icon="save" size="1rem"/>
                     <span style={{marginLeft: "0.4rem"}}>Save Changes</span>
                 </button>
             </div>
@@ -372,7 +372,7 @@ class InstitutionDescription extends React.Component {
                                         }}
                                         type="button"
                                     >
-                                        <ButtonSvgIcon icon="edit" size="1rem"/>
+                                        <SvgIcon icon="edit" size="1rem"/>
                                         <span style={{marginLeft: "0.4rem"}}>Edit Institution</span>
                                     </button>
                                 </div>
@@ -558,7 +558,7 @@ class ImageryList extends React.Component {
                                         }}
                                         type="button"
                                     >
-                                        <ButtonSvgIcon icon="plus" size="1rem"/>
+                                        <SvgIcon icon="plus" size="1rem"/>
                                         <span style={{marginLeft: "0.4rem"}}>Add New Imagery</span>
                                     </button>
 
@@ -950,13 +950,13 @@ class NewImagery extends React.Component {
                             {isNewImagery
                                 ? (
                                     <>
-                                        <ButtonSvgIcon icon="plus" size="1rem"/>
+                                        <SvgIcon icon="plus" size="1rem"/>
                                         <span style={{marginLeft: "0.4rem"}}>Add New Imagery</span>
                                     </>
                                 )
                                 : (
                                     <>
-                                        <ButtonSvgIcon icon="save" size="1rem"/>
+                                        <SvgIcon icon="save" size="1rem"/>
                                         <span style={{marginLeft: "0.4rem"}}>Save Imagery Changes</span>
                                     </>
                                 )}
@@ -973,7 +973,7 @@ class NewImagery extends React.Component {
                             }}
                             type="button"
                         >
-                            <ButtonSvgIcon icon="cancel" size="1rem"/>
+                            <SvgIcon icon="cancel" size="1rem"/>
                             <span style={{marginLeft: "0.4rem"}}>Cancel Changes</span>
                         </button>
                     </div>
@@ -1018,7 +1018,7 @@ function Imagery({title, canEdit, visibility, toggleVisibility, selectEditImager
                             }}
                             type="button"
                         >
-                            <ButtonSvgIcon icon="edit" size="1rem"/>
+                            <SvgIcon icon="edit" size="1rem"/>
                         </button>
                     </div>
                     <div className="col-1 pl-0">
@@ -1034,7 +1034,7 @@ function Imagery({title, canEdit, visibility, toggleVisibility, selectEditImager
                             }}
                             type="button"
                         >
-                            <ButtonSvgIcon icon="trash" size="1rem"/>
+                            <SvgIcon icon="trash" size="1rem"/>
                         </button>
                     </div>
                 </>
@@ -1095,7 +1095,7 @@ function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProj
                             }}
                             type="button"
                         >
-                            <ButtonSvgIcon icon="plus" size="1rem"/>
+                            <SvgIcon icon="plus" size="1rem"/>
                             <span style={{marginLeft: "0.4rem"}}>Create New Project</span>
                         </button>
                     </div>
@@ -1145,7 +1145,7 @@ function Project({project, isAdmin, deleteProject}) {
                                 title="Edit Project"
                                 type="button"
                             >
-                                <ButtonSvgIcon icon="edit" size="1rem"/>
+                                <SvgIcon icon="edit" size="1rem"/>
                             </button>
                         </div>
                         <div className="col-1 pl-0">
@@ -1161,7 +1161,7 @@ function Project({project, isAdmin, deleteProject}) {
                                 title="Delete Project"
                                 type="button"
                             >
-                                <ButtonSvgIcon icon="trash" size="1rem"/>
+                                <SvgIcon icon="trash" size="1rem"/>
                             </button>
                         </div>
                         <div className="col-1 pl-0">
@@ -1442,7 +1442,7 @@ class NewUserButtons extends React.Component {
                                 }}
                                 type="button"
                             >
-                                <ButtonSvgIcon icon="plus" size="1rem"/>
+                                <SvgIcon icon="plus" size="1rem"/>
                                 <span style={{marginLeft: "0.4rem"}}>Add User</span>
                             </button>
                         </div>
@@ -1461,7 +1461,7 @@ class NewUserButtons extends React.Component {
                             }}
                             type="button"
                         >
-                            <ButtonSvgIcon icon="plus" size="1rem"/>
+                            <SvgIcon icon="plus" size="1rem"/>
                             <span style={{marginLeft: "0.4rem"}}>Request Membership</span>
                         </button>
                     </div>

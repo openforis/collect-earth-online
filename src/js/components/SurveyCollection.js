@@ -3,7 +3,7 @@ import React, {Fragment} from "react";
 import {removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
 import RulesCollectionModal from "./RulesCollectionModal";
-import SvgIcon, {ButtonSvgIcon} from "./svg/SvgIcon";
+import SvgIcon from "./svg/SvgIcon";
 import {mercator} from "../utils/mercator";
 import RequiredInput from "./RequiredInput";
 
@@ -851,7 +851,7 @@ class AnswerDropDown extends React.Component {
                         onClick={this.toggleDropDown}
                         type="button"
                     >
-                        <ButtonSvgIcon icon="downCaret" size="1rem"/>
+                        <SvgIcon icon="downCaret" size="1rem"/>
                     </button>
                 </div>
                 <div

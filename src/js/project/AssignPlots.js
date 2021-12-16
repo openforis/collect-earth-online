@@ -4,7 +4,7 @@ import {ProjectContext} from "./constants";
 import Select from "../components/Select";
 import UserSelect from "../components/UserSelect";
 import {formatNumberWithCommas, removeAtIndex} from "../utils/generalUtils";
-import {ButtonSvgIcon} from "../components/svg/SvgIcon";
+import SvgIcon from "../components/svg/SvgIcon";
 
 export default class AssignPlots extends React.Component {
     getQaqcAssignment = () => this.context.designSettings.qaqcAssignment;
@@ -102,7 +102,7 @@ export default class AssignPlots extends React.Component {
                                 title={`Remove ${email}`}
                                 type="button"
                             >
-                                <ButtonSvgIcon icon="minus" size="0.9rem"/>
+                                <SvgIcon icon="minus" size="0.9rem"/>
                             </button>
                         </div>
                     </div>
