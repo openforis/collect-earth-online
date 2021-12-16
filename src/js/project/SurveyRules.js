@@ -1,7 +1,7 @@
 import React, {useContext} from "react";
 
 import SurveyRule from "../components/SurveyRule";
-import {ButtonSvgIcon} from "../components/svg/SvgIcon";
+import SvgIcon from "../components/svg/SvgIcon";
 
 import {isNumber, sameContents} from "../utils/generalUtils";
 import {ProjectContext} from "./constants";
@@ -36,7 +36,7 @@ export class SurveyRulesList extends React.Component {
             title="Delete Rule"
             type="button"
         >
-            <ButtonSvgIcon icon="trash" size="1.25rem"/>
+            <SvgIcon icon="trash" size="1.25rem"/>
         </button>
     );
 

@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 
-import {ButtonSvgIcon} from "./svg/SvgIcon";
+import SvgIcon from "./svg/SvgIcon";
 import Select from "./Select";
 
 export default function UserSelect({label, id, possibleUsers = [], addUser}) {
@@ -29,7 +29,7 @@ export default function UserSelect({label, id, possibleUsers = [], addUser}) {
                     title="Add User"
                     type="button"
                 >
-                    <ButtonSvgIcon icon="plus" size="0.9rem"/>
+                    <SvgIcon icon="plus" size="0.9rem"/>
                 </button>
             </div>
         </div>

@@ -1,6 +1,6 @@
 import React from "react";
 
-import SvgIcon, {ButtonSvgIcon} from "../components/svg/SvgIcon";
+import SvgIcon from "../components/svg/SvgIcon";
 import {removeEnumerator} from "../utils/generalUtils";
 
 export default function SurveyCardList(props) {
@@ -76,7 +76,7 @@ class SurveyCard extends React.Component {
                                 onClick={() => this.setState({showQuestions: !this.state.showQuestions})}
                                 type="button"
                             >
-                                {this.state.showQuestions ? <ButtonSvgIcon icon="minus" size="0.9rem"/> : <ButtonSvgIcon icon="plus" size="0.9rem"/>}
+                                {this.state.showQuestions ? <SvgIcon icon="minus" size="0.9rem"/> : <SvgIcon icon="plus" size="0.9rem"/>}
                             </button>
                             <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
                             <h3 className="m-3">
@@ -95,7 +95,7 @@ class SurveyCard extends React.Component {
                                     style={{opacity: surveyQuestion.id === topLevelNodeIds[0] ? "0.25" : "1.0"}}
                                     type="button"
                                 >
-                                    <ButtonSvgIcon icon="upCaret" size="1rem"/>
+                                    <SvgIcon icon="upCaret" size="1rem"/>
                                 </button>
                                 <button
                                     className="btn btn-outline-lightgreen my-1 px-3 py-0"
@@ -104,7 +104,7 @@ class SurveyCard extends React.Component {
                                     style={{opacity: surveyQuestion.id === topLevelNodeIds[topLevelNodeIds.length - 1] ? "0.25" : "1.0"}}
                                     type="button"
                                 >
-                                    <ButtonSvgIcon icon="downCaret" size="1rem"/>
+                                    <SvgIcon icon="downCaret" size="1rem"/>
                                 </button>
                             </div>
                         )}
@@ -159,7 +159,7 @@ function SurveyQuestionTree({
                                 onClick={() => removeQuestion(surveyQuestion.id)}
                                 type="button"
                             >
-                                <ButtonSvgIcon icon="trash" size="1rem"/>
+                                <SvgIcon icon="trash" size="1rem"/>
                             </button>
                         )}
                         <h3 className="font-weight-bold">
@@ -261,7 +261,7 @@ function ExistingAnswer({answer, color, inDesignMode, removeAnswer}) {
                         onClick={removeAnswer}
                         type="button"
                     >
-                        <ButtonSvgIcon icon="trash" size="1rem"/>
+                        <SvgIcon icon="trash" size="1rem"/>
                     </button>
                 )}
                 <div className="ExistingAnswer__circle">

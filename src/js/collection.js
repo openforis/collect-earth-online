@@ -17,7 +17,7 @@ import {CollapsibleTitle} from "./components/FormComponents";
 import Modal from "./components/Modal";
 import RadioButton from "./components/RadioButton";
 import Select from "./components/Select";
-import SvgIcon, {ButtonSvgIcon} from "./components/svg/SvgIcon";
+import SvgIcon from "./components/svg/SvgIcon";
 
 import {getQueryString, safeLength, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
 import {getProjectPreferences, setProjectPreferences} from "./utils/preferences";
@@ -904,8 +904,8 @@ class Collection extends React.Component {
                 >
                     <div style={{padding: ".5rem", color: "white"}}>
                         {this.state.showSidebar
-                            ? <ButtonSvgIcon icon="upCaret" size="1rem"/>
-                            : <ButtonSvgIcon icon="downCaret" size="1rem"/>}
+                            ? <SvgIcon icon="upCaret" size="1rem"/>
+                            : <SvgIcon icon="downCaret" size="1rem"/>}
                     </div>
                 </div>
                 <SideBar
@@ -1146,14 +1146,14 @@ class PlotNavigation extends React.Component {
                 onClick={this.props.navToPrevPlot}
                 type="button"
             >
-                <ButtonSvgIcon icon="leftArrow" size="0.9rem"/>
+                <SvgIcon icon="leftArrow" size="0.9rem"/>
             </button>
             <button
                 className="btn btn-outline-lightgreen btn-sm mx-1"
                 onClick={() => this.props.navToNextPlot()}
                 type="button"
             >
-                <ButtonSvgIcon icon="rightArrow" size="0.9rem"/>
+                <SvgIcon icon="rightArrow" size="0.9rem"/>
             </button>
             <input
                 autoComplete="off"
@@ -1562,7 +1562,7 @@ class ProjectTitle extends React.Component {
                     onClick={() => this.setState({showStats: !this.state.showStats})}
                     style={{flex: 0, marginLeft: "1rem"}}
                 >
-                    <SvgIcon color="#ffffff" icon="info" size="1.25rem"/>
+                    <SvgIcon color="#ffffff" cursor="pointer" icon="info" size="1.25rem"/>
                 </div>
                 <div
                     style={{cursor: "default", flex: 1, height: "3rem"}}
