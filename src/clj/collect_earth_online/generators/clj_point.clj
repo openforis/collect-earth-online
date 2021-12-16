@@ -129,7 +129,7 @@
                             plot-spacing
                             plot-size]
   (let [[[left bottom] [right top]] (EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
-        [left bottom right top]     (pad-bounds left bottom right top (/ 2.0 plot-size))]
+        [left bottom right top]     (pad-bounds left bottom right top (/ plot-size 2.0))]
     (check-plot-limits (if (= "gridded" plot-distribution)
                          (count-gridded-points left bottom right top plot-spacing)
                          num-plots)
