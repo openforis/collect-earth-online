@@ -294,7 +294,7 @@ export function SampleReview() {
                                                     </td>
                                                 </tr>
                                             )}
-                                            {["shp", "csv"].contains(sampleDistribution) && (
+                                            {["shp", "csv"].includes(sampleDistribution) && (
                                                 <tr>
                                                     <td className="w-80">Sample File</td>
                                                     <td className="w-20 text-center">
