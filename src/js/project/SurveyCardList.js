@@ -225,6 +225,7 @@ function SurveyQuestionTree({
                                 key={surveyAnswer.id}
                                 answer={surveyAnswer.answer}
                                 color={surveyAnswer.color}
+                                inDesignMode={inDesignMode}
                                 removeAnswer={() => inDesignMode && removeAnswer(surveyQuestion.id, surveyAnswer.id)}
                             />
                         ))}
@@ -250,11 +251,11 @@ function SurveyQuestionTree({
     );
 }
 
-function ExistingAnswer({answer, color, removeAnswer}) {
+function ExistingAnswer({answer, color, inDesignMode, removeAnswer}) {
     return (
         <div className="ExistingAnswer">
             <div className="col d-flex">
-                {removeAnswer && (
+                {removeAnswer && inDesignMode && (
                     <button
                         className="btn btn-outline-red py-0 px-2 mr-1"
                         onClick={removeAnswer}
