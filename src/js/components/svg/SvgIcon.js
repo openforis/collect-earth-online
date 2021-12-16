@@ -59,7 +59,7 @@ const iconMap = {
     "zoomIn": zoomInIcon
 };
 
-export default function SvgIcon({icon, color = "currentColor", cursor = "default", size}) {
+export default function SvgIcon({icon, color = "currentColor", cursor, size}) {
     return (
         <div
             className="svg-icon"
