@@ -106,7 +106,7 @@ export default class AOIMap extends React.Component {
                 this.state.mapConfig,
                 "projectPlots",
                 mercator.plotsToVectorSource(this.props.context.plots),
-                mercator.ceoMapStyles("overview", "yellow")
+                mercator.ceoMapStyles("overview", {color: "yellow", border: "black"})
             );
         }
     };
