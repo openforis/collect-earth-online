@@ -23,7 +23,8 @@ INSERT INTO institution_users
     (inst_user_uid, institution_rid, user_rid, role_rid)
 VALUES
     (1, 1, 1, 1),
-    (2, 1, 2, 2);
+    (2, 1, 2, 1),
+    (3, 1, 3, 2);
 
 SELECT setval(pg_get_serial_sequence('institution_users', 'inst_user_uid'), (SELECT MAX(inst_user_uid) FROM institution_users) + 1);
 
@@ -57,7 +58,7 @@ INSERT INTO projects (
 ) VALUES (
     1,
     1,
-    'unpublished',
+    'published',
     'Test Project',
     'This project is a default project for development testing.',
     'public',
