@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import {alertIcon} from "./alertIcon";
 import {cancelIcon} from "./cancelIcon";
 import {checkIcon} from "./checkIcon";
@@ -59,7 +60,7 @@ const iconMap = {
     "zoomIn": zoomInIcon
 };
 
-export default function SvgIcon({icon, color = "currentColor", cursor, size}) {
+function SvgIcon({icon, color, cursor, size}) {
     return (
         <div
             className="svg-icon"
@@ -77,3 +78,17 @@ export default function SvgIcon({icon, color = "currentColor", cursor, size}) {
         </div>
     );
 }
+
+SvgIcon.propTypes = {
+    color: PropTypes.string,
+    cursor: PropTypes.string,
+    icon: PropTypes.string.isRequired,
+    size: PropTypes.string.isRequired
+};
+
+SvgIcon.defaultProps = {
+    color: "currentColor",
+    cursor: "unset"
+};
+
+export default SvgIcon;

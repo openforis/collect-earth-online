@@ -40,10 +40,9 @@ export default function ReviewForm() {
             <button
                 className="btn btn-sm btn-outline-info"
                 onClick={() => context.setContextState({designMode: "wizard", wizardStep: step})}
-                style={{padding: "0.2rem 0.4rem 0.7rem"}}
                 type="button"
             >
-                <SvgIcon color="white" icon="edit" size="1rem"/>
+                <SvgIcon color="white" icon="edit" size="1.1rem"/>
             </button>
         </div>
     );
