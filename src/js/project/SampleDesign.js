@@ -316,12 +316,9 @@ export function SampleReview() {
                                                 <tr>
                                                     <td className="w-80">Allowed sample geometries</td>
                                                     <td className="w-20 text-center">
-                                                        {Object.entries(sampleGeometries).map(([geometry, isUsed]) => {
-                                                            const toReturn = isUsed ? (
-                                                                <Badge key={geometry}>{geometry}</Badge>
-                                                            ) : null;
-                                                            return toReturn;
-                                                        })}
+                                                        {Object.entries(sampleGeometries)
+                                                            .map(([geometry, isUsed]) => (
+                                                                isUsed && <Badge key={geometry}>{geometry}</Badge>))}
                                                     </td>
                                                 </tr>
                                             )}
