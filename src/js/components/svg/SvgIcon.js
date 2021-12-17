@@ -88,7 +88,7 @@ SvgIcon.propTypes = {
 
 SvgIcon.defaultProps = {
     color: "currentColor",
-    cursor: null
+    cursor: "unset"
 };
 
 export default SvgIcon;
