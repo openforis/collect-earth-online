@@ -254,11 +254,18 @@ export class SampleDesign extends React.Component {
 }
 SampleDesign.contextType = ProjectContext;
 
+function Badge({children}) {
+    return (
+        <span className="badge badge-pill bg-lightgreen ml-1">{children}</span>
+    );
+}
+
 export function SampleReview() {
     return (
         <ProjectContext.Consumer>
             {({
                 allowDrawnSamples,
+                designSettings: {sampleGeometries},
                 sampleDistribution,
                 sampleFileName,
                 sampleResolution,
@@ -277,20 +284,20 @@ export function SampleReview() {
                                             <tr>
                                                 <td className="w-80 pr-5">Spatial Distribution</td>
                                                 <td className="w-20 text-center">
-                                                    <span className="badge badge-pill bg-lightgreen">{sampleDistribution}</span>
+                                                    <Badge>{sampleDistribution}</Badge>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td className="w-80">Samples Per Plot</td>
                                                 <td className="w-20 text-center">
-                                                    <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} / plot</span>
+                                                    <Badge>{samplesPerPlot} / plot</Badge>
                                                 </td>
                                             </tr>
                                             {sampleDistribution === "gridded" && (
                                                 <tr>
                                                     <td className="w-80">Sample Spacing</td>
                                                     <td className="w-20 text-center">
-                                                        <span className="badge badge-pill bg-lightgreen">{sampleResolution} m</span>
+                                                        <Badge>{sampleResolution} m</Badge>
                                                     </td>
                                                 </tr>
                                             )}
@@ -305,12 +312,21 @@ export function SampleReview() {
                                                     </td>
                                                 </tr>
                                             )}
+                                            {allowDrawnSamples && (
+                                                <tr>
+                                                    <td className="w-80">Allowed sample geometries</td>
+                                                    <td className="w-20 text-center">
+                                                        {Object.entries(sampleGeometries)
+                                                            .map(([geometry, isUsed]) => (
+                                                                isUsed && <Badge key={geometry}>{geometry}</Badge>))}
+                                                    </td>
+                                                </tr>
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         )}
-                    {allowDrawnSamples && <h3>Users can draw additional samples at collection time.</h3>}
                 </div>
             )}
         </ProjectContext.Consumer>
