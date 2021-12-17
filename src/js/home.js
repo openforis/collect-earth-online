@@ -535,8 +535,8 @@ class Institution extends React.Component {
                             >
                                 {props.projects && props.projects.length > 0 && (
                                     props.forceInstitutionExpand || this.state.showProjectList
-                                        ? <SvgIcon color="white" icon="downCaret" size="0.9rem"/>
-                                        : <SvgIcon color="white" icon="rightCaret" size="0.9rem"/>
+                                        ? <SvgIcon color="white" icon="upCaret" size="0.9rem"/>
+                                        : <SvgIcon color="white" icon="downCaret" size="0.9rem"/>
                                 )}
                             </div>
                         </div>

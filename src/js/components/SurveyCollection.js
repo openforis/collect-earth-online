@@ -461,14 +461,14 @@ export class SurveyCollection extends React.Component {
                             style={this.buttonStyle(this.props.answerMode === "question")}
                             title="Answer questions"
                         >
-                            <SvgIcon icon="question" size="2rem"/>
+                            <SvgIcon cursor="pointer" icon="question" size="2rem"/>
                         </span>
                         <span
                             onClick={() => this.props.setAnswerMode("draw", this.state.drawTool)}
                             style={this.buttonStyle(this.props.answerMode === "draw")}
                             title="Draw sample points"
                         >
-                            <SvgIcon icon="draw" size="2rem"/>
+                            <SvgIcon cursor="pointer" icon="draw" size="2rem"/>
                         </span>
                     </div>
                 )}

@@ -63,6 +63,15 @@ module.exports = env => ({
                     "style-loader",
                     {loader: "css-loader", options: {url: false}}
                 ]
+            },
+            {
+                test: /\.svg$/,
+                use: [{
+                    loader: "react-svg-loader",
+                    options: {
+                        jsx: false // We need false because we are still compiling to es6
+                    }
+                }]
             }
         ]
     },

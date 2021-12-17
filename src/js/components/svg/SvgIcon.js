@@ -1,33 +1,33 @@
 import React from "react";
 import PropTypes from "prop-types";
-import {alertIcon} from "./alertIcon";
-import {cancelIcon} from "./cancelIcon";
-import {checkIcon} from "./checkIcon";
-import {closeIcon} from "./closeIcon";
-import {downCaretIcon} from "./downCaretIcon";
-import {downRightArrowIcon} from "./downRightArrowIcon";
-import {drawIcon} from "./drawIcon";
-import {editIcon} from "./editIcon";
-import {helpIcon} from "./helpIcon";
-import {infoIcon} from "./infoIcon";
-import {leftArrowIcon} from "./leftArrowIcon";
-import {leftDoubleIcon} from "./leftDoubleIcon";
-import {lineStringIcon} from "./lineStringIcon";
-import {minus} from "./minus";
-import {plus} from "./plus";
-import {pointIcon} from "./pointIcon";
-import {polygonIcon} from "./polygonIcon";
-import {questionIcon} from "./questionIcon";
-import {rightArrowIcon} from "./rightArrowIcon";
-import {rightCaretIcon} from "./rightCaretIcon";
-import {rightDoubleIcon} from "./rightDoubleIcon";
-import {ruleIcon} from "./ruleIcon";
-import {saveIcon} from "./saveIcon";
-import {settingsIcon} from "./settingsIcon";
-import {trashIcon} from "./trashIcon";
-import {upArrowIcon} from "./upArrowIcon";
-import {upCaretIcon} from "./upCaretIcon";
-import {zoomInIcon} from "./zoomInIcon";
+import alertIcon from "./alertIcon.svg";
+import cancelIcon from "./cancelIcon.svg";
+import checkIcon from "./checkIcon.svg";
+import closeIcon from "./closeIcon.svg";
+import downCaretIcon from "./downCaretIcon.svg";
+import downRightArrowIcon from "./downRightArrowIcon.svg";
+import drawIcon from "./drawIcon.svg";
+import editIcon from "./editIcon.svg";
+import helpIcon from "./helpIcon.svg";
+import infoIcon from "./infoIcon.svg";
+import leftArrowIcon from "./leftArrowIcon.svg";
+import leftDoubleIcon from "./leftDoubleIcon.svg";
+import lineStringIcon from "./lineStringIcon.svg";
+import minus from "./minus.svg";
+import plus from "./plus.svg";
+import pointIcon from "./pointIcon.svg";
+import polygonIcon from "./polygonIcon.svg";
+import questionIcon from "./questionIcon.svg";
+import rightArrowIcon from "./rightArrowIcon.svg";
+import rightCaretIcon from "./rightCaretIcon.svg";
+import rightDoubleIcon from "./rightDoubleIcon.svg";
+import ruleIcon from "./ruleIcon.svg";
+import saveIcon from "./saveIcon.svg";
+import settingsIcon from "./settingsIcon.svg";
+import trashIcon from "./trashIcon.svg";
+import upArrowIcon from "./upArrowIcon.svg";
+import upCaretIcon from "./upCaretIcon.svg";
+import zoomInIcon from "./zoomInIcon.svg";
 
 const iconMap = {
     "alert": alertIcon,
@@ -60,22 +60,17 @@ const iconMap = {
     "zoomIn": zoomInIcon
 };
 
-function SvgIcon({icon, color, cursor, size}) {
+function SvgIcon({icon, color, cursor, size, verticalAlign}) {
+    const Icon = iconMap[icon];
     return (
-        <div
-            className="svg-icon"
-            style={{
-                color,
-                cursor,
-                fill: color,
-                height: size,
-                maxHeight: size,
-                maxWidth: size,
-                width: size
-            }}
-        >
-            {iconMap[icon]}
-        </div>
+        <Icon
+            color={color}
+            cursor={cursor}
+            fill={color}
+            height={size}
+            style={{verticalAlign}}
+            width={size}
+        />
     );
 }
 
@@ -83,12 +78,14 @@ SvgIcon.propTypes = {
     color: PropTypes.string,
     cursor: PropTypes.string,
     icon: PropTypes.string.isRequired,
-    size: PropTypes.string.isRequired
+    size: PropTypes.string.isRequired,
+    verticalAlign: PropTypes.string
 };
 
 SvgIcon.defaultProps = {
     color: "currentColor",
-    cursor: "unset"
+    cursor: "unset",
+    verticalAlign: "middle"
 };
 
 export default SvgIcon;

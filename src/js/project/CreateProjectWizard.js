@@ -495,7 +495,7 @@ export default class CreateProjectWizard extends React.Component {
                         padding: "calc((2.5rem - 1.25rem) / 2)"
                     }}
                 >
-                    {stepComplete && <SvgIcon color="white" icon="check" size="1.25rem"/>}
+                    {stepComplete && <SvgIcon color="white" icon="check" size="1.25rem" verticalAlign="initial"/>}
                 </div>
                 <label style={{color: stepColor, fontWeight: "bold"}}>
                     {steps[stepName].title}
