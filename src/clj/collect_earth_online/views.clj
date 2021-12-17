@@ -20,6 +20,8 @@
    [:meta {:name "keywords"    :content "collect earth online image analysis crowdsourcing platform openforis SIG spatial informatics group"}]
    [:meta {:name "viewport"    :content "width=device-width, user-scalable=no"}] ; prevent touch zoom on mobile
    [:link {:rel "shortcut icon" :href "favicon.ico"}]
+   [:script {:async true :src "https://www.googletagmanager.com/gtag/js?id=G-NT7YQRX0H8"}]
+   [:script "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-NT7YQRX0H8');"]
    (include-css "/css/bootstrap.min.css")
    (apply include-js
           "/js/jquery-3.5.1.slim.min.js"
