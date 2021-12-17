@@ -40,7 +40,7 @@ should navigate to the toplevel directory (i.e., the directory
 containing this README) and run the database build command as follows:
 
 #+begin_src sh
-clojure -M:build-db build-all
+clojure -M:build-db build-all [--dev-data]
 #+end_src
 
 This will begin by creating a new database and role called ceo and
@@ -48,7 +48,9 @@ then add the postgis and pgcrypto extensions to it. Next, the script
 will populate the database with the schemas, tables, and functions
 that are necessary for storing and processing ceo's data. Finally, it
 will load some default data into these tables that is necessary for
-the website to function properly.
+the website to function properly.  You can optionally load dev data
+with ~--dev-data~.  This will initialize the DB with 3 users, an
+imagery source, and a project.
 
 *** Performance Settings
 
