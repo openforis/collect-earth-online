@@ -11,4 +11,5 @@
             :base-url "https://my.domain/"}
  :server   {:http-port 8080
             :mode      "prod"
-            :log-dir   "logs"}}
+            :log-dir   "logs"}
+ :ga-id    null}
