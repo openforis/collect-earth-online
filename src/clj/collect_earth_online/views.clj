@@ -4,7 +4,8 @@
             [clojure.java.io   :as io]
             [cognitect.transit :as transit]
             [hiccup.page :refer [html5 include-js include-css]]
-            [collect-earth-online.git :refer [current-version]])
+            [collect-earth-online.git :refer [current-version]]
+            [triangulum.config  :refer [get-config]])
   (:import java.io.ByteArrayOutputStream))
 
 (defn kebab->camel [kebab]
@@ -20,6 +21,9 @@
    [:meta {:name "keywords"    :content "collect earth online image analysis crowdsourcing platform openforis SIG spatial informatics group"}]
    [:meta {:name "viewport"    :content "width=device-width, user-scalable=no"}] ; prevent touch zoom on mobile
    [:link {:rel "shortcut icon" :href "favicon.ico"}]
+   (when-let [ga-id (get-config :ga-id)]
+     [:script {:async true :src (str "https://www.googletagmanager.com/gtag/js?id=" ga-id)}]
+     [:script (str "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', '" ga-id "');")])
    (include-css "/css/bootstrap.min.css")
    (apply include-js
           "/js/jquery-3.5.1.slim.min.js"
