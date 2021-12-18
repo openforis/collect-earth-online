@@ -491,7 +491,9 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION delete_plots_by_project(_project_id integer)
  RETURNS void AS $$
 
-    DELETE FROM plots WHERE project_rid = _project_id
+    DELETE FROM plots WHERE project_rid = _project_id;
+
+    ANALYZE plots;
 
 $$ LANGUAGE SQL;
 
