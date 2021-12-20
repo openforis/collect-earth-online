@@ -147,7 +147,6 @@ Now, in a separate terminal window (because webpack needs to be running in the
 background), run the following commands:
 
 #+begin_src sh
-npm run build-db-functions
 npm run server-dev
 #+end_src
 
