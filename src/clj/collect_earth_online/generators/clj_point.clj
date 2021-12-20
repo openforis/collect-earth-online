@@ -41,15 +41,15 @@
         y-steps   (Math/floor (/ y-range spacing))
         x-padding (/ (- x-range (* x-steps spacing)) 2.0)
         y-padding (/ (- y-range (* y-steps spacing)) 2.0)]
-    (for [x (range (+ 1 x-steps))
-          y (range (+ 1 y-steps))]
+    (for [x (range (inc x-steps))
+          y (range (inc y-steps))]
       [(+ (* x spacing) left x-padding) (+ (* y spacing) bottom y-padding)])))
 
 (defn- create-gridded-plots-in-bounds [left bottom right top spacing]
   (->> (get-all-gridded-points left bottom right top spacing)
        (map EPSG:3857->4326)))
 
-(defn- create-gridded-sample-set [circle? radius buffer sample-resolution center-x center-y]
+(defn- create-gridded-sample-set [circle? center-x center-y radius buffer sample-resolution]
   (let [[left bottom right top] (pad-bounds (- center-x radius)
                                             (- center-y radius)
                                             (+ center-x radius)
@@ -69,9 +69,8 @@
         theta (* (Math/random) 2 Math/PI)]
     [(+ center-x (* r (Math/cos theta))) (+ center-y (* r (Math/sin theta)))]))
 
-(defn- gen-random-points [num-plots buffer & opts]
-  (let [{:keys [left bottom right top center-x center-y radius circle?]} opts
-        max-iterations (* 2 num-plots)]
+(defn- gen-random-points [num-plots spacing point-gen-fn]
+  (let [max-iterations (* 2 num-plots)]
     (loop [points     []
            iterations 0]
       (cond
@@ -82,13 +81,11 @@
         (init-throw "Unable to generate random plots.  Try a lower number of plots, smaller plot size, or bigger area.")
 
         :else
-        (let [test-point (if circle?
-                           (random-point-in-circle center-x center-y radius)
-                           (random-point-in-bounds left bottom right top))]
+        (let [test-point (point-gen-fn)]
           (recur (if (some (fn [[x1 y1]]
                              (let [[x2 y2] test-point
                                    dist (distance x1 y1 x2 y2)]
-                               (< dist buffer)))
+                               (< dist spacing)))
                            points)
                    points
                    (conj points test-point))
@@ -97,24 +94,21 @@
 (defn- create-random-plots-in-bounds [left bottom right top plot-size num-plots]
   (->> (gen-random-points num-plots
                           (* 2.0 plot-size)
-                          :left left
-                          :bottom bottom
-                          :right right
-                          :top top)
+                          #(random-point-in-bounds left bottom right top))
        (map EPSG:3857->4326)))
 
-(defn- create-random-sample-set [circle? radius buffer samples-per-plot center-x center-y]
-  (->> (gen-random-points samples-per-plot
-                          buffer
-                          :circle? circle?
-                          :left (- center-x radius)
-                          :bottom (- center-y radius)
-                          :right (+ center-x radius)
-                          :top (+ center-y radius)
-                          :center-x center-x
-                          :center-y center-y
-                          :radius (- radius buffer))
-       (map EPSG:3857->4326)))
+(defn- create-random-sample-set [circle? center-x center-y radius spacing samples-per-plot]
+  (let [[left bottom right top] (pad-bounds (- center-x radius)
+                                            (- center-y radius)
+                                            (+ center-x radius)
+                                            (+ center-y radius)
+                                            spacing)] ; Add buffer = spacing
+    (->> (gen-random-points samples-per-plot
+                            spacing
+                            (if circle?
+                              #(random-point-in-circle center-x center-y (- radius spacing)) ; Add buffer = spacing
+                              #(random-point-in-bounds left bottom right top)))
+         (map EPSG:3857->4326))))
 
 (defn generate-point-samples [plots
                               plot-count
@@ -131,11 +125,11 @@
         samples-per-plot (case sample-distribution
                            "gridded" (count (create-gridded-sample-set
                                              circle?
+                                             45
+                                             45
                                              radius
                                              buffer
-                                             sample-resolution
-                                             45
-                                             45))
+                                             sample-resolution))
                            "random"  samples-per-plot
                            "center"  1.0
                            "none"    1.0)]
@@ -156,11 +150,11 @@
                                center?
                                [[lon lat]]
 
-                               (= "random" sample-distribution)
-                               (create-random-sample-set circle? radius buffer samples-per-plot center-x center-y)
-
                                (= "gridded" sample-distribution)
-                               (create-gridded-sample-set circle? radius buffer sample-resolution center-x center-y)
+                               (create-gridded-sample-set circle? center-x center-y radius buffer sample-resolution)
+
+                               (= "random" sample-distribution)
+                               (create-random-sample-set circle? center-x center-y radius buffer samples-per-plot)
 
                                :else []))))
             plots)))
@@ -177,7 +171,7 @@
   (let [[[left bottom] [right top]] (EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
         [left bottom right top]     (pad-bounds left bottom right top (/ plot-size 2.0))]
     (check-plot-limits (if (= "gridded" plot-distribution)
-                         (count-gridded-points left bottom right top (* 2.0 plot-size))
+                         (count-gridded-points left bottom right top plot-spacing)
                          num-plots)
                        5000.0)
     (map-indexed (fn [idx [lon lat]]
