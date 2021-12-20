@@ -148,23 +148,21 @@ background), run the following commands:
 
 #+begin_src sh
 npm run build-db-functions
-psql -U ceo -f src/sql/dev_data/dev_data.sql
 npm run server-dev
 #+end_src
 
-This will build the proper database functions as well as add some dummy
-development data to the database. The website will then be available at
-http://localhost:8080 unless a port is specified. These can also be configured
-using the ~:server~ section in your ~config.edn~ file. When using the
-`clojure -M:server start` command (which is what `npm run server-dev` is an
-alias for) an http port can be specified with -p and an https port can be
-specified with -P. In dev mode, server-side exceptions will be displayed in the
-browser and JavaScript source files will be reloaded whenever you refresh
-the page.
+The website will then be available at http://localhost:8080 unless a port is
+specified. These can also be configured using the ~:server~ section in your
+~config.edn~ file. When using the `clojure -M:server start` command
+(which is what `npm run server-dev` is an alias for) an http port can be
+specified with -p and an https port can be specified with -P. In dev mode,
+server-side exceptions will be displayed in the browser and JavaScript source
+files will be reloaded whenever you refresh the page.
 
-Now, since the database has been built, going forward you only need to run
-`npm run webpack-dev` and `npm run server-dev` (still in separate terminals)
-to get your dev environment set up.
+Going forward you only usually only need to run `npm run webpack-dev`
+and `npm run server-dev` (still in separate terminals) to get your dev environment
+set up.  Watch for updates to SQL files or package.json and run ~npm run build-db-functions~
+or ~npm install~ respectively.
 
 *** Checking for Reflection Warnings
 
