@@ -177,7 +177,9 @@ export class SampleDesign extends React.Component {
                 <p
                     className="font-italic ml-2"
                     style={{
-                        color: samplesPerPlot > perPlotLimit ? "#8B0000" : "#006400",
+                        color: (samplesPerPlot > perPlotLimit || samplesPerPlot * totalPlots > sampleLimit)
+                            ? "#8B0000"
+                            : "#006400",
                         fontSize: "1rem",
                         whiteSpace: "pre-line"
                     }}
@@ -189,8 +191,9 @@ export class SampleDesign extends React.Component {
                             ? "  No samples will be added to the plot."
                             : ""}
                     {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot > perPlotLimit
-                        && `* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
-                            + ` samples per plot. * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`}
+                        && `\n* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)} samples per plot.`}
+                    {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot * totalPlots > sampleLimit
+                        && `\n* The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`}
                 </p>
                 <div className="mb-3">
                     <div className="form-check form-check-inline">
