@@ -159,7 +159,7 @@ specified with -p and an https port can be specified with -P. In dev mode,
 server-side exceptions will be displayed in the browser and JavaScript source
 files will be reloaded whenever you refresh the page.
 
-Going forward you only usually only need to run `npm run webpack-dev`
+Going forward you will usually only need to run `npm run webpack-dev`
 and `npm run server-dev` (still in separate terminals) to get your dev environment
 set up.  Watch for updates to SQL files or package.json and run ~npm run build-db-functions~
 or ~npm install~ respectively.
