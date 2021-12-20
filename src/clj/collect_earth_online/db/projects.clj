@@ -588,9 +588,33 @@
         original-project     (first (call-sql "select_project_by_id" project-id))]
     (if original-project
       (try
+        (call-sql "update_project"
+                  project-id
+                  name
+                  description
+                  privacy-level
+                  imagery-id
+                  boundary
+                  plot-distribution
+                  num-plots
+                  plot-spacing
+                  plot-shape
+                  plot-size
+                  plot-file-name
+                  sample-distribution
+                  samples-per-plot
+                  sample-resolution
+                  sample-file-name
+                  allow-drawn-samples?
+                  survey-questions
+                  survey-rules
+                  project-options
+                  design-settings)
+
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery! project-id imagery-list))
+
         (cond
           (not= "unpublished" (:availability original-project))
           nil
@@ -650,28 +674,7 @@
           (or update-survey
               (and (:allow_drawn_samples original-project) (not allow-drawn-samples?)))
           (reset-collected-samples! project-id))
-        (call-sql "update_project"
-                  project-id
-                  name
-                  description
-                  privacy-level
-                  imagery-id
-                  boundary
-                  plot-distribution
-                  num-plots
-                  plot-spacing
-                  plot-shape
-                  plot-size
-                  plot-file-name
-                  sample-distribution
-                  samples-per-plot
-                  sample-resolution
-                  sample-file-name
-                  allow-drawn-samples?
-                  survey-questions
-                  survey-rules
-                  project-options
-                  design-settings)
+
         ;; Final clean up
         (call-sql "update_project_counts" project-id)
         (data-response "")
