@@ -325,7 +325,7 @@ export class PlotDesign extends React.Component {
                 >
                     {totalPlots > 0 && `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
                     {totalPlots > 0 && totalPlots > plotLimit
-                        && `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
+                        && `\n* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
                 </p>
                 <div className="row mr-1">
                     <AssignPlots institutionUserList={institutionUserList} totalPlots={totalPlots}/>

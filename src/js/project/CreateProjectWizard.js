@@ -218,8 +218,13 @@ export default class CreateProjectWizard extends React.Component {
         } else if (this.context.sampleDistribution === "gridded"
             && this.context.plotSize
             && this.context.sampleResolution) {
-            const steps = Math.floor(this.context.plotSize / this.context.sampleResolution) + 1;
-            return steps * steps;
+            const steps = Math.floor(
+                (this.context.plotSize - this.context.plotSize / 12.5)
+                / this.context.sampleResolution + 1
+            ) ** 2;
+            return this.context.plotShape === "circle"
+                ? Math.floor(steps * (3.14 / 4))
+                : steps;
         } else if (this.context.sampleDistribution === "center") {
             return 1;
         } else {
