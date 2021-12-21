@@ -3,15 +3,12 @@ import ReactDOM from "react-dom";
 
 import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
-import {LoadingModal, NavigationBar} from "./components/PageComponents";
-import {
-    sortAlphabetically,
-    capitalizeFirst,
-    KBtoBase64Length,
-    safeLength
-} from "./utils/generalUtils";
-import {imageryOptions} from "./imagery/imageryOptions";
 import SvgIcon from "./components/svg/SvgIcon";
+import {LoadingModal, NavigationBar} from "./components/PageComponents";
+
+import {sortAlphabetically, capitalizeFirst, KBtoBase64Length} from "./utils/generalUtils";
+import {safeLength} from "./utils/sequence";
+import {imageryOptions} from "./imagery/imageryOptions";
 
 class ReviewInstitution extends React.Component {
     constructor(props) {

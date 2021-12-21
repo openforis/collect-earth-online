@@ -110,33 +110,8 @@ export function KBtoBase64Length(kb) {
     return (kb * 1024 * 4) / 3;
 }
 
-export function last(array) {
-    return array[array.length - 1];
-}
-
-export function removeFromSet(set, value) {
-    set.delete(value);
-    return set;
-}
-
-export function safeLength(arr) {
-    return (arr || []).length;
-}
-
 export function removeEnumerator(questionText) {
     return questionText.replace(/[\s][(][\d]*[[)]$/, "");
-}
-
-export function sameContents(array1, array2) {
-    return array1.every(e => array2.includes(e)) && array2.every(e => array1.includes(e));
-}
-
-export function intersection(array1, array2) {
-    return array1.filter(value => array2.includes(value));
-}
-
-export function partition(array, n) {
-    return array.length ? [array.splice(0, n)].concat(partition(array, n)) : [];
 }
 
 export function invertColor(hex) {
@@ -192,6 +167,3 @@ export function isRegExp(val) { return toString.call(val) === "[object RegExp]";
 * @param {number} index
 * @returns {array}
 */
-export function removeAtIndex(arr, index) {
-    return arr.slice(0, index).concat(arr.slice(index + 1, arr.length));
-}

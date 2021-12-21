@@ -1,11 +1,13 @@
 import React, {Fragment} from "react";
 
-import {removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
 import RulesCollectionModal from "./RulesCollectionModal";
 import SvgIcon from "./svg/SvgIcon";
-import {mercator} from "../utils/mercator";
 import RequiredInput from "./RequiredInput";
+
+import {mercator} from "../utils/mercator";
+import {removeEnumerator, isNumber} from "../utils/generalUtils";
+import {intersection} from "../utils/sequence";
 
 export class SurveyCollection extends React.Component {
     constructor(props) {

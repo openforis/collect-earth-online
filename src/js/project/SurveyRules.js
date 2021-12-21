@@ -3,7 +3,8 @@ import React, {useContext} from "react";
 import SurveyRule from "../components/SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
 
-import {isNumber, sameContents} from "../utils/generalUtils";
+import {isNumber} from "../utils/generalUtils";
+import {sameContents} from "../utils/sequence";
 import {ProjectContext} from "./constants";
 
 const getNextId = array => array.reduce((maxId, obj) => Math.max(maxId, obj.id), 0) + 1;

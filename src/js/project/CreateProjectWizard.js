@@ -11,7 +11,7 @@ import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
 import SvgIcon from "../components/svg/SvgIcon";
 import {mercator} from "../utils/mercator";
-import {last, removeFromSet} from "../utils/generalUtils";
+import {last, removeFromSet} from "../utils/sequence";
 import {ProjectContext, plotLimit, perPlotLimit, sampleLimit} from "./constants";
 
 export default class CreateProjectWizard extends React.Component {

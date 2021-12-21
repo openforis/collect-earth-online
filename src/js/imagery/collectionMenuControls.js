@@ -1,6 +1,8 @@
 import React from "react";
+
 import {mercator} from "../utils/mercator";
-import {monthlyMapping, last} from "../utils/generalUtils";
+import {monthlyMapping} from "../utils/generalUtils";
+import {last} from "../utils/sequence";
 import {nicfiLayers} from "./imageryOptions";
 
 export class PlanetMenu extends React.Component {
