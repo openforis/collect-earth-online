@@ -99,6 +99,6 @@
         "webpack-prod": "webpack --config webpack.config.js --env.prod",
         "server-dev": "clojure -M:server start -p 8080 -m dev",
         "server-prod": "clojure -M:production:server start -P 8443 -m prod",
-        "lint": "./node_modules/.bin/eslint 'src/js/**/*' --fix"
+        "lint": "./node_modules/.bin/eslint 'src/js/**/*.js' --fix"
     }
 }
