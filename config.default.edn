@@ -12,4 +12,4 @@
  :server   {:http-port 8080
             :mode      "prod"
             :log-dir   "logs"}
- :ga-id    null}
+ :ga-id    nil}
