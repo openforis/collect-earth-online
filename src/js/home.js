@@ -521,46 +521,47 @@ class Institution extends React.Component {
         return (
             <li>
                 <div
-                    className="btn btn-lightgreen btn-block p-2 rounded-0"
+                    className="btn-lightgreen p-2"
                     onClick={this.toggleShowProjectList}
-                    style={{marginBottom: "2px"}}
+                    style={{
+                        alignItems: "center",
+                        borderRadius: "6px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        margin: "2px"
+                    }}
                 >
-                    <div className="d-flex justify-content-between align-items-center">
-                        <div style={{flex: "0 0 1rem"}}>
-                            <div
-                                style={{
-                                    display: "inline-block",
-                                    veritcalAlign: "middle"
-                                }}
-                            >
-                                {props.projects && props.projects.length > 0 && (
-                                    props.forceInstitutionExpand || this.state.showProjectList
-                                        ? <SvgIcon color="white" icon="upCaret" size="0.9rem"/>
-                                        : <SvgIcon color="white" icon="downCaret" size="0.9rem"/>
-                                )}
-                            </div>
-                        </div>
-                        <div
-                            style={{
-                                flex: 1,
-                                marginLeft: "0.4rem",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap"
-                            }}
-                        >
-                            {props.name}
-                        </div>
-                        <div
-                            className="btn btn-sm visit-btn"
-                            onClick={e => {
-                                e.stopPropagation();
-                                window.location = `/review-institution?institutionId=${props.id}`;
-                            }}
-                        >
-                            VISIT
-                        </div>
+                    <div
+                        style={{
+                            flex: 0,
+                            display: "inline-block",
+                            margin: "0 .5rem 0 .25rem",
+                            transition: "transform 150ms linear 0s",
+                            transform: (props.forceInstitutionExpand || this.state.showProjectList) && "rotate(90deg)"
+                        }}
+                    >
+                        <SvgIcon color="white" icon="rightCaret" size="0.9rem"/>
                     </div>
+                    <div
+                        style={{
+                            flex: 1,
+                            fontSize: "1rem",
+                            fontWeight: "bold",
+                            margin: "0",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap"
+                        }}
+                    >
+                        {props.name}
+                    </div>
+                    <a
+                        className="btn btn-sm visit-btn"
+                        href={`/review-institution?institutionId=${props.id}`}
+                        onClick={e => e.stopPropagation()}
+                    >
+                            VISIT
+                    </a>
                 </div>
                 {(props.forceInstitutionExpand || this.state.showProjectList) && (
                     <ProjectList
