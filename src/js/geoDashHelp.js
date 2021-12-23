@@ -36,7 +36,7 @@ class GeoDashHelp extends React.Component {
             <section className="container" id="geo-dash-help">
                 <div className="container-fluid" style={{overflowWrap: "break-word"}}>
                     <div className="col-xl-10 offset-xl-1 col-lg-10 offset-lg-1 justify-content-center">
-                        <h1>{lngObject.title}</h1>
+                        <h1 style={{paddingTop: "1rem"}}>{lngObject.title}</h1>
                         <CollapsibleSectionBlock title={lngObject.head_image_collection_widget}>
                             {this.expandableImageWrapper("/img/geodash/image_collection_widget.gif")}
                             <ol>
