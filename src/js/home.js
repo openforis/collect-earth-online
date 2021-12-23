@@ -526,6 +526,7 @@ class Institution extends React.Component {
                     style={{
                         alignItems: "center",
                         borderRadius: "6px",
+                        cursor: "pointer",
                         display: "flex",
                         justifyContent: "space-between",
                         margin: "2px"
@@ -560,7 +561,7 @@ class Institution extends React.Component {
                         href={`/review-institution?institutionId=${props.id}`}
                         onClick={e => e.stopPropagation()}
                     >
-                            VISIT
+                        VISIT
                     </a>
                 </div>
                 {(props.forceInstitutionExpand || this.state.showProjectList) && (
