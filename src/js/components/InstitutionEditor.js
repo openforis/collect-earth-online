@@ -13,7 +13,10 @@ export default function InstitutionEditor({
 }) {
     return (
         <div className="row justify-content-center" id="institution-details">
-            <div className="col-xl-6 col-lg-6 border pb-3 mb-2" id="institution-edit">
+            <div
+                className="card card-lightgreen col-xl-6 col-lg-6 pb-2"
+                id="institution-edit"
+            >
                 <h2 className="header">
                     {title}
                 </h2>
