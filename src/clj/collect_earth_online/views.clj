@@ -40,9 +40,7 @@
 (defn js-init [page params]
   (let [js-params (json/write-str params)]
     [:script {:type "text/javascript"}
-     (str "window.onload = function () {
-           setTimeout (function () {document.getElementById ('banner') .style.display='none'}, 10000);
-           " page ".pageInit(" js-params "); };")]))
+     (str "window.onload = function () {" page ".pageInit(" js-params "); };")]))
 
 (defn find-webpack-files [page]
   (as-> (slurp "target/entry-points.json") wp
@@ -64,6 +62,8 @@
                           :left             "0"
                           :width            "100vw"
                           :z-index          "10000"}}
+     [:script {:type "text/javascript"}
+      "setTimeout (function () {document.getElementById ('banner') .style.display='none'}, 10000);"]
      [:p {:style {:font-size   "18px"
                   :font-weight "bold"
                   :margin      "0 30px 0 0"}}
