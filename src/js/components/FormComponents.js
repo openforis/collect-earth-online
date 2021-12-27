@@ -216,10 +216,10 @@ export function CollapsibleTitle({title, showGroup, toggleShow}) {
                 <div
                     style={{
                         transition: "transform 150ms linear 0s",
-                        transform: showGroup && "rotate(-90deg)"
+                        transform: showGroup && "rotate(90deg)"
                     }}
                 >
-                    <SvgIcon icon="downCaret" size="0.9rem"/>
+                    <SvgIcon icon="rightCaret" size="0.9rem"/>
                 </div>
             </button>
             <h3 className="ml-2" style={{marginBottom: "0"}}>{title}</h3>
