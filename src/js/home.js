@@ -353,7 +353,7 @@ function InstitutionList({
             <ul
                 className="tree"
                 style={{
-                    overflowY: "scroll",
+                    overflowY: "auto",
                     overflowX: "hidden",
                     minHeight: "3.5rem",
                     flex: "1 1 0%",
@@ -541,7 +541,9 @@ class Institution extends React.Component {
                             transform: (props.forceInstitutionExpand || this.state.showProjectList) && "rotate(90deg)"
                         }}
                     >
-                        <SvgIcon color="white" icon="rightCaret" size="0.9rem"/>
+                        {props.projects && props.projects.length > 0 && (
+                            <SvgIcon color="white" icon="rightCaret" size="0.9rem"/>
+                        )}
                     </div>
                     <div
                         style={{
