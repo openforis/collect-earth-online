@@ -39,6 +39,7 @@ INSERT INTO projects (
     project_uid,
     institution_rid,
     availability,
+    published_date,
     name,
     description,
     privacy_level,
@@ -58,7 +59,8 @@ INSERT INTO projects (
 ) VALUES (
     1,
     1,
-    'unpublished',
+    'published',
+    Now(),
     'Test Project',
     'This project is a default project for development testing.',
     'public',
