@@ -72,7 +72,10 @@ export class SampleDesign extends React.Component {
             allowDrawnSamples,
             designSettings: {sampleGeometries, qaqcAssignment: {qaqcMethod}},
             plotDistribution,
+            plotShape,
+            plotSize,
             sampleDistribution,
+            sampleResolution,
             setProjectDetails
         } = this.context;
         const totalPlots = this.props.getTotalPlots();
@@ -177,7 +180,11 @@ export class SampleDesign extends React.Component {
                 <p
                     className="font-italic ml-2"
                     style={{
-                        color: (samplesPerPlot > perPlotLimit || samplesPerPlot * totalPlots > sampleLimit)
+                        color: (samplesPerPlot > perPlotLimit
+                                 || samplesPerPlot * totalPlots > sampleLimit
+                                 || (sampleDistribution === "gridded"
+                                      && plotShape === "circle"
+                                      && sampleResolution >= plotSize / Math.sqrt(2)))
                             ? "#8B0000"
                             : "#006400",
                         fontSize: "1rem",
@@ -194,6 +201,10 @@ export class SampleDesign extends React.Component {
                         && `\n* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)} samples per plot.`}
                     {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot * totalPlots > sampleLimit
                         && `\n* The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`}
+                    {sampleDistribution === "gridded"
+                        && plotShape === "circle"
+                        && sampleResolution >= plotSize / Math.sqrt(2)
+                        && `\n* You must use a sample spacing that is less than ${Math.round((plotSize / Math.sqrt(2)) * 100) / 100} meters.`}
                 </p>
                 <div className="mb-3">
                     <div className="form-check form-check-inline">
