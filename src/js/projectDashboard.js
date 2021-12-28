@@ -219,7 +219,7 @@ function ProjectStats(props) {
                                     analysisTime={user.timedPlots > 0
                                         ? (user.seconds / user.timedPlots / 1.0).toFixed(2)
                                         : 0}
-                                    plots={user.plots}
+                                    plots={user.analyzed + user.flagged}
                                     title={(isProjectAdmin || user.email === userName)
                                         ? `${idx + 1}. ${user.email}`
                                         : `User ${idx + 1}`}
@@ -231,7 +231,7 @@ function ProjectStats(props) {
                                         / userStats.reduce((p, c) => p + c.timedPlots, 0)
                                         / 1.0).toFixed(2)
                                     : 0}
-                                plots={userStats.reduce((p, c) => p + c.plots, 0)}
+                                plots={analyzedPlots}
                                 title="Total"
                             />
                         </div>
