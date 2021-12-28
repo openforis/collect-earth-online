@@ -1322,7 +1322,8 @@ class User extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            userRole: props.user.institutionRole
+            userRole: props.user.institutionRole,
+            didRoleUpdate: false
         };
     }
 
@@ -1353,7 +1354,19 @@ class User extends React.Component {
                         <div className="col-2 mb-1 pl-0">
                             <select
                                 className="custom-select custom-select-sm"
-                                onChange={e => this.setState({userRole: e.target.value})}
+                                onChange={e => {
+                                    if (this.props.user.institutionRole !== e.target.value) {
+                                        this.setState({
+                                            userRole: e.target.value,
+                                            didRoleUpdate: true
+                                        });
+                                    } else {
+                                        this.setState({
+                                            userRole: e.target.value,
+                                            didRoleUpdate: false
+                                        });
+                                    }
+                                }}
                                 size="1"
                                 value={this.state.userRole}
                             >
@@ -1364,10 +1377,14 @@ class User extends React.Component {
                         </div>
                         <div className="col-2 mb-1 pl-0">
                             <button
-                                className="btn btn-sm btn-outline-yellow btn-block"
+                                className={this.state.didRoleUpdate
+                                    ? "btn btn-sm btn-outline-yellow btn-block"
+                                    : "disabled-group btn btn-sm btn-outline-yellow btn-block"}
                                 onClick={() => {
-                                    const confirmBox = window.confirm("Do you really want to update the role of this user?");
-                                    if (confirmBox) updateUserInstitutionRole(user.id, null, this.state.userRole);
+                                    if (this.state.didRoleUpdate) {
+                                        const confirmBox = window.confirm("Do you really want to update the role of this user?");
+                                        if (confirmBox) updateUserInstitutionRole(user.id, null, this.state.userRole);
+                                    }
                                 }}
                                 type="button"
                             >
