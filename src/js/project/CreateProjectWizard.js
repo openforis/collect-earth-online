@@ -343,7 +343,7 @@ export default class CreateProjectWizard extends React.Component {
             (sampleDistribution === "gridded"
                 && plotShape === "circle"
                 && sampleResolution >= plotSize / Math.sqrt(2))
-                && "The sample spacing must be less than plot diameter divided by the square root of 2.",
+                && `You must use a sample spacing that is less than ${Math.round((plotSize / Math.sqrt(2)) * 100) / 100} meters.`,
             (sampleDistribution === "gridded"
                 && plotShape === "square"
                 && sampleResolution >= plotSize)
