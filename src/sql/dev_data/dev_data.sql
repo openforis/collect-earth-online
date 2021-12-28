@@ -58,7 +58,7 @@ INSERT INTO projects (
 ) VALUES (
     1,
     1,
-    'published',
+    'unpublished',
     'Test Project',
     'This project is a default project for development testing.',
     'public',
