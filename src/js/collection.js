@@ -1700,9 +1700,10 @@ class ProjectStats extends React.Component {
                     backgroundColor: "#f1f1f1",
                     boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)",
                     cursor: "default",
-                    marginLeft: "1rem",
+                    left: "0",
+                    margin: "0 1rem",
                     overflow: "auto",
-                    padding: ".5rem",
+                    padding: "0 .5rem .5rem .5rem",
                     position: "absolute",
                     zIndex: "10"
                 }}
