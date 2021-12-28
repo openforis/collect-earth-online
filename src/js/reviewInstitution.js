@@ -1366,8 +1366,14 @@ class User extends React.Component {
                             <button
                                 className="btn btn-sm btn-outline-yellow btn-block"
                                 onClick={() => {
-                                    const confirmBox = window.confirm("Do you really want to update the role of this user?");
-                                    if (confirmBox) updateUserInstitutionRole(user.id, null, this.state.userRole);
+                                    const {userRole} = this.state;
+                                    const {institutionRole} = this.props.user;
+                                    if (userRole === institutionRole) {
+                                        alert("You must change the role of a user in order to update it.");
+                                    } else {
+                                        const confirmBox = window.confirm("Do you really want to update the role of this user?");
+                                        if (confirmBox) updateUserInstitutionRole(user.id, null, userRole);
+                                    }
                                 }}
                                 type="button"
                             >
