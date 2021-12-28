@@ -11,6 +11,7 @@ class CreateInstitution extends React.Component {
             newInstitutionDetails: {
                 name: "",
                 base64Image: "",
+                imageName: "",
                 url: "",
                 description: "",
                 acceptTOS: false
@@ -38,6 +39,7 @@ class CreateInstitution extends React.Component {
                       body: JSON.stringify({
                           name: this.state.newInstitutionDetails.name,
                           base64Image: this.state.newInstitutionDetails.base64Image,
+                          imageName: this.state.newInstitutionDetails.imageName,
                           url: this.state.newInstitutionDetails.url,
                           description: this.state.newInstitutionDetails.description
                       })
@@ -79,6 +81,7 @@ class CreateInstitution extends React.Component {
                 acceptTOS={this.state.newInstitutionDetails.acceptTOS}
                 buttonGroup={this.renderButtonGroup}
                 description={this.state.newInstitutionDetails.description}
+                imageName={this.state.newInstitutionDetails.imageName}
                 name={this.state.newInstitutionDetails.name}
                 setInstitutionDetails={this.setInstitutionDetails}
                 title="Create New Institution"

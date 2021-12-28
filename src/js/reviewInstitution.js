@@ -161,6 +161,7 @@ class InstitutionDescription extends React.Component {
             institutionDetails: {
                 name: "",
                 base64Image: "",
+                imageName: "",
                 url: "",
                 description: "",
                 institutionAdmin: false
@@ -168,6 +169,7 @@ class InstitutionDescription extends React.Component {
             newInstitutionDetails: {
                 name: "",
                 base64Image: "",
+                imageName: "",
                 url: "",
                 description: ""
             },
@@ -187,6 +189,7 @@ class InstitutionDescription extends React.Component {
                     institutionDetails: data,
                     newInstitutionDetails: {
                         name: data.name,
+                        imageName: data.imageName,
                         url: data.url,
                         description: data.description,
                         base64Image: ""
@@ -219,6 +222,7 @@ class InstitutionDescription extends React.Component {
                     body: JSON.stringify({
                         institutionId: this.props.institutionId,
                         name: this.state.newInstitutionDetails.name,
+                        imageName: this.state.newInstitutionDetails.imageName,
                         base64Image: this.state.newInstitutionDetails.base64Image,
                         url: this.state.newInstitutionDetails.url,
                         description: this.state.newInstitutionDetails.description
@@ -327,6 +331,7 @@ class InstitutionDescription extends React.Component {
                 <InstitutionEditor
                     buttonGroup={this.renderEditButtonGroup}
                     description={this.state.newInstitutionDetails.description}
+                    imageName={this.state.newInstitutionDetails.imageName}
                     name={this.state.newInstitutionDetails.name}
                     setInstitutionDetails={this.updateNewInstitutionDetails}
                     title="Edit Institution"

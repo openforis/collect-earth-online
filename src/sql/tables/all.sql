@@ -19,6 +19,7 @@ CREATE TABLE users (
 CREATE TABLE institutions (
     institution_uid    SERIAL PRIMARY KEY,
     name               text NOT NULL,
+    image_name         text DEFAULT NULL,
     logo_data          bytea,
     description        text NOT NULL,
     url                text NOT NULL,
