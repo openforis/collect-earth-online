@@ -1565,16 +1565,11 @@ class ProjectTitle extends React.Component {
                     <SvgIcon color="#ffffff" cursor="pointer" icon="info" size="1.25rem"/>
                 </div>
                 <div
-                    style={{cursor: "default", flex: 1, height: "3rem"}}
+                    style={{cursor: "default", flex: 1, height: "3rem", minWidth: 0}}
                 >
                     <h2
-                        className="header overflow-hidden text-truncate"
-                        style={{
-                            display: "flex",
-                            height: "100%",
-                            justifyContent: "center",
-                            margin: "0"
-                        }}
+                        className="header text-truncate"
+                        style={{height: "100%", margin: "0"}}
                         title={projectName}
                     >
                         {projectName}
