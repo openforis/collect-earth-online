@@ -1558,11 +1558,19 @@ class ProjectTitle extends React.Component {
                     marginRight: "-15px"
                 }}
             >
-                <div
-                    onClick={() => this.setState({showStats: !this.state.showStats})}
-                    style={{flex: 0, marginLeft: "1rem"}}
-                >
-                    <SvgIcon color="#ffffff" cursor="pointer" icon="info" size="1.25rem"/>
+                <div>
+                    <div
+                        onClick={() => this.setState({showStats: !this.state.showStats})}
+                        style={{flex: 0, marginLeft: "1rem"}}
+                    >
+                        <SvgIcon color="#ffffff" cursor="pointer" icon="info" size="1.25rem"/>
+                    </div>
+                    {this.state.showStats && (
+                        <ProjectStats
+                            projectId={projectId}
+                            userName={userName}
+                        />
+                    )}
                 </div>
                 <div
                     style={{cursor: "default", flex: 1, height: "3rem"}}
@@ -1579,12 +1587,6 @@ class ProjectTitle extends React.Component {
                     >
                         {projectName}
                     </h2>
-                    {this.state.showStats && (
-                        <ProjectStats
-                            projectId={projectId}
-                            userName={userName}
-                        />
-                    )}
                 </div>
             </div>
         );
@@ -1700,8 +1702,7 @@ class ProjectStats extends React.Component {
                     backgroundColor: "#f1f1f1",
                     boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)",
                     cursor: "default",
-                    left: "0",
-                    margin: "0 1rem",
+                    margin: ".75rem 1rem 0 1rem",
                     overflow: "auto",
                     padding: "0 .5rem .5rem .5rem",
                     position: "absolute",
