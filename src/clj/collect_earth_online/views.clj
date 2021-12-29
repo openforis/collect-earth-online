@@ -22,7 +22,8 @@
    [:meta {:name "viewport"    :content "width=device-width, user-scalable=no"}] ; prevent touch zoom on mobile
    [:link {:rel "shortcut icon" :href "favicon.ico"}]
    (when-let [ga-id (get-config :ga-id)]
-     [:script {:async true :src (str "https://www.googletagmanager.com/gtag/js?id=" ga-id)}]
+     [:script {:async true :src (str "https://www.googletagmanager.com/gtag/js?id=" ga-id)}])
+   (when-let [ga-id (get-config :ga-id)]
      [:script (str "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', '" ga-id "');")])
    (include-css "/css/bootstrap.min.css")
    (apply include-js
