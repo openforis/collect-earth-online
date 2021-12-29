@@ -48,19 +48,3 @@ $$ LANGUAGE SQL;
 ALTER TABLE projects ADD COLUMN sq_bk jsonb;
 UPDATE projects SET sq_bk = survey_questions;
 UPDATE projects SET survey_questions = survey_reduce(survey_questions);
-
-CREATE OR REPLACE FUNCTION survey_rename_key(_questions jsonb, _from text, _to text)
- RETURNS jsonb AS $$
-
-    SELECT jsonb_object_agg(
-        key, jsonb_set(value, ('{"' || _to || '"}')::text[], value->_from) - _from
-    )
-    FROM (
-        SELECT key, value
-        FROM jsonb_each(_questions)
-    ) a
-
-$$ LANGUAGE SQL;
-
-UPDATE projects SET survey_questions = survey_rename_key(survey_questions, 'parentQuestion', 'parentQuestionId');
-UPDATE projects SET survey_questions = survey_rename_key(survey_questions, 'parentAnswer', 'parentAnswerId');
