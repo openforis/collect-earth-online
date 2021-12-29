@@ -31,8 +31,8 @@ export class SurveyCollection extends React.Component {
 
         // This happens when the selected question is set back to the beginning after switching from draw to question mode.
         if (this.props.selectedQuestionId !== prevProps.selectedQuestionId) {
-            const {parentQuestion} = this.props.surveyQuestions[this.props.selectedQuestionId];
-            if (parentQuestion === -1) {
+            const {parentQuestionId} = this.props.surveyQuestions[this.props.selectedQuestionId];
+            if (parentQuestionId === -1) {
                 this.setState({currentNodeIndex: this.state.topLevelNodeIds.indexOf(this.props.selectedQuestionId)});
             }
         }
@@ -46,7 +46,7 @@ export class SurveyCollection extends React.Component {
         const {surveyQuestions} = this.props;
         this.setState({
             topLevelNodeIds: mapObjectArray(
-                filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestion === -1),
+                filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === -1),
                 ([nodeId, _node]) => Number(nodeId)
             )
         });
@@ -77,7 +77,7 @@ export class SurveyCollection extends React.Component {
         const {surveyQuestions} = this.props;
         const {visible, answered} = this.getNodeById(currentQuestionId);
         const childQuestionIds = mapObjectArray(
-            filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestion === currentQuestionId),
+            filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === currentQuestionId),
             ([key, _val]) => Number(key)
         );
         return visible.length === answered.length
@@ -556,7 +556,7 @@ class SurveyQuestionTree extends React.Component {
             validateAndSetCurrentValue
         } = this.props;
         const {showAnswers} = this.state;
-        const childNodes = filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestion === surveyNodeId);
+        const childNodes = filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === surveyNodeId);
         const nodeQuestion = surveyQuestions[surveyNodeId];
         return (
             <>

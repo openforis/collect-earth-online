@@ -6,7 +6,7 @@ import {mapObject, mapObjectArray, filterObject} from "../utils/sequence";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = mapObjectArray(
-        filterObject(props.surveyQuestions, ([_id, sq]) => sq.parentQuestion === -1),
+        filterObject(props.surveyQuestions, ([_id, sq]) => sq.parentQuestionId === -1),
         ([id, _sq]) => Number(id)
     );
     return topLevelNodes.map((nodeId, idx) => (
@@ -46,7 +46,7 @@ class SurveyCard extends React.Component {
         this.props.setProjectDetails({
             surveyQuestions: mapObject(surveyQuestions, ([key, val]) => [
                 this.swapId(Number(key), surveyQuestionId, newId),
-                {...val, parentQuestion: this.swapId(val.parentQuestion, surveyQuestionId, newId)}
+                {...val, parentQuestionId: this.swapId(val.parentQuestionId, surveyQuestionId, newId)}
             ])
         });
     };
@@ -144,10 +144,10 @@ function SurveyQuestionTree({
 }) {
     const surveyQuestion = surveyQuestions[surveyQuestionId];
     const childNodeIds = mapObjectArray(
-        filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestion === surveyQuestionId),
+        filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === surveyQuestionId),
         ([key, _val]) => Number(key)
     );
-    const parentQuestion = surveyQuestions[surveyQuestion.parentQuestion];
+    const parentQuestion = surveyQuestions[surveyQuestion.parentQuestionId];
     return (
         <>
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">
@@ -202,7 +202,7 @@ function SurveyQuestionTree({
                                     </ul>
                                 </li>
                             )}
-                            {surveyQuestion.parentQuestion > -1 && (
+                            {parentQuestion && (
                                 <>
                                     <li>
                                         <span className="font-weight-bold">Parent Question:  </span>
@@ -212,9 +212,9 @@ function SurveyQuestionTree({
                                     </li>
                                     <li>
                                         <span className="font-weight-bold">Parent Answer:  </span>
-                                        {surveyQuestion.parentAnswer === -1
+                                        {surveyQuestion.parentAnswerId === -1
                                             ? "Any"
-                                            : parentQuestion.answers[surveyQuestion.parentAnswer].answer}
+                                            : parentQuestion.answers[surveyQuestion.parentAnswerId].answer}
                                     </li>
                                 </>
                             )}

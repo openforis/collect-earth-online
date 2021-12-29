@@ -359,7 +359,7 @@ class SimpleCollection extends React.Component {
             : {},
         selectedQuestionId: Number(findObject(
             this.state.currentProject.surveyQuestions,
-            ([_id, sq]) => sq.parentQuestion === -1
+            ([_id, sq]) => sq.parentQuestionId === -1
         )[0]),
         collectionStart: Date.now(),
         unansweredColor: "black"
@@ -457,7 +457,7 @@ class SimpleCollection extends React.Component {
     getChildQuestionIds = currentQuestionId => {
         const {surveyQuestions} = this.state.currentProject;
         const childQuestionIds = mapObjectArray(
-            filterObject(surveyQuestions, ([_id, val]) => val.parentQuestion === currentQuestionId),
+            filterObject(surveyQuestions, ([_id, val]) => val.parentQuestionId === currentQuestionId),
             ([key, _val]) => Number(key)
         );
 
@@ -578,15 +578,15 @@ class SimpleCollection extends React.Component {
 
     calcVisibleSamples = currentQuestionId => {
         const {currentProject: {surveyQuestions}, userSamples} = this.state;
-        const {parentQuestion, parentAnswer} = surveyQuestions[currentQuestionId];
+        const {parentQuestionId, parentAnswerId} = surveyQuestions[currentQuestionId];
 
-        if (parentQuestion === -1) {
+        if (parentQuestionId === -1) {
             return this.state.currentPlot.samples;
         } else {
-            return this.calcVisibleSamples(parentQuestion)
+            return this.calcVisibleSamples(parentQuestionId)
                 .filter(sample => {
-                    const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestion, "answerId"]);
-                    return sampleAnswerId && (parentAnswer === -1 || parentAnswer === sampleAnswerId);
+                    const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestionId, "answerId"]);
+                    return sampleAnswerId && (parentAnswerId === -1 || parentAnswerId === sampleAnswerId);
                 });
         }
     };
