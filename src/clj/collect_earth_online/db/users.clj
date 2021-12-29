@@ -60,7 +60,7 @@
                                    "Kind Regards,\n"
                                    "  The CEO Team")
                               email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)]
-        (call-sql "add_user" email password reset-key)
+        (call-sql "add_user" {:log? false} email password reset-key)
         (try
           (send-mail email nil nil "Welcome to CEO!" email-msg "text/plain")
           (data-response "")
@@ -74,7 +74,7 @@
   (cond (str/blank? current-password)
         "Current Password required"
 
-        (empty? (call-sql "check_login" current-email current-password))
+        (empty? (call-sql "check_login" {:log? false} current-email current-password))
         "Invalid current password."
 
         (not (or (str/blank? new-email) (email? new-email)))
@@ -107,12 +107,12 @@
                             current-email
                             (sql-primitive (call-sql "set_user_email" current-email new-email)))]
         (when-not (str/blank? password)
-          (call-sql "update_password" updated-email password))
+          (call-sql "update_password" {:log? false} updated-email password))
         (data-response "" {:session {:userName updated-email}})))))
 
 (defn password-request [{:keys [params]}]
   (let [reset-key (str (UUID/randomUUID))
-        email     (sql-primitive (call-sql "set_password_reset_key" (:email params) reset-key))
+        email     (sql-primitive (call-sql "set_password_reset_key" {:log? false} (:email params) reset-key))
         email-msg (format (str "Hi %s,\n\n"
                                "  To reset your password, simply click the following link:\n\n"
                                "  %spassword-reset?email=%s&passwordResetKey=%s")
@@ -151,7 +151,7 @@
     (if-let [error-msg (get-password-reset-errors user email reset-key password password-confirmation)]
       (data-response error-msg)
       (do
-        (call-sql "update_password" email password)
+        (call-sql {:log? false} "update_password" email password)
         (data-response "")))))
 
 (defn- get-verify-email-errors [user email reset-key]
