@@ -19,6 +19,7 @@
                                    :sha     "eca491ec19149da885624b692a0cc2a476dd19ec"}}
 
  :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
+           :config           {:main-opts ["-m" "triangulum.config"]}
            :https            {:main-opts ["-m" "triangulum.https"]}
            :server           {:main-opts ["-m" "collect-earth-online.server"]}
            :systemd          {:main-opts ["-m" "triangulum.systemd"]}
