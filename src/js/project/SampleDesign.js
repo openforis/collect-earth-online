@@ -320,8 +320,10 @@ export function SampleReview() {
                                                     <td className="w-80">Sample File</td>
                                                     <td className="w-20 text-center">
                                                         <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
-                                                            {sampleFileName.split(".").map(s => truncate(s, 13)).join("")}
-                                                            <div className="tooltip_content">{sampleFileName}</div>
+                                                            {sampleFileName
+                                                                ? sampleFileName.length > 13 ? `${sampleFileName.substring(0, 13)}...` : sampleFileName
+                                                                : "null"}
+                                                            {sampleFileName && <div className="tooltip_content">{sampleFileName}</div>}
                                                         </span>
                                                     </td>
                                                 </tr>
