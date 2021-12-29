@@ -9,13 +9,14 @@ class Register extends React.Component {
             email: "",
             password: "",
             passwordConfirmation: "",
-            acceptTOS: false
+            acceptTOS: false,
+            acceptDataTOS: false
         };
     }
 
     register = () => {
-        if (!this.state.acceptTOS) {
-            alert("You must accept the terms of service to continue.");
+        if (!this.state.acceptTOS || !this.state.acceptDataTOS) {
+            alert("You must accept both terms of service to continue.");
         } else {
             fetch("/register",
                   {
@@ -87,7 +88,7 @@ class Register extends React.Component {
                                     value={this.state.passwordConfirmation}
                                 />
                             </div>
-                            <div className="form-check mb-3">
+                            <div className="form-check">
                                 <input
                                     checked={this.state.acceptTOS}
                                     className="form-check-input"
@@ -96,7 +97,19 @@ class Register extends React.Component {
                                     type="checkbox"
                                 />
                                 <label className="form-check-label" htmlFor="tos-check">
-                                    I agree to the <a href="/terms" target="_blank">Terms of Service</a>.
+                                    I agree to the <a href="/terms-of-service" target="_blank">Terms of Service</a>.
+                                </label>
+                            </div>
+                            <div className="form-check mb-3">
+                                <input
+                                    checked={this.state.acceptDataTOS}
+                                    className="form-check-input"
+                                    id="data-tos-check"
+                                    onChange={() => this.setState({acceptDataTOS: !this.state.acceptDataTOS})}
+                                    type="checkbox"
+                                />
+                                <label className="form-check-label" htmlFor="data-tos-check">
+                                    I agree to the <a href="https://assets.planet.com/docs/Planet_ParticipantLicenseAgreement_NICFI.pdf" rel="noreferrer" target="_blank">NICFI Data Access Terms</a>.
                                 </label>
                             </div>
                             <button className="btn btn-lightgreen float-right mb-2" type="submit">

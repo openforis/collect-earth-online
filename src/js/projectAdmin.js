@@ -72,7 +72,7 @@ class Project extends React.Component {
             originalProject: {},
             institutionImagery: [],
             institutionUserList: [],
-            designMode: "loading",
+            designMode: this.props.projectId > 0 ? "manage" : "wizard",
             modalMessage: null,
             wizardStep: "overview"
         };
@@ -81,12 +81,9 @@ class Project extends React.Component {
     /// Lifecycle Methods
 
     componentDidMount() {
-        if (this.props.projectId > 0) {
-            this.setState({designMode: "manage"});
-        } else if (this.props.institutionId > 0) {
-            this.setState({designMode: "wizard"});
+        if (this.props.institutionId > 0) {
             this.getInstitutionImagery(this.props.institutionId);
-        } else {
+        } else if (!this.props.projectId > 0) {
             alert("Invalid URL.");
             window.location = "/home";
         }

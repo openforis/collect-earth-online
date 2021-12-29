@@ -22,7 +22,8 @@
    [:meta {:name "viewport"    :content "width=device-width, user-scalable=no"}] ; prevent touch zoom on mobile
    [:link {:rel "shortcut icon" :href "favicon.ico"}]
    (when-let [ga-id (get-config :ga-id)]
-     [:script {:async true :src (str "https://www.googletagmanager.com/gtag/js?id=" ga-id)}]
+     [:script {:async true :src (str "https://www.googletagmanager.com/gtag/js?id=" ga-id)}])
+   (when-let [ga-id (get-config :ga-id)]
      [:script (str "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', '" ga-id "');")])
    (include-css "/css/bootstrap.min.css")
    (apply include-js
@@ -40,9 +41,7 @@
 (defn js-init [page params]
   (let [js-params (json/write-str params)]
     [:script {:type "text/javascript"}
-     (str "window.onload = function () {
-           setTimeout (function () {document.getElementById ('banner') .style.display='none'}, 10000);
-           " page ".pageInit(" js-params "); };")]))
+     (str "window.onload = function () {" page ".pageInit(" js-params "); };")]))
 
 (defn find-webpack-files [page]
   (as-> (slurp "target/entry-points.json") wp
@@ -64,6 +63,8 @@
                           :left             "0"
                           :width            "100vw"
                           :z-index          "10000"}}
+     [:script {:type "text/javascript"}
+      "setTimeout (function () {document.getElementById ('banner') .style.display='none'}, 10000);"]
      [:p {:style {:font-size   "18px"
                   :font-weight "bold"
                   :margin      "0 30px 0 0"}}

@@ -25,7 +25,7 @@ class CreateInstitution extends React.Component {
             alert("Institution must have a name.");
         } else if (this.state.newInstitutionDetails.description.length === 0) {
             alert("Institution must have a description.");
-        } else if (!this.state.newInstitutionDetails.acceptTOS === 0) {
+        } else if (!this.state.newInstitutionDetails.acceptTOS === true) {
             alert("Please accept the Terms of Service.");
         } else {
             fetch("/create-institution",

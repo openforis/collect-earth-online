@@ -39,7 +39,7 @@
     (or (nil? name) (= name ""))
     (str "Name is required.")
 
-    (> (count description) max-name-lenth)
+    (> (count name) max-name-lenth)
     (str "Institution name must not exceed " max-name-lenth " characters.")
 
     (or (nil? description) (= description ""))

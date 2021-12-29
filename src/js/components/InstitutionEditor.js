@@ -13,7 +13,10 @@ export default function InstitutionEditor({
 }) {
     return (
         <div className="row justify-content-center" id="institution-details">
-            <div className="col-xl-6 col-lg-6 border pb-3 mb-2" id="institution-edit">
+            <div
+                className="card card-lightgreen col-xl-6 col-lg-6 pb-2"
+                id="institution-edit"
+            >
                 <h2 className="header">
                     {title}
                 </h2>
@@ -73,7 +76,7 @@ export default function InstitutionEditor({
                             type="checkbox"
                         />
                         <label className="form-check-label" htmlFor="tos-check">
-                            <span style={{color: "red"}}>*</span>I agree to the <a href="/terms" target="_blank">Terms of Service</a>.
+                            <span style={{color: "red"}}>*</span>I agree to the <a href="/terms-of-service" target="_blank">Terms of Service</a>.
                         </label>
                     </div>
                 )}

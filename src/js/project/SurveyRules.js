@@ -1,8 +1,9 @@
 import React, {useContext} from "react";
 
 import SurveyRule from "../components/SurveyRule";
+import SvgIcon from "../components/svg/SvgIcon";
 
-import {isNumber, sameContents, UnicodeIcon} from "../utils/generalUtils";
+import {isNumber, sameContents} from "../utils/generalUtils";
 import {ProjectContext} from "./constants";
 
 const getNextId = array => array.reduce((maxId, obj) => Math.max(maxId, obj.id), 0) + 1;
@@ -30,12 +31,12 @@ export class SurveyRulesList extends React.Component {
     // TODO update the remove buttons with SVG
     removeButton = ruleId => (
         <button
-            className="btn btn-sm btn-outline-red px-3 mt-0 mr-3 mb-3"
+            className="btn btn-sm btn-outline-red mt-0 mr-3 mb-3"
             onClick={() => this.deleteSurveyRule(ruleId)}
             title="Delete Rule"
             type="button"
         >
-            <UnicodeIcon icon="trash"/>
+            <SvgIcon icon="trash" size="1.25rem"/>
         </button>
     );
 

@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 
+import SvgIcon from "./svg/SvgIcon";
 import Select from "./Select";
-import {ButtonSvgIcon} from "./SvgIcon";
 
 export default function UserSelect({label, id, possibleUsers = [], addUser}) {
     const [selectedUserId, setSelectedUserId] = useState(-1);
@@ -29,7 +29,7 @@ export default function UserSelect({label, id, possibleUsers = [], addUser}) {
                     title="Add User"
                     type="button"
                 >
-                    <ButtonSvgIcon icon="plus" size="0.9rem"/>
+                    <SvgIcon icon="plus" size="0.9rem"/>
                 </button>
             </div>
         </div>

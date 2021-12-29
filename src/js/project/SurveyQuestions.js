@@ -2,6 +2,7 @@ import React from "react";
 
 import SurveyCardList from "./SurveyCardList";
 import {SurveyCollection} from "../components/SurveyCollection";
+import SvgIcon from "../components/svg/SvgIcon";
 
 import {removeEnumerator} from "../utils/generalUtils";
 import {ProjectContext} from "./constants";
@@ -232,12 +233,19 @@ class NewQuestionDesigner extends React.Component {
                     </tr>
                     <tr>
                         <td>
-                            <input
-                                className="button"
+                            <button
+                                className="btn btn-sm btn-success"
                                 onClick={this.addSurveyQuestion}
+                                style={{
+                                    alignItems: "center",
+                                    display: "flex",
+                                    justifyContent: "center"
+                                }}
                                 type="button"
-                                value="Add Survey Question"
-                            />
+                            >
+                                <SvgIcon icon="plus" size="0.9rem"/>
+                                &nbsp;&nbsp;Add Survey Question
+                            </button>
                         </td>
                         <td/>
                     </tr>
@@ -280,11 +288,11 @@ class NewAnswerDesigner extends React.Component {
             <div className="NewAnswerDesigner">
                 <div className="col d-flex">
                     <button
-                        className="btn btn-outline-success py-0 px-2 mr-1"
+                        className="btn btn-success py-0 px-2 mr-1"
                         onClick={this.addSurveyAnswer}
                         type="button"
                     >
-                        <span className="font-weight-bold">+</span>
+                        <SvgIcon icon="plus" size="0.9rem"/>
                     </button>
                     <input
                         className="value-color mx-2 mt-1"

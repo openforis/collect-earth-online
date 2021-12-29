@@ -7,11 +7,11 @@ import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {
     sortAlphabetically,
     capitalizeFirst,
-    UnicodeIcon,
     KBtoBase64Length,
     safeLength
 } from "./utils/generalUtils";
 import {imageryOptions} from "./imagery/imageryOptions";
+import SvgIcon from "./components/svg/SvgIcon";
 
 class ReviewInstitution extends React.Component {
     constructor(props) {
@@ -270,22 +270,50 @@ class InstitutionDescription extends React.Component {
 
     renderEditButtonGroup = () => (
         <div className="row">
-            <div className="col-6">
+            <div className="col-4">
                 <button
-                    className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                    onClick={this.updateInstitution}
+                    className="btn btn-sm btn-red btn-block mt-0"
+                    id="delete-institution"
+                    onClick={this.deleteInstitution}
+                    style={{
+                        alignItems: "center",
+                        display: "flex",
+                        justifyContent: "center"
+                    }}
                     type="button"
                 >
-                    <UnicodeIcon icon="save"/> Save Changes
+                    <SvgIcon icon="trash" size="1rem"/>
+                    <span style={{marginLeft: "0.4rem"}}>Delete Institution</span>
                 </button>
             </div>
-            <div className="col-6">
+            <div className="col-4">
                 <button
                     className="btn btn-sm btn-outline-red btn-block mt-0"
                     onClick={this.toggleEditMode}
+                    style={{
+                        alignItems: "center",
+                        display: "flex",
+                        justifyContent: "center"
+                    }}
                     type="button"
                 >
-                    <UnicodeIcon icon="noAction"/> Cancel Changes
+                    <SvgIcon icon="cancel" size="1rem"/>
+                    <span style={{marginLeft: "0.4rem"}}>Cancel Changes</span>
+                </button>
+            </div>
+            <div className="col-4">
+                <button
+                    className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
+                    onClick={this.updateInstitution}
+                    style={{
+                        alignItems: "center",
+                        display: "flex",
+                        justifyContent: "center"
+                    }}
+                    type="button"
+                >
+                    <SvgIcon icon="save" size="1rem"/>
+                    <span style={{marginLeft: "0.4rem"}}>Save Changes</span>
                 </button>
             </div>
         </div>
@@ -301,11 +329,11 @@ class InstitutionDescription extends React.Component {
                     description={this.state.newInstitutionDetails.description}
                     name={this.state.newInstitutionDetails.name}
                     setInstitutionDetails={this.updateNewInstitutionDetails}
-                    title="Create New Institution"
+                    title="Edit Institution"
                     url={this.state.newInstitutionDetails.url}
                 />
             ) : (
-                <div className="row justify-content-center" id="institution-details">
+                <div className="row justify-content-center mt-3" id="institution-details">
                     <div className="col-8" id="institution-view">
                         <div className="row mb-4">
                             <div className="col-md-3" id="institution-logo-container">
@@ -332,34 +360,30 @@ class InstitutionDescription extends React.Component {
                         </div>
                         {this.props.isAdmin && (
                             <div className="row justify-content-center mb-2" id="institution-controls">
-                                <div className="col-3">
+                                <div className="col-4">
                                     <button
                                         className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
                                         id="edit-institution"
                                         onClick={this.toggleEditMode}
+                                        style={{
+                                            alignItems: "center",
+                                            display: "flex",
+                                            justifyContent: "center"
+                                        }}
                                         type="button"
                                     >
-                                        <UnicodeIcon icon="edit"/> Edit
+                                        <SvgIcon icon="edit" size="1rem"/>
+                                        <span style={{marginLeft: "0.4rem"}}>Edit Institution</span>
                                     </button>
                                 </div>
-                                <div className="col-3">
-                                    <button
-                                        className="btn btn-sm btn-outline-red btn-block mt-0"
-                                        id="delete-institution"
-                                        onClick={this.deleteInstitution}
-                                        type="button"
-                                    >
-                                        <UnicodeIcon icon="trash"/> Delete
-                                    </button>
-                                </div>
-                                <div className="col-3">
+                                <div className="col-4">
                                     <button
                                         className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
                                         id="institution-dashboard"
                                         onClick={this.gotoInstitutionDashboard}
                                         type="button"
                                     >
-                                Go to Dashboard
+                                    Go to Dashboard
                                     </button>
                                 </div>
                             </div>
@@ -522,14 +546,20 @@ class ImageryList extends React.Component {
                         </div>
                         {this.props.isAdmin && (
                             <div className="row">
-                                <div className="col-lg-12 mb-1">
+                                <div className="col-lg-12 mb-3">
                                     <button
-                                        className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
+                                        className="btn btn-sm btn-block btn-lightgreen py-2 font-weight-bold"
                                         id="add-imagery-button"
                                         onClick={this.selectAddImagery}
+                                        style={{
+                                            alignItems: "center",
+                                            display:"flex",
+                                            justifyContent: "center"
+                                        }}
                                         type="button"
                                     >
-                                        <UnicodeIcon backgroundColor="#f1c00f" icon="add"/>Add New Imagery
+                                        <SvgIcon icon="plus" size="1rem"/>
+                                        <span style={{marginLeft: "0.4rem"}}>Add New Imagery</span>
                                     </button>
 
                                 </div>
@@ -576,17 +606,9 @@ class NewImagery extends React.Component {
     }
 
     componentDidMount() {
-        const {id, title, attribution, isProxied, sourceConfig} = this.props.imageryToEdit;
+        const {id} = this.props.imageryToEdit;
         if (id !== -1) {
-            const {type, ...imageryParams} = sourceConfig;
-            const selectedType = imageryOptions.findIndex(io => io.type === type);
-            this.setState({
-                selectedType,
-                imageryTitle: title,
-                imageryAttribution: attribution,
-                isProxied,
-                imageryParams: this.getImageryParams(type, imageryParams)
-            });
+            this.setImageryToEdit();
         } else {
             this.imageryTypeChangeHandler(0);
         }
@@ -747,7 +769,7 @@ class NewImagery extends React.Component {
     );
 
     formCheck = (title, checked, callback) => (
-        <div key={title} className="mb-2">
+        <div key={title} className="mb-0">
             <label>
                 <input
                     checked={checked}
@@ -835,6 +857,19 @@ class NewImagery extends React.Component {
                             ? "Open Street Map"
                             : "");
 
+    setImageryToEdit = () => {
+        const {title, attribution, isProxied, sourceConfig} = this.props.imageryToEdit;
+        const {type, ...imageryParams} = sourceConfig;
+        const selectedType = imageryOptions.findIndex(io => io.type === type);
+        this.setState({
+            selectedType,
+            imageryTitle: title,
+            imageryAttribution: attribution,
+            isProxied,
+            imageryParams: this.getImageryParams(type, imageryParams)
+        });
+    };
+
     imageryTypeChangeHandler = val => {
         const {type, params, defaultProxy} = imageryOptions[val];
         const defaultState = params.reduce((acc, cur) => ({
@@ -884,39 +919,64 @@ class NewImagery extends React.Component {
                 {optionalProxy && this.formCheck("Proxy Imagery",
                                                  this.state.isProxied,
                                                  () => this.setState({isProxied: !this.state.isProxied}))}
-                {/* Action buttons for save and quit */}
-                <div className="btn-group-vertical btn-block">
-                    <div className="mb-3">
-                        <input
-                            checked={this.state.addToAllProjects}
-                            className="mr-2"
-                            id="add-to-all"
-                            onChange={() => this.setState({addToAllProjects: !this.state.addToAllProjects})}
-                            type="checkbox"
-                        />
-                        <label
-                            htmlFor="add-to-all"
-                        >
+                {/* Add Imagery to All Projects checkbox */}
+                <div className="mb-3">
+                    <input
+                        checked={this.state.addToAllProjects}
+                        className="mr-2"
+                        id="add-to-all"
+                        onChange={() => this.setState({addToAllProjects: !this.state.addToAllProjects})}
+                        type="checkbox"
+                    />
+                    <label
+                        htmlFor="add-to-all"
+                    >
                             Add Imagery to All Projects When Saving
-                        </label>
+                    </label>
+                </div>
+                <div className="row">
+                    <div className="col-6">
+                        <button
+                            className="btn btn-sm btn-block btn-outline-lightgreen btn-group py-2 font-weight-bold"
+                            id="add-imagery-button"
+                            onClick={() => this.uploadCustomImagery(isNewImagery)}
+                            style={{
+                                alignItems: "center",
+                                display:"flex",
+                                justifyContent: "center"
+                            }}
+                            type="button"
+                        >
+                            {isNewImagery
+                                ? (
+                                    <>
+                                        <SvgIcon icon="plus" size="1rem"/>
+                                        <span style={{marginLeft: "0.4rem"}}>Add New Imagery</span>
+                                    </>
+                                )
+                                : (
+                                    <>
+                                        <SvgIcon icon="save" size="1rem"/>
+                                        <span style={{marginLeft: "0.4rem"}}>Save Imagery Changes</span>
+                                    </>
+                                )}
+                        </button>
                     </div>
-                    <button
-                        className="btn btn-sm btn-block btn-outline-yellow btn-group py-2 font-weight-bold"
-                        id="add-imagery-button"
-                        onClick={() => this.uploadCustomImagery(isNewImagery)}
-                        type="button"
-                    >
-                        {isNewImagery
-                            ? <><UnicodeIcon backgroundColor="#f1c00f" icon="add"/>Add New Imagery</>
-                            : <><UnicodeIcon backgroundColor="#f1c00f" icon="edit"/>Save Imagery Changes</>}
-                    </button>
-                    <button
-                        className="btn btn-sm btn-block btn-outline-red btn-group py-2 font-weight-bold"
-                        onClick={this.props.hideEditMode}
-                        type="button"
-                    >
-                        <UnicodeIcon icon="noAction"/>Discard
-                    </button>
+                    <div className="col-6">
+                        <button
+                            className="btn btn-sm btn-block btn-outline-red btn-group py-2 font-weight-bold"
+                            onClick={this.props.hideEditMode}
+                            style={{
+                                alignItems: "center",
+                                display:"flex",
+                                justifyContent: "center"
+                            }}
+                            type="button"
+                        >
+                            <SvgIcon icon="cancel" size="1rem"/>
+                            <span style={{marginLeft: "0.4rem"}}>Cancel Changes</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -945,24 +1005,36 @@ function Imagery({title, canEdit, visibility, toggleVisibility, selectEditImager
             </div>
             {canEdit && (
                 <>
-                    <div className="pr-3">
+                    <div className="col-1 pl-0">
                         <button
-                            className="btn btn-outline-yellow btn-sm btn-block px-3"
+                            className="btn btn-outline-yellow btn-sm btn-block"
                             id="edit-imagery"
                             onClick={selectEditImagery}
+                            style={{
+                                alignItems: "center",
+                                display: "flex",
+                                height: "100%",
+                                justifyContent: "center"
+                            }}
                             type="button"
                         >
-                            <UnicodeIcon icon="edit"/>
+                            <SvgIcon icon="edit" size="1rem"/>
                         </button>
                     </div>
-                    <div className="pr-3">
+                    <div className="col-1 pl-0">
                         <button
-                            className="btn btn-outline-red btn-sm btn-block px-3"
+                            className="btn btn-outline-red btn-sm btn-block"
                             id="delete-imagery"
                             onClick={deleteImagery}
+                            style={{
+                                alignItems: "center",
+                                display:"flex",
+                                height: "100%",
+                                justifyContent: "center"
+                            }}
                             type="button"
                         >
-                            <UnicodeIcon icon="trash"/>
+                            <SvgIcon icon="trash" size="1rem"/>
                         </button>
                     </div>
                 </>
@@ -972,6 +1044,36 @@ function Imagery({title, canEdit, visibility, toggleVisibility, selectEditImager
 }
 
 function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProject}) {
+    const noProjects = msg => (
+        <div style={{display: "flex"}}>
+            <SvgIcon icon="alert" size="1.2rem"/>
+            <p style={{marginLeft: "0.4rem"}}>
+                {msg}
+            </p>
+        </div>
+    );
+
+    const renderProjects = () => {
+        if (projectList === null) {
+            return <h3>Loading projects...</h3>;
+        } else if (projectList.length === 0 && isAdmin) {
+            return noProjects("There are no projects yet. Click 'Create New Project' to get started.");
+        } else if (projectList.length === 0) {
+            return noProjects("There are no public projects.");
+        } else {
+            return (
+                projectList.map((project, uid) => (
+                    <Project
+                        key={uid} // eslint-disable-line react/no-array-index-key
+                        deleteProject={deleteProject}
+                        isAdmin={isAdmin}
+                        project={project}
+                    />
+                ))
+            );
+        }
+    };
+
     return (
         <div style={!isVisible ? {display: "none"} : {}}>
             <div className="mb-3">
@@ -983,28 +1085,23 @@ function ProjectList({isAdmin, institutionId, projectList, isVisible, deleteProj
                 <div className="row mb-3">
                     <div className="col">
                         <button
-                            className="btn btn-sm btn-block btn-outline-yellow py-2 font-weight-bold"
+                            className="btn btn-sm btn-block btn-lightgreen py-2 font-weight-bold"
                             id="create-project"
                             onClick={() => window.location.assign(`/create-project?institutionId=${institutionId}`)}
+                            style={{
+                                alignItems: "center",
+                                display:"flex",
+                                justifyContent: "center"
+                            }}
                             type="button"
                         >
-                            <UnicodeIcon backgroundColor="#f1c00f" icon="add"/>Create New Project
+                            <SvgIcon icon="plus" size="1rem"/>
+                            <span style={{marginLeft: "0.4rem"}}>Create New Project</span>
                         </button>
                     </div>
                 </div>
             )}
-            {projectList === null
-                ? <h3>Loading projects...</h3>
-                : projectList.length === 0
-                    ? <h3>There are no projects</h3>
-                    : projectList.map((project, uid) => (
-                        <Project
-                            key={uid}
-                            deleteProject={deleteProject}
-                            isAdmin={isAdmin}
-                            project={project}
-                        />
-                    ))}
+            {renderProjects()}
         </div>
     );
 }
@@ -1034,36 +1131,60 @@ function Project({project, isAdmin, deleteProject}) {
             </div>
             {isAdmin
                 && (
-                    <div className="d-flex">
-                        <span
-                            className="btn btn-sm btn-outline-yellow btn-block px-3 mr-1"
-                            onClick={() => window.location.assign(`/review-project?projectId=${project.id}`)}
-                            title="Edit Project"
-                        >
-                            <UnicodeIcon icon="edit"/>
-                        </span>
-                        <span
-                            className="btn btn-sm btn-outline-red btn-block px-3 mt-0 mr-1"
-                            onClick={() => deleteProject(project.id)}
-                            title="Delete Project"
-                        >
-                            <UnicodeIcon icon="trash"/>
-                        </span>
-                        <span
-                            className="btn btn-sm btn-outline-lightgreen btn-block px-3 mt-0 mr-1"
-                            onClick={() => window.open(`/dump-project-aggregate-data?projectId=${project.id}`, "_blank")}
-                            title="Download Plot Data"
-                        >
-                        P
-                        </span>
-                        <span
-                            className="btn btn-sm btn-outline-lightgreen btn-block px-3 mt-0"
-                            onClick={() => window.open(`/dump-project-raw-data?projectId=${project.id}`, "_blank")}
-                            title="Download Sample Data"
-                        >
-                        S
-                        </span>
-                    </div>
+                    <>
+                        <div className="col-1 pl-0">
+                            <button
+                                className="btn btn-sm btn-outline-yellow btn-block"
+                                onClick={() => window.location.assign(`/review-project?projectId=${project.id}`)}
+                                style={{
+                                    alignItems: "center",
+                                    display: "flex",
+                                    height: "100%",
+                                    justifyContent: "center"
+                                }}
+                                title="Edit Project"
+                                type="button"
+                            >
+                                <SvgIcon icon="edit" size="1rem"/>
+                            </button>
+                        </div>
+                        <div className="col-1 pl-0">
+                            <button
+                                className="btn btn-sm btn-outline-red btn-block"
+                                onClick={() => deleteProject(project.id)}
+                                style={{
+                                    alignItems: "center",
+                                    display: "flex",
+                                    height: "100%",
+                                    justifyContent: "center"
+                                }}
+                                title="Delete Project"
+                                type="button"
+                            >
+                                <SvgIcon icon="trash" size="1rem"/>
+                            </button>
+                        </div>
+                        <div className="col-1 pl-0">
+                            <button
+                                className="btn btn-sm btn-outline-lightgreen btn-block"
+                                onClick={() => window.open(`/dump-project-aggregate-data?projectId=${project.id}`, "_blank")}
+                                title="Download Plot Data"
+                                type="button"
+                            >
+                            P
+                            </button>
+                        </div>
+                        <div className="col-1 pl-0">
+                            <button
+                                className="btn btn-sm btn-outline-lightgreen btn-block"
+                                onClick={() => window.open(`/dump-project-raw-data?projectId=${project.id}`, "_blank")}
+                                title="Download Sample Data"
+                                type="button"
+                            >
+                            S
+                            </button>
+                        </div>
+                    </>
                 )}
         </div>
     );
@@ -1186,7 +1307,7 @@ class UserList extends React.Component {
                     .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
                     .map(iu => (
                         <User
-                            key={iu}
+                            key={iu.email}
                             isAdmin={this.props.isAdmin}
                             updateUserInstitutionRole={this.updateUserInstitutionRole}
                             user={iu}
@@ -1197,43 +1318,85 @@ class UserList extends React.Component {
     }
 }
 
-function User({user, isAdmin, updateUserInstitutionRole}) {
-    return (
-        <div className="row">
-            {!isAdmin && (
-                <div className="col-2 mb-1 pr-0">
-                    <div className="btn btn-sm btn-outline-lightgreen btn-block">
-                        {capitalizeFirst(user.institutionRole)}
+class User extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            userRole: props.user.institutionRole
+        };
+    }
+
+    render() {
+        const {isAdmin, updateUserInstitutionRole, user} = this.props;
+
+        return (
+            <div className="row">
+                {!isAdmin && (
+                    <div className="col-2 mb-1 pr-0">
+                        <div className="btn btn-sm btn-outline-lightgreen btn-block">
+                            {capitalizeFirst(user.institutionRole)}
+                        </div>
                     </div>
-                </div>
-            )}
-            <div className="col mb-1 overflow-hidden">
-                <button
-                    className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-                    onClick={() => window.location.assign(`/account?accountId=${user.id}`)}
-                    title={user.email}
-                    type="button"
-                >
-                    {user.email}
-                </button>
-            </div>
-            {isAdmin && (
-                <div className="col-lg-3 mb-1 pl-0">
-                    <select
-                        className="custom-select custom-select-sm"
-                        onChange={e => updateUserInstitutionRole(user.id, null, e.target.value)}
-                        size="1"
-                        value={user.institutionRole}
+                )}
+                <div className="col mb-1 overflow-hidden">
+                    <button
+                        className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
+                        onClick={() => window.location.assign(`/account?accountId=${user.id}`)}
+                        title={user.email}
+                        type="button"
                     >
-                        {user.institutionRole === "pending" && <option value="pending">Pending</option>}
-                        <option value="member">Member</option>
-                        <option value="admin">Admin</option>
-                        <option value="not-member">Remove</option>
-                    </select>
+                        {user.email}
+                    </button>
                 </div>
-            )}
-        </div>
-    );
+                {isAdmin && (
+                    <>
+                        <div className="col-2 mb-1 pl-0">
+                            <select
+                                className="custom-select custom-select-sm"
+                                onChange={e => this.setState({userRole: e.target.value})}
+                                size="1"
+                                value={this.state.userRole}
+                            >
+                                {this.state.userRole === "pending" && <option value="pending">Pending</option>}
+                                <option value="member">Member</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div className="col-2 mb-1 pl-0">
+                            <button
+                                className="btn btn-sm btn-outline-yellow btn-block"
+                                onClick={() => {
+                                    const {userRole} = this.state;
+                                    const {institutionRole} = this.props.user;
+                                    if (userRole === institutionRole) {
+                                        alert("You must change the role of a user in order to update it.");
+                                    } else {
+                                        const confirmBox = window.confirm("Do you really want to update the role of this user?");
+                                        if (confirmBox) updateUserInstitutionRole(user.id, null, userRole);
+                                    }
+                                }}
+                                type="button"
+                            >
+                                Update
+                            </button>
+                        </div>
+                        <div className="col-2 mb-1 pl-0">
+                            <button
+                                className="btn btn-sm btn-outline-red btn-block"
+                                onClick={() => {
+                                    const confirmBox = window.confirm("Do you really want to remove this user from the institution?");
+                                    if (confirmBox) updateUserInstitutionRole(user.id, null, "not-member");
+                                }}
+                                type="button"
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
+        );
+    }
 }
 
 class NewUserButtons extends React.Component {
@@ -1262,24 +1425,31 @@ class NewUserButtons extends React.Component {
         return (
             <>
                 {this.props.isAdmin && (
-                    <div className="row mb-1">
-                        <div className="col-9 pr-3">
+                    <div className="row mb-3">
+                        <div className="col-8">
                             <input
                                 autoComplete="off"
                                 className="form-control form-control-sm py-2"
                                 onChange={e => this.setState({newUserEmail: e.target.value})}
                                 placeholder="Email"
+                                style={{height: "100%"}}
                                 type="email"
                                 value={this.state.newUserEmail}
                             />
                         </div>
-                        <div className="col-3 pl-0">
+                        <div className="col-4 pl-0">
                             <button
-                                className="btn btn-sm btn-outline-yellow btn-block py-2 font-weight-bold"
+                                className="btn btn-sm btn-lightgreen btn-block py-2 font-weight-bold"
                                 onClick={() => this.checkUserEmail() && this.addUser()}
+                                style={{
+                                    alignItems: "center",
+                                    display: "flex",
+                                    justifyContent: "center"
+                                }}
                                 type="button"
                             >
-                                <UnicodeIcon backgroundColor="#f1c00f" icon="add"/>Add User
+                                <SvgIcon icon="plus" size="1rem"/>
+                                <span style={{marginLeft: "0.4rem"}}>Add User</span>
                             </button>
                         </div>
                     </div>
@@ -1287,12 +1457,18 @@ class NewUserButtons extends React.Component {
                 {(this.props.userId > 0 && !this.props.currentIsInstitutionMember) && (
                     <div>
                         <button
-                            className="btn btn-sm btn-outline-yellow btn-block mb-2"
+                            className="btn btn-sm btn-lightgreen btn-block mb-3"
                             id="request-membership-button"
                             onClick={this.props.requestMembership}
+                            style={{
+                                alignItems: "center",
+                                display: "flex",
+                                justifyContent: "center"
+                            }}
                             type="button"
                         >
-                            <UnicodeIcon backgroundColor="#f1c00f" icon="add"/>Request membership
+                            <SvgIcon icon="plus" size="1rem"/>
+                            <span style={{marginLeft: "0.4rem"}}>Request Membership</span>
                         </button>
                     </div>
                 )}

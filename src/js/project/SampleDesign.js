@@ -72,7 +72,10 @@ export class SampleDesign extends React.Component {
             allowDrawnSamples,
             designSettings: {sampleGeometries, qaqcAssignment: {qaqcMethod}},
             plotDistribution,
+            plotShape,
+            plotSize,
             sampleDistribution,
+            sampleResolution,
             setProjectDetails
         } = this.context;
         const totalPlots = this.props.getTotalPlots();
@@ -168,6 +171,7 @@ export class SampleDesign extends React.Component {
                 </p>
                 <div style={{display: "flex"}}>
                     {sampleOptions[sampleDistribution].inputs.map((i, idx) => (
+                        // eslint-disable-next-line react/no-array-index-key
                         <div key={idx} className="mr-3">
                             {i()}
                         </div>
@@ -176,7 +180,13 @@ export class SampleDesign extends React.Component {
                 <p
                     className="font-italic ml-2"
                     style={{
-                        color: samplesPerPlot > perPlotLimit ? "#8B0000" : "#006400",
+                        color: (samplesPerPlot > perPlotLimit
+                                 || samplesPerPlot * totalPlots > sampleLimit
+                                 || (sampleDistribution === "gridded"
+                                      && plotShape === "circle"
+                                      && sampleResolution >= plotSize / Math.sqrt(2)))
+                            ? "#8B0000"
+                            : "#006400",
                         fontSize: "1rem",
                         whiteSpace: "pre-line"
                     }}
@@ -188,8 +198,13 @@ export class SampleDesign extends React.Component {
                             ? "  No samples will be added to the plot."
                             : ""}
                     {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot > perPlotLimit
-                        && `* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)}`
-                            + ` samples per plot. * The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`}
+                        && `\n* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)} samples per plot.`}
+                    {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot * totalPlots > sampleLimit
+                        && `\n* The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`}
+                    {sampleDistribution === "gridded"
+                        && plotShape === "circle"
+                        && sampleResolution >= plotSize / Math.sqrt(2)
+                        && `\n* You must use a sample spacing that is less than ${Math.round((plotSize / Math.sqrt(2)) * 100) / 100} meters.`}
                 </p>
                 <div className="mb-3">
                     <div className="form-check form-check-inline">
@@ -253,11 +268,18 @@ export class SampleDesign extends React.Component {
 }
 SampleDesign.contextType = ProjectContext;
 
+function Badge({children}) {
+    return (
+        <span className="badge badge-pill bg-lightgreen ml-1">{children}</span>
+    );
+}
+
 export function SampleReview() {
     return (
         <ProjectContext.Consumer>
             {({
                 allowDrawnSamples,
+                designSettings: {sampleGeometries},
                 sampleDistribution,
                 sampleFileName,
                 sampleResolution,
@@ -276,31 +298,43 @@ export function SampleReview() {
                                             <tr>
                                                 <td className="w-80 pr-5">Spatial Distribution</td>
                                                 <td className="w-20 text-center">
-                                                    <span className="badge badge-pill bg-lightgreen">{sampleDistribution}</span>
+                                                    <Badge>{sampleDistribution}</Badge>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td className="w-80">Samples Per Plot</td>
                                                 <td className="w-20 text-center">
-                                                    <span className="badge badge-pill bg-lightgreen">{samplesPerPlot} / plot</span>
+                                                    <Badge>{samplesPerPlot} / plot</Badge>
                                                 </td>
                                             </tr>
                                             {sampleDistribution === "gridded" && (
                                                 <tr>
                                                     <td className="w-80">Sample Spacing</td>
                                                     <td className="w-20 text-center">
-                                                        <span className="badge badge-pill bg-lightgreen">{sampleResolution} m</span>
+                                                        <Badge>{sampleResolution} m</Badge>
                                                     </td>
                                                 </tr>
                                             )}
-                                            {sampleFileName && (
+                                            {["shp", "csv"].includes(sampleDistribution) && (
                                                 <tr>
                                                     <td className="w-80">Sample File</td>
                                                     <td className="w-20 text-center">
                                                         <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
-                                                            {sampleFileName.split(".").map(s => truncate(s, 13)).join("")}
-                                                            <div className="tooltip_content">{sampleFileName}</div>
+                                                            {sampleFileName
+                                                                ? sampleFileName.length > 13 ? `${sampleFileName.substring(0, 13)}...` : sampleFileName
+                                                                : "null"}
+                                                            {sampleFileName && <div className="tooltip_content">{sampleFileName}</div>}
                                                         </span>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                            {allowDrawnSamples && (
+                                                <tr>
+                                                    <td className="w-80">Allowed sample geometries</td>
+                                                    <td className="w-20 text-center">
+                                                        {Object.entries(sampleGeometries)
+                                                            .map(([geometry, isUsed]) => (
+                                                                isUsed && <Badge key={geometry}>{geometry}</Badge>))}
                                                     </td>
                                                 </tr>
                                             )}
@@ -309,7 +343,6 @@ export function SampleReview() {
                                 </div>
                             </div>
                         )}
-                    {allowDrawnSamples && <h3>Users can draw additional samples at collection time.</h3>}
                 </div>
             )}
         </ProjectContext.Consumer>
@@ -331,8 +364,8 @@ export function SamplePreview() {
                                 : (
                                     <div>
                                         <h3>
-                                            The following is a mock up of a {plotShape}
-                                            plot with {sampleDistribution} samples.
+                                            The following is a mock up of a {plotShape} plot
+                                            with {sampleDistribution} samples.
                                         </h3>
                                         <img
                                             alt="distribution"

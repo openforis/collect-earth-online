@@ -167,24 +167,9 @@
                     :partialPlots    (:partial_plots stats)
                     :analyzedPlots   (:analyzed_plots stats)
                     :unanalyzedPlots (:unanalyzed_plots stats)
-                    :createdDate     (str (:created_date stats))
-                    :publishedDate   (str (:published_date stats))
-                    :closedDate      (str (:closed_date stats))
                     :userStats       (->> (:user_stats stats)
                                           (tc/jsonb->clj)
                                           (map #(set/rename-keys % {:timed_plots :timedPlots})))})))
-
-(defn get-project-user-stats [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))
-        user-id    (:userId params -1)
-        stats      (first (call-sql "select_project_user_stats" project-id user-id))]
-    (data-response {:totalPlots    (:total_plots stats)
-                    :userAssigned  (:user_assigned stats)
-                    :flaggedPlots  (:flagged_plots stats)
-                    :analyzedPlots (:analyzed_plots stats)
-                    :userStats     (-> (:user_stats stats)
-                                       (tc/jsonb->clj)
-                                       (set/rename-keys {:timed_plots :timedPlots}))})))
 
 ;;;
 ;;; Create project helper functions
@@ -391,10 +376,7 @@
                              sample-file-name
                              sample-file-base64
                              allow-drawn-samples?
-                             saved-plots))
-
-  ;; Final clean up
-  (call-sql "update_project_counts" project-id))
+                             saved-plots)))
 
 (defn create-project! [{:keys [params]}]
   (let [institution-id       (tc/val->int (:institutionId params))
@@ -478,10 +460,14 @@
                                sample-file-base64
                                allow-drawn-samples?
                                design-settings))
+      ;; Final clean up
+      (call-sql "update_project_counts" project-id)
+
       ;; Save project imagery
       (if-let [imagery-list (:projectImageryList params)]
         (insert-project-imagery! project-id imagery-list)
         (call-sql "add_all_institution_imagery" project-id)) ; API backwards compatibility
+
       ;; Copy template widgets
       ;; TODO this can be a simple SQL query once we drop the dashboard ID
       (when (and (pos? project-template) use-template-widgets)
@@ -602,9 +588,33 @@
         original-project     (first (call-sql "select_project_by_id" project-id))]
     (if original-project
       (try
+        (call-sql "update_project"
+                  project-id
+                  name
+                  description
+                  privacy-level
+                  imagery-id
+                  boundary
+                  plot-distribution
+                  num-plots
+                  plot-spacing
+                  plot-shape
+                  plot-size
+                  plot-file-name
+                  sample-distribution
+                  samples-per-plot
+                  sample-resolution
+                  sample-file-name
+                  allow-drawn-samples?
+                  survey-questions
+                  survey-rules
+                  project-options
+                  design-settings)
+
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery! project-id imagery-list))
+
         (cond
           (not= "unpublished" (:availability original-project))
           nil
@@ -646,6 +656,7 @@
                 (or (not= samples-per-plot (:samples_per_plot original-project))
                     (not= sample-resolution (:sample_resolution original-project)))))
           (do
+            (call-sql "delete_user_plots_by_project" project-id)
             (call-sql "delete_all_samples_by_project" project-id)
             (create-project-samples! project-id
                                      plot-shape
@@ -663,28 +674,9 @@
           (or update-survey
               (and (:allow_drawn_samples original-project) (not allow-drawn-samples?)))
           (reset-collected-samples! project-id))
-        (call-sql "update_project"
-                  project-id
-                  name
-                  description
-                  privacy-level
-                  imagery-id
-                  boundary
-                  plot-distribution
-                  num-plots
-                  plot-spacing
-                  plot-shape
-                  plot-size
-                  plot-file-name
-                  sample-distribution
-                  samples-per-plot
-                  sample-resolution
-                  sample-file-name
-                  allow-drawn-samples?
-                  survey-questions
-                  survey-rules
-                  project-options
-                  design-settings)
+
+        ;; Final clean up
+        (call-sql "update_project_counts" project-id)
         (data-response "")
         (catch Exception e
           (let [causes (:causes (ex-data e))]

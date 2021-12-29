@@ -16,11 +16,13 @@
             [ring.middleware.resource           :refer [wrap-resource]]
             [ring.middleware.reload             :refer [wrap-reload]]
             [ring.middleware.session            :refer [wrap-session]]
+            [ring.middleware.session.cookie     :refer [cookie-store]]
             [ring.middleware.ssl                :refer [wrap-ssl-redirect]]
             [ring.middleware.x-headers          :refer [wrap-frame-options wrap-content-type-options wrap-xss-protection]]
             [ring.util.response                 :refer [redirect]]
             [ring.util.codec                    :refer [url-encode url-decode]]
-            [triangulum.logging :refer [log-str]]
+            [triangulum.logging                 :refer [log-str]]
+            [triangulum.config                  :refer [get-config]]
             [triangulum.type-conversion :as tc]
             [collect-earth-online.routing          :refer [routes]]
             [collect-earth-online.views            :refer [not-found-page data-response]]
@@ -161,6 +163,8 @@
     (mw handler)
     handler))
 
+(defn- string-to-bytes [s] (.getBytes s))
+
 (defn create-handler-stack [ssl? reload?]
   (-> authenticated-routing-handler
       (optional-middleware wrap-ssl-redirect ssl?)
@@ -172,7 +176,7 @@
       wrap-nested-params
       wrap-multipart-params
       wrap-params
-      wrap-session
+      (wrap-session {:store (cookie-store {:key (string-to-bytes (get-config :session-key))})})
       wrap-absolute-redirects
       (wrap-resource "public")
       wrap-content-type

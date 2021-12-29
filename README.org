@@ -40,7 +40,7 @@ should navigate to the toplevel directory (i.e., the directory
 containing this README) and run the database build command as follows:
 
 #+begin_src sh
-clojure -M:build-db build-all
+clojure -M:build-db build-all [--dev-data]
 #+end_src
 
 This will begin by creating a new database and role called ceo and
@@ -48,7 +48,9 @@ then add the postgis and pgcrypto extensions to it. Next, the script
 will populate the database with the schemas, tables, and functions
 that are necessary for storing and processing ceo's data. Finally, it
 will load some default data into these tables that is necessary for
-the website to function properly.
+the website to function properly.  You can optionally load dev data
+with ~--dev-data~.  This will initialize the DB with 3 users, an
+imagery source, and a project.
 
 *** Performance Settings
 
@@ -129,6 +131,11 @@ C:\Program Files\7-Zip
 
 Replace *X* with the PostgreSQL version installed on your computer.
 
+** Configuration
+
+Copy ~config.default.edn~ to ~config.edn~ and update any settings that you wish.
+The base set of defaults should be sufficient to run CEO in a development setting.
+
 ** Development Web Server
 
 *** Compile and run
@@ -145,24 +152,21 @@ Now, in a separate terminal window (because webpack needs to be running in the
 background), run the following commands:
 
 #+begin_src sh
-npm run build-db-functions
-psql -U ceo -f src/sql/dev_data/dev_data.sql
 npm run server-dev
 #+end_src
 
-This will build the proper database functions as well as add some dummy
-development data to the database. The website will then be available at
-http://localhost:8080 unless a port is specified. These can also be configured
-using the ~:server~ section in your ~config.edn~ file. When using the
-`clojure -M:server start` command (which is what `npm run server-dev` is an
-alias for) an http port can be specified with -p and an https port can be
-specified with -P. In dev mode, server-side exceptions will be displayed in the
-browser and JavaScript source files will be reloaded whenever you refresh
-the page.
+The website will then be available at http://localhost:8080 unless a port is
+specified. These can also be configured using the ~:server~ section in your
+~config.edn~ file. When using the `clojure -M:server start` command
+(which is what `npm run server-dev` is an alias for) an http port can be
+specified with -p and an https port can be specified with -P. In dev mode,
+server-side exceptions will be displayed in the browser and JavaScript source
+files will be reloaded whenever you refresh the page.
 
-Now, since the database has been built, going forward you only need to run
-`npm run webpack-dev` and `npm run server-dev` (still in separate terminals)
-to get your dev environment set up.
+Going forward you will usually only need to run `npm run webpack-dev`
+and `npm run server-dev` (still in separate terminals) to get your dev environment
+set up.  Watch for updates to SQL files or package.json and run ~npm run build-db-functions~
+or ~npm install~ respectively.
 
 *** Checking for Reflection Warnings
 
@@ -184,6 +188,12 @@ system performance.
 
 - [[https://certbot.eff.org/][certbot]]
 - [[https://www.openssl.org/source/][openssl]]
+
+*** Sessions
+
+It is very important to change the default ~:session-key~ in ~config.edn~.  This
+key is used to encrypt user session data and should be unique to each deployment.
+The key must be exactly 16 characters long.
 
 *** Email Server
 
@@ -248,14 +258,15 @@ announcement.txt and remove all text.
 ** Contact
 
 *Authors:*
-- [[mailto:gjohnson@sig-gis.com][Gary W. Johnson (SIG)]]
 - [[mailto:dsaah@sig-gis.com][David S. Saah (SIG)]]
+- [[mailto:mspencer@sig-gis.com][Matt Spencer (SIG)]]
+- [[mailto:gjohnson@sig-gis.com][Gary W. Johnson (SIG)]]
 - [[mailto:billy.ashmall@nasa.gov][Billy Ashmall (NASA)]]
+- [[mailto:roberto.fontanarosa@fao.org][Roberto Fontanarosa (FAO)]]
+- [[mailto:obaldwinedwards@sig-gis.com][Oliver Baldwin Edwards (SIG)]]
 - [[mailto:githika.tondapu@nasa.gov][Githika Tondapu (NASA)]]
 - [[mailto:stefano.ricci@fao.org][Stefano Ricci (FAO)]]
-- [[mailto:roberto.fontanarosa@fao.org][Roberto Fontanarosa (FAO)]]
 - [[mailto:alfonso.sanchezpausdiaz@fao.org][Alfonso SanchezPausDiaz (FAO)]]
-- [[mailto:mspencer@sig-gis.com][Matt Spencer (SIG)]]
 - [[mailto:bbhandari@sig-gis.com][Biplov Bhandari (SIG)]]
 
 ** License and Distribution

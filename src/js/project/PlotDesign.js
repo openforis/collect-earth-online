@@ -304,6 +304,7 @@ export class PlotDesign extends React.Component {
                                 </p>
                                 <div style={{display: "flex"}}>
                                     {plotOptions[plotDistribution].inputs.map((i, idx) => (
+                                        // eslint-disable-next-line react/no-array-index-key
                                         <div key={idx} className="mr-3">
                                             {i()}
                                         </div>
@@ -324,7 +325,7 @@ export class PlotDesign extends React.Component {
                 >
                     {totalPlots > 0 && `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
                     {totalPlots > 0 && totalPlots > plotLimit
-                        && `* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
+                        && `\n* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
                 </p>
                 <div className="row mr-1">
                     <AssignPlots institutionUserList={institutionUserList} totalPlots={totalPlots}/>
@@ -403,13 +404,15 @@ export function PlotReview() {
                                             </tr>
                                         </>
                                     )}
-                                    {plotFileName && (
+                                    {["shp", "csv"].includes(plotDistribution) && (
                                         <tr>
                                             <td className="w-80">Plot file</td>
                                             <td className="w-20 text-center">
                                                 <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
-                                                    {plotFileName.split(".").map(s => truncate(s, 13)).join("")}
-                                                    <div className="tooltip_content">{plotFileName}</div>
+                                                    {plotFileName
+                                                        ? plotFileName.length > 13 ? `${plotFileName.substring(0, 13)}...` : plotFileName
+                                                        : "null"}
+                                                    {plotFileName && <div className="tooltip_content">{plotFileName}</div>}
                                                 </span>
                                             </td>
                                         </tr>

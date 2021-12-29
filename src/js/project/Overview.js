@@ -161,16 +161,12 @@ export function Overview(props) {
 }
 
 class ProjectTemplateSelection extends React.Component {
-    constructor(props) {
-        super(props);
+    constructor(props, context) {
+        super(props, context);
         this.state = {
             projectFilter: "",
-            selectedTemplateProjectId: -1
+            selectedTemplateProjectId: this.context.templateProjectId || -1
         };
-    }
-
-    componentDidMount() {
-        this.setState({selectedTemplateProjectId: this.context.templateProjectId || -1});
     }
 
     render() {
@@ -207,7 +203,7 @@ class ProjectTemplateSelection extends React.Component {
                             {templateProjectList && templateProjectList
                                 .filter(proj => (proj.id + proj.name.toLocaleLowerCase())
                                     .includes(this.state.projectFilter.toLocaleLowerCase()))
-                                .map((proj, uid) => <option key={uid} value={proj.id}>{proj.id} - {proj.name}</option>)}
+                                .map(proj => <option key={proj.id} value={proj.id}>{proj.id} - {proj.name}</option>)}
                         </select>
                     </div>
                     <span className="form-group">

@@ -196,7 +196,7 @@ export default class ReviewChanges extends React.Component {
                                 type="checkbox"
                             />
                             <label className="form-check-label" htmlFor="tos-check">
-                            I agree to the <a href="/terms" target="_blank">Terms of Service</a>.
+                            I agree to the <a href="/terms-of-service" target="_blank">Terms of Service</a>.
                             </label>
                         </div>
                         <input

@@ -15,11 +15,11 @@ import {
 } from "./imagery/collectionMenuControls";
 import {CollapsibleTitle} from "./components/FormComponents";
 import Modal from "./components/Modal";
+import RadioButton from "./components/RadioButton";
 import Select from "./components/Select";
-import Switch from "./components/Switch";
-import {ButtonSvgIcon} from "./components/SvgIcon";
+import SvgIcon from "./components/svg/SvgIcon";
 
-import {UnicodeIcon, getQueryString, safeLength, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
+import {getQueryString, safeLength, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
 import {getProjectPreferences, setProjectPreferences} from "./utils/preferences";
 import {mercator} from "./utils/mercator";
 
@@ -515,23 +515,14 @@ class Collection extends React.Component {
         const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
         const existingIds = allFeatures.map(f => f.get("sampleId")).filter(id => id);
         const getMax = samples => Math.max(0, ...existingIds, ...samples.map(s => s.id));
-        const newSamples = allFeatures.reduce((acc, cur) => {
-            const sampleId = cur.get("sampleId");
-            if (sampleId) {
-                return [...acc,
-                        {
-                            id: sampleId,
-                            sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857")
-                        }];
-            } else {
-                const nextId = getMax(acc) + 1;
-                return [...acc,
-                        {
-                            id: nextId,
-                            sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857")
-                        }];
+        const newSamples = allFeatures.reduce((acc, cur) => [
+            ...acc,
+            {
+                id: cur.get("sampleId") || getMax(acc) + 1,
+                visibleId: cur.get("visibleId"),
+                sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857")
             }
-        }, []);
+        ], []);
 
         this.setState({
             currentPlot: {...currentPlot, samples: newSamples},
@@ -606,46 +597,14 @@ class Collection extends React.Component {
 
     confirmFlag = () => !this.hasAnswers() || confirm("Flagging this plot will delete your previous answers. Are you sure you want to continue?");
 
-    postValuesToDB = () => {
-        if (this.state.currentPlot.flagged) {
-            if (this.confirmFlag()) {
-                this.processModal(
-                    "Saving flagged plot",
-                    () => fetch(
-                        "/flag-plot",
-                        {
-                            method: "POST",
-                            headers: {
-                                "Accept": "application/json",
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                projectId: this.props.projectId,
-                                plotId: this.state.currentPlot.id,
-                                collectionStart: this.state.collectionStart,
-                                flaggedReason: this.state.currentPlot.flaggedReason,
-                                inReviewMode: this.state.inReviewMode,
-                                currentUserId: this.state.currentUserId
-                            })
-                        }
-                    )
-                        .then(response => {
-                            if (response.ok) {
-                                return this.navToNextPlot(true);
-                            } else {
-                                console.log(response);
-                                alert("Error flagging plot as bad. See console for details.");
-                            }
-                        })
-                );
-            }
-        } else {
+    flagPlot = () => {
+        if (this.confirmFlag()) {
             this.processModal(
-                "Saving plot answers",
+                "Saving flagged plot",
                 () => fetch(
-                    "/add-user-samples",
+                    "/flag-plot",
                     {
-                        method: "post",
+                        method: "POST",
                         headers: {
                             "Accept": "application/json",
                             "Content-Type": "application/json"
@@ -653,14 +612,8 @@ class Collection extends React.Component {
                         body: JSON.stringify({
                             projectId: this.props.projectId,
                             plotId: this.state.currentPlot.id,
-                            confidence: this.state.currentProject.projectOptions.collectConfidence
-                                ? this.state.currentPlot.confidence
-                                : -1,
                             collectionStart: this.state.collectionStart,
-                            userSamples: this.state.userSamples,
-                            userImages: this.state.userImages,
-                            newPlotSamples: this.state.currentProject.allowDrawnSamples
-                                && this.state.currentPlot.samples,
+                            flaggedReason: this.state.currentPlot.flaggedReason,
                             inReviewMode: this.state.inReviewMode,
                             currentUserId: this.state.currentUserId
                         })
@@ -671,10 +624,56 @@ class Collection extends React.Component {
                             return this.navToNextPlot(true);
                         } else {
                             console.log(response);
-                            alert("Error saving your assignments to the database. See console for details.");
+                            alert("Error flagging plot as bad. See console for details.");
                         }
                     })
             );
+        }
+    };
+
+    savePlotAnswers = () => {
+        this.processModal(
+            "Saving plot answers",
+            () => fetch(
+                "/add-user-samples",
+                {
+                    method: "post",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        projectId: this.props.projectId,
+                        plotId: this.state.currentPlot.id,
+                        confidence: this.state.currentProject.projectOptions.collectConfidence
+                            ? this.state.currentPlot.confidence
+                            : -1,
+                        collectionStart: this.state.collectionStart,
+                        userSamples: this.state.userSamples,
+                        userImages: this.state.userImages,
+                        newPlotSamples: this.state.currentProject.allowDrawnSamples
+                            && this.state.currentPlot.samples,
+                        inReviewMode: this.state.inReviewMode,
+                        currentUserId: this.state.currentUserId
+                    })
+                }
+            )
+                .then(response => {
+                    if (response.ok) {
+                        return this.navToNextPlot(true);
+                    } else {
+                        console.log(response);
+                        alert("Error saving your assignments to the database. See console for details.");
+                    }
+                })
+        );
+    };
+
+    postValuesToDB = () => {
+        if (this.state.currentPlot.flagged) {
+            this.flagPlot();
+        } else {
+            this.savePlotAnswers();
         }
     };
 
@@ -885,7 +884,7 @@ class Collection extends React.Component {
                     imageryAttribution={this.state.imageryAttribution}
                 />
                 <div
-                    className="d-xl-none btn btn-lightgreen"
+                    className="d-lg-none btn btn-lightgreen"
                     onClick={() => this.setState({showSidebar: !this.state.showSidebar}, () => {
                         if (this.state.showSidebar) {
                             window.location = "#sidebar";
@@ -896,6 +895,7 @@ class Collection extends React.Component {
                     })}
                     style={{
                         position: "fixed",
+                        boxShadow: "1px 1px 5px rgba(0, 0, 0, 0.3)",
                         zIndex: 99999,
                         right: "1rem",
                         top: "calc(60px + 1rem)",
@@ -904,8 +904,8 @@ class Collection extends React.Component {
                 >
                     <div style={{padding: ".5rem", color: "white"}}>
                         {this.state.showSidebar
-                            ? <UnicodeIcon icon="upCaret"/>
-                            : <UnicodeIcon icon="downCaret"/>}
+                            ? <SvgIcon icon="upCaret" size="1rem"/>
+                            : <SvgIcon icon="downCaret" size="1rem"/>}
                     </div>
                 </div>
                 <SideBar
@@ -1021,7 +1021,7 @@ class Collection extends React.Component {
 function ImageAnalysisPane({imageryAttribution}) {
     return (
         // Mercator hooks into image-analysis-pane
-        <div className="col-xl-9 col-lg-9 col-md-12 pl-0 pr-0 full-height" id="image-analysis-pane">
+        <div className="col-lg-9 col-md-12 pl-0 pr-0 full-height" id="image-analysis-pane">
             <div className="row" id="imagery-info" style={{justifyContent: "center"}}>
                 <p style={{fontSize: ".9rem", marginBottom: "0"}}>{imageryAttribution}</p>
             </div>
@@ -1083,9 +1083,9 @@ class SideBar extends React.Component {
     render() {
         return (
             <div
-                className="col-xl-3 border-left full-height"
+                className="col-lg-3 border-left full-height"
                 id="sidebar"
-                style={{overflowY: "scroll", overflowX: "hidden"}}
+                style={{overflowY: "auto", overflowX: "hidden"}}
             >
                 <ProjectTitle
                     inReviewMode={this.props.inReviewMode}
@@ -1146,14 +1146,14 @@ class PlotNavigation extends React.Component {
                 onClick={this.props.navToPrevPlot}
                 type="button"
             >
-                <ButtonSvgIcon icon="leftArrow" size="0.9rem"/>
+                <SvgIcon icon="leftArrow" size="0.9rem"/>
             </button>
             <button
                 className="btn btn-outline-lightgreen btn-sm mx-1"
                 onClick={() => this.props.navToNextPlot()}
                 type="button"
             >
-                <ButtonSvgIcon icon="rightArrow" size="0.9rem"/>
+                <SvgIcon icon="rightArrow" size="0.9rem"/>
             </button>
             <input
                 autoComplete="off"
@@ -1179,13 +1179,20 @@ class PlotNavigation extends React.Component {
     reviewMode = (inReviewMode, setReviewMode) => (
         <div className="row my-2">
             <div className="col-5 text-right">
-                <label htmlFor="review-mode">Review Mode:</label>
+                <label htmlFor="review-mode">Mode:</label>
             </div>
             <div className="col-6 px-0">
-                <Switch
-                    checked={inReviewMode}
+                <RadioButton
+                    id="collect-mode"
+                    label="Collect"
+                    onChange={() => setReviewMode(false)}
+                    selected={!inReviewMode}
+                />
+                <RadioButton
                     id="review-mode"
-                    onChange={() => setReviewMode(!inReviewMode)}
+                    label="Admin Review"
+                    onChange={() => setReviewMode(true)}
+                    selected={inReviewMode}
                 />
             </div>
         </div>
@@ -1540,144 +1547,51 @@ class ProjectTitle extends React.Component {
     }
 
     render() {
-        const {projectName, inReviewMode, projectId, userName} = this.props;
+        const {projectName, projectId, userName} = this.props;
         return (
             <div
-                onClick={() => this.setState({showStats: !this.state.showStats})}
-                style={{height: "3rem", cursor: "default"}}
+                style={{
+                    alignItems: "center",
+                    background: "#31bab0",
+                    display: "flex",
+                    marginLeft: "-15px",
+                    marginRight: "-15px"
+                }}
             >
-                <h2
-                    className="header overflow-hidden text-truncate"
-                    style={{height: "100%", marginBottom: "0"}}
-                    title={projectName}
-                >
-                    <UnicodeIcon icon="downCaret"/>{" " + projectName}
-                </h2>
-                {this.state.showStats && (inReviewMode
-                    ? (
+                <div>
+                    <div
+                        onClick={() => this.setState({showStats: !this.state.showStats})}
+                        style={{flex: 0, marginLeft: "1rem"}}
+                    >
+                        <SvgIcon color="#ffffff" cursor="pointer" icon="info" size="1.25rem"/>
+                    </div>
+                    {this.state.showStats && (
                         <ProjectStats
                             projectId={projectId}
                             userName={userName}
                         />
-                    ) : (
-                        <UserProjectStats
-                            projectId={projectId}
-                            userName={userName}
-                        />
-                    )
-
-                )}
-            </div>
-        );
-    }
-}
-
-class UserProjectStats extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            stats: {}
-        };
-    }
-
-    componentDidMount() {
-        this.getProjectStats();
-    }
-
-    getProjectStats() {
-        fetch(`/get-project-user-stats?projectId=${this.props.projectId}`)
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => this.setState({stats: data}))
-            .catch(response => {
-                console.error(response);
-                alert("Error getting project stats. See console for details.");
-            });
-    }
-
-    renderPercent = (val, total) => (
-        <span>
-            {`${val} (${asPercentage(val, total)}%)`}
-        </span>
-    );
-
-    render() {
-        const {stats} = this.state;
-        const aveTime = stats.userStats?.timedPlots > 0
-            ? (stats.userStats?.seconds
-                / stats.userStats?.timedPlots
-                / 1.0)
-            : 0;
-        const numPlots = stats.userAssigned > 0 ? stats.userAssigned : stats.totalPlots;
-
-        return (
-            <div
-                className="row"
-                style={{
-                    backgroundColor: "#f1f1f1",
-                    boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)",
-                    cursor: "default",
-                    marginLeft: "2rem",
-                    overflow: "auto",
-                    position: "absolute",
-                    zIndex: "10"
-                }}
-            >
-                <div className="col-lg-12">
-                    <fieldset className="projNoStats" id="projStats">
-                        <table className="table table-sm">
-                            <tbody>
-                                <tr>
-                                    <td className="small pl-4">My Plots Completed</td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- {stats.userAssigned > 0
-                                        ? "Assigned to Me" : "Total Project Plots"}
-                                    </td>
-                                    <td className="small">
-                                        {numPlots}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- Analyzed</td>
-                                    <td className="small">
-                                        {this.renderPercent(stats.analyzedPlots, numPlots)}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- Unanalyzed</td>
-                                    <td className="small">
-                                        {this.renderPercent(numPlots - stats.analyzedPlots, numPlots)}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- Flagged</td>
-                                    <td className="small">
-                                        {this.renderPercent(stats.flaggedPlots, numPlots)}
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td className="small pl-4">-- My Average Time</td>
-                                    <td className="small">
-                                        {aveTime > 0
-                                            ? `${aveTime.toFixed(2)} secs`
-                                            : "untimed"}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </fieldset>
+                    )}
+                </div>
+                <div
+                    style={{cursor: "default", flex: 1, height: "3rem", minWidth: 0}}
+                >
+                    <h2
+                        className="header text-truncate"
+                        style={{height: "100%", margin: "0"}}
+                        title={projectName}
+                    >
+                        {projectName}
+                    </h2>
                 </div>
             </div>
         );
     }
 }
-
 class ProjectStats extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            stats: {}
+            stats: null
         };
     }
 
@@ -1701,103 +1615,98 @@ class ProjectStats extends React.Component {
         </span>
     );
 
-    render() {
+    renderHeader = title => (
+        <tr>
+            <td className="small pl-4 font-weight-bold">{title}</td>
+        </tr>
+    );
+
+    renderRow = (title, val, total = null) => (
+        <tr>
+            <td className="small pl-4">{`-- ${title}`}</td>
+            <td className="small">
+                {total ? this.renderPercent(val, total) : val}
+            </td>
+        </tr>
+    );
+
+    renderStats = () => {
         const {stats} = this.state;
-        const numTimedPlots = stats.userStats ? stats.userStats.reduce((p, c) => p + c.timedPlots, 0) : 0;
+        const {userName} = this.props;
+        // Totals
+        const numTimedPlots = stats.userStats
+            ? stats.userStats.reduce((acc, cur) => acc + cur.timedPlots, 0)
+            : 0;
         const aveTime = numTimedPlots > 0
-            ? (stats.userStats.reduce((p, c) => p + c.seconds, 0)
-                / stats.userStats.reduce((p, c) => p + c.timedPlots, 0)
-                / 1.0)
+            ? (stats.userStats.reduce((acc, cur) => acc + cur.seconds, 0) / numTimedPlots / 1.0)
             : 0;
 
+        // This user
+        const thisUser = stats.userStats.find(u => u.email === userName);
+        const {flagged, analyzed, assigned, timedPlots, seconds} = thisUser || {};
+        const userAveTime = timedPlots > 0
+            ? (seconds / timedPlots / 1.0)
+            : 0;
+        const userPlots = assigned > 0 ? assigned : null;
+
+        return (
+            <table className="table table-sm mb-0">
+                <tbody>
+                    {this.renderHeader("Project Statistics")}
+                    {this.renderRow("Total", stats.totalPlots)}
+                    {stats.plotAssignments > stats.totalPlots && this.renderRow("Plot Assignments", stats.plotAssignments)}
+                    {this.renderRow("Analyzed", stats.analyzedPlots, stats.totalPlots)}
+                    {stats.plotAssignments > 0
+                        && this.renderRow("Partial", stats.partialPlots, stats.totalPlots)}
+                    {this.renderRow("Unanalyzed", stats.unanalyzedPlots, stats.totalPlots)}
+                    {this.renderRow("Flagged", stats.flaggedPlots, stats.totalPlots)}
+                    {stats.usersAssigned > 0
+                        ? this.renderRow("Users Assigned", stats.usersAssigned)
+                        : this.renderRow("Total Contributors", stats.userStats?.length)}
+                    {this.renderRow(
+                        "Average Collection Time",
+                        aveTime > 0
+                            ? `${aveTime.toFixed(2)} secs`
+                            : "untimed"
+                    )}
+                    {this.renderHeader("My Statistics")}
+                    {thisUser
+                        ? (
+                            <>
+                                {stats.userAssigned > 0 && this.renderRow("Assigned to Me", userPlots)}
+                                {this.renderRow("Analyzed", analyzed, userPlots)}
+                                {assigned > 0 && this.renderRow("Unanalyzed", assigned - analyzed, userPlots)}
+                                {this.renderRow("Flagged", flagged, userPlots)}
+                                {this.renderRow("My Average Time", userAveTime > 0
+                                    ? `${userAveTime.toFixed(2)} secs`
+                                    : "untimed")}
+                            </>
+                        ) : (
+                            this.renderRow("You have not collected on this project.")
+                        )}
+                </tbody>
+            </table>
+        );
+    };
+
+    render() {
+        const {stats} = this.state;
         return (
             <div
-                className="row"
                 style={{
                     backgroundColor: "#f1f1f1",
                     boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)",
                     cursor: "default",
-                    marginLeft: "2rem",
+                    margin: ".75rem 1rem 0 1rem",
                     overflow: "auto",
+                    padding: "0 .5rem .5rem .5rem",
                     position: "absolute",
                     zIndex: "10"
                 }}
             >
-                <div className="col-lg-12">
-                    <fieldset className="projNoStats" id="projStats">
-                        <table className="table table-sm">
-                            <tbody>
-                                <tr>
-                                    <td className="small pl-4">Project Plots</td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- Total</td>
-                                    <td className="small">
-                                        {stats.totalPlots}
-                                    </td>
-                                </tr>
-                                {stats.plotAssignments > 0 && (
-                                    <tr>
-                                        <td className="small pl-4">-- Plot Assignments</td>
-                                        <td className="small">
-                                            {stats.plotAssignments}
-                                        </td>
-                                    </tr>
-                                )}
-                                <tr>
-                                    <td className="small pl-4">-- Analyzed</td>
-                                    <td className="small">
-                                        {this.renderPercent(stats.analyzedPlots, stats.totalPlots)}
-                                    </td>
-                                </tr>
-                                {stats.plotAssignments > 0 && (
-                                    <tr>
-                                        <td className="small pl-4">-- Partial</td>
-                                        <td className="small">
-                                            {this.renderPercent(stats.partialPlots, stats.totalPlots)}
-                                        </td>
-                                    </tr>
-                                )}
-                                <tr>
-                                    <td className="small pl-4">-- Unanalyzed</td>
-                                    <td className="small">
-                                        {this.renderPercent(stats.unanalyzedPlots, stats.totalPlots)}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="small pl-4">-- Flagged</td>
-                                    <td className="small">
-                                        {this.renderPercent(stats.flaggedPlots, stats.totalPlots)}
-                                    </td>
-                                </tr>
-                                {stats.usersAssigned > 0
-                                    ? (
-                                        <tr>
-                                            <td className="small pl-4">-- Users Assigned</td>
-                                            <td className="small">
-                                                {stats.usersAssigned}
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        <tr>
-                                            <td className="small pl-4">-- Total Contributors</td>
-                                            <td className="small">
-                                                {stats.userStats?.length}
-                                            </td>
-                                        </tr>
-                                    )}
-                                <tr>
-                                    <td className="small pl-4">-- Users Average Time</td>
-                                    <td className="small">
-                                        {aveTime > 0
-                                            ? `${aveTime.toFixed(2)} secs`
-                                            : "untimed"}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </fieldset>
-                </div>
+                {stats
+                    ? this.renderStats()
+                    : <label className="p-3">Loading...</label>}
             </div>
         );
     }

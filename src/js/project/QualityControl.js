@@ -4,34 +4,34 @@ import {ProjectContext} from "./constants";
 import Select from "../components/Select";
 import UserSelect from "../components/UserSelect";
 import {formatNumberWithCommas} from "../utils/generalUtils";
-import {ButtonSvgIcon} from "../components/SvgIcon";
+import SvgIcon from "../components/svg/SvgIcon";
 
 export default class QualityControl extends React.Component {
-    getAssignment = () => this.context.designSettings.qaqcAssignment;
+    getQaqcAssignment = () => this.context.designSettings.qaqcAssignment;
 
     getUserAssignment = () => this.context.designSettings.userAssignment;
 
-    setAssignment = newAssignment => {
-        const assignment = this.getAssignment();
+    setQaqcAssignment = newAssignment => {
+        const assignment = this.getQaqcAssignment();
         this.context.setProjectDetails({
             designSettings: {...this.context.designSettings, qaqcAssignment: {...assignment, ...newAssignment}}
         });
     };
 
-    setMethod = qaqcMethod => this.setAssignment({qaqcMethod});
+    setMethod = qaqcMethod => this.setQaqcAssignment({qaqcMethod});
 
-    setPercent = percent => this.setAssignment({percent});
+    setPercent = percent => this.setQaqcAssignment({percent});
 
-    setTimesToReview = timesToReview => this.setAssignment({timesToReview});
+    setTimesToReview = timesToReview => this.setQaqcAssignment({timesToReview});
 
     addSME = id => {
-        const {smes} = this.getAssignment();
-        this.setAssignment({smes: [...smes, id]});
+        const {smes} = this.getQaqcAssignment();
+        this.setQaqcAssignment({smes: [...smes, id]});
     };
 
     removeSME = id => {
-        const {smes} = this.getAssignment();
-        this.setAssignment({smes: smes.filter(s => s !== id)});
+        const {smes} = this.getQaqcAssignment();
+        this.setQaqcAssignment({smes: smes.filter(s => s !== id)});
     };
 
     renderAssignedSMEs = assignedSMEs => (
@@ -61,7 +61,7 @@ export default class QualityControl extends React.Component {
                             title={`Remove ${email}`}
                             type="button"
                         >
-                            <ButtonSvgIcon icon="minus" size="0.9rem"/>
+                            <SvgIcon icon="minus" size="0.9rem"/>
                         </button>
                     </div>
                 </div>
@@ -75,7 +75,7 @@ export default class QualityControl extends React.Component {
             ["overlap", "Overlap"],
             ["sme", "SME Verification"]
         ];
-        const {qaqcMethod, percent, smes, timesToReview} = this.getAssignment();
+        const {qaqcMethod, percent, smes, timesToReview} = this.getQaqcAssignment();
         const {userMethod, users} = this.getUserAssignment();
         const {allowDrawnSamples} = this.context;
         const {institutionUserList, totalPlots} = this.props;
@@ -104,8 +104,8 @@ export default class QualityControl extends React.Component {
                   - SME: Subject Matter Expert
                 </p>
                 {allowDrawnSamples ? (
-                    <p className="font-italic mt-2 small">
-                        When User-Drawn samples are enabled, the project cannot support Quality Control of plots.
+                    <p className="font-italic ml-2 mt-2 small">
+                        - When User-Drawn samples are enabled, the project cannot support Quality Control of plots.
                         Disable User-Drawn samples to re-enable Quality Control.
                     </p>
                 ) : userMethod === "none" && (
@@ -153,7 +153,7 @@ export default class QualityControl extends React.Component {
                             />
                         </div>
                         <p className="font-italic mt-2 ml-2 small">
-                            {`- ${formatNumberWithCommas(plotsToReview)} plots will be reviewed ${timesToReview} times`}
+                            {`- ${formatNumberWithCommas(plotsToReview)} plots will be reviewed ${timesToReview} times.`}
                         </p>
                     </>
                 )}
@@ -169,7 +169,7 @@ export default class QualityControl extends React.Component {
                         {this.renderAssignedSMEs(assignedSMEs)}
                         {smes.length > 0 && (
                             <p className="font-italic ml-2 mt-2 small">
-                                - Each SME will review ~{formatNumberWithCommas(plotsPerSME)} plots
+                                - Each SME will review ~{formatNumberWithCommas(plotsPerSME)} plots.
                             </p>
                         )}
                     </>

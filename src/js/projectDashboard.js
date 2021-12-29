@@ -138,6 +138,7 @@ class ProjectDashboard extends React.Component {
                         <ProjectStats
                             availability={this.state.projectDetails.availability}
                             isProjectAdmin={this.state.projectDetails.isProjectAdmin}
+                            projectDetails={this.state.projectDetails}
                             stats={this.state.stats}
                             userName={this.props.userName}
                         />
@@ -158,10 +159,12 @@ function ProjectStats(props) {
             partialPlots,
             unanalyzedPlots,
             flaggedPlots,
+            userStats
+        },
+        projectDetails: {
             closedDate,
             createdDate,
-            publishedDate,
-            userStats
+            publishedDate
         },
         isProjectAdmin,
         userName
@@ -216,7 +219,7 @@ function ProjectStats(props) {
                                     analysisTime={user.timedPlots > 0
                                         ? (user.seconds / user.timedPlots / 1.0).toFixed(2)
                                         : 0}
-                                    plots={user.plots}
+                                    plots={user.analyzed + user.flagged}
                                     title={(isProjectAdmin || user.email === userName)
                                         ? `${idx + 1}. ${user.email}`
                                         : `User ${idx + 1}`}
@@ -228,7 +231,7 @@ function ProjectStats(props) {
                                         / userStats.reduce((p, c) => p + c.timedPlots, 0)
                                         / 1.0).toFixed(2)
                                     : 0}
-                                plots={userStats.reduce((p, c) => p + c.plots, 0)}
+                                plots={analyzedPlots}
                                 title="Total"
                             />
                         </div>

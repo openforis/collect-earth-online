@@ -7,16 +7,13 @@ export class PlanetMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            year: "",
-            month: ""
+            year: this.props.sourceConfig.year,
+            month: this.props.sourceConfig.month
         };
     }
 
     componentDidMount() {
-        this.setState({
-            year: this.props.sourceConfig.year,
-            month: this.props.sourceConfig.month
-        }, () => this.updatePlanetLayer());
+        this.updatePlanetLayer();
     }
 
     componentDidUpdate(prevProps) {
@@ -38,14 +35,16 @@ export class PlanetMenu extends React.Component {
 
     updatePlanetLayer = () => {
         this.updateImageryInformation();
-        mercator.updateLayerSource(this.props.mapConfig,
-                                   this.props.thisImageryId,
-                                   this.props.currentProjectBoundary,
-                                   sourceConfig => ({
-                                       ...sourceConfig,
-                                       month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
-                                       year: this.state.year
-                                   }));
+        mercator.updateLayerSource(
+            this.props.mapConfig,
+            this.props.thisImageryId,
+            this.props.currentProjectBoundary,
+            sourceConfig => ({
+                ...sourceConfig,
+                month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
+                year: this.state.year
+            })
+        );
     };
 
     render() {
@@ -93,20 +92,13 @@ export class PlanetDailyMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            startDate: "",
-            endDate: ""
+            startDate: this.props.sourceConfig.startDate,
+            endDate: this.props.sourceConfig.endDate
         };
     }
 
     componentDidMount() {
-        this.setState({
-            startDate: this.props.sourceConfig.startDate,
-            endDate: this.props.sourceConfig.endDate
-        }, () => {
-            if (this.props.visible) {
-                this.updatePlanetDailyLayer();
-            }
-        });
+        this.updatePlanetDailyLayer();
     }
 
     componentDidUpdate(prevProps) {
@@ -193,18 +185,15 @@ export class PlanetNICFIMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectedTime: "",
-            selectedBand: ""
-        };
-    }
-
-    componentDidMount() {
-        this.setState({
             selectedTime: this.props.sourceConfig.time === "newest"
                 ? last(nicfiLayers)
                 : this.props.sourceConfig.time,
             selectedBand: this.props.sourceConfig.band
-        }, () => this.updatePlanetLayer());
+        };
+    }
+
+    componentDidMount() {
+        this.updatePlanetLayer();
     }
 
     componentDidUpdate(prevProps) {
@@ -224,14 +213,16 @@ export class PlanetNICFIMenu extends React.Component {
 
     updatePlanetLayer = () => {
         this.updateImageryInformation();
-        mercator.updateLayerSource(this.props.mapConfig,
-                                   this.props.thisImageryId,
-                                   this.props.currentProjectBoundary,
-                                   sourceConfig => ({
-                                       ...sourceConfig,
-                                       time: this.state.selectedTime,
-                                       band: this.state.selectedBand
-                                   }));
+        mercator.updateLayerSource(
+            this.props.mapConfig,
+            this.props.thisImageryId,
+            this.props.currentProjectBoundary,
+            sourceConfig => ({
+                ...sourceConfig,
+                time: this.state.selectedTime,
+                band: this.state.selectedBand
+            })
+        );
     };
 
     render() {
@@ -380,8 +371,8 @@ export class SecureWatchMenu extends React.Component {
                         }
                     })
                     .catch(response => {
-                        console.log(response);
-                        alert("It is likely that your Connect ID for Securewatch imagery is expired. See console for more details.");
+                        console.error(response);
+                        console.error("It is likely that your Connect ID for Securewatch imagery is expired. See console for more details.");
                         return {features: []};
                     })
                     .then(data => {
@@ -465,18 +456,14 @@ export class SentinelMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            year: "",
-            month: "",
-            bandCombination: ""
+            year: this.props.sourceConfig.year,
+            month: this.props.sourceConfig.month,
+            bandCombination: this.props.sourceConfig.bandCombination
         };
     }
 
     componentDidMount() {
-        this.setState({
-            year: this.props.sourceConfig.year,
-            month: this.props.sourceConfig.month,
-            bandCombination: this.props.sourceConfig.bandCombination
-        }, () => this.updateSentinelLayer());
+        this.updateSentinelLayer();
     }
 
     componentDidUpdate(prevProps) {
@@ -499,15 +486,17 @@ export class SentinelMenu extends React.Component {
 
     updateSentinelLayer = () => {
         this.updateImageryInformation();
-        mercator.updateLayerSource(this.props.mapConfig,
-                                   this.props.thisImageryId,
-                                   this.props.currentProjectBoundary,
-                                   sourceConfig => ({
-                                       ...sourceConfig,
-                                       month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
-                                       year: this.state.year,
-                                       bandCombination: this.state.bandCombination
-                                   }));
+        mercator.updateLayerSource(
+            this.props.mapConfig,
+            this.props.thisImageryId,
+            this.props.currentProjectBoundary,
+            sourceConfig => ({
+                ...sourceConfig,
+                month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
+                year: this.state.year,
+                bandCombination: this.state.bandCombination
+            })
+        );
     };
 
     render() {
@@ -581,14 +570,12 @@ export class GEEImageMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            visParams: ""
+            visParams: this.props.sourceConfig.imageVisParams
         };
     }
 
     componentDidMount() {
-        this.setState({
-            visParams: this.props.sourceConfig.imageVisParams
-        }, () => this.updateGEEImagery());
+        this.updateGEEImagery();
     }
 
     componentDidUpdate(prevProps) {
@@ -650,18 +637,14 @@ export class GEEImageCollectionMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            startDate: "",
-            endDate: "",
-            visParams: ""
+            startDate: this.props.sourceConfig.startDate,
+            endDate: this.props.sourceConfig.endDate,
+            visParams: this.props.sourceConfig.collectionVisParams
         };
     }
 
     componentDidMount() {
-        this.setState({
-            startDate: this.props.sourceConfig.startDate,
-            endDate: this.props.sourceConfig.endDate,
-            visParams: this.props.sourceConfig.collectionVisParams
-        }, () => this.updateGEEImageCollection());
+        this.updateGEEImageCollection();
     }
 
     componentDidUpdate(prevProps) {

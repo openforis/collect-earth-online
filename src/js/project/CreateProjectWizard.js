@@ -9,7 +9,7 @@ import {SurveyRuleDesign} from "./SurveyRules";
 import AOIMap from "./AOIMap";
 import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
-import SvgIcon from "../components/SvgIcon";
+import SvgIcon from "../components/svg/SvgIcon";
 import {mercator} from "../utils/mercator";
 import {last, removeFromSet} from "../utils/generalUtils";
 import {ProjectContext, plotLimit, perPlotLimit, sampleLimit} from "./constants";
@@ -218,8 +218,13 @@ export default class CreateProjectWizard extends React.Component {
         } else if (this.context.sampleDistribution === "gridded"
             && this.context.plotSize
             && this.context.sampleResolution) {
-            const steps = Math.floor(this.context.plotSize / this.context.sampleResolution) + 1;
-            return steps * steps;
+            const steps = Math.floor(
+                (this.context.plotSize - this.context.plotSize / 12.5)
+                / this.context.sampleResolution + 1
+            ) ** 2;
+            return this.context.plotShape === "circle"
+                ? Math.floor(steps * (3.14 / 4))
+                : steps;
         } else if (this.context.sampleDistribution === "center") {
             return 1;
         } else {
@@ -338,7 +343,7 @@ export default class CreateProjectWizard extends React.Component {
             (sampleDistribution === "gridded"
                 && plotShape === "circle"
                 && sampleResolution >= plotSize / Math.sqrt(2))
-                && "The sample spacing must be less than plot diameter divided by the square root of 2.",
+                && `You must use a sample spacing that is less than ${Math.round((plotSize / Math.sqrt(2)) * 100) / 100} meters.`,
             (sampleDistribution === "gridded"
                 && plotShape === "square"
                 && sampleResolution >= plotSize)
@@ -495,7 +500,7 @@ export default class CreateProjectWizard extends React.Component {
                         padding: "calc((2.5rem - 1.25rem) / 2)"
                     }}
                 >
-                    {stepComplete && <SvgIcon color="white" icon="check" size="1.25rem"/>}
+                    {stepComplete && <SvgIcon color="white" icon="check" size="1.25rem" verticalAlign="initial"/>}
                 </div>
                 <label style={{color: stepColor, fontWeight: "bold"}}>
                     {steps[stepName].title}

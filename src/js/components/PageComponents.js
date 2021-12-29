@@ -1,7 +1,7 @@
 import "../../css/custom.css";
 
 import React from "react";
-import SvgIcon from "./SvgIcon";
+import SvgIcon from "./svg/SvgIcon";
 import {getLanguage, capitalizeFirst} from "../utils/generalUtils";
 import {getPreference, setPreference} from "../utils/preferences";
 
@@ -242,7 +242,7 @@ export class NavigationBar extends React.Component {
                             className="ml-3"
                             onClick={() => this.setState({showHelpMenu: true})}
                         >
-                            {this.state.helpSlides.length > 0 && <SvgIcon color="purple" icon="help" size="2rem"/>}
+                            {this.state.helpSlides.length > 0 && <SvgIcon color="purple" cursor="pointer" icon="help" size="2rem"/>}
                         </div>
                     </div>
                 </nav>

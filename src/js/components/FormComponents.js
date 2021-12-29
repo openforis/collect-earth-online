@@ -1,5 +1,5 @@
 import React from "react";
-import {UnicodeIcon} from "../utils/generalUtils";
+import SvgIcon from "./svg/SvgIcon";
 
 export function FormLayout({title, children}) {
     return (
@@ -58,29 +58,33 @@ export class CollapsibleSectionBlock extends React.Component {
         const {title, children} = this.props;
         return (
             <div>
-                <h2
-                    className="header"
+                <div
+                    className="bg-lightgreen mb-2"
                     onClick={() => this.toggleOpenClose()}
                     style={{
-                        textAlign: "left",
-                        fontSize: "1.25rem",
-                        padding: ".75rem",
+                        alignContent: "center",
+                        borderRadius: ".25rem",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "1rem 1.5rem",
                         cursor: "pointer",
-                        margin: "0 0 .5rem 0"
+                        width: "100%"
                     }}
                 >
-                    {title}
-                    <span
+                    <div
                         style={{
+                            flex: "0",
                             transition: "transform 150ms linear 0s",
-                            transform: this.state.showContent && "scaleY(-1)",
-                            float: "right",
-                            marginRight: "2rem"
+                            transform: this.state.showContent && "rotate(90deg)",
+                            marginRight: "1rem"
                         }}
                     >
-                        <UnicodeIcon icon="downCaret"/>
-                    </span>
-                </h2>
+                        <SvgIcon icon="rightCaret" size="1.5rem"/>
+                    </div>
+                    <div style={{textAlign: "left", fontSize: "1.25rem", flex: 1, lineHeight: "1.5rem"}}>
+                        {title}
+                    </div>
+                </div>
                 <div
                     ref={this.setInnerRef}
                     onTransitionEnd={() => this.updateAfterTransition()}
@@ -199,21 +203,25 @@ export class ExpandableImage extends React.Component {
 }
 
 export function CollapsibleTitle({title, showGroup, toggleShow}) {
-    const commonStyle = {width: "1.5rem", height: "1.5rem", marginBottom: "0"};
-    const buttonDownStyle = {...commonStyle, paddingTop: "1px", paddingLeft: "3px"};
-    const buttonRightStyle = {...commonStyle, paddingTop: "0px", paddingLeft: "6px", fontSize: ".8rem"};
     return (
         <div
             className="CollapsibleTitle__Title row p-1"
             style={{borderBottom: "2px solid black", margin: "0 0 .5rem 0"}}
         >
-            <h3
-                className="btn btn-sm btn-outline-darkgray"
+            <button
+                className="btn btn-outline-darkgray btn-sm"
                 onClick={toggleShow}
-                style={showGroup ? buttonDownStyle : buttonRightStyle}
+                type="button"
             >
-                {showGroup ? <UnicodeIcon icon="downCaret"/> : <UnicodeIcon icon="rightCaret"/>}
-            </h3>
+                <div
+                    style={{
+                        transition: "transform 150ms linear 0s",
+                        transform: showGroup && "rotate(90deg)"
+                    }}
+                >
+                    <SvgIcon icon="rightCaret" size="0.9rem"/>
+                </div>
+            </button>
             <h3 className="ml-2" style={{marginBottom: "0"}}>{title}</h3>
         </div>
     );

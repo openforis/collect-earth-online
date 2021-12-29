@@ -1,9 +1,9 @@
 import React, {Fragment} from "react";
 
-import {UnicodeIcon, removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
+import {removeEnumerator, intersection, isNumber} from "../utils/generalUtils";
 import {CollapsibleTitle} from "./FormComponents";
 import RulesCollectionModal from "./RulesCollectionModal";
-import SvgIcon from "./SvgIcon";
+import SvgIcon from "./svg/SvgIcon";
 import {mercator} from "../utils/mercator";
 import RequiredInput from "./RequiredInput";
 
@@ -461,14 +461,14 @@ export class SurveyCollection extends React.Component {
                             style={this.buttonStyle(this.props.answerMode === "question")}
                             title="Answer questions"
                         >
-                            <SvgIcon icon="question" size="2rem"/>
+                            <SvgIcon cursor="pointer" icon="question" size="2rem"/>
                         </span>
                         <span
                             onClick={() => this.props.setAnswerMode("draw", this.state.drawTool)}
                             style={this.buttonStyle(this.props.answerMode === "draw")}
                             title="Draw sample points"
                         >
-                            <SvgIcon icon="draw" size="2rem"/>
+                            <SvgIcon cursor="pointer" icon="draw" size="2rem"/>
                         </span>
                     </div>
                 )}
@@ -696,10 +696,9 @@ class AnswerInput extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
+        // TODO, I think this was due to incorrect keys, this component should be remounting for diff answers.
         if (this.props.surveyNode.id !== prevProps.surveyNode.id) {
-            const matchingNode = this.props.surveyNode.answered
-                .find(a => a.answerId === this.props.surveyNode.answers[0].id);
-            this.setState({newInput: matchingNode ? matchingNode.answerText : ""});
+            this.resetInputText();
         }
         if (this.props.selectedSampleId !== prevProps.selectedSampleId) {
             this.resetInputText();
@@ -784,6 +783,7 @@ class AnswerDropDown extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
+        // TODO, I think this was due to incorrect keys, this component should be remounting for diff answers.
         if (this.props.surveyNode !== prevProps.surveyNode) {
             this.setState({showDropdown: false});
         }
@@ -794,9 +794,9 @@ class AnswerDropDown extends React.Component {
     render() {
         const {surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue} = this.props;
         const {showDropdown} = this.state;
-        const options = answers.map((ans, uid) => (
+        const options = answers.map(ans => (
             <div
-                key={uid}
+                key={ans.id}
                 className="d-inline-flex py-2 border-bottom"
                 onMouseDown={() => validateAndSetCurrentValue(surveyNode, ans.id, ans.answer)}
                 style={{backgroundColor: answered.some(a => a.answerId === ans.id) ? "#e8e8e8" : "#f1f1f1"}}
@@ -846,19 +846,12 @@ class AnswerDropDown extends React.Component {
                             ))}
                     </div>
                     <button
-                        className="dropbtn"
+                        className="btn btn-lightgreen btn-sm"
                         onBlur={() => this.setState({showDropdown: false})}
                         onClick={this.toggleDropDown}
-                        style={{
-                            backgroundColor: "#31BAB0",
-                            color: "white",
-                            padding: "8px 16px",
-                            border: "none",
-                            cursor: "pointer"
-                        }}
                         type="button"
                     >
-                        <UnicodeIcon icon="downCaret"/>
+                        <SvgIcon icon="downCaret" size="1rem"/>
                     </button>
                 </div>
                 <div

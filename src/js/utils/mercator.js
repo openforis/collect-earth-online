@@ -322,7 +322,6 @@ mercator.createSource = (sourceConfig,
                 }
             }).catch(response => {
                 console.error("Error loading Planet Daily imagery: ", response);
-                alert("Error loading Planet Daily imagery. Check console for details.");
             });
         return planetLayer;
     } else if (sourceConfig.type === "BingMaps") {
@@ -1222,6 +1221,7 @@ mercator.samplesToVectorSource = samples =>
         features: samples.map(
             sample => new Feature({
                 sampleId: sample.id,
+                visibleId: sample.visibleId,
                 geometry: mercator.parseGeoJson(sample.sampleGeom, true)
             })
         )

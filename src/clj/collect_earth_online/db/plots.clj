@@ -158,10 +158,11 @@
   (data-response ""))
 
 (defn- prepare-samples-array [plot-id user-id]
-  (mapv (fn [{:keys [sample_id sample_geom saved_answers]}]
+  (mapv (fn [{:keys [sample_id sample_geom saved_answers visible_id]}]
           {:id           sample_id
            :sampleGeom   sample_geom
-           :savedAnswers (tc/jsonb->clj saved_answers)})
+           :savedAnswers (tc/jsonb->clj saved_answers)
+           :visibleId    visible_id})
         (call-sql "select_plot_samples" {:log? false} plot-id user-id)))
 
 (defn- build-collection-plot [plot-info user-id review-mode?]
@@ -274,10 +275,11 @@
         id-translation   (when new-plot-samples
                            (call-sql "delete_user_plot_by_plot" plot-id user-id)
                            (call-sql "delete_samples_by_plot" plot-id)
-                           (reduce (fn [acc {:keys [id sampleGeom]}]
+                           (reduce (fn [acc {:keys [id visibleId sampleGeom]}]
                                      (let [new-id (sql-primitive (call-sql "create_project_plot_sample"
                                                                            {:log? false}
                                                                            plot-id
+                                                                           visibleId
                                                                            (tc/json->jsonb sampleGeom)))]
                                        (assoc acc (str id) (str new-id))))
                                    {}
