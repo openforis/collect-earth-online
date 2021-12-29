@@ -7,7 +7,7 @@ import SvgIcon from "../components/svg/SvgIcon";
 
 import {removeEnumerator} from "../utils/generalUtils";
 import {ProjectContext} from "./constants";
-import {findObject, lengthObject, mapObjectArray, mapVals, filterObject, mapObject} from "../utils/sequence";
+import {findObject, lengthObject, mapObjectArray, filterObject, mapObject} from "../utils/sequence";
 
 export class SurveyQuestionDesign extends React.Component {
     getChildQuestionIds = questionId => {
@@ -369,6 +369,10 @@ export class SurveyQuestionHelp extends React.Component {
         };
     }
 
+    componentDidMount() {
+        this.updateQuestionStatus();
+    }
+
     componentDidUpdate(prevProps, prevState) {
         if (lengthObject(this.context.surveyQuestions)
             && this.state.userSamples !== prevState.userSamples) {
@@ -376,15 +380,15 @@ export class SurveyQuestionHelp extends React.Component {
         }
     }
 
-    getChildQuestions = currentQuestionId => {
+    getChildQuestionIds = currentQuestionId => {
         const {surveyQuestions} = this.context;
         const childQuestionIds = mapObjectArray(
             filterObject(surveyQuestions, ([_id, val]) => val.parentQuestion === currentQuestionId),
-            (key, _val) => Number(key)
+            ([key, _val]) => Number(key)
         );
-
         return childQuestionIds.length
-            ? childQuestionIds.reduce((acc, cur) => [...acc, ...this.getChildQuestions(cur)], [currentQuestionId])
+            ? childQuestionIds.reduce((acc, cur) =>
+                [...acc, ...this.getChildQuestionIds(cur)], [currentQuestionId])
             : [currentQuestionId];
     };
 
@@ -394,23 +398,22 @@ export class SurveyQuestionHelp extends React.Component {
         const {parentQuestion, parentAnswer} = surveyQuestions[currentQuestionId];
 
         if (parentQuestion === -1) {
-            return this.state.currentPlot.samples;
-        } else if (parentAnswer === -1) {
-            return this.calcVisibleSamples(parentQuestion);
+            return [{id: 1}];
         } else {
             return this.calcVisibleSamples(parentQuestion)
                 .filter(sample => {
                     const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestion, "answerId"]);
-                    return parentAnswer === sampleAnswerId;
+                    return sampleAnswerId && (parentAnswer === -1 || parentAnswer === sampleAnswerId);
                 });
         }
     };
 
     updateQuestionStatus = () => {
         const {userSamples} = this.state;
+        const {surveyQuestions} = this.context;
         const visibleAnswered = mapObject(
-            this.state.currentProject.surveyQuestions,
-            ([questionId, question]) => {
+            surveyQuestions,
+            ([questionId, _question]) => {
                 const visible = this.calcVisibleSamples(Number(questionId)) || [];
                 const answered = visible
                     .filter(vs => userSamples[vs.id][questionId])
@@ -419,44 +422,34 @@ export class SurveyQuestionHelp extends React.Component {
                         answerId: Number(userSamples[vs.id][questionId].answerId),
                         answerText: userSamples[vs.id][questionId].answer
                     }));
-                return ([questionId, {...question, visible, answered}]);
+                return ([questionId, {visible, answered}]);
             }
         );
 
-        this.setState({
-            visibleAnswered,
-            selectedQuestion: {...this.state.selectedQuestion, ...visibleAnswered[this.state.selectedQuestion.id]}
-        });
+        this.setState({visibleAnswered});
     };
 
     setCurrentValue = (questionId, answerId, answerText) => {
-        const sampleIds = [1];
+        const newQuestion = {
+            questionId,
+            answer: answerText,
+            answerId
+        };
 
-        const newSamples = sampleIds.reduce((acc, sampleId) => {
-            const newQuestion = {
-                questionId,
-                answer: answerText,
-                answerId
-            };
+        const childQuestionIds = this.getChildQuestionIds(questionId);
 
-            const childQuestionIds = this.getChildQuestionIds(questionId);
+        const subQuestionsCleared = filterObject(
+            this.state.userSamples[1],
+            ([key, _val]) => !childQuestionIds.includes(Number(key))
+        );
 
-            const subQuestionsCleared = filterObject(
-                this.state.userSamples[sampleId],
-                ([key, _val]) => !childQuestionIds.includes(key)
-            );
-
-            return {
-                ...acc,
-                [sampleId]: {
+        this.setState({
+            userSamples: {
+                1: {
                     ...subQuestionsCleared,
                     [questionId]: newQuestion
                 }
-            };
-        }, {});
-
-        this.setState({
-            userSamples: {...this.state.userSamples, ...newSamples},
+            },
             selectedQuestionId: questionId
         });
     };
@@ -474,7 +467,7 @@ export class SurveyQuestionHelp extends React.Component {
     toggleFlagged = () => this.setState({isFlagged: !this.state.isFlagged});
 
     render() {
-        return null && (
+        return (
             <div className="p-3">
                 <SurveyCollection
                     allowDrawnSamples={this.context.allowDrawnSamples}
@@ -491,9 +484,11 @@ export class SurveyQuestionHelp extends React.Component {
                     setFlaggedReason={this.setFlaggedReason}
                     setSelectedQuestion={this.setSelectedQuestion}
                     setUnansweredColor={color => this.setState({unansweredColor: color})}
-                    surveyQuestions={mapVals(
+                    surveyQuestions={mapObject(
                         this.context.surveyQuestions,
-                        sq => ({...sq, answered: [], visible: [], ...this.state.visibleAnswered[sq.id]})
+                        ([sqId, sq]) => (
+                            [sqId, {...sq, answered: [], visible: [], ...this.state.visibleAnswered[sqId]}]
+                        )
                     )}
                     surveyRules={this.context.surveyRules}
                     toggleFlagged={this.toggleFlagged}

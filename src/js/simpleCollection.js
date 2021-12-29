@@ -458,17 +458,12 @@ class SimpleCollection extends React.Component {
         const {surveyQuestions} = this.state.currentProject;
         const childQuestionIds = mapObjectArray(
             filterObject(surveyQuestions, ([_id, val]) => val.parentQuestion === currentQuestionId),
-            (key, _val) => Number(key)
+            ([key, _val]) => Number(key)
         );
 
-        if (childQuestionIds.length === 0) {
-            return [currentQuestionId];
-        } else {
-            return childQuestionIds
-                .reduce((prev, acc) => (
-                    [...prev, ...this.getChildQuestionIds(acc)]
-                ), [currentQuestionId]);
-        }
+        return childQuestionIds.length
+            ? childQuestionIds.reduce((acc, cur) => [...acc, ...this.getChildQuestionIds(cur)], [currentQuestionId])
+            : [currentQuestionId];
     };
 
     getSelectedSampleIds = questionId => {
@@ -515,7 +510,7 @@ class SimpleCollection extends React.Component {
 
                 const subQuestionsCleared = filterObject(
                     this.state.userSamples[sampleId],
-                    ([key, _val]) => !childQuestionIds.includes(key)
+                    ([key, _val]) => !childQuestionIds.includes(Number(key))
                 );
 
                 return {
@@ -587,13 +582,11 @@ class SimpleCollection extends React.Component {
 
         if (parentQuestion === -1) {
             return this.state.currentPlot.samples;
-        } else if (parentAnswer === -1) {
-            return this.calcVisibleSamples(parentQuestion);
         } else {
             return this.calcVisibleSamples(parentQuestion)
                 .filter(sample => {
                     const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestion, "answerId"]);
-                    return parentAnswer === sampleAnswerId;
+                    return sampleAnswerId && (parentAnswer === -1 || parentAnswer === sampleAnswerId);
                 });
         }
     };

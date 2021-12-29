@@ -71,7 +71,6 @@ export function mapVals(obj, fn) {
 
 /**
  * Returns object filtered by applying the pred the key value pair.
- * Note, number keys will be sent to fn as a string.
  * @param {object} obj
  * @param {function(entry): boolean)} pred
  * @returns {object}

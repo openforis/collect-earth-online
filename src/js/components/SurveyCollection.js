@@ -364,11 +364,10 @@ export class SurveyCollection extends React.Component {
                                     id="top-select"
                                     onClick={() => this.setSurveyQuestionTree(i)}
                                     style={{
-                                        boxShadow:
-                                    `${(i === this.state.currentNodeIndex)
-                                        ? "0 0 4px 2px rgba(0, 0, 0, 1), "
-                                        : "0 0 2px 1px rgba(0, 0, 0, 0.1), "}
-                                    ${this.getTopColor(this.getNodeById(nodeId))}`
+                                        boxShadow: `${(i === this.state.currentNodeIndex)
+                                            ? "0 0 4px 2px rgba(0, 0, 0, 1), "
+                                            : "0 0 2px 1px rgba(0, 0, 0, 0.1), "}
+                                        ${this.getTopColor(nodeId)}`
                                     }}
                                     title={removeEnumerator(this.getNodeById(nodeId).question)}
                                     type="button"
@@ -397,7 +396,7 @@ export class SurveyCollection extends React.Component {
                                 selectedQuestionId={this.props.selectedQuestionId}
                                 selectedSampleId={this.props.selectedSampleId}
                                 setSelectedQuestion={this.props.setSelectedQuestion}
-                                surveyNodeId={this.getNodeById(this.state.currentNodeIndex)}
+                                surveyNodeId={this.state.topLevelNodeIds[this.state.currentNodeIndex]}
                                 surveyQuestions={this.props.surveyQuestions}
                                 surveyRules={this.props.surveyRules}
                                 validateAndSetCurrentValue={this.validateAndSetCurrentValue}
