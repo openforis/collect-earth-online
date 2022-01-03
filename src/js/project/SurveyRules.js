@@ -10,12 +10,13 @@ import {ProjectContext} from "./constants";
 const getNextId = array => array.reduce((maxId, obj) => Math.max(maxId, obj.id), 0) + 1;
 
 export const SurveyRuleDesign = () => {
-    const {setProjectDetails, surveyRules} = useContext(ProjectContext);
+    const {setProjectDetails, surveyRules, surveyQuestions} = useContext(ProjectContext);
     return (
         <div id="survey-rule-design">
             <SurveyRulesList
                 inDesignMode
                 setProjectDetails={setProjectDetails}
+                surveyQuestions={surveyQuestions}
                 surveyRules={surveyRules}
             />
             <SurveyRulesForm/>
@@ -41,11 +42,11 @@ export class SurveyRulesList extends React.Component {
     );
 
     renderRuleRow = r => {
-        const {inDesignMode} = this.props;
+        const {inDesignMode, surveyQuestions} = this.props;
         return (
             <div key={r.id} style={{display: "flex", alignItems: "center"}}>
                 {inDesignMode && this.removeButton(r.id)}
-                <SurveyRule ruleOptions={r}/>
+                <SurveyRule ruleOptions={r} surveyQuestions={surveyQuestions}/>
             </div>
         );
     };
@@ -134,7 +135,6 @@ class TextMatchForm extends React.Component {
                     id: getNextId(surveyRules),
                     ruleType: "text-match",
                     questionId,
-                    questionsText: "",
                     regex
                 }]
             });
@@ -216,7 +216,6 @@ class NumericRangeForm extends React.Component {
                     id: getNextId(surveyRules),
                     ruleType: "numeric-range",
                     questionId,
-                    questionsText: "",
                     min,
                     max
                 }]
@@ -308,7 +307,6 @@ class SumOfAnswersForm extends React.Component {
                     id: getNextId(surveyRules),
                     ruleType: "sum-of-answers",
                     questions: questionIds,
-                    questionsText: [],
                     validSum
                 }]
             });
@@ -394,9 +392,7 @@ class MatchingSumsForm extends React.Component {
                     id: getNextId(surveyRules),
                     ruleType: "matching-sums",
                     questionSetIds1,
-                    questionSetIds2,
-                    questionSetText1: [],
-                    questionSetText2: []
+                    questionSetIds2
                 }]
             });
         }
@@ -506,11 +502,7 @@ class IncompatibleAnswersForm extends React.Component {
                     question1: questionId1,
                     question2: questionId2,
                     answer1: answerId1,
-                    answer2: answerId2,
-                    questionText1: "",
-                    questionText2: "",
-                    answerText1: "",
-                    answerText2: ""
+                    answer2: answerId2
                 }]
             });
         }

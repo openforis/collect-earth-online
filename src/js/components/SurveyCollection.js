@@ -1,4 +1,5 @@
 import React, {Fragment} from "react";
+import _ from "lodash";
 
 import {CollapsibleTitle} from "./FormComponents";
 import RulesCollectionModal from "./RulesCollectionModal";
@@ -153,6 +154,16 @@ export class SurveyCollection extends React.Component {
         </div>
     );
 
+    getSurveyQuestionText = questionId => {
+        const {surveyQuestions} = this.props;
+        return _.get(surveyQuestions, [questionId, "question"], "");
+    };
+
+    getSurveyAnswerText = (questionId, answerId) => {
+        const {surveyQuestions} = this.props;
+        return _.get(surveyQuestions, [questionId, "answers", answerId, "answer"], "");
+    };
+
     checkRuleTextMatch = (surveyRule, questionIdToSet, answerId, answerText) => {
         if (surveyRule.questionId === questionIdToSet
             && !RegExp(surveyRule.regex).test(answerText)) {
@@ -193,9 +204,15 @@ export class SurveyCollection extends React.Component {
                             .reduce((sum, num) => sum + parseInt(num), 0);
                         if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
                             const {question} = this.props.surveyQuestions[questionIdToSet];
-                            return "Sum of answers validation failed.\r\n\n"
-                                + `Sum for questions [${surveyRule.questionsText.toString()}] must be ${(surveyRule.validSum).toString()}.\r\n\n`
-                                + `An acceptable answer for "${question}" is ${(surveyRule.validSum - answeredSum).toString()}.`;
+                            return `Sum of answers validation failed.\r\n\nSum for questions [${
+                                surveyRule.questionIds.map(q => this.getSurveyQuestionText(q)).toString()
+                            }] must be ${
+                                (surveyRule.validSum).toString()
+                            }.\r\n\nAn acceptable answer for "${
+                                question
+                            }" is ${
+                                (surveyRule.validSum - answeredSum).toString()
+                            }.`;
                         } else {
                             return null;
                         }
@@ -248,7 +265,11 @@ export class SurveyCollection extends React.Component {
                     if (invalidSum) {
                         const {question} = this.props.surveyQuestions[questionIdToSet];
                         return "Matching sums validation failed.\r\n\n"
-                            + `Totals of the question sets [${surveyRule.questionSetText1.toString()}] and [${surveyRule.questionSetText2.toString()}] do not match.\r\n\n`
+                            + `Totals of the question sets [${
+                                surveyRule.questionSet1.map(q => this.getSurveyQuestionText(q)).toString()
+                            }] and [${
+                                surveyRule.questionSet2.map(q => this.getSurveyQuestionText(q)).toString()
+                            }] do not match.\r\n\n`
                             + `An acceptable answer for "${question}" is ${Math.abs(invalidSum[0] - invalidSum[1])}.`;
                     } else {
                         return null;
@@ -272,9 +293,15 @@ export class SurveyCollection extends React.Component {
                 const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
                 const commonSampleIds = intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
-                    return "Incompatible answers validation failed.\r\n\n"
-                        + `Answer "${surveyRule.answerText1}" from question "${surveyRule.questionText1}" is incompatible with\r\n`
-                        + `answer "${surveyRule.answerText2}" from question "${surveyRule.questionText2}".\r\n\n`;
+                    return `Incompatible answers validation failed.\r\n\nAnswer "${
+                            this.getSurveyAnswerText(surveyRule.question1, surveyRule.answer1)
+                        }" from question "${
+                            this.getSurveyQuestionText(surveyRule.question1)
+                        }" is incompatible with\r\n answer "${
+                            this.getSurveyAnswerText(surveyRule.question2, surveyRule.answer2)
+                        }" from question "${
+                            this.getSurveyQuestionText(surveyRule.question2)
+                        }".\r\n\n`;
                 } else {
                     return null;
                 }
@@ -288,9 +315,15 @@ export class SurveyCollection extends React.Component {
                 const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
                 const commonSampleIds = intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
-                    return "Incompatible answers validation failed.\r\n\n"
-                        + `Answer "${surveyRule.answerText2}" from question "${surveyRule.questionText2}" is incompatible with\r\n`
-                        + `answer "${surveyRule.answerText1}" from question "${surveyRule.questionText1}".\r\n\n`;
+                    return `Incompatible answers validation failed.\r\n\nAnswer "${
+                        this.getSurveyAnswerText(surveyRule.question2, surveyRule.answer2)
+                    }" from question "${
+                        this.getSurveyQuestionText(surveyRule.question2)
+                    }" is incompatible with\r\nanswer "${
+                        this.getSurveyAnswerText(surveyRule.question1, surveyRule.answer1)
+                    }" from question "${
+                        this.getSurveyQuestionText(surveyRule.question1)
+                    }".\r\n\n`;
                 } else {
                     return null;
                 }
@@ -580,7 +613,11 @@ class SurveyQuestionTree extends React.Component {
                         >
                             {showAnswers ? <span>-</span> : <span>+</span>}
                         </button>
-                        <RulesCollectionModal surveyNodeId={surveyNodeId} surveyRules={surveyRules}/>
+                        <RulesCollectionModal
+                            surveyNodeId={surveyNodeId}
+                            surveyQuestions={surveyQuestions}
+                            surveyRules={surveyRules}
+                        />
                         <button
                             className="text-center btn btn-outline-lightgreen btn-sm col text-truncate"
                             onClick={() => setSelectedQuestion(surveyNodeId)}
