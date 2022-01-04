@@ -758,12 +758,11 @@
   "Returns a list of every question answer combo like
    (question1:answer1 question1:answer2 question2:answer1)"
   [survey-questions]
-  (->> survey-questions
-       (mapcat (fn [group]
-                 (let [question-label (name (get group :question))]
-                   (map (fn [answer]
-                          (str question-label ":" (name (get answer :answer))))
-                        (get group :answers)))))))
+  (mapcat (fn [[_ {:keys [question answers]}]]
+            (map (fn [[_ {:keys [answer]}]]
+                   (str question ":" answer))
+                 answers))
+          survey-questions))
 
 (defn- count-answer [sample-size question-answers]
   (u/mapm (fn [[question answers]]
@@ -772,11 +771,12 @@
 
 (defn- get-value-distribution
   "Count the answers given, and return a map of {'question:answers' count}"
-  [samples]
+  [survey-questions samples]
   (count-answer (count samples)
                 (mapcat (fn [sample]
-                          (map (fn [[question-label answer]]
-                                 (str (name question-label) ":" (:answer answer)))
+                          (map (fn [[question-id {:keys [answerId]}]]
+                                 (let [{:keys [question answers]} (get survey-questions question-id)]
+                                   (str question ":" (get-in answers [(str answerId) :answer]))))
                                (:saved_answers sample)))
                         samples)))
 
@@ -821,7 +821,7 @@
                                                                      (prefix-keys "pl_" extra-plot-info))
                                                               text-headers
                                                               "")
-                                                    (map->csv (get-value-distribution samples)
+                                                    (map->csv (get-value-distribution survey-questions samples)
                                                               number-headers
                                                               0)))))
                               plots)]
@@ -847,9 +847,14 @@
 ;;; Dump raw
 ;;;
 
-(defn- extract-answers [value]
+(defn- extract-answers [survey-questions value]
   (if value
-    (reduce (fn [acc [k v]] (merge acc {(name k) (:answer v)})) {} value)
+    (reduce (fn [acc [k v]]
+              (let [{:keys [question answers]} (get survey-questions k)]
+                (merge acc {question
+                            (get-in answers [(str (:answerId v)) :answer])})))
+            {}
+            value)
     ""))
 
 (def sample-base-headers [:plotid
@@ -872,7 +877,9 @@
             text-headers     (concat sample-base-headers
                                      (get-ext-headers samples :extra_plot_info "pl_")
                                      (get-ext-headers samples :extra_sample_info "smpl_")
-                                     (map :question survey-questions))
+                                     (map (fn [[_ val]]
+                                            (:question val "not-found"))
+                                          survey-questions))
             headers-out      (->> text-headers
                                   (map #(-> % name csv-quotes))
                                   (str/join ",")
@@ -887,7 +894,7 @@
                                                                      (update :analysis_duration #(when % (str % " secs"))))
                                                                  (prefix-keys "pl_" extra-plot-info)
                                                                  (prefix-keys "smpl_" extra-sample-info)
-                                                                 (extract-answers saved-answers))
+                                                                 (extract-answers survey-questions saved-answers))
                                                           text-headers
                                                           ""))))
                                   samples)]
