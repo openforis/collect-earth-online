@@ -274,7 +274,7 @@ export default class MapWidget extends React.Component {
         source.on("tileloaderror", error => {
             if (!error.tile.attempted) {
                 window.setTimeout(() => {
-                    error.tile.attempted = true;
+                    error.tile.attempted = true; // eslint-disable-line no-param-reassign
                     error.tile.load();
                 }, 1000);
             }

@@ -1,5 +1,5 @@
 import React from "react";
-import SvgIcon from "../components/SvgIcon";
+import SvgIcon from "../components/svg/SvgIcon";
 
 export default function GeoDashModal({title, body, footer, closeDialogs}) {
     return (

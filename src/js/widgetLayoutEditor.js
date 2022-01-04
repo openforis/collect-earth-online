@@ -13,14 +13,13 @@ import GeoDashModal from "./geodash/GeoDashModal";
 import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
 import ImageAssetDesigner from "./geodash/ImageAssetDesigner";
 import ImageCollectionAssetDesigner from "./geodash/ImageCollectionAssetDesigner";
-import StatsDesigner from "./geodash/StatsDesigner";
 import TimeSeriesDesigner from "./geodash/TimeSeriesDesigner";
 import PolygonDesigner from "./geodash/PolygonDesigner";
 import PreImageCollectionDesigner from "./geodash/PreImageCollectionDesigner";
 
 import {EditorContext, graphWidgetList, gridRowHeight, mapWidgetList} from "./geodash/constants";
 import WidgetContainer from "./geodash/WidgetContainer";
-import SvgIcon from "./components/SvgIcon";
+import SvgIcon from "./components/svg/SvgIcon";
 import {cleanJSON, isValidJSON} from "./utils/generalUtils";
 
 const ReactGridLayout = WidthProvider(RGL);
@@ -99,7 +98,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             statistics: {
                 title: "Statistics",
                 blankWidget: {},
-                WidgetDesigner: StatsDesigner
+                WidgetDesigner: () => null
             },
             timeSeries: {
                 title: "Time Series Graph",

@@ -30,7 +30,7 @@ export default class GraphWidget extends React.Component {
         }
     }
 
-    componentDidUpdate(prevProps, prevState) {
+    componentDidUpdate(prevProps, _prevState) {
         if (this.props.degDataType
             && (prevProps.degDataType !== this.props.degDataType
                 || prevProps.sarGraphBand !== this.props.sarGraphBand)) {

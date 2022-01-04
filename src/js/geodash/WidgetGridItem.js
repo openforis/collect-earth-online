@@ -1,6 +1,6 @@
 import React from "react";
 
-import SvgIcon from "../components/SvgIcon";
+import SvgIcon from "../components/svg/SvgIcon";
 
 import StatsWidget from "./StatsWidget";
 import {graphWidgetList, mapWidgetList} from "./constants";
