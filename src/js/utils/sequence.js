@@ -24,6 +24,10 @@ export function removeAtIndex(arr, index) {
     return arr.slice(0, index).concat(arr.slice(index + 1, arr.length));
 }
 
+export function getNextInSequence(arr) {
+    return Math.max(-1, ...arr) + 1;
+}
+
 /// Set Functions ///
 
 // set.delete is in place.  This function will then return the set so it can be referenced.
