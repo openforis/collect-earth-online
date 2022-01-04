@@ -17,7 +17,7 @@ import {
     mapObjectArray,
     filterObject
 } from "./utils/sequence";
-import {UnicodeIcon, getQueryString, isNumber, invertColor, getLanguage} from "./utils/generalUtils";
+import {UnicodeIcon, getQueryString, isNumber, getLanguage} from "./utils/generalUtils";
 import {mercator} from "./utils/mercator";
 
 const localeLanguages = {
@@ -561,15 +561,9 @@ class SimpleCollection extends React.Component {
             .forEach(feature => {
                 const sampleId = feature.get("sampleId");
                 const userAnswer = _.get(this.state, ["userSamples", sampleId, selectedQuestionId, "answerId"], -1);
-                const matchingAnswer = answers[userAnswer];
-
                 const color = componentType === "input"
-                    ? userAnswer.length > 0
-                        ? firstEntry(answers)[1].color
-                        : invertColor(firstEntry(answers)[1].color)
-                    : matchingAnswer
-                        ? matchingAnswer.color
-                        : "";
+                    ? _.get(firstEntry(answers), [1, "color"], "")
+                    : _.get(answers, [userAnswer, "color"], "");
 
                 mercator.highlightSampleGeometry(feature, color);
             });
