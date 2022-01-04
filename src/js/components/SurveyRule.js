@@ -39,14 +39,14 @@ function Question({text}) {
     );
 }
 
-function SumOfAnswersRule({surveyQuestions, questions, validSum}) {
+function SumOfAnswersRule({surveyQuestions, questionIds, validSum}) {
     return (
         <>
             <div><strong>Sum of Answers</strong></div>
             <div>
                 Answers to&nbsp;
                 <Question
-                    text={questions.map(q => getSurveyQuestionText(surveyQuestions, q))}
+                    text={questionIds.map(q => getSurveyQuestionText(surveyQuestions, q))}
                 />
                 &nbsp;should sum up to {validSum}.
             </div>
@@ -54,33 +54,33 @@ function SumOfAnswersRule({surveyQuestions, questions, validSum}) {
     );
 }
 
-function IncompatibleAnswersRule({surveyQuestions, answer1, answer2, question1, question2}) {
+function IncompatibleAnswersRule({surveyQuestions, answerId1, answerId2, questionId1, questionId2}) {
     return (
         <>
             <div><strong>Incompatible Answers</strong></div>
             <div>
                 Answer&nbsp;
-                <Badge text={getSurveyAnswerText(surveyQuestions, question1, answer1)}/>
+                <Badge text={getSurveyAnswerText(surveyQuestions, questionId1, answerId1)}/>
                 &nbsp;from&nbsp;
-                <Question text={getSurveyQuestionText(surveyQuestions, question1)}/>
+                <Question text={getSurveyQuestionText(surveyQuestions, questionId1)}/>
                 &nbsp;is incompatible with&nbsp;
-                <Badge text={getSurveyAnswerText(surveyQuestions, question2, answer2)}/>
+                <Badge text={getSurveyAnswerText(surveyQuestions, questionId2, answerId2)}/>
                 &nbsp;from&nbsp;
-                <Question text={getSurveyQuestionText(surveyQuestions, question2)}/>
+                <Question text={getSurveyQuestionText(surveyQuestions, questionId2)}/>
             </div>
         </>
     );
 }
 
-function MatchingSumsRule({surveyQuestions, questionSetIds1, questionSetIds2}) {
+function MatchingSumsRule({surveyQuestions, questionIds1, questionIds2}) {
     return (
         <>
             <div><strong>Matching Sums</strong></div>
             <div>
                 Sum of&nbsp;
-                <Question text={questionSetIds1.map(q => getSurveyQuestionText(surveyQuestions, q))}/>
+                <Question text={questionIds1.map(q => getSurveyQuestionText(surveyQuestions, q))}/>
                 &nbsp;should be equal to sum of&nbsp;
-                <Question text={questionSetIds2.map(q => getSurveyQuestionText(surveyQuestions, q))}/>
+                <Question text={questionIds2.map(q => getSurveyQuestionText(surveyQuestions, q))}/>
             </div>
         </>
     );

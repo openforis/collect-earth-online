@@ -187,13 +187,13 @@ export class SurveyCollection extends React.Component {
     // TODO, sqId needs to be integer for all checks
 
     checkRuleSumOfAnswers = (surveyRule, questionIdToSet, answerId, answerText) => {
-        if (surveyRule.questions.includes(questionIdToSet)) {
+        if (surveyRule.questionIds.includes(questionIdToSet)) {
             const answeredQuestions = filterObject(
                 this.props.surveyQuestions,
-                ([sqId, sq]) => surveyRule.questions.includes(sqId)
+                ([sqId, sq]) => surveyRule.questionIds.includes(sqId)
                     && sq.answered.length > 0 && sqId !== questionIdToSet
             );
-            if (surveyRule.questions.length === answeredQuestions.length + 1) {
+            if (surveyRule.questionIds.length === answeredQuestions.length + 1) {
                 const sampleIds = this.props.getSelectedSampleIds(questionIdToSet);
                 const answeredSampleIds = answeredQuestions.map(aq => aq.answered.map(a => a.sampleId));
                 const commonSampleIds = answeredSampleIds.reduce(intersection, sampleIds);
@@ -229,19 +229,19 @@ export class SurveyCollection extends React.Component {
     };
 
     checkRuleMatchingSums = (surveyRule, questionIdToSet, answerId, answerText) => {
-        if (surveyRule.questionSetIds1.includes(questionIdToSet)
-                || surveyRule.questionSetIds2.includes(questionIdToSet)) {
+        if (surveyRule.questionIds1.includes(questionIdToSet)
+                || surveyRule.questionIds2.includes(questionIdToSet)) {
             const answeredQuestions1 = filterObject(
                 this.props.surveyQuestions,
-                ([sqId, sq]) => surveyRule.questionSetIds1.includes(sqId)
+                ([sqId, sq]) => surveyRule.questionIds1.includes(sqId)
                     && sq.answered.length > 0 && sqId !== questionIdToSet
             );
             const answeredQuestions2 = filterObject(
                 this.props.surveyQuestions,
-                ([sqId, sq]) => surveyRule.questionSetIds2.includes(sqId)
+                ([sqId, sq]) => surveyRule.questionIds2.includes(sqId)
                     && sq.answered.length > 0 && sqId !== questionIdToSet
             );
-            if (surveyRule.questionSetIds1.length + surveyRule.questionSetIds2.length
+            if (surveyRule.questionIds1.length + surveyRule.questionIds2.length
                     === answeredQuestions1.length + answeredQuestions2.length + 1) {
                 const sampleIds = this.props.getSelectedSampleIds(questionIdToSet);
                 const answeredSampleIds1 = answeredQuestions1.map(aq => aq.answered.map(a => a.sampleId));
@@ -259,8 +259,8 @@ export class SurveyCollection extends React.Component {
                             .reduce((sum, num) => sum + parseInt(num), 0);
                         return [sum1, sum2];
                     });
-                    const q1Value = surveyRule.questionSetIds1.includes(questionIdToSet) ? parseInt(answerText) : 0;
-                    const q2Value = surveyRule.questionSetIds2.includes(questionIdToSet) ? parseInt(answerText) : 0;
+                    const q1Value = surveyRule.questionIds1.includes(questionIdToSet) ? parseInt(answerText) : 0;
+                    const q2Value = surveyRule.questionIds2.includes(questionIdToSet) ? parseInt(answerText) : 0;
                     const invalidSum = sampleSums.find(sums => sums[0] + q1Value !== sums[1] + q2Value);
                     if (invalidSum) {
                         const {question} = this.props.surveyQuestions[questionIdToSet];
@@ -286,21 +286,22 @@ export class SurveyCollection extends React.Component {
     };
 
     checkRuleIncompatibleAnswers = (surveyRule, questionIdToSet, answerId, _answerText) => {
-        if (surveyRule.question1 === questionIdToSet && surveyRule.answer1 === answerId) {
-            const ques2 = this.props.surveyQuestions[surveyRule.question2];
-            if (ques2.answered.some(ans => ans.answerId === surveyRule.answer2)) {
+        if (surveyRule.questionId1 === questionIdToSet && surveyRule.answerId1 === answerId) {
+            const ques2 = this.props.surveyQuestions[surveyRule.questionId2];
+            if (ques2.answered.some(ans => ans.answerId === surveyRule.answerId2)) {
                 const ques1Ids = this.props.getSelectedSampleIds(questionIdToSet);
-                const ques2Ids = ques2.answered.filter(ans => ans.answerId === surveyRule.answer2).map(a => a.sampleId);
+                const ques2Ids = ques2.answered.filter(ans =>
+                    ans.answerId === surveyRule.answerId2).map(a => a.sampleId);
                 const commonSampleIds = intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
                     return `Incompatible answers validation failed.\r\n\nAnswer "${
-                            this.getSurveyAnswerText(surveyRule.question1, surveyRule.answer1)
+                            this.getSurveyAnswerText(surveyRule.questionId1, surveyRule.answerId1)
                         }" from question "${
-                            this.getSurveyQuestionText(surveyRule.question1)
+                            this.getSurveyQuestionText(surveyRule.questionId1)
                         }" is incompatible with\r\n answer "${
-                            this.getSurveyAnswerText(surveyRule.question2, surveyRule.answer2)
+                            this.getSurveyAnswerText(surveyRule.questionId2, surveyRule.answerId2)
                         }" from question "${
-                            this.getSurveyQuestionText(surveyRule.question2)
+                            this.getSurveyQuestionText(surveyRule.questionId2)
                         }".\r\n\n`;
                 } else {
                     return null;
@@ -308,21 +309,22 @@ export class SurveyCollection extends React.Component {
             } else {
                 return null;
             }
-        } else if (surveyRule.question2 === questionIdToSet && surveyRule.answer2 === answerId) {
-            const ques1 = this.props.surveyQuestions[surveyRule.question1];
-            if (ques1.answered.some(ans => ans.answerId === surveyRule.answer1)) {
+        } else if (surveyRule.questionId2 === questionIdToSet && surveyRule.answerId2 === answerId) {
+            const ques1 = this.props.surveyQuestions[surveyRule.questionId1];
+            if (ques1.answered.some(ans => ans.answerId === surveyRule.answerId1)) {
                 const ques2Ids = this.props.getSelectedSampleIds(questionIdToSet);
-                const ques1Ids = ques1.answered.filter(ans => ans.answerId === surveyRule.answer1).map(a => a.sampleId);
+                const ques1Ids = ques1.answered.filter(ans =>
+                    ans.answerId === surveyRule.answerId1).map(a => a.sampleId);
                 const commonSampleIds = intersection(ques1Ids, ques2Ids);
                 if (commonSampleIds.length > 0) {
                     return `Incompatible answers validation failed.\r\n\nAnswer "${
-                        this.getSurveyAnswerText(surveyRule.question2, surveyRule.answer2)
+                        this.getSurveyAnswerText(surveyRule.questionId2, surveyRule.answerId2)
                     }" from question "${
-                        this.getSurveyQuestionText(surveyRule.question2)
+                        this.getSurveyQuestionText(surveyRule.questionId2)
                     }" is incompatible with\r\nanswer "${
-                        this.getSurveyAnswerText(surveyRule.question1, surveyRule.answer1)
+                        this.getSurveyAnswerText(surveyRule.questionId1, surveyRule.answerId1)
                     }" from question "${
-                        this.getSurveyQuestionText(surveyRule.question1)
+                        this.getSurveyQuestionText(surveyRule.questionId1)
                     }".\r\n\n`;
                 } else {
                     return null;
@@ -657,8 +659,9 @@ class SurveyQuestionTree extends React.Component {
                             selectedSampleId={selectedSampleId}
                             setSelectedQuestion={setSelectedQuestion}
                             surveyNode={node}
-                            surveyNodeId={nodeId} // is it better to pass derived val if already derived?
-                            surveyQuestions={surveyQuestions}
+                            surveyNodeId={nodeId}
+                            surveyQuestions={surveyQuestions} // is it better to pass derived val if already derived?
+                            surveyRules={surveyRules}
                             validateAndSetCurrentValue={validateAndSetCurrentValue}
                         />
                     );

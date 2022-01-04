@@ -293,7 +293,7 @@ class SumOfAnswersForm extends React.Component {
         const {surveyRules, setProjectDetails} = this.context;
         const {questionIds, validSum} = this.state;
         const conflictingRule = surveyRules.find(rule => rule.ruleType === "sum-of-answers"
-            && sameContents(questionIds, rule.questions));
+            && sameContents(questionIds, rule.questionIds));
         const errorMessages = [
             conflictingRule && "A sum of answers rule already exists for these questions. (Rule " + conflictingRule.id + ")",
             (questionIds.length < 2) && "Sum of answers rule requires the selection of two or more questions.",
@@ -306,7 +306,7 @@ class SumOfAnswersForm extends React.Component {
                 surveyRules: [...surveyRules, {
                     id: getNextId(surveyRules),
                     ruleType: "sum-of-answers",
-                    questions: questionIds,
+                    questionIds,
                     validSum
                 }]
             });
@@ -364,24 +364,24 @@ class MatchingSumsForm extends React.Component {
         super(props);
 
         this.state = {
-            questionSetIds1: [],
-            questionSetIds2: []
+            questionIds1: [],
+            questionIds2: []
         };
     }
 
     addSurveyRule = () => {
         const {surveyRules, setProjectDetails} = this.context;
-        const {questionSetIds1, questionSetIds2} = this.state;
+        const {questionIds1, questionIds2} = this.state;
         const conflictingRule = surveyRules.find(rule => rule.ruleType === "matching-sums"
-            && sameContents(questionSetIds1, rule.questionSetIds1)
-            && sameContents(questionSetIds2, rule.questionSetIds2));
+            && sameContents(questionIds1, rule.questionIds1)
+            && sameContents(questionIds2, rule.questionIds2));
         const errorMessages = [
             conflictingRule && "A matching sums rule already exists for these questions. (Rule " + conflictingRule.id + ")",
-            (questionSetIds1.length < 2 && questionSetIds2.length < 2)
+            (questionIds1.length < 2 && questionIds2.length < 2)
                 && "Matching sums rule requires that at least one of the question sets contain two or more questions.",
-            questionSetIds1.length === 0 && "You must select at least one question from the first set.",
-            questionSetIds2.length === 0 && "You must select at least one question from the second set.",
-            questionSetIds1.some(id => questionSetIds2.includes(id))
+            questionIds1.length === 0 && "You must select at least one question from the first set.",
+            questionIds2.length === 0 && "You must select at least one question from the second set.",
+            questionIds1.some(id => questionIds2.includes(id))
                 && "Question set 1 and 2 cannot contain the same question."
         ].filter(m => m);
         if (errorMessages.length > 0) {
@@ -391,15 +391,15 @@ class MatchingSumsForm extends React.Component {
                 surveyRules: [...surveyRules, {
                     id: getNextId(surveyRules),
                     ruleType: "matching-sums",
-                    questionSetIds1,
-                    questionSetIds2
+                    questionIds1,
+                    questionIds2
                 }]
             });
         }
     };
 
     render() {
-        const {questionSetIds1, questionSetIds2} = this.state;
+        const {questionIds1, questionIds2} = this.state;
         const {surveyQuestions} = this.context;
         const availableQuestions = filterObject(surveyQuestions, ([_id, sq]) => sq.dataType === "number");
         return availableQuestions.length > 1
@@ -411,9 +411,9 @@ class MatchingSumsForm extends React.Component {
                             className="form-control form-control-sm overflow-auto"
                             multiple="multiple"
                             onChange={e => this.setState({
-                                questionSetIds1: Array.from(e.target.selectedOptions, i => Number(i.value))
+                                questionIds1: Array.from(e.target.selectedOptions, i => Number(i.value))
                             })}
-                            value={questionSetIds1}
+                            value={questionIds1}
                         >
                             {mapObjectArray(availableQuestions, ([aqId, aq]) =>
                                 <option key={aqId} value={aqId}>{aq.question}</option>)}
@@ -426,9 +426,9 @@ class MatchingSumsForm extends React.Component {
                             className="form-control form-control-sm overflow-auto"
                             multiple="multiple"
                             onChange={e => this.setState({
-                                questionSetIds2: Array.from(e.target.selectedOptions, i => Number(i.value))
+                                questionIds2: Array.from(e.target.selectedOptions, i => Number(i.value))
                             })}
-                            value={questionSetIds2}
+                            value={questionIds2}
                         >
                             {mapObjectArray(availableQuestions, ([aqId, aq]) =>
                                 <option key={aqId} value={aqId}>{aq.question}</option>)}
@@ -470,13 +470,13 @@ class IncompatibleAnswersForm extends React.Component {
     addSurveyRule = () => {
         const {surveyRules, setProjectDetails} = this.context;
         const {questionId1, answerId1, questionId2, answerId2} = this.state;
-        const conflictingRule = surveyRules.find(({question1, answer1, question2, answer2, ruleType}) =>
-            ruleType === "incompatible-answers"
+        const conflictingRule = surveyRules.find(rule =>
+            rule.ruleType === "incompatible-answers"
             && this.checkEquivalent(
-                question1,
-                answer1,
-                question2,
-                answer2,
+                rule.questionId1,
+                rule.answerId1,
+                rule.questionId2,
+                rule.answerId2,
                 questionId1,
                 answerId1,
                 questionId2,
@@ -499,10 +499,10 @@ class IncompatibleAnswersForm extends React.Component {
                 surveyRules: [...surveyRules, {
                     id: getNextId(surveyRules),
                     ruleType: "incompatible-answers",
-                    question1: questionId1,
-                    question2: questionId2,
-                    answer1: answerId1,
-                    answer2: answerId2
+                    questionId1,
+                    questionId2,
+                    answerId1,
+                    answerId2
                 }]
             });
         }
