@@ -1,10 +1,11 @@
 import React, {useState} from "react";
 
-export default function RequiredInput({id, label, maxLength, onChange, value, type, placeholder}) {
+export default function RequiredInput({id, label, maxLength, onChange, value, type, placeholder, required = true}) {
     const [touched, setTouched] = useState(false);
-
+    const error = required && touched && value.length > 0;
+    console.log(required, error);
     return (
-        <div style={{display: "flex", flexDirection: "column"}}>
+        <div style={{display: "flex", flexDirection: "column", alignItems: "start"}}>
             {label && (
                 <label htmlFor={id}>
                     <span style={{color: "red"}}>*</span>
@@ -30,15 +31,14 @@ export default function RequiredInput({id, label, maxLength, onChange, value, ty
                     maxLength={maxLength}
                     onBlur={() => setTouched(true)}
                     onChange={onChange}
-                    onFocus={() => console.log("focus")}
                     placeholder={placeholder}
                     required
-                    style={touched && value.length === 0 ? {borderColor: "red"} : {}}
+                    style={error ? {borderColor: "red"} : {}}
                     type={type || "text"}
                     value={value}
                 />
             )}
-            {touched && value.length === 0 && (
+            {error && (
                 <div className="invalid-feedback" style={{display: "block"}}>
                     {`${label || "This field "} is required.`}
                 </div>

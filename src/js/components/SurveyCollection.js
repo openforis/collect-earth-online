@@ -784,8 +784,9 @@ class AnswerInput extends React.Component {
     render() {
         const {newInput} = this.state;
         const {surveyNode, surveyNodeId, validateAndSetCurrentValue} = this.props;
-        const {answers, dataType, required} = surveyNode;
+        const {answers, dataType} = surveyNode;
         const [answerId, answer] = firstEntry(answers);
+        const required = false;
         return answer
             ? (
                 <div className="d-inline-flex">
@@ -798,33 +799,17 @@ class AnswerInput extends React.Component {
                             }}
                         />
                     </div>
-                    {required ? (
-                        // TODO, 'required' is a future feature to allow the admins to make inputs required or not.
-                        //       This is just a place holder
-                        // TODO, update RequiredInput to take option required={false}
-                        <RequiredInput
-                            className="form-control mr-2"
-                            id={answer.answer + "_" + answerId}
-                            onChange={e => this.updateInputValue(dataType === "number"
-                                ? Number(e.target.value)
-                                : e.target.value)}
-                            placeholder={answer.answer}
-                            type={dataType}
-                            value={newInput}
-                        />
-                    ) : (
-                        <input
-                            className="form-control mr-2"
-                            id={answer.answer + "_" + answerId}
-                            name={answer.answer + "_" + answerId}
-                            onChange={e => this.updateInputValue(dataType === "number"
-                                ? Number(e.target.value)
-                                : e.target.value)}
-                            placeholder={answer.answer}
-                            type={dataType}
-                            value={newInput}
-                        />
-                    )}
+                    <RequiredInput
+                        className="form-control mr-2"
+                        id={answer.answer + "_" + answerId}
+                        onChange={e => this.updateInputValue(dataType === "number"
+                            ? Number(e.target.value)
+                            : e.target.value)}
+                        placeholder={answer.answer}
+                        required={required}
+                        type={dataType}
+                        value={newInput}
+                    />
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm ml-2"
                         id="save-input"
