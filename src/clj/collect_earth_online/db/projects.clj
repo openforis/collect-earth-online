@@ -785,7 +785,7 @@
                         (->> answer-group
                              (map :answer-text)
                              (distinct)
-                             (str/join "\n"))
+                             (str/join ";"))
                         (format "%.2f" (* 100.0 (count answer-group) inverse-samples)))]))))))
 
 (def plot-base-headers [:plotid
