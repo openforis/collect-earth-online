@@ -764,21 +764,29 @@
                  answers))
           survey-questions))
 
-(defn- count-answer [sample-size question-answers]
-  (u/mapm (fn [[question answers]]
-            [question (* 100.0 (count answers) (/ sample-size))])
-          (group-by str question-answers)))
-
 (defn- get-value-distribution
   "Count the answers given, and return a map of {'question:answers' count}"
   [survey-questions samples]
-  (count-answer (count samples)
-                (mapcat (fn [sample]
-                          (map (fn [[question-id {:keys [answerId]}]]
-                                 (let [{:keys [question answers]} (get survey-questions question-id)]
-                                   (str question ":" (get-in answers [(str answerId) :answer]))))
-                               (:saved_answers sample)))
-                        samples)))
+  (let [inverse-samples (/ (count samples))]
+    (->> samples
+         ;; Flatten answers from multiple samples into a single sequence.
+         (mapcat (fn [sample]
+                   (map (fn [[question-id {:keys [answerId answer]}]]
+                          {:question-id question-id
+                           :answer-id answerId
+                           :answer-text answer})
+                        (:saved_answers sample))))
+         (group-by (juxt :question-id :answer-id))
+         ;; Count number of answers in each group, or join free text answers.
+         (u/mapm (fn [[[question-id answer-id] answer-group]]
+                   (let [{:keys [question answers componentType]} (get survey-questions question-id)]
+                     [(str question ":" (get-in answers [(str answer-id) :answer]))
+                      (if (= "input" componentType)
+                        (->> answer-group
+                             (map :answer-text)
+                             (distinct)
+                             (str/join "\n"))
+                        (format "%.2f" (* 100.0 (count answer-group) inverse-samples)))]))))))
 
 (def plot-base-headers [:plotid
                         :center_lon
