@@ -1,4 +1,4 @@
-import {partition} from "../utils/generalUtils";
+import {partition} from "../utils/sequence";
 
 export const nicfiLayers = [
     "2015-12_2016-05",

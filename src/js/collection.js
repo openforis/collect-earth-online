@@ -19,7 +19,8 @@ import RadioButton from "./components/RadioButton";
 import Select from "./components/Select";
 import SvgIcon from "./components/svg/SvgIcon";
 
-import {getQueryString, safeLength, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
+import {getQueryString, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
+import {safeLength} from "./utils/sequence";
 import {getProjectPreferences, setProjectPreferences} from "./utils/preferences";
 import {mercator} from "./utils/mercator";
 

@@ -3,8 +3,10 @@ import React from "react";
 import {ProjectContext} from "./constants";
 import Select from "../components/Select";
 import UserSelect from "../components/UserSelect";
-import {formatNumberWithCommas, removeAtIndex} from "../utils/generalUtils";
 import SvgIcon from "../components/svg/SvgIcon";
+
+import {formatNumberWithCommas} from "../utils/generalUtils";
+import {removeAtIndex} from "../utils/sequence";
 
 // TODO, two arrays for user and percent is probably not the best data structure.
 //      Originally we had the percent array only added for by percent assignments.

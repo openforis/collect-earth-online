@@ -5,15 +5,8 @@ import {LoadingModal} from "./components/PageComponents";
 import SvgIcon from "./components/svg/SvgIcon";
 
 import {nicfiLayers} from "./imagery/imageryOptions";
-import {
-    UnicodeIcon,
-    getQueryString,
-    safeLength,
-    isNumber,
-    invertColor,
-    getLanguage,
-    last
-} from "./utils/generalUtils";
+import {safeLength, last} from "./utils/sequence";
+import {UnicodeIcon, getQueryString, isNumber, invertColor, getLanguage} from "./utils/generalUtils";
 import {mercator} from "./utils/mercator";
 
 const localeLanguages = {
