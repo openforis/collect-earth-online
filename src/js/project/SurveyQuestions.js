@@ -13,7 +13,7 @@ export class SurveyQuestionDesign extends React.Component {
     getChildQuestionIds = questionId => {
         const {surveyQuestions} = this.context;
         const childQuestionIds = mapObjectArray(
-            filterObject(surveyQuestions, ([_sqId, sq]) => sq.parentQuestion === questionId),
+            filterObject(surveyQuestions, ([_sqId, sq]) => sq.parentQuestionId === questionId),
             ([key, _val]) => Number(key)
         );
         return childQuestionIds.length === 0
@@ -33,7 +33,7 @@ export class SurveyQuestionDesign extends React.Component {
         const {surveyQuestions, setProjectDetails} = this.context;
         const matchingQuestion = findObject(
             surveyQuestions,
-            ([_id, sq]) => sq.parentQuestion === questionId && sq.parentAnswer === answerId
+            ([_id, sq]) => sq.parentQuestionId === questionId && sq.parentAnswerId === answerId
         )[1];
         if (matchingQuestion) {
             alert(
@@ -146,8 +146,8 @@ class NewQuestionDesigner extends React.Component {
                         ? newQuestionText + ` (${repeatedQuestions})`
                         : newQuestionText,
                     answers: {},
-                    parentQuestion: selectedParent,
-                    parentAnswer: selectedAnswer,
+                    parentQuestionId: selectedParent,
+                    parentAnswerId: selectedAnswer,
                     dataType,
                     componentType
                 };
@@ -383,7 +383,7 @@ export class SurveyQuestionHelp extends React.Component {
     getChildQuestionIds = currentQuestionId => {
         const {surveyQuestions} = this.context;
         const childQuestionIds = mapObjectArray(
-            filterObject(surveyQuestions, ([_id, val]) => val.parentQuestion === currentQuestionId),
+            filterObject(surveyQuestions, ([_id, val]) => val.parentQuestionId === currentQuestionId),
             ([key, _val]) => Number(key)
         );
         return childQuestionIds.length
@@ -395,15 +395,15 @@ export class SurveyQuestionHelp extends React.Component {
     calcVisibleSamples = currentQuestionId => {
         const {surveyQuestions} = this.context;
         const {userSamples} = this.state;
-        const {parentQuestion, parentAnswer} = surveyQuestions[currentQuestionId];
+        const {parentQuestionId, parentAnswerId} = surveyQuestions[currentQuestionId];
 
-        if (parentQuestion === -1) {
+        if (parentQuestionId === -1) {
             return [{id: 1}];
         } else {
-            return this.calcVisibleSamples(parentQuestion)
+            return this.calcVisibleSamples(parentQuestionId)
                 .filter(sample => {
-                    const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestion, "answerId"]);
-                    return sampleAnswerId && (parentAnswer === -1 || parentAnswer === sampleAnswerId);
+                    const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestionId, "answerId"]);
+                    return sampleAnswerId && (parentAnswerId === -1 || parentAnswerId === sampleAnswerId);
                 });
         }
     };
