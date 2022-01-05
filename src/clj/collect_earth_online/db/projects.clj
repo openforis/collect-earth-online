@@ -750,6 +750,23 @@
     (.format (SimpleDateFormat. "YYYY-MM-dd HH:mm")
              pg-time)))
 
+(defn- append-children [survey-questions questions]
+  (reduce (fn [acc cur]
+            (let [cur-id   (tc/val->int (get cur 0))
+                  children (filter (fn [[_id question]] (= cur-id (:parentQuestionId question)))
+                                   survey-questions)]
+              (cond-> (conj acc cur)
+                (seq children) (concat (append-children survey-questions children))
+                :always        (vec))))
+          []
+          questions))
+
+(defn- sort-questions [survey-questions]
+  (append-children survey-questions
+                   (filter (fn [[_id question]]
+                             (= -1 (:parentQuestionId question)))
+                           survey-questions)))
+
 ;;;
 ;;; Dump aggregate
 ;;;
@@ -812,7 +829,7 @@
         text-headers     (concat (pu/remove-vector-items plot-base-headers
                                                          (when-not confidence? :confidence))
                                  (get-ext-headers plots :extra_plot_info "pl_"))
-        number-headers   (get-value-distribution-headers survey-questions)
+        number-headers   (-> survey-questions (sort-questions) (get-value-distribution-headers))
         headers-out      (->> (concat text-headers number-headers)
                               (map #(-> % name csv-quotes))
                               (str/join ",")
@@ -885,9 +902,9 @@
             text-headers     (concat sample-base-headers
                                      (get-ext-headers samples :extra_plot_info "pl_")
                                      (get-ext-headers samples :extra_sample_info "smpl_")
-                                     (map (fn [[_ val]]
-                                            (:question val "not-found"))
-                                          survey-questions))
+                                     (->> survey-questions
+                                          (sort-questions)
+                                          (map (fn [[_ {:keys [question]}]] (or question "not-found")))))
             headers-out      (->> text-headers
                                   (map #(-> % name csv-quotes))
                                   (str/join ",")
