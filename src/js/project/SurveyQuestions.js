@@ -29,23 +29,21 @@ export class SurveyQuestionDesign extends React.Component {
     };
 
     removeAnswer = (questionId, answerId) => {
-        console.log(questionId, answerId);
         const {surveyQuestions, setProjectDetails} = this.context;
         const matchingQuestion = findObject(
             surveyQuestions,
             ([_id, sq]) => sq.parentQuestionId === questionId && sq.parentAnswerId === answerId
-        )[1];
+        );
         if (matchingQuestion) {
             alert(
                 "You cannot remove this answer because a sub question ("
-                + matchingQuestion.question
+                + matchingQuestion[1].question
                 + ") is referencing it."
             );
         } else {
             const surveyQuestion = surveyQuestions[questionId];
-            // FIXME, check if this works with number strings
+            // eslint-disable-next-line no-unused-vars
             const {[answerId]: _id, ...remainingAnswers} = surveyQuestion.answers;
-            // const remainingAnswers = filterObject(surveyQuestion.answers, ([ansId]) => ansId !== answerId);
             setProjectDetails({
                 surveyQuestions: {
                     ...surveyQuestions,

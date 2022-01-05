@@ -175,11 +175,12 @@ function SurveyQuestionTree({
         ([key, _val]) => Number(key)
     );
     const parentQuestion = surveyQuestions[surveyQuestion.parentQuestionId];
+    console.log(indentLevel);
     return (
         <>
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">
-                {[...Array(indentLevel)].map(l => (
-                    <div key={`${surveyQuestionId}-${l}`} className="pl-5" style={{cursor: "default"}}>
+                {[...Array(indentLevel)].map((l, idx) => (
+                    <div key={idx} className="pl-5" style={{cursor: "default"}}>
                         <SvgIcon icon="downRightArrow" size="1.4rem"/>
                     </div>
                 ))}
