@@ -51,7 +51,7 @@ class Project extends React.Component {
             sampleResolution: "",
             samplesPerPlot: "",
             allowDrawnSamples: false,
-            surveyQuestions: [],
+            surveyQuestions: {},
             surveyRules: [],
             templateProjectId: -1,
             useTemplateWidgets: false,

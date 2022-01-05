@@ -20,7 +20,16 @@ import Select from "./components/Select";
 import SvgIcon from "./components/svg/SvgIcon";
 
 import {getQueryString, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
-import {safeLength} from "./utils/sequence";
+import {
+    everyObject,
+    findObject,
+    firstEntry,
+    lengthObject,
+    mapObject,
+    safeLength,
+    mapObjectArray,
+    filterObject
+} from "./utils/sequence";
 import {getProjectPreferences, setProjectPreferences} from "./utils/preferences";
 import {mercator} from "./utils/mercator";
 
@@ -29,7 +38,7 @@ class Collection extends React.Component {
         super(props);
         this.state = {
             collectionStart: 0,
-            currentProject: {surveyQuestions: [], institution: ""},
+            currentProject: {surveyQuestions: {}, institution: ""},
             currentImagery: {id: "", sourceConfig: {}},
             currentPlot: {},
             currentUserId: -1,
@@ -44,7 +53,7 @@ class Collection extends React.Component {
             plotList: [],
             plotters: [],
             unansweredColor: "black",
-            selectedQuestion: {id: 0, question: "", answers: []},
+            selectedQuestionId: -1,
             selectedSampleId: -1,
             userSamples: {},
             originalUserSamples: {},
@@ -117,13 +126,16 @@ class Collection extends React.Component {
         }
 
         // Conditions required for samples to be shown
+        const selectedQuestion = this.state.currentProject.surveyQuestions[this.state.selectedQuestionId];
+        const prevSelectedQuestion = prevState.currentProject.surveyQuestions[prevState.selectedQuestionId];
+
         if (this.state.currentPlot.id
-            && this.state.selectedQuestion.visible) {
+            && selectedQuestion.visible) {
             // Changing conditions for which samples need to be re-drawn
-            if (this.state.selectedQuestion.id !== prevState.selectedQuestion.id
+            if (this.state.selectedQuestionId !== prevState.selectedQuestionId
                 || this.state.unansweredColor !== prevState.unansweredColor
                 || this.state.userSamples !== prevState.userSamples
-                || this.state.selectedQuestion.visible !== prevState.selectedQuestion.visible) {
+                || selectedQuestion.visible !== prevSelectedQuestion.visible) {
                 this.showPlotSamples();
                 this.highlightSamplesByQuestion();
                 this.createPlotKML();
@@ -131,7 +143,7 @@ class Collection extends React.Component {
         }
 
         // Update user samples calculations for display
-        if (this.state.currentProject.surveyQuestions.length > 0
+        if (lengthObject(this.state.currentProject.surveyQuestions)
             && this.state.userSamples !== prevState.userSamples) {
             this.updateQuestionStatus();
         }
@@ -441,12 +453,10 @@ class Collection extends React.Component {
             ? newPlot.samples.reduce((acc, cur) =>
                 ({...acc, [cur.id]: copyValues ? (cur.userImage || {}) : {}}), {})
             : {},
-        selectedQuestion: {
-            ...this.state.currentProject.surveyQuestions
-                .sort((a, b) => a.id - b.id)
-                .find(surveyNode => surveyNode.parentQuestion === -1),
-            visible: null
-        },
+        selectedQuestionId: Number(findObject(
+            this.state.currentProject.surveyQuestions,
+            ([_id, sq]) => sq.parentQuestion === -1
+        )[0]),
         collectionStart: Date.now(),
         unansweredColor: "black"
     });
@@ -455,7 +465,6 @@ class Collection extends React.Component {
 
     showProjectPlot = () => {
         const {currentPlot, mapConfig, currentProject} = this.state;
-
         mercator.disableSelection(mapConfig);
         mercator.removeLayerById(mapConfig, "currentPlots");
         mercator.removeLayerById(mapConfig, "currentPlot");
@@ -478,7 +487,8 @@ class Collection extends React.Component {
     };
 
     showPlotSamples = () => {
-        const {mapConfig, unansweredColor, selectedQuestion: {visible}} = this.state;
+        const {mapConfig, unansweredColor, currentProject, selectedQuestionId} = this.state;
+        const {visible} = currentProject.surveyQuestions[selectedQuestionId];
         mercator.disableSelection(mapConfig);
         mercator.disableDrawing(mapConfig);
         mercator.removeLayerById(mapConfig, "currentSamples");
@@ -527,14 +537,10 @@ class Collection extends React.Component {
 
         this.setState({
             currentPlot: {...currentPlot, samples: newSamples},
-            userSamples: newSamples.reduce((acc, cur) => {
-                acc[cur.id] = userSamples[cur.id] || {};
-                return acc;
-            }, {}),
-            userImages: newSamples.reduce((acc, cur) => {
-                acc[cur.id] = userImages[cur.id] || {};
-                return acc;
-            }, {})
+            userSamples: newSamples.reduce((acc, cur) =>
+                ({...acc, [cur.id]: userSamples[cur.id] || {}}), {}),
+            userImages: newSamples.reduce((acc, cur) =>
+                ({...acc, [cur.id]: userImages[cur.id] || {}}), {})
         });
     };
 
@@ -678,37 +684,37 @@ class Collection extends React.Component {
         }
     };
 
-    getChildQuestions = currentQuestionId => {
+    getChildQuestionIds = currentQuestionId => {
         const {surveyQuestions} = this.state.currentProject;
-        const {question, id} = surveyQuestions.find(sq => sq.id === currentQuestionId);
-        const childQuestions = surveyQuestions.filter(sq => sq.parentQuestion === id);
+        const childQuestionIds = mapObjectArray(
+            filterObject(surveyQuestions, ([_id, val]) => val.parentQuestion === currentQuestionId),
+            ([key, _val]) => Number(key)
+        );
 
-        if (childQuestions.length === 0) {
-            return [question];
-        } else {
-            return childQuestions
-                .reduce((prev, acc) => (
-                    [...prev, ...this.getChildQuestions(acc.id)]
-                ), [question]);
-        }
+        return childQuestionIds.length
+            ? childQuestionIds.reduce((acc, cur) => [...acc, ...this.getChildQuestionIds(cur)], [currentQuestionId])
+            : [currentQuestionId];
     };
 
-    getSelectedSampleIds = question => {
+    getSelectedSampleIds = questionId => {
+        const {answered} = this.state.currentProject.surveyQuestions[questionId];
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
         const selectedSamples = mercator.getSelectedSamples(this.state.mapConfig);
         const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
         return (
-            (selectedFeatures.length === 0 && question.answered.length === 0)
-            || Object.keys(this.state.userSamples).length === 1
+            (selectedFeatures.length === 0 && answered.length === 0)
+            || lengthObject(this.state.userSamples) === 1
                 ? allFeatures
                 : selectedFeatures
         ).map(sf => sf.get("sampleId"));
     };
 
-    checkSelection = (sampleIds, questionToSet) => {
+    checkSelection = (sampleIds, questionId) => {
+        const questionToSet = this.state.currentProject.surveyQuestions[questionId];
+        const visibleIds = questionToSet.visible.map(v => v.id);
         if (!this.warnOnNoSamples(this.state.currentPlot)) {
             return false;
-        } else if (sampleIds.some(sid => questionToSet.visible.every(vs => vs.id !== sid))) {
+        } else if (sampleIds.some(s => !visibleIds.includes(s))) {
             alert("Invalid Selection. Try selecting the question before answering.");
             return false;
         } else if (sampleIds.length === 0) {
@@ -719,27 +725,29 @@ class Collection extends React.Component {
         }
     };
 
-    setCurrentValue = (questionToSet, answerId, answerText) => {
-        const sampleIds = this.getSelectedSampleIds(questionToSet);
+    setCurrentValue = (questionId, answerId, answerText) => {
+        const sampleIds = this.getSelectedSampleIds(questionId);
 
-        if (this.checkSelection(sampleIds, questionToSet)) {
+        if (this.checkSelection(sampleIds, questionId)) {
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
-                    questionId: questionToSet.id,
+                    questionId,
                     answer: answerText,
                     answerId
                 };
 
-                const childQuestionArray = this.getChildQuestions(questionToSet.id);
-                const clearedSubQuestions = Object.entries(this.state.userSamples[sampleId])
-                    .filter(entry => !childQuestionArray.includes(entry[0]))
-                    .reduce((acc2, cur) => ({...acc2, [cur[0]]: cur[1]}), {});
+                const childQuestionIds = this.getChildQuestionIds(questionId);
+
+                const subQuestionsCleared = filterObject(
+                    this.state.userSamples[sampleId],
+                    ([key, _val]) => !childQuestionIds.includes(Number(key))
+                );
 
                 return {
                     ...acc,
                     [sampleId]: {
-                        ...clearedSubQuestions,
-                        [questionToSet.question]: newQuestion
+                        ...subQuestionsCleared,
+                        [questionId]: newQuestion
                     }
                 };
             }, {});
@@ -764,35 +772,33 @@ class Collection extends React.Component {
             this.setState({
                 userSamples: {...this.state.userSamples, ...newSamples},
                 userImages: {...this.state.userImages, ...newUserImages},
-                selectedQuestion: questionToSet
+                selectedQuestionId: questionId
             });
         }
     };
 
-    setSelectedQuestion = newSelectedQuestion => this.setState({
-        selectedQuestion: newSelectedQuestion
-    });
+    setSelectedQuestion = newId => this.setState({selectedQuestionId: newId});
 
     highlightSamplesByQuestion = () => {
+        const {selectedQuestionId, currentProject} = this.state;
+        const {answers, componentType} = currentProject.surveyQuestions[selectedQuestionId];
         const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
 
-        const {question} = this.state.selectedQuestion;
         allFeatures
             .filter(feature => {
                 const sampleId = feature.get("sampleId");
                 return this.state.userSamples[sampleId]
-                    && this.state.userSamples[sampleId][question];
+                    && this.state.userSamples[sampleId][selectedQuestionId];
             })
             .forEach(feature => {
                 const sampleId = feature.get("sampleId");
-                const userAnswer = this.state.userSamples[sampleId][question].answer;
-                const matchingAnswer = this.state.selectedQuestion.answers
-                    .find(ans => ans.answer === userAnswer);
+                const userAnswer = _.get(this.state, ["userSamples", sampleId, selectedQuestionId, "answerId"], -1);
+                const matchingAnswer = answers[userAnswer];
 
-                const color = this.state.selectedQuestion.componentType === "input"
+                const color = componentType === "input"
                     ? userAnswer.length > 0
-                        ? this.state.selectedQuestion.answers[0].color
-                        : invertColor(this.state.selectedQuestion.answers[0].color)
+                        ? firstEntry(answers)[1].color
+                        : invertColor(firstEntry(answers)[1].color)
                     : matchingAnswer
                         ? matchingAnswer.color
                         : "";
@@ -803,53 +809,42 @@ class Collection extends React.Component {
     };
 
     calcVisibleSamples = currentQuestionId => {
-        const {currentProject : {surveyQuestions}, userSamples} = this.state;
-        const {parentQuestion, parentAnswer} = surveyQuestions
-            .find(sq => sq.id === currentQuestionId);
-        const parentQuestionText = parentQuestion === -1
-            ? ""
-            : surveyQuestions.find(sq => sq.id === parentQuestion).question;
+        const {currentProject: {surveyQuestions}, userSamples} = this.state;
+        const {parentQuestion, parentAnswer} = surveyQuestions[currentQuestionId];
 
         if (parentQuestion === -1) {
             return this.state.currentPlot.samples;
         } else {
-            const correctAnswerText = surveyQuestions
-                .find(sq => sq.id === parentQuestion).answers
-                .find(ans => parentAnswer === -1 || ans.id === parentAnswer).answer;
-
             return this.calcVisibleSamples(parentQuestion)
                 .filter(sample => {
-                    const sampleAnswer = userSamples[sample.id][parentQuestionText]
-                          && userSamples[sample.id][parentQuestionText].answer;
-                    return (parentAnswer === -1 && sampleAnswer)
-                        || correctAnswerText === sampleAnswer;
+                    const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestion, "answerId"]);
+                    return sampleAnswerId && (parentAnswer === -1 || parentAnswer === sampleAnswerId);
                 });
         }
     };
 
     updateQuestionStatus = () => {
-        const newSurveyQuestions = this.state.currentProject.surveyQuestions.map(sq => {
-            const visibleSamples = this.calcVisibleSamples(sq.id) || [];
-            return ({
-                ...sq,
-                visible: visibleSamples,
-                answered: visibleSamples
-                    .filter(vs => this.state.userSamples[vs.id][sq.question])
+        const {userSamples} = this.state;
+        const newSurveyQuestions = mapObject(
+            this.state.currentProject.surveyQuestions,
+            ([questionId, question]) => {
+                const visible = this.calcVisibleSamples(Number(questionId)) || [];
+                const answered = visible
+                    .filter(vs => userSamples[vs.id][questionId])
                     .map(vs => ({
                         sampleId: vs.id,
-                        answerId: this.state.userSamples[vs.id][sq.question].answerId,
-                        answerText: this.state.userSamples[vs.id][sq.question].answer
-                    }))
-            });
-        });
+                        answerId: Number(userSamples[vs.id][questionId].answerId),
+                        answerText: userSamples[vs.id][questionId].answer
+                    }));
+                return ([questionId, {...question, visible, answered}]);
+            }
+        );
 
         this.setState({
             currentProject: {
                 ...this.state.currentProject,
                 surveyQuestions: newSurveyQuestions
-            },
-            selectedQuestion: newSurveyQuestions
-                .find(sq => sq.id === this.state.selectedQuestion.id)
+            }
         });
     };
 
@@ -867,7 +862,7 @@ class Collection extends React.Component {
                 this.featuresToDrawLayer(drawTool);
             } else {
                 this.featuresToSampleLayer();
-                this.setSelectedQuestion(this.state.currentProject.surveyQuestions[0]);
+                this.setSelectedQuestion(Number(firstEntry(this.state.currentProject.surveyQuestions)[0]));
             }
             this.setState({answerMode: newMode});
         }
@@ -978,7 +973,7 @@ class Collection extends React.Component {
                                 mapConfig={this.state.mapConfig}
                                 resetPlotValues={this.resetPlotValues}
                                 sampleGeometries={this.state.currentProject.designSettings.sampleGeometries}
-                                selectedQuestion={this.state.selectedQuestion}
+                                selectedQuestionId={this.state.selectedQuestionId}
                                 selectedSampleId={Object.keys(this.state.userSamples).length === 1
                                     ? parseInt(Object.keys(this.state.userSamples)[0])
                                     : this.state.selectedSampleId}
@@ -1033,9 +1028,10 @@ function ImageAnalysisPane({imageryAttribution}) {
 class SideBar extends React.Component {
     checkCanSave = () => {
         const {answerMode, currentPlot, inReviewMode, surveyQuestions} = this.props;
-        const noneAnswered = surveyQuestions.every(sq => safeLength(sq.answered) === 0);
+        const noneAnswered = everyObject(surveyQuestions, ([_id, sq]) => safeLength(sq.answered) === 0);
         const hasSamples = safeLength(currentPlot.samples) > 0;
-        const allAnswered = surveyQuestions.every(sq => safeLength(sq.visible) === safeLength(sq.answered));
+        const allAnswered = everyObject(surveyQuestions, ([_id, sq]) =>
+            safeLength(sq.visible) === safeLength(sq.answered));
         if (answerMode !== "question") {
             alert("You must be in question mode to save the collection.");
             return false;

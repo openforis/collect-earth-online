@@ -11,7 +11,7 @@ import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
 import SvgIcon from "../components/svg/SvgIcon";
 import {mercator} from "../utils/mercator";
-import {last, removeFromSet} from "../utils/sequence";
+import {last, lengthObject, removeFromSet, someObject} from "../utils/sequence";
 import {ProjectContext, plotLimit, perPlotLimit, sampleLimit} from "./constants";
 
 export default class CreateProjectWizard extends React.Component {
@@ -359,9 +359,9 @@ export default class CreateProjectWizard extends React.Component {
     validateSurveyQuestions = () => {
         const {surveyQuestions} = this.context;
         const errorList = [
-            (surveyQuestions.length === 0)
+            (lengthObject(surveyQuestions) === 0)
                 && "A survey must include at least one question.",
-            (surveyQuestions.some(sq => sq.answers.length === 0))
+            (someObject(surveyQuestions, ([_id, sq]) => lengthObject(sq.answers) === 0))
                 && "All survey questions must contain at least one answer."
         ];
         return errorList.filter(e => e);
