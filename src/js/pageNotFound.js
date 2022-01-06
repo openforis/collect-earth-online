@@ -9,14 +9,16 @@ function NotFound() {
             <section className="row justify-content-center" id="page-not-found">
                 <div className="col-sm-6">
                     <div
-                        className="display-1 text-danger"
-                        style={{textAlign: "center"}}
+                        className="text-danger"
+                        style={{
+                            alignItems: "center",
+                            display: "flex",
+                            flexDirection: "column"
+                        }}
                     >
                         <SvgIcon icon="alert" size="5rem"/>
+                        <h2 className="text-danger">Page Not Found</h2>
                     </div>
-                    <h2 className="text-danger">
-                      Page Not Found
-                    </h2>
                     <p className="error-message">
                         There&apos;s no page at the address you requested. If you entered
                         it by hand, check for typos. If you followed a link or a
