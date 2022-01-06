@@ -97,7 +97,7 @@ class ReviewInstitution extends React.Component {
                         {count}
                     </span>
                     <span className="float-right">
-                        {index === this.state.selectedTab && "\u25BC"}
+                        {index === this.state.selectedTab && <SvgIcon icon="downCaret" size="1rem"/>}
                     </span>
                 </h2>
             </div>

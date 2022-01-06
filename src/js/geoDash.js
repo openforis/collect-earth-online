@@ -15,9 +15,10 @@ import {Style, Stroke} from "ol/style";
 import {getArea as sphereGetArea} from "ol/sphere";
 
 import {mercator} from "./utils/mercator";
-import {UnicodeIcon, formatDateISO} from "./utils/generalUtils";
+import {formatDateISO} from "./utils/generalUtils";
 import {GeoDashNavigationBar} from "./components/PageComponents";
 import Switch from "./components/Switch";
+import SvgIcon from "./components/svg/SvgIcon";
 
 function getGatewayPath(widget, collectionName) {
     const fts = {
@@ -340,7 +341,7 @@ class Widget extends React.Component {
                             title="Toggle Fullscreen"
                             type="button"
                         >
-                            {widget.isFull ? <UnicodeIcon icon="collapse"/> : <UnicodeIcon icon="expand"/>}
+                            {widget.isFull ? <SvgIcon icon="downCaret"/> : <SvgIcon icon="upCaret"/>}
                         </button>
                     </li>
                     {this.getResetMapButton(widget)}

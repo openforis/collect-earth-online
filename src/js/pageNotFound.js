@@ -1,14 +1,22 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
+import SvgIcon from "./components/svg/SvgIcon";
 
 function NotFound() {
     return (
         <div className="container absolute-center">
             <section className="row justify-content-center" id="page-not-found">
                 <div className="col-sm-6">
-                    <h1 className="display-1 text-danger">&#x20E0;</h1>
-                    <h2 className="text-danger">Page Not Found</h2>
+                    <div
+                        className="display-1 text-danger"
+                        style={{textAlign: "center"}}
+                    >
+                        <SvgIcon icon="alert" size="5rem"/>
+                    </div>
+                    <h2 className="text-danger">
+                      Page Not Found
+                    </h2>
                     <p className="error-message">
                         There&apos;s no page at the address you requested. If you entered
                         it by hand, check for typos. If you followed a link or a
