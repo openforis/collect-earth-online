@@ -216,7 +216,7 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
         FROM projects p
         INNER JOIN plots pl
             ON pl.project_rid = project_uid
-        INNER JOIN samples s
+        LEFT JOIN samples s
             ON plot_uid = s.plot_rid
         WHERE project_uid = _project_id
     )
