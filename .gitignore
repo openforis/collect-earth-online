@@ -18,7 +18,7 @@ package-lock.json
 announcement.txt
 __pycache__
 classes
+ceo-gee-key.json
 
 # MacOS X Backups
 .DS_Store
-ceo-gee-key.json
