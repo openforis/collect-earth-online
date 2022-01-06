@@ -8,11 +8,13 @@ import downCaretIcon from "./downCaretIcon.svg";
 import downRightArrowIcon from "./downRightArrowIcon.svg";
 import drawIcon from "./drawIcon.svg";
 import editIcon from "./editIcon.svg";
+import fileIcon from "./fileIcon.svg";
 import helpIcon from "./helpIcon.svg";
 import infoIcon from "./infoIcon.svg";
 import leftArrowIcon from "./leftArrowIcon.svg";
 import leftDoubleIcon from "./leftDoubleIcon.svg";
 import lineStringIcon from "./lineStringIcon.svg";
+import linkIcon from "./linkIcon.svg";
 import minus from "./minus.svg";
 import plus from "./plus.svg";
 import pointIcon from "./pointIcon.svg";
@@ -38,11 +40,13 @@ const iconMap = {
     "downRightArrow": downRightArrowIcon,
     "draw": drawIcon,
     "edit": editIcon,
+    "file": fileIcon,
     "help": helpIcon,
     "info": infoIcon,
     "leftArrow": leftArrowIcon,
     "leftDouble": leftDoubleIcon,
     "lineString": lineStringIcon,
+    "link": linkIcon,
     "minus": minus,
     "plus": plus,
     "point": pointIcon,
