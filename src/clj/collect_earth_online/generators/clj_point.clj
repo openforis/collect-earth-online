@@ -117,9 +117,7 @@
                               sample-distribution
                               samples-per-plot
                               sample-resolution]
-  (let [center?          (or (= "center" sample-distribution)
-                             (>= sample-resolution plot-size))
-        circle?          (= plot-shape "circle")
+  (let [circle?          (= plot-shape "circle")
         radius           (/ plot-size 2.0)
         buffer           (/ radius 25.0)
         samples-per-plot (case sample-distribution
@@ -147,7 +145,7 @@
                                 :visible_id  (+ idx visible-offset)
                                 :sample_geom (tc/str->pg (make-wkt-point sample-lon sample-lat) "geometry")})
                              (cond
-                               center?
+                               (= "center" sample-distribution)
                                [[lon lat]]
 
                                (= "gridded" sample-distribution)
