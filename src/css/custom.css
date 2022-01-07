@@ -751,3 +751,16 @@ input:checked + .switch-slider:before {
   -ms-transform: translateX(16px);
   transform: translateX(16px);
 }
+
+/***********************/
+/* Help Icon Animation */
+/***********************/
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 15px -5px purple;
+  }
+  to {
+    box-shadow: 0 0 15px 5px purple;
+  }
+}

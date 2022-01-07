@@ -242,7 +242,23 @@ export class NavigationBar extends React.Component {
                             className="ml-3"
                             onClick={() => this.setState({showHelpMenu: true})}
                         >
-                            {this.state.helpSlides.length > 0 && <SvgIcon color="purple" cursor="pointer" icon="help" size="2rem"/>}
+                            {this.state.helpSlides.length > 0 && (
+                                <div
+                                    className="tooltip_wrapper"
+                                    style={{
+                                        animation: "glow 1s 4 alternate",
+                                        borderRadius: "2rem"
+                                    }}
+                                >
+                                    <SvgIcon
+                                        color="purple"
+                                        cursor="pointer"
+                                        icon="help"
+                                        size="2rem"
+                                    />
+                                    <span className="tooltip_content">Help</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </nav>
