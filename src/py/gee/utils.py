@@ -11,15 +11,14 @@ from gee.inputs import getLandsat, getS1
 
 
 def initialize(ee_account='', ee_key_path=''):
-    print(ee_account)
-    print(ee_key_path)
-    print(os.path.exists(ee_key_path))
-    if ee_account and ee_key_path and os.path.exists(ee_key_path):
-        print("auth file")
-        credentials = ee.ServiceAccountCredentials(ee_account, ee_key_path)
-        ee.Initialize(credentials)
-    else:
-        ee.Initialize()
+    try:
+        if ee_account and ee_key_path and os.path.exists(ee_key_path):
+            credentials = ee.ServiceAccountCredentials(ee_account, ee_key_path)
+            ee.Initialize(credentials)
+        else:
+            ee.Initialize()
+    except Exception as e:
+        print(e)
 
 
 def getReducer(reducer):
@@ -389,23 +388,18 @@ def getTimeSeriesByCollectionAndIndex(assetId, indexName, scale, coords, dateFro
     else:
         geometry = ee.Geometry.Point(coords)
     if indexName != None:
-        print("collection: " + assetId +
-                     " - indexName: " + indexName)
         indexCollection = ee.ImageCollection(assetId).filterDate(
             dateFrom, dateTo).select(indexName)
     else:
-        print("indexName missing")
         indexCollection = ee.ImageCollection(
             assetId).filterDate(dateFrom, dateTo)
 
     def getIndex(image):
         theReducer = getReducer(reducer)
         if indexName != None:
-            print("had indexName: " + indexName)
             indexValue = image.reduceRegion(
                 theReducer, geometry, scale).get(indexName)
         else:
-            print("No indexName")
             indexValue = image.reduceRegion(theReducer, geometry, scale)
         date = image.get('system:time_start')
         indexImage = ee.Image().set(

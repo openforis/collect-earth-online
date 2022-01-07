@@ -139,7 +139,8 @@ The base set of defaults should be sufficient to run CEO in a development settin
 
 ** Python dependencies
 
-Use pip to install dependencies.  The python / clj interop does not support virtual environments.
+Use pip to install dependencies.  The python / clj interop does not support
+virtual environments.
 
 #+begin_src sh
 pip install -r requirements.txt
@@ -156,6 +157,16 @@ authentication information with:
 #+begin_src sh
 earthengine authenticate
 #+end_src
+
+This command will open a window in your browser containing a key that you should
+copy and paste back into your terminal.
+
+Note that GeoDash will work partially without a registered GEE account, but
+you'll need an account to use all of the GeoDash features. To apply for a GEE
+account, visit https://signup.earthengine.google.com/#!/. Note that this account
+should use the same email that you used when to create your key from the
+~earthengine authenticate~ command. Also note that you do not need to update the
+~:gee~ section of ~config.edn~ or create any sort of ~gee-key-file.json~.
 
 *** Compile and run
 
@@ -228,11 +239,14 @@ page for further instructions on enabling HTTPS.
 *** Google Earth Engine service account
 
 For production it is recommended that you use a service account with a key file.
-Set the service account and key path in the optional ~:gee~ section of config.edn.
+You can obtain your key file by logging into your service account, navigating to
+the account menu, and clicking "Create key > JSON". Then, download that JSON key
+file and place it in the root directory of CEO. Set the email for your service
+account and key path in the ~:gee~ section of config.edn.
 
 #+begin_src text
 `:gee {:ee-account  "example@gmail.com"
-       :ee-key-path "path/to/file.json"}
+       :ee-key-path "ceo-gee-key.json"}
 #+end_src
 
 *** Launching the Web Server
