@@ -150,7 +150,7 @@ VALUES
 -- Add 2 widgets
 -- FIXME update widget information
 INSERT INTO project_widgets
-    (project_rid, dashboard_id, widget)
+    (project_rid, widget)
 VALUES
-    (1, 'fe78e98b-83b0-42be-9374-b47a98bdf937', '{"id":0,"name":"Image Collection","layout":{"h":1,"i":"0","w":3,"x":0,"y":0,"minW":3,"moved":false,"static":false},"dualLayer":false,"properties":["ImageCollectionNDVI","","2019-01-01","2020-12-31","NDVI"]}'),
-    (1, 'fe78e98b-83b0-42be-9374-b47a98bdf937', '{"id":1,"name":"Time Series Graph","layout":{"h":1,"i":"1","w":3,"x":0,"y":1,"minW":3,"moved":false,"static":false},"dualLayer":false,"properties":["ndviTimeSeries","","2019-01-01","2019-12-31","NDVI"]}');
+    (1, '{"id":0,"name":"Image Collection","layout":{"h":1,"i":"0","w":3,"x":0,"y":0,"minW":3,"moved":false,"static":false},"dualLayer":false,"properties":["ImageCollectionNDVI","","2019-01-01","2020-12-31","NDVI"]}'),
+    (1, '{"id":1,"name":"Time Series Graph","layout":{"h":1,"i":"1","w":3,"x":0,"y":1,"minW":3,"moved":false,"static":false},"dualLayer":false,"properties":["ndviTimeSeries","","2019-01-01","2019-12-31","NDVI"]}');

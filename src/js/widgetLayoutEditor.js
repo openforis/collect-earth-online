@@ -529,18 +529,23 @@ class WidgetLayoutEditor extends React.PureComponent {
                                     title={widget.name}
                                     titleButtons={(
                                         <div className="d-flex" style={{gap: ".5rem"}}>
-                                            <div onClick={() => this.copyWidget(widget)}>
-                                                <SvgIcon color="currentColor" icon="copy" size="1.5rem"/>
+                                            <div
+                                                onClick={() => this.copyWidget(widget)}
+                                                title="Copy Widget"
+                                            >
+                                                <SvgIcon color="currentColor" cursor="pointer" icon="copy" size="1.5rem"/>
                                             </div>
                                             <div
                                                 onClick={() => this.editWidgetDesign(widget)}
+                                                title="Edit Widget"
                                             >
-                                                <SvgIcon color="currentColor" icon="edit" size="1.5rem"/>
+                                                <SvgIcon color="currentColor" cursor="pointer" icon="edit" size="1.5rem"/>
                                             </div>
                                             <div
                                                 onClick={() => this.removeLayoutItem(widget.id)}
+                                                title="Delete Widget"
                                             >
-                                                <SvgIcon color="currentColor" icon="delete" size="1.5rem"/>
+                                                <SvgIcon color="currentColor" cursor="pointer" icon="delete" size="1.5rem"/>
                                             </div>
                                         </div>
                                     )}
