@@ -757,8 +757,8 @@ input:checked + .switch-slider:before {
 /***********************/
 
 @keyframes glow {
-  from {
-    box-shadow: 0 0 15px -5px purple;
+  from, 50% {
+    box-shadow: none;
   }
   to {
     box-shadow: 0 0 15px 5px purple;

@@ -246,7 +246,8 @@ export class NavigationBar extends React.Component {
                                 <div
                                     className="tooltip_wrapper"
                                     style={{
-                                        animation: "glow 1s 4 alternate",
+                                        animation: "glow 2s 6 alternate",
+                                        animationDelay: "1s",
                                         borderRadius: "2rem"
                                     }}
                                 >
