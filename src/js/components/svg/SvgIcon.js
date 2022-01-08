@@ -44,7 +44,6 @@ const iconMap = {
     "close": closeIcon,
     "collapse": collapseIcon,
     "copy": copyIcon,
-    "delete": deleteIcon,
     "downCaret": downCaretIcon,
     "downRightArrow": downRightArrowIcon,
     "draw": drawIcon,

@@ -58,12 +58,11 @@
 
 (defn gateway-request [{:keys [params json-params]}]
   (check-initialized)
-  (data-response
-   (if-let [py-fn (some-> params :path path->python)]
-     (binding [*item-tuple-cutoff* 0]
-       (try (py-fn json-params)
-            (catch Exception e (parse-py-errors e))))
-     {:errMsg (str "No GEE function defined for path " (:path params) ".")})))
+  (data-response (if-let [py-fn (some-> params :path path->python)]
+                   (binding [*item-tuple-cutoff* 0]
+                     (try (py-fn json-params)
+                          (catch Exception e (parse-py-errors e))))
+                   {:errMsg (str "No GEE function defined for path " (:path params) ".")})))
 
 ;;; Widget Routes
 

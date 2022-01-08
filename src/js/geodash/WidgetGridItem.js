@@ -1,13 +1,13 @@
 import React from "react";
 
-import SvgIcon from "../components/svg/SvgIcon";
-
-import StatsWidget from "./StatsWidget";
-import {graphWidgetList, mapWidgetList} from "./constants";
+import DegradationWidget from "./DegradationWidget";
 import GraphWidget from "./GraphWidget";
 import MapWidget from "./MapWidget";
-import DegradationWidget from "./DegradationWidget";
+import StatsWidget from "./StatsWidget";
+import SvgIcon from "../components/svg/SvgIcon";
 import WidgetContainer from "./WidgetContainer";
+
+import {graphWidgetList, mapWidgetList} from "./constants";
 
 export default class WidgetGridItem extends React.Component {
     constructor(props) {
@@ -123,11 +123,10 @@ export default class WidgetGridItem extends React.Component {
     render() {
         const {isFullScreen} = this.state;
         const {widget} = this.props;
-        // TODO this probably can be return this.getWidgetHtml()
         return (
             <>
                 {isFullScreen && (
-                    <div className="full-screen"/>
+                    <div className="full-screen-background"/>
                 )}
                 <div
                     className={`grid-item ${widget.layout.h} ${isFullScreen && "full-widget"}`}

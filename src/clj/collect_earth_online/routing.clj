@@ -29,7 +29,9 @@
    [:get  "/create-project"]                 {:handler     (render-page "/project-admin")
                                               :auth-type   :admin
                                               :auth-action :redirect}
-   [:get  "/geo-dash"]                       {:handler     (render-page "/geo-dash")}
+   [:get  "/geo-dash"]                       {:handler     (render-page "/geo-dash")
+                                              :auth-type   :collect
+                                              :auth-action :redirect}
    [:get  "/geo-dash/geo-dash-help"]         {:handler     (render-page "/geo-dash/geo-dash-help")}
    [:get  "/home"]                           {:handler     (render-page "/home")}
    [:get  "/institution-dashboard"]          {:handler     (render-page "/institution-dashboard")

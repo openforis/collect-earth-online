@@ -1,11 +1,11 @@
 import React, {useContext, useState} from "react";
 
 import GDDateRange from "./form/GDDateRange";
+import GDInput from "./form/GDInput";
 import GDSelect from "./form/GDSelect";
 import GetBands from "./form/GetBands";
 
 import {EditorContext} from "./constants";
-import GDInput from "./form/GDInput";
 
 export default function TimeSeriesDesigner() {
     const [bands, setBands] = useState(null);

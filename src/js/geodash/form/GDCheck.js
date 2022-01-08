@@ -2,13 +2,13 @@ import React, {useContext} from "react";
 
 import {EditorContext} from "../constants";
 
-export default function GDCheck({title, dataKey, prefixPath = "", defaultCheck = false}) {
+export default function GDCheck({title, dataKey, prefixPath = ""}) {
     const {setWidgetDesign, getWidgetDesign} = useContext(EditorContext);
 
     return (
         <div className="form-group mx-4">
             <input
-                checked={getWidgetDesign(dataKey, prefixPath) || defaultCheck}
+                checked={getWidgetDesign(dataKey, prefixPath)}
                 className="form-check-input"
                 id={dataKey}
                 onChange={e => setWidgetDesign(dataKey, e.target.checked, prefixPath)}

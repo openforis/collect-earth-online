@@ -151,22 +151,17 @@ pip install earthengine-api --upgrade
 
 *** Google Earth Engine authentication
 
-For GEE requests to work from the dev environment, you must store local
-authentication information with:
+You will need a Google Earth Engine account to use the GeoDash.  To apply
+for a GEE account, visit https://signup.earthengine.google.com/#!/.  Once you
+receive an account, you can store local authentication information with:
 
 #+begin_src sh
 earthengine authenticate
 #+end_src
 
 This command will open a window in your browser containing a key that you should
-copy and paste back into your terminal.
-
-Note that GeoDash will work partially without a registered GEE account, but
-you'll need an account to use all of the GeoDash features. To apply for a GEE
-account, visit https://signup.earthengine.google.com/#!/. Note that this account
-should use the same email that you used when to create your key from the
-~earthengine authenticate~ command. Also note that you do not need to update the
-~:gee~ section of ~config.edn~ or create any sort of ~gee-key-file.json~.
+copy and paste back into your terminal. You do not need to update the
+~:gee~ section of ~config.edn~ if you use this method.
 
 *** Compile and run
 

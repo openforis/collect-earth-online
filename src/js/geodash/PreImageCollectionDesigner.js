@@ -1,6 +1,6 @@
 import React, {useContext} from "react";
 
-import BaseMapSelector from "./form/BaseMapSelector";
+import BasemapSelector from "./form/BasemapSelector";
 import GDInput from "./form/GDInput";
 import GDDateRange from "./form/GDDateRange";
 import GDSelect from "./form/GDSelect";
@@ -19,7 +19,7 @@ export default function PreImageCollectionDesigner({isDual = false, prefixPath =
 
     return (
         <>
-            {!isDual && <BaseMapSelector/>}
+            {!isDual && <BasemapSelector/>}
             <GDSelect
                 dataKey="indexName"
                 items={[

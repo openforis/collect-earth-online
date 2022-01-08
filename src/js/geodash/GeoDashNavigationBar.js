@@ -36,9 +36,6 @@ export default class GeoDashNavigationBar extends React.Component {
                         />
                     </a>
                     <button
-                        aria-controls="navbarSupportedContent"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation"
                         className="navbar-toggler"
                         data-target="#navbarSupportedContent"
                         data-toggle="collapse"

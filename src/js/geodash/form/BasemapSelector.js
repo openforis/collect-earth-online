@@ -2,7 +2,7 @@ import React, {useContext} from "react";
 
 import {EditorContext} from "../constants";
 
-export default function BaseMapSelector() {
+export default function BasemapSelector() {
     const {setWidgetDesign, getWidgetDesign, imagery, getInstitutionImagery, institutionId} = useContext(EditorContext);
     return (
         <div className="form-group">
@@ -19,7 +19,6 @@ export default function BaseMapSelector() {
             <select
                 className="form-control"
                 id="basemap-select"
-                name="basemap-select"
                 onChange={e => setWidgetDesign("basemapId", parseInt(e.target.value))}
                 value={getWidgetDesign("basemapId")}
             >

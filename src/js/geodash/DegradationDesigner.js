@@ -1,24 +1,16 @@
 import React from "react";
 
-import BaseMapSelector from "./form/BaseMapSelector";
+import BasemapSelector from "./form/BasemapSelector";
 import GDDateRange from "./form/GDDateRange";
 import GDSelect from "./form/GDSelect";
 
 export default function DegradationDesigner() {
     return (
         <>
-            <BaseMapSelector/>
+            <BasemapSelector/>
             <GDSelect
                 dataKey="band"
-                items={[
-                    "NDFI",
-                    "SWIR1",
-                    "NIR",
-                    "RED",
-                    "GREEN",
-                    "BLUE",
-                    "SWIR2"
-                ]}
+                items={["NDFI", "SWIR1", "NIR", "RED", "GREEN", "BLUE", "SWIR2"]}
                 title="Band to graph"
             />
             <GDDateRange/>

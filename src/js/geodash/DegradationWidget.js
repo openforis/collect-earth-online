@@ -1,6 +1,6 @@
 import React from "react";
-import Switch from "../components/Switch";
 
+import Switch from "../components/Switch";
 import GraphWidget from "./GraphWidget";
 import MapWidget from "./MapWidget";
 
@@ -89,7 +89,7 @@ export default class DegradationWidget extends React.Component {
                             <>
                                 <div className="settings-item">
                                     <label className="settings-item font-weight-bold">
-                                    Map Bands: VV, VH, VV/VH
+                                        Map Bands: VV, VH, VV/VH
                                     </label>
                                 </div>
                                 <div className="settings-item">
@@ -104,8 +104,8 @@ export default class DegradationWidget extends React.Component {
                                             height: "30px"
                                         }}
                                     >
-                                        {selectOptions.map(el => (
-                                            <option key={el.value} value={el.value}>{el.label}</option>
+                                        {selectOptions.map(({value, label}) => (
+                                            <option key={value} value={value}>{label}</option>
                                         ))}
                                     </select>
                                 </div>

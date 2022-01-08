@@ -14,5 +14,5 @@
                :log-dir   "logs"}
  :ga-id       nil
  :session-key "changeme12345678"
- :gee         {:ee-account  "example@gmail.com"
-               :ee-key-path "ceo-gee-key.json"}}
+ :gee         {:ee-account  ""
+               :ee-key-path ""}}

@@ -2,16 +2,19 @@ import "../css/geo-dash.css";
 
 import React from "react";
 import ReactDOM from "react-dom";
+
 import {Feature} from "ol";
 import {buffer as ExtentBuffer} from "ol/extent";
 import {Circle, Polygon, Point} from "ol/geom";
 import {transform as projTransform} from "ol/proj";
+import {fromExtent} from "ol/geom/Polygon";
 import {Vector} from "ol/source";
+
+import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
+import WidgetGridItem from "./geodash/WidgetGridItem";
 
 import {mercator} from "./utils/mercator";
 import {isArray, isNumber} from "./utils/generalUtils";
-import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
-import WidgetGridItem from "./geodash/WidgetGridItem";
 import {gridRowHeight} from "./geodash/constants";
 
 class Geodash extends React.Component {
@@ -56,18 +59,9 @@ class Geodash extends React.Component {
                 .filter(e => e)
                 .map(geom => new Feature({geometry: mercator.parseGeoJson(geom, true)}));
         } else if (plotShape === "square") {
-            const pointFeature = new Feature(
-                new Point(projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"))
-            );
-            const pointExtent = pointFeature.getGeometry().getExtent();
-            const bufferedExtent = new ExtentBuffer(pointExtent, radius);
-            return [new Feature(new Polygon(
-                [[[bufferedExtent[0], bufferedExtent[1]],
-                  [bufferedExtent[0], bufferedExtent[3]],
-                  [bufferedExtent[2], bufferedExtent[3]],
-                  [bufferedExtent[2], bufferedExtent[1]],
-                  [bufferedExtent[0], bufferedExtent[1]]]]
-            ))];
+            const point = new Point(projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"));
+            const bufferedExtent = new ExtentBuffer(point.getExtent(), radius);
+            return [new Feature(fromExtent(bufferedExtent))];
         } else if (plotShape === "circle") {
             return [
                 new Feature(
@@ -124,7 +118,6 @@ class Geodash extends React.Component {
 
     render() {
         const {widgets} = this.state;
-        const plotExtentPolygon = this.extentToPolygon(this.props.plotExtent);
         return (
             <div
                 style={{
@@ -145,7 +138,7 @@ class Geodash extends React.Component {
                             initCenter={this.mapCenter}
                             mapCenter={this.state.mapCenter}
                             mapZoom={this.state.mapZoom}
-                            plotExtentPolygon={plotExtentPolygon}
+                            plotExtentPolygon={this.extentToPolygon(this.props.plotExtent)}
                             resetCenterAndZoom={this.resetCenterAndZoom}
                             setCenterAndZoom={this.setCenterAndZoom}
                             vectorSource={this.state.vectorSource}
@@ -155,9 +148,7 @@ class Geodash extends React.Component {
                     ))
                     ) : (
                         <div style={{gridArea: "2 / 2 / span 2 / span 10"}}>
-                            <h1 id="noWidgetMessage">
-                                Retrieving Geo-Dash configuration for this project
-                            </h1>
+                            <h1>Retrieving Geo-Dash configuration for this project</h1>
                         </div>
                     )}
             </div>

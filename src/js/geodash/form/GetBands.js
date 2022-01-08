@@ -1,23 +1,21 @@
-import React, {} from "react";
+import React from "react";
 
 import {isArray} from "../../utils/generalUtils";
 
 export default function GetBands({bands, setBands, assetId, assetType, hideLabel}) {
     const getBandsFromGateway = () => {
-        console.log(assetId);
         if (assetId.length) {
-            const postObject = {
-                path: "getAvailableBands",
-                assetId,
-                assetType
-            };
             fetch("/geo-dash/gateway-request", {
                 method: "POST",
                 headers: {
                     "Accept": "application/json",
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(postObject)
+                body: JSON.stringify({
+                    path: "getAvailableBands",
+                    assetId,
+                    assetType
+                })
             })
                 .then(res => (res.ok ? res.json() : Promise.reject()))
                 .then(data => {
@@ -40,7 +38,6 @@ export default function GetBands({bands, setBands, assetId, assetType, hideLabel
         <>
             <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
                 <label>Available Bands</label>
-                {/* TODO, depending on DualImage, move fetch function to this js file */}
                 <button
                     className="btn btn-sm btn-secondary mb-1"
                     onClick={getBandsFromGateway}

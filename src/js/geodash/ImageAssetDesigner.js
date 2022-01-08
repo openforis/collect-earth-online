@@ -1,6 +1,6 @@
 import React, {useState, useContext} from "react";
 
-import BaseMapSelector from "./form/BaseMapSelector";
+import BasemapSelector from "./form/BasemapSelector";
 import GDInput from "./form/GDInput";
 import GDTextArea from "./form/GDTextArea";
 import GetBands from "./form/GetBands";
@@ -12,7 +12,7 @@ export default function ImageAssetDesigner({isDual = false, prefixPath = ""}) {
     const {getWidgetDesign} = useContext(EditorContext);
     return (
         <>
-            {!isDual && <BaseMapSelector/>}
+            {!isDual && <BasemapSelector/>}
             <GDInput
                 dataKey="assetId"
                 placeholder="LANDSAT/LC8_L1T_TOA/LC81290502015036LGN00"

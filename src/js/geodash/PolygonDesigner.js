@@ -1,13 +1,13 @@
 import React from "react";
 
-import BaseMapSelector from "./form/BaseMapSelector";
+import BasemapSelector from "./form/BasemapSelector";
 import GDInput from "./form/GDInput";
 import GDTextArea from "./form/GDTextArea";
 
 export default function PolygonDesigner() {
     return (
         <>
-            <BaseMapSelector/>
+            <BasemapSelector/>
             <GDInput
                 dataKey="assetId"
                 placeholder="users/username/collectionName"

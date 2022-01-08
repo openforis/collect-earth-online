@@ -1,6 +1,6 @@
 import React, {useContext} from "react";
-import {isString} from "../../utils/generalUtils";
 
+import {isString} from "../../utils/generalUtils";
 import {EditorContext} from "../constants";
 
 function cleanString(str) {

@@ -1,12 +1,13 @@
 import React, {useContext, useState} from "react";
 import _ from "lodash";
 
-import BaseMapSelector from "./form/BaseMapSelector";
+import BasemapSelector from "./form/BasemapSelector";
 import GDCheck from "./form/GDCheck";
 import GDSelect from "./form/GDSelect";
 import ImageAssetDesigner from "./ImageAssetDesigner";
 import ImageCollectionAssetDesigner from "./ImageCollectionAssetDesigner";
 import PreImageCollectionDesigner from "./PreImageCollectionDesigner";
+
 import {EditorContext} from "./constants";
 
 export default function DualImageryDesigner() {
@@ -35,7 +36,7 @@ export default function DualImageryDesigner() {
     const {WidgetDesigner} = widgetTypes[selectedWidget] || {};
     return (
         <>
-            <BaseMapSelector/>
+            <BasemapSelector/>
             <label>Imagery Selection</label>
             <div className="d-flex justify-content-between align-items-center">
                 <GDCheck dataKey="swipeAsDefault" title="Swipe as default"/>
@@ -47,8 +48,6 @@ export default function DualImageryDesigner() {
                     {step1 ? "Next Image" : "Previous Image" }
                 </button>
             </div>
-            {/* FIXME, changing this type wont correctly reset widget design */}
-            {/* I probably got too clever with the path thing.  Look at middleware or specific set dual function. */}
             {step1
                 ? (
                     <GDSelect
@@ -67,12 +66,7 @@ export default function DualImageryDesigner() {
                         title="Top Imagery Type"
                     />
                 )}
-            {WidgetDesigner && (
-                <WidgetDesigner
-                    isDual
-                    prefixPath={step1 ? "image1" : "image2"}
-                />
-            )}
+            {WidgetDesigner && <WidgetDesigner isDual prefixPath={step1 ? "image1" : "image2"}/>}
         </>
     );
 }

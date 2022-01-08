@@ -175,7 +175,7 @@ mercator.maybeParseJson = text => {
 // TODO, wrap request in cache function
 mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
     const geeSource = new XYZ({
-        url: "", // TODO, get a loading image for URL
+        url: "",
         id: imageryId,
         attributions: attribution
     });
@@ -354,8 +354,7 @@ mercator.createSource = (sourceConfig,
         const theJson = {
             path: type === "Sentinel2" ? "filteredSentinel2" : "filteredSentinelSAR",
             bands,
-            min: sourceConfig.min,
-            max: sourceConfig.max,
+            ...sourceConfig,
             cloudLessThan: type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null,
             startDate: sourceConfig.year + "-" + (sourceConfig.month.length === 1 ? "0" : "") + sourceConfig.month + "-01",
             endDate : formatDateISO(endDate)

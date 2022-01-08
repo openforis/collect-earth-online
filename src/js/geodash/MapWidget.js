@@ -12,7 +12,7 @@ export default class MapWidget extends React.Component {
         super(props);
         this.state = {
             mapRef: null,
-            updateTimeOutRefs: [],
+            timeOutRefs: [],
             swipeValue: 0,
             opacityValue: 100,
             sliderType: this.props.widget.swipeAsDefault ? "swipe" : "opacity"
@@ -26,10 +26,6 @@ export default class MapWidget extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (!prevState.mapRef && this.state.mapRef) {
-            if (this.props.widget.type !== "degradationTool") this.loadWidgetSource();
-        }
-
         if (prevProps.isFullScreen !== this.props.isFullScreen) {
             this.state.mapRef.updateSize();
         }
@@ -38,12 +34,15 @@ export default class MapWidget extends React.Component {
             this.centerAndZoomMap(this.props.mapCenter, this.props.mapZoom);
         }
 
-        if (this.props.widget.type === "degradationTool"
-            && (prevProps.imageDate !== this.props.imageDate
+        if (this.props.widget.type === "degradationTool") {
+            if (prevProps.imageDate !== this.props.imageDate
                 || prevProps.stretch !== this.props.stretch
-                || prevProps.degDataType !== this.props.degDataType)) {
-            this.pauseGeeLayer();
-            if (this.props.imageDate !== "") this.loadWidgetSource();
+                || prevProps.degDataType !== this.props.degDataType) {
+                this.pauseGeeLayer();
+                if (this.props.imageDate !== "") this.loadWidgetSource();
+            }
+        } else if (!prevState.mapRef && this.state.mapRef) {
+            this.loadWidgetSource();
         }
     }
 
@@ -60,7 +59,7 @@ export default class MapWidget extends React.Component {
         });
         const data = await (res.ok ? res.json() : Promise.reject());
         if (data && data.hasOwnProperty("url")) {
-            this.setCache(postObject, data);
+            this.setCache(postObject, data.url);
             return data.url;
         } else {
             console.warn("Wrong Data Returned");
@@ -94,7 +93,6 @@ export default class MapWidget extends React.Component {
 
     /// Get widget URL
 
-    // TODO update widget to {name, type, params}
     getPostObject = widget => {
         if (widget.type === "imageAsset") {
             return {path: "image", ...widget};
@@ -141,12 +139,11 @@ export default class MapWidget extends React.Component {
         const {widget, idx} = this.props;
         if (widget.type === "dualImagery") {
             const [url1, url2] = await Promise.all([this.wrapCache(widget.image1), this.wrapCache(widget.image2)]);
-            this.upsertFirstTileSource(url1, widget.id, idx);
-            this.upsertFirstTileSource(url1, widget.id, idx);
-            this.upsertSecondTileSource(url2, widget.id, idx);
+            this.upsertTileSource(url1, widget.id, idx);
+            this.upsertTileSource(url2, widget.id, idx, this.addSwipe);
         } else {
             const url = await this.wrapCache(widget);
-            this.upsertFirstTileSource(url, widget.id, idx);
+            this.upsertTileSource(url, widget.id, idx);
         }
         this.resumeGeeLayer();
     };
@@ -165,13 +162,10 @@ export default class MapWidget extends React.Component {
         }
     };
 
-    setCache = (postObject, data) => {
+    setCache = (postObject, url) => {
         localStorage.setItem(
             JSON.stringify(postObject),
-            JSON.stringify({
-                ...data,
-                lastGatewayUpdate: new Date()
-            })
+            JSON.stringify({url, lastGatewayUpdate: new Date()})
         );
     };
 
@@ -179,10 +173,10 @@ export default class MapWidget extends React.Component {
 
     initMap = () => {
         const {widget} = this.props;
-        const {sourceConfig, id, attribution, isProxied} = this.props.imageryList.find(imagery =>
-            imagery.id === widget.basemapId)
-            || this.props.imageryList.find(imagery => imagery.title === "Open Street Map")
-            || this.props.imageryList[0];
+        const {sourceConfig, id, attribution, isProxied} = this.props.imageryList
+            .find(imagery => imagery.id === widget.basemapId)
+                || this.props.imageryList.find(imagery => imagery.title === "Open Street Map")
+                || this.props.imageryList[0];
         const basemapLayer = new TileLayer({
             source: mercator.createSource(sourceConfig, id, attribution, isProxied)
         });
@@ -197,11 +191,9 @@ export default class MapWidget extends React.Component {
             }),
             zIndex: 100
         });
-
-        const mapdiv = "widget-map_" + widget.id;
         const map = new Map({
             layers: [basemapLayer, plotSampleLayer],
-            target: mapdiv,
+            target: "widget-map_" + widget.id,
             view: new View({
                 center: [0, 0],
                 projection: "EPSG:3857",
@@ -209,14 +201,15 @@ export default class MapWidget extends React.Component {
             })
         });
 
-        // TODO, this also fires when the props change.  setCenterAndZoom is redundant and circular
+        this.setState({
+            mapRef: map
+        });
+
         map.on("movestart", this.pauseGeeLayer);
         map.on("moveend", e => {
             this.props.setCenterAndZoom(e.map.getView().getCenter(), e.map.getView().getZoom());
             this.resumeGeeLayer();
         });
-
-        plotSampleLayer.getSource().getExtent();
 
         map.getView().fit(
             plotSampleLayer.getSource().getExtent(),
@@ -227,18 +220,16 @@ export default class MapWidget extends React.Component {
         );
 
         if (!this.props.mapCenter) {
-            this.props.setCenterAndZoom(map.getView().getCenter(), map.getView().getZoom());
+            const view = map.getView();
+            this.props.setCenterAndZoom(view.getCenter(), view.getZoom());
         }
-
-        this.setState({
-            mapRef: map
-        });
     };
 
     centerAndZoomMap = (center, zoom) => {
         const {mapRef} = this.state;
-        mapRef.getView().setCenter(center);
-        mapRef.getView().setZoom(zoom);
+        const view = mapRef.getView();
+        view.setCenter(center);
+        view.setZoom(zoom);
     };
 
     getLayerById = layerId => {
@@ -247,10 +238,10 @@ export default class MapWidget extends React.Component {
     };
 
     pauseGeeLayer = () => {
-        const {mapRef, updateTimeOutRefs} = this.state;
+        const {mapRef, timeOutRefs} = this.state;
         if (mapRef) {
-            updateTimeOutRefs.forEach(to => window.clearTimeout(to));
-            this.setState({updateTimeOutRefs: []});
+            timeOutRefs.forEach(tor => window.clearTimeout(tor));
+            this.setState({timeOutRefs: []});
             mapRef.getLayers().forEach(lyr => { if (lyr.get("layerId")) lyr.setVisible(false); });
         }
     };
@@ -259,11 +250,11 @@ export default class MapWidget extends React.Component {
         const {mapRef} = this.state;
         if (mapRef) {
             const layers = mapRef.getLayers().getArray();
-            const updateTimeOutRefs = layers.map(layer => {
-                const to = 50 * (layer.get("idx") || 0) + 250;
+            const timeOutRefs = layers.map(layer => {
+                const to = 75 * (layer.get("idx") || 0);
                 return window.setTimeout(() => { layer.setVisible(true); }, to);
             });
-            this.setState({updateTimeOutRefs});
+            this.setState({timeOutRefs});
         }
     };
 
@@ -272,9 +263,9 @@ export default class MapWidget extends React.Component {
             url
         });
         source.on("tileloaderror", error => {
-            if (!error.tile.attempted) {
+            if (!error.tile.reloaded) {
                 window.setTimeout(() => {
-                    error.tile.attempted = true; // eslint-disable-line no-param-reassign
+                    error.tile.reloaded = true; // eslint-disable-line no-param-reassign
                     error.tile.load();
                 }, 1000);
             }
@@ -288,7 +279,33 @@ export default class MapWidget extends React.Component {
         return layer;
     };
 
-    upsertFirstTileSource = (url, widgetId, idx) => {
+    addSwipe = layer => {
+        layer.on("prerender", event => {
+            const {swipeValue, sliderType} = this.state;
+            const ctx = event.context;
+            if (sliderType === "opacity") {
+                ctx.restore();
+            } else {
+                const width = Math.abs(ctx.canvas.width * (swipeValue / 100.0));
+                ctx.save();
+                ctx.beginPath();
+                if (swipeValue >= 0) {
+                    ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
+                } else {
+                    // Secret code just in case.  It may not be as useful as I thought.
+                    ctx.rect(0, 0, ctx.canvas.width - width, ctx.canvas.height);
+                }
+                ctx.clip();
+            }
+        });
+
+        layer.on("postrender", event => {
+            const ctx = event.context;
+            ctx.restore();
+        });
+    };
+
+    upsertTileSource = (url, widgetId, idx, newLayerCallback = () => {}) => {
         const {mapRef} = this.state;
         const layerId = "layer-" + widgetId;
         const existingLayer = this.getLayerById(layerId);
@@ -296,50 +313,13 @@ export default class MapWidget extends React.Component {
             existingLayer.getSource().setUrl(url);
         } else if (url) {
             const layer = this.addNewLayer(url, layerId, idx);
-            mapRef.addLayer(layer);
-        }
-    };
-
-    upsertSecondTileSource = (url, widgetId, idx) => {
-        const {mapRef} = this.state;
-        const layerId = "layer-" + widgetId + "-2";
-        const existingLayer = this.getLayerById(layerId);
-        if (existingLayer) {
-            existingLayer.getSource().setUrl(url);
-        } else if (url) {
-            const layer = this.addNewLayer(url, layerId, idx);
-            layer.on("prerender", event => {
-                const {swipeValue, sliderType} = this.state;
-                const ctx = event.context;
-                if (sliderType === "opacity") {
-                    ctx.restore();
-                } else {
-                    const width = Math.abs(ctx.canvas.width * (swipeValue / 100.0));
-                    ctx.save();
-                    ctx.beginPath();
-                    if (swipeValue >= 0) {
-                        ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
-                    } else {
-                        // Secret code just in case.  It may not be as useful as I thought.
-                        ctx.rect(0, 0, ctx.canvas.width - width, ctx.canvas.height);
-                    }
-                    ctx.clip();
-                }
-            });
-
-            layer.on("postrender", event => {
-                const ctx = event.context;
-                ctx.restore();
-            });
-
+            newLayerCallback(layer);
             mapRef.addLayer(layer);
         }
     };
 
     setOpacity = newOpacity => {
         this.state.mapRef.getLayers().forEach(lyr => {
-            // FIXME, this does not appear that it will work with dual layer
-            // Also just use mercator.getLayerById
             const layerId = lyr.get("layerId") || "";
             if (layerId.includes(this.props.widget.id)) {
                 lyr.setOpacity(newOpacity / 100.0);

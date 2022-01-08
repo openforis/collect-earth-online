@@ -1,20 +1,20 @@
 import React, {useContext, useState} from "react";
 
-import BaseMapSelector from "./form/BaseMapSelector";
+import BasemapSelector from "./form/BasemapSelector";
 import GDDateRange from "./form/GDDateRange";
 import GDInput from "./form/GDInput";
 import GDTextArea from "./form/GDTextArea";
+import GDSelect from "./form/GDSelect";
 import GetBands from "./form/GetBands";
 
 import {EditorContext} from "./constants";
-import GDSelect from "./form/GDSelect";
 
 export default function ImageCollectionAssetDesigner({isDual = false, prefixPath = ""}) {
     const [bands, setBands] = useState(null);
     const {getWidgetDesign} = useContext(EditorContext);
     return (
         <>
-            {!isDual && <BaseMapSelector/>}
+            {!isDual && <BasemapSelector/>}
             <GDInput
                 dataKey="assetId"
                 placeholder="LANDSAT/LC8_L1T_TOA"

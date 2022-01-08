@@ -1,8 +1,7 @@
 import React from "react";
-
-import _, {isArray} from "lodash";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
+import _, {isArray} from "lodash";
 
 import {formatDateISO} from "../utils/generalUtils";
 
@@ -26,7 +25,7 @@ export default class GraphWidget extends React.Component {
         } else if (type === "timeSeries") {
             this.loadTimeSeries();
         } else {
-            console.error("Incorrect widget type passed to the graph widget");
+            console.error("Incorrect widget type passed to the graph widget.");
         }
     }
 
@@ -56,11 +55,10 @@ export default class GraphWidget extends React.Component {
     };
 
     loadDegradation = () => {
-        const {widget, degDataType, plotExtentPolygon, sarGraphBand} = this.props;
+        const {widget, degDataType, plotExtentPolygon} = this.props;
 
         // Try to load existing data first.
-        const chartKey = degDataType === "landsat" ? widget.band : sarGraphBand;
-        const chartData = this.getChartData(chartKey);
+        const chartData = this.getChartData(this.getChartKey());
 
         if (!this.validArray(chartData)) {
             fetch("/geo-dash/gateway-request", {
@@ -91,7 +89,7 @@ export default class GraphWidget extends React.Component {
                         this.setState({chartData: {...this.state.chartData, ...objChartData}});
                     }
                 })
-                .catch(error => console.log(error));
+                .catch(error => console.error(error));
         }
     };
 
@@ -119,7 +117,9 @@ export default class GraphWidget extends React.Component {
                 if (invalidCheck) {
                     console.error(invalidCheck);
                 } else {
-                    const timeSeries = data.timeseries.filter(v => v[0]).sort((a, b) => a[0] - b[0]);
+                    const timeSeries = data.timeseries
+                        .filter(v => v[0])
+                        .sort((a, b) => a[0] - b[0]);
                     this.setState({
                         chartData: {
                             ...this.state.chartData,
@@ -133,9 +133,11 @@ export default class GraphWidget extends React.Component {
 
     /// Helpers
 
-    convertData = data => data.map(d => [d[0], d[1][Object.keys(d[1])[0]]]);
+    validArray = arr => ((isArray(arr) && arr.length > 0) ? arr : null);
 
     widgetIsCustom = () => this.props.widget.indexName === "Custom";
+
+    /// High Charts
 
     getChartKey = () => {
         const {widget, degDataType, sarGraphBand} = this.props;
@@ -147,10 +149,6 @@ export default class GraphWidget extends React.Component {
             return widget.indexName;
         }
     };
-
-    /// High Charts
-
-    validArray = arr => ((isArray(arr) && arr.length > 0) ? arr : null);
 
     getChartData = chartKey => {
         const {chartData} = this.state;
@@ -199,9 +197,9 @@ export default class GraphWidget extends React.Component {
             chart: {zoomType: "x"},
             title: {text: ""},
             subtitle: {
-                text: document.ontouchstart === undefined
-                    ? "Click and drag in the plot area to zoom in"
-                    : "Pinch the chart to zoom in"
+                text: document.ontouchstart
+                    ? "Pinch the chart to zoom in"
+                    : "Click and drag in the plot area to zoom in"
             },
             xAxis: {type: "datetime"},
             yAxis: {title: ""},

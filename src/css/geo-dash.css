@@ -43,9 +43,7 @@
     border: 1px solid transparent;
     border-radius: 6px;
     overflow: hidden;
-    -webkit-box-shadow: 3px 3px 6px 0px  rgba(0,0,0,.5);
     box-shadow: 3px 3px 6px 0px  rgba(0,0,0,.5);
-
     background-color: #ffffff;
     display: flex;
     flex-direction: column;
@@ -72,7 +70,7 @@
 /*
  * Fill Screen Widget
  */
-.full-screen {
+.full-screen-background {
     background-color: rgba(0, 0, 0, 0.4);
     position: fixed;
     top: 0;

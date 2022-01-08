@@ -11,9 +11,7 @@ export default function CopyDialog(props) {
     const dialogBody = (
         <form>
             <div className="form-group">
-                <label
-                    htmlFor="project-filter"
-                >
+                <label htmlFor="project-filter">
                     Template Filter (Name or ID)
                 </label>
                 <input
@@ -29,7 +27,6 @@ export default function CopyDialog(props) {
                 <select
                     className="form-control"
                     id="project-template"
-                    name="project-template"
                     onChange={e => setTemplateId(parseInt(e.target.value))}
                     value={templateId}
                 >
@@ -37,8 +34,7 @@ export default function CopyDialog(props) {
                     {projectTemplateList
                         .filter(({id, name}) => (id + name.toLocaleLowerCase())
                             .includes(projectFilter.toLocaleLowerCase()))
-                        .map(({id, name}) =>
-                            <option key={id} value={id}>{id} - {name}</option>)}
+                        .map(({id, name}) => <option key={id} value={id}>{id} - {name}</option>)}
                 </select>
             </div>
         </form>
@@ -48,7 +44,6 @@ export default function CopyDialog(props) {
         <>
             <button
                 className="btn btn-primary"
-                data-dismiss="modal"
                 onClick={() => copyProjectWidgets(templateId)}
                 type="button"
             >
@@ -56,7 +51,6 @@ export default function CopyDialog(props) {
             </button>
             <button
                 className="btn btn-secondary"
-                data-dismiss="modal"
                 onClick={closeDialogs}
                 type="button"
             >

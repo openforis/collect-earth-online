@@ -570,7 +570,7 @@ export class GEEImageMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            visParams: this.props.sourceConfig.imageVivisParamssParams
+            visParams: this.props.sourceConfig.visParams
         };
     }
 

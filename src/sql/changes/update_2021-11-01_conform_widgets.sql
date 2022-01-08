@@ -1,5 +1,4 @@
 -- Drop archived projects with odd widgets
--- This includes all widgets that were "dualLayer", ie the precursor to dualImageWidget
 SELECT delete_project(project_uid) FROM projects WHERE project_uid IN (4998, 1057, 1054, 1080);
 
 ALTER TABLE project_widgets ADD COLUMN widget_bk jsonb;
@@ -104,8 +103,6 @@ WHERE widget->'properties'->>0 in (
 );
 
 -- Update Pre Image Collection -> landsat / sentinel widgets
--- It looks like the old code is broken and visParams are not split up.
--- This may cause some widgets to act different than before.
 UPDATE project_widgets
 SET widget = jsonb_build_object(
     'layout', widget->'layout',

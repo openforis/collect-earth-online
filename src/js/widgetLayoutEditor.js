@@ -13,14 +13,14 @@ import GeoDashModal from "./geodash/GeoDashModal";
 import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
 import ImageAssetDesigner from "./geodash/ImageAssetDesigner";
 import ImageCollectionAssetDesigner from "./geodash/ImageCollectionAssetDesigner";
-import TimeSeriesDesigner from "./geodash/TimeSeriesDesigner";
 import PolygonDesigner from "./geodash/PolygonDesigner";
 import PreImageCollectionDesigner from "./geodash/PreImageCollectionDesigner";
+import TimeSeriesDesigner from "./geodash/TimeSeriesDesigner";
+import SvgIcon from "./components/svg/SvgIcon";
+import WidgetContainer from "./geodash/WidgetContainer";
 
 import {EditorContext, graphWidgetList, gridRowHeight, mapWidgetList} from "./geodash/constants";
-import WidgetContainer from "./geodash/WidgetContainer";
-import SvgIcon from "./components/svg/SvgIcon";
-import {cleanJSON, isValidJSON} from "./utils/generalUtils";
+import {cleanJSON, isValidJSON, last} from "./utils/generalUtils";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -35,7 +35,6 @@ class WidgetLayoutEditor extends React.PureComponent {
             editDialog: false,
 
             // Widget specific state
-            // TODO, move type into widget design.
             title: "",
             type: "-1",
             widgetDesign: {},
@@ -112,6 +111,8 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     componentDidMount() {
         Promise.all([this.fetchProjectWidgets(), this.getInstitutionImagery(), this.getProjectTemplateList()])
+            .then(([widgets, imagery, projectTemplateList]) =>
+                this.setState({widgets, imagery, projectTemplateList}))
             .catch(error => {
                 console.error(error);
                 alert("Error loading widget designer.  See console for details.");
@@ -120,21 +121,14 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     /// API Calls
 
-    fetchProjectWidgets = () =>
-        fetch(`/geo-dash/get-project-widgets?projectId=${this.props.projectId}`)
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => this.setState({widgets: data}));
+    fetchProjectWidgets = () => fetch(`/geo-dash/get-project-widgets?projectId=${this.props.projectId}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)));
 
-    getInstitutionImagery = () =>
-        fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => this.setState({imagery: data}));
+    getInstitutionImagery = () => fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
+        .then(response => (response.ok ? response.json() : Promise.reject(response)));
 
-    getProjectTemplateList = () =>
-        fetch("/get-template-projects")
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => this.setState({projectTemplateList: data}))
-            .catch(error => console.error(error));
+    getProjectTemplateList = () => fetch("/get-template-projects")
+        .then(response => (response.ok ? response.json() : Promise.reject(response)));
 
     widgetAPIWrapper = (route, widget) => {
         fetch(
@@ -178,7 +172,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             .then(data => this.setState({widgets: data}))
             .catch(error => {
                 console.error(error);
-                alert("Error loading template widgets. See console for details.");
+                alert("Error copying template widgets. See console for details.");
             });
     };
 
@@ -193,6 +187,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     editWidgetDesign = widget => {
+        // eslint-disable-next-line no-unused-vars
         const {id, layout, name, type, ...widgetDesign} = widget;
         this.setState({
             type,
@@ -208,6 +203,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         const {widgetDesign} = this.state;
         if ((pathPrefix === "image1" || pathPrefix === "image2")) {
             if (dataKey === "type") {
+                // eslint-disable-next-line no-unused-vars
                 const {basemapId, ...blankWidget} = this.widgetTypes[val].blankWidget;
                 this.setState({widgetDesign: {...widgetDesign, [pathPrefix]: {...blankWidget, type: val}}});
             } else {
@@ -232,25 +228,18 @@ class WidgetLayoutEditor extends React.PureComponent {
     updateType = newType => {
         const {widgets, imagery} = this.state;
         const widgetDesign = this.widgetTypes[newType].blankWidget;
-        const getWidgetDesign = () => {
-            if (widgetDesign.hasOwnProperty("basemapId")) {
-                const lastBasemapId = _.get(
-                    _.last(widgets.filter(w => w.hasOwnProperty("basemapId"))),
-                    "basemapId",
-                    {}
-                );
-                return {
-                    ...widgetDesign,
-                    basemapId: lastBasemapId || imagery[0].id || "-1"
-                };
-            } else {
-                return widgetDesign;
+        const widgetPlusBasemap = {
+            ...widgetDesign,
+            ...widgetDesign.hasOwnProperty("basemapId") && {
+                basemapId: _.get(last(widgets.filter(w => w.hasOwnProperty("basemapId"))), "basemapId")
+                    || imagery[0].id
+                    || "-1"
             }
         };
 
         this.setState({
             type: newType,
-            widgetDesign: getWidgetDesign()
+            widgetDesign: widgetPlusBasemap
         });
     };
 
@@ -302,16 +291,13 @@ class WidgetLayoutEditor extends React.PureComponent {
         ].filter(e => e);
     };
 
-    // FIXME, validate widget
     buildNewWidget = () => {
         const {title, type, widgetDesign} = this.state;
         return {
             name: title,
             type,
-            ...Object.assign(
-                widgetDesign,
-                widgetDesign.hasOwnProperty("visParams") && {visParams: cleanJSON(widgetDesign.visParams)}
-            )
+            ...widgetDesign,
+            ...widgetDesign.hasOwnProperty("visParams") && {visParams: cleanJSON(widgetDesign.visParams)}
         };
     };
 
@@ -372,13 +358,15 @@ class WidgetLayoutEditor extends React.PureComponent {
         && layout1.h === layout2.h
         && layout1.w === layout2.w;
 
-    onLayoutChange = layout => this.state.widgets.forEach((stateWidget, idx) => {
-        if (!this.sameLayout(stateWidget.layout, layout[idx])) {
-            const {x, y, h, w} = layout[idx];
-            const newWidget = {...stateWidget, layout: {x, y, h, w}};
-            this.widgetAPIWrapper("update-widget", newWidget);
-        }
-    });
+    onLayoutChange = layout => {
+        const {widgets} = this.state;
+        widgets.filter((stateWidget, idx) => !this.sameLayout(stateWidget.layout, layout[idx]))
+            .forEach((stateWidget, idx) => {
+                const {x, y, h, w} = layout[idx];
+                const newWidget = {...stateWidget, layout: {x, y, h, w}};
+                this.widgetAPIWrapper("update-widget", newWidget);
+            });
+    };
 
     /// Render
 
@@ -447,7 +435,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                     <input
                         className="form-control"
                         id="widgetTitle"
-                        name="widgetTitle"
                         onChange={e => this.updateTitle(e.target.value)}
                         placeholder="Enter title"
                         type="text"
@@ -459,7 +446,6 @@ class WidgetLayoutEditor extends React.PureComponent {
                     <select
                         className="form-control"
                         id="widgetTypeSelect"
-                        name="widgetTypeSelect"
                         onChange={e => this.updateType(e.target.value)}
                         value={this.state.type}
                     >
@@ -474,6 +460,29 @@ class WidgetLayoutEditor extends React.PureComponent {
             </form>
         );
     };
+
+    containerButtons = widget => (
+        <div className="d-flex" style={{gap: ".5rem"}}>
+            <div
+                onClick={() => this.copyWidget(widget)}
+                title="Copy Widget"
+            >
+                <SvgIcon color="currentColor" cursor="pointer" icon="copy" size="1.5rem"/>
+            </div>
+            <div
+                onClick={() => this.editWidgetDesign(widget)}
+                title="Edit Widget"
+            >
+                <SvgIcon color="currentColor" cursor="pointer" icon="edit" size="1.5rem"/>
+            </div>
+            <div
+                onClick={() => this.removeLayoutItem(widget.id)}
+                title="Delete Widget"
+            >
+                <SvgIcon color="currentColor" cursor="pointer" icon="trash" size="1.5rem"/>
+            </div>
+        </div>
+    );
 
     render() {
         const {widgets, projectTemplateList, editDialog} = this.state;
@@ -490,30 +499,30 @@ class WidgetLayoutEditor extends React.PureComponent {
                     getInstitutionImagery: this.getInstitutionImagery
                 }}
             >
+                {addDialog && (
+                    <GeoDashModal
+                        body={this.dialogBody()}
+                        closeDialogs={this.cancelNewWidget}
+                        footer={this.createDialogButtons()}
+                        title="Create Widget"
+                    />
+                )}
+                {editDialog && (
+                    <GeoDashModal
+                        body={this.dialogBody()}
+                        closeDialogs={this.cancelEditWidget}
+                        footer={this.editDialogButtons()}
+                        title="Edit Widget"
+                    />
+                )}
+                {copyDialog && (
+                    <CopyDialog
+                        closeDialogs={closeDialogs}
+                        copyProjectWidgets={this.copyProjectWidgets}
+                        projectTemplateList={projectTemplateList}
+                    />
+                )}
                 <div style={{marginBottom: `${gridRowHeight}px`}}>
-                    {addDialog && (
-                        <GeoDashModal
-                            body={this.dialogBody()}
-                            closeDialogs={this.cancelNewWidget}
-                            footer={this.createDialogButtons()}
-                            title="Create Widget"
-                        />
-                    )}
-                    {editDialog && (
-                        <GeoDashModal
-                            body={this.dialogBody()}
-                            closeDialogs={this.cancelEditWidget}
-                            footer={this.editDialogButtons()}
-                            title="Edit Widget"
-                        />
-                    )}
-                    {copyDialog && (
-                        <CopyDialog
-                            closeDialogs={closeDialogs}
-                            copyProjectWidgets={this.copyProjectWidgets}
-                            projectTemplateList={projectTemplateList}
-                        />
-                    )}
                     <ReactGridLayout
                         cols={12}
                         onLayoutChange={this.onLayoutChange}
@@ -527,28 +536,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                             >
                                 <WidgetContainer
                                     title={widget.name}
-                                    titleButtons={(
-                                        <div className="d-flex" style={{gap: ".5rem"}}>
-                                            <div
-                                                onClick={() => this.copyWidget(widget)}
-                                                title="Copy Widget"
-                                            >
-                                                <SvgIcon color="currentColor" cursor="pointer" icon="copy" size="1.5rem"/>
-                                            </div>
-                                            <div
-                                                onClick={() => this.editWidgetDesign(widget)}
-                                                title="Edit Widget"
-                                            >
-                                                <SvgIcon color="currentColor" cursor="pointer" icon="edit" size="1.5rem"/>
-                                            </div>
-                                            <div
-                                                onClick={() => this.removeLayoutItem(widget.id)}
-                                                title="Delete Widget"
-                                            >
-                                                <SvgIcon color="currentColor" cursor="pointer" icon="delete" size="1.5rem"/>
-                                            </div>
-                                        </div>
-                                    )}
+                                    titleButtons={this.containerButtons(widget)}
                                 >
                                     <div
                                         style={{

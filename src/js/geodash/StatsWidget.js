@@ -22,7 +22,7 @@ export default class StatsWidget extends React.Component {
                 path: "statistics"
             })
         })
-            .then(res => res.json())
+            .then(res => (res.ok ? res.json() : Promise.reject()))
             .then(data => {
                 if (data.errMsg) {
                     console.warn(data.errMsg);
