@@ -1,6 +1,6 @@
 import React from "react";
 
-import {formatNumberWithCommas, encodeFileAsBase64, truncate} from "../utils/generalUtils";
+import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
 import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator";
 import AssignPlots from "./AssignPlots";

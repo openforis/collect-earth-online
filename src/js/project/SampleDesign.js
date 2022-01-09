@@ -1,6 +1,6 @@
 import React from "react";
 
-import {formatNumberWithCommas, encodeFileAsBase64, truncate} from "../utils/generalUtils";
+import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
 import {ProjectContext, perPlotLimit, sampleLimit} from "./constants";
 
 export class SampleDesign extends React.Component {

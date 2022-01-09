@@ -255,9 +255,7 @@ class ProjectManagement extends React.Component {
                         <input
                             className="btn btn-outline-lightgreen btn-sm w-100"
                             onClick={() => window.open(
-                                "/widget-layout-editor?editable=true&" // TODO, drop unused 'editable'
-                                    + `institutionId=${institution}`
-                                    + `&projectId=${id}`
+                                `/widget-layout-editor?institutionId=${institution}&projectId=${id}`
                             )}
                             type="button"
                             value="Configure Geo-Dash"

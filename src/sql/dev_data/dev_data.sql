@@ -147,9 +147,10 @@ VALUES
     (3, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[106.718562527415,13.7452788216232]}'), 4326), 44),
     (3, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[106.717809924561,13.7458799404487]}'), 4326), 45);
 
--- Add 2 widgets
+-- Add 3 widgets
 INSERT INTO project_widgets
-    (project_rid, dashboard_id, widget)
+    (project_rid, widget_uid, widget)
 VALUES
-    (1, 'fe78e98b-83b0-42be-9374-b47a98bdf937', '{"id":0,"name":"Image Collection","layout":{"h":1,"i":"0","w":3,"x":0,"y":0,"minW":3,"moved":false,"static":false},"dualLayer":false,"properties":["ImageCollectionNDVI","","2019-01-01","2020-12-31","NDVI"]}'),
-    (1, 'fe78e98b-83b0-42be-9374-b47a98bdf937', '{"id":1,"name":"Time Series Graph","layout":{"h":1,"i":"1","w":3,"x":0,"y":1,"minW":3,"moved":false,"static":false},"dualLayer":false,"properties":["ndviTimeSeries","","2019-01-01","2019-12-31","NDVI"]}');
+    (1, 1, '{"name":"Image Collection","type":"preImageCollection","layout":{"h":1,"w":3,"x":0,"y":0},"endDate":"2022-01-07","basemapId":{},"indexName":"NDVI","startDate":"2022-01-01"}'),
+    (1, 2, '{"name":"Time Series Graph","type":"timeSeries","layout":{"h":1,"w":3,"x":3,"y":0},"endDate":"2022-01-07","indexName":"EVI","startDate":"2021-12-31"}'),
+    (1, 3, '{"name":"Statistics","type":"statistics","layout":{"h":1,"w":3,"x":6,"y":0}}');

@@ -521,8 +521,7 @@ class Collection extends React.Component {
                 id: cur.get("sampleId") || getMax(acc) + 1,
                 visibleId: cur.get("visibleId"),
                 sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857")
-            }
-        ], []);
+            }], []);
 
         this.setState({
             currentPlot: {...currentPlot, samples: newSamples},
@@ -547,10 +546,10 @@ class Collection extends React.Component {
                     + `&projectId=${this.props.projectId}`
                     + `&visiblePlotId=${currentPlot.visibleId}`
                     + `&plotId=${currentPlot.id}`
-                    + `&aoi=${encodeURIComponent(`[${mercator.getViewExtent(mapConfig)}]`)}`
+                    + `&plotExtent=${encodeURIComponent(JSON.stringify(mercator.getViewExtent(mapConfig)))}`
                     + `&plotShape=${currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon"}`
-                    + `&bcenter=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}`
-                    + `&bradius=${plotRadius}`,
+                    + `&center=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}`
+                    + `&radius=${plotRadius}`,
                     `_geo-dash_${this.props.projectId}`);
     };
 

@@ -195,3 +195,25 @@ export function isRegExp(val) { return toString.call(val) === "[object RegExp]";
 export function removeAtIndex(arr, index) {
     return arr.slice(0, index).concat(arr.slice(index + 1, arr.length));
 }
+
+export function cleanJSON(str) {
+    const params = str
+        .replace(/\n/g, ",")
+        .replace(/[{} "']/g, "")
+        .split(/[,:]/)
+        .filter(u => u !== "");
+    return params.length % 2 === 0
+        ? `{${partition(params, 2)
+            .map(([k, v]) => `"${k}": "${v}"`)
+            .join(",")}}`
+        : str;
+}
+
+export function isValidJSON(str) {
+    try {
+        JSON.parse(str);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
