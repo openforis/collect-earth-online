@@ -5,7 +5,7 @@ import ReactDOM from "react-dom";
 
 import {Feature} from "ol";
 import {buffer as ExtentBuffer} from "ol/extent";
-import {Circle, Polygon, Point} from "ol/geom";
+import {Circle, Point} from "ol/geom";
 import {transform as projTransform} from "ol/proj";
 import {fromExtent} from "ol/geom/Polygon";
 import {Vector} from "ol/source";
