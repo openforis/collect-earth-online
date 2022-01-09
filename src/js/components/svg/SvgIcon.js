@@ -7,7 +7,6 @@ import checkIcon from "./checkIcon.svg";
 import closeIcon from "./closeIcon.svg";
 import collapseIcon from "./collapseIcon.svg";
 import copyIcon from "./copyIcon.svg";
-import deleteIcon from "./deleteIcon.svg";
 import downCaretIcon from "./downCaretIcon.svg";
 import downRightArrowIcon from "./downRightArrowIcon.svg";
 import drawIcon from "./drawIcon.svg";
