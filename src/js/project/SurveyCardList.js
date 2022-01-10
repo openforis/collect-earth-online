@@ -1,4 +1,5 @@
 import React from "react";
+import _ from "lodash";
 
 import SvgIcon from "../components/svg/SvgIcon";
 import {removeEnumerator} from "../utils/generalUtils";
@@ -51,17 +52,43 @@ class SurveyCard extends React.Component {
         });
     };
 
+    getSurveyQuestionText = questionId => {
+        const {surveyQuestions} = this.props;
+        return _.get(surveyQuestions, [questionId, "question"], "");
+    };
+
+    getSurveyAnswerText = (questionId, answerId) => {
+        const {surveyQuestions} = this.props;
+        return _.get(surveyQuestions, [questionId, "answers", answerId, "answer"], "");
+    };
+
     getRulesById = id => (this.props.surveyRules || [])
         .filter(r => r.id === id)
-        .map(r => (r.ruleType === "text-match"
-            ? "Question '" + r.questionsText + "' should match the pattern: " + r.regex + "."
-            : r.ruleType === "numeric-range"
-                ? "Question '" + r.questionsText + "' should be between " + r.min + " and " + r.max + "."
-                : r.ruleType === "sum-of-answers"
-                    ? "Questions '" + r.questionsText + "' should sum up to " + r.validSum + "."
-                    : r.ruleType === "matching-sums"
-                        ? "Sum of '" + r.questionSetText1 + "' should be equal to sum of  '" + r.questionSetText2 + "'."
-                        : "'Question1: " + r.questionText1 + ", Answer1: " + r.answerText1 + "' is not compatible with 'Question2: " + r.questionText2 + ", Answer2: " + r.answerText2 + "'."));
+        .map(r => {
+            if (r.ruleType === "text-match") {
+                return `Question '${this.getSurveyQuestionText(r.questionId)}' should match the pattern: ${r.regex}.`;
+            } else if (r.ruleType === "numeric-range") {
+                return `Question '${this.getSurveyQuestionText(r.questionId)}' should be between ${r.min} and ${r.max}.`;
+            } else if (r.ruleType === "sum-of-answers") {
+                return `Questions '${r.questions.map(q => this.getSurveyQuestionText(q))}' should sum up to ${r.validSum}.`;
+            } else if (r.ruleType === "matching-sums") {
+                return `Sum of '[${
+                    r.questionSetIds1.map(q => this.getSurveyQuestionText(q)).toString()
+                }]' should be equal to sum of '[${
+                    r.questionSetIds2.map(q => this.getSurveyQuestionText(q)).toString()
+                }]'.`;
+            } else {
+                return `Question1: '${
+                    this.getSurveyQuestionText(r.question1)
+                }', Answer1: '${
+                    this.getSurveyAnswerText(r.question1, r.answer1)
+                }' is not compatible with Question2: '${
+                    this.getSurveyQuestionText(r.question2)
+                }', Answer2: '${
+                    this.getSurveyAnswerText(r.question2, r.answer2)
+                }'.`;
+            }
+        });
 
     render() {
         const {cardNumber, surveyQuestions, surveyQuestionId, inDesignMode, topLevelNodeIds} = this.props;
