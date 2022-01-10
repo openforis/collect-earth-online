@@ -5,6 +5,7 @@ import ReactDOM from "react-dom";
 import _ from "lodash";
 import RGL, {WidthProvider} from "react-grid-layout";
 import {GeoDashNavigationBar} from "./components/PageComponents";
+import {getNextInSequence} from "./utils/sequence";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -292,14 +293,11 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     onCreateNewWidget = () => {
         const widget = {};
-        const id = this.state.widgets.length > 0
-            ? (Math.max(...this.state.widgets.map(o => o.id))) + 1
-            : 0;
+        const id = getNextInSequence(this.state.widgets.map(o => o.id));
         const name = this.state.widgetTitle;
         widget.id = id;
         widget.name = name;
-        const maxY = Math.max(...this.state.widgets.map(o => (o.layout.y || 0)));
-        const yval = maxY > -1 ? maxY + 1 : 0;
+        const yval = getNextInSequence(this.state.widgets.map(o => (o.layout.y || 0)));
         widget.layout = {
             i: id.toString(),
             x: 0,

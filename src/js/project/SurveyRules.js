@@ -4,10 +4,8 @@ import SurveyRule from "../components/SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
 
 import {isNumber} from "../utils/generalUtils";
-import {filterObject, mapObjectArray, sameContents} from "../utils/sequence";
+import {filterObject, getNextInSequence, mapObjectArray, sameContents} from "../utils/sequence";
 import {ProjectContext} from "./constants";
-
-const getNextId = array => array.reduce((maxId, obj) => Math.max(maxId, obj.id), 0) + 1;
 
 export const SurveyRuleDesign = () => {
     const {setProjectDetails, surveyRules, surveyQuestions} = useContext(ProjectContext);
@@ -132,7 +130,7 @@ class TextMatchForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextId(surveyRules),
+                    id: getNextInSequence(surveyRules),
                     ruleType: "text-match",
                     questionId,
                     regex
@@ -213,7 +211,7 @@ class NumericRangeForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextId(surveyRules),
+                    id: getNextInSequence(surveyRules),
                     ruleType: "numeric-range",
                     questionId,
                     min,
@@ -304,7 +302,7 @@ class SumOfAnswersForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextId(surveyRules),
+                    id: getNextInSequence(surveyRules),
                     ruleType: "sum-of-answers",
                     questionIds,
                     validSum
@@ -389,7 +387,7 @@ class MatchingSumsForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextId(surveyRules),
+                    id: getNextInSequence(surveyRules),
                     ruleType: "matching-sums",
                     questionIds1,
                     questionIds2
@@ -497,7 +495,7 @@ class IncompatibleAnswersForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextId(surveyRules),
+                    id: getNextInSequence(surveyRules),
                     ruleType: "incompatible-answers",
                     questionId1,
                     questionId2,

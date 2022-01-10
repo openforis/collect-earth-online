@@ -7,7 +7,7 @@ import SvgIcon from "../components/svg/SvgIcon";
 
 import {removeEnumerator} from "../utils/generalUtils";
 import {ProjectContext} from "./constants";
-import {findObject, lengthObject, mapObjectArray, filterObject, mapObject} from "../utils/sequence";
+import {findObject, lengthObject, mapObjectArray, filterObject, mapObject, getNextInSequence} from "../utils/sequence";
 
 export class SurveyQuestionDesign extends React.Component {
     getChildQuestionIds = questionId => {
@@ -140,7 +140,7 @@ class NewQuestionDesigner extends React.Component {
             if (repeatedQuestions === 0
                 || confirm("Warning: This is a duplicate name.  It will be added as "
                            + `${newQuestionText} (${repeatedQuestions}) in design mode.`)) {
-                const newId = Math.max(...Object.keys(surveyQuestions)) + 1;
+                const newId = getNextInSequence(Object.keys(surveyQuestions));
                 const newQuestion = {
                     question: repeatedQuestions > 0
                         ? newQuestionText + ` (${repeatedQuestions})`
@@ -297,7 +297,7 @@ export class NewAnswerDesigner extends React.Component {
         const {surveyQuestionId, surveyQuestion, surveyQuestions} = this.props;
         const {setProjectDetails} = this.context;
         if (this.state.newAnswerText.length > 0) {
-            const newId = Math.max(...Object.keys(surveyQuestion.answers)) + 1;
+            const newId = getNextInSequence(Object.keys(surveyQuestion.answers));
             const newAnswer = {
                 answer: this.state.newAnswerText,
                 color: this.state.selectedColor
