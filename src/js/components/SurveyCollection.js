@@ -351,7 +351,7 @@ export class SurveyCollection extends React.Component {
             .find(msg => msg);
     };
 
-    validateAndSetCurrentValue = (questionIdToSet, answerId, answerText) => {
+    validateAndSetCurrentValue = (questionIdToSet, answerId, answerText = null) => {
         const ruleError = this.rulesViolated(questionIdToSet, answerId, answerText);
         if (ruleError) {
             alert(ruleError);
@@ -683,7 +683,7 @@ function AnswerButton({surveyNodeId, surveyNode, selectedSampleId, validateAndSe
                         <button
                             className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
                             id={ans.answer + "_" + ansId}
-                            onClick={() => validateAndSetCurrentValue(surveyNodeId, ansId, ans.answer)}
+                            onClick={() => validateAndSetCurrentValue(surveyNodeId, ansId)}
                             style={{
                                 boxShadow: answered.some(a => a.answerId === ansId && a.sampleId === selectedSampleId)
                                     ? "0px 0px 8px 3px black inset"
@@ -728,7 +728,7 @@ function AnswerRadioButton({
                     <li key={ansId} className="mb-1">
                         <button
                             className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
-                            onClick={() => validateAndSetCurrentValue(surveyNodeId, ansId, ans.answer)}
+                            onClick={() => validateAndSetCurrentValue(surveyNodeId, ansId)}
                             title={ans.answer}
                             type="button"
                         >
@@ -863,7 +863,7 @@ class AnswerDropDown extends React.Component {
                 <div
                     key={ansId}
                     className="d-inline-flex py-2 border-bottom"
-                    onMouseDown={() => validateAndSetCurrentValue(surveyNode, ansId, ans.answer)}
+                    onMouseDown={() => validateAndSetCurrentValue(surveyNode, ansId)}
                     style={{backgroundColor: answered.some(a => a.answerId === ansId) ? "#e8e8e8" : "#f1f1f1"}}
                 >
                     <div className="col-1">

@@ -731,9 +731,8 @@ class Collection extends React.Component {
         if (this.checkSelection(sampleIds, questionId)) {
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
-                    questionId,
-                    answer: answerText,
-                    answerId
+                    answerId,
+                    ...answerText && {answer: answerText}
                 };
 
                 const childQuestionIds = this.getChildQuestionIds(questionId);
@@ -793,15 +792,9 @@ class Collection extends React.Component {
             .forEach(feature => {
                 const sampleId = feature.get("sampleId");
                 const userAnswer = _.get(this.state, ["userSamples", sampleId, selectedQuestionId, "answerId"], -1);
-                const matchingAnswer = answers[userAnswer];
-
-                const color = componentType === "input"
-                    ? userAnswer.length > 0
-                        ? firstEntry(answers)[1].color
-                        : invertColor(firstEntry(answers)[1].color)
-                    : matchingAnswer
-                        ? matchingAnswer.color
-                        : "";
+                const color = componentType === "input" && userAnswer > 0
+                    ? _.get(firstEntry(answers), [1, "color"], "")
+                    : _.get(answers, [userAnswer, "color"], "");
 
                 mercator.highlightSampleGeometry(feature, color);
             });
