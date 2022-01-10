@@ -70,22 +70,22 @@ class SurveyCard extends React.Component {
             } else if (r.ruleType === "numeric-range") {
                 return `Question '${this.getSurveyQuestionText(r.questionId)}' should be between ${r.min} and ${r.max}.`;
             } else if (r.ruleType === "sum-of-answers") {
-                return `Questions '${r.questions.map(q => this.getSurveyQuestionText(q))}' should sum up to ${r.validSum}.`;
+                return `Questions '${r.questionIds.map(q => this.getSurveyQuestionText(q))}' should sum up to ${r.validSum}.`;
             } else if (r.ruleType === "matching-sums") {
                 return `Sum of '[${
-                    r.questionSetIds1.map(q => this.getSurveyQuestionText(q)).toString()
+                    r.questionIds1.map(q => this.getSurveyQuestionText(q)).toString()
                 }]' should be equal to sum of '[${
-                    r.questionSetIds2.map(q => this.getSurveyQuestionText(q)).toString()
+                    r.questionIds2.map(q => this.getSurveyQuestionText(q)).toString()
                 }]'.`;
             } else {
                 return `Question1: '${
-                    this.getSurveyQuestionText(r.question1)
+                    this.getSurveyQuestionText(r.questionId1)
                 }', Answer1: '${
-                    this.getSurveyAnswerText(r.question1, r.answer1)
+                    this.getSurveyAnswerText(r.questionId1, r.answerId1)
                 }' is not compatible with Question2: '${
-                    this.getSurveyQuestionText(r.question2)
+                    this.getSurveyQuestionText(r.questionId2)
                 }', Answer2: '${
-                    this.getSurveyAnswerText(r.question2, r.answer2)
+                    this.getSurveyAnswerText(r.questionId2, r.answerId2)
                 }'.`;
             }
         });
@@ -211,10 +211,10 @@ function SurveyQuestionTree({
                                     <span className="font-weight-bold">Rules:  </span>
                                     <ul>
                                         {surveyRules.map(rule =>
-                                            [rule.questionId, rule.question1, rule.question2]
-                                                .concat(rule.questions)
-                                                .concat(rule.questionSetIds1)
-                                                .concat(rule.questionSetIds2)
+                                            [rule.questionId, rule.questionId1, rule.questionId2]
+                                                .concat(rule.questionIds)
+                                                .concat(rule.questionIds1)
+                                                .concat(rule.questionIds2)
                                                 .includes(surveyQuestionId)
                                                 && (
                                                     <li key={rule.id}>
