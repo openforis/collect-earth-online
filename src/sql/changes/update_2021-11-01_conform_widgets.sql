@@ -192,7 +192,6 @@ SET widget = jsonb_build_object(
     'name', widget->>'name',
     'type', 'dualImagery',
     'basemapId', widget->'basemapId',
-    'swipeAsDefault', coalesce(widget->>'swipeAsDefault', 'false')::jsonb,
     'image1', widget->'dualImageCollection'->0,
     'image2', widget->'dualImageCollection'->1
 )

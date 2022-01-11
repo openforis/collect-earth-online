@@ -7,15 +7,16 @@ import {Style, Stroke} from "ol/style";
 
 import {mercator} from "../utils/mercator";
 
+import SvgIcon from "../components/svg/SvgIcon";
+
 export default class MapWidget extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             mapRef: null,
             timeOutRefs: [],
-            swipeValue: 0,
-            opacityValue: 100,
-            sliderType: this.props.widget.swipeAsDefault ? "swipe" : "opacity"
+            overlayValue: 0,
+            opacityValue: 100
         };
     }
 
@@ -74,20 +75,8 @@ export default class MapWidget extends React.Component {
         this.setOpacity(newOpacity);
     };
 
-    updateSwipe = newSwipe => {
-        this.setState({swipeValue: newSwipe});
-        this.state.mapRef.render();
-    };
-
-    toggleSliderType = () => {
-        const {sliderType, opacityValue} = this.state;
-        const newSliderType = sliderType === "opacity" ? "swipe" : "opacity";
-        this.setState({sliderType: newSliderType});
-        if (newSliderType === "opacity") {
-            this.setOpacity(opacityValue);
-        } else {
-            this.setOpacity(100);
-        }
+    updateOverlay = newOverlay => {
+        this.setState({overlayValue: newOverlay});
         this.state.mapRef.render();
     };
 
@@ -140,7 +129,7 @@ export default class MapWidget extends React.Component {
         if (widget.type === "dualImagery") {
             const [url1, url2] = await Promise.all([this.wrapCache(widget.image1), this.wrapCache(widget.image2)]);
             this.upsertTileSource(url1, widget.id, idx);
-            this.upsertTileSource(url2, widget.id, idx, this.addSwipe);
+            this.upsertTileSource(url2, widget.id, idx, this.addOverlay);
         } else {
             const url = await this.wrapCache(widget);
             this.upsertTileSource(url, widget.id, idx);
@@ -279,24 +268,20 @@ export default class MapWidget extends React.Component {
         return layer;
     };
 
-    addSwipe = layer => {
+    addOverlay = layer => {
         layer.on("prerender", event => {
-            const {swipeValue, sliderType} = this.state;
+            const {overlayValue} = this.state;
             const ctx = event.context;
-            if (sliderType === "opacity") {
-                ctx.restore();
+            const width = Math.abs(ctx.canvas.width * (overlayValue / 100.0));
+            ctx.save();
+            ctx.beginPath();
+            if (overlayValue >= 0) {
+                ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
             } else {
-                const width = Math.abs(ctx.canvas.width * (swipeValue / 100.0));
-                ctx.save();
-                ctx.beginPath();
-                if (swipeValue >= 0) {
-                    ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
-                } else {
-                    // Secret code just in case.  It may not be as useful as I thought.
-                    ctx.rect(0, 0, ctx.canvas.width - width, ctx.canvas.height);
-                }
-                ctx.clip();
+                // Secret code just in case.  It may not be as useful as I thought.
+                ctx.rect(0, 0, ctx.canvas.width - width, ctx.canvas.height);
             }
+            ctx.clip();
         });
 
         layer.on("postrender", event => {
@@ -328,48 +313,35 @@ export default class MapWidget extends React.Component {
     };
 
     /// Render functions
+    renderSlider = (value, updateFn, icon, title) => (
+        <>
+            <div style={{alignItems: "center", display: "flex"}} title={title}>
+                <SvgIcon color="rgb(49, 186, 176)" icon={icon} size="1.5rem"/>
+            </div>
+            <input
+                className="mapRange"
+                max="100"
+                min="0"
+                onChange={e => updateFn(parseInt(e.target.value))}
+                step="1"
+                type="range"
+                value={value}
+            />
+        </>
+    );
 
-    renderSliderControl = () => {
-        const {sliderType, swipeValue, opacityValue} = this.state;
+    renderSliderControls = () => {
+        const {overlayValue, opacityValue} = this.state;
         const {widget} = this.props;
 
         return (
             <div className="d-flex">
-                {widget.type === "dualImagery" && (
-                    <div className="toggleSwitchContainer">
-                        <img
-                            alt="toggle opacity"
-                            height="20px"
-                            onClick={this.toggleSliderType}
-                            src={sliderType === "opacity" ? "img/geodash/opacity.png" : "img/geodash/swipe.png"}
-                            style={{cursor: "pointer"}}
-                            title="Opacity"
-                            width="40px"
-                        />
-                    </div>
-                )}
-                {sliderType === "opacity"
-                    ? (
-                        <input
-                            className="mapRange"
-                            max="100"
-                            min="0"
-                            onChange={e => this.updateOpacity(parseInt(e.target.value))}
-                            step="1"
-                            type="range"
-                            value={opacityValue}
-                        />
-                    ) : (
-                        <input
-                            className="mapRange"
-                            max="100"
-                            min="0"
-                            onChange={e => this.updateSwipe(parseInt(e.target.value))}
-                            step="1"
-                            type="range"
-                            value={swipeValue}
-                        />
-                    )}
+                {widget.type === "dualImagery" ? (
+                    <>
+                        {this.renderSlider(opacityValue, this.updateOpacity, "opacity", "Opacity")}
+                        {this.renderSlider(overlayValue, this.updateOverlay, "overlay", "Overlay Layers")}
+                    </>
+                ) : this.renderSlider(opacityValue, this.updateOpacity, "opacity", "Opacity")}
             </div>
         );
     };
@@ -382,7 +354,7 @@ export default class MapWidget extends React.Component {
                     id={"widget-map_" + widget.id}
                     style={{flex: 1}}
                 />
-                {this.renderSliderControl()}
+                {this.renderSliderControls()}
             </>
         );
     }

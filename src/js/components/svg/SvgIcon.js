@@ -20,6 +20,8 @@ import leftDoubleIcon from "./leftDoubleIcon.svg";
 import lineStringIcon from "./lineStringIcon.svg";
 import linkIcon from "./linkIcon.svg";
 import minusIcon from "./minus.svg";
+import overlayIcon from "./overlayIcon.svg";
+import opacityIcon from "./opacityIcon.svg";
 import plusIcon from "./plus.svg";
 import pointIcon from "./pointIcon.svg";
 import polygonIcon from "./polygonIcon.svg";
@@ -56,6 +58,8 @@ const iconMap = {
     "lineString": lineStringIcon,
     "link": linkIcon,
     "minus": minusIcon,
+    "opacity": opacityIcon,
+    "overlay": overlayIcon,
     "plus": plusIcon,
     "point": pointIcon,
     "polygon": polygonIcon,
