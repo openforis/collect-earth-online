@@ -269,13 +269,13 @@ CREATE OR REPLACE FUNCTION institution_name_taken(_name text, _institution_id_to
 $$ LANGUAGE SQL;
 
 -- Adds a new institution to the database
-CREATE OR REPLACE FUNCTION add_institution(_name text, _url text, _description text)
+CREATE OR REPLACE FUNCTION add_institution(_name text, _image_name text, _url text, _description text)
  RETURNS integer AS $$
 
     INSERT INTO institutions
-        (name, url, description, archived)
+        (name, image_name, url, description, archived)
     VALUES
-        (_name, _url, _description, FALSE)
+        (_name, _image_name, _url, _description, FALSE)
     RETURNING institution_uid
 
 $$ LANGUAGE SQL;
@@ -322,6 +322,7 @@ CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer, _us
  RETURNS table (
     institution_id       integer,
     name                 text,
+    image_name           text,
     base64_image         text,
     url                  text,
     description          text,
@@ -330,6 +331,7 @@ CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer, _us
 
     SELECT institution_uid,
         name,
+        image_name,
         encode(logo_data, 'base64'),
         url,
         description,
@@ -341,11 +343,12 @@ CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer, _us
 $$ LANGUAGE SQL;
 
 -- Updates institution details
-CREATE OR REPLACE FUNCTION update_institution(_institution_id integer, _name text, _url text, _description text)
+CREATE OR REPLACE FUNCTION update_institution(_institution_id integer, _name text, _image_name text, _url text, _description text)
  RETURNS integer AS $$
 
     UPDATE institutions
     SET name = _name,
+        image_name = _image_name,
         url = _url,
         description = _description
     WHERE institution_uid = _institution_id
