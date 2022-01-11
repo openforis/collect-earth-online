@@ -342,14 +342,21 @@ class InstitutionDescription extends React.Component {
                     <div className="col-8" id="institution-view">
                         <div className="row mb-4">
                             <div className="col-md-3" id="institution-logo-container">
-                                <img
-                                    alt={this.state.institutionDetails.name}
-                                    onClick={() => window.open(this.httpAddress(this.state.institutionDetails.url))}
-                                    src={safeLength(this.state.institutionDetails.base64Image) > 1
-                                        ? `data:*/*;base64,${this.state.institutionDetails.base64Image}`
-                                        : "/img/ceo-logo.png"}
-                                    style={{maxWidth: "100%"}}
-                                />
+                                <a
+                                    href={this.state.institutionDetails.url === ""
+                                        ? "/"
+                                        : this.httpAddress(this.state.institutionDetails.url)}
+                                    rel="noreferrer"
+                                    target="_blank"
+                                >
+                                    <img
+                                        alt={this.state.institutionDetails.name}
+                                        src={safeLength(this.state.institutionDetails.base64Image) > 1
+                                            ? `data:*/*;base64,${this.state.institutionDetails.base64Image}`
+                                            : "/img/ceo-logo.png"}
+                                        style={{maxWidth: "100%"}}
+                                    />
+                                </a>
                             </div>
                             <div className="col-md-8">
                                 <h1>

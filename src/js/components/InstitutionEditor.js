@@ -55,7 +55,7 @@ export default function InstitutionEditor({
                             type="file"
                         />
                         <label className="custom-file-label" htmlFor="institution-logo">
-                            {imageName === "" || imageName === null ? "Choose image..." : imageName}
+                            {imageName === "" ? "Choose image..." : imageName}
                         </label>
                     </div>
                 </div>
