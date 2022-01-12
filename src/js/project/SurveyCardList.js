@@ -175,7 +175,6 @@ function SurveyQuestionTree({
         ([key, _val]) => Number(key)
     );
     const parentQuestion = surveyQuestions[surveyQuestion.parentQuestionId];
-    console.log(indentLevel);
     return (
         <>
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">

@@ -99,6 +99,9 @@ export default function ReviewForm() {
             {renderSectionHeader("Survey Questions", "questions", context.availability === "unpublished")}
             <div id="survey-review">
                 <SurveyCardList {...context} inDesignMode={false}/>
+            </div>
+            {renderSectionHeader("Survey Rules", "rules", context.availability === "unpublished")}
+            <div id="survey-rules-review">
                 <SurveyRulesList {...context} inDesignMode={false}/>
             </div>
         </div>
