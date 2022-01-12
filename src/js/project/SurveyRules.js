@@ -4,7 +4,7 @@ import SurveyRule from "../components/SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
 
 import {isNumber} from "../utils/generalUtils";
-import {filterObject, getNextInSequence, mapObjectArray, sameContents} from "../utils/sequence";
+import {filterObject, getNextInSequence, lengthObject, mapObjectArray, sameContents} from "../utils/sequence";
 import {ProjectContext} from "./constants";
 
 export const SurveyRuleDesign = () => {
@@ -143,7 +143,7 @@ class TextMatchForm extends React.Component {
             surveyQuestions,
             ([_id, sq]) => sq.componentType === "input" && sq.dataType === "text"
         );
-        return Object.keys(availableQuestions).length > 0
+        return lengthObject(availableQuestions) > 0
             ? (
                 <>
                     <div className="form-group">
@@ -225,7 +225,7 @@ class NumericRangeForm extends React.Component {
             surveyQuestions,
             ([_id, sq]) => sq.componentType === "input" && sq.dataType === "number"
         );
-        return Object.keys(availableQuestions).length > 0
+        return lengthObject(availableQuestions) > 0
             ? (
                 <>
                     <div className="form-group">
@@ -312,7 +312,7 @@ class SumOfAnswersForm extends React.Component {
         const {questionIds, validSum} = this.state;
         const {surveyQuestions} = this.context;
         const availableQuestions = filterObject(surveyQuestions, ([_id, sq]) => sq.dataType === "number");
-        return Object.keys(availableQuestions).length > 1
+        return lengthObject(availableQuestions) > 1
             ? (
                 <>
                     <div className="form-group">
@@ -397,7 +397,7 @@ class MatchingSumsForm extends React.Component {
         const {questionIds1, questionIds2} = this.state;
         const {surveyQuestions} = this.context;
         const availableQuestions = filterObject(surveyQuestions, ([_id, sq]) => sq.dataType === "number");
-        return Object.keys(availableQuestions).length > 1
+        return lengthObject(availableQuestions) > 1
             ? (
                 <>
                     <div className="form-group">
@@ -512,7 +512,7 @@ class IncompatibleAnswersForm extends React.Component {
         const {questionId1, answerId1, questionId2, answerId2} = this.state;
         const {surveyQuestions} = this.context;
         const availableQuestions = filterObject(surveyQuestions, ([_id, sq]) => sq.componentType !== "input");
-        return Object.keys(availableQuestions).length > 1
+        return lengthObject(availableQuestions) > 1
             ? (
                 <>
                     <strong className="mb-2" style={{textAlign: "center"}}>Select the incompatible questions and answers</strong>
