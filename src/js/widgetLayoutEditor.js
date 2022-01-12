@@ -52,8 +52,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                 blankWidget: {
                     basemapId: "-1",
                     image1: {assetId: "", type: "imageAsset", visParams: ""},
-                    image2: {assetId: "", type: "imageAsset", visParams: ""},
-                    swipeAsDefault: false
+                    image2: {assetId: "", type: "imageAsset", visParams: ""}
                 },
                 WidgetDesigner: DualImageryDesigner
             },

@@ -2,7 +2,6 @@ import React, {useContext, useState} from "react";
 import _ from "lodash";
 
 import BasemapSelector from "./form/BasemapSelector";
-import GDCheck from "./form/GDCheck";
 import GDSelect from "./form/GDSelect";
 import ImageAssetDesigner from "./ImageAssetDesigner";
 import ImageCollectionAssetDesigner from "./ImageCollectionAssetDesigner";
@@ -37,9 +36,8 @@ export default function DualImageryDesigner() {
     return (
         <>
             <BasemapSelector/>
-            <label>Imagery Selection</label>
-            <div className="d-flex justify-content-between align-items-center">
-                <GDCheck dataKey="swipeAsDefault" title="Swipe as default"/>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+                <label style={{fontWeight: "bold"}}>Imagery Selection</label>
                 <button
                     className="btn btn-sm btn-secondary"
                     onClick={() => setStep1(!step1)}
