@@ -17,7 +17,7 @@ import {
     mapObjectArray,
     filterObject
 } from "./utils/sequence";
-import {UnicodeIcon, getQueryString, isNumber, getLanguage} from "./utils/generalUtils";
+import {getQueryString, isNumber, getLanguage} from "./utils/generalUtils";
 import {mercator} from "./utils/mercator";
 
 const localeLanguages = {

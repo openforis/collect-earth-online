@@ -20,8 +20,8 @@ import SvgIcon from "./components/svg/SvgIcon";
 import WidgetContainer from "./geodash/WidgetContainer";
 
 import {EditorContext, graphWidgetList, gridRowHeight, mapWidgetList} from "./geodash/constants";
-import {cleanJSON, isValidJSON, last} from "./utils/generalUtils";
-import {getNextInSequence} from "./utils/sequence";
+import {cleanJSON, isValidJSON} from "./utils/generalUtils";
+import {getNextInSequence, last} from "./utils/sequence";
 
 const ReactGridLayout = WidthProvider(RGL);
 
