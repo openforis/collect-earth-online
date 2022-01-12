@@ -51,8 +51,10 @@ export default function ReviewForm() {
 
     return (
         <div className="px-2 pb-2" id="project-design-form">
-            {renderSectionHeader("Overview", "overview", true)}
-            <OverviewReview/>
+            <div id="overview-review">
+                {renderSectionHeader("Overview", "overview", true)}
+                <OverviewReview/>
+            </div>
             <div id="collection-review">
                 {renderSectionHeader("Collection Design", "imagery", true)}
                 <AOIMap canDrag={false} context={context}/>
@@ -96,12 +98,12 @@ export default function ReviewForm() {
                         </div>
                     )}
             </div>
-            {renderSectionHeader("Survey Questions", "questions", context.availability === "unpublished")}
             <div id="survey-review">
+                {renderSectionHeader("Survey Questions", "questions", context.availability === "unpublished")}
                 <SurveyCardList {...context} inDesignMode={false}/>
             </div>
-            {renderSectionHeader("Survey Rules", "rules", context.availability === "unpublished")}
             <div id="survey-rules-review">
+                {renderSectionHeader("Survey Rules", "rules", context.availability === "unpublished")}
                 <SurveyRulesList {...context} inDesignMode={false}/>
             </div>
         </div>
