@@ -53,9 +53,9 @@
 (defn get-plot-sample-geom [{:keys [params]}]
   (let [plot-id (tc/val->int (:plotId params))]
     (data-response (if-let [plot-geom (sql-primitive (call-sql "select_plot_geom" plot-id))]
-                     {:plotGeom     plot-geom
-                      :samplesGeoms (mapv :sample_geom
-                                          (call-sql "select_plot_sample_geoms" plot-id))}
+                     {:plotGeom    plot-geom
+                      :sampleGeoms (mapv :sample_geom
+                                         (call-sql "select_plot_sample_geoms" plot-id))}
                      ""))))
 
 ;;;

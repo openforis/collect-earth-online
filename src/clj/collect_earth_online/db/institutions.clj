@@ -26,8 +26,9 @@
   (let [institution-id (tc/val->int (:institutionId params))
         user-id        (:userId params -1)]
     (if-let [institution (first (call-sql "select_institution_by_id" institution-id user-id))]
-      (data-response (let [{:keys [name base64_image url description institution_admin]} institution]
+      (data-response (let [{:keys [name image_name base64_image url description institution_admin]} institution]
                        {:name             name
+                        :imageName        image_name
                         :url              url
                         :description      description
                         :institutionAdmin institution_admin
@@ -39,7 +40,7 @@
     (or (nil? name) (= name ""))
     (str "Name is required.")
 
-    (> (count description) max-name-lenth)
+    (> (count name) max-name-lenth)
     (str "Institution name must not exceed " max-name-lenth " characters.")
 
     (or (nil? description) (= description ""))
@@ -55,13 +56,14 @@
 (defn create-institution [{:keys [params]}]
   (let [user-id      (:userId params -1)
         name         (:name params)
+        image-name   (:imageName params)
         base64-image (:base64Image params)
         url          (:url params)
         description  (:description params)]
     (if-let [error-message (or (get-common-errors name description)
                                (get-create-errors name))]
       (data-response error-message)
-      (if-let [institution-id (sql-primitive (call-sql "add_institution" name url description))]
+      (if-let [institution-id (sql-primitive (call-sql "add_institution" name image-name url description))]
         (do
           (when (pos? (count base64-image))
             (call-sql "update_institution_logo" {:log? false} institution-id (second (str/split base64-image #","))))
@@ -82,6 +84,7 @@
   (let [user-id        (:userId params -1)
         institution-id (tc/val->int (:institutionId params))
         name           (:name params)
+        image-name     (:imageName params)
         base64-image   (:base64Image params)
         url            (:url params)
         description    (:description params)]
@@ -89,7 +92,7 @@
                                (get-update-errors institution-id user-id name))]
       (data-response error-message)
       (do
-        (call-sql "update_institution" institution-id name url description)
+        (call-sql "update_institution" institution-id name image-name url description)
         (when (pos? (count base64-image))
           (call-sql "update_institution_logo" {:log? false} institution-id (second (str/split base64-image #","))))
         (data-response "")))))

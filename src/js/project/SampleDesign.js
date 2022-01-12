@@ -1,6 +1,6 @@
 import React from "react";
 
-import {formatNumberWithCommas, encodeFileAsBase64, truncate} from "../utils/generalUtils";
+import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
 import {ProjectContext, perPlotLimit, sampleLimit} from "./constants";
 
 export class SampleDesign extends React.Component {
@@ -72,7 +72,10 @@ export class SampleDesign extends React.Component {
             allowDrawnSamples,
             designSettings: {sampleGeometries, qaqcAssignment: {qaqcMethod}},
             plotDistribution,
+            plotShape,
+            plotSize,
             sampleDistribution,
+            sampleResolution,
             setProjectDetails
         } = this.context;
         const totalPlots = this.props.getTotalPlots();
@@ -177,7 +180,11 @@ export class SampleDesign extends React.Component {
                 <p
                     className="font-italic ml-2"
                     style={{
-                        color: (samplesPerPlot > perPlotLimit || samplesPerPlot * totalPlots > sampleLimit)
+                        color: (samplesPerPlot > perPlotLimit
+                                 || samplesPerPlot * totalPlots > sampleLimit
+                                 || (sampleDistribution === "gridded"
+                                      && plotShape === "circle"
+                                      && sampleResolution >= plotSize / Math.sqrt(2)))
                             ? "#8B0000"
                             : "#006400",
                         fontSize: "1rem",
@@ -194,6 +201,10 @@ export class SampleDesign extends React.Component {
                         && `\n* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)} samples per plot.`}
                     {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot * totalPlots > sampleLimit
                         && `\n* The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`}
+                    {sampleDistribution === "gridded"
+                        && plotShape === "circle"
+                        && sampleResolution >= plotSize / Math.sqrt(2)
+                        && `\n* You must use a sample spacing that is less than ${Math.round((plotSize / Math.sqrt(2)) * 100) / 100} meters.`}
                 </p>
                 <div className="mb-3">
                     <div className="form-check form-check-inline">
@@ -309,8 +320,10 @@ export function SampleReview() {
                                                     <td className="w-80">Sample File</td>
                                                     <td className="w-20 text-center">
                                                         <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
-                                                            {sampleFileName.split(".").map(s => truncate(s, 13)).join("")}
-                                                            <div className="tooltip_content">{sampleFileName}</div>
+                                                            {sampleFileName
+                                                                ? sampleFileName.length > 13 ? `${sampleFileName.substring(0, 13)}...` : sampleFileName
+                                                                : "null"}
+                                                            {sampleFileName && <div className="tooltip_content">{sampleFileName}</div>}
                                                         </span>
                                                     </td>
                                                 </tr>

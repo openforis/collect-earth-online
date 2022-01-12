@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
+import SvgIcon from "./components/svg/SvgIcon";
 
 function Support() {
     return (
@@ -14,7 +15,8 @@ function Support() {
                             href="/downloads/CEO_Planet_new_imagery_user_doc.pdf"
                             role="button"
                         >
-                            &#x1F4BE; Public Planet Imagery
+                            <SvgIcon icon="file" size="1.2rem"/>
+                            {" Public Planet Imagery"}
                         </a>
                     </div>
                     <h1>Collect Earth Online Manuals</h1>
@@ -24,28 +26,32 @@ function Support() {
                             href="/downloads/CEO_Manual_DataCollector_EN_20210331.pdf"
                             role="button"
                         >
-                            &#x1F4BE; Data Collection Manual (English)
+                            <SvgIcon icon="file" size="1.2rem"/>
+                            {" Data Collection Manual (English)"}
                         </a>
                         <a
                             className="btn btn-outline-lightgreen btn-block"
                             href="/downloads/CEO_Manual_DataCollector_SP_20210720.pdf"
                             role="button"
                         >
-                            &#x1F4BE; Manual de Recolección de Datos (Español)
+                            <SvgIcon icon="file" size="1.2rem"/>
+                            {" Manual de Recolección de Datos (Español)"}
                         </a>
                         <a
                             className="btn btn-outline-lightgreen btn-block"
                             href="/downloads/CEO_Manual_DataCollector_20210120_francais.pdf"
                             role="button"
                         >
-                            &#x1F4BE; Manuel pour la collecte de données (Français)
+                            <SvgIcon icon="file" size="1.2rem"/>
+                            {" Manuel pour la collecte de données (Français)"}
                         </a>
                         <a
                             className="btn btn-outline-lightgreen btn-block"
                             href="/downloads/CEO_Manual_DataCollector_20201124_portugese.pdf"
                             role="button"
                         >
-                            &#x1F4BE; Manual de Coleta de Dados (Português)
+                            <SvgIcon icon="file" size="1.2rem"/>
+                            {" Manual de Coleta de Dados (Português)"}
                         </a>
                     </div>
                     <div className="btn-group-vertical btn-block mb-4">
@@ -54,28 +60,32 @@ function Support() {
                             href="/downloads/CEO_Manual_InstitutionProject_EN_20210331.pdf"
                             role="button"
                         >
-                            &#x1F4BE; Institution & Project Creation Manual (For Admin)
+                            <SvgIcon icon="file" size="1.2rem"/>
+                            {" Institution & Project Creation Manual (For Admin)"}
                         </a>
                         <a
                             className="btn btn-outline-lightgreen btn-block"
                             href="/downloads/CEO_Manual_InstitutionProject_SP_20210720.pdf"
                             role="button"
                         >
-                            &#x1F4BE; Manual de Creación de Instituciones y Proyectos (para el Administrador)
+                            <SvgIcon icon="file" size="1.2rem"/>
+                            {" Manual de Creación de Instituciones y Proyectos (para el Administrador)"}
                         </a>
                         <a
                             className="btn btn-outline-lightgreen btn-block"
                             href="/downloads/CEO_Manual_InstitutionProject_20210120_francais.pdf"
                             role="button"
                         >
-                            &#x1F4BE; Manuel de création de projets et de profils d’institution (pour l’administrateur)
+                            <SvgIcon icon="file" size="1.2rem"/>
+                            {" Manuel de création de projets et de profils d’institution (pour l’administrateur)"}
                         </a>
                         <a
                             className="btn btn-outline-lightgreen btn-block"
                             href="/downloads/CEO_Manual_InstitutionProject_20201124_portugese.pdf"
                             role="button"
                         >
-                            &#x1F4BE; Manual de Criação de Instituições e Projetos (para Administrador)
+                            <SvgIcon icon="file" size="1.2rem"/>
+                            {" Manual de Criação de Instituições e Projetos (para Administrador)"}
                         </a>
                     </div>
                     <div className="btn-group-vertical btn-block mb-4">
@@ -84,7 +94,8 @@ function Support() {
                             href="/downloads/CEO_Theoretical_Manual.pdf"
                             role="button"
                         >
-                            &#x1F4BE; Project Development Theory
+                            <SvgIcon icon="file" size="1.2rem"/>
+                            {" Project Development Theory"}
                         </a>
                     </div>
                     <h1>Code and Bug Support</h1>
@@ -94,13 +105,15 @@ function Support() {
                             className="btn btn-outline-lightgreen btn-block"
                             href="https://github.com/openforis/collect-earth-online/issues"
                         >
-                            &#x1F517; Github Issue Tracker
+                            <SvgIcon icon="link" size="1.2rem"/>
+                            {" Github Issue Tracker"}
                         </a>
                         <a
                             className="btn btn-outline-lightgreen btn-block"
                             href="http://www.openforis.org"
                         >
-                            &#x1F517; OpenForis Website
+                            <SvgIcon icon="link" size="1.2rem"/>
+                            {" OpenForis Website"}
                         </a>
                     </div>
                     <h1>Collect Earth Online Tutorials</h1>
@@ -115,7 +128,7 @@ function Support() {
                     </p>
                     <h1>Geo-Dash Help Center</h1>
                     <p className="text-center col-lg-10 offset-lg-1 mb-4">
-                        Please access the <a href="/geo-dash/geo-dash-help" rel="noreferrer" target="_blank">Geo-Dash Help Center</a>
+                        Please access the <a href="/geo-dash/geo-dash-help" rel="noreferrer" target="_blank">Geo-Dash Help Center </a>
                         for details on configuring the Geo-Dash for your project.
                     </p>
                     <h1>Terms of Service</h1>

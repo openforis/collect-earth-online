@@ -1,102 +1,14 @@
-#content {
-    overflow-x: auto;
-}
-.ctrl-text {
-    font-size: .75rem;
-}
-
 /*
- * React grid layout
+ * General
  */
-
-.react-grid-item > .react-resizable-handle {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    bottom: 0;
-    right: 0;
-    cursor: se-resize;
+.btn.btn-primary {
+    backface-visibility: unset !important;
 }
-.react-grid-item > .react-resizable-handle::after {
-    content: "";
-    position: absolute;
-    right: 3px;
-    bottom: 3px;
-    width: 5px;
-    height: 5px;
-    border-right: 2px solid rgba(0, 0, 0, 0.4);
-    border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+.btn-primary.disabled, .btn-primary:disabled {
+    cursor: not-allowed;
 }
-.react-grid-item.react-grid-placeholder {
-    background: red;
-    opacity: 0.2;
-    transition-duration: 100ms;
-    z-index: 2;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -o-user-select: none;
-    user-select: none;
-}
-.react-grid-layout {
-    position: relative;
-    transition: height 200ms ease;
-}
-.react-grid-item {
-    transition: all 200ms ease;
-    transition-property: left, top;
-}
-
-.react-grid-item.cssTransforms {
-    transition-property: transform;
-}
-.react-grid-item.resizing {
-    z-index: 1;
-    will-change: width, height;
-}
-.react-grid-item.react-draggable-dragging {
-    transition: none;
-    z-index: 3;
-    will-change: transform;
-}
-.react-grid-item.react-grid-placeholder {
-    background: red;
-    opacity: 0.2;
-    transition-duration: 100ms;
-    z-index: 2;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -o-user-select: none;
-    user-select: none;
-}
-.react-grid-item > .react-resizable-handle {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    bottom: 0;
-    right: 0;
-    cursor: se-resize;
-}
-.react-grid-item > .react-resizable-handle::after {
-    content: "";
-    position: absolute;
-    right: 3px;
-    bottom: 3px;
-    width: 5px;
-    height: 5px;
-    border-right: 2px solid rgba(0, 0, 0, 0.4);
-    border-bottom: 2px solid rgba(0, 0, 0, 0.4);
-}
-
-/*
- * Dual Image slider
- */
-.toggleSwitchContainer {
-    align-content: center;
-    padding: 5px;
-    width: 80px;
-    float: left;
+.ol-control button {
+    background-color: rgb(49, 186, 176);
 }
 
 /*
@@ -106,42 +18,6 @@
     margin-right: auto;
     margin-left: auto;
 }
-.columnSpan3 {
-    max-width:calc(100% - 20px)!important;
-    grid-column-end: span 3;
-}
-.rowSpan1 {
-    height:362px;
-}
-.rowSpan2 {
-    height:745px;
-}
-.rowSpan3 {
-    height:1182px;
-}
-.widgetEditor.title {
-    background-color: #31bab0;
-    color: white;
-    line-height: 26px;
-    min-height: 26px;
-}
-.widgetEditor .remove {
-    float: right;
-    margin-right: 10px;
-    cursor: pointer;
-}
-.widgetWizardCheckbox {
-    display: inline-block;
-    margin-left: 10px;
-    width: 20px;
-    height: 20px;
-    margin-top: 5px;
-    top: 5px;
-    position: relative;
-}
-.mapRange.dual {
-    width: calc(100% - 85px);
-}
 .modal {
     position: fixed;
     top: 0;
@@ -149,106 +25,66 @@
     bottom: 0;
     left: 0;
 }
-.rowSpan1 .minmapwidget {
-    height: calc(100% - 95px);
-}
-.rowSpan2 .minmapwidget {
-    height: calc(100% - 95px);
-}
-.rowSpan3 .minmapwidget {
-    height: calc(100% - 95px);
-}
-.rowSpan2 .widget-container .front {
-    position: absolute;
+
+/*
+ * Widget Grid Container
+ */
+.widget-container {
+    border: 1px solid transparent;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 3px 3px 6px 0px  rgba(0,0,0,.5);
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
     height: 100%;
+    width: 100%;
 }
-.rowSpan1 .minmapwidget .graphwidget {
-    height: 250px;
+.widget-container-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
 }
-.rowSpan2 .graphwidget {
-    height:calc(100% - 125px); /*100%!important;*/
-}
-.minmapwidget.graphwidget.normal {
-    height:100%;
+.widget-container-heading {
+    color: #31bab0;
+    background-color: #e7e7e7;
+    border-bottom: 1px solid transparent;
+    justify-content: space-between;
+    display: flex;
+    padding: .5rem 1rem;
+    position: relative;
 }
 
 /*
- * Placeholder dashboard ideas
+ * Fill Screen Widget
  */
-
-.placeholders {
-    margin-bottom: 30px;
-    text-align: center;
-    display: grid;
-    grid-template-columns: 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33% 8.33%;
-}
-.placeholders h4 {
-    margin-bottom: 0;
-}
-.placeholder {
-    margin-bottom: 20px;
-}
-.placeholder img {
-    display: inline-block;
-    border-radius: 50%;
-}
-.widget-container {
-    position:relative;
-    height:100%;
-}
-.widget-container .front {
-    position:absolute;
-    height:100%;
-}
-.panel-default {
-    perspective: 1000px;
-    height: 100%;
-}
-.panel-default > .panel-heading {
-    min-height: 35px;
-    color: #333;
-    background-color: #f5f5f5;
-    border-color: #ddd;
-}
-.panel-heading {
-    padding: 10px 15px;
-    border-bottom: 1px solid transparent;
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
-}
-.panel-heading li {
-    color: #31bab0;
-}
-.panel-fullscreen {
-    cursor:pointer;
-}
-a.list-inline.panel-actions.panel-fullscreen {
-    float:right;
-}
-.panel {
-    margin-bottom: 20px;
-    background-color: #fff;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    -webkit-box-shadow: 0 1px 1px rgba(0,0,0,.05);
-    box-shadow: 0 1px 1px rgba(0,0,0,.05);
-}
-.bodyfull {
-    overflow: hidden;
-}
-.fullwidget {
-    position: absolute;
+.full-screen-background {
+    background-color: rgba(0, 0, 0, 0.4);
+    position: fixed;
     top: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 2000;
+    right: 0;
+    bottom: 0;
     left: 0;
+    height: auto;
+    width: auto;
+    z-index: 1500;
 }
-.minmapwidget {
-    width: 100%;
-    min-height: 200px;
-    height: calc(100% - 98px);
+.full-widget {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    bottom: 2rem;
+    left: 2rem;
+    height: auto;
+    width: auto;
+    z-index: 2000;
 }
+
+/*
+ * Map Control Slider
+ */
 .mapRange {
     -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
     width: 100%; /* Specific width is required for Firefox. */
@@ -270,7 +106,6 @@ a.list-inline.panel-actions.panel-fullscreen {
     border-color: transparent;
     color: transparent;
 }
-
 /* Special styling for WebKit/Blink */
 .mapRange::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -283,7 +118,6 @@ a.list-inline.panel-actions.panel-fullscreen {
     margin-top: -14px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
     box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; /* Add cool effects to your sliders! */
 }
-
 /* All the same stuff for Firefox */
 .mapRange::-moz-range-thumb {
     box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
@@ -294,7 +128,6 @@ a.list-inline.panel-actions.panel-fullscreen {
     background: #ffffff;
     cursor: pointer;
 }
-
 /* All the same stuff for IE */
 .mapRange::-ms-thumb {
     box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
@@ -353,56 +186,29 @@ a.list-inline.panel-actions.panel-fullscreen {
 .mapRange:focus::-ms-fill-upper {
     background: #367ebd;
 }
-.graphwidget {
-    height: 250px;
+
+/*
+ * Degradation Widget
+ */
+.settings-block {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 0 1rem;
 }
-.statsWidget {
-    padding: 5px;
+.settings-block input {
+    padding: 0 .25rem;
 }
-.front {
-    overflow-y: auto;
-    overflow-x: hidden;
-    width: 100%;
+.settings-block label {
+    margin-bottom: 0;
 }
-.btn.btn-primary {
-    backface-visibility: unset !important;
-}
-.btn-primary.disabled, .btn-primary:disabled {
-    cursor: not-allowed;
-}
-.flip-container {
-    height: 100%;
-}
-.full .panel .flip-container .back {
-    height: 100% !important;
-}
-.panel-default {
-    border-color: #ddd;
-    webkit-box-shadow: 8px -10px 3px rgba(0,0,0,.45);
-    box-shadow: 8px 5px 3px rgba(0,0,0,.45);
-}
-.panel.panel-default {
-    overflow:hidden;
-}
-.ol-control button {
-    background-color: rgb(49, 186, 176);
-}
-.list-inline {
-    margin-bottom: 0px;
-}
-@media (max-width: 990px) {
-    .container-fluid.widgetEditor {
-        width: 100%;
-    }
-}
-@media (max-width: 600px) {
-    #geodash .row {
-        display: block;
-    }
-    .row.placeholders {
-        display: block;
-    }
-    .columnSpan3 {
-        max-width: 98% !important;
-    }
+.settings-item {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    font-weight: bold;
+    font-size: .85rem;
+    height: 2rem;
+    white-space: nowrap;
 }

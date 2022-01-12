@@ -1,4 +1,4 @@
-import React from "react";
+import {partition} from "./sequence";
 
 export function sortAlphabetically(a, b) {
     return a < b ? -1
@@ -12,39 +12,6 @@ export function capitalizeFirst(str) {
     } else {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
-}
-
-export function UnicodeIcon({icon, backgroundColor}) {
-    return (
-        icon === "leftCaret" ? "\u25C0"
-            : icon === "rightCaret" ? "\u25B6"
-                : icon === "upCaret" ? "\u25B2"
-                    : icon === "downCaret" ? "\u25BC"
-                        : icon === "rightArrow" ? "\u27A1"
-                            : icon === "edit" ? "\u270D"
-                                : icon === "trash" ? <span style={{fontWeight: "normal"}}>{"\uD83D\uDDD1"}</span>
-                                    : icon === "noAction" ? <span className="ml-2 mr-3">{"\u20E0"}</span>
-                                        : icon === "magnify" ? "\uD83D\uDD0D"
-                                            : icon === "info" ? "\u24D8"
-                                                : icon === "save" ? "\uD83D\uDCBE"
-                                                    : icon === "expand" ? "\u21F1"
-                                                        : icon === "collapse" ? "\u21F2"
-                                                            : icon === "add" ? (
-                                                                <span
-                                                                    className="mr-1 px-1"
-                                                                    style={{
-                                                                        backgroundColor,
-                                                                        borderRadius: "2px",
-                                                                        color: "white",
-                                                                        fontSize: ".7rem",
-                                                                        marginTop: "2px"
-                                                                    }}
-                                                                >
-                                                                    {"\u2795"}
-                                                                </span>
-                                                            )
-                                                                : ""
-    );
 }
 
 export function getQueryString(params) {
@@ -161,9 +128,24 @@ export function isString(val) { return toString.call(val) === "[object String]";
 export function isDate(val) { return toString.call(val) === "[object Date]"; }
 export function isRegExp(val) { return toString.call(val) === "[object RegExp]"; }
 
-/**
-* Removes the item from array at index
-* @param {array} arr
-* @param {number} index
-* @returns {array}
-*/
+export function cleanJSON(str) {
+    const params = str
+        .replace(/\n/g, ",")
+        .replace(/[{} "']/g, "")
+        .split(/[,:]/)
+        .filter(u => u !== "");
+    return params.length % 2 === 0
+        ? `{${partition(params, 2)
+            .map(([k, v]) => `"${k}": "${v}"`)
+            .join(",")}}`
+        : str;
+}
+
+export function isValidJSON(str) {
+    try {
+        JSON.parse(str);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}

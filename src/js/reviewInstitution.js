@@ -94,7 +94,7 @@ class ReviewInstitution extends React.Component {
                         {count}
                     </span>
                     <span className="float-right">
-                        {index === this.state.selectedTab && "\u25BC"}
+                        {index === this.state.selectedTab && <SvgIcon icon="downCaret" size="1rem"/>}
                     </span>
                 </h2>
             </div>
@@ -158,6 +158,7 @@ class InstitutionDescription extends React.Component {
             institutionDetails: {
                 name: "",
                 base64Image: "",
+                imageName: "",
                 url: "",
                 description: "",
                 institutionAdmin: false
@@ -165,6 +166,7 @@ class InstitutionDescription extends React.Component {
             newInstitutionDetails: {
                 name: "",
                 base64Image: "",
+                imageName: "",
                 url: "",
                 description: ""
             },
@@ -184,6 +186,7 @@ class InstitutionDescription extends React.Component {
                     institutionDetails: data,
                     newInstitutionDetails: {
                         name: data.name,
+                        imageName: data.imageName,
                         url: data.url,
                         description: data.description,
                         base64Image: ""
@@ -216,6 +219,7 @@ class InstitutionDescription extends React.Component {
                     body: JSON.stringify({
                         institutionId: this.props.institutionId,
                         name: this.state.newInstitutionDetails.name,
+                        imageName: this.state.newInstitutionDetails.imageName,
                         base64Image: this.state.newInstitutionDetails.base64Image,
                         url: this.state.newInstitutionDetails.url,
                         description: this.state.newInstitutionDetails.description
@@ -324,6 +328,7 @@ class InstitutionDescription extends React.Component {
                 <InstitutionEditor
                     buttonGroup={this.renderEditButtonGroup}
                     description={this.state.newInstitutionDetails.description}
+                    imageName={this.state.newInstitutionDetails.imageName}
                     name={this.state.newInstitutionDetails.name}
                     setInstitutionDetails={this.updateNewInstitutionDetails}
                     title="Edit Institution"
@@ -334,14 +339,21 @@ class InstitutionDescription extends React.Component {
                     <div className="col-8" id="institution-view">
                         <div className="row mb-4">
                             <div className="col-md-3" id="institution-logo-container">
-                                <img
-                                    alt={this.state.institutionDetails.name}
-                                    onClick={() => window.open(this.httpAddress(this.state.institutionDetails.url))}
-                                    src={safeLength(this.state.institutionDetails.base64Image) > 1
-                                        ? `data:*/*;base64,${this.state.institutionDetails.base64Image}`
-                                        : "/img/ceo-logo.png"}
-                                    style={{maxWidth: "100%"}}
-                                />
+                                <a
+                                    href={this.state.institutionDetails.url === ""
+                                        ? "/"
+                                        : this.httpAddress(this.state.institutionDetails.url)}
+                                    rel="noreferrer"
+                                    target="_blank"
+                                >
+                                    <img
+                                        alt={this.state.institutionDetails.name}
+                                        src={safeLength(this.state.institutionDetails.base64Image) > 1
+                                            ? `data:*/*;base64,${this.state.institutionDetails.base64Image}`
+                                            : "/img/ceo-logo.png"}
+                                        style={{maxWidth: "100%"}}
+                                    />
+                                </a>
                             </div>
                             <div className="col-md-8">
                                 <h1>
@@ -1363,8 +1375,14 @@ class User extends React.Component {
                             <button
                                 className="btn btn-sm btn-outline-yellow btn-block"
                                 onClick={() => {
-                                    const confirmBox = window.confirm("Do you really want to update the role of this user?");
-                                    if (confirmBox) updateUserInstitutionRole(user.id, null, this.state.userRole);
+                                    const {userRole} = this.state;
+                                    const {institutionRole} = this.props.user;
+                                    if (userRole === institutionRole) {
+                                        alert("You must change the role of a user in order to update it.");
+                                    } else {
+                                        const confirmBox = window.confirm("Do you really want to update the role of this user?");
+                                        if (confirmBox) updateUserInstitutionRole(user.id, null, userRole);
+                                    }
                                 }}
                                 type="button"
                             >

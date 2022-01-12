@@ -895,14 +895,14 @@ class PlotNavigation extends React.Component {
                         onClick={navToPrevPlot}
                         type="button"
                     >
-                        <UnicodeIcon icon="leftCaret"/>
+                        <SvgIcon icon="leftArrow" size="0.9rem"/>
                     </button>
                     <button
                         className="btn btn-outline-lightgreen btn-sm mx-1"
                         onClick={navToNextPlot}
                         type="button"
                     >
-                        <UnicodeIcon icon="rightCaret"/>
+                        <SvgIcon icon="rightArrow" size="0.9rem"/>
                     </button>
                     <input
                         autoComplete="off"

@@ -6,6 +6,7 @@ export default function InstitutionEditor({
     title,
     name,
     description,
+    imageName,
     url,
     acceptTOS,
     buttonGroup,
@@ -13,7 +14,10 @@ export default function InstitutionEditor({
 }) {
     return (
         <div className="row justify-content-center" id="institution-details">
-            <div className="col-xl-6 col-lg-6 border pb-3 mb-2" id="institution-edit">
+            <div
+                className="card card-lightgreen col-xl-6 col-lg-6 pb-2"
+                id="institution-edit"
+            >
                 <h2 className="header">
                     {title}
                 </h2>
@@ -45,12 +49,14 @@ export default function InstitutionEditor({
                             className="custom-file-input mb-1 mr-sm-2"
                             id="institution-logo"
                             onChange={e => {
-                                setInstitutionDetails("logo", e.target.files[0].name);
+                                setInstitutionDetails("imageName", e.target.files[0].name);
                                 encodeFileAsBase64(e.target.files[0], r => setInstitutionDetails("base64Image", r));
                             }}
                             type="file"
                         />
-                        <label className="custom-file-label" htmlFor="institution-logo">Choose image...</label>
+                        <label className="custom-file-label" htmlFor="institution-logo">
+                            {imageName === "" ? "Choose image..." : imageName}
+                        </label>
                     </div>
                 </div>
                 <div className="mb-3">

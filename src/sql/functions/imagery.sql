@@ -55,7 +55,8 @@ CREATE OR REPLACE FUNCTION select_public_osm()
     SELECT imagery_uid
     FROM imagery
     WHERE source_config->>'type' = 'OSM'
-        AND archived = false
+        AND archived = FALSE
+        AND visibility = 'public'
     ORDER BY imagery_uid
     LIMIT 1
 

@@ -20,12 +20,18 @@ export function safeLength(arr) {
     return (arr || []).length;
 }
 
-export function removeAtIndex(arr, index) {
-    return arr.slice(0, index).concat(arr.slice(index + 1, arr.length));
-}
-
 export function getNextInSequence(arr) {
     return Math.max(-1, ...arr) + 1;
+}
+
+/**
+* Removes the item from array at index
+* @param {array} arr
+* @param {number} index
+* @returns {array}
+*/
+export function removeAtIndex(arr, index) {
+    return arr.slice(0, index).concat(arr.slice(index + 1, arr.length));
 }
 
 /// Set Functions ///

@@ -15,7 +15,7 @@ import {ProjectContext} from "./constants";
 
 export default function ReviewForm() {
     const context = React.useContext(ProjectContext);
-    const renderSectionHeader = (title, step) => (
+    const renderSectionHeader = (title, step, showEditIcon) => (
         <div
             className="header my-2 p-2 d-flex flex-row justify-content-center align-items-center"
             style={{
@@ -37,22 +37,24 @@ export default function ReviewForm() {
             >
                 {title}
             </h2>
-            <button
-                className="btn btn-sm btn-outline-info"
-                onClick={() => context.setContextState({designMode: "wizard", wizardStep: step})}
-                type="button"
-            >
-                <SvgIcon color="white" icon="edit" size="1.1rem"/>
-            </button>
+            {showEditIcon ? (
+                <button
+                    className="btn btn-sm btn-outline-info"
+                    onClick={() => context.setContextState({designMode: "wizard", wizardStep: step})}
+                    type="button"
+                >
+                    <SvgIcon color="white" icon="edit" size="1.1rem"/>
+                </button>
+            ) : null}
         </div>
     );
 
     return (
         <div className="px-2 pb-2" id="project-design-form">
-            {renderSectionHeader("Overview", "overview")}
+            {renderSectionHeader("Overview", "overview", true)}
             <OverviewReview/>
             <div id="collection-review">
-                {renderSectionHeader("Collection Design", "imagery")}
+                {renderSectionHeader("Collection Design", "imagery", true)}
                 <AOIMap canDrag={false} context={context}/>
                 <div className="row" style={{borderBottom: "1px solid lightgray"}}>
                     <div className="col-6 pt-3" style={{borderRight: "1px solid lightgray"}}>
@@ -94,7 +96,7 @@ export default function ReviewForm() {
                         </div>
                     )}
             </div>
-            {renderSectionHeader("Survey Questions", "questions")}
+            {renderSectionHeader("Survey Questions", "questions", context.availability === "unpublished")}
             <div id="survey-review">
                 <SurveyCardList {...context} inDesignMode={false}/>
                 <SurveyRulesList {...context} inDesignMode={false}/>

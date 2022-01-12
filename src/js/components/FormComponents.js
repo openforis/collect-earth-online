@@ -71,17 +71,18 @@ export class CollapsibleSectionBlock extends React.Component {
                         width: "100%"
                     }}
                 >
-                    <div style={{textAlign: "left", fontSize: "1.25rem", flex: 1, lineHeight: "1.5rem"}}>
-                        {title}
-                    </div>
                     <div
                         style={{
                             flex: "0",
                             transition: "transform 150ms linear 0s",
-                            transform: this.state.showContent && "scaleY(-1)"
+                            transform: this.state.showContent && "rotate(90deg)",
+                            marginRight: "1rem"
                         }}
                     >
-                        <SvgIcon icon="downCaret" size="1.5rem"/>
+                        <SvgIcon icon="rightCaret" size="1.5rem"/>
+                    </div>
+                    <div style={{textAlign: "left", fontSize: "1.25rem", flex: 1, lineHeight: "1.5rem"}}>
+                        {title}
                     </div>
                 </div>
                 <div
@@ -212,7 +213,14 @@ export function CollapsibleTitle({title, showGroup, toggleShow}) {
                 onClick={toggleShow}
                 type="button"
             >
-                {showGroup ? <SvgIcon icon="upCaret" size="0.9rem"/> : <SvgIcon icon="downCaret" size="0.9rem"/>}
+                <div
+                    style={{
+                        transition: "transform 150ms linear 0s",
+                        transform: showGroup && "rotate(90deg)"
+                    }}
+                >
+                    <SvgIcon icon="rightCaret" size="0.9rem"/>
+                </div>
             </button>
             <h3 className="ml-2" style={{marginBottom: "0"}}>{title}</h3>
         </div>

@@ -532,8 +532,7 @@ class Collection extends React.Component {
                 id: cur.get("sampleId") || getMax(acc) + 1,
                 visibleId: cur.get("visibleId"),
                 sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857")
-            }
-        ], []);
+            }], []);
 
         this.setState({
             currentPlot: {...currentPlot, samples: newSamples},
@@ -554,10 +553,10 @@ class Collection extends React.Component {
                     + `&projectId=${this.props.projectId}`
                     + `&visiblePlotId=${currentPlot.visibleId}`
                     + `&plotId=${currentPlot.id}`
-                    + `&aoi=${encodeURIComponent(`[${mercator.getViewExtent(mapConfig)}]`)}`
+                    + `&plotExtent=${encodeURIComponent(JSON.stringify(mercator.getViewExtent(mapConfig)))}`
                     + `&plotShape=${currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon"}`
-                    + `&bcenter=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}`
-                    + `&bradius=${plotRadius}`,
+                    + `&center=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}`
+                    + `&radius=${plotRadius}`,
                     `_geo-dash_${this.props.projectId}`);
     };
 
@@ -1548,33 +1547,30 @@ class ProjectTitle extends React.Component {
                     marginRight: "-15px"
                 }}
             >
-                <div
-                    onClick={() => this.setState({showStats: !this.state.showStats})}
-                    style={{flex: 0, marginLeft: "1rem"}}
-                >
-                    <SvgIcon color="#ffffff" cursor="pointer" icon="info" size="1.25rem"/>
-                </div>
-                <div
-                    style={{cursor: "default", flex: 1, height: "3rem"}}
-                >
-                    <h2
-                        className="header overflow-hidden text-truncate"
-                        style={{
-                            display: "flex",
-                            height: "100%",
-                            justifyContent: "center",
-                            margin: "0"
-                        }}
-                        title={projectName}
+                <div>
+                    <div
+                        onClick={() => this.setState({showStats: !this.state.showStats})}
+                        style={{flex: 0, marginLeft: "1rem"}}
                     >
-                        {projectName}
-                    </h2>
+                        <SvgIcon color="#ffffff" cursor="pointer" icon="info" size="1.25rem"/>
+                    </div>
                     {this.state.showStats && (
                         <ProjectStats
                             projectId={projectId}
                             userName={userName}
                         />
                     )}
+                </div>
+                <div
+                    style={{cursor: "default", flex: 1, height: "3rem", minWidth: 0}}
+                >
+                    <h2
+                        className="header text-truncate"
+                        style={{height: "100%", margin: "0"}}
+                        title={projectName}
+                    >
+                        {projectName}
+                    </h2>
                 </div>
             </div>
         );
@@ -1690,9 +1686,9 @@ class ProjectStats extends React.Component {
                     backgroundColor: "#f1f1f1",
                     boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)",
                     cursor: "default",
-                    marginLeft: "1rem",
+                    margin: ".75rem 1rem 0 1rem",
                     overflow: "auto",
-                    padding: ".5rem",
+                    padding: "0 .5rem .5rem .5rem",
                     position: "absolute",
                     zIndex: "10"
                 }}
