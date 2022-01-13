@@ -1,5 +1,3 @@
-import React from "react";
-
 export function sortAlphabetically(a, b) {
     return a < b ? -1
         : a > b ? 1
