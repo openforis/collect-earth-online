@@ -151,7 +151,7 @@
     (if-let [error-msg (get-password-reset-errors user email reset-key password password-confirmation)]
       (data-response error-msg)
       (do
-        (call-sql {:log? false} "update_password" email password)
+        (call-sql "update_password" {:log? false} email password)
         (data-response "")))))
 
 (defn- get-verify-email-errors [user email reset-key]
