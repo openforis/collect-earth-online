@@ -480,9 +480,9 @@ class IncompatibleAnswersForm extends React.Component {
                 + conflictingRule.id
                 + ")",
             (questionId1 === questionId2) && "You must select two different questions.",
-            questionId1 < 1 && "You must select a valid first question.",
-            questionId2 < 1 && "You must select a valid second question.",
-            (answerId1 < 1 || answerId2 < 1) && "You must select an answer for each question."
+            questionId1 < 0 && "You must select a valid first question.",
+            questionId2 < 0 && "You must select a valid second question.",
+            (answerId1 < 0 || answerId2 < 0) && "You must select an answer for each question."
         ].filter(m => m);
         if (errorMessages.length > 0) {
             alert(errorMessages.map(s => "- " + s).join("\n"));
@@ -501,8 +501,8 @@ class IncompatibleAnswersForm extends React.Component {
     };
 
     safeFindAnswers = questionId => {
-        const {question} = this.context.surveyQuestions[questionId];
-        return question.answers || {};
+        const {surveyQuestions} = this.context;
+        return questionId in surveyQuestions ? surveyQuestions[questionId].answers : {};
     };
 
     render() {
