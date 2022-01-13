@@ -52,9 +52,8 @@ export class SurveyRulesList extends React.Component {
     render() {
         const {surveyRules} = this.props;
         return (surveyRules || []).length > 0
-            ? (
-                <div>{surveyRules.map(this.renderRuleRow)}</div>
-            ) : <label className="ml-3">No rules have been created for this survey.</label>;
+            ? <div>{surveyRules.map(this.renderRuleRow)}</div>
+            : <label className="ml-3">No rules have been created for this survey.</label>;
     }
 }
 
