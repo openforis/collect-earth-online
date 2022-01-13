@@ -125,7 +125,7 @@ class TextMatchForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextInSequence(surveyRules),
+                    id: getNextInSequence(surveyRules.map(rule => rule.id)),
                     ruleType: "text-match",
                     questionId,
                     regex
@@ -206,7 +206,7 @@ class NumericRangeForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextInSequence(surveyRules),
+                    id: getNextInSequence(surveyRules.map(rule => rule.id)),
                     ruleType: "numeric-range",
                     questionId,
                     min,
@@ -297,7 +297,7 @@ class SumOfAnswersForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextInSequence(surveyRules),
+                    id: getNextInSequence(surveyRules.map(rule => rule.id)),
                     ruleType: "sum-of-answers",
                     questionIds,
                     validSum
@@ -382,7 +382,7 @@ class MatchingSumsForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextInSequence(surveyRules),
+                    id: getNextInSequence(surveyRules.map(rule => rule.id)),
                     ruleType: "matching-sums",
                     questionIds1,
                     questionIds2
@@ -490,7 +490,7 @@ class IncompatibleAnswersForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextInSequence(surveyRules),
+                    id: getNextInSequence(surveyRules.map(rule => rule.id)),
                     ruleType: "incompatible-answers",
                     questionId1,
                     questionId2,
