@@ -6,19 +6,10 @@ import requiredIf from "react-required-if";
  * Component for a generic modal.
  * To display a confirm button, use `confirmLabel` and `onConfirm`
  *
- * @component
  * @example
- * function MyComponent() {
- *     const [showModal, setShowModal] = useState(true);
- *     const title = "Completed"
- *     return (
- *        {state.showModal && (
- *            <Modal title={title} onClose={() => setState({showModal: false})}>
- *                <p>Your changes have been saved</p>
- *            </Modal>
- *        )}
- *     )
- * }
+ * <Modal title={title} onClose={() => setState({showModal: false})}>
+ *   <p>Your changes have been saved</p>
+ * </Modal>
  */
 export default function Modal({title, danger, children, closeText, confirmText, onClose, onConfirm}) {
     return (
