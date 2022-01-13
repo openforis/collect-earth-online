@@ -4,7 +4,10 @@ CREATE OR REPLACE FUNCTION missing_answers_count(_questions jsonb)
  RETURNS int AS $$
 
     SELECT SUM(
-        CASE WHEN value->>'answers' = 'null' THEN 1 ELSE 0 END
+        CASE WHEN (value->>'answers' = 'null' OR jsonb_typeof(value->'answers') <> 'array')
+        THEN 1
+        ELSE 0
+        END
     )::int
     FROM (
         SELECT value
