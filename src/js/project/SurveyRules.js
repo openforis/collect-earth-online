@@ -30,12 +30,12 @@ export class SurveyRulesList extends React.Component {
 
     removeButton = ruleId => (
         <button
-            className="btn btn-sm btn-outline-red mt-0 mr-3 mb-3"
+            className="btn btn-sm btn-outline-red"
             onClick={() => this.deleteSurveyRule(ruleId)}
             title="Delete Rule"
             type="button"
         >
-            <SvgIcon icon="trash" size="1.25rem"/>
+            <SvgIcon icon="trash" size="1rem"/>
         </button>
     );
 
@@ -43,8 +43,12 @@ export class SurveyRulesList extends React.Component {
         const {inDesignMode, surveyQuestions} = this.props;
         return (
             <div key={r.id} style={{display: "flex", alignItems: "center"}}>
-                {inDesignMode && this.removeButton(r.id)}
-                <SurveyRule ruleOptions={r} surveyQuestions={surveyQuestions}/>
+                <SurveyRule
+                    inDesignMode={inDesignMode}
+                    removeButton={this.removeButton}
+                    ruleOptions={r}
+                    surveyQuestions={surveyQuestions}
+                />
             </div>
         );
     };

@@ -219,7 +219,7 @@ function SurveyQuestionTree({
                                                 && (
                                                     <li key={rule.id}>
                                                         <div className="tooltip_wrapper">
-                                                            {"Rule " + rule.id + ": " + rule.ruleType}
+                                                            {`Rule ${rule.id + 1}: ${rule.ruleType}`}
                                                             <span className="tooltip_content">
                                                                 {getRulesById(rule.id)}
                                                             </span>
