@@ -180,22 +180,29 @@ function SurveyQuestionTree({
                             {surveyRules && surveyRules.length > 0 && (
                                 <li>
                                     <b>Rules:</b>
-                                    {surveyRules.map(rule => {
-                                        const allIds = new Set([rule.questionId, rule.questionId1, rule.questionId2]
-                                            .concat(rule.questionIds)
-                                            .concat(rule.questionIds1)
-                                            .concat(rule.questionIds2));
-                                        return allIds.has(surveyQuestionId)
+                                    <ul>
+                                        {surveyRules.map(rule => {
+                                            const allIds = new Set([rule.questionId, rule.questionId1, rule.questionId2]
+                                                .concat(rule.questionIds)
+                                                .concat(rule.questionIds1)
+                                                .concat(rule.questionIds2));
+                                            return allIds.has(surveyQuestionId)
                                                 && (
-                                                    <div key={rule.id}>
-                                                        <SurveyRule
-                                                            inDesignMode={inDesignMode}
-                                                            ruleOptions={rule}
-                                                            surveyQuestions={surveyQuestions}
-                                                        />
-                                                    </div>
+                                                    <li key={rule.id}>
+                                                        <div className="tooltip_wrapper">
+                                                            {`Rule ${rule.id + 1}: ${rule.ruleType}`}
+                                                            <div className="tooltip_content survey_rule">
+                                                                <SurveyRule
+                                                                    inDesignMode={inDesignMode}
+                                                                    ruleOptions={rule}
+                                                                    surveyQuestions={surveyQuestions}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </li>
                                                 );
-                                    })}
+                                        })}
+                                    </ul>
                                 </li>
                             )}
                             {parentQuestion && (
