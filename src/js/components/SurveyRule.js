@@ -18,10 +18,10 @@ function getSurveyAnswerText(surveyQuestions, questionId, answerId) {
 function SumOfAnswersRuleBody({questionIds, validSum, surveyQuestions}) {
     return (
         <p className="card-text">
-            The answers to&nbsp;
+            The answers to questions&nbsp;
             <b>
-                questions&nbsp;&quot;
-                {questionIds.map(q => getSurveyQuestionText(surveyQuestions, q)).join(", ")}
+                &quot;
+                {questionIds.map(q => getSurveyQuestionText(surveyQuestions, q)).join("\", \"")}
                  &quot;
             </b>
             &nbsp;should sum up to&nbsp;
@@ -35,19 +35,19 @@ function IncompatibleAnswersRuleBody({answerId1, answerId2, questionId1, questio
         <div className="card-text">
             The answer&nbsp;
             <b>
-                {getSurveyAnswerText(surveyQuestions, questionId1, answerId1)}
+                &quot;{getSurveyAnswerText(surveyQuestions, questionId1, answerId1)}&quot;
             </b>
-            &nbsp;from&nbsp;
+            &nbsp;from question&nbsp;
             <b>
-                question &quot;{getSurveyQuestionText(surveyQuestions, questionId1)}&quot;
+               &quot;{getSurveyQuestionText(surveyQuestions, questionId1)}&quot;
             </b>
             &nbsp;is incompatible with the answer&nbsp;
             <b>
-                {getSurveyAnswerText(surveyQuestions, questionId2, answerId2)}
+                &quot;{getSurveyAnswerText(surveyQuestions, questionId2, answerId2)}&quot;
             </b>
-            &nbsp;from&nbsp;
+            &nbsp;from question&nbsp;
             <b>
-                question &quot;{getSurveyQuestionText(surveyQuestions, questionId2)}&quot;
+                &quot;{getSurveyQuestionText(surveyQuestions, questionId2)}&quot;
             </b>.
         </div>
     );
@@ -59,15 +59,13 @@ function MatchingSumsRuleBody({questionIds1, questionIds2, surveyQuestions}) {
     const surveyQuestionText2 = questionIds2.map(q => getSurveyQuestionText(surveyQuestions, q));
     return (
         <p className="card-text">
-            The {isQuestionIds1Multiple ? "sum of the answers" : "answer"} to&nbsp;
+            The {isQuestionIds1Multiple ? "sum of the answers" : "answer"} to question{isQuestionIds1Multiple ? "s " : " "}
             <b>
-                question{isQuestionIds1Multiple ? "s " : " "}
-                &quot;{surveyQuestionText1.join(", ")}&quot;
+                &quot;{surveyQuestionText1.join("\", \"")}&quot;
             </b>
-            &nbsp;should be equal to the {isQuestionIds2Multiple ? "sum of the answers" : "answer"} to&nbsp;
+            &nbsp;should be equal to the {isQuestionIds2Multiple ? "sum of the answers" : "answer"} to question{isQuestionIds2Multiple ? "s " : " "}
             <b>
-                question{isQuestionIds2Multiple ? "s " : " "}
-                &quot;{surveyQuestionText2.join(", ")}&quot;
+                &quot;{surveyQuestionText2.join("\", \"")}&quot;
             </b>.
         </p>
     );
@@ -76,11 +74,11 @@ function MatchingSumsRuleBody({questionIds1, questionIds2, surveyQuestions}) {
 function NumericRangeRuleBody({questionId, min, max, surveyQuestions}) {
     return (
         <p className="card-text">
-            The answer to&nbsp;
+            The answer to question&nbsp;
             <b>
-                question &quot;{getSurveyQuestionText(surveyQuestions, questionId)}&quot;
+                &quot;{getSurveyQuestionText(surveyQuestions, questionId)}&quot;
             </b>
-                &nbsp;should be between:&nbsp;
+                &nbsp;should be between&nbsp;
             <b>{min} and {max}</b>.
         </p>
     );
@@ -89,11 +87,11 @@ function NumericRangeRuleBody({questionId, min, max, surveyQuestions}) {
 function TextMatchRuleBody({questionId, regex, surveyQuestions}) {
     return (
         <p className="card-text">
-            The answer to&nbsp;
+            The answer to question&nbsp;
             <b>
-                question &quot;{getSurveyQuestionText(surveyQuestions, questionId)}&quot;
+                &quot;{getSurveyQuestionText(surveyQuestions, questionId)}&quot;
             </b>
-                &nbsp;should match the pattern:&nbsp;
+                &nbsp;should match the pattern&nbsp;
             <b>{regex}</b>.
         </p>
     );
