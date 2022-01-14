@@ -100,7 +100,7 @@ function TextMatchRuleBody({questionId, regex, surveyQuestions}) {
 function SurveyRuleCard({inDesignMode, removeButton, ruleOptions, title, Body}) {
     return (
         <div className="card" style={{width: "100%"}}>
-            <div className="card-body pt-2 pb-3">
+            <div className="card-body pt-2 pb-2">
                 <div
                     style={{
                         alignItems: "baseline",
@@ -110,7 +110,7 @@ function SurveyRuleCard({inDesignMode, removeButton, ruleOptions, title, Body}) 
                     }}
                 >
                     <h3 style={{marginBottom: 0}}>{ruleOptions.id + 1}. {title}</h3>
-                    {inDesignMode && removeButton(ruleOptions.id)}
+                    {removeButton && inDesignMode && removeButton(ruleOptions.id)}
                 </div>
                 <hr style={{margin: "0.5rem 0"}}/>
                 <Body/>

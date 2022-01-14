@@ -1,6 +1,7 @@
 import React from "react";
 import _ from "lodash";
 
+import SurveyRule from "../components/SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
 import {removeEnumerator} from "../utils/generalUtils";
 import {mapObject, mapObjectArray, filterObject} from "../utils/sequence";
@@ -62,34 +63,6 @@ class SurveyCard extends React.Component {
         return _.get(surveyQuestions, [questionId, "answers", answerId, "answer"], "");
     };
 
-    getRulesById = id => (this.props.surveyRules || [])
-        .filter(r => r.id === id)
-        .map(r => {
-            if (r.ruleType === "text-match") {
-                return `Question '${this.getSurveyQuestionText(r.questionId)}' should match the pattern: ${r.regex}.`;
-            } else if (r.ruleType === "numeric-range") {
-                return `Question '${this.getSurveyQuestionText(r.questionId)}' should be between ${r.min} and ${r.max}.`;
-            } else if (r.ruleType === "sum-of-answers") {
-                return `Questions '${r.questionIds.map(q => this.getSurveyQuestionText(q))}' should sum up to ${r.validSum}.`;
-            } else if (r.ruleType === "matching-sums") {
-                return `Sum of '[${
-                    r.questionIds1.map(q => this.getSurveyQuestionText(q)).toString()
-                }]' should be equal to sum of '[${
-                    r.questionIds2.map(q => this.getSurveyQuestionText(q)).toString()
-                }]'.`;
-            } else {
-                return `Question1: '${
-                    this.getSurveyQuestionText(r.questionId1)
-                }', Answer1: '${
-                    this.getSurveyAnswerText(r.questionId1, r.answerId1)
-                }' is not compatible with Question2: '${
-                    this.getSurveyQuestionText(r.questionId2)
-                }', Answer2: '${
-                    this.getSurveyAnswerText(r.questionId2, r.answerId2)
-                }'.`;
-            }
-        });
-
     render() {
         const {cardNumber, surveyQuestions, surveyQuestionId, inDesignMode, topLevelNodeIds} = this.props;
         const {question} = surveyQuestions[surveyQuestionId];
@@ -140,7 +113,6 @@ class SurveyCard extends React.Component {
                         <div className="SurveyCard__question-tree row d-block">
                             <SurveyQuestionTree
                                 key={this.props.surveyQuestionId}
-                                getRulesById={this.getRulesById}
                                 indentLevel={0}
                                 inDesignMode={this.props.inDesignMode}
                                 newAnswerComponent={this.props.newAnswerComponent}
@@ -166,8 +138,7 @@ function SurveyQuestionTree({
     removeQuestion,
     surveyQuestionId,
     surveyQuestions,
-    surveyRules,
-    getRulesById
+    surveyRules
 }) {
     const surveyQuestion = surveyQuestions[surveyQuestionId];
     const childNodeIds = mapObjectArray(
@@ -208,25 +179,23 @@ function SurveyQuestionTree({
                             )}
                             {surveyRules && surveyRules.length > 0 && (
                                 <li>
-                                    <span className="font-weight-bold">Rules:  </span>
-                                    <ul>
-                                        {surveyRules.map(rule =>
-                                            [rule.questionId, rule.questionId1, rule.questionId2]
-                                                .concat(rule.questionIds)
-                                                .concat(rule.questionIds1)
-                                                .concat(rule.questionIds2)
-                                                .includes(surveyQuestionId)
+                                    <b>Rules:</b>
+                                    {surveyRules.map(rule => {
+                                        const allIds = new Set([rule.questionId, rule.questionId1, rule.questionId2]
+                                            .concat(rule.questionIds)
+                                            .concat(rule.questionIds1)
+                                            .concat(rule.questionIds2));
+                                        return allIds.has(surveyQuestionId)
                                                 && (
-                                                    <li key={rule.id}>
-                                                        <div className="tooltip_wrapper">
-                                                            {`Rule ${rule.id + 1}: ${rule.ruleType}`}
-                                                            <span className="tooltip_content">
-                                                                {getRulesById(rule.id)}
-                                                            </span>
-                                                        </div>
-                                                    </li>
-                                                ))}
-                                    </ul>
+                                                    <div key={rule.id}>
+                                                        <SurveyRule
+                                                            inDesignMode={inDesignMode}
+                                                            ruleOptions={rule}
+                                                            surveyQuestions={surveyQuestions}
+                                                        />
+                                                    </div>
+                                                );
+                                    })}
                                 </li>
                             )}
                             {parentQuestion && (
@@ -267,7 +236,6 @@ function SurveyQuestionTree({
             {childNodeIds.map(childId => (
                 <SurveyQuestionTree
                     key={childId}
-                    getRulesById={getRulesById}
                     indentLevel={indentLevel + 1}
                     inDesignMode={inDesignMode}
                     newAnswerComponent={newAnswerComponent}
