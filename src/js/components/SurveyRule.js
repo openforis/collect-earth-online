@@ -7,15 +7,6 @@ function truncjoin(qs) {
     return qs.map(q => truncate(q, 15)).join(", ");
 }
 
-function Badge({text}) {
-    return (
-        <div className="badge badge-light tooltip_wrapper" style={{color: "black"}}>
-            {truncate(text, 10)}
-            {text.length > 10 && (<div className="tooltip_content">{text}</div>)}
-        </div>
-    );
-}
-
 function getSurveyQuestionText(surveyQuestions, questionId) {
     return _.get(surveyQuestions, [questionId, "question"], "");
 }
@@ -27,14 +18,14 @@ function getSurveyAnswerText(surveyQuestions, questionId, answerId) {
 function SumOfAnswersRuleBody({questionIds, validSum, surveyQuestions}) {
     return (
         <p className="card-text">
-              The answer to&nbsp;
+            The answers to&nbsp;
             <b>
-                Survey Questions&nbsp;&quot;
+                questions&nbsp;&quot;
                 {questionIds.map(q => getSurveyQuestionText(surveyQuestions, q)).join(", ")}
                  &quot;
             </b>
-              &nbsp;should sum up to:&nbsp;
-            <code style={{color: "black"}}>{validSum}</code>
+            &nbsp;should sum up to&nbsp;
+            <b>{validSum}</b>.
         </p>
     );
 }
@@ -43,18 +34,21 @@ function IncompatibleAnswersRuleBody({answerId1, answerId2, questionId1, questio
     return (
         <div className="card-text">
             The answer&nbsp;
-            <Badge text={getSurveyAnswerText(surveyQuestions, questionId1, answerId1)}/>
+            <b>
+                {getSurveyAnswerText(surveyQuestions, questionId1, answerId1)}
+            </b>
             &nbsp;from&nbsp;
             <b>
-              Survey Question &quot;{getSurveyQuestionText(surveyQuestions, questionId1)}&quot;
+                question &quot;{getSurveyQuestionText(surveyQuestions, questionId1)}&quot;
             </b>
-            &nbsp;is incompatible with&nbsp;
-            <Badge text={getSurveyAnswerText(surveyQuestions, questionId2, answerId2)}/>
+            &nbsp;is incompatible with the answer&nbsp;
+            <b>
+                {getSurveyAnswerText(surveyQuestions, questionId2, answerId2)}
+            </b>
             &nbsp;from&nbsp;
             <b>
-              Survey Question &quot;{getSurveyQuestionText(surveyQuestions, questionId2)}&quot;
-            </b>
-            .
+                question &quot;{getSurveyQuestionText(surveyQuestions, questionId2)}&quot;
+            </b>.
         </div>
     );
 }
@@ -65,21 +59,16 @@ function MatchingSumsRuleBody({questionIds1, questionIds2, surveyQuestions}) {
     const surveyQuestionText2 = questionIds2.map(q => getSurveyQuestionText(surveyQuestions, q));
     return (
         <p className="card-text">
-            The sum of the {isQuestionIds1Multiple ? "answers" : "answer"} to&nbsp;
+            The {isQuestionIds1Multiple ? "sum of the answers" : "answer"} to&nbsp;
             <b>
-              Survey Question
-                {isQuestionIds1Multiple
-                    ? `s "${surveyQuestionText1.join(", ")}"`
-                    : ` "${surveyQuestionText1[0]}"`}
+                question{isQuestionIds1Multiple ? "s " : " "}
+                &quot;{surveyQuestionText1.join(", ")}&quot;
             </b>
-            &nbsp;should be equl to the sum of the {isQuestionIds1Multiple ? "answers" : "answer"} to &nbsp;
+            &nbsp;should be equal to the {isQuestionIds2Multiple ? "sum of the answers" : "answer"} to&nbsp;
             <b>
-            Survey Question
-                {isQuestionIds2Multiple
-                    ? `s "${surveyQuestionText2.join(", ")}"`
-                    : ` "${surveyQuestionText2[0]}"`}
-            </b>
-            .
+                question{isQuestionIds2Multiple ? "s " : " "}
+                &quot;{surveyQuestionText2.join(", ")}&quot;
+            </b>.
         </p>
     );
 }
@@ -87,12 +76,12 @@ function MatchingSumsRuleBody({questionIds1, questionIds2, surveyQuestions}) {
 function NumericRangeRuleBody({questionId, min, max, surveyQuestions}) {
     return (
         <p className="card-text">
-              The answer to&nbsp;
+            The answer to&nbsp;
             <b>
-                Survey Question &quot;{getSurveyQuestionText(surveyQuestions, questionId)}&quot;
+                question &quot;{getSurveyQuestionText(surveyQuestions, questionId)}&quot;
             </b>
                 &nbsp;should be between:&nbsp;
-            <code style={{color: "black"}}>{min} and {max}</code>
+            <b>{min} and {max}</b>.
         </p>
     );
 }
@@ -100,12 +89,12 @@ function NumericRangeRuleBody({questionId, min, max, surveyQuestions}) {
 function TextMatchRuleBody({questionId, regex, surveyQuestions}) {
     return (
         <p className="card-text">
-                The answer to&nbsp;
+            The answer to&nbsp;
             <b>
-                Survey Question &quot;{getSurveyQuestionText(surveyQuestions, questionId)}&quot;
+                question &quot;{getSurveyQuestionText(surveyQuestions, questionId)}&quot;
             </b>
                 &nbsp;should match the pattern:&nbsp;
-            <code style={{color: "black"}}>{regex}</code>
+            <b>{regex}</b>.
         </p>
     );
 }
@@ -114,12 +103,7 @@ function SurveyRuleCard({title, Body}) {
     return (
         <div className="card" style={{width: "100%"}}>
             <div className="card-body pt-2 pb-3">
-                <div
-                    className="font-weight-bold"
-                    style={{fontFamily: "CaviarDreams", fontSize: "1.25rem"}}
-                >
-                    {title}
-                </div>
+                <h3>{title}</h3>
                 <hr style={{margin: "0.5rem 0"}}/>
                 <Body/>
             </div>
