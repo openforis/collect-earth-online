@@ -597,6 +597,7 @@ class SurveyQuestionTree extends React.Component {
             <>
                 <fieldset
                     className="justify-content-center text-center"
+                    onClick={() => setSelectedQuestion(surveyNodeId)}
                     style={{
                         border: "1px solid rgba(0, 0, 0, 0.2)",
                         borderRadius: "6px",
@@ -622,7 +623,6 @@ class SurveyQuestionTree extends React.Component {
                         />
                         <button
                             className="text-center btn btn-outline-lightgreen btn-sm col text-truncate"
-                            onClick={() => setSelectedQuestion(surveyNodeId)}
                             style={{
                                 boxShadow: nodeQuestion.answered.length === 0
                                     ? "0px 0px 6px 4px red inset"
