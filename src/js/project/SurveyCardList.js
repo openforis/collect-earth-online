@@ -200,7 +200,7 @@ function SurveyQuestionTree({
                                                             <div className="tooltip_content survey_rule">
                                                                 <SurveyRule
                                                                     inDesignMode={inDesignMode}
-                                                                    removeFn={() => deleteSurveyRule(rule.id)}
+                                                                    removeRule={() => deleteSurveyRule(rule.id)}
                                                                     ruleOptions={rule}
                                                                     surveyQuestions={surveyQuestions}
                                                                 />

@@ -98,7 +98,7 @@ function TextMatchRuleBody({questionId, regex, surveyQuestions}) {
     );
 }
 
-function SurveyRuleCard({inDesignMode, removeFn, ruleOptions, title, Body}) {
+function SurveyRuleCard({inDesignMode, removeRule, ruleOptions, title, Body}) {
     return (
         <div className="card" style={{width: "100%"}}>
             <div className="card-body pt-2 pb-2">
@@ -111,10 +111,10 @@ function SurveyRuleCard({inDesignMode, removeFn, ruleOptions, title, Body}) {
                     }}
                 >
                     <h3 style={{marginBottom: 0}}>{ruleOptions.id + 1}. {title}</h3>
-                    {removeFn && inDesignMode && (
+                    {removeRule && inDesignMode && (
                         <button
                             className="btn btn-sm btn-outline-red"
-                            onClick={removeFn}
+                            onClick={removeRule}
                             title="Delete Rule"
                             type="button"
                         >
@@ -129,42 +129,42 @@ function SurveyRuleCard({inDesignMode, removeFn, ruleOptions, title, Body}) {
     );
 }
 
-export default function SurveyRule({inDesignMode, removeFn, ruleOptions, surveyQuestions}) {
+export default function SurveyRule({inDesignMode, removeRule, ruleOptions, surveyQuestions}) {
     return (
         <div className="d-flex flex-column mb-1" style={{flex: 1}}>
             {{
                 "text-match": <SurveyRuleCard
                     Body={() => <TextMatchRuleBody {...ruleOptions} surveyQuestions={surveyQuestions}/>}
                     inDesignMode={inDesignMode}
-                    removeFn={removeFn}
+                    removeRule={removeRule}
                     ruleOptions={ruleOptions}
                     title="Text Match"
                 />,
                 "numeric-range": <SurveyRuleCard
                     Body={() => <NumericRangeRuleBody {...ruleOptions} surveyQuestions={surveyQuestions}/>}
                     inDesignMode={inDesignMode}
-                    removeFn={removeFn}
+                    removeRule={removeRule}
                     ruleOptions={ruleOptions}
                     title="Numeric Range"
                 />,
                 "sum-of-answers": <SurveyRuleCard
                     Body={() => <SumOfAnswersRuleBody {...ruleOptions} surveyQuestions={surveyQuestions}/>}
                     inDesignMode={inDesignMode}
-                    removeFn={removeFn}
+                    removeRule={removeRule}
                     ruleOptions={ruleOptions}
                     title="Sum of Answers"
                 />,
                 "matching-sums": <SurveyRuleCard
                     Body={() => <MatchingSumsRuleBody {...ruleOptions} surveyQuestions={surveyQuestions}/>}
                     inDesignMode={inDesignMode}
-                    removeFn={removeFn}
+                    removeRule={removeRule}
                     ruleOptions={ruleOptions}
                     title="Matching Sums"
                 />,
                 "incompatible-answers": <SurveyRuleCard
                     Body={() => <IncompatibleAnswersRuleBody {...ruleOptions} surveyQuestions={surveyQuestions}/>}
                     inDesignMode={inDesignMode}
-                    removeFn={removeFn}
+                    removeRule={removeRule}
                     ruleOptions={ruleOptions}
                     title="Incompatible Answers"
                 />
