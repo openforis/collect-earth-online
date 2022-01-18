@@ -118,6 +118,7 @@ class SurveyCard extends React.Component {
                                 newAnswerComponent={this.props.newAnswerComponent}
                                 removeAnswer={this.props.removeAnswer}
                                 removeQuestion={this.props.removeQuestion}
+                                setProjectDetails={this.props.setProjectDetails}
                                 surveyQuestionId={this.props.surveyQuestionId}
                                 surveyQuestions={this.props.surveyQuestions}
                                 surveyRules={this.props.surveyRules}
@@ -136,6 +137,7 @@ function SurveyQuestionTree({
     newAnswerComponent,
     removeAnswer,
     removeQuestion,
+    setProjectDetails,
     surveyQuestionId,
     surveyQuestions,
     surveyRules
@@ -146,6 +148,10 @@ function SurveyQuestionTree({
         ([key, _val]) => Number(key)
     );
     const parentQuestion = surveyQuestions[surveyQuestion.parentQuestionId];
+    const deleteSurveyRule = ruleId => {
+        const newSurveyRules = surveyRules.filter(rule => rule.id !== ruleId);
+        setProjectDetails({surveyRules: newSurveyRules});
+    };
     return (
         <>
             <div className="SurveyQuestionTree__question d-flex border-top pt-3 pb-1">
@@ -181,12 +187,12 @@ function SurveyQuestionTree({
                                 <li>
                                     <b>Rules:</b>
                                     <ul>
-                                        {surveyRules.map(rule => {
-                                            const allIds = new Set([rule.questionId, rule.questionId1, rule.questionId2]
+                                        {surveyRules.map(rule =>
+                                            [rule.questionId, rule.questionId1, rule.questionId2]
                                                 .concat(rule.questionIds)
                                                 .concat(rule.questionIds1)
-                                                .concat(rule.questionIds2));
-                                            return allIds.has(surveyQuestionId)
+                                                .concat(rule.questionIds2)
+                                                .includes(surveyQuestionId)
                                                 && (
                                                     <li key={rule.id}>
                                                         <div className="tooltip_wrapper">
@@ -194,14 +200,14 @@ function SurveyQuestionTree({
                                                             <div className="tooltip_content survey_rule">
                                                                 <SurveyRule
                                                                     inDesignMode={inDesignMode}
+                                                                    removeFn={() => deleteSurveyRule(rule.id)}
                                                                     ruleOptions={rule}
                                                                     surveyQuestions={surveyQuestions}
                                                                 />
                                                             </div>
                                                         </div>
                                                     </li>
-                                                );
-                                        })}
+                                                ))}
                                     </ul>
                                 </li>
                             )}

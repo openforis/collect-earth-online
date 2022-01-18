@@ -458,6 +458,9 @@ a:hover {
     width: 500px;
     z-index: 1;
 }
+.tooltip_content.survey_rule::after {
+  border-color: transparent transparent white transparent;
+}
 
 /*************/
 /* Home Page */
