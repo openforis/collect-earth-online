@@ -443,6 +443,24 @@ a:hover {
     padding: 5px 5px 5px 25px;
     width: 300px;
 }
+.tooltip_content.survey_rule {
+    visibility: hidden;
+    background-color: transparent;
+    border-radius: 0;
+    color: #000000;
+    left: 0;
+    font-weight: normal;
+    max-width: max-content;
+    text-align: start;
+    padding: 0;
+    position: absolute;
+    top: 110%;
+    width: 500px;
+    z-index: 1;
+}
+.tooltip_content.survey_rule::after {
+  border-color: transparent transparent white transparent;
+}
 
 /*************/
 /* Home Page */

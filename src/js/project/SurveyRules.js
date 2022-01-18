@@ -28,24 +28,13 @@ export class SurveyRulesList extends React.Component {
         this.props.setProjectDetails({surveyRules: newSurveyRules});
     };
 
-    removeButton = ruleId => (
-        <button
-            className="btn btn-sm btn-outline-red"
-            onClick={() => this.deleteSurveyRule(ruleId)}
-            title="Delete Rule"
-            type="button"
-        >
-            <SvgIcon icon="trash" size="1rem"/>
-        </button>
-    );
-
     renderRuleRow = r => {
         const {inDesignMode, surveyQuestions} = this.props;
         return (
             <div key={r.id} style={{display: "flex", alignItems: "center"}}>
                 <SurveyRule
                     inDesignMode={inDesignMode}
-                    removeButton={this.removeButton}
+                    removeRule={() => this.deleteSurveyRule(r.id)}
                     ruleOptions={r}
                     surveyQuestions={surveyQuestions}
                 />
