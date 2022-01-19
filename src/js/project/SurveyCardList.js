@@ -40,16 +40,64 @@ class SurveyCard extends React.Component {
         : val === swapVal ? checkVal
             : val);
 
+    swapIdArray = (arr, checkVal, swapVal) => {
+        const newArr = [...arr];
+        if (newArr.includes(checkVal) && newArr.includes(swapVal)) {
+            return newArr;
+        } else if (newArr.includes(checkVal)) {
+            const idx = newArr.indexOf(checkVal);
+            newArr[idx] = swapVal;
+            return newArr;
+        } else if (newArr.includes(swapVal)) {
+            const idx = newArr.indexOf(swapVal);
+            newArr[idx] = checkVal;
+            return newArr;
+        }
+        return newArr;
+    };
+
+    updateRuleQuestionIds = (rule, oldQuestionId, newQuestionId) => {
+        const allIds = new Set([rule.questionId, rule.questionId1, rule.questionId2]
+            .concat(rule.questionIds)
+            .concat(rule.questionIds1)
+            .concat(rule.questionIds2)
+            .concat(rule.questionIds2));
+        const newRule = {...rule};
+        if (allIds.has(oldQuestionId) || allIds.has(newQuestionId)) {
+            // Swap for Numeric Range and Text Match Rules
+            if (newRule.questionId !== undefined) {
+                newRule.questionId = this.swapId(newRule.questionId, oldQuestionId, newQuestionId);
+            }
+            // Swap for Incompatible Answers Rules
+            if (newRule.questionId1 !== undefined && newRule.questionId2 !== undefined) {
+                newRule.questionId1 = this.swapId(newRule.questionId1, oldQuestionId, newQuestionId);
+                newRule.questionId2 = this.swapId(newRule.questionId2, oldQuestionId, newQuestionId);
+            }
+            // Swap for Sum of Answers Rules
+            if (newRule.questionIds !== undefined) {
+                newRule.questionIds = this.swapIdArray(newRule.questionIds, oldQuestionId, newQuestionId);
+            }
+            // Swap for Matching Sums Rules
+            if (newRule.questionIds1 !== undefined && newRule.questionIds2 !== undefined) {
+                newRule.questionIds1 = this.swapIdArray(newRule.questionIds1, oldQuestionId, newQuestionId);
+                newRule.questionIds2 = this.swapIdArray(newRule.questionIds2, oldQuestionId, newQuestionId);
+            }
+        }
+        return newRule;
+    };
+
     swapQuestionIds = upOrDown => {
-        const {surveyQuestions, surveyQuestionId, topLevelNodeIds} = this.props;
+        const {surveyRules, surveyQuestions, surveyQuestionId, topLevelNodeIds} = this.props;
         const newId = topLevelNodeIds[
-            this.props.topLevelNodeIds.indexOf(surveyQuestionId) + upOrDown
+            topLevelNodeIds.indexOf(surveyQuestionId) + upOrDown
         ];
         this.props.setProjectDetails({
             surveyQuestions: mapObject(surveyQuestions, ([key, val]) => [
                 this.swapId(Number(key), surveyQuestionId, newId),
                 {...val, parentQuestionId: this.swapId(val.parentQuestionId, surveyQuestionId, newId)}
-            ])
+            ]),
+            surveyRules: surveyRules.map(rule =>
+                this.updateRuleQuestionIds(rule, surveyQuestionId, newId))
         });
     };
 
