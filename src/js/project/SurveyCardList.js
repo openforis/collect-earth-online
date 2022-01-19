@@ -4,7 +4,7 @@ import _ from "lodash";
 import SurveyRule from "../components/SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
 import {removeEnumerator} from "../utils/generalUtils";
-import {mapObject, mapObjectArray, filterObject} from "../utils/sequence";
+import {mapObject, mapObjectArray, replaceNumber, filterObject} from "../utils/sequence";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = mapObjectArray(
@@ -41,49 +41,32 @@ class SurveyCard extends React.Component {
             : val);
 
     swapIdArray = (arr, checkVal, swapVal) => {
-        const newArr = [...arr];
-        if (newArr.includes(checkVal) && newArr.includes(swapVal)) {
-            return newArr;
-        } else if (newArr.includes(checkVal)) {
-            const idx = newArr.indexOf(checkVal);
-            newArr[idx] = swapVal;
-            return newArr;
-        } else if (newArr.includes(swapVal)) {
-            const idx = newArr.indexOf(swapVal);
-            newArr[idx] = checkVal;
-            return newArr;
-        }
-        return newArr;
+        if (arr.includes(checkVal) && !arr.includes(swapVal)) {
+            return replaceNumber(arr, checkVal, swapVal);
+        } else if (arr.includes(swapVal) && !arr.includes(checkVal)) {
+            return replaceNumber(arr, swapVal, checkVal);
+        } else return arr;
     };
 
     updateRuleQuestionIds = (rule, oldQuestionId, newQuestionId) => {
-        const allIds = new Set([rule.questionId, rule.questionId1, rule.questionId2]
-            .concat(rule.questionIds)
-            .concat(rule.questionIds1)
-            .concat(rule.questionIds2)
-            .concat(rule.questionIds2));
-        const newRule = {...rule};
-        if (allIds.has(oldQuestionId) || allIds.has(newQuestionId)) {
-            // Swap for Numeric Range and Text Match Rules
-            if (newRule.questionId !== undefined) {
-                newRule.questionId = this.swapId(newRule.questionId, oldQuestionId, newQuestionId);
-            }
-            // Swap for Incompatible Answers Rules
-            if (newRule.questionId1 !== undefined && newRule.questionId2 !== undefined) {
-                newRule.questionId1 = this.swapId(newRule.questionId1, oldQuestionId, newQuestionId);
-                newRule.questionId2 = this.swapId(newRule.questionId2, oldQuestionId, newQuestionId);
-            }
-            // Swap for Sum of Answers Rules
-            if (newRule.questionIds !== undefined) {
-                newRule.questionIds = this.swapIdArray(newRule.questionIds, oldQuestionId, newQuestionId);
-            }
-            // Swap for Matching Sums Rules
-            if (newRule.questionIds1 !== undefined && newRule.questionIds2 !== undefined) {
-                newRule.questionIds1 = this.swapIdArray(newRule.questionIds1, oldQuestionId, newQuestionId);
-                newRule.questionIds2 = this.swapIdArray(newRule.questionIds2, oldQuestionId, newQuestionId);
-            }
+        if (rule.ruleType === "text-match" || rule.ruleType === "numeric-range") {
+            const questionId = this.swapId(rule.questionId, oldQuestionId, newQuestionId);
+            return {...rule, questionId};
         }
-        return newRule;
+        if (rule.ruleType === "incompatible-answers") {
+            const questionId1 = this.swapId(rule.questionId1, oldQuestionId, newQuestionId);
+            const questionId2 = this.swapId(rule.questionId2, oldQuestionId, newQuestionId);
+            return {...rule, questionId1, questionId2};
+        }
+        if (rule.ruleType === "sum-of-answers") {
+            const questionIds = this.swapIdArray(rule.questionIds, oldQuestionId, newQuestionId);
+            return {...rule, questionIds};
+        }
+        if (rule.ruleType === "matching-sums") {
+            const questionIds1 = this.swapIdArray(rule.questionIds1, oldQuestionId, newQuestionId);
+            const questionIds2 = this.swapIdArray(rule.questionIds2, oldQuestionId, newQuestionId);
+            return {...rule, questionIds1, questionIds2};
+        } else return rule;
     };
 
     swapQuestionIds = upOrDown => {

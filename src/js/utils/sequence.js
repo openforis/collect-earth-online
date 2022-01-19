@@ -34,6 +34,20 @@ export function removeAtIndex(arr, index) {
     return arr.slice(0, index).concat(arr.slice(index + 1, arr.length));
 }
 
+/**
+* Replaces the given number in an array with a new value
+* @param {array} array
+* @param {number} numToReplace
+* @param {number} newNum
+* @returns {array}
+*/
+export function replaceNumber(arr, numToReplace, newNum) {
+    if (arr.includes(numToReplace)) {
+        const idx = arr.indexOf(numToReplace);
+        return arr.slice(0, idx).concat(newNum, arr.slice(idx + 1, arr.length));
+    } else return arr;
+}
+
 /// Set Functions ///
 
 // set.delete is in place.  This function will then return the set so it can be referenced.
