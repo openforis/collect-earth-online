@@ -4,7 +4,7 @@ import _ from "lodash";
 import SurveyRule from "../components/SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
 import {removeEnumerator} from "../utils/generalUtils";
-import {mapObject, mapObjectArray, filterObject} from "../utils/sequence";
+import {mapObject, mapObjectArray, replaceNumber, filterObject} from "../utils/sequence";
 
 export default function SurveyCardList(props) {
     const topLevelNodes = mapObjectArray(
@@ -40,16 +40,47 @@ class SurveyCard extends React.Component {
         : val === swapVal ? checkVal
             : val);
 
+    swapIdArray = (arr, checkVal, swapVal) => {
+        if (arr.includes(checkVal) && !arr.includes(swapVal)) {
+            return replaceNumber(arr, checkVal, swapVal);
+        } else if (arr.includes(swapVal) && !arr.includes(checkVal)) {
+            return replaceNumber(arr, swapVal, checkVal);
+        } else return arr;
+    };
+
+    updateRuleQuestionIds = (rule, oldQuestionId, newQuestionId) => {
+        if (rule.ruleType === "text-match" || rule.ruleType === "numeric-range") {
+            const questionId = this.swapId(rule.questionId, oldQuestionId, newQuestionId);
+            return {...rule, questionId};
+        }
+        if (rule.ruleType === "incompatible-answers") {
+            const questionId1 = this.swapId(rule.questionId1, oldQuestionId, newQuestionId);
+            const questionId2 = this.swapId(rule.questionId2, oldQuestionId, newQuestionId);
+            return {...rule, questionId1, questionId2};
+        }
+        if (rule.ruleType === "sum-of-answers") {
+            const questionIds = this.swapIdArray(rule.questionIds, oldQuestionId, newQuestionId);
+            return {...rule, questionIds};
+        }
+        if (rule.ruleType === "matching-sums") {
+            const questionIds1 = this.swapIdArray(rule.questionIds1, oldQuestionId, newQuestionId);
+            const questionIds2 = this.swapIdArray(rule.questionIds2, oldQuestionId, newQuestionId);
+            return {...rule, questionIds1, questionIds2};
+        } else return rule;
+    };
+
     swapQuestionIds = upOrDown => {
-        const {surveyQuestions, surveyQuestionId, topLevelNodeIds} = this.props;
+        const {surveyRules, surveyQuestions, surveyQuestionId, topLevelNodeIds} = this.props;
         const newId = topLevelNodeIds[
-            this.props.topLevelNodeIds.indexOf(surveyQuestionId) + upOrDown
+            topLevelNodeIds.indexOf(surveyQuestionId) + upOrDown
         ];
         this.props.setProjectDetails({
             surveyQuestions: mapObject(surveyQuestions, ([key, val]) => [
                 this.swapId(Number(key), surveyQuestionId, newId),
                 {...val, parentQuestionId: this.swapId(val.parentQuestionId, surveyQuestionId, newId)}
-            ])
+            ]),
+            surveyRules: surveyRules.map(rule =>
+                this.updateRuleQuestionIds(rule, surveyQuestionId, newId))
         });
     };
 
