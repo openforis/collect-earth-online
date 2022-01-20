@@ -1,6 +1,7 @@
 import React, {useContext} from "react";
 
 import {EditorContext} from "../constants";
+import SvgIcon from "../../components/svg/SvgIcon";
 
 export default function BasemapSelector() {
     const {setWidgetDesign, getWidgetDesign, imagery, getInstitutionImagery, institutionId} = useContext(EditorContext);
@@ -11,9 +12,10 @@ export default function BasemapSelector() {
                 <button
                     className="btn btn-sm btn-secondary mb-1"
                     onClick={getInstitutionImagery}
+                    title="Refresh Basemap"
                     type="button"
                 >
-                    Refresh
+                    <SvgIcon icon="refresh" size="1.2rem"/>
                 </button>
             </div>
             <select

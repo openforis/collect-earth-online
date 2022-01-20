@@ -26,6 +26,7 @@ import plusIcon from "./plus.svg";
 import pointIcon from "./pointIcon.svg";
 import polygonIcon from "./polygonIcon.svg";
 import questionIcon from "./questionIcon.svg";
+import refreshIcon from "./refreshIcon.svg";
 import rightArrowIcon from "./rightArrowIcon.svg";
 import rightCaretIcon from "./rightCaretIcon.svg";
 import rightDoubleIcon from "./rightDoubleIcon.svg";
@@ -64,6 +65,7 @@ const iconMap = {
     "point": pointIcon,
     "polygon": polygonIcon,
     "question": questionIcon,
+    "refresh": refreshIcon,
     "rightArrow": rightArrowIcon,
     "rightCaret": rightCaretIcon,
     "rightDouble": rightDoubleIcon,
