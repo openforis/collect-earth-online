@@ -245,6 +245,7 @@ export class NavigationBar extends React.Component {
                             {this.state.helpSlides.length > 0 && (
                                 <div
                                     className="tooltip_wrapper"
+                                    id="helpButton"
                                     style={{
                                         animation: "glow 2s 6 alternate",
                                         animationDelay: "1s",
