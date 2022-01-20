@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import Joyride from "react-joyride";
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
 import {mercator} from "./utils/mercator";
 import {sortAlphabetically} from "./utils/generalUtils";
@@ -244,7 +245,7 @@ class SideBar extends React.Component {
     render() {
         return this.props.showSidePanel && (
             <div
-                className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column"
+                className="first-step col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column"
                 id="lPanel"
             >
                 {(this.props.userRole === "admin" || this.props.userId === -1) && (
@@ -696,17 +697,65 @@ class ProjectPopup extends React.Component {
 }
 
 export function pageInit(args) {
+    const steps = [
+        {
+            target: "body",
+            placement: "center",
+            title: "React Joyride",
+            content: "Welcome to the tour of CEO!",
+            locale: {skip: <strong aria-label="skip">Skip Tour</strong>}
+        },
+        {
+            target: "#filter-institution",
+            styles: {
+                options: {
+                    backgroundColor: "#31bab0"
+                }
+            },
+            content: (
+                <div>
+                    <h2>Step Number 2</h2>
+                    <span>
+                    You can imbed
+                        <b> JSX </b>
+                    inside the content of each step, such as:
+                        <ul>
+                            <li>Lists</li>
+                            <li>
+                                <a href="/" style={{color: "blue"}}>Links</a>
+                            </li>
+                            <li><i>And more!</i></li>
+                        </ul>
+                    </span>
+                </div>
+            )
+        },
+        {
+            target: "#helpButton",
+            content: "Here's the help button!",
+            title: "Last Step"
+        }
+    ];
+
     ReactDOM.render(
-        <NavigationBar
-            userId={args.userId}
-            userName={args.userName}
-            version={args.version}
-        >
-            <Home
-                userId={args.userId || -1}
-                userRole={args.userRole || ""}
+        <>
+            <Joyride
+                continuous
+                showProgress
+                showSkipButton
+                steps={steps}
             />
-        </NavigationBar>,
+            <NavigationBar
+                userId={args.userId}
+                userName={args.userName}
+                version={args.version}
+            >
+                <Home
+                    userId={args.userId || -1}
+                    userRole={args.userRole || ""}
+                />
+            </NavigationBar>
+        </>,
         document.getElementById("app")
     );
 }
