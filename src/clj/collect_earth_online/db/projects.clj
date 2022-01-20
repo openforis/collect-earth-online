@@ -783,8 +783,8 @@
 (def plot-base-headers [:plotid
                         :center_lon
                         :center_lat
-                        :size_m
                         :shape
+                        :size_m
                         :sample_points
                         :email
                         :flagged
