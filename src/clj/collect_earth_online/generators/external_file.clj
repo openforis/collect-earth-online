@@ -78,7 +78,11 @@
                              (update r geom-key tc/str->pg "geometry")
                              (update r :visible_id tc/val->int)))
                          (str/split body-text #"\r\n|\n|\r"))]
-    [header-keys body]))
+    (if (apply distinct? header-keys)
+      [header-keys body]
+      (pu/init-throw (str "The provided "
+                           design-type
+                           " SHP file must not contain duplicate column titles.")))))
 
 (defmethod get-file-data :csv [_ design-type ext-file folder-name]
   (let [rows       (str/split (slurp (str folder-name ext-file)) #"\r\n|\n|\r")
@@ -110,7 +114,11 @@
                            (rest rows))]
       (if (and (some #(= % :lon) header-keys)
                (some #(= % :lat) header-keys))
-        [(pu/remove-vector-items header-keys [:lon :lat]) body]
+        (if (apply distinct? header-keys)
+          [(pu/remove-vector-items header-keys [:lon :lat]) body]
+          (pu/init-throw (str "The provided "
+                               design-type
+                               " CSV file must not contain duplicate column titles.")))
         (pu/init-throw  (str "The provided "
                              design-type
                              " CSV file must contain a LAT and LON column."))))))
