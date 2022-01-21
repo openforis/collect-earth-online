@@ -73,9 +73,9 @@
        (:survey_questions)
        (tc/jsonb->clj)))
 
-(defn- users-samples->answers [users-samples question]
+(defn- users-samples->answers [users-samples question-id]
   (map (fn [sv]
-         (map #(get-in % [question "answerId"])
+         (map #(get-in % [question-id "answerId"])
               sv))
        users-samples))
 
@@ -108,8 +108,8 @@
                                         (mapv (fn [[_ samples]]
                                                 (map (fn [{:keys [:saved_answers]}] (jsonb->clj-str saved_answers))
                                                      samples))))]
-                 (some (fn [{:keys [question]}]
-                         (->> question
+                 (some (fn [[question-id _sq]]
+                         (->> question-id
                               (users-samples->answers users-samples)
                               (question-disagreement)
                               (<= threshold)))
@@ -127,10 +127,11 @@
                              (get-samples-answer-array plot-id (:user_id user)))
                            user_plots)]
     (data-response (->> (get-survey-questions project-id)
-                        (map (fn [{:keys [question] :as sq}]
-                               (let [sample-answers (users-samples->answers users-samples question)]
+                        (map (fn [[question-id sq]]
+                               (let [sample-answers (users-samples->answers users-samples question-id)]
                                  (assoc sq
-                                        :disagreement      (question-disagreement sample-answers)
+                                        :questionId   (tc/val->int question-id)
+                                        :disagreement (question-disagreement sample-answers)
                                         :userPlotInfo (map (fn [user ans]
                                                              {:userId     (:user_id user)
                                                               :flagged    (:flagged user)
