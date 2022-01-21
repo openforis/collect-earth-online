@@ -1,6 +1,7 @@
 import React from "react";
 
 import {isArray} from "../../utils/generalUtils";
+import SvgIcon from "../../components/svg/SvgIcon";
 
 export default function GetBands({bands, setBands, assetId, assetType, hideLabel}) {
     const getBandsFromGateway = () => {
@@ -41,15 +42,16 @@ export default function GetBands({bands, setBands, assetId, assetType, hideLabel
                 <button
                     className="btn btn-sm btn-secondary mb-1"
                     onClick={getBandsFromGateway}
+                    title="Refresh Available Bands"
                     type="button"
                 >
-                    Refresh
+                    <SvgIcon icon="refresh" size="1.2rem"/>
                 </button>
             </div>
             {!hideLabel && (
                 <label className="ml-3">
                     {bands === null
-                        ? "Click on refresh to see the Available Bands."
+                        ? "Click on the refresh button to see the Available Bands."
                         : isArray(bands)
                             ? bands.join(", ")
                             : bands }

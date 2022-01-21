@@ -20,7 +20,7 @@ export default function PolygonDesigner() {
             />
             <GDTextArea
                 dataKey="visParams"
-                title="Image Parameters (json format)"
+                title="Image Parameters (JSON format)"
             />
         </>
     );

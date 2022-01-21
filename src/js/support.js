@@ -128,7 +128,7 @@ function Support() {
                     </p>
                     <h1>Geo-Dash Help Center</h1>
                     <p className="text-center col-lg-10 offset-lg-1 mb-4">
-                        Please access the <a href="/geo-dash/geo-dash-help" rel="noreferrer" target="_blank">Geo-Dash Help Center </a>
+                        Please access the <a href="/geo-dash-help" rel="noreferrer" target="_blank">Geo-Dash Help Center </a>
                         for details on configuring the Geo-Dash for your project.
                     </p>
                     <h1>Terms of Service</h1>

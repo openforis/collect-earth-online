@@ -37,7 +37,7 @@ export default function ImageCollectionAssetDesigner({isDual = false, prefixPath
                 dataKey="visParams"
                 placeholder={"{\"bands\": \"B4, B3, B2\", \n\"min\":0, \n\"max\": 0.3}"}
                 prefixPath={prefixPath}
-                title="Image Parameters (json format)"
+                title="Image Parameters (JSON format)"
             />
             <GDDateRange optional prefixPath={prefixPath}/>
         </>
