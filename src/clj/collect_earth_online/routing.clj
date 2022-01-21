@@ -32,7 +32,7 @@
    [:get  "/geo-dash"]                       {:handler     (render-page "/geo-dash")
                                               :auth-type   :collect
                                               :auth-action :redirect}
-   [:get  "/geo-dash/geo-dash-help"]         {:handler     (render-page "/geo-dash/geo-dash-help")}
+   [:get  "/geo-dash-help"]                  {:handler     (render-page "/geo-dash-help")}
    [:get  "/home"]                           {:handler     (render-page "/home")}
    [:get  "/institution-dashboard"]          {:handler     (render-page "/institution-dashboard")
                                               :auth-type   :admin

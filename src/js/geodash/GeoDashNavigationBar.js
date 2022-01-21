@@ -81,7 +81,7 @@ export default class GeoDashNavigationBar extends React.Component {
                             <li className="nav-item my-auto ml-1">
                                 <button
                                     className="btn btn-outline-lightgreen btn-sm"
-                                    onClick={() => window.open("geo-dash/geo-dash-help", "_blank")}
+                                    onClick={() => window.open("geo-dash-help", "_blank")}
                                     type="button"
                                 >
                                     Geo-Dash Help
