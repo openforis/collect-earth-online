@@ -107,7 +107,7 @@ class NewQuestionDesigner extends React.Component {
 
         this.state = {
             selectedAnswer: -1,
-            selectedParent: -1,
+            selectedParentId: -1,
             selectedType: 0,
             newQuestionText: ""
         };
@@ -115,19 +115,19 @@ class NewQuestionDesigner extends React.Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (lengthObject(this.props.surveyQuestions) !== lengthObject(prevProps.surveyQuestions)) {
-            if (!this.props.surveyQuestions[this.state.selectedParent]) {
-                this.setState({selectedParent: -1});
+            if (!this.props.surveyQuestions[this.state.selectedParentId]) {
+                this.setState({selectedParentId: -1});
             }
         }
 
-        if (this.state.selectedParent !== prevState.selectedParent) {
+        if (this.state.selectedParentId !== prevState.selectedParentId) {
             this.setState({selectedAnswer: -1});
         }
     }
 
     addSurveyQuestion = () => {
         if (this.state.newQuestionText !== "") {
-            const {selectedType, newQuestionText, selectedParent, selectedAnswer} = this.state;
+            const {selectedType, newQuestionText, selectedParentId, selectedAnswer} = this.state;
             const {surveyQuestions, setProjectDetails} = this.props;
             const {dataType, componentType} = this.componentTypes[selectedType];
             const repeatedQuestions = lengthObject(filterObject(
@@ -144,7 +144,7 @@ class NewQuestionDesigner extends React.Component {
                         ? newQuestionText + ` (${repeatedQuestions})`
                         : newQuestionText,
                     answers: {},
-                    parentQuestionId: selectedParent,
+                    parentQuestionId: selectedParentId,
                     parentAnswerId: selectedAnswer,
                     dataType,
                     componentType
@@ -159,22 +159,18 @@ class NewQuestionDesigner extends React.Component {
 
     renderOptions = () => {
         const {surveyQuestions} = this.props;
-        if (lengthObject(surveyQuestions)) {
-            return mapObjectArray(
-                filterObject(surveyQuestions, ([_id, sq]) => sq.componentType !== "input"),
-                ([key, val]) => (
-                    <option key={key} value={key}>
-                        {val.question}
-                    </option>
-                )
-            );
-        } else {
-            return "";
-        }
+        return mapObjectArray(
+            filterObject(surveyQuestions, ([_id, sq]) => sq.componentType !== "input"),
+            ([key, val]) => (
+                <option key={key} value={key}>
+                    {val.question}
+                </option>
+            )
+        );
     };
 
     render() {
-        const selectedParent = this.props.surveyQuestions[this.state.selectedParent];
+        const parentAnswers = _.get(this.props, ["surveyQuestions", this.state.selectedParentId, "answers"], {});
         return (
             <table className="mt-4">
                 <tbody>
@@ -207,9 +203,9 @@ class NewQuestionDesigner extends React.Component {
                             <select
                                 className="form-control form-control-sm"
                                 id="value-parent"
-                                onChange={e => this.setState({selectedParent: parseInt(e.target.value)})}
+                                onChange={e => this.setState({selectedParentId: parseInt(e.target.value)})}
                                 size="1"
-                                value={this.state.selectedParent}
+                                value={this.state.selectedParentId}
                             >
                                 <option key={-1} value={-1}>None</option>
                                 {this.renderOptions()}
@@ -229,16 +225,14 @@ class NewQuestionDesigner extends React.Component {
                                 value={this.state.selectedAnswer}
                             >
                                 <option key={-1} value={-1}>Any</option>
-                                {this.state.selectedParent > 0 && selectedParent
-                                    ? mapObjectArray(
-                                        selectedParent.answers,
-                                        ([answerId, answer]) => (
-                                            <option key={answerId} value={answerId}>
-                                                {answer.answer}
-                                            </option>
-                                        )
+                                {mapObjectArray(
+                                    parentAnswers,
+                                    ([answerId, answer]) => (
+                                        <option key={answerId} value={answerId}>
+                                            {answer.answer}
+                                        </option>
                                     )
-                                    : ""}
+                                )}
                             </select>
                         </td>
                     </tr>
