@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import requiredIf from "react-required-if";
+import {requiredBy} from "airbnb-prop-types";
 
 /**
  * Component for a generic modal.
@@ -74,7 +74,7 @@ export default function Modal({title, danger, children, closeText, confirmText, 
 
 Modal.propTypes = {
     closeText: PropTypes.string,
-    confirmText: requiredIf(PropTypes.string, props => typeof props.onConfirm === "function"),
+    confirmText: requiredBy("onConfirm", PropTypes.string),
     onClose: PropTypes.func.isRequired,
     onConfirm: PropTypes.func,
     title: PropTypes.string.isRequired
