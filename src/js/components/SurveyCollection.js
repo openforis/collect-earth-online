@@ -31,7 +31,7 @@ export class SurveyCollection extends React.Component {
         }
 
         // This happens when the selected question is set back to the beginning after switching from draw to question mode.
-        if (this.props.selectedQuestionId !== prevProps.selectedQuestionId) {
+        if (this.props.selectedQuestionId !== prevProps.selectedQuestionId && this.props.selectedQuestionId >= 0) {
             const {parentQuestionId} = this.props.surveyQuestions[this.props.selectedQuestionId];
             if (parentQuestionId === -1) {
                 this.setState({currentNodeIndex: this.state.topLevelNodeIds.indexOf(this.props.selectedQuestionId)});
@@ -840,7 +840,12 @@ class AnswerDropDown extends React.Component {
     toggleDropDown = () => this.setState({showDropdown: !this.state.showDropdown});
 
     render() {
-        const {surveyNode, surveyNode: {answers, answered}, selectedSampleId, validateAndSetCurrentValue} = this.props;
+        const {
+            surveyNodeId,
+            surveyNode: {answers, answered},
+            selectedSampleId,
+            validateAndSetCurrentValue
+        } = this.props;
         const {showDropdown} = this.state;
         const answerOptions = mapObjectArray(answers, ([strId, ans]) => {
             const ansId = Number(strId);
@@ -848,7 +853,7 @@ class AnswerDropDown extends React.Component {
                 <div
                     key={ansId}
                     className="d-inline-flex py-2 border-bottom"
-                    onMouseDown={() => validateAndSetCurrentValue(surveyNode, ansId)}
+                    onMouseDown={() => validateAndSetCurrentValue(surveyNodeId, ansId)}
                     style={{backgroundColor: answered.some(a => a.answerId === ansId) ? "#e8e8e8" : "#f1f1f1"}}
                 >
                     <div className="col-1">

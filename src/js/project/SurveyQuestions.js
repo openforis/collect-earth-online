@@ -106,7 +106,7 @@ class NewQuestionDesigner extends React.Component {
         ];
 
         this.state = {
-            selectedAnswer: -1,
+            selectedAnswerId: -1,
             selectedParentId: -1,
             selectedType: 0,
             newQuestionText: ""
@@ -121,13 +121,13 @@ class NewQuestionDesigner extends React.Component {
         }
 
         if (this.state.selectedParentId !== prevState.selectedParentId) {
-            this.setState({selectedAnswer: -1});
+            this.setState({selectedAnswerId: -1});
         }
     }
 
     addSurveyQuestion = () => {
         if (this.state.newQuestionText !== "") {
-            const {selectedType, newQuestionText, selectedParentId, selectedAnswer} = this.state;
+            const {selectedType, newQuestionText, selectedParentId, selectedAnswerId} = this.state;
             const {surveyQuestions, setProjectDetails} = this.props;
             const {dataType, componentType} = this.componentTypes[selectedType];
             const repeatedQuestions = lengthObject(filterObject(
@@ -145,12 +145,12 @@ class NewQuestionDesigner extends React.Component {
                         : newQuestionText,
                     answers: {},
                     parentQuestionId: selectedParentId,
-                    parentAnswerId: selectedAnswer,
+                    parentAnswerId: selectedAnswerId,
                     dataType,
                     componentType
                 };
                 setProjectDetails({surveyQuestions: {...surveyQuestions, [newId]: newQuestion}});
-                this.setState({selectedAnswer: -1, newQuestionText: ""});
+                this.setState({selectedAnswerId: -1, newQuestionText: ""});
             }
         } else {
             alert("Please enter a survey question first.");
@@ -220,9 +220,9 @@ class NewQuestionDesigner extends React.Component {
                             <select
                                 className="form-control form-control-sm"
                                 id="value-answer"
-                                onChange={e => this.setState({selectedAnswer: parseInt(e.target.value)})}
+                                onChange={e => this.setState({selectedAnswerId: parseInt(e.target.value)})}
                                 size="1"
-                                value={this.state.selectedAnswer}
+                                value={this.state.selectedAnswerId}
                             >
                                 <option key={-1} value={-1}>Any</option>
                                 {mapObjectArray(
