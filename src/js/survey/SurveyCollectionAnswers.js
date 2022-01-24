@@ -211,7 +211,11 @@ class AnswerDropDown extends React.Component {
 
         return (
             <div className="mb-1 d-flex flex-column align-items-start">
-                <div className="dropdown-selector ml-3 d-flex pl-0 col-12">
+                <div
+                    className="dropdown-selector ml-3 d-flex pl-0 col-12"
+                    onClick={this.toggleDropDown}
+                    style={{cursor: "pointer"}}
+                >
                     <div className="SelectedItem d-inline-flex border col-8">
                         {/* TODO, why are we mapping twice? This looks wrong, should be `find -> lookup answer`, I think. */}
                         {mapObjectArray(answers, ([strId, ans]) => {
@@ -241,7 +245,6 @@ class AnswerDropDown extends React.Component {
                     <button
                         className="btn btn-lightgreen btn-sm"
                         onBlur={() => this.setState({showDropdown: false})}
-                        onClick={this.toggleDropDown}
                         type="button"
                     >
                         <SvgIcon icon="downCaret" size="1rem"/>

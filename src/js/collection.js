@@ -810,7 +810,7 @@ class Collection extends React.Component {
             return this.calcVisibleSamples(parentQuestionId)
                 .filter(sample => {
                     const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestionId, "answerId"]);
-                    return sampleAnswerId && (parentAnswerId === -1 || parentAnswerId === sampleAnswerId);
+                    return sampleAnswerId != null && (parentAnswerId === -1 || parentAnswerId === sampleAnswerId);
                 });
         }
     };
