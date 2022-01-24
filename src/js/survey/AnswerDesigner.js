@@ -88,11 +88,10 @@ export default class AnswerDesigner extends React.Component {
         const {surveyQuestion, answerId} = this.props;
         const {newAnswerText, selectedColor} = this.state;
         return (
-            <div className="col d-flex">
+            <div className="col d-flex mb-1 align-items-center">
                 {answerId != null
                     ? (
                         <>
-
                             <button
                                 className="btn btn-outline-red py-0 px-2 mr-1"
                                 onClick={this.removeAnswer}
@@ -118,7 +117,7 @@ export default class AnswerDesigner extends React.Component {
                         </button>
                     )}
                 <input
-                    className="value-color mx-2 mt-1"
+                    className="mr-1"
                     onChange={e => this.setState({selectedColor: e.target.value})}
                     type="color"
                     value={selectedColor}
