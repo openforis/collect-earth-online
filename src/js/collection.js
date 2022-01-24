@@ -791,7 +791,7 @@ class Collection extends React.Component {
             .forEach(feature => {
                 const sampleId = feature.get("sampleId");
                 const userAnswer = _.get(this.state, ["userSamples", sampleId, selectedQuestionId, "answerId"], -1);
-                const color = componentType === "input" && userAnswer > 0
+                const color = componentType === "input" && userAnswer >= 0
                     ? _.get(firstEntry(answers), [1, "color"], "")
                     : _.get(answers, [userAnswer, "color"], "");
 
