@@ -9,16 +9,17 @@ export default class NewAnswerDesigner extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectedColor: "#1527f6",
-            newAnswerText: ""
+            selectedColor: this.props.color || "#1527f6",
+            newAnswerText: this.props.answer || ""
         };
     }
 
-    removeAnswer = (questionId, answerId) => {
+    removeAnswer = () => {
+        const {surveyQuestionId, answerId} = this.props;
         const {surveyQuestions, setProjectDetails} = this.context;
         const matchingQuestion = findObject(
             surveyQuestions,
-            ([_id, sq]) => sq.parentQuestionId === questionId && sq.parentAnswerId === answerId
+            ([_id, sq]) => sq.parentQuestionId === surveyQuestionId && sq.parentAnswerId === answerId
         );
         if (matchingQuestion) {
             alert(
@@ -27,27 +28,23 @@ export default class NewAnswerDesigner extends React.Component {
                 + ") is referencing it."
             );
         } else {
-            const surveyQuestion = surveyQuestions[questionId];
+            const surveyQuestion = surveyQuestions[surveyQuestionId];
             // eslint-disable-next-line no-unused-vars
             const {[answerId]: _id, ...remainingAnswers} = surveyQuestion.answers;
             setProjectDetails({
                 surveyQuestions: {
                     ...surveyQuestions,
-                    [questionId]: {...surveyQuestion, answers: remainingAnswers}
+                    [surveyQuestionId]: {...surveyQuestion, answers: remainingAnswers}
                 }
             });
         }
     };
 
-    maxAnswers = (componentType, dataType) => ((componentType || "").toLowerCase() === "input" ? 1
-        : (dataType || "").toLowerCase() === "boolean" ? 2
-            : 1000);
-
-    addSurveyAnswer = () => {
-        const {surveyQuestionId, surveyQuestion} = this.props;
+    saveSurveyAnswer = () => {
+        const {surveyQuestionId, surveyQuestion, answerId} = this.props;
         const {surveyQuestions, setProjectDetails} = this.context;
         if (this.state.newAnswerText.length > 0) {
-            const newId = getNextInSequence(Object.keys(surveyQuestion.answers));
+            const newId = answerId || getNextInSequence(Object.keys(surveyQuestion.answers));
             const newAnswer = {
                 answer: this.state.newAnswerText,
                 color: this.state.selectedColor
@@ -64,25 +61,16 @@ export default class NewAnswerDesigner extends React.Component {
                     }
                 }
             });
-            this.setState({selectedColor: "#1527f6", newAnswerText: ""});
+            if (answerId == null) this.setState({selectedColor: "#1527f6", newAnswerText: ""});
         } else {
             alert("Please enter a value for the answer.");
         }
     };
 
     renderExisting = () => {
-        const {answer, color, inDesignMode, surveyQuestionId, answerId} = this.props;
+        const {answer, color} = this.props;
         return (
             <div className="col d-flex">
-                {inDesignMode && (
-                    <button
-                        className="btn btn-outline-red py-0 px-2 mr-1"
-                        onClick={() => this.removeAnswer(surveyQuestionId, answerId)}
-                        type="button"
-                    >
-                        <SvgIcon icon="trash" size="1rem"/>
-                    </button>
-                )}
                 <div>
                     <div
                         className="circle mt-1 mr-3"
@@ -96,41 +84,66 @@ export default class NewAnswerDesigner extends React.Component {
         );
     };
 
-    renderNew = () => (
-        <div className="col d-flex">
-            <button
-                className="btn btn-success py-0 px-2 mr-1"
-                onClick={this.addSurveyAnswer}
-                type="button"
-            >
-                <SvgIcon icon="plus" size="0.9rem"/>
-            </button>
-            <input
-                className="value-color mx-2 mt-1"
-                onChange={e => this.setState({selectedColor: e.target.value})}
-                type="color"
-                value={this.state.selectedColor}
-            />
-            <input
-                autoComplete="off"
-                className="value-name"
-                maxLength="120"
-                onChange={e => this.setState({newAnswerText: e.target.value})}
-                onKeyDown={e => {
-                    if (e.key === "e" && this.props.surveyQuestion.dataType === "number") e.preventDefault();
-                }}
-                type={this.props.surveyQuestion.dataType === "number" ? "number" : "text"}
-                value={this.state.newAnswerText}
-            />
-        </div>
-    );
+    renderNew = () => {
+        const {surveyQuestion, answerId} = this.props;
+        const {newAnswerText, selectedColor} = this.state;
+        return (
+            <div className="col d-flex">
+                {answerId != null
+                    ? (
+                        <>
+
+                            <button
+                                className="btn btn-outline-red py-0 px-2 mr-1"
+                                onClick={this.removeAnswer}
+                                type="button"
+                            >
+                                <SvgIcon icon="trash" size="0.9rem"/>
+                            </button>
+                            <button
+                                className="btn btn-success py-0 px-2 mr-1"
+                                onClick={this.saveSurveyAnswer}
+                                type="button"
+                            >
+                                <SvgIcon icon="save" size="0.9rem"/>
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            className="btn btn-success py-0 px-2 mr-1"
+                            onClick={this.saveSurveyAnswer}
+                            type="button"
+                        >
+                            <SvgIcon icon="plus" size="0.9rem"/>
+                        </button>
+                    )}
+                <input
+                    className="value-color mx-2 mt-1"
+                    onChange={e => this.setState({selectedColor: e.target.value})}
+                    type="color"
+                    value={selectedColor}
+                />
+                <input
+                    autoComplete="off"
+                    maxLength="120"
+                    onChange={e => this.setState({newAnswerText: e.target.value})}
+                    onKeyDown={e => {
+                        if (e.key === "e" && surveyQuestion.dataType === "number") e.preventDefault();
+                    }}
+                    type={surveyQuestion.dataType === "number" ? "number" : "text"}
+                    value={newAnswerText}
+                />
+            </div>
+        );
+    };
 
     render() {
+        const {inDesignMode} = this.props;
         return (
             <div id="new-answer-designer">
-                {this.props.answer
-                    ? this.renderExisting()
-                    : this.renderNew()}
+                {inDesignMode
+                    ? this.renderNew()
+                    : this.renderExisting()}
             </div>
         );
     }
