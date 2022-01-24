@@ -2,7 +2,7 @@ import React, {useContext, useState} from "react";
 
 import SurveyRule from "./SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
-import NewAnswerDesigner from "./NewAnswerDesigner";
+import AnswerDesigner from "./AnswerDesigner";
 
 import {removeEnumerator} from "../utils/generalUtils";
 import {mapObjectArray, filterObject, lengthObject} from "../utils/sequence";
@@ -152,7 +152,7 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                     </div>
                     <div>
                         {mapObjectArray(surveyQuestion.answers, ([answerId, surveyAnswer]) => (
-                            <NewAnswerDesigner
+                            <AnswerDesigner
                                 key={`${surveyQuestionId}-${answerId}`}
                                 answer={surveyAnswer.answer}
                                 answerId={answerId}
@@ -163,7 +163,7 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                             />
                         ))}
                         {inDesignMode && !maxAnswers(surveyQuestion) && (
-                            <NewAnswerDesigner
+                            <AnswerDesigner
                                 inDesignMode={inDesignMode}
                                 surveyQuestion={surveyQuestion}
                                 surveyQuestionId={surveyQuestionId}

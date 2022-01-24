@@ -5,7 +5,7 @@ import SvgIcon from "../components/svg/SvgIcon";
 import {ProjectContext} from "../project/constants";
 import {findObject, getNextInSequence} from "../utils/sequence";
 
-export default class NewAnswerDesigner extends React.Component {
+export default class AnswerDesigner extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -148,4 +148,4 @@ export default class NewAnswerDesigner extends React.Component {
         );
     }
 }
-NewAnswerDesigner.contextType = ProjectContext;
+AnswerDesigner.contextType = ProjectContext;
