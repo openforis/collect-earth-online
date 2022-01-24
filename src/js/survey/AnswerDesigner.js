@@ -19,7 +19,7 @@ export default class AnswerDesigner extends React.Component {
         const {surveyQuestions, setProjectDetails} = this.context;
         const matchingQuestion = findObject(
             surveyQuestions,
-            ([_id, sq]) => sq.parentQuestionId === surveyQuestionId && sq.parentAnswerId === answerId
+            ([_id, sq]) => sq.parentQuestionId === surveyQuestionId && sq.parentAnswerIds.includes(answerId)
         );
         if (matchingQuestion) {
             alert(

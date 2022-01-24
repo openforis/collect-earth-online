@@ -22,7 +22,7 @@ export default class NewQuestionDesigner extends React.Component {
         ];
 
         this.state = {
-            selectedAnswerId: -1,
+            selectedAnswerIds: [],
             selectedParentId: -1,
             selectedType: 0,
             newQuestionText: ""
@@ -39,13 +39,13 @@ export default class NewQuestionDesigner extends React.Component {
 
         if (this.state.selectedParentId !== prevState.selectedParentId) {
             // eslint-disable-next-line react/no-did-update-set-state
-            this.setState({selectedAnswerId: -1});
+            this.setState({selectedAnswerIds: []});
         }
     }
 
     addSurveyQuestion = () => {
         if (this.state.newQuestionText !== "") {
-            const {selectedType, newQuestionText, selectedParentId, selectedAnswerId} = this.state;
+            const {selectedType, newQuestionText, selectedParentId, selectedAnswerIds} = this.state;
             const {surveyQuestions, setProjectDetails} = this.props;
             const {dataType, componentType} = this.componentTypes[selectedType];
             const repeatedQuestions = lengthObject(filterObject(
@@ -63,12 +63,12 @@ export default class NewQuestionDesigner extends React.Component {
                         : newQuestionText,
                     answers: {},
                     parentQuestionId: selectedParentId,
-                    parentAnswerId: selectedAnswerId,
+                    parentAnswerIds: selectedAnswerIds,
                     dataType,
                     componentType
                 };
                 setProjectDetails({surveyQuestions: {...surveyQuestions, [newId]: newQuestion}});
-                this.setState({selectedAnswerId: -1, newQuestionText: ""});
+                this.setState({selectedAnswerIds: [], newQuestionText: ""});
             }
         } else {
             alert("Please enter a survey question first.");
@@ -132,17 +132,17 @@ export default class NewQuestionDesigner extends React.Component {
                     </tr>
                     <tr>
                         <td>
-                            <label htmlFor="value-answer">Parent Answer:</label>
+                            <label htmlFor="value-answer">Parent Answers:</label>
                         </td>
                         <td>
                             <select
-                                className="form-control form-control-sm"
-                                id="value-answer"
-                                onChange={e => this.setState({selectedAnswerId: parseInt(e.target.value)})}
-                                size="1"
-                                value={this.state.selectedAnswerId}
+                                className="form-control form-control-sm overflow-auto"
+                                multiple="multiple"
+                                onChange={e => this.setState({
+                                    selectedAnswerIds: Array.from(e.target.selectedOptions, i => Number(i.value))
+                                })}
+                                value={this.state.selectedAnswerIds}
                             >
-                                <option key={-1} value={-1}>Any</option>
                                 {mapObjectArray(
                                     parentAnswers,
                                     ([answerId, answer]) => (
