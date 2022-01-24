@@ -271,7 +271,7 @@ announcement.txt and remove all text.
 
 ** License and Distribution
 
-Copyright © 2016-2021 FAO.
+Copyright © 2016-2022 FAO.
 
 Collect Earth Online is distributed by FAO under the terms of the MIT
 License. See LICENSE in this directory for more information.
