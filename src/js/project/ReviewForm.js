@@ -6,7 +6,7 @@ import {OverviewReview} from "./Overview";
 import {AOIReview, PlotReview} from "./PlotDesign";
 import {SampleReview} from "./SampleDesign";
 import SurveyCardList from "../survey/SurveyCardList";
-import {SurveyRulesList} from "../survey/SurveyRules";
+import SurveyRulesList from "../survey/SurveyRulesList";
 import SvgIcon from "../components/svg/SvgIcon";
 import UserAssignmentReview from "./UserAssignmentReview";
 import QAQCReview from "./QAQCReview";

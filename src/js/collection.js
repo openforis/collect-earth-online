@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import _ from "lodash";
 
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
-import {SurveyCollection} from "./components/SurveyCollection";
+import SurveyCollection from "./survey/SurveyCollection";
 import {
     PlanetMenu,
     PlanetDailyMenu,

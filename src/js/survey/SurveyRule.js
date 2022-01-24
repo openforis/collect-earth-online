@@ -1,12 +1,7 @@
 import React from "react";
 import _ from "lodash";
 
-import {truncate} from "../utils/generalUtils";
-import SvgIcon from "./svg/SvgIcon";
-
-function truncjoin(qs) {
-    return qs.map(q => truncate(q, 15)).join(", ");
-}
+import SvgIcon from "../components/svg/SvgIcon";
 
 function getSurveyQuestionText(surveyQuestions, questionId) {
     return _.get(surveyQuestions, [questionId, "question"], "");

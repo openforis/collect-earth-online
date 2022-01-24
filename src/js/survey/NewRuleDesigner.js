@@ -1,95 +1,8 @@
-import React, {useContext} from "react";
-
-import SurveyRule from "../components/SurveyRule";
+import React from "react";
 
 import {isNumber} from "../utils/generalUtils";
 import {filterObject, getNextInSequence, lengthObject, mapObjectArray, sameContents} from "../utils/sequence";
 import {ProjectContext} from "../project/constants";
-
-export const SurveyRuleDesign = () => {
-    const {setProjectDetails, surveyRules, surveyQuestions} = useContext(ProjectContext);
-    return (
-        <div id="survey-rule-design">
-            <SurveyRulesList
-                inDesignMode
-                setProjectDetails={setProjectDetails}
-                surveyQuestions={surveyQuestions}
-                surveyRules={surveyRules}
-            />
-            <SurveyRulesForm/>
-        </div>
-    );
-};
-
-export class SurveyRulesList extends React.Component {
-    deleteSurveyRule = ruleId => {
-        const newSurveyRules = this.props.surveyRules.filter(rule => rule.id !== ruleId);
-        this.props.setProjectDetails({surveyRules: newSurveyRules});
-    };
-
-    renderRuleRow = r => {
-        const {inDesignMode, surveyQuestions} = this.props;
-        return (
-            <div key={r.id} style={{display: "flex", alignItems: "center"}}>
-                <SurveyRule
-                    inDesignMode={inDesignMode}
-                    removeRule={() => this.deleteSurveyRule(r.id)}
-                    ruleOptions={r}
-                    surveyQuestions={surveyQuestions}
-                />
-            </div>
-        );
-    };
-
-    render() {
-        const {surveyRules} = this.props;
-        return (surveyRules || []).length > 0
-            ? <div>{surveyRules.map(this.renderRuleRow)}</div>
-            : <label className="ml-3">No rules have been created for this survey.</label>;
-    }
-}
-
-class SurveyRulesForm extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            selectedRuleType: "text-match"
-        };
-    }
-
-    render() {
-        const {selectedRuleType} = this.state;
-        return (
-            <div className="mt-3 d-flex justify-content-center">
-                <div style={{display: "flex", flexFlow: "column", width: "25rem"}}>
-                    <h2>New Rule</h2>
-                    <div className="form-group">
-                        <label>Rule Type</label>
-                        <select
-                            className="form-control form-control-sm"
-                            onChange={e => this.setState({selectedRuleType: e.target.value})}
-                            value={selectedRuleType}
-                        >
-                            <option value="text-match">Text Regex Match</option>
-                            <option value="numeric-range">Numeric Range</option>
-                            <option value="sum-of-answers">Sum of Answers</option>
-                            <option value="matching-sums">Matching Sums</option>
-                            <option value="incompatible-answers">Incompatible Answers</option>
-                        </select>
-                    </div>
-                    {{
-                        "text-match": <TextMatchForm/>,
-                        "numeric-range": <NumericRangeForm/>,
-                        "sum-of-answers": <SumOfAnswersForm/>,
-                        "matching-sums": <MatchingSumsForm/>,
-                        "incompatible-answers": <IncompatibleAnswersForm/>
-                    }[selectedRuleType]}
-                </div>
-            </div>
-        );
-    }
-}
 
 class TextMatchForm extends React.Component {
     constructor(props) {
@@ -572,3 +485,45 @@ class IncompatibleAnswersForm extends React.Component {
     }
 }
 IncompatibleAnswersForm.contextType = ProjectContext;
+
+export default class NewRuleDesigner extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            selectedRuleType: "text-match"
+        };
+    }
+
+    render() {
+        const {selectedRuleType} = this.state;
+        return (
+            <div className="mt-3 d-flex justify-content-center">
+                <div style={{display: "flex", flexFlow: "column", width: "25rem"}}>
+                    <h2>New Rule</h2>
+                    <div className="form-group">
+                        <label>Rule Type</label>
+                        <select
+                            className="form-control form-control-sm"
+                            onChange={e => this.setState({selectedRuleType: e.target.value})}
+                            value={selectedRuleType}
+                        >
+                            <option value="text-match">Text Regex Match</option>
+                            <option value="numeric-range">Numeric Range</option>
+                            <option value="sum-of-answers">Sum of Answers</option>
+                            <option value="matching-sums">Matching Sums</option>
+                            <option value="incompatible-answers">Incompatible Answers</option>
+                        </select>
+                    </div>
+                    {{
+                        "text-match": <TextMatchForm/>,
+                        "numeric-range": <NumericRangeForm/>,
+                        "sum-of-answers": <SumOfAnswersForm/>,
+                        "matching-sums": <MatchingSumsForm/>,
+                        "incompatible-answers": <IncompatibleAnswersForm/>
+                    }[selectedRuleType]}
+                </div>
+            </div>
+        );
+    }
+}

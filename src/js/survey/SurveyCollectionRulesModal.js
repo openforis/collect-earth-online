@@ -1,6 +1,6 @@
 import React from "react";
 
-import SvgIcon from "./svg/SvgIcon";
+import SvgIcon from "../components/svg/SvgIcon";
 import {pluralize} from "../utils/generalUtils";
 import SurveyRule from "./SurveyRule";
 
