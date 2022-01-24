@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useContext} from "react";
 
 import SurveyRule from "./SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
@@ -6,19 +6,10 @@ import NewAnswerDesigner from "./NewAnswerDesigner";
 
 import {removeEnumerator} from "../utils/generalUtils";
 import {mapObjectArray, filterObject} from "../utils/sequence";
+import {ProjectContext} from "../project/constants";
 
-export default function SurveyDesignQuestion({
-    indentLevel,
-    inDesignMode,
-    setProjectDetails,
-    surveyQuestionId,
-    surveyQuestions,
-    surveyRules
-}) {
-    const deleteSurveyRule = ruleId => {
-        const newSurveyRules = surveyRules.filter(rule => rule.id !== ruleId);
-        setProjectDetails({surveyRules: newSurveyRules});
-    };
+export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQuestionId}) {
+    const {setProjectDetails, surveyQuestions, surveyRules} = useContext(ProjectContext);
 
     const getChildQuestionIds = questionId => {
         const childQuestionIds = mapObjectArray(
@@ -92,8 +83,7 @@ export default function SurveyDesignQuestion({
                                                             <div className="tooltip_content survey_rule">
                                                                 <SurveyRule
                                                                     inDesignMode={inDesignMode}
-                                                                    removeRule={() => deleteSurveyRule(rule.id)}
-                                                                    ruleOptions={rule}
+                                                                    rule={rule}
                                                                     surveyQuestions={surveyQuestions}
                                                                 />
                                                             </div>
@@ -151,10 +141,7 @@ export default function SurveyDesignQuestion({
                     key={childId}
                     indentLevel={indentLevel + 1}
                     inDesignMode={inDesignMode}
-                    setProjectDetails={setProjectDetails}
                     surveyQuestionId={childId}
-                    surveyQuestions={surveyQuestions}
-                    surveyRules={surveyRules}
                 />
             ))}
         </>

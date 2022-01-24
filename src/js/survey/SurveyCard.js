@@ -1,21 +1,20 @@
-import React, {useState} from "react";
+import React, {useContext, useState} from "react";
 
 import SvgIcon from "../components/svg/SvgIcon";
 import SurveyDesignQuestion from "./SurveyDesignQuestion";
 
 import {removeEnumerator} from "../utils/generalUtils";
 import {mapObject, replaceNumber} from "../utils/sequence";
+import {ProjectContext} from "../project/constants";
 
 export default function SurveyCard({
     cardNumber,
     inDesignMode,
-    setProjectDetails,
     surveyQuestionId,
-    surveyQuestions,
-    surveyRules,
     topLevelNodeIds
 }) {
     const [showQuestions, setShow] = useState(true);
+    const {setProjectDetails, surveyQuestions, surveyRules} = useContext(ProjectContext);
 
     const swapId = (val, checkVal, swapVal) => (val === checkVal ? swapVal
         : val === swapVal ? checkVal
@@ -112,10 +111,7 @@ export default function SurveyCard({
                             key={surveyQuestionId}
                             indentLevel={0}
                             inDesignMode={inDesignMode}
-                            setProjectDetails={setProjectDetails}
                             surveyQuestionId={surveyQuestionId}
-                            surveyQuestions={surveyQuestions}
-                            surveyRules={surveyRules}
                         />
                     </div>
                 )}

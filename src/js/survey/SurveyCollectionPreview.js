@@ -6,7 +6,7 @@ import SurveyCollection from "./SurveyCollection";
 import {ProjectContext} from "../project/constants";
 import {lengthObject, mapObjectArray, filterObject, mapObject} from "../utils/sequence";
 
-export default class SurveyQuestionsPreview extends React.Component {
+export default class SurveyCollectionPreview extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -149,4 +149,4 @@ export default class SurveyQuestionsPreview extends React.Component {
         );
     }
 }
-SurveyQuestionsPreview.contextType = ProjectContext;
+SurveyCollectionPreview.contextType = ProjectContext;

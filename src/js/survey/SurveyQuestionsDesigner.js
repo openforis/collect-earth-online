@@ -9,12 +9,7 @@ export default function SurveyQuestionsDesigner() {
     const {setProjectDetails, surveyQuestions, surveyRules} = useContext(ProjectContext);
     return (
         <div id="survey-design">
-            <SurveyCardList
-                inDesignMode
-                setProjectDetails={setProjectDetails}
-                surveyQuestions={surveyQuestions}
-                surveyRules={surveyRules}
-            />
+            <SurveyCardList inDesignMode/>
             <NewQuestionDesigner
                 setProjectDetails={setProjectDetails}
                 surveyQuestions={surveyQuestions}

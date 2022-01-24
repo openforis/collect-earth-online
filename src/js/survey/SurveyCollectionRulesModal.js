@@ -66,10 +66,10 @@ export default class RulesCollectionModal extends React.Component {
                                 </button>
                             </div>
                             <div className="modal-body text-left">
-                                {rules.map(r => (
+                                {rules.map(rule => (
                                     <SurveyRule
-                                        key={r.id}
-                                        ruleOptions={r}
+                                        key={rule.id}
+                                        rule={rule}
                                         surveyQuestions={this.props.surveyQuestions}
                                     />
                                 ))}
