@@ -3,18 +3,18 @@ import React, {useContext} from "react";
 import SurveyRule from "../components/SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
 
-import {isNumber, sameContents} from "../utils/generalUtils";
+import {isNumber} from "../utils/generalUtils";
+import {filterObject, getNextInSequence, lengthObject, mapObjectArray, sameContents} from "../utils/sequence";
 import {ProjectContext} from "./constants";
 
-const getNextId = array => array.reduce((maxId, obj) => Math.max(maxId, obj.id), 0) + 1;
-
 export const SurveyRuleDesign = () => {
-    const {setProjectDetails, surveyRules} = useContext(ProjectContext);
+    const {setProjectDetails, surveyRules, surveyQuestions} = useContext(ProjectContext);
     return (
         <div id="survey-rule-design">
             <SurveyRulesList
                 inDesignMode
                 setProjectDetails={setProjectDetails}
+                surveyQuestions={surveyQuestions}
                 surveyRules={surveyRules}
             />
             <SurveyRulesForm/>
@@ -28,39 +28,25 @@ export class SurveyRulesList extends React.Component {
         this.props.setProjectDetails({surveyRules: newSurveyRules});
     };
 
-    // TODO update the remove buttons with SVG
-    removeButton = ruleId => (
-        <button
-            className="btn btn-sm btn-outline-red mt-0 mr-3 mb-3"
-            onClick={() => this.deleteSurveyRule(ruleId)}
-            title="Delete Rule"
-            type="button"
-        >
-            <SvgIcon icon="trash" size="1.25rem"/>
-        </button>
-    );
-
     renderRuleRow = r => {
-        const {inDesignMode} = this.props;
+        const {inDesignMode, surveyQuestions} = this.props;
         return (
             <div key={r.id} style={{display: "flex", alignItems: "center"}}>
-                {inDesignMode && this.removeButton(r.id)}
-                <SurveyRule ruleOptions={r}/>
+                <SurveyRule
+                    inDesignMode={inDesignMode}
+                    removeRule={() => this.deleteSurveyRule(r.id)}
+                    ruleOptions={r}
+                    surveyQuestions={surveyQuestions}
+                />
             </div>
         );
     };
 
     render() {
         const {surveyRules} = this.props;
-        return (
-            <>
-                <h2>Rules</h2>
-                {(surveyRules || []).length > 0
-                    ? (
-                        <div>{surveyRules.map(this.renderRuleRow)}</div>
-                    ) : <label className="ml-3">No rules have been created for this survey.</label>}
-            </>
-        );
+        return (surveyRules || []).length > 0
+            ? <div>{surveyRules.map(this.renderRuleRow)}</div>
+            : <label className="ml-3">No rules have been created for this survey.</label>;
     }
 }
 
@@ -117,13 +103,13 @@ class TextMatchForm extends React.Component {
     }
 
     addSurveyRule = () => {
-        const {surveyRules, surveyQuestions, setProjectDetails} = this.context;
+        const {surveyRules, setProjectDetails} = this.context;
         const {questionId, regex} = this.state;
         const conflictingRule = surveyRules.find(rule => rule.ruleType === "text-match"
             && rule.questionId === questionId);
         const errorMessages = [
             conflictingRule && "A text regex match rule already exists for this question. (Rule " + conflictingRule.id + ")",
-            questionId < 1 && "You must select a question.",
+            questionId < 0 && "You must select a question.",
             regex.length === 0 && "The regex string is missing."
         ].filter(m => m);
         if (errorMessages.length > 0) {
@@ -131,10 +117,9 @@ class TextMatchForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextId(surveyRules),
+                    id: getNextInSequence(surveyRules.map(rule => rule.id)),
                     ruleType: "text-match",
                     questionId,
-                    questionsText: [surveyQuestions.find(q => q.id === questionId).question],
                     regex
                 }]
             });
@@ -143,9 +128,12 @@ class TextMatchForm extends React.Component {
 
     render() {
         const {questionId, regex} = this.state;
-        const availableQuestions = this.context.surveyQuestions
-            .filter(q => q.componentType === "input" && q.dataType === "text");
-        return availableQuestions.length > 0
+        const {surveyQuestions} = this.context;
+        const availableQuestions = filterObject(
+            surveyQuestions,
+            ([_id, sq]) => sq.componentType === "input" && sq.dataType === "text"
+        );
+        return lengthObject(availableQuestions) > 0
             ? (
                 <>
                     <div className="form-group">
@@ -156,8 +144,8 @@ class TextMatchForm extends React.Component {
                             value={questionId}
                         >
                             <option value={-1}>- Select Question -</option>
-                            {availableQuestions.map(question =>
-                                <option key={question.id} value={question.id}>{question.question}</option>)}
+                            {mapObjectArray(availableQuestions, ([aqId, aq]) =>
+                                <option key={aqId} value={aqId}>{aq.question}</option>)}
                         </select>
                     </div>
                     <div className="form-group">
@@ -196,13 +184,13 @@ class NumericRangeForm extends React.Component {
     }
 
     addSurveyRule = () => {
-        const {surveyRules, surveyQuestions, setProjectDetails} = this.context;
+        const {surveyRules, setProjectDetails} = this.context;
         const {questionId, min, max} = this.state;
         const conflictingRule = surveyRules.find(rule => rule.ruleType === "numeric-range"
             && rule.questionId === questionId);
         const errorMessages = [
             conflictingRule && "A numeric range rule already exists for this question. (Rule " + conflictingRule.id + ")",
-            questionId < 1 && "You must select a question.",
+            questionId < 0 && "You must select a question.",
             (max <= min) && "Max must be larger than min."
         ].filter(m => m);
         if (errorMessages.length > 0) {
@@ -210,10 +198,9 @@ class NumericRangeForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextId(surveyRules),
+                    id: getNextInSequence(surveyRules.map(rule => rule.id)),
                     ruleType: "numeric-range",
                     questionId,
-                    questionsText: [surveyQuestions.find(q => q.id === questionId).question],
                     min,
                     max
                 }]
@@ -223,9 +210,12 @@ class NumericRangeForm extends React.Component {
 
     render() {
         const {questionId, min, max} = this.state;
-        const availableQuestions = this.context.surveyQuestions
-            .filter(q => q.componentType === "input" && q.dataType === "number");
-        return availableQuestions.length > 0
+        const {surveyQuestions} = this.context;
+        const availableQuestions = filterObject(
+            surveyQuestions,
+            ([_id, sq]) => sq.componentType === "input" && sq.dataType === "number"
+        );
+        return lengthObject(availableQuestions) > 0
             ? (
                 <>
                     <div className="form-group">
@@ -236,8 +226,8 @@ class NumericRangeForm extends React.Component {
                             value={questionId}
                         >
                             <option value={-1}>- Select Question -</option>
-                            {availableQuestions.map(question =>
-                                <option key={question.id} value={question.id}>{question.question}</option>)}
+                            {mapObjectArray(availableQuestions, ([aqId, aq]) =>
+                                <option key={aqId} value={aqId}>{aq.question}</option>)}
                         </select>
                     </div>
                     <div className="form-group">
@@ -285,10 +275,10 @@ class SumOfAnswersForm extends React.Component {
     }
 
     addSurveyRule = () => {
-        const {surveyRules, surveyQuestions, setProjectDetails} = this.context;
+        const {surveyRules, setProjectDetails} = this.context;
         const {questionIds, validSum} = this.state;
         const conflictingRule = surveyRules.find(rule => rule.ruleType === "sum-of-answers"
-            && sameContents(questionIds, rule.questions));
+            && sameContents(questionIds, rule.questionIds));
         const errorMessages = [
             conflictingRule && "A sum of answers rule already exists for these questions. (Rule " + conflictingRule.id + ")",
             (questionIds.length < 2) && "Sum of answers rule requires the selection of two or more questions.",
@@ -299,12 +289,9 @@ class SumOfAnswersForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextId(surveyRules),
+                    id: getNextInSequence(surveyRules.map(rule => rule.id)),
                     ruleType: "sum-of-answers",
-                    questions: questionIds,
-                    questionsText: surveyQuestions
-                        .filter(q => questionIds.includes(q.id))
-                        .map(q => q.question),
+                    questionIds,
                     validSum
                 }]
             });
@@ -313,8 +300,9 @@ class SumOfAnswersForm extends React.Component {
 
     render() {
         const {questionIds, validSum} = this.state;
-        const availableQuestions = this.context.surveyQuestions.filter(q => q.dataType === "number");
-        return availableQuestions.length > 1
+        const {surveyQuestions} = this.context;
+        const availableQuestions = filterObject(surveyQuestions, ([_id, sq]) => sq.dataType === "number");
+        return lengthObject(availableQuestions) > 1
             ? (
                 <>
                     <div className="form-group">
@@ -327,8 +315,8 @@ class SumOfAnswersForm extends React.Component {
                             })}
                             value={questionIds}
                         >
-                            {availableQuestions.map(question =>
-                                <option key={question.id} value={question.id}>{question.question}</option>)}
+                            {mapObjectArray(availableQuestions, ([aqId, aq]) =>
+                                <option key={aqId} value={aqId}>{aq.question}</option>)}
                         </select>
                         <small className="form-text text-muted">Hold ctrl/cmd and select multiple questions</small>
                     </div>
@@ -361,24 +349,24 @@ class MatchingSumsForm extends React.Component {
         super(props);
 
         this.state = {
-            questionSetIds1: [],
-            questionSetIds2: []
+            questionIds1: [],
+            questionIds2: []
         };
     }
 
     addSurveyRule = () => {
-        const {surveyRules, surveyQuestions, setProjectDetails} = this.context;
-        const {questionSetIds1, questionSetIds2} = this.state;
+        const {surveyRules, setProjectDetails} = this.context;
+        const {questionIds1, questionIds2} = this.state;
         const conflictingRule = surveyRules.find(rule => rule.ruleType === "matching-sums"
-            && sameContents(questionSetIds1, rule.questionSetIds1)
-            && sameContents(questionSetIds2, rule.questionSetIds2));
+            && sameContents(questionIds1, rule.questionIds1)
+            && sameContents(questionIds2, rule.questionIds2));
         const errorMessages = [
             conflictingRule && "A matching sums rule already exists for these questions. (Rule " + conflictingRule.id + ")",
-            (questionSetIds1.length < 2 && questionSetIds2.length < 2)
+            (questionIds1.length < 2 && questionIds2.length < 2)
                 && "Matching sums rule requires that at least one of the question sets contain two or more questions.",
-            questionSetIds1.length === 0 && "You must select at least one question from the first set.",
-            questionSetIds2.length === 0 && "You must select at least one question from the second set.",
-            questionSetIds1.some(id => questionSetIds2.includes(id))
+            questionIds1.length === 0 && "You must select at least one question from the first set.",
+            questionIds2.length === 0 && "You must select at least one question from the second set.",
+            questionIds1.some(id => questionIds2.includes(id))
                 && "Question set 1 and 2 cannot contain the same question."
         ].filter(m => m);
         if (errorMessages.length > 0) {
@@ -386,25 +374,20 @@ class MatchingSumsForm extends React.Component {
         } else {
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextId(surveyRules),
+                    id: getNextInSequence(surveyRules.map(rule => rule.id)),
                     ruleType: "matching-sums",
-                    questionSetIds1,
-                    questionSetIds2,
-                    questionSetText1: surveyQuestions
-                        .filter(q => questionSetIds1.includes(q.id))
-                        .map(q => q.question),
-                    questionSetText2: surveyQuestions
-                        .filter(q => questionSetIds2.includes(q.id))
-                        .map(q => q.question)
+                    questionIds1,
+                    questionIds2
                 }]
             });
         }
     };
 
     render() {
-        const {questionSetIds1, questionSetIds2} = this.state;
-        const availableQuestions = this.context.surveyQuestions.filter(q => q.dataType === "number");
-        return availableQuestions.length > 1
+        const {questionIds1, questionIds2} = this.state;
+        const {surveyQuestions} = this.context;
+        const availableQuestions = filterObject(surveyQuestions, ([_id, sq]) => sq.dataType === "number");
+        return lengthObject(availableQuestions) > 1
             ? (
                 <>
                     <div className="form-group">
@@ -413,12 +396,12 @@ class MatchingSumsForm extends React.Component {
                             className="form-control form-control-sm overflow-auto"
                             multiple="multiple"
                             onChange={e => this.setState({
-                                questionSetIds1: Array.from(e.target.selectedOptions, i => Number(i.value))
+                                questionIds1: Array.from(e.target.selectedOptions, i => Number(i.value))
                             })}
-                            value={questionSetIds1}
+                            value={questionIds1}
                         >
-                            {availableQuestions.map(question =>
-                                <option key={question.id} value={question.id}>{question.question}</option>)}
+                            {mapObjectArray(availableQuestions, ([aqId, aq]) =>
+                                <option key={aqId} value={aqId}>{aq.question}</option>)}
                         </select>
                         <small className="form-text text-muted">Hold ctrl/cmd and select multiple questions</small>
                     </div>
@@ -428,12 +411,12 @@ class MatchingSumsForm extends React.Component {
                             className="form-control form-control-sm overflow-auto"
                             multiple="multiple"
                             onChange={e => this.setState({
-                                questionSetIds2: Array.from(e.target.selectedOptions, i => Number(i.value))
+                                questionIds2: Array.from(e.target.selectedOptions, i => Number(i.value))
                             })}
-                            value={questionSetIds2}
+                            value={questionIds2}
                         >
-                            {availableQuestions.map(question =>
-                                <option key={question.id} value={question.id}>{question.question}</option>)}
+                            {mapObjectArray(availableQuestions, ([aqId, aq]) =>
+                                <option key={aqId} value={aqId}>{aq.question}</option>)}
                         </select>
                         <small className="form-text text-muted">Hold ctrl/cmd and select multiple questions</small>
                     </div>
@@ -470,14 +453,15 @@ class IncompatibleAnswersForm extends React.Component {
             || (this.checkPair(q1, a1, q4, a4) && this.checkPair(q2, a2, q3, a3));
 
     addSurveyRule = () => {
-        const {surveyRules, surveyQuestions, setProjectDetails} = this.context;
+        const {surveyRules, setProjectDetails} = this.context;
         const {questionId1, answerId1, questionId2, answerId2} = this.state;
-        const conflictingRule = surveyRules.find(({question1, answer1, question2, answer2, ruleType}) => ruleType === "incompatible-answers"
+        const conflictingRule = surveyRules.find(rule =>
+            rule.ruleType === "incompatible-answers"
             && this.checkEquivalent(
-                question1,
-                answer1,
-                question2,
-                answer2,
+                rule.questionId1,
+                rule.answerId1,
+                rule.questionId2,
+                rule.answerId2,
                 questionId1,
                 answerId1,
                 questionId2,
@@ -489,42 +473,36 @@ class IncompatibleAnswersForm extends React.Component {
                 + conflictingRule.id
                 + ")",
             (questionId1 === questionId2) && "You must select two different questions.",
-            questionId1 < 1 && "You must select a valid first question.",
-            questionId2 < 1 && "You must select a valid second question.",
-            (answerId1 < 1 || answerId2 < 1) && "You must select an answer for each question."
+            questionId1 < 0 && "You must select a valid first question.",
+            questionId2 < 0 && "You must select a valid second question.",
+            (answerId1 < 0 || answerId2 < 0) && "You must select an answer for each question."
         ].filter(m => m);
         if (errorMessages.length > 0) {
             alert(errorMessages.map(s => "- " + s).join("\n"));
         } else {
-            const q1 = surveyQuestions.find(q => q.id === questionId1);
-            const q2 = surveyQuestions.find(q => q.id === questionId2);
             setProjectDetails({
                 surveyRules: [...surveyRules, {
-                    id: getNextId(surveyRules),
+                    id: getNextInSequence(surveyRules.map(rule => rule.id)),
                     ruleType: "incompatible-answers",
-                    question1: questionId1,
-                    question2: questionId2,
-                    answer1: answerId1,
-                    answer2: answerId2,
-                    questionText1: q1.question,
-                    questionText2: q2.question,
-                    answerText1: q1.answers.find(a => a.id === answerId1).answer,
-                    answerText2: q2.answers.find(a => a.id === answerId2).answer
+                    questionId1,
+                    questionId2,
+                    answerId1,
+                    answerId2
                 }]
             });
         }
     };
 
     safeFindAnswers = questionId => {
-        const question = this.context.surveyQuestions.find(q => q.id === questionId);
-        const answers = question && question.answers;
-        return answers || [];
+        const {surveyQuestions} = this.context;
+        return questionId in surveyQuestions ? surveyQuestions[questionId].answers : {};
     };
 
     render() {
         const {questionId1, answerId1, questionId2, answerId2} = this.state;
-        const availableQuestions = this.context.surveyQuestions.filter(q => q.componentType !== "input");
-        return availableQuestions.length > 1
+        const {surveyQuestions} = this.context;
+        const availableQuestions = filterObject(surveyQuestions, ([_id, sq]) => sq.componentType !== "input");
+        return lengthObject(availableQuestions) > 1
             ? (
                 <>
                     <strong className="mb-2" style={{textAlign: "center"}}>Select the incompatible questions and answers</strong>
@@ -539,8 +517,8 @@ class IncompatibleAnswersForm extends React.Component {
                             value={questionId1}
                         >
                             <option value="-1">- Select Question 1 -</option>
-                            {availableQuestions.map(question =>
-                                <option key={question.id} value={question.id}>{question.question}</option>)}
+                            {mapObjectArray(availableQuestions, ([aqId, aq]) =>
+                                <option key={aqId} value={aqId}>{aq.question}</option>)}
                         </select>
                     </div>
                     <div className="form-group">
@@ -551,8 +529,8 @@ class IncompatibleAnswersForm extends React.Component {
                             value={answerId1}
                         >
                             <option value="-1">- Select Answer 1 -</option>
-                            {this.safeFindAnswers(questionId1).map(answer =>
-                                <option key={answer.id} value={answer.id}>{answer.answer}</option>)}
+                            {mapObjectArray(this.safeFindAnswers(questionId1), ([ansId, ans]) =>
+                                <option key={ansId} value={ansId}>{ans.answer}</option>)}
                         </select>
                     </div>
                     <div className="form-group">
@@ -566,8 +544,8 @@ class IncompatibleAnswersForm extends React.Component {
                             value={questionId2}
                         >
                             <option value="-1">- Select Question 2 -</option>
-                            {availableQuestions.map(question =>
-                                <option key={question.id} value={question.id}>{question.question}</option>)}
+                            {mapObjectArray(availableQuestions, ([aqId, aq]) =>
+                                <option key={aqId} value={aqId}>{aq.question}</option>)}
                         </select>
                     </div>
                     <div className="form-group">
@@ -578,8 +556,8 @@ class IncompatibleAnswersForm extends React.Component {
                             value={answerId2}
                         >
                             <option value="-1">- Select Answer 2 -</option>
-                            {this.safeFindAnswers(questionId2).map(answer =>
-                                <option key={answer.id} value={answer.id}>{answer.answer}</option>)}
+                            {mapObjectArray(this.safeFindAnswers(questionId2), ([ansId, ans]) =>
+                                <option key={ansId} value={ansId}>{ans.answer}</option>)}
                         </select>
                     </div>
                     <div className="d-flex justify-content-end">

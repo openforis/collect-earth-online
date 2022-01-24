@@ -11,7 +11,7 @@ import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
 import SvgIcon from "../components/svg/SvgIcon";
 import {mercator} from "../utils/mercator";
-import {last, removeFromSet} from "../utils/generalUtils";
+import {last, lengthObject, removeFromSet, someObject} from "../utils/sequence";
 import {ProjectContext, plotLimit, perPlotLimit, sampleLimit} from "./constants";
 
 export default class CreateProjectWizard extends React.Component {
@@ -359,9 +359,9 @@ export default class CreateProjectWizard extends React.Component {
     validateSurveyQuestions = () => {
         const {surveyQuestions} = this.context;
         const errorList = [
-            (surveyQuestions.length === 0)
+            (lengthObject(surveyQuestions) === 0)
                 && "A survey must include at least one question.",
-            (surveyQuestions.some(sq => sq.answers.length === 0))
+            (someObject(surveyQuestions, ([_id, sq]) => lengthObject(sq.answers) === 0))
                 && "All survey questions must contain at least one answer."
         ];
         return errorList.filter(e => e);
@@ -495,6 +495,7 @@ export default class CreateProjectWizard extends React.Component {
                     style={{
                         borderRadius: "50%",
                         backgroundColor: stepColor,
+                        cursor: "pointer",
                         height: "2.5rem",
                         width: "2.5rem",
                         padding: "calc((2.5rem - 1.25rem) / 2)"
@@ -502,7 +503,7 @@ export default class CreateProjectWizard extends React.Component {
                 >
                     {stepComplete && <SvgIcon color="white" icon="check" size="1.25rem" verticalAlign="initial"/>}
                 </div>
-                <label style={{color: stepColor, fontWeight: "bold"}}>
+                <label style={{color: stepColor, cursor: "pointer", fontWeight: "bold"}}>
                     {steps[stepName].title}
                 </label>
             </div>

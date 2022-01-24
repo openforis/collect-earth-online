@@ -20,7 +20,8 @@ import SvgIcon from "./components/svg/SvgIcon";
 import WidgetContainer from "./geodash/WidgetContainer";
 
 import {EditorContext, graphWidgetList, gridRowHeight, mapWidgetList} from "./geodash/constants";
-import {cleanJSON, isValidJSON, last} from "./utils/generalUtils";
+import {cleanJSON, isValidJSON} from "./utils/generalUtils";
+import {getNextInSequence, last} from "./utils/sequence";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -251,16 +252,16 @@ class WidgetLayoutEditor extends React.PureComponent {
     getNextLayout = (width = 3, height = 1) => {
         const {widgets} = this.state;
         const layouts = widgets.map(w => w.layout);
-        const maxY = Math.max(...layouts.map(l => (l.y || 0)), 0);
+        const nextY = getNextInSequence(...layouts.map(l => (l.y || 0)));
 
         if (height === 1) {
-            const emptyXY = _.range(maxY + 1).map(y => {
+            const emptyXY = _.range(nextY).map(y => {
                 const row = layouts.filter(l => l.y === y);
                 const emptyX = _.range(10)
                     .filter(x => row.every(l => (x < l.x && x + width <= l.x)
                     || (x >= l.x + l.w && x + width >= l.x + l.w)));
                 return {x: _.first(emptyX), y};
-            }).find(({x}) => _.isNumber(x)) || {x: 0, y: maxY + 1};
+            }).find(({x}) => _.isNumber(x)) || {x: 0, y: nextY};
 
             return {
                 ...emptyXY,
@@ -270,7 +271,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         } else {
             return {
                 x: 0,
-                y: maxY + 1,
+                y: nextY,
                 w: width,
                 h: height
             };

@@ -2,12 +2,13 @@ import React from "react";
 import ReactDOM from "react-dom";
 import {NavigationBar} from "./components/PageComponents";
 import {CollapsibleSectionBlock} from "./components/FormComponents";
+import {lengthObject, mapObjectArray} from "./utils/sequence";
 
 class UserDisagreement extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            questions: [],
+            surveyQuestions: [],
             plotters: []
         };
     }
@@ -21,8 +22,8 @@ class UserDisagreement extends React.Component {
         const {plotId, projectId} = this.props;
         return fetch(`/get-plot-disagreement?projectId=${projectId}&plotId=${plotId}`)
             .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(questions => {
-                this.setState({questions});
+            .then(surveyQuestions => {
+                this.setState({surveyQuestions});
                 return Promise.resolve("resolved");
             });
     };
@@ -41,15 +42,15 @@ class UserDisagreement extends React.Component {
 
     renderAnswers = (userAnswers, answers) => (
         <div style={{display: "flex", flexDirection: "column", alignItems: "flex-start"}}>
-            {Object.keys(userAnswers).map(a => {
-                const answer = this.findByKey(answers, "id", parseInt(a));
+            {mapObjectArray(userAnswers, ([uaId]) => {
+                const {answer, color} = answers[uaId];
                 return (
-                    <div key={a} className="d-flex">
+                    <div key={uaId} className="d-flex">
                         <div
                             className="circle mt-1 mr-3"
-                            style={{backgroundColor: answer?.color, border: "solid 1px"}}
+                            style={{backgroundColor: color, border: "solid 1px"}}
                         />
-                        {`${answer?.answer} - ${userAnswers[a]}`}
+                        {`${answer} - ${userAnswers[uaId]}`}
                     </div>
                 );
             })}
@@ -60,7 +61,7 @@ class UserDisagreement extends React.Component {
         const plotInfo = this.findByKey(userPlotInfo, "userId", user.userId);
         const unanswered = !plotInfo
             ? "plot"
-            : Object.keys(plotInfo?.answers || {}).length === 0
+            : lengthObject(plotInfo?.answers || {}) === 0
                 ? "question"
                 : null;
         return (
@@ -80,9 +81,8 @@ class UserDisagreement extends React.Component {
                     {/* TODO, dynamically size this based on the longest email */}
                     <span style={{width: "40%"}}>{user.email}</span>
                     {plotInfo?.flagged
-                        ? (
-                            "This user flagged the plot"
-                        ) : unanswered
+                        ? "This user flagged the plot"
+                        : unanswered
                             ? ("This user did not answer this " + unanswered)
                             : (this.renderAnswers(plotInfo.answers, answers))}
                 </div>
@@ -93,11 +93,11 @@ class UserDisagreement extends React.Component {
         );
     };
 
-    renderQuestion = (thisQuestion, questions, level) => {
+    renderQuestion = (thisQuestion, surveyQuestions, level) => {
         const {plotters} = this.state;
         const {threshold} = this.props;
-        const {id, question, answers, disagreement, userPlotInfo} = thisQuestion;
-        const children = questions.filter(q => q.parentQuestion === id);
+        const {questionId, question, answers, disagreement, userPlotInfo} = thisQuestion;
+        const children = surveyQuestions.filter(q => q.parentQuestionId === questionId);
         return (
             <>
                 <CollapsibleSectionBlock
@@ -116,20 +116,19 @@ class UserDisagreement extends React.Component {
                         {plotters.map(user => this.renderUser(user, userPlotInfo, answers))}
                     </div>
                 </CollapsibleSectionBlock>
-                {children.length > 0 && children.map(q => this.renderQuestion(q, questions, level + 1))}
+                {children.length > 0 && children.map(cq => this.renderQuestion(cq, surveyQuestions, level + 1))}
             </>
         );
     };
 
     render() {
-        const {questions} = this.state;
-        const parentQuestions = questions.filter(q => q.parentQuestion < 0);
+        const {surveyQuestions} = this.state;
+        const parentQuestions = surveyQuestions.filter(q => q.parentQuestionId < 0);
         return (
             <div style={{display: "flex", justifyContent: "center", width: "100%"}}>
                 <div style={{display: "flex", flexDirection: "column", margin: "1rem", width: "50%"}}>
-                    {parentQuestions.map((q, idx) => (
-                        // eslint-disable-next-line react/no-array-index-key
-                        <div key={idx}>
+                    {parentQuestions.map((pq, idx) => (
+                        <div key={pq.questionId}>
                             <h2 className="m-3">{`Survey Card Number ${idx + 1}`}</h2>
                             <div
                                 style={{
@@ -139,7 +138,7 @@ class UserDisagreement extends React.Component {
                                     overflow: "hidden"
                                 }}
                             >
-                                {this.renderQuestion(q, questions, 0)}
+                                {this.renderQuestion(pq, surveyQuestions, 0)}
                             </div>
                         </div>
                     ))}

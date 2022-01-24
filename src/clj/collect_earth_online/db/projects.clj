@@ -744,6 +744,23 @@
     (.format (SimpleDateFormat. "YYYY-MM-dd HH:mm")
              pg-time)))
 
+(defn- append-children [survey-questions questions]
+  (reduce (fn [acc cur]
+            (let [cur-id   (tc/val->int (get cur 0))
+                  children (filter (fn [[_id question]] (= cur-id (:parentQuestionId question)))
+                                   survey-questions)]
+              (cond-> (conj acc cur)
+                (seq children) (concat (append-children survey-questions children))
+                :always        (vec))))
+          []
+          questions))
+
+(defn- sort-questions [survey-questions]
+  (append-children survey-questions
+                   (filter (fn [[_id question]]
+                             (= -1 (:parentQuestionId question)))
+                           survey-questions)))
+
 ;;;
 ;;; Dump aggregate
 ;;;
@@ -752,27 +769,34 @@
   "Returns a list of every question answer combo like
    (question1:answer1 question1:answer2 question2:answer1)"
   [survey-questions]
-  (->> survey-questions
-       (mapcat (fn [group]
-                 (let [question-label (name (get group :question))]
-                   (map (fn [answer]
-                          (str question-label ":" (name (get answer :answer))))
-                        (get group :answers)))))))
-
-(defn- count-answer [sample-size question-answers]
-  (u/mapm (fn [[question answers]]
-            [question (* 100.0 (count answers) (/ sample-size))])
-          (group-by str question-answers)))
+  (mapcat (fn [[_ {:keys [question answers]}]]
+            (map (fn [[_ {:keys [answer]}]]
+                   (str question ":" answer))
+                 answers))
+          survey-questions))
 
 (defn- get-value-distribution
   "Count the answers given, and return a map of {'question:answers' count}"
-  [samples]
-  (count-answer (count samples)
-                (mapcat (fn [sample]
-                          (map (fn [[question-label answer]]
-                                 (str (name question-label) ":" (:answer answer)))
-                               (:saved_answers sample)))
-                        samples)))
+  [survey-questions samples]
+  (->> samples
+       ;; Flatten answers from multiple samples into a single sequence.
+       (mapcat (fn [sample]
+                 (map (fn [[question-id {:keys [answerId answer]}]]
+                        {:question-id question-id
+                         :answer-id answerId
+                         :answer-text answer})
+                      (:saved_answers sample))))
+       (group-by (juxt :question-id :answer-id))
+       ;; Count number of answers in each group, or join free text answers.
+       (u/mapm (fn [[[question-id answer-id] answer-group]]
+                 (let [{:keys [question answers componentType]} (get survey-questions question-id)]
+                   [(str question ":" (get-in answers [(str answer-id) :answer]))
+                    (if (= "input" componentType)
+                      (->> answer-group
+                           (map :answer-text)
+                           (distinct)
+                           (str/join ";"))
+                      (format "%.2f" (* 100.0 (count answer-group) (/ (count samples)))))])))))
 
 (def plot-base-headers [:plotid
                         :center_lon
@@ -798,7 +822,7 @@
         text-headers     (concat (pu/remove-vector-items plot-base-headers
                                                          (when-not confidence? :confidence))
                                  (get-ext-headers plots :extra_plot_info "pl_"))
-        number-headers   (get-value-distribution-headers survey-questions)
+        number-headers   (-> survey-questions (sort-questions) (get-value-distribution-headers))
         headers-out      (->> (concat text-headers number-headers)
                               (map #(-> % name csv-quotes))
                               (str/join ",")
@@ -815,7 +839,7 @@
                                                                      (prefix-keys "pl_" extra-plot-info))
                                                               text-headers
                                                               "")
-                                                    (map->csv (get-value-distribution samples)
+                                                    (map->csv (get-value-distribution survey-questions samples)
                                                               number-headers
                                                               0)))))
                               plots)]
@@ -841,9 +865,14 @@
 ;;; Dump raw
 ;;;
 
-(defn- extract-answers [value]
+(defn- extract-answers [survey-questions value]
   (if value
-    (reduce (fn [acc [k v]] (merge acc {(name k) (:answer v)})) {} value)
+    (reduce (fn [acc [k v]]
+              (let [{:keys [question answers]} (get survey-questions k)]
+                (merge acc {question
+                            (get-in answers [(str (:answerId v)) :answer])})))
+            {}
+            value)
     ""))
 
 (def sample-base-headers [:plotid
@@ -866,7 +895,9 @@
             text-headers     (concat sample-base-headers
                                      (get-ext-headers samples :extra_plot_info "pl_")
                                      (get-ext-headers samples :extra_sample_info "smpl_")
-                                     (map :question survey-questions))
+                                     (->> survey-questions
+                                          (sort-questions)
+                                          (map (fn [[_ {:keys [question]}]] (or question "not-found")))))
             headers-out      (->> text-headers
                                   (map #(-> % name csv-quotes))
                                   (str/join ",")
@@ -881,7 +912,7 @@
                                                                      (update :analysis_duration #(when % (str % " secs"))))
                                                                  (prefix-keys "pl_" extra-plot-info)
                                                                  (prefix-keys "smpl_" extra-sample-info)
-                                                                 (extract-answers saved-answers))
+                                                                 (extract-answers survey-questions saved-answers))
                                                           text-headers
                                                           ""))))
                                   samples)]

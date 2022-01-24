@@ -26,7 +26,7 @@ SET widget = jsonb_build_object(
     'assetId', widget->>'ImageAsset',
     'visParams', widget->>'visParams'
 )
-WHERE widget->>'ImageAsset' is not null
+WHERE widget->>'ImageAsset' IS NOT NULL;
 
 -- Update Degradation widgets
 UPDATE project_widgets
@@ -292,7 +292,7 @@ CREATE OR REPLACE FUNCTION build_landsat_widgets(_widget jsonb)
         'min', coalesce(_widget->'visParams'->>'min', ''),
         'max', coalesce(_widget->'visParams'->>'max', ''),
         'cloudLessThan', CASE WHEN _widget->'visParams'->>'cloudLessThan' = '' THEN 90
-            ELSE coalesce(_widget->'visParams'->>'cloudLessThan', '90')::int END,
+            ELSE round(coalesce(_widget->'visParams'->>'cloudLessThan', '90')::float)::int END,
         'startDate', _widget->>'startDate',
         'endDate', _widget->>'endDate'
     )
