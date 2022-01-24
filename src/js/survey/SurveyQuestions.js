@@ -6,7 +6,7 @@ import {SurveyCollection} from "../components/SurveyCollection";
 import SvgIcon from "../components/svg/SvgIcon";
 
 import {removeEnumerator} from "../utils/generalUtils";
-import {ProjectContext} from "./constants";
+import {ProjectContext} from "../project/constants";
 import {findObject, lengthObject, mapObjectArray, filterObject, mapObject, getNextInSequence} from "../utils/sequence";
 
 export class SurveyQuestionDesign extends React.Component {

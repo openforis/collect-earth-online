@@ -1,11 +1,10 @@
 import React, {useContext} from "react";
 
 import SurveyRule from "../components/SurveyRule";
-import SvgIcon from "../components/svg/SvgIcon";
 
 import {isNumber} from "../utils/generalUtils";
 import {filterObject, getNextInSequence, lengthObject, mapObjectArray, sameContents} from "../utils/sequence";
-import {ProjectContext} from "./constants";
+import {ProjectContext} from "../project/constants";
 
 export const SurveyRuleDesign = () => {
     const {setProjectDetails, surveyRules, surveyQuestions} = useContext(ProjectContext);

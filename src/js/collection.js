@@ -19,7 +19,7 @@ import RadioButton from "./components/RadioButton";
 import Select from "./components/Select";
 import SvgIcon from "./components/svg/SvgIcon";
 
-import {getQueryString, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
+import {getQueryString, isNumber, asPercentage, isArray} from "./utils/generalUtils";
 import {
     everyObject,
     findObject,

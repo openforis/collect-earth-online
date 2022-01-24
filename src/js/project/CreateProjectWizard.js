@@ -4,8 +4,8 @@ import _ from "lodash";
 import {ImagerySelection} from "./ImagerySelection";
 import {Overview, OverviewIntro} from "./Overview";
 import {PlotDesign, PlotDesignReview} from "./PlotDesign";
-import {SurveyQuestionDesign, SurveyQuestionHelp} from "./SurveyQuestions";
-import {SurveyRuleDesign} from "./SurveyRules";
+import {SurveyQuestionDesign, SurveyQuestionHelp} from "../survey/SurveyQuestions";
+import {SurveyRuleDesign} from "../survey/SurveyRules";
 import AOIMap from "./AOIMap";
 import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
