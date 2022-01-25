@@ -11,12 +11,12 @@ export default function BulkAddAnswers({closeDialog, surveyQuestionId, surveyQue
     const addAnswers = () => {
         const splitArr = newAnswers.split(/[,|\n|\t] */);
         if (splitArr.length % 2 !== 0) {
-            alert("You must provide an a color for answer.");
+            alert("You must provide pairs of color and answer.  If you feel like you have correct data, check for extra separators (comma, tab, or new line)");
         } else {
             const newId = getNextInSequence(Object.keys(surveyQuestion.answers));
             const pairs = partition(splitArr, 2);
             pairs.forEach(([color, answer], idx) => {
-                const newAnswer = {answer, color};
+                const newAnswer = {answer: answer.trim(), color};
                 setProjectDetails({
                     surveyQuestions: {
                         ...surveyQuestions,
