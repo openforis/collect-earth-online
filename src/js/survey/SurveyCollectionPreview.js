@@ -25,8 +25,9 @@ export default class SurveyCollectionPreview extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (lengthObject(this.context.surveyQuestions)
-            && this.state.userSamples !== prevState.userSamples) {
+        if (lengthObject(this.props.surveyQuestions)
+            && (lengthObject(prevProps.surveyQuestions) !== lengthObject(this.props.surveyQuestions)
+                || this.state.userSamples !== prevState.userSamples)) {
             this.updateQuestionStatus();
         }
     }
