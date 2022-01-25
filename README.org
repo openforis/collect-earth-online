@@ -174,8 +174,8 @@ View the [[https://github.com/sig-gis/triangulum#triangulumhttps][Triangulum HTT
 For production it is recommended that you use a service account with a key file. You can obtain your key file by logging into your service account, navigating to the account menu, and clicking "Create key > JSON". Then, download that JSON key file and place it in the root directory of CEO. Set the email for your service account and key path in the ~:gee~ section of config.edn.
 
 #+begin_src text
-`:gee {:ee-account  "example@gmail.com"
-       :ee-key-path "ceo-gee-key.json"}
+:gee {:ee-account  "example@gmail.com"
+      :ee-key-path "ceo-gee-key.json"}
 #+end_src
 
 *** Launching the Web Server

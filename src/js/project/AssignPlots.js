@@ -6,7 +6,7 @@ import UserSelect from "../components/UserSelect";
 import SvgIcon from "../components/svg/SvgIcon";
 
 import {formatNumberWithCommas} from "../utils/generalUtils";
-import {removeAtIndex} from "../utils/sequence";
+import {removeAtIndex, sumArray} from "../utils/sequence";
 
 // TODO, two arrays for user and percent is probably not the best data structure.
 //      Originally we had the percent array only added for by percent assignments.
@@ -124,7 +124,7 @@ export default class AssignPlots extends React.Component {
             {id: -1, email: "Select user..."},
             ...institutionUserList.filter(u => !users.includes(u.id) && (qaqcMethod !== "sme" || !smes.includes(u.id)))
         ];
-        const runningTotalPercents = percents.reduce((prev, current) => prev + current, 0);
+        const runningTotalPercents = sumArray(percents);
 
         return (
             <div className="col-6">

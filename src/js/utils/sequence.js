@@ -36,7 +36,7 @@ export function removeAtIndex(arr, index) {
 
 /**
 * Replaces the given number in an array with a new value
-* @param {array} array
+* @param {array} arr
 * @param {number} numToReplace
 * @param {number} newNum
 * @returns {array}
@@ -46,6 +46,15 @@ export function replaceNumber(arr, numToReplace, newNum) {
         const idx = arr.indexOf(numToReplace);
         return arr.slice(0, idx).concat(newNum, arr.slice(idx + 1, arr.length));
     } else return arr;
+}
+
+/**
+* Sums up all of the numbers in an array.
+* @param {array} arr
+* @returns {number}
+*/
+export function sumArray(arr) {
+    return arr.reduce((acc, cur) => acc + cur, 0);
 }
 
 /// Set Functions ///
