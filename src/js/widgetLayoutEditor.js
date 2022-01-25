@@ -252,7 +252,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     getNextLayout = (width = 3, height = 1) => {
         const {widgets} = this.state;
         const layouts = widgets.map(w => w.layout);
-        const nextY = getNextInSequence(...layouts.map(l => (l.y || 0)));
+        const nextY = getNextInSequence(layouts.map(l => (l.y || 0)));
 
         if (height === 1) {
             const emptyXY = _.range(nextY).map(y => {
