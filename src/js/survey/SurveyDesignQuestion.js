@@ -1,8 +1,9 @@
 import React, {useContext, useState} from "react";
 
+import AnswerDesigner from "./AnswerDesigner";
+import BulkAddAnswers from "./BulkAddAnswers";
 import SurveyRule from "./SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
-import AnswerDesigner from "./AnswerDesigner";
 
 import {removeEnumerator} from "../utils/generalUtils";
 import {mapObjectArray, filterObject, lengthObject} from "../utils/sequence";
@@ -19,6 +20,7 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
     );
 
     const [newQuestionText, setText] = useState(surveyQuestion.question);
+    const [showBulkAdd, setBulkAdd] = useState(false);
 
     const getChildQuestionIds = questionId => {
         const childQuestionIds = mapObjectArray(
@@ -55,6 +57,13 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
 
     return (
         <>
+            {showBulkAdd && (
+                <BulkAddAnswers
+                    closeDialog={() => setBulkAdd(false)}
+                    surveyQuestion={surveyQuestion}
+                    surveyQuestionId={surveyQuestionId}
+                />
+            )}
             <div className="d-flex border-top pt-3 pb-1">
                 {[...Array(indentLevel)].map((l, idx) => (
                     // eslint-disable-next-line react/no-array-index-key
@@ -168,6 +177,15 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                                 surveyQuestion={surveyQuestion}
                                 surveyQuestionId={surveyQuestionId}
                             />
+                        )}
+                        {surveyQuestion.componentType !== "input" && (
+                            <button
+                                className="btn btn-sm btn-success ml-3"
+                                onClick={() => setBulkAdd(true)}
+                                type="button"
+                            >
+                                Bulk Add
+                            </button>
                         )}
                     </div>
                 </div>
