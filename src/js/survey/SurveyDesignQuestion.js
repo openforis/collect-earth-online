@@ -1,15 +1,24 @@
-import React, {useContext} from "react";
+import React, {useContext, useState} from "react";
 
 import SurveyRule from "./SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
 import NewAnswerDesigner from "./NewAnswerDesigner";
 
 import {removeEnumerator} from "../utils/generalUtils";
-import {mapObjectArray, filterObject} from "../utils/sequence";
+import {mapObjectArray, filterObject, lengthObject} from "../utils/sequence";
 import {ProjectContext} from "../project/constants";
 
 export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQuestionId}) {
     const {setProjectDetails, surveyQuestions, surveyRules} = useContext(ProjectContext);
+
+    const surveyQuestion = surveyQuestions[surveyQuestionId];
+    const parentQuestion = surveyQuestions[surveyQuestion.parentQuestionId];
+    const childNodeIds = mapObjectArray(
+        filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === surveyQuestionId),
+        ([key, _val]) => Number(key)
+    );
+
+    const [newQuestionText, setText] = useState(surveyQuestion.question);
 
     const getChildQuestionIds = questionId => {
         const childQuestionIds = mapObjectArray(
@@ -21,18 +30,28 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
             : childQuestionIds.reduce((acc, cur) => [...acc, ...getChildQuestionIds(cur)], [questionId]);
     };
 
-    const removeQuestion = questionId => {
-        const childQuestionIds = getChildQuestionIds(questionId);
+    const maxAnswers = ({componentType, dataType, answers}) =>
+        lengthObject(answers) >= ((componentType || "").toLowerCase() === "input" ? 1
+            : (dataType || "").toLowerCase() === "boolean" ? 2
+                : 1000);
+
+    const removeQuestion = () => {
+        const childQuestionIds = getChildQuestionIds(surveyQuestionId);
         const newSurveyQuestions = filterObject(surveyQuestions, ([sqId]) => !childQuestionIds.includes(Number(sqId)));
         setProjectDetails({surveyQuestions: newSurveyQuestions});
     };
 
-    const surveyQuestion = surveyQuestions[surveyQuestionId];
-    const parentQuestion = surveyQuestions[surveyQuestion.parentQuestionId];
-    const childNodeIds = mapObjectArray(
-        filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === surveyQuestionId),
-        ([key, _val]) => Number(key)
-    );
+    const updateQuestion = () => {
+        if (newQuestionText !== "") {
+            const newQuestion = {
+                ...surveyQuestion,
+                question: newQuestionText
+            };
+            setProjectDetails({surveyQuestions: {...surveyQuestions, [surveyQuestionId]: newQuestion}});
+        } else {
+            alert("Please enter a text for survey question.");
+        }
+    };
 
     return (
         <>
@@ -45,27 +64,42 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                 ))}
                 <div className="container mb-2">
                     <div className="pb-1 d-flex">
-                        {inDesignMode && (
-                            <button
-                                className="btn btn-outline-red py-0 px-2 mr-1"
-                                onClick={() => removeQuestion(surveyQuestionId)}
-                                type="button"
-                            >
-                                <SvgIcon icon="trash" size="1rem"/>
-                            </button>
-                        )}
-                        <h3 className="font-weight-bold">
-                            {inDesignMode ? surveyQuestion.question : removeEnumerator(surveyQuestion.question)}
-                        </h3>
+                        {inDesignMode
+                            ? (
+                                <>
+                                    <button
+                                        className="btn btn-outline-red py-0 px-2 mr-1"
+                                        onClick={removeQuestion}
+                                        type="button"
+                                    >
+                                        <SvgIcon icon="trash" size="1rem"/>
+                                    </button>
+                                    <button
+                                        className="btn btn-success py-0 px-2 mr-1"
+                                        onClick={updateQuestion}
+                                        type="button"
+                                    >
+                                        <SvgIcon icon="save" size="1rem"/>
+                                    </button>
+                                    <input
+                                        autoComplete="off"
+                                        maxLength="210"
+                                        onChange={e => setText(e.target.value)}
+                                        value={newQuestionText}
+                                    />
+                                </>
+                            ) : (
+                                <h3 className="font-weight-bold">
+                                    {removeEnumerator(surveyQuestion.question)}
+                                </h3>
+                            )}
                     </div>
                     <div className="pb-1">
-                        <ul className="mb-1">
-                            {surveyQuestion.componentType && (
-                                <li>
-                                    <span className="font-weight-bold">Component Type:  </span>
-                                    {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
-                                </li>
-                            )}
+                        <ul className="mb-1 pl-3">
+                            <li>
+                                <span className="font-weight-bold">Component Type: </span>
+                                {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
+                            </li>
                             {surveyRules && surveyRules.length > 0 && (
                                 <li>
                                     <b>Rules:</b>
@@ -109,10 +143,12 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                                     </li>
                                 </>
                             )}
+                            <li>
+                                <span className="font-weight-bold">
+                                    {surveyQuestion.componentType === "input" ? "Placeholder" : "Answers"}:
+                                </span>
+                            </li>
                         </ul>
-                        <h3 className="font-weight-bold ml-3">
-                            {surveyQuestion.componentType === "input" ? "Placeholder" : "Answers"}:
-                        </h3>
                     </div>
                     <div>
                         {mapObjectArray(surveyQuestion.answers, ([answerId, surveyAnswer]) => (
@@ -126,7 +162,7 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                                 surveyQuestionId={surveyQuestionId}
                             />
                         ))}
-                        {inDesignMode && (
+                        {inDesignMode && !maxAnswers(surveyQuestion) && (
                             <NewAnswerDesigner
                                 inDesignMode={inDesignMode}
                                 surveyQuestion={surveyQuestion}
