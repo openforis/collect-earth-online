@@ -41,8 +41,8 @@ class GeoDashHelp extends React.Component {
                             {this.expandableImageWrapper("/img/geodash/create_degradation_widget.png")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
-                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.select_degradation}</li>
+                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.choose_basemap}</li>
                                 <li>{lngObject.choose_band}</li>
                                 <li>{lngObject.click_create}</li>
@@ -52,8 +52,8 @@ class GeoDashHelp extends React.Component {
                             {this.expandableImageWrapper("/img/geodash/create_dual_imagery_widget.png")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
-                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.select_dual_image_collection}</li>
+                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.choose_basemap}</li>
                                 <li>{lngObject.select_imagery_type}</li>
                                 <li>{lngObject.select_remaining_imagery}</li>
@@ -65,8 +65,8 @@ class GeoDashHelp extends React.Component {
                             {this.expandableImageWrapper("/img/geodash/create_image_asset_widget.png")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
-                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.select_image_asset}</li>
+                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.choose_basemap}</li>
                                 <li>
                                     {lngObject.enter_image_asset + " (e.g. users/billyz313/carbon_monoxide)."}
@@ -82,8 +82,8 @@ class GeoDashHelp extends React.Component {
                             {this.expandableImageWrapper("/img/geodash/create_image_collection_asset_widget.png")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
-                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.select_image_collection_asset}</li>
+                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.choose_basemap}</li>
                                 <li>
                                     {lngObject.enter_image_asset + " (e.g. users/billyz313/carbon_monoxide)."}
@@ -100,8 +100,8 @@ class GeoDashHelp extends React.Component {
                             {this.expandableImageWrapper("/img/geodash/create_polygon_compare_widget.png")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
-                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.select_polygon_compare}</li>
+                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.fill_remaining_fields}</li>
                                 <li>{lngObject.click_create}</li>
                             </ol>
@@ -110,8 +110,8 @@ class GeoDashHelp extends React.Component {
                             {this.expandableImageWrapper("/img/geodash/create_preloaded_image_collections_widget.png")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
-                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.select_preloaded_image_collections}</li>
+                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.choose_basemap}</li>
                                 <li>{lngObject.select_data_type_preloaded}</li>
                                 <li>{lngObject.select_date_range}</li>
@@ -122,8 +122,8 @@ class GeoDashHelp extends React.Component {
                             {this.expandableImageWrapper("/img/geodash/create_statistics_widget.png")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
-                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.select_stats}</li>
+                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.click_create}</li>
                             </ol>
                         </CollapsibleSectionBlock>
@@ -131,8 +131,8 @@ class GeoDashHelp extends React.Component {
                             {this.expandableImageWrapper("/img/geodash/create_time_series_graph_widget.png")}
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
-                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.select_time_series}</li>
+                                <li>{lngObject.give_title}</li>
                                 <li>{lngObject.select_data_type_time_series}</li>
                                 <li>{lngObject.select_date_range}</li>
                                 <li>{lngObject.click_create}</li>

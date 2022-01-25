@@ -431,17 +431,6 @@ class WidgetLayoutEditor extends React.PureComponent {
         return (
             <form>
                 <div className="form-group">
-                    <label htmlFor="widgetTitle">Title</label>
-                    <input
-                        className="form-control"
-                        id="widgetTitle"
-                        onChange={e => this.updateTitle(e.target.value)}
-                        placeholder="Enter title"
-                        type="text"
-                        value={this.state.title}
-                    />
-                </div>
-                <div className="form-group">
                     <label htmlFor="widgetTypeSelect">Widget Type</label>
                     <select
                         className="form-control"
@@ -455,6 +444,17 @@ class WidgetLayoutEditor extends React.PureComponent {
                                    <option key={key} value={key}>{title}</option>
                                ))}
                     </select>
+                </div>
+                <div className="form-group">
+                    <label htmlFor="widgetTitle">Title</label>
+                    <input
+                        className="form-control"
+                        id="widgetTitle"
+                        onChange={e => this.updateTitle(e.target.value)}
+                        placeholder="Enter title"
+                        type="text"
+                        value={this.state.title}
+                    />
                 </div>
                 {WidgetDesigner && <WidgetDesigner/>}
             </form>
