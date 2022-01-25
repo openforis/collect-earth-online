@@ -145,10 +145,12 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                                             : removeEnumerator(parentQuestion.question)}
                                     </li>
                                     <li>
-                                        <span className="font-weight-bold">Parent Answer: </span>
-                                        {surveyQuestion.parentAnswerId === -1
+                                        <span className="font-weight-bold">Parent Answers: </span>
+                                        {surveyQuestion.parentAnswerIds.length === 0
                                             ? "Any"
-                                            : parentQuestion.answers[surveyQuestion.parentAnswerId].answer}
+                                            : surveyQuestion.parentAnswerIds
+                                                .map(paId => parentQuestion.answers[paId].answer)
+                                                .join(", ")}
                                     </li>
                                 </>
                             )}
