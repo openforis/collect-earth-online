@@ -43,18 +43,18 @@ export default function CopyDialog(props) {
     const dialogButtons = (
         <>
             <button
-                className="btn btn-primary"
-                onClick={() => copyProjectWidgets(templateId)}
-                type="button"
-            >
-                Copy
-            </button>
-            <button
                 className="btn btn-secondary"
                 onClick={closeDialogs}
                 type="button"
             >
                 Close
+            </button>
+            <button
+                className="btn btn-primary"
+                onClick={() => copyProjectWidgets(templateId)}
+                type="button"
+            >
+                Copy
             </button>
         </>
     );
