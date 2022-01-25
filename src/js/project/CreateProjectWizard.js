@@ -90,7 +90,8 @@ export default class CreateProjectWizard extends React.Component {
                 description: "Questions to be answered during collection",
                 StepComponent: SurveyQuestionsDesigner,
                 helpDescription: "Question Preview",
-                StepHelpComponent: SurveyCollectionPreview,
+                StepHelpComponent: () =>
+                    <SurveyCollectionPreview surveyQuestions={this.context.surveyQuestions}/>,
                 validate: this.validateSurveyQuestions
             },
             rules: {
@@ -98,7 +99,8 @@ export default class CreateProjectWizard extends React.Component {
                 description: "Rules to ensure correct answers",
                 StepComponent: SurveyRulesDesigner,
                 helpDescription: "Question Preview",
-                StepHelpComponent: SurveyCollectionPreview,
+                StepHelpComponent: () =>
+                    <SurveyCollectionPreview surveyQuestions={this.context.surveyQuestions}/>,
                 validate: () => []
             }
         };

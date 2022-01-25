@@ -169,6 +169,7 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                                 answerId={answerId}
                                 color={surveyAnswer.color}
                                 inDesignMode={inDesignMode}
+                                required={surveyAnswer.required}
                                 surveyQuestion={surveyQuestion}
                                 surveyQuestionId={surveyQuestionId}
                             />
