@@ -47,7 +47,7 @@ export default function CopyDialog(props) {
                 onClick={closeDialogs}
                 type="button"
             >
-            Close
+                Close
             </button>
             <button
                 className="btn btn-primary"
