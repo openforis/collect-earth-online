@@ -523,44 +523,60 @@ class WidgetLayoutEditor extends React.PureComponent {
                     />
                 )}
                 <div style={{marginBottom: `${gridRowHeight}px`}}>
-                    <ReactGridLayout
-                        cols={12}
-                        onLayoutChange={this.onLayoutChange}
-                        resizeHandles={["e", "s", "se"]}
-                        rowHeight={gridRowHeight}
-                    >
-                        {widgets.map(widget => (
-                            <div
-                                key={widget.id}
-                                data-grid={{...widget.layout, minW: 3}}
-                            >
-                                <WidgetContainer
-                                    title={widget.name}
-                                    titleButtons={this.containerButtons(widget)}
+                    {widgets.length > 0 ? (
+                        <ReactGridLayout
+                            cols={12}
+                            onLayoutChange={this.onLayoutChange}
+                            resizeHandles={["e", "s", "se"]}
+                            rowHeight={gridRowHeight}
+                        >
+                            {widgets.map(widget => (
+                                <div
+                                    key={widget.id}
+                                    data-grid={{...widget.layout, minW: 3}}
                                 >
-                                    <div
-                                        style={{
-                                            backgroundImage: "url(" + this.getImageByType(widget.type) + ")",
-                                            backgroundSize: "cover",
-                                            height: "100%"
-                                        }}
+                                    <WidgetContainer
+                                        title={widget.name}
+                                        titleButtons={this.containerButtons(widget)}
                                     >
                                         <div
-                                            className="text text-danger mx-auto font-weight-bold mt-2"
                                             style={{
-                                                background: "#f1f1f1",
-                                                borderRadius: ".5rem",
-                                                padding: "0 .5rem",
-                                                width: "fit-content"
+                                                backgroundImage: "url(" + this.getImageByType(widget.type) + ")",
+                                                backgroundSize: "cover",
+                                                height: "100%"
                                             }}
                                         >
+                                            <div
+                                                className="text text-danger mx-auto font-weight-bold mt-2"
+                                                style={{
+                                                    background: "#f1f1f1",
+                                                    borderRadius: ".5rem",
+                                                    padding: "0 .5rem",
+                                                    width: "fit-content"
+                                                }}
+                                            >
                                             Sample Image
+                                            </div>
                                         </div>
-                                    </div>
-                                </WidgetContainer>
-                            </div>
-                        ))}
-                    </ReactGridLayout>
+                                    </WidgetContainer>
+                                </div>
+                            ))}
+                        </ReactGridLayout>
+                    ) : (
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "center",
+                                margin: "2rem"
+                            }}
+                        >
+                            <SvgIcon icon="alert" size="1.2rem"/>
+                            <p style={{marginLeft: "0.4rem"}}>
+                              You don&apos;t have any GeoDash Widgets.
+                              Click Copy Layout or Add Widget above to get started!
+                            </p>
+                        </div>
+                    )}
                 </div>
             </EditorContext.Provider>
         );
