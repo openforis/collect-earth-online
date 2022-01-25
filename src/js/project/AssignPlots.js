@@ -124,6 +124,7 @@ export default class AssignPlots extends React.Component {
             {id: -1, email: "Select user..."},
             ...institutionUserList.filter(u => !users.includes(u.id) && (qaqcMethod !== "sme" || !smes.includes(u.id)))
         ];
+        const runningTotalPercents = percents.reduce((prev, current) => prev + current, 0);
 
         return (
             <div className="col-6">
@@ -158,6 +159,14 @@ export default class AssignPlots extends React.Component {
                                 );
                             })}
                         </div>
+                        {userMethod === "percent" && users.length > 0 && (
+                            <p
+                                className="font-italic ml-2 mt-2 small"
+                                style={{color: runningTotalPercents !== 100 ? "#8B0000" : "#006400"}}
+                            >
+                                {runningTotalPercents}% of the plots are assigned.
+                            </p>
+                        )}
                         {userMethod === "equal" && users.length > 0 && (
                             <p className="font-italic ml-2 mt-2 small">
                                 {["shp", "csv"].includes(plotDistribution)
