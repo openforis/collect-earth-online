@@ -30,9 +30,11 @@ SELECT setval(pg_get_serial_sequence('institution_users', 'inst_user_uid'), (SEL
 
 -- Adds an institution imagery
 INSERT INTO imagery
-    (institution_rid, visibility, title, attribution, extent, source_config)
+    (imagery_uid, institution_rid, visibility, title, attribution, extent, source_config)
 VALUES
-    (1, 'public', 'Open Street Maps', 'Open Street Maps', null, '{"type": "OSM"}');
+    (1, 1, 'public', 'Open Street Maps', 'Open Street Maps', null, '{"type": "OSM"}');
+
+SELECT setval(pg_get_serial_sequence('imagery', 'imagery_uid'), (SELECT MAX(imagery_uid) FROM imagery) + 1);
 
 -- Adds a project
 INSERT INTO projects (
@@ -149,8 +151,8 @@ VALUES
 
 -- Add 3 widgets
 INSERT INTO project_widgets
-    (project_rid, widget_uid, widget)
+    (project_rid, widget)
 VALUES
-    (1, 1, '{"name":"Image Collection","type":"preImageCollection","layout":{"h":1,"w":3,"x":0,"y":0},"endDate":"2022-01-07","basemapId":{},"indexName":"NDVI","startDate":"2022-01-01"}'),
-    (1, 2, '{"name":"Time Series Graph","type":"timeSeries","layout":{"h":1,"w":3,"x":3,"y":0},"endDate":"2022-01-07","indexName":"EVI","startDate":"2021-12-31"}'),
-    (1, 3, '{"name":"Statistics","type":"statistics","layout":{"h":1,"w":3,"x":6,"y":0}}');
+    (1, '{"name":"Image Collection","type":"preImageCollection","layout":{"h":1,"w":3,"x":0,"y":0},"endDate":"2022-01-07","basemapId":{},"indexName":"NDVI","startDate":"2022-01-01"}'),
+    (1, '{"name":"Time Series Graph","type":"timeSeries","layout":{"h":1,"w":3,"x":3,"y":0},"endDate":"2022-01-07","indexName":"EVI","startDate":"2021-12-31"}'),
+    (1, '{"name":"Statistics","type":"statistics","layout":{"h":1,"w":3,"x":6,"y":0}}');
