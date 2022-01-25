@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import _ from "lodash";
 
 import {LoadingModal, NavigationBar} from "./components/PageComponents";
-import {SurveyCollection} from "./components/SurveyCollection";
+import SurveyCollection from "./survey/SurveyCollection";
 import {
     PlanetMenu,
     PlanetDailyMenu,
@@ -19,7 +19,7 @@ import RadioButton from "./components/RadioButton";
 import Select from "./components/Select";
 import SvgIcon from "./components/svg/SvgIcon";
 
-import {getQueryString, isNumber, invertColor, asPercentage, isArray} from "./utils/generalUtils";
+import {getQueryString, isNumber, asPercentage, isArray} from "./utils/generalUtils";
 import {
     everyObject,
     findObject,
@@ -810,7 +810,7 @@ class Collection extends React.Component {
             return this.calcVisibleSamples(parentQuestionId)
                 .filter(sample => {
                     const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestionId, "answerId"]);
-                    return sampleAnswerId && (parentAnswerId === -1 || parentAnswerId === sampleAnswerId);
+                    return sampleAnswerId != null && (parentAnswerId === -1 || parentAnswerId === sampleAnswerId);
                 });
         }
     };

@@ -1,16 +1,15 @@
-import React, {Fragment} from "react";
+import React from "react";
 import _ from "lodash";
 
-import {CollapsibleTitle} from "./FormComponents";
-import RulesCollectionModal from "./RulesCollectionModal";
-import SvgIcon from "./svg/SvgIcon";
-import RequiredInput from "./RequiredInput";
+import {CollapsibleTitle} from "../components/FormComponents";
+import SvgIcon from "../components/svg/SvgIcon";
+import SurveyCollectionQuestion from "./SurveyCollectionQuestion";
 
 import {mercator} from "../utils/mercator";
 import {removeEnumerator, isNumber} from "../utils/generalUtils";
-import {filterObject, firstEntry, intersection, lengthObject, mapObjectArray} from "../utils/sequence";
+import {filterObject, intersection, lengthObject, mapObjectArray} from "../utils/sequence";
 
-export class SurveyCollection extends React.Component {
+export default class SurveyCollection extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -34,6 +33,7 @@ export class SurveyCollection extends React.Component {
         if (this.props.selectedQuestionId !== prevProps.selectedQuestionId && this.props.selectedQuestionId >= 0) {
             const {parentQuestionId} = this.props.surveyQuestions[this.props.selectedQuestionId];
             if (parentQuestionId === -1) {
+                // eslint-disable-next-line react/no-did-update-set-state
                 this.setState({currentNodeIndex: this.state.topLevelNodeIds.indexOf(this.props.selectedQuestionId)});
             }
         }
@@ -361,7 +361,7 @@ export class SurveyCollection extends React.Component {
     };
 
     renderQuestions = () => (
-        <div className="SurveyQuestions__questions mx-1">
+        <div className="mx-1">
             {this.unansweredColor()}
             {this.props.flagged
                 ? (
@@ -381,7 +381,7 @@ export class SurveyCollection extends React.Component {
                     </>
                 ) : (
                     <>
-                        <div className="SurveyQuestions__top-questions">
+                        <div>
                             <button
                                 className="btn btn-outline-lightgreen m-2"
                                 disabled={this.state.currentNodeIndex === 0}
@@ -426,7 +426,8 @@ export class SurveyCollection extends React.Component {
                             </button>
                         </div>
                         {this.state.topLevelNodeIds.length > 0 && (
-                            <SurveyQuestionTree
+                            <SurveyCollectionQuestion
+                                key={this.state.topLevelNodeIds[this.state.currentNodeIndex]}
                                 hierarchyLabel=""
                                 selectedQuestionId={this.props.selectedQuestionId}
                                 selectedSampleId={this.props.selectedSampleId}
@@ -567,383 +568,4 @@ export class SurveyCollection extends React.Component {
             </fieldset>
         );
     }
-}
-
-class SurveyQuestionTree extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            showAnswers: true
-        };
-    }
-
-    toggleShowAnswers = () => this.setState({showAnswers: !this.state.showAnswers});
-
-    render() {
-        const {
-            hierarchyLabel,
-            surveyNodeId,
-            surveyQuestions,
-            surveyRules,
-            selectedQuestionId,
-            selectedSampleId,
-            setSelectedQuestion,
-            validateAndSetCurrentValue
-        } = this.props;
-        const {showAnswers} = this.state;
-        const childNodes = filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === surveyNodeId);
-        const nodeQuestion = surveyQuestions[surveyNodeId];
-        return (
-            <>
-                <fieldset
-                    className="justify-content-center text-center"
-                    onClick={() => setSelectedQuestion(surveyNodeId)}
-                    style={{
-                        border: "1px solid rgba(0, 0, 0, 0.2)",
-                        borderRadius: "6px",
-                        boxShadow: surveyNodeId === selectedQuestionId
-                            ? "0 0 4px 2px rgba(0, 0, 0, 1)"
-                            : "0 0 2px 1px rgba(0, 0, 0, 0.15)",
-                        margin: "1rem 0",
-                        padding: ".5rem"
-                    }}
-                >
-                    <div className="SurveyQuestionTree__question-buttons btn-block my-2 d-flex">
-                        <button
-                            className="text-center btn btn-outline-lightgreen btn-sm text-bold px-3 py-2 mr-1"
-                            onClick={this.toggleShowAnswers}
-                            type="button"
-                        >
-                            {showAnswers ? <span>-</span> : <span>+</span>}
-                        </button>
-                        <RulesCollectionModal
-                            surveyNodeId={surveyNodeId}
-                            surveyQuestions={surveyQuestions}
-                            surveyRules={surveyRules}
-                        />
-                        <button
-                            className="text-center btn btn-outline-lightgreen btn-sm col text-truncate"
-                            style={{
-                                boxShadow: nodeQuestion.answered.length === 0
-                                    ? "0px 0px 6px 4px red inset"
-                                    : nodeQuestion.answered.length === nodeQuestion.visible.length
-                                        ? "0px 0px 6px 5px #3bb9d6 inset"
-                                        : "0px 0px 6px 4px yellow inset"
-                            }}
-                            title={removeEnumerator(nodeQuestion.question)}
-                            type="button"
-                        >
-                            {hierarchyLabel + removeEnumerator(nodeQuestion.question)}
-                        </button>
-                    </div>
-
-                    {showAnswers && (
-                        <SurveyAnswers
-                            selectedSampleId={selectedSampleId}
-                            surveyNode={nodeQuestion} // TODO is it better to pass derived val if already derived?
-                            surveyNodeId={surveyNodeId}
-                            surveyQuestions={surveyQuestions}
-                            validateAndSetCurrentValue={validateAndSetCurrentValue}
-                        />
-                    )}
-                </fieldset>
-                {/* TODO, why do the nodes need to be an object */}
-                {/* TODO, probably keep passing id? */}
-                {mapObjectArray(childNodes, ([strId, node]) => {
-                    const nodeId = Number(strId);
-                    return surveyQuestions[nodeId].visible.length > 0 && (
-                        <SurveyQuestionTree
-                            key={nodeId}
-                            hierarchyLabel={hierarchyLabel + "- "}
-                            selectedQuestionId={selectedQuestionId}
-                            selectedSampleId={selectedSampleId}
-                            setSelectedQuestion={setSelectedQuestion}
-                            surveyNode={node}
-                            surveyNodeId={nodeId}
-                            surveyQuestions={surveyQuestions} // is it better to pass derived val if already derived?
-                            surveyRules={surveyRules}
-                            validateAndSetCurrentValue={validateAndSetCurrentValue}
-                        />
-                    );
-                })}
-            </>
-        );
-    }
-}
-
-function AnswerButton({surveyNodeId, surveyNode, selectedSampleId, validateAndSetCurrentValue}) {
-    const {answers, answered} = surveyNode;
-    return (
-        <ul className="samplevalue justify-content-center my-1">
-            {mapObjectArray(answers, ([strId, ans]) => {
-                const ansId = Number(strId);
-                return (
-                    // TODO, do these need compound keys
-                    <li key={ansId} className="mb-1">
-                        <button
-                            className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
-                            id={ans.answer + "_" + ansId}
-                            onClick={() => validateAndSetCurrentValue(surveyNodeId, ansId)}
-                            style={{
-                                boxShadow: answered.some(a => a.answerId === ansId && a.sampleId === selectedSampleId)
-                                    ? "0px 0px 8px 3px black inset"
-                                    : answered.some(a => a.answerId === ansId)
-                                        ? "0px 0px 8px 3px grey inset"
-                                        : "initial"
-                            }}
-                            title={ans.answer}
-                            type="button"
-                        >
-                            <div
-                                className="circle mr-2"
-                                style={{
-                                    backgroundColor: ans.color,
-                                    border: "1px solid",
-                                    float: "left",
-                                    marginTop: "4px"
-                                }}
-                            />
-                            <span className="small">{ans.answer}</span>
-                        </button>
-                    </li>
-                );
-            })}
-        </ul>
-    );
-}
-
-// TODO, do we really need radio button?
-function AnswerRadioButton({
-    surveyNode,
-    surveyNodeId,
-    selectedSampleId,
-    validateAndSetCurrentValue
-}) {
-    const {answers, answered} = surveyNode;
-    return (
-        <ul className="samplevalue justify-content-center">
-            {mapObjectArray(answers, ([strId, ans]) => {
-                const ansId = Number(strId);
-                return (
-                    <li key={ansId} className="mb-1">
-                        <button
-                            className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
-                            onClick={() => validateAndSetCurrentValue(surveyNodeId, ansId)}
-                            title={ans.answer}
-                            type="button"
-                        >
-                            <div
-                                className="circle ml-1"
-                                style={{
-                                    border: "1px solid black",
-                                    float: "left",
-                                    marginTop: "4px",
-                                    boxShadow: "0px 0px 0px 3px " + ans.color,
-                                    backgroundColor: answered.some(a =>
-                                        a.answerId === ansId && a.sampleId === selectedSampleId)
-                                        ? "black"
-                                        : answered.some(a => a.answerId === ansId)
-                                            ? "#e8e8e8"
-                                            : "white"
-                                }}
-                            />
-                            <span className="small">{ans.answer}</span>
-                        </button>
-                    </li>
-                );
-            })}
-        </ul>
-    );
-}
-
-class AnswerInput extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            newInput: ""
-        };
-    }
-
-    componentDidUpdate(prevProps) {
-        if (this.props.selectedSampleId !== prevProps.selectedSampleId) {
-            this.resetInputText();
-        }
-    }
-
-    resetInputText = () => {
-        const answerId = Number(firstEntry(this.props.surveyNode.answers)[0]);
-        const matchingNode = this.props.surveyNode.answered
-            .find(a => a.answerId === answerId && a.sampleId === this.props.selectedSampleId);
-        this.setState({
-            newInput: matchingNode ? matchingNode.answerText : ""
-        });
-    };
-
-    updateInputValue = value => this.setState({newInput: value});
-
-    render() {
-        const {newInput} = this.state;
-        const {surveyNode, surveyNodeId, validateAndSetCurrentValue} = this.props;
-        const {answers, dataType} = surveyNode;
-        const [answerId, answer] = firstEntry(answers);
-        const required = false;
-        return answer
-            ? (
-                <div className="d-inline-flex">
-                    <div className="pr-2 pt-2">
-                        <div
-                            className="circle"
-                            style={{
-                                backgroundColor: answer.color,
-                                border: "1px solid"
-                            }}
-                        />
-                    </div>
-                    <RequiredInput
-                        className="form-control mr-2"
-                        id={answer.answer + "_" + answerId}
-                        onChange={e => this.updateInputValue(dataType === "number"
-                            ? Number(e.target.value)
-                            : e.target.value)}
-                        placeholder={answer.answer}
-                        required={required}
-                        type={dataType}
-                        value={newInput}
-                    />
-                    <button
-                        className="text-center btn btn-outline-lightgreen btn-sm ml-2"
-                        id="save-input"
-                        name="save-input"
-                        onClick={() => {
-                            if (!required || newInput) {
-                                validateAndSetCurrentValue(surveyNodeId, answerId, newInput);
-                            }
-                        }}
-                        style={{height: "2.5rem"}}
-                        type="button"
-                    >
-                        Save
-                    </button>
-                </div>
-            ) : null;
-    }
-}
-
-class AnswerDropDown extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            showDropdown: false
-        };
-    }
-
-    toggleDropDown = () => this.setState({showDropdown: !this.state.showDropdown});
-
-    render() {
-        const {
-            surveyNodeId,
-            surveyNode: {answers, answered},
-            selectedSampleId,
-            validateAndSetCurrentValue
-        } = this.props;
-        const {showDropdown} = this.state;
-        const answerOptions = mapObjectArray(answers, ([strId, ans]) => {
-            const ansId = Number(strId);
-            return (
-                <div
-                    key={ansId}
-                    className="d-inline-flex py-2 border-bottom"
-                    onMouseDown={() => validateAndSetCurrentValue(surveyNodeId, ansId)}
-                    style={{backgroundColor: answered.some(a => a.answerId === ansId) ? "#e8e8e8" : "#f1f1f1"}}
-                >
-                    <div className="col-1">
-                        <span
-                            className="dot"
-                            style={{
-                                height: "15px",
-                                width: "15px",
-                                backgroundColor: ans.color,
-                                borderRadius: "50%",
-                                display: "inline-block"
-                            }}
-                        />
-                    </div>
-                    <div className="col-11 text-left">
-                        {ans.answer}
-                    </div>
-                </div>
-            );
-        });
-
-        return (
-            <div className="mb-1 d-flex flex-column align-items-start">
-                <div className="dropdown-selector ml-3 d-flex pl-0 col-12">
-                    <div className="SelectedItem d-inline-flex border col-8">
-                        {/* TODO, why are we mapping twice? This looks wrong, should be `find -> lookup answer`, I think. */}
-                        {mapObjectArray(answers, ([strId, ans]) => {
-                            const ansId = Number(strId);
-                            return answered.some(a =>
-                                a.answerId === ansId && a.sampleId === selectedSampleId) && (
-                                <Fragment key={ansId}>
-                                    <div className="col-1 mt-2">
-                                        <span
-                                            className="dot"
-                                            style={{
-                                                height: "15px",
-                                                width: "15px",
-                                                backgroundColor: ans.color,
-                                                borderRadius: "50%",
-                                                display: "inline-block"
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="col-11 text-left mt-1">
-                                        {ans.answer}
-                                    </div>
-                                </Fragment>
-                            );
-                        })}
-                    </div>
-                    <button
-                        className="btn btn-lightgreen btn-sm"
-                        onBlur={() => this.setState({showDropdown: false})}
-                        onClick={this.toggleDropDown}
-                        type="button"
-                    >
-                        <SvgIcon icon="downCaret" size="1rem"/>
-                    </button>
-                </div>
-                <div
-                    className="dropdown-content col-8"
-                    id="dropdown-placeholder"
-                >
-                    <div
-                        className="dropdown-content flex-column container"
-                        id="myDropdown"
-                        style={{
-                            display: showDropdown ? "flex" : "none",
-                            position: "absolute",
-                            backgroundColor: "#f1f1f1",
-                            overflow: "auto",
-                            boxShadow: "0px 8px 16px 0px rgba(0,0,0,0.2)",
-                            zIndex: "10",
-                            cursor: "pointer"
-                        }}
-                    >
-                        {answerOptions}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-}
-
-function SurveyAnswers(props) {
-    const type = (props.surveyNode.componentType || "button").toLowerCase();
-    return {
-        radiobutton: <AnswerRadioButton {...props}/>,
-        input: <AnswerInput {...props}/>,
-        dropdown: <AnswerDropDown {...props}/>,
-        button: <AnswerButton {...props}/>
-    }[type];
 }

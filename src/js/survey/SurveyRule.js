@@ -1,12 +1,8 @@
-import React from "react";
+import React, {useContext} from "react";
 import _ from "lodash";
 
-import {truncate} from "../utils/generalUtils";
-import SvgIcon from "./svg/SvgIcon";
-
-function truncjoin(qs) {
-    return qs.map(q => truncate(q, 15)).join(", ");
-}
+import SvgIcon from "../components/svg/SvgIcon";
+import {ProjectContext} from "../project/constants";
 
 function getSurveyQuestionText(surveyQuestions, questionId) {
     return _.get(surveyQuestions, [questionId, "question"], "");
@@ -98,77 +94,63 @@ function TextMatchRuleBody({questionId, regex, surveyQuestions}) {
     );
 }
 
-function SurveyRuleCard({inDesignMode, removeRule, ruleOptions, title, Body}) {
-    return (
-        <div className="card" style={{width: "100%"}}>
-            <div className="card-body pt-2 pb-2">
-                <div
-                    style={{
-                        alignItems: "baseline",
-                        display: "flex",
-                        flexDirection: "row",
-                        justifyContent: "space-between"
-                    }}
-                >
-                    <h3 style={{marginBottom: 0}}>{ruleOptions.id + 1}. {title}</h3>
-                    {removeRule && inDesignMode && (
-                        <button
-                            className="btn btn-sm btn-outline-red"
-                            onClick={removeRule}
-                            title="Delete Rule"
-                            type="button"
-                        >
-                            <SvgIcon icon="trash" size="1rem"/>
-                        </button>
-                    )}
-                </div>
-                <hr style={{margin: "0.5rem 0"}}/>
-                <Body/>
-            </div>
-        </div>
-    );
-}
+export default function SurveyRule({inDesignMode, rule, surveyQuestions}) {
+    const {setProjectDetails, surveyRules} = useContext(ProjectContext);
+    const removeRule = () => {
+        const newSurveyRules = surveyRules.filter(r => r.id !== rule.id);
+        setProjectDetails({surveyRules: newSurveyRules});
+    };
+    const {RuleBody, title} = {
+        "text-match": {
+            RuleBody: () => <TextMatchRuleBody {...rule} surveyQuestions={surveyQuestions}/>,
+            title: "Text Match"
+        },
+        "numeric-range": {
+            RuleBody:() => <NumericRangeRuleBody {...rule} surveyQuestions={surveyQuestions}/>,
+            title:"Numeric Range"
+        },
+        "sum-of-answers": {
+            RuleBody: () => <SumOfAnswersRuleBody {...rule} surveyQuestions={surveyQuestions}/>,
+            title: "Sum of Answers"
+        },
+        "matching-sums": {
+            RuleBody: () => <MatchingSumsRuleBody {...rule} surveyQuestions={surveyQuestions}/>,
+            title: "Matching Sums"
+        },
+        "incompatible-answers": {
+            RuleBody: () => <IncompatibleAnswersRuleBody {...rule} surveyQuestions={surveyQuestions}/>,
+            title: "Incompatible Answers"
+        }
+    }[rule.ruleType];
 
-export default function SurveyRule({inDesignMode, removeRule, ruleOptions, surveyQuestions}) {
     return (
         <div className="d-flex flex-column mb-1" style={{flex: 1}}>
-            {{
-                "text-match": <SurveyRuleCard
-                    Body={() => <TextMatchRuleBody {...ruleOptions} surveyQuestions={surveyQuestions}/>}
-                    inDesignMode={inDesignMode}
-                    removeRule={removeRule}
-                    ruleOptions={ruleOptions}
-                    title="Text Match"
-                />,
-                "numeric-range": <SurveyRuleCard
-                    Body={() => <NumericRangeRuleBody {...ruleOptions} surveyQuestions={surveyQuestions}/>}
-                    inDesignMode={inDesignMode}
-                    removeRule={removeRule}
-                    ruleOptions={ruleOptions}
-                    title="Numeric Range"
-                />,
-                "sum-of-answers": <SurveyRuleCard
-                    Body={() => <SumOfAnswersRuleBody {...ruleOptions} surveyQuestions={surveyQuestions}/>}
-                    inDesignMode={inDesignMode}
-                    removeRule={removeRule}
-                    ruleOptions={ruleOptions}
-                    title="Sum of Answers"
-                />,
-                "matching-sums": <SurveyRuleCard
-                    Body={() => <MatchingSumsRuleBody {...ruleOptions} surveyQuestions={surveyQuestions}/>}
-                    inDesignMode={inDesignMode}
-                    removeRule={removeRule}
-                    ruleOptions={ruleOptions}
-                    title="Matching Sums"
-                />,
-                "incompatible-answers": <SurveyRuleCard
-                    Body={() => <IncompatibleAnswersRuleBody {...ruleOptions} surveyQuestions={surveyQuestions}/>}
-                    inDesignMode={inDesignMode}
-                    removeRule={removeRule}
-                    ruleOptions={ruleOptions}
-                    title="Incompatible Answers"
-                />
-            }[ruleOptions.ruleType]}
+            <div className="card" style={{width: "100%"}}>
+                <div className="card-body pt-2 pb-2">
+                    <div
+                        style={{
+                            alignItems: "baseline",
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "space-between"
+                        }}
+                    >
+                        <h3 style={{marginBottom: 0}}>{rule.id + 1}. {title}</h3>
+                        {inDesignMode && (
+                            <button
+                                className="btn btn-sm btn-outline-red"
+                                onClick={removeRule}
+                                title="Delete Rule"
+                                type="button"
+                            >
+                                <SvgIcon icon="trash" size="1rem"/>
+                            </button>
+                        )}
+                    </div>
+                    <hr style={{margin: "0.5rem 0"}}/>
+                    <RuleBody/>
+                </div>
+            </div>
         </div>
     );
 }

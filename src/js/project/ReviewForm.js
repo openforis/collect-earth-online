@@ -5,8 +5,8 @@ import {ImageryReview} from "./ImagerySelection";
 import {OverviewReview} from "./Overview";
 import {AOIReview, PlotReview} from "./PlotDesign";
 import {SampleReview} from "./SampleDesign";
-import SurveyCardList from "./SurveyCardList";
-import {SurveyRulesList} from "./SurveyRules";
+import SurveyCardList from "../survey/SurveyCardList";
+import SurveyRulesList from "../survey/SurveyRulesList";
 import SvgIcon from "../components/svg/SvgIcon";
 import UserAssignmentReview from "./UserAssignmentReview";
 import QAQCReview from "./QAQCReview";
@@ -100,11 +100,11 @@ export default function ReviewForm() {
             </div>
             <div id="survey-review">
                 {renderSectionHeader("Survey Questions", "questions", context.availability === "unpublished")}
-                <SurveyCardList {...context} inDesignMode={false}/>
+                <SurveyCardList inDesignMode={false}/>
             </div>
             <div id="survey-rules-review">
                 {renderSectionHeader("Survey Rules", "rules", context.availability === "unpublished")}
-                <SurveyRulesList {...context} inDesignMode={false}/>
+                <SurveyRulesList inDesignMode={false}/>
             </div>
         </div>
     );

@@ -4,12 +4,13 @@ import _ from "lodash";
 import {ImagerySelection} from "./ImagerySelection";
 import {Overview, OverviewIntro} from "./Overview";
 import {PlotDesign, PlotDesignReview} from "./PlotDesign";
-import {SurveyQuestionDesign, SurveyQuestionHelp} from "./SurveyQuestions";
-import {SurveyRuleDesign} from "./SurveyRules";
+import SurveyQuestionsDesigner from "../survey/SurveyQuestionsDesigner";
+import SurveyCollectionPreview from "../survey/SurveyCollectionPreview";
+import SurveyRulesDesigner from "../survey/SurveyRulesDesigner";
 import AOIMap from "./AOIMap";
 import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
-
 import SvgIcon from "../components/svg/SvgIcon";
+
 import {mercator} from "../utils/mercator";
 import {last, lengthObject, removeFromSet, someObject} from "../utils/sequence";
 import {ProjectContext, plotLimit, perPlotLimit, sampleLimit} from "./constants";
@@ -87,17 +88,17 @@ export default class CreateProjectWizard extends React.Component {
             questions: {
                 title: "Survey Questions",
                 description: "Questions to be answered during collection",
-                StepComponent: SurveyQuestionDesign,
+                StepComponent: SurveyQuestionsDesigner,
                 helpDescription: "Question Preview",
-                StepHelpComponent: SurveyQuestionHelp,
+                StepHelpComponent: SurveyCollectionPreview,
                 validate: this.validateSurveyQuestions
             },
             rules: {
                 title: "Survey Rules",
                 description: "Rules to ensure correct answers",
-                StepComponent: SurveyRuleDesign,
+                StepComponent: SurveyRulesDesigner,
                 helpDescription: "Question Preview",
-                StepHelpComponent: SurveyQuestionHelp,
+                StepHelpComponent: SurveyCollectionPreview,
                 validate: () => []
             }
         };
