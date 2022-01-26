@@ -175,7 +175,7 @@ mercator.maybeParseJson = text => {
 // TODO, wrap request in cache function
 mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
     const geeSource = new XYZ({
-        url: "",
+        url: "img/source-loading.png",
         id: imageryId,
         attributions: attribution
     });
