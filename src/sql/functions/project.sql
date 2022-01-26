@@ -632,11 +632,12 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
  RETURNS table (
-     project_id    integer,
-     name          text
+     project_id        integer,
+     name              text,
+     institution_id    integer
  ) AS $$
 
-    SELECT project_uid, name
+    SELECT project_uid, name, p.institution_rid
     FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
