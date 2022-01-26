@@ -70,7 +70,9 @@ export default class RulesCollectionModal extends React.Component {
                                     <SurveyRule
                                         key={rule.id}
                                         rule={rule}
+                                        setProjectDetails={this.props.setProjectDetails}
                                         surveyQuestions={this.props.surveyQuestions}
+                                        surveyRules={this.props.surveyRules}
                                     />
                                 ))}
                             </div>

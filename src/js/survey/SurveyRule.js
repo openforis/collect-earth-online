@@ -1,8 +1,7 @@
-import React, {useContext} from "react";
+import React from "react";
 import _ from "lodash";
 
 import SvgIcon from "../components/svg/SvgIcon";
-import {ProjectContext} from "../project/constants";
 
 function getSurveyQuestionText(surveyQuestions, questionId) {
     return _.get(surveyQuestions, [questionId, "question"], "");
@@ -94,8 +93,7 @@ function TextMatchRuleBody({questionId, regex, surveyQuestions}) {
     );
 }
 
-export default function SurveyRule({inDesignMode, rule, surveyQuestions}) {
-    const {setProjectDetails, surveyRules} = useContext(ProjectContext);
+export default function SurveyRule({inDesignMode, rule, surveyQuestions, setProjectDetails, surveyRules}) {
     const removeRule = () => {
         const newSurveyRules = surveyRules.filter(r => r.id !== rule.id);
         setProjectDetails({surveyRules: newSurveyRules});
