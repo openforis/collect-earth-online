@@ -1,5 +1,4 @@
 import React from "react";
-import _ from "lodash";
 
 import ReviewForm from "./ReviewForm";
 
@@ -56,19 +55,7 @@ export default class ReviewChanges extends React.Component {
     };
 
     updateProject = () => {
-        // TODO: Match project details in context as in state (i.e. do not spread into context).
-        const updateSurvey = this.surveyQuestionUpdated(this.context, this.context.originalProject);
-        const extraMessage = (this.plotsUpdated(this.context, this.context.originalProject)
-          || this.plotDesignChanged(this.context, this.context.originalProject))
-            ? "  Plots and samples will be recreated, losing all collection data."
-            : this.samplesUpdated(this.context, this.context.originalProject)
-                ? "  Samples will be recreated, losing all collection data."
-                : updateSurvey
-                    ? "  Updating survey questions or rules will reset all collected data."
-                    : this.allowDrawnSamplesDisallowed(this.context, this.context.originalProject)
-                        ? "  Disallowing users to draw samples will reset all collected data."
-                        : "";
-        if (confirm("Do you really want to update this project?" + extraMessage)) {
+        if (confirm("Collection data will cleared to reset the project. Do you really want to update this project?")) {
             this.context.processModal(
                 "Updating Project",
                 () => fetch(
@@ -81,8 +68,7 @@ export default class ReviewChanges extends React.Component {
                         },
                         body: JSON.stringify({
                             projectId: this.context.projectId,
-                            ...this.buildProjectObject(),
-                            updateSurvey // FIXME this is a shim for when stored questions are in an old format.
+                            ...this.buildProjectObject()
                         })
                     }
                 )
@@ -137,33 +123,6 @@ export default class ReviewChanges extends React.Component {
             sampleFileBase64: this.context.sampleFileBase64
         };
     };
-
-    allowDrawnSamplesDisallowed = (projectDetails, originalProject) =>
-        originalProject.allowDrawnSamples && !projectDetails.allowDrawnSamples;
-
-    surveyQuestionUpdated = (projectDetails, originalProject) =>
-        !_.isEqual(projectDetails.surveyQuestions, originalProject.surveyQuestions)
-            || !_.isEqual(projectDetails.surveyRules, originalProject.surveyRules);
-
-    plotDesignChanged = ({designSettings}, {designSettings: originalDesignSettings}) =>
-        !(_.isEqual(designSettings, originalDesignSettings));
-
-    plotsUpdated = (projectDetails, originalProject) =>
-        projectDetails.plotDistribution !== originalProject.plotDistribution
-            || (["csv", "shp"].includes(this.context.plotDistribution)
-                ? projectDetails.plotFileBase64
-                : projectDetails.boundary !== originalProject.boundary
-                    || projectDetails.numPlots !== originalProject.numPlots
-                    || projectDetails.plotShape !== originalProject.plotShape
-                    || projectDetails.plotSize !== originalProject.plotSize
-                    || projectDetails.plotSpacing !== originalProject.plotSpacing);
-
-    samplesUpdated = (projectDetails, originalProject) =>
-        projectDetails.sampleDistribution !== originalProject.sampleDistribution
-            || (["csv", "shp"].includes(this.context.sampleDistribution)
-                ? projectDetails.sampleFileBase64
-                : projectDetails.samplesPerPlot !== originalProject.samplesPerPlot
-                    || projectDetails.sampleResolution !== originalProject.sampleResolution);
 
     /// Render Functions
 
