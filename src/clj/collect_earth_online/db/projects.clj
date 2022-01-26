@@ -318,6 +318,10 @@
                             (str/join ", " (take 10 bad-plots))
                             "]"))))))
 
+(defn- assign-plots [design-settings current-plots]
+  (when-let [assigned-plots (assign-user-plots current-plots design-settings)]
+    (p-insert-rows! "plot_assignments" (assign-qaqc assigned-plots design-settings))))
+
 (defn- create-project-plots! [project-id
                               lon-min
                               lat-min
@@ -366,8 +370,7 @@
                         "This can come from improper coordinates or projection when uploading shape or csv data.")))
 
   (let [saved-plots (call-sql "get_plot_centers_by_project" project-id)]
-    (when-let [assigned-plots (assign-user-plots saved-plots design-settings)]
-      (p-insert-rows! "plot_assignments" (assign-qaqc assigned-plots design-settings)))
+    (assign-plots design-settings saved-plots)
     (create-project-samples! project-id
                              plot-shape
                              plot-size
@@ -543,10 +546,6 @@
        (same-ring? (exterior-ring (:coordinates geom1))
                    (exterior-ring (:coordinates geom2)))))
 
-(defn modified-design? [ds1 ds2]
-  (not= (-> ds1 (tc/jsonb->clj))
-        (-> ds2 (tc/jsonb->clj))))
-
 (defn update-project! [{:keys [params]}]
   (let [project-id           (tc/val->int (:projectId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
@@ -573,9 +572,8 @@
                                  (tc/val->bool (:allowDrawnSamples params)))
         survey-questions     (tc/clj->jsonb (:surveyQuestions params))
         survey-rules         (tc/clj->jsonb (:surveyRules params))
-        update-survey        (tc/val->bool (:updateSurvey params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
-        design-settings      (tc/clj->jsonb (:designSettings params default-settings))
+        design-settings      (:designSettings params default-settings)
         plot-file-name       (:plotFileName params)
         plot-file-base64     (:plotFileBase64 params)
         sample-file-name     (:sampleFileName params)
@@ -604,7 +602,7 @@
                   survey-questions
                   survey-rules
                   project-options
-                  design-settings)
+                  (tc/clj->jsonb design-settings))
 
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
@@ -615,10 +613,10 @@
           nil
 
           (or (not= plot-distribution (:plot_distribution original-project))
-              (modified-design? design-settings (:design_settings original-project))
               (if (#{"csv" "shp"} plot-distribution)
                 plot-file-base64
-                (or (not (same-polygon-boundary? (tc/jsonb->clj boundary) (tc/jsonb->clj (:boundary original-project))))
+                (or (not (same-polygon-boundary? (tc/jsonb->clj boundary)
+                                                 (tc/jsonb->clj (:boundary original-project))))
                     (not= num-plots    (:num_plots original-project))
                     (not= plot-shape   (:plot_shape original-project))
                     (not= plot-size    (:plot_size original-project))
@@ -645,34 +643,35 @@
                                    allow-drawn-samples?
                                    design-settings))
 
-          (or (not= sample-distribution (:sample_distribution original-project))
-              (if (#{"csv" "shp"} sample-distribution)
-                sample-file-base64
-                (or (not= samples-per-plot (:samples_per_plot original-project))
-                    (not= sample-resolution (:sample_resolution original-project)))))
+          :else
           (do
-            (call-sql "delete_user_plots_by_project" project-id)
-            (call-sql "delete_all_samples_by_project" project-id)
-            (create-project-samples! project-id
-                                     plot-shape
-                                     plot-size
-                                     sample-distribution
-                                     samples-per-plot
-                                     sample-resolution
-                                     sample-file-name
-                                     sample-file-base64
-                                     allow-drawn-samples?
-                                     (call-sql "get_plot_centers_by_project" project-id)))
-
-          ;; NOTE: Old stored questions can have a different format than when passed from the UI.
-          ;;       This is why we check whether the survey questions are different on the front (for now).
-          (or update-survey
-              (and (:allow_drawn_samples original-project) (not allow-drawn-samples?)))
-          (reset-collected-samples! project-id))
+            (if (or (not= sample-distribution (:sample_distribution original-project))
+                    (if (#{"csv" "shp"} sample-distribution)
+                      sample-file-base64
+                      (or (not= samples-per-plot (:samples_per_plot original-project))
+                          (not= sample-resolution (:sample_resolution original-project)))))
+              (do
+                (call-sql "delete_user_plots_by_project" project-id)
+                (call-sql "delete_all_samples_by_project" project-id)
+                (create-project-samples! project-id
+                                         plot-shape
+                                         plot-size
+                                         sample-distribution
+                                         samples-per-plot
+                                         sample-resolution
+                                         sample-file-name
+                                         sample-file-base64
+                                         allow-drawn-samples?
+                                         (call-sql "get_plot_centers_by_project" project-id)))
+              (reset-collected-samples! project-id))
+            (when (not= design-settings (tc/jsonb->clj (:design_settings original-project)))
+              (call-sql "delete_plot_assignments_by_project" project-id)
+              (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id)))))
 
         ;; Final clean up
         (call-sql "update_project_counts" project-id)
         (data-response "")
+
         (catch Exception e
           (let [causes (:causes (ex-data e))]
             ;; Log unknown errors

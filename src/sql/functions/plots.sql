@@ -505,6 +505,15 @@ CREATE OR REPLACE FUNCTION delete_user_plots_by_project(_project_id integer)
 
 $$ LANGUAGE SQL;
 
+-- For clearing all user plots in a project
+CREATE OR REPLACE FUNCTION delete_plot_assignments_by_project(_project_id integer)
+ RETURNS void AS $$
+
+    DELETE FROM plot_assignments WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id)
+
+$$ LANGUAGE SQL;
+
+
 -- For clearing all samples in a project
 CREATE OR REPLACE FUNCTION delete_all_samples_by_project(_project_id integer)
  RETURNS void AS $$
