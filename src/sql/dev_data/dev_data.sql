@@ -153,6 +153,6 @@ VALUES
 INSERT INTO project_widgets
     (project_rid, widget)
 VALUES
-    (1, '{"name":"Image Collection","type":"preImageCollection","layout":{"h":1,"w":3,"x":0,"y":0},"endDate":"2022-01-07","basemapId":{},"indexName":"NDVI","startDate":"2022-01-01"}'),
+    (1, '{"name":"Image Collection","type":"preImageCollection","layout":{"h":1,"w":3,"x":0,"y":0},"endDate":"2022-01-07","basemapId":1,"indexName":"NDVI","startDate":"2022-01-01"}'),
     (1, '{"name":"Time Series Graph","type":"timeSeries","layout":{"h":1,"w":3,"x":3,"y":0},"endDate":"2022-01-07","indexName":"EVI","startDate":"2021-12-31"}'),
     (1, '{"name":"Statistics","type":"statistics","layout":{"h":1,"w":3,"x":6,"y":0}}');
