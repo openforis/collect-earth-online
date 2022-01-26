@@ -84,7 +84,9 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                                                                 <SurveyRule
                                                                     inDesignMode={inDesignMode}
                                                                     rule={rule}
+                                                                    setProjectDetails
                                                                     surveyQuestions={surveyQuestions}
+                                                                    surveyRules
                                                                 />
                                                             </div>
                                                         </div>
