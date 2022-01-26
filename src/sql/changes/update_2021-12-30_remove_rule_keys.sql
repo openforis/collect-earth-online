@@ -1,3 +1,6 @@
+UPDATE projects SET survey_rules = '[]'::jsonb
+WHERE jsonb_typeof(survey_rules) <> 'array';
+
 CREATE OR REPLACE FUNCTION remove_rules_keys(_rules jsonb)
  RETURNS jsonb AS $$
 

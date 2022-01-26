@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION survey_rules_rename_key(_questions jsonb, _from text, _to text)
+CREATE OR REPLACE FUNCTION survey_rules_rename_key(_rules jsonb, _from text, _to text)
  RETURNS jsonb AS $$
 
     SELECT  jsonb_agg(
@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION survey_rules_rename_key(_questions jsonb, _from text,
     )
     FROM (
         SELECT value
-        FROM jsonb_array_elements(_questions)
+        FROM jsonb_array_elements(_rules)
     ) a
 
 $$ LANGUAGE SQL;
