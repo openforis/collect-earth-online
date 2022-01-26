@@ -3,8 +3,6 @@ import React from "react";
 import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
 import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator";
-import AssignPlots from "./AssignPlots";
-import QualityControl from "./QualityControl";
 
 export class PlotDesign extends React.Component {
     constructor(props) {
@@ -245,8 +243,7 @@ export class PlotDesign extends React.Component {
 
     render() {
         const {plotDistribution, plotShape} = this.context;
-        const {institutionUserList} = this.props;
-        const totalPlots = this.props.getTotalPlots();
+        const {totalPlots} = this.props;
         const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
 
         const plotOptions = {
@@ -327,10 +324,6 @@ export class PlotDesign extends React.Component {
                     {totalPlots > 0 && totalPlots > plotLimit
                         && `\n* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
                 </p>
-                <div className="row mr-1">
-                    <AssignPlots institutionUserList={institutionUserList} totalPlots={totalPlots}/>
-                    <QualityControl institutionUserList={institutionUserList} totalPlots={totalPlots}/>
-                </div>
             </div>
         );
     }
