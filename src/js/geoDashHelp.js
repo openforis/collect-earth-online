@@ -45,7 +45,9 @@ class GeoDashHelp extends React.Component {
                                 <li>{lngObject.give_title}</li>
                                 <li>{lngObject.choose_basemap}</li>
                                 <li>{lngObject.choose_band}</li>
+                                <li>{lngObject.select_date_range_degradation}</li>
                                 <li>{lngObject.click_create}</li>
+                                <li>{lngObject.reposition_degradation}</li>
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_dual_image_collection}>
@@ -53,12 +55,20 @@ class GeoDashHelp extends React.Component {
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
                                 <li>{lngObject.select_dual_image_collection}</li>
-                                <li>{lngObject.give_title}</li>
+                                <li>{lngObject.give_title + "We suggest an informative title such as {Data} {Date range} e.g. NDVI 2001 or NDVI 2001 – 2002."}</li>
                                 <li>{lngObject.choose_basemap}</li>
-                                <li>{lngObject.select_imagery_type}</li>
-                                <li>{lngObject.select_remaining_imagery}</li>
+                                <li>
+                                    {lngObject.select_imagery_type}
+                                    <ol style={{listStyleType: "lower-alpha"}}>
+                                        <li>{lngObject.imagery_types_options}</li>
+                                        <li>{lngObject.more_info_image_assets}</li>
+                                        <li>{lngObject.more_info_image_collection_assets}</li>
+                                        <li>{lngObject.more_info_preloaded_collections}</li>
+                                    </ol>
+                                </li>
                                 <li>{lngObject.select_date_range}</li>
                                 <li>{lngObject.click_create}</li>
+                                <li>{lngObject.reposition}</li>
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_image_asset}>
@@ -68,14 +78,18 @@ class GeoDashHelp extends React.Component {
                                 <li>{lngObject.select_image_asset}</li>
                                 <li>{lngObject.give_title}</li>
                                 <li>{lngObject.choose_basemap}</li>
+                                <li>{lngObject.enter_gee_asset_id}</li>
+                                <li>{lngObject.view_available_bands}</li>
                                 <li>
-                                    {lngObject.enter_image_asset + " (e.g. users/billyz313/carbon_monoxide)."}
-                                </li>
-                                <li>{lngObject.choose_band}</li>
-                                <li>
-                                    {lngObject.enter_image_asset_params + " (e.g. {\"bands\":\"CO_column_number_density,H2O_column_number_density,cloud_height\",\"min\":\"0\",\"max\":\"0.5\"})."}
+                                    {lngObject.enter_json_image_parameters_image_asset}
+                                    <ol style={{listStyleType: "lower-alpha"}}>
+                                        <li>{lngObject.image_asset_json_example1}</li>
+                                        <li>{lngObject.image_asset_json_example2}</li>
+                                        <li>{lngObject.image_asset_json_example_note}</li>
+                                    </ol>
                                 </li>
                                 <li>{lngObject.click_create}</li>
+                                <li>{lngObject.reposition}</li>
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_image_collection_asset_widget}>
@@ -85,15 +99,16 @@ class GeoDashHelp extends React.Component {
                                 <li>{lngObject.select_image_collection_asset}</li>
                                 <li>{lngObject.give_title}</li>
                                 <li>{lngObject.choose_basemap}</li>
+                                <li>{lngObject.enter_gee_asset_id}</li>
+                                <li>{lngObject.view_available_bands}</li>
                                 <li>
-                                    {lngObject.enter_image_asset + " (e.g. users/billyz313/carbon_monoxide)."}
+                                    {lngObject.select_reducer}
+                                    <a href="https://developers.google.com/earth-engine/guides/reducers_intro">https://developers.google.com/earth-engine/guides/reducers_intro.</a>
                                 </li>
-                                <li>{lngObject.choose_band}</li>
-                                <li>
-                                    {lngObject.enter_image_asset_params + " (e.g. {\"bands\":\"B4,B5,B3\",\"min\":\"10,0,10\",\"max\":\"120,90,70\"})."}
-                                </li>
+                                <li>{lngObject.enter_json_image_parameters}</li>
                                 <li>{lngObject.select_date_range}</li>
                                 <li>{lngObject.click_create}</li>
+                                <li>{lngObject.reposition}</li>
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_polygon_compare_widget}>
@@ -102,8 +117,12 @@ class GeoDashHelp extends React.Component {
                                 <li>{lngObject.click_add_widget}</li>
                                 <li>{lngObject.select_polygon_compare}</li>
                                 <li>{lngObject.give_title}</li>
-                                <li>{lngObject.fill_remaining_fields}</li>
+                                <li>{lngObject.choose_basemap}</li>
+                                <li>{lngObject.enter_gee_asset_id}</li>
+                                <li>{lngObject.enter_plotid}</li>
+                                <li>{lngObject.enter_json_image_parameters}</li>
                                 <li>{lngObject.click_create}</li>
+                                <li>{lngObject.reposition}</li>
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_preloaded_image_collections_widget}>
@@ -113,9 +132,42 @@ class GeoDashHelp extends React.Component {
                                 <li>{lngObject.select_preloaded_image_collections}</li>
                                 <li>{lngObject.give_title}</li>
                                 <li>{lngObject.choose_basemap}</li>
-                                <li>{lngObject.select_data_type_preloaded}</li>
+                                <li>
+                                    {lngObject.select_data}
+                                    <ol style={{listStyleType: "lower-alpha"}}>
+                                        <li>{lngObject.select_data_preloaded_1}</li>
+                                        <li>
+                                            {lngObject.select_data_preloaded_2}
+                                            <ol style={{listStyleType: "lower-roman"}}>
+                                                <li>{lngObject.landsat5_bands}</li>
+                                                <li>{lngObject.landsat7_bands}</li>
+                                                <li>{lngObject.landsat8_bands}</li>
+                                                <li>{lngObject.sentinel2_bands}</li>
+                                                <li>
+                                                    {lngObject.min_max_cloud}
+                                                    <ol style={{listStyleType: "lower-alpha"}}>
+                                                        <li>{lngObject.landsat5_example_vals}</li>
+                                                        <li>{lngObject.landsat7_example_vals}</li>
+                                                        <li>{lngObject.landsat8_example_vals}</li>
+                                                        <li>{lngObject.sentinel2_example_vals}</li>
+                                                    </ol>
+                                                </li>
+                                                <li>
+                                                    {lngObject.preconfigured_landsat}
+                                                    <ol style={{listStyleType: "lower-alpha"}}>
+                                                        <li>{lngObject.landsat8_preconfigured}</li>
+                                                        <li>{lngObject.landsat7_preconfigured}</li>
+                                                        <li>{lngObject.landsat5_preconfigured}</li>
+                                                        <li>{lngObject.sentinel2_preconfigured}</li>
+                                                    </ol>
+                                                </li>
+                                            </ol>
+                                        </li>
+                                    </ol>
+                                </li>
                                 <li>{lngObject.select_date_range}</li>
                                 <li>{lngObject.click_create}</li>
+                                <li>{lngObject.reposition}</li>
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_stats_widget}>
@@ -125,6 +177,7 @@ class GeoDashHelp extends React.Component {
                                 <li>{lngObject.select_stats}</li>
                                 <li>{lngObject.give_title}</li>
                                 <li>{lngObject.click_create}</li>
+                                <li>{lngObject.reposition}</li>
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.add_time_series_graph}>
@@ -133,9 +186,26 @@ class GeoDashHelp extends React.Component {
                                 <li>{lngObject.click_add_widget}</li>
                                 <li>{lngObject.select_time_series}</li>
                                 <li>{lngObject.give_title}</li>
-                                <li>{lngObject.select_data_type_time_series}</li>
+                                <li>
+                                    {lngObject.select_data}
+                                    <ol style={{listStyleType: "lower-alpha"}}>
+                                        <li>{lngObject.select_data_non_custom}</li>
+                                        <li>
+                                            {lngObject.select_data_custom}
+                                            <ol style={{listStyleType: "lower-roman"}}>
+                                                <li>{lngObject.gee_image_collection_example}</li>
+                                                <li>{lngObject.band_to_graph_example}</li>
+                                                <li>
+                                                    {lngObject.select_reducer}
+                                                    <a href="https://developers.google.com/earth-engine/guides/reducers_intro">https://developers.google.com/earth-engine/guides/reducers_intro.</a>
+                                                </li>
+                                            </ol>
+                                        </li>
+                                    </ol>
+                                </li>
                                 <li>{lngObject.select_date_range}</li>
                                 <li>{lngObject.click_create}</li>
+                                <li>{lngObject.reposition}</li>
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.to_move_resize}>
@@ -145,6 +215,7 @@ class GeoDashHelp extends React.Component {
                                 <li>{lngObject.resize_by}</li>
                                 <li>{lngObject.widgets_realtime}</li>
                                 <li>{lngObject.view_rendered}</li>
+                                <li>{lngObject.reposition}</li>
                             </ol>
                         </CollapsibleSectionBlock>
                         <CollapsibleSectionBlock title={lngObject.gee_image_asset_creation}>
