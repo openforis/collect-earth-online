@@ -93,9 +93,10 @@
 
 (defn get-template-projects [{:keys [params]}]
   (let [user-id (:userId params -1)]
-    (data-response (mapv (fn [{:keys [project_id name]}]
-                           {:id   project_id
-                            :name name})
+    (data-response (mapv (fn [{:keys [project_id name institution_id]}]
+                           {:id            project_id
+                            :name          name
+                            :institutionId institution_id})
                          (call-sql "select_template_projects" user-id)))))
 
 (defn- build-project-by-id [user-id project-id]
@@ -136,7 +137,7 @@
 
 (defn get-template-by-id [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
-        project (first (call-sql "select_project_by_id" project-id))]
+        project    (first (call-sql "select_project_by_id" project-id))]
     (data-response {:imageryId          (:imagery_id project)
                     :name               (:name project)
                     :description        (:description project)

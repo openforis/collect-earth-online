@@ -165,67 +165,97 @@ class ProjectTemplateSelection extends React.Component {
         super(props, context);
         this.state = {
             projectFilter: "",
+            showPublic: false,
             selectedTemplateProjectId: this.context.templateProjectId || -1
         };
     }
 
     render() {
-        const {templateProjectId, useTemplateWidgets, useTemplatePlots, setProjectDetails} = this.context;
+        const {projectFilter, showPublic, selectedTemplateProjectId} = this.state;
+        const {
+            templateProjectId,
+            useTemplateWidgets,
+            setProjectDetails,
+            useTemplatePlots,
+            institutionId
+        } = this.context;
         const {setProjectTemplate, clearTemplateSelection, templateProjectList} = this.props;
         return (
             <div id="project-template-selector">
-                <div className="d-flex align-items-end justify-content-between">
-                    <div className="form-group">
+                <div className="d-flex justify-content-between">
+                    <div className="form-group d-flex flex-column">
                         <h3 htmlFor="project-filter">Template Filter (Name or ID)</h3>
                         <input
                             className="form-control form-control-sm"
                             id="project-filter"
                             onChange={e => this.setState({projectFilter: e.target.value})}
                             type="text"
-                            value={this.state.projectFilter}
+                            value={projectFilter}
                         />
+                        <div className="d-flex align-items-center">
+                            <input
+                                checked={showPublic}
+                                className="mx-2"
+                                id="show-public"
+                                onChange={() => this.setState({showPublic: !showPublic})}
+                                type="checkbox"
+                            />
+                            <label
+                                className="form-check-label"
+                                htmlFor="show-public"
+                            >
+                                Show Public Projects
+                            </label>
+                        </div>
                     </div>
-                    <div className="form-group mx-3" style={{flex: "1 1 1px"}}>
-                        <h3 htmlFor="project-template">Select Template</h3>
-                        <select
-                            className="form-control-sm form-control"
-                            id="project-template"
-                            onChange={e => this.setState({
-                                selectedTemplateProjectId: parseInt(e.target.value)
-                            })}
-                            size="1"
-                            style={{height: "calc(1.5em + .5rem + 2px)"}}
-                            value={this.state.selectedTemplateProjectId}
-                        >
-                            {templateProjectList
+                    <div
+                        className="d-flex align-items-end justify-content-between"
+                        style={{height: "fit-content", flex: "1"}}
+                    >
+                        <div className="form-group mx-3" style={{flex: "1 1 1px"}}>
+                            <h3 htmlFor="project-template">Select Template</h3>
+                            <select
+                                className="form-control-sm form-control"
+                                id="project-template"
+                                onChange={e => this.setState({
+                                    selectedTemplateProjectId: parseInt(e.target.value)
+                                })}
+                                size="1"
+                                style={{height: "calc(1.5em + .5rem + 2px)"}}
+                                value={selectedTemplateProjectId}
+                            >
+                                {templateProjectList
                                 && templateProjectList[0].id > 0
                                 && <option key={-1} value={-1}>- Select Project -</option>}
-                            {templateProjectList && templateProjectList
-                                .filter(proj => (proj.id + proj.name.toLocaleLowerCase())
-                                    .includes(this.state.projectFilter.toLocaleLowerCase()))
-                                .map(proj => <option key={proj.id} value={proj.id}>{proj.id} - {proj.name}</option>)}
-                        </select>
+                                {templateProjectList && templateProjectList
+                                    .filter(proj => (showPublic || institutionId === proj.institutionId)
+                                        && (proj.id + proj.name.toLocaleLowerCase())
+                                            .includes(projectFilter.toLocaleLowerCase()))
+                                    .map(proj =>
+                                        <option key={proj.id} value={proj.id}>{proj.id} - {proj.name}</option>)}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <input
+                                className="btn btn-lightgreen mr-1"
+                                disabled={selectedTemplateProjectId === -1}
+                                onClick={() => setProjectTemplate(selectedTemplateProjectId)}
+                                style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
+                                type="button"
+                                value="Load"
+                            />
+                            <input
+                                className="btn btn-lightgreen"
+                                onClick={() => {
+                                    this.setState({selectedTemplateProjectId: -1});
+                                    clearTemplateSelection();
+                                }}
+                                style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
+                                type="button"
+                                value="Clear"
+                            />
+                        </div>
                     </div>
-                    <span className="form-group">
-                        <input
-                            className="btn btn-lightgreen mr-1"
-                            disabled={this.state.selectedTemplateProjectId === -1}
-                            onClick={() => setProjectTemplate(this.state.selectedTemplateProjectId)}
-                            style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
-                            type="button"
-                            value="Load"
-                        />
-                        <input
-                            className="btn btn-lightgreen"
-                            onClick={() => {
-                                this.setState({selectedTemplateProjectId: -1});
-                                clearTemplateSelection();
-                            }}
-                            style={{height: "calc(1.5em + .5rem + 2px)", padding: "0 .5rem"}}
-                            type="button"
-                            value="Clear"
-                        />
-                    </span>
                 </div>
                 {templateProjectId > 0 && (
                     <div className="pb-2">
