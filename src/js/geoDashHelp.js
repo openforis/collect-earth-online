@@ -55,7 +55,7 @@ class GeoDashHelp extends React.Component {
                             <ol>
                                 <li>{lngObject.click_add_widget}</li>
                                 <li>{lngObject.select_dual_image_collection}</li>
-                                <li>{lngObject.give_title + "We suggest an informative title such as {Data} {Date range} e.g. NDVI 2001 or NDVI 2001 – 2002."}</li>
+                                <li>{lngObject.give_title_dual_image_collection}</li>
                                 <li>{lngObject.choose_basemap}</li>
                                 <li>
                                     {lngObject.select_imagery_type}
@@ -103,7 +103,7 @@ class GeoDashHelp extends React.Component {
                                 <li>{lngObject.view_available_bands}</li>
                                 <li>
                                     {lngObject.select_reducer}
-                                    <a href="https://developers.google.com/earth-engine/guides/reducers_intro">https://developers.google.com/earth-engine/guides/reducers_intro.</a>
+                                    <a href="https://developers.google.com/earth-engine/guides/reducers_intro">here.</a>
                                 </li>
                                 <li>{lngObject.enter_json_image_parameters}</li>
                                 <li>{lngObject.select_date_range}</li>
@@ -197,7 +197,7 @@ class GeoDashHelp extends React.Component {
                                                 <li>{lngObject.band_to_graph_example}</li>
                                                 <li>
                                                     {lngObject.select_reducer}
-                                                    <a href="https://developers.google.com/earth-engine/guides/reducers_intro">https://developers.google.com/earth-engine/guides/reducers_intro.</a>
+                                                    <a href="https://developers.google.com/earth-engine/guides/reducers_intro">here.</a>
                                                 </li>
                                             </ol>
                                         </li>
