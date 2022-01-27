@@ -323,10 +323,6 @@
     (p-insert-rows! "plot_assignments" (assign-qaqc assigned-plots design-settings))))
 
 (defn- create-project-plots! [project-id
-                              lon-min
-                              lat-min
-                              lon-max
-                              lat-max
                               plot-distribution
                               num-plots
                               plot-spacing
@@ -348,10 +344,6 @@
                                      plot-file-name
                                      plot-file-base64)
                 (generate-point-plots project-id
-                                      lon-min
-                                      lat-min
-                                      lon-max
-                                      lat-max
                                       plot-distribution
                                       num-plots
                                       plot-spacing
@@ -446,10 +438,6 @@
       (if (and (pos? project-template) use-template-plots)
         (call-sql "copy_template_plots" project-template project-id)
         (create-project-plots! project-id
-                               lon-min
-                               lat-min
-                               lon-max
-                               lat-max
                                plot-distribution
                                num-plots
                                plot-spacing
@@ -624,10 +612,6 @@
           (do
             (call-sql "delete_plots_by_project" project-id)
             (create-project-plots! project-id
-                                   lon-min
-                                   lat-min
-                                   lon-max
-                                   lat-max
                                    plot-distribution
                                    num-plots
                                    plot-spacing
