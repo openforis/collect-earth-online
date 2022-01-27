@@ -30,7 +30,42 @@ Once the Postgresql database server is running on your machine, you should navig
 clojure -M:build-db build-all [--dev-data]
 #+end_src
 
-This will begin by creating a new database and role called ceo and then add the postgis and pgcrypto extensions to it. Next, the script will populate the database with the schemas, tables, and functions that are necessary for storing and processing ceo's data. Finally, it will load some default data into these tables that is necessary for the website to function properly. You can optionally load dev data with ~--dev-data~.  This will initialize the DB with 3 users, an imagery source, and a project.
+This will begin by creating a new database and role called ~ceo~ and then add the postgis and pgcrypto extensions to it. Next, the script will populate the database with the schemas, tables, and functions that are necessary for storing and processing ceo's data. Finally, it will load some default data into these tables that is necessary for the website to function properly. You can optionally load dev data with ~--dev-data~.  This will initialize the DB with 3 users, an imagery source, and a project.
+
+If you wish to use a live copy of the CEO database isntead of the dev data, you will need a ~.dump~ file containg a copy of the live database downloaded locally. Assuming you have a copy of the database, you can then run:
+
+#+begin_src sh
+~clojure -M:build-db restore -f ./path-to/ceo-db.dump~
+#+end_src
+
+This will copy the database from the ~.dump~ file into your local Postgres ~ceo~ database. Note that you will be prompted with a password after running this command. You should enter the Postgres master password that you first created when running Postgres after installing. Depending on the size of your ~.dump~ file, this command may take a couple of minutes. If you are working on the development branch and you are using a copy of the production database you may also need to apply some of the SQL changes from the ~./sql/changes~ directory. If you have just run the ~clojure -M:build-db restore -f ./path-to/ceo-db.dump~ command above, then your database doesn't have any of the change files on development applied to it, so you can apply all of them at once using the following command:
+
+#+begin_src sh
+for filename in ./src/sql/changes/*.sql; do psql -U ceo -f $filename; done
+#+end_src
+
+For more information on how the ~build-db~ command works, please see the [[https://github.com/sig-gis/triangulum#triangulumbuild-db][Triangulum README]].
+
+*** Example Database Queries
+
+To make queries on the database, it is suggested to use pgAdmin, which you can download [[https://www.pgadmin.org/download/][here]]. Once you have pgAdmin installed and set up, you can use the Query Tool to make useful queries such as:
+
+#+begin_src sql
+SELECT * from projects
+WHERE num_plots > 10000;
+#+end_src
+
+to find projects with large numbers of plots or
+
+#+begin_src sql
+SELECT * FROM institutions
+WHERE created_date > '20220101'
+ORDER BY created_date DESC;
+#+end_src
+
+to find all institutions created in 2022 sorted from newest to oldest.
+
+to find projects with
 
 *** Performance Settings
 
