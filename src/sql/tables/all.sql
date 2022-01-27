@@ -69,7 +69,7 @@ CREATE TABLE projects (
     name                   text NOT NULL,
     description            text,
     privacy_level          text,
-    boundary               geometry(Polygon,4326),
+    boundary               geometry(geometry,4326),
     plot_distribution      text,
     num_plots              integer,
     plot_spacing           real,
