@@ -35,21 +35,14 @@ export class PlotDesign extends React.Component {
         });
     };
 
-    generateGeoJSON = () => {
+    updateBoundaryFromCoords = newCoord => {
         const {latMin, latMax, lonMin, lonMax} = this.state;
-        return mercator.hasValidBounds(latMin, latMax, lonMin, lonMax)
-            ? {
-                type: "Polygon",
-                coordinates: [[
-                    [lonMin, latMin],
-                    [lonMin, latMax],
-                    [lonMax, latMax],
-                    [lonMax, latMin],
-                    [lonMin, latMin]
-                ]]
-            }
-            : null;
-    };
+        this.setState(
+            newCoord,
+            () => this.setPlotDetails({
+                boundary: mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)
+            })
+    )};
 
     setPlotDetails = newDetail => {
         const resetBoundary = ["csv", "shp"].includes(newDetail.plotDistribution);
@@ -68,10 +61,6 @@ export class PlotDesign extends React.Component {
         ));
     };
 
-    updateBoundaryFromCoords = newCoord => this.setState(
-        newCoord,
-        () => this.setPlotDetails({boundary: this.generateGeoJSON()})
-    );
 
     /// Render Functions
 

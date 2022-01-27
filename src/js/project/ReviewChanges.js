@@ -92,15 +92,10 @@ export default class ReviewChanges extends React.Component {
     /// Helper Functions
 
     buildProjectObject = () => {
-        // TODO pass boundary instead of lon / lat.  Boundary will be arbitrary.
-        const boundaryExtent = mercator.parseGeoJson(this.context.boundary, false).getExtent();
         return {
             imageryId: this.context.imageryId,
             projectImageryList: this.context.projectImageryList,
-            lonMin: boundaryExtent[0],
-            latMin: boundaryExtent[1],
-            lonMax: boundaryExtent[2],
-            latMax: boundaryExtent[3],
+            boundary: this.context.boundary,
             description: this.context.description,
             name: this.context.name,
             privacyLevel: this.context.privacyLevel,

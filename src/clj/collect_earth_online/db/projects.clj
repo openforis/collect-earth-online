@@ -380,14 +380,7 @@
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
-        lon-min              (tc/val->double (:lonMin params))
-        lat-min              (tc/val->double (:latMin params))
-        lon-max              (tc/val->double (:lonMax params))
-        lat-max              (tc/val->double (:latMax params))
-        boundary             (make-geo-json-polygon lon-min
-                                                    lat-min
-                                                    lon-max
-                                                    lat-max)
+        boundary             (tc/json->jsonb (:boundary params))
         plot-distribution    (:plotDistribution params)
         num-plots            (tc/val->int (:numPlots params))
         plot-spacing         (tc/val->float (:plotSpacing params))
