@@ -161,7 +161,7 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                             </li>
                         </ul>
                     </div>
-                    <div>
+                    <div className="ml-3">
                         {mapObjectArray(surveyQuestion.answers, ([answerId, surveyAnswer]) => (
                             <AnswerDesigner
                                 key={`${surveyQuestionId}-${answerId}`}
@@ -183,7 +183,7 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                         )}
                         {surveyQuestion.componentType !== "input" && (
                             <button
-                                className="btn btn-sm btn-success ml-3"
+                                className="btn btn-sm btn-success"
                                 onClick={() => setBulkAdd(true)}
                                 type="button"
                             >

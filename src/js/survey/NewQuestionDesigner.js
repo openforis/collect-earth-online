@@ -229,7 +229,7 @@ export default class NewQuestionDesigner extends React.Component {
                         type="button"
                     >
                         <SvgIcon icon="plus" size="0.9rem"/>
-                                &nbsp;&nbsp;Add Survey Question
+                            &nbsp;&nbsp;Add Survey Question
                     </button>
                 </td>
                 <td/>
