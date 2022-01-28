@@ -129,58 +129,59 @@ export default class AssignPlots extends React.Component {
         return (
             <div className="col-6">
                 <h3 className="mb-3">Assign Plots</h3>
-                <div className="form-row">
-                    <Select
-                        id="user-assignment"
-                        label="User Assignment"
-                        onChange={e => this.setMethod(e.target.value)}
-                        options={methods}
-                        value={userMethod}
-                    />
-                </div>
-                {userMethod !== "none" && (
-                    <div className="mt-3">
-                        <UserSelect
-                            addUser={this.addUser}
-                            id="assigned-users"
-                            label="Assigned Users"
-                            possibleUsers={possibleUsers}
+                <div className="ml-3">
+                    <div className="form-row">
+                        <Select
+                            id="user-assignment"
+                            label="User Assignment"
+                            onChange={e => this.setMethod(e.target.value)}
+                            options={methods}
+                            value={userMethod}
                         />
-                        <div>
-                            {users.map((userId, idx) => {
-                                const {email} = (institutionUserList.find(({id}) => userId === id) || {});
-                                return this.renderUserRow(
-                                    idx,
-                                    userId,
-                                    email,
-                                    userMethod,
-                                    percents[idx],
-                                    totalPlots
-                                );
-                            })}
-                        </div>
-                        {userMethod === "percent" && users.length > 0 && (
-                            <p
-                                className="font-italic ml-2 mt-2 small"
-                                style={{color: runningTotalPercents !== 100 ? "#8B0000" : "#006400"}}
-                            >
-                                {runningTotalPercents}% of the plots are assigned.
-                            </p>
-                        )}
-                        {userMethod === "equal" && users.length > 0 && (
-                            <p className="font-italic ml-2 mt-2 small">
-                                {["shp", "csv"].includes(plotDistribution)
-                                    ? "- Unable to estimate assignments for external files."
-                                    : `- Each user will be assigned ~${
+                    </div>
+                    {userMethod !== "none" && (
+                        <div className="mt-3">
+                            <UserSelect
+                                addUser={this.addUser}
+                                id="assigned-users"
+                                label="Assigned Users"
+                                possibleUsers={possibleUsers}
+                            />
+                            <div>
+                                {users.map((userId, idx) => {
+                                    const {email} = (institutionUserList.find(({id}) => userId === id) || {});
+                                    return this.renderUserRow(
+                                        idx,
+                                        userId,
+                                        email,
+                                        userMethod,
+                                        percents[idx],
+                                        totalPlots
+                                    );
+                                })}
+                            </div>
+                            {userMethod === "percent" && users.length > 0 && (
+                                <p
+                                    className="font-italic ml-2 mt-2 small"
+                                    style={{color: runningTotalPercents !== 100 ? "#8B0000" : "#006400"}}
+                                >
+                                    {runningTotalPercents}% of the plots are assigned.
+                                </p>
+                            )}
+                            {userMethod === "equal" && users.length > 0 && (
+                                <p className="font-italic ml-2 mt-2 small">
+                                    {["shp", "csv"].includes(plotDistribution)
+                                        ? "- Unable to estimate assignments for external files."
+                                        : `- Each user will be assigned ~${
                                             formatNumberWithCommas(Math.round(totalPlots / users.length))
                                             } plots.`}
-                            </p>
-                        )}
-                    </div>
-                )}
+                                </p>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
         );
     }
 }
-
 AssignPlots.contextType = ProjectContext;

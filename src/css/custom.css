@@ -111,14 +111,18 @@
 /**************/
 /* Typography */
 /**************/
-h1, h2 {
+h1, h2, h3 {
     font-family: 'CaviarDreams';
-    color: #707070;
+}
+h1, h2 {
     text-align: center;
 }
 h1 {font-size: 2rem;}
 h2 {font-size: 1.5rem;}
-h3 {font-size: 1rem;}
+h3 {
+    font-size: 1.125rem;
+    font-weight: bolder;
+}
 h4 {font-size: 0.8rem;}
 
 /**********/

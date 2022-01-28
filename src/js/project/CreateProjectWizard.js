@@ -190,17 +190,19 @@ export default class CreateProjectWizard extends React.Component {
     getTotalPlots = () => {
         if (this.context.plotDistribution === "random"
             && this.context.numPlots) {
-            return this.context.numPlots;
+            return this.context.numPlots * this.context.aoiFeatures.length;
         } else if (this.context.plotDistribution === "gridded"
                     && this.context.plotSize
                     && this.context.plotSpacing) {
-            const boundaryExtent = mercator.parseGeoJson(this.context.boundary, true).getExtent();
-            const buffer = this.context.plotSize;
-            const xRange = boundaryExtent[2] - boundaryExtent[0] - buffer;
-            const yRange = boundaryExtent[3] - boundaryExtent[1] - buffer;
-            const xSteps = Math.floor(xRange / this.context.plotSpacing) + 1;
-            const ySteps = Math.floor(yRange / this.context.plotSpacing) + 1;
-            return xSteps * ySteps;
+            return this.context.aoiFeatures.reduce((acc, cur) => {
+                const boundaryExtent = mercator.parseGeoJson(cur, true).getExtent();
+                const buffer = this.context.plotSize;
+                const xRange = boundaryExtent[2] - boundaryExtent[0] - buffer;
+                const yRange = boundaryExtent[3] - boundaryExtent[1] - buffer;
+                const xSteps = Math.floor(xRange / this.context.plotSpacing) + 1;
+                const ySteps = Math.floor(yRange / this.context.plotSpacing) + 1;
+                return acc + xSteps * ySteps;
+            }, 0);
         } else {
             return 0;
         }
@@ -252,7 +254,7 @@ export default class CreateProjectWizard extends React.Component {
     validatePlotData = () => {
         const {
             projectId,
-            boundary,
+            aoiFeatures,
             plotDistribution,
             numPlots,
             plotSpacing,
@@ -269,7 +271,7 @@ export default class CreateProjectWizard extends React.Component {
         const plotFileNeeded = !useTemplatePlots
             && (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
         const errorList = [
-            (["random", "gridded"].includes(plotDistribution) && !boundary)
+            (["random", "gridded"].includes(plotDistribution) && !aoiFeatures.length)
                 && "Please select a valid boundary.",
             (plotDistribution === "random" && !numPlots)
                 && "A number of plots is required for random plot distribution.",
@@ -443,7 +445,8 @@ export default class CreateProjectWizard extends React.Component {
             this.context.setProjectDetails({
                 useTemplatePlots: true,
                 plots: this.state.templatePlots,
-                boundary: this.state.templateProject.boundary,
+                aoiFeatures: this.state.templateProject.aoiFeatures,
+                aoiFileName: this.state.templateProject.aoiFileName,
                 numPlots: this.state.templateProject.numPlots,
                 plotDistribution: this.state.templateProject.plotDistribution,
                 plotShape: this.state.templateProject.plotShape,

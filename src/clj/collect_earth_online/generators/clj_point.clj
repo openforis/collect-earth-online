@@ -1,5 +1,6 @@
 (ns collect-earth-online.generators.clj-point
   (:require [triangulum.type-conversion :as tc]
+            [triangulum.database        :refer [call-sql]]
             [collect-earth-online.utils.project    :refer [check-plot-limits check-sample-limits]]
             [collect-earth-online.utils.geom       :refer [make-wkt-point EPSG:3857->4326 EPSG:4326->3857]]
             [collect-earth-online.utils.part-utils :refer [init-throw]]))
@@ -27,13 +28,6 @@
 
 ;;; Gridded
 
-(defn- count-gridded-points [left bottom right top spacing]
-  (let [x-range (- right left)
-        y-range (- top bottom)
-        x-steps (+ (Math/floor (/ x-range spacing)) 1)
-        y-steps (+ (Math/floor (/ y-range spacing)) 1)]
-    (* x-steps y-steps)))
-
 (defn- get-all-gridded-points [left bottom right top spacing]
   (let [x-range   (- right left)
         y-range   (- top bottom)
@@ -45,10 +39,6 @@
           y (range (inc y-steps))]
       [(+ (* x spacing) left x-padding) (+ (* y spacing) bottom y-padding)])))
 
-(defn- create-gridded-plots-in-bounds [left bottom right top spacing]
-  (->> (get-all-gridded-points left bottom right top spacing)
-       (map EPSG:3857->4326)))
-
 (defn- create-gridded-sample-set [circle? center-x center-y radius buffer sample-resolution]
   (let [[left bottom right top] (pad-bounds (- center-x radius)
                                             (- center-y radius)
@@ -59,7 +49,38 @@
          (filter-circle circle? center-x center-y radius buffer)
          (map EPSG:3857->4326))))
 
+(defn- create-gridded-plots-in-bounds [project-id plot-size plot-spacing]
+  (let [plots (->> (call-sql "select_project_features" project-id)
+                   (mapcat
+                    (fn [{:keys [feature]}]
+                      (call-sql "gridded_points_in_bounds" {:log? false} feature plot-spacing (/ plot-size 2.0)))))]
+    (check-plot-limits (count plots) 5000.0)
+    (map (fn [{:keys [lon lat]}] [lon lat]) plots)))
+
 ;;; Random
+
+(defn- filter-random-points [num-plots spacing seed-points]
+  (loop [seed-points  seed-points
+         final-points []
+         iterations   0]
+    (cond
+      (>= (count final-points) num-plots)
+      final-points
+
+      (empty? seed-points)
+      (init-throw "Unable to generate random plots.  Try a lower number of plots, smaller plot size, or bigger area.")
+
+      :else
+      (let [test-point (first seed-points)]
+        (recur (rest seed-points)
+               (if (some (fn [[x1 y1]]
+                           (let [[x2 y2] test-point
+                                 dist (distance x1 y1 x2 y2)]
+                             (< dist spacing)))
+                         final-points)
+                 final-points
+                 (conj final-points test-point))
+               (inc iterations))))))
 
 (defn- random-point-in-bounds [left bottom right top]
   [(random-num left (- right left)) (random-num bottom (- top bottom))])
@@ -69,46 +90,30 @@
         theta (* (Math/random) 2 Math/PI)]
     [(+ center-x (* r (Math/cos theta))) (+ center-y (* r (Math/sin theta)))]))
 
-(defn- gen-random-points [num-plots spacing point-gen-fn]
-  (let [max-iterations (* 2 num-plots)]
-    (loop [points     []
-           iterations 0]
-      (cond
-        (>= (count points) num-plots)
-        points
-
-        (> iterations max-iterations)
-        (init-throw "Unable to generate random plots.  Try a lower number of plots, smaller plot size, or bigger area.")
-
-        :else
-        (let [test-point (point-gen-fn)]
-          (recur (if (some (fn [[x1 y1]]
-                             (let [[x2 y2] test-point
-                                   dist (distance x1 y1 x2 y2)]
-                               (< dist spacing)))
-                           points)
-                   points
-                   (conj points test-point))
-                 (inc iterations)))))))
-
-(defn- create-random-plots-in-bounds [left bottom right top plot-size num-plots]
-  (->> (gen-random-points num-plots
-                          (* 2.0 plot-size)
-                          #(random-point-in-bounds left bottom right top))
-       (map EPSG:3857->4326)))
-
 (defn- create-random-sample-set [circle? center-x center-y radius spacing samples-per-plot]
   (let [[left bottom right top] (pad-bounds (- center-x radius)
                                             (- center-y radius)
                                             (+ center-x radius)
                                             (+ center-y radius)
                                             spacing)] ; Add buffer = spacing
-    (->> (gen-random-points samples-per-plot
-                            spacing
-                            (if circle?
-                              #(random-point-in-circle center-x center-y (- radius spacing)) ; Add buffer = spacing
-                              #(random-point-in-bounds left bottom right top)))
+    (->> (filter-random-points samples-per-plot
+                               spacing
+                               (if circle?
+                                 (take (* 2 samples-per-plot)
+                                       (repeatedly #(random-point-in-circle center-x center-y (- radius spacing))))
+                                 (take (* 2 samples-per-plot)
+                                       (repeatedly #(random-point-in-bounds left bottom right top)))))
          (map EPSG:3857->4326))))
+
+(defn- create-random-plots-in-bounds [project-id plot-size num-plots]
+  (let [features (call-sql "select_project_features" project-id)]
+    (check-plot-limits (* num-plots (count features)) 5000.0)
+    (->> features
+         (mapcat (fn [{:keys [feature]}]
+                   (->> (call-sql "random_points_in_bounds" {:log? false} feature (/ plot-size 2) (* 2 num-plots))
+                        (map (fn [{:keys [x y]}] [x y]))
+                        (filter-random-points num-plots plot-size)
+                        (map EPSG:3857->4326)))))))
 
 (defn generate-point-samples [plots
                               plot-count
@@ -160,24 +165,14 @@
             plots)))
 
 (defn generate-point-plots [project-id
-                            lon-min
-                            lat-min
-                            lon-max
-                            lat-max
                             plot-distribution
                             num-plots
                             plot-spacing
                             plot-size]
-  (let [[[left bottom] [right top]] (EPSG:4326->3857 [lon-min lat-min] [lon-max lat-max])
-        [left bottom right top]     (pad-bounds left bottom right top (/ plot-size 2.0))]
-    (check-plot-limits (if (= "gridded" plot-distribution)
-                         (count-gridded-points left bottom right top plot-spacing)
-                         num-plots)
-                       5000.0)
-    (map-indexed (fn [idx [lon lat]]
-                   {:project_rid project-id
-                    :visible_id  (inc idx)
-                    :plot_geom   (tc/str->pg (make-wkt-point lon lat) "geometry")})
-                 (if (= "gridded" plot-distribution)
-                   (create-gridded-plots-in-bounds left bottom right top plot-spacing)
-                   (create-random-plots-in-bounds left bottom right top plot-size num-plots)))))
+  (map-indexed (fn [idx [lon lat]]
+                 {:project_rid project-id
+                  :visible_id  (inc idx)
+                  :plot_geom   (tc/str->pg (make-wkt-point lon lat) "geometry")})
+               (if (= "gridded" plot-distribution)
+                 (create-gridded-plots-in-bounds project-id plot-size plot-spacing)
+                 (create-random-plots-in-bounds  project-id plot-size num-plots))))

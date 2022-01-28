@@ -888,12 +888,36 @@ mercator.parseGeoJson = (geoJson, reprojectToMap) => {
     }
 };
 
+mercator.generateGeoJSON = (latMin, latMax, lonMin, lonMax) =>
+    (mercator.hasValidBounds(latMin, latMax, lonMin, lonMax)
+        ? {
+            type: "Polygon",
+            coordinates: [[
+                [lonMin, latMin],
+                [lonMin, latMax],
+                [lonMax, latMax],
+                [lonMax, latMin],
+                [lonMin, latMin]
+            ]]
+        }
+        : null);
+
 // [Pure] Returns a new vector source containing the passed in geometry.
 mercator.geometryToVectorSource = geometry =>
     new VectorSource({
         features: [
             new Feature({geometry})
         ]
+    });
+
+// [Pure] Returns a new vector source containing the passed in geoms.
+mercator.geomArrayToVectorSource = geoms =>
+    new VectorSource({
+        features: geoms.map(
+            geom => new Feature({
+                geometry: mercator.parseGeoJson(geom, true)
+            })
+        )
     });
 
 mercator.geometryToGeoJSON = (geometry, toProjection, fromProjection = null, decimals = 10) => {

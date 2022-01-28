@@ -22,8 +22,8 @@ export default class AOIMap extends React.Component {
         }
 
         if (this.state.mapConfig) {
-            if (prevProps.context.boundary !== this.props.context.boundary) {
-                this.updateBoundary();
+            if (prevProps.context.aoiFeatures !== this.props.context.aoiFeatures) {
+                this.updateAOIAreas();
             }
 
             if (prevProps.context.imageryId !== this.props.context.imageryId) {
@@ -52,7 +52,7 @@ export default class AOIMap extends React.Component {
         const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.props.context.institutionImagery);
         this.setState({mapConfig: newMapConfig}, () => {
             this.updateBaseMapImagery();
-            if (this.props.context.boundary) this.updateBoundary();
+            if (this.props.context.aoiFeatures) this.updateAOIAreas();
             if (this.props.canDrag) this.showDragBoxDraw();
             if (this.props.context.plots.length > 0) this.showPlots();
         });
@@ -63,14 +63,14 @@ export default class AOIMap extends React.Component {
                                  this.props.context.imageryId || this.props.context.institutionImagery[0].id);
     };
 
-    updateBoundary = () => {
+    updateAOIAreas = () => {
         // Display a bounding box with the project's AOI on the map and zoom to it
         mercator.removeLayerById(this.state.mapConfig, "currentAOI");
-        if (this.props.context.boundary) {
+        if (this.props.context.aoiFeatures) {
             mercator.addVectorLayer(
                 this.state.mapConfig,
                 "currentAOI",
-                mercator.geometryToVectorSource(mercator.parseGeoJson(this.props.context.boundary, true)),
+                mercator.geomArrayToVectorSource(this.props.context.aoiFeatures),
                 mercator.ceoMapStyles("geom", "yellow")
             );
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
@@ -80,8 +80,12 @@ export default class AOIMap extends React.Component {
     showDragBoxDraw = () => {
         const displayDragBoxBounds = dragBox => {
             mercator.removeLayerById(this.state.mapConfig, "currentAOI");
-            const boundary = mercator.geometryToGeoJSON(dragBox.getGeometry().clone(), "EPSG:4326", "EPSG:3857");
-            this.props.context.setProjectDetails({boundary, plots: []});
+            const drawnBox = JSON.parse(mercator.geometryToGeoJSON(dragBox.getGeometry().clone(), "EPSG:4326", "EPSG:3857"));
+            this.props.context.setProjectDetails({
+                aoiFeatures: [drawnBox],
+                aoiFileName: "",
+                plots: []
+            });
         };
         mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
     };
