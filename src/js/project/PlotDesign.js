@@ -12,8 +12,7 @@ export class PlotDesign extends React.Component {
             lonMin: "",
             latMin: "",
             lonMax: "",
-            latMax: "",
-            boundaryFileName: ""
+            latMax: ""
         };
     }
 
@@ -22,19 +21,29 @@ export class PlotDesign extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.boundary && prevProps.boundary !== this.props.boundary) {
+        if (this.props.aoiFeatures && prevProps.aoiFeatures !== this.props.aoiFeatures) {
             this.setCoordsFromBoundary();
         }
     }
 
     setCoordsFromBoundary = () => {
-        const boundaryExtent = mercator.parseGeoJson(this.props.boundary, false).getExtent();
-        this.setState({
-            lonMin: boundaryExtent[0],
-            latMin: boundaryExtent[1],
-            lonMax: boundaryExtent[2],
-            latMax: boundaryExtent[3]
-        });
+        const {aoiFeatures} = this.props;
+        if (aoiFeatures?.length === 1) {
+            const boundaryExtent = mercator.parseGeoJson(aoiFeatures[0], false).getExtent();
+            this.setState({
+                lonMin: boundaryExtent[0],
+                latMin: boundaryExtent[1],
+                lonMax: boundaryExtent[2],
+                latMax: boundaryExtent[3]
+            });
+        } else {
+            this.setState({
+                lonMin: "",
+                latMin: "",
+                lonMax: "",
+                latMax: ""
+            });
+        }
     };
 
     updateBoundaryFromCoords = newCoord => {
@@ -43,15 +52,15 @@ export class PlotDesign extends React.Component {
             () => {
                 const {latMin, latMax, lonMin, lonMax} = this.state;
                 this.setPlotDetails({
-                    boundary: mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)
+                    aoiFeatures: [mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)]
                 });
             }
         );
     };
 
     setPlotDetails = newDetail => {
-        const resetBoundary = ["csv", "shp"].includes(newDetail.plotDistribution);
-        if (resetBoundary) {
+        const resetAOI = ["csv", "shp"].includes(newDetail.plotDistribution);
+        if (resetAOI) {
             this.setState({
                 lonMin: "",
                 latMin: "",
@@ -62,7 +71,7 @@ export class PlotDesign extends React.Component {
         this.context.setProjectDetails(Object.assign(
             newDetail,
             {plots: []},
-            resetBoundary ? {boundary: null} : {}
+            resetAOI ? {aoiFeatures: [], aoiFileName: ""} : {}
         ));
     };
 
@@ -192,11 +201,10 @@ export class PlotDesign extends React.Component {
     loadGeoJson = shpFile => {
         try {
             shp(shpFile).then(g => {
-                if (g.features.length > 1) {
-                    alert("CEO only supports single feature shape files.  The first feature will be used.");
-                }
-                this.setState({boundaryFileName: g.fileName});
-                this.context.setProjectDetails({boundary: JSON.stringify(g.features[0].geometry)});
+                this.context.setProjectDetails({
+                    aoiFeatures: g.features.map(f => f.geometry),
+                    aoiFileName: g.fileName
+                });
             });
         } catch {
             alert("Unknown error loading shape file.");
@@ -226,7 +234,7 @@ export class PlotDesign extends React.Component {
                     />
                 </label>
                 <label className="ml-3 text-nowrap">
-                    File: {this.state.boundaryFileName}
+                    File: {this.context.aoiFileName}
                 </label>
             </div>
         </div>
@@ -466,31 +474,37 @@ export function PlotReview() {
 export function AOIReview() {
     return (
         <ProjectContext.Consumer>
-            {({boundary}) => {
-                const boundaryExtent = mercator.parseGeoJson(boundary, false).getExtent();
+            {({aoiFeatures, aoiFileName}) => {
+                const boundaryExtent = mercator.parseGeoJson(aoiFeatures[0], false).getExtent();
                 return (
                     <div id="aoi-review">
-                        <h3>Boundary Coordinates</h3>
-                        <div className="form-group mx-4">
-                            <div className="row">
-                                <div className="col-md-6 offset-md-3">
-                                    <label><b>North: </b>{boundaryExtent[3]}</label>
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col-md-6">
-                                    <label><b>West: </b>{boundaryExtent[0]}</label>
-                                </div>
-                                <div className="col-md-6">
-                                    <label><b>East: </b>{boundaryExtent[2]}</label>
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col-md-6 offset-md-3">
-                                    <label><b>South: </b>{boundaryExtent[1]}</label>
-                                </div>
-                            </div>
-                        </div>
+                        {aoiFileName.length
+                            ? <h3>Boundary will be calculated from {aoiFileName}</h3>
+                            : (
+                                <>
+                                    <h3>Boundary Coordinates</h3>
+                                    <div className="form-group mx-4">
+                                        <div className="row">
+                                            <div className="col-md-6 offset-md-3">
+                                                <label><b>North: </b>{boundaryExtent[3]}</label>
+                                            </div>
+                                        </div>
+                                        <div className="row">
+                                            <div className="col-md-6">
+                                                <label><b>West: </b>{boundaryExtent[0]}</label>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <label><b>East: </b>{boundaryExtent[2]}</label>
+                                            </div>
+                                        </div>
+                                        <div className="row">
+                                            <div className="col-md-6 offset-md-3">
+                                                <label><b>South: </b>{boundaryExtent[1]}</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                     </div>
                 );
             }}

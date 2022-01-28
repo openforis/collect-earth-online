@@ -6,7 +6,7 @@ import QualityControl from "./QualityControl";
 import {PlotDesign, PlotDesignReview} from "./PlotDesign";
 
 export default function PlotStep({getTotalPlots}) {
-    const {institutionUserList, boundary, useTemplatePlots} = useContext(ProjectContext);
+    const {institutionUserList, aoiFeatures, useTemplatePlots} = useContext(ProjectContext);
     const totalPlots = getTotalPlots();
     return (
         <>
@@ -14,7 +14,7 @@ export default function PlotStep({getTotalPlots}) {
                 ? <PlotDesignReview/>
                 : (
                     <PlotDesign
-                        boundary={boundary}
+                        aoiFeatures={aoiFeatures}
                         institutionUserList={institutionUserList}
                         totalPlots={totalPlots}
                     />

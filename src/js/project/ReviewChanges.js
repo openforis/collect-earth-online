@@ -93,7 +93,8 @@ export default class ReviewChanges extends React.Component {
     buildProjectObject = () => ({
         imageryId: this.context.imageryId,
         projectImageryList: this.context.projectImageryList,
-        boundary: this.context.boundary,
+        aoiFeatures: this.context.aoiFeatures,
+        aoiFileName: this.context.aoiFileName,
         description: this.context.description,
         name: this.context.name,
         privacyLevel: this.context.privacyLevel,

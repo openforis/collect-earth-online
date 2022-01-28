@@ -910,6 +910,16 @@ mercator.geometryToVectorSource = geometry =>
         ]
     });
 
+// [Pure] Returns a new vector source containing the passed in geoms.
+mercator.geomArrayToVectorSource = geoms =>
+    new VectorSource({
+        features: geoms.map(
+            geom => new Feature({
+                geometry: mercator.parseGeoJson(geom, true)
+            })
+        )
+    });
+
 mercator.geometryToGeoJSON = (geometry, toProjection, fromProjection = null, decimals = 10) => {
     const format = new GeoJSON();
     return format.writeGeometry(
