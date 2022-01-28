@@ -384,7 +384,7 @@
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
-        aoi-features         (or (tc/clj->jsonb (:aoiFeatures params))
+        aoi-features         (or (:aoiFeatures params)
                                  [(make-geo-json-polygon (tc/val->double (:lonMin params))
                                                          (tc/val->double (:latMin params))
                                                          (tc/val->double (:lonMax params))
@@ -418,7 +418,7 @@
                                                       description
                                                       privacy-level
                                                       imagery-id
-                                                      aoi-features
+                                                      (tc/clj->jsonb aoi-features)
                                                       aoi-file-name
                                                       plot-distribution
                                                       num-plots

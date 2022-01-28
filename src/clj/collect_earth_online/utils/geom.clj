@@ -36,23 +36,3 @@
     (if (= 1 (count points))
       (first points)
       points)))
-
-
-(defn- exterior-ring [coords]
-  (map (fn [[a b]] [(tc/val->double a) (tc/val->double b)])
-       (first coords)))
-
-(defn- same-ring? [[start1 :as ring1] ring2]
-  (and (some #(= start1 %) ring2)
-       (or (= ring1 ring2)
-           (= ring1 (reverse ring2))
-           (= ring1 (take (count ring1) (drop-while #(not= start1 %) (cycle (rest ring2)))))
-           (= ring1 (take (count ring1) (drop-while #(not= start1 %) (cycle (reverse (rest ring2)))))))))
-
-;; NOTE: This only works for polygons (and only compares their
-;;       exterior rings). If you need to compare linestrings or points, you
-;;       will need a different function.
-(defn- same-polygon-boundary? [geom1 geom2]
-  (and (= "polygon" (str/lower-case (:type geom1)) (str/lower-case (:type geom2)))
-       (same-ring? (exterior-ring (:coordinates geom1))
-                   (exterior-ring (:coordinates geom2)))))

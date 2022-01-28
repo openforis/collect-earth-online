@@ -469,7 +469,21 @@ CREATE OR REPLACE FUNCTION random_points_in_bounds(_geo_json jsonb, _m_buffer re
 
     SELECT ST_X(ST_Centroid(geom)),
         ST_Y(ST_Centroid(geom))
-    FROM ST_Dump(ST_GeneratePoints(ST_Buffer(ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(_geo_json), 4326), 3857), -1 * _m_buffer / 2), _num_points))
+    FROM ST_Dump(
+        ST_GeneratePoints(
+            ST_Buffer(
+                ST_Transform(
+                    ST_SetSRID(
+                        ST_GeomFromGeoJSON(_geo_json),
+                        4326
+                    ),
+                    3857
+                ),
+                -1 * _m_buffer / 2
+            ),
+            _num_points
+        )
+    )
 
 $$ LANGUAGE SQL;
 
