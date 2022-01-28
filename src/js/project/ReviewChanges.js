@@ -3,7 +3,6 @@ import React from "react";
 import ReviewForm from "./ReviewForm";
 
 import {ProjectContext} from "./constants";
-import {mercator} from "../utils/mercator";
 
 export default class ReviewChanges extends React.Component {
     constructor(props) {
@@ -91,33 +90,31 @@ export default class ReviewChanges extends React.Component {
 
     /// Helper Functions
 
-    buildProjectObject = () => {
-        return {
-            imageryId: this.context.imageryId,
-            projectImageryList: this.context.projectImageryList,
-            boundary: this.context.boundary,
-            description: this.context.description,
-            name: this.context.name,
-            privacyLevel: this.context.privacyLevel,
-            projectOptions: this.context.projectOptions,
-            designSettings: this.context.designSettings,
-            numPlots: this.context.numPlots,
-            plotDistribution: this.context.plotDistribution,
-            plotShape: this.context.plotShape,
-            plotSize: this.context.plotSize,
-            plotSpacing: this.context.plotSpacing,
-            sampleDistribution: this.context.sampleDistribution,
-            samplesPerPlot: this.context.samplesPerPlot,
-            sampleResolution: this.context.sampleResolution,
-            allowDrawnSamples: this.context.allowDrawnSamples,
-            surveyQuestions: this.context.surveyQuestions,
-            surveyRules: this.context.surveyRules,
-            plotFileName: this.context.plotFileName,
-            plotFileBase64: this.context.plotFileBase64,
-            sampleFileName: this.context.sampleFileName,
-            sampleFileBase64: this.context.sampleFileBase64
-        };
-    };
+    buildProjectObject = () => ({
+        imageryId: this.context.imageryId,
+        projectImageryList: this.context.projectImageryList,
+        boundary: this.context.boundary,
+        description: this.context.description,
+        name: this.context.name,
+        privacyLevel: this.context.privacyLevel,
+        projectOptions: this.context.projectOptions,
+        designSettings: this.context.designSettings,
+        numPlots: this.context.numPlots,
+        plotDistribution: this.context.plotDistribution,
+        plotShape: this.context.plotShape,
+        plotSize: this.context.plotSize,
+        plotSpacing: this.context.plotSpacing,
+        sampleDistribution: this.context.sampleDistribution,
+        samplesPerPlot: this.context.samplesPerPlot,
+        sampleResolution: this.context.sampleResolution,
+        allowDrawnSamples: this.context.allowDrawnSamples,
+        surveyQuestions: this.context.surveyQuestions,
+        surveyRules: this.context.surveyRules,
+        plotFileName: this.context.plotFileName,
+        plotFileBase64: this.context.plotFileBase64,
+        sampleFileName: this.context.sampleFileName,
+        sampleFileBase64: this.context.sampleFileBase64
+    });
 
     /// Render Functions
 

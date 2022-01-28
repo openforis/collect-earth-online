@@ -1,6 +1,6 @@
 import React from "react";
 
-import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
+import {formatNumberWithCommas, readFileAsBase64Url} from "../utils/generalUtils";
 import {ProjectContext, perPlotLimit, sampleLimit} from "./constants";
 
 export class SampleDesign extends React.Component {
@@ -37,7 +37,7 @@ export class SampleDesign extends React.Component {
                         id="sample-distribution-file"
                         onChange={e => {
                             const file = e.target.files[0];
-                            encodeFileAsBase64(file, base64 => this.context.setProjectDetails({
+                            readFileAsBase64Url(file, base64 => this.context.setProjectDetails({
                                 sampleFileName: file.name,
                                 sampleFileBase64: base64
                             }));

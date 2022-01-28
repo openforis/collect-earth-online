@@ -1,5 +1,5 @@
 import React from "react";
-import {encodeFileAsBase64} from "../utils/generalUtils";
+import {readFileAsBase64Url} from "../utils/generalUtils";
 import RequiredInput from "./RequiredInput";
 
 export default function InstitutionEditor({
@@ -50,7 +50,7 @@ export default function InstitutionEditor({
                             id="institution-logo"
                             onChange={e => {
                                 setInstitutionDetails("imageName", e.target.files[0].name);
-                                encodeFileAsBase64(e.target.files[0], r => setInstitutionDetails("base64Image", r));
+                                readFileAsBase64Url(e.target.files[0], r => setInstitutionDetails("base64Image", r));
                             }}
                             type="file"
                         />

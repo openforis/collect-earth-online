@@ -1,6 +1,7 @@
 import React from "react";
+import shp from "shpjs";
 
-import {formatNumberWithCommas, encodeFileAsBase64} from "../utils/generalUtils";
+import {formatNumberWithCommas, readFileAsArrayBuffer, readFileAsBase64Url} from "../utils/generalUtils";
 import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator";
 
@@ -11,7 +12,8 @@ export class PlotDesign extends React.Component {
             lonMin: "",
             latMin: "",
             lonMax: "",
-            latMax: ""
+            latMax: "",
+            boundaryFileName: ""
         };
     }
 
@@ -36,13 +38,16 @@ export class PlotDesign extends React.Component {
     };
 
     updateBoundaryFromCoords = newCoord => {
-        const {latMin, latMax, lonMin, lonMax} = this.state;
         this.setState(
             newCoord,
-            () => this.setPlotDetails({
-                boundary: mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)
-            })
-    )};
+            () => {
+                const {latMin, latMax, lonMin, lonMax} = this.state;
+                this.setPlotDetails({
+                    boundary: mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)
+                });
+            }
+        );
+    };
 
     setPlotDetails = newDetail => {
         const resetBoundary = ["csv", "shp"].includes(newDetail.plotDistribution);
@@ -60,7 +65,6 @@ export class PlotDesign extends React.Component {
             resetBoundary ? {boundary: null} : {}
         ));
     };
-
 
     /// Render Functions
 
@@ -185,6 +189,56 @@ export class PlotDesign extends React.Component {
         );
     };
 
+    loadGeoJson = shpFile => {
+        try {
+            shp(shpFile).then(g => {
+                if (g.features.length > 1) {
+                    alert("CEO only supports single feature shape files.  The first feature will be used.");
+                }
+                this.setState({boundaryFileName: g.fileName});
+                this.context.setProjectDetails({boundary: JSON.stringify(g.features[0].geometry)});
+            });
+        } catch {
+            alert("Unknown error loading shape file.");
+        }
+    };
+
+    renderBoundaryFileInput = () => (
+        <div>
+            <div style={{display: "flex"}}>
+                <label
+                    className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+                    htmlFor="project-boundary-file"
+                    id="custom-upload"
+                    style={{display: "flex", alignItems: "center", width: "fit-content"}}
+                >
+                    Upload project boundary
+                    <input
+                        accept="application/zip"
+                        defaultValue=""
+                        id="project-boundary-file"
+                        onChange={e => {
+                            const file = e.target.files[0];
+                            readFileAsArrayBuffer(file, this.loadGeoJson);
+                        }}
+                        style={{display: "none"}}
+                        type="file"
+                    />
+                </label>
+                <label className="ml-3 text-nowrap">
+                    File: {this.state.boundaryFileName}
+                </label>
+            </div>
+        </div>
+    );
+
+    renderAOISelector = () => (
+        <div>
+            {this.renderAOICoords()}
+            {this.renderBoundaryFileInput()}
+        </div>
+    );
+
     renderFileInput = fileType => (
         <div>
             <div style={{display: "flex"}}>
@@ -201,7 +255,7 @@ export class PlotDesign extends React.Component {
                         id="plot-distribution-file"
                         onChange={e => {
                             const file = e.target.files[0];
-                            encodeFileAsBase64(file, base64 => this.setPlotDetails({
+                            readFileAsBase64Url(file, base64 => this.setPlotDetails({
                                 plotFileName: file.name,
                                 plotFileBase64: base64
                             }));
@@ -297,7 +351,7 @@ export class PlotDesign extends React.Component {
                                     ))}
                                 </div>
                             </div>
-                            {plotOptions[plotDistribution].showAOI && this.renderAOICoords()}
+                            {plotOptions[plotDistribution].showAOI && this.renderAOISelector()}
                         </div>
                     </div>
                 </div>
