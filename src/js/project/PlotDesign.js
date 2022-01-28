@@ -467,10 +467,10 @@ export function AOIReview() {
     return (
         <div id="aoi-review">
             {aoiFileName.length
-                ? <h3>Boundary will be calculated from {aoiFileName}</h3>
+                ? <label>Boundary will be calculated from {aoiFileName}</label>
                 : (
                     <>
-                        <h3>Boundary Coordinates</h3>
+                        <label>Boundary Coordinates</label>
                         <div className="form-group mx-4">
                             <div className="row">
                                 <div className="col-md-6 offset-md-3">
