@@ -148,7 +148,7 @@ export default class ReviewChanges extends React.Component {
                                 type="checkbox"
                             />
                             <label className="form-check-label" htmlFor="tos-check">
-                            I agree to the <a href="/terms-of-service" target="_blank">Terms of Service</a>.
+                                I agree to the <a href="/terms-of-service" target="_blank">Terms of Service</a>.
                             </label>
                         </div>
                         <input
@@ -197,6 +197,10 @@ export default class ReviewChanges extends React.Component {
                         style={{border: "1px solid black", borderRadius: "6px"}}
                     >
                         <h2 className="bg-lightgreen w-100 py-1">Project Management</h2>
+                        <p>
+                            You will be able to continue to make changes to the project after creating it.
+                            Once satisfied with the project, click publish to begin final collection.
+                        </p>
                         <div className="p-3">
                             {this.renderButtons()}
                         </div>

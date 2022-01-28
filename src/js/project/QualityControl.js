@@ -90,90 +90,92 @@ export default class QualityControl extends React.Component {
         return (
             <div className="col-6">
                 <h3 className="mb-3">Quality Control</h3>
-                <div className="form-row">
-                    <Select
-                        disabled={allowDrawnSamples || userMethod === "none"}
-                        id="quality-mode"
-                        label="Quality Mode"
-                        onChange={e => this.setMethod(e.target.value)}
-                        options={qualityMethods}
-                        value={qaqcMethod}
-                    />
-                </div>
-                <p className="font-italic ml-2 mt-2 small">
-                  - SME: Subject Matter Expert
-                </p>
-                {allowDrawnSamples ? (
-                    <p className="font-italic ml-2 mt-2 small">
-                        - When User-Drawn samples are enabled, the project cannot support Quality Control of plots.
-                        Disable User-Drawn samples to re-enable Quality Control.
+                <div className="ml-3">
+                    <div className="form-row">
+                        <Select
+                            disabled={allowDrawnSamples || userMethod === "none"}
+                            id="quality-mode"
+                            label="Quality Mode"
+                            onChange={e => this.setMethod(e.target.value)}
+                            options={qualityMethods}
+                            value={qaqcMethod}
+                        />
+                    </div>
+                    <p className="font-italic ml-2 mt-2">
+                        - SME: Subject Matter Expert
                     </p>
-                ) : userMethod === "none" && (
-                    <p className="font-italic mt-2 small">
-                        Please assign users to enable Quality Control.
-                    </p>
+                    {allowDrawnSamples ? (
+                        <p className="font-italic ml-2 mt-2">
+                            - When User-Drawn samples are enabled, the project cannot support Quality Control of plots.
+                            Disable User-Drawn samples to re-enable Quality Control.
+                        </p>
+                    ) : userMethod === "none" && (
+                        <p className="font-italic mt-2">
+                            Please assign users to enable Quality Control.
+                        </p>
 
-                )}
-                {qaqcMethod !== "none" && (
-                    <>
-                        <div className="form-row mt-3">
-                            <label className="col-5" htmlFor="percent">Percent:</label>
-                            <div className="col-5 d-flex align-items-center">
-                                <input
-                                    id="percent"
-                                    max="100"
-                                    min="0"
-                                    onChange={e => this.setPercent(parseInt(e.target.value))}
-                                    steps="5"
-                                    type="range"
-                                    value={percent}
-                                />
-                                <div style={{fontSize: "0.9rem", marginLeft: "0.5rem"}}>
-                                    {percent}%
+                    )}
+                    {qaqcMethod !== "none" && (
+                        <>
+                            <div className="form-row mt-3">
+                                <label className="col-5" htmlFor="percent">Percent:</label>
+                                <div className="col-5 d-flex align-items-center">
+                                    <input
+                                        id="percent"
+                                        max="100"
+                                        min="0"
+                                        onChange={e => this.setPercent(parseInt(e.target.value))}
+                                        steps="5"
+                                        type="range"
+                                        value={percent}
+                                    />
+                                    <div style={{fontSize: "0.9rem", marginLeft: "0.5rem"}}>
+                                        {percent}%
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <p className="font-italic ml-2 small">
-                            - Percent of each users plots to review
-                        </p>
-                    </>
-                )}
-                {qaqcMethod === "overlap" && (
-                    <>
-                        <div className="form-row mt-3">
-                            <label className="col-5" htmlFor="reviews"># of Reviews:</label>
-                            <input
-                                className="col-5 form-control form-control-sm"
-                                id="reviews"
-                                max={Math.max(users.length, 2)}
-                                min="2"
-                                onChange={e => this.setTimesToReview(parseInt(e.target.value))}
-                                type="number"
-                                value={timesToReview}
-                            />
-                        </div>
-                        <p className="font-italic mt-2 ml-2 small">
-                            {`- ${formatNumberWithCommas(plotsToReview)} plots will be reviewed ${timesToReview} times.`}
-                        </p>
-                    </>
-                )}
-
-                {qaqcMethod === "sme" && (
-                    <>
-                        <UserSelect
-                            addUser={this.addSME}
-                            id="assigned-smes"
-                            label="Assigned SMEs"
-                            possibleUsers={possibleSMEs}
-                        />
-                        {this.renderAssignedSMEs(assignedSMEs)}
-                        {smes.length > 0 && (
-                            <p className="font-italic ml-2 mt-2 small">
-                                - Each SME will review ~{formatNumberWithCommas(plotsPerSME)} plots.
+                            <p className="font-italic ml-2">
+                                - Percent of each users plots to review
                             </p>
-                        )}
-                    </>
-                )}
+                        </>
+                    )}
+                    {qaqcMethod === "overlap" && (
+                        <>
+                            <div className="form-row mt-3">
+                                <label className="col-5" htmlFor="reviews"># of Reviews:</label>
+                                <input
+                                    className="col-5 form-control form-control-sm"
+                                    id="reviews"
+                                    max={Math.max(users.length, 2)}
+                                    min="2"
+                                    onChange={e => this.setTimesToReview(parseInt(e.target.value))}
+                                    type="number"
+                                    value={timesToReview}
+                                />
+                            </div>
+                            <p className="font-italic mt-2 ml-2">
+                                {`- ${formatNumberWithCommas(plotsToReview)} plots will be reviewed ${timesToReview} times.`}
+                            </p>
+                        </>
+                    )}
+
+                    {qaqcMethod === "sme" && (
+                        <>
+                            <UserSelect
+                                addUser={this.addSME}
+                                id="assigned-smes"
+                                label="Assigned SMEs"
+                                possibleUsers={possibleSMEs}
+                            />
+                            {this.renderAssignedSMEs(assignedSMEs)}
+                            {smes.length > 0 && (
+                                <p className="font-italic ml-2 mt-2">
+                                    - Each SME will review ~{formatNumberWithCommas(plotsPerSME)} plots.
+                                </p>
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
         );
     }
