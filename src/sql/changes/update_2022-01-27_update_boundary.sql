@@ -1,1 +1,1 @@
-ALTER TABLE projects ALTER ALTER boundary TYPE geometry(geometry,4326);
+ALTER TABLE projects ALTER COLUMN boundary TYPE geometry(geometry,4326);
