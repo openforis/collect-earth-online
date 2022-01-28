@@ -2,7 +2,7 @@ import React, {useState} from "react";
 
 export default function RequiredInput({id, label, maxLength, onChange, value, type, placeholder, required = true}) {
     const [touched, setTouched] = useState(false);
-    const error = required && touched && value.length > 0;
+    const error = required && touched && value.length === 0;
     return (
         <div style={{display: "flex", flexDirection: "column", alignItems: "start"}}>
             {label && (

@@ -9,7 +9,7 @@ export function intersection(array1, array2) {
 }
 
 export function partition(array, n) {
-    return array.length ? [array.splice(0, n)].concat(partition(array, n)) : [];
+    return array.length ? [array.slice(0, n)].concat(partition(array.slice(n), n)) : [];
 }
 
 export function last(array) {

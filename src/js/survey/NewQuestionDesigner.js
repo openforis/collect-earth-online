@@ -22,10 +22,13 @@ export default class NewQuestionDesigner extends React.Component {
         ];
 
         this.state = {
-            selectedAnswerId: -1,
+            questionType: "new",
+            selectedAnswerIds: [],
             selectedParentId: -1,
             selectedType: 0,
-            newQuestionText: ""
+            newQuestionText: "",
+            selectedCopyId: -1,
+            copyChildren: true
         };
     }
 
@@ -39,13 +42,13 @@ export default class NewQuestionDesigner extends React.Component {
 
         if (this.state.selectedParentId !== prevState.selectedParentId) {
             // eslint-disable-next-line react/no-did-update-set-state
-            this.setState({selectedAnswerId: -1});
+            this.setState({selectedAnswerIds: []});
         }
     }
 
     addSurveyQuestion = () => {
         if (this.state.newQuestionText !== "") {
-            const {selectedType, newQuestionText, selectedParentId, selectedAnswerId} = this.state;
+            const {selectedType, newQuestionText, selectedParentId, selectedAnswerIds} = this.state;
             const {surveyQuestions, setProjectDetails} = this.props;
             const {dataType, componentType} = this.componentTypes[selectedType];
             const repeatedQuestions = lengthObject(filterObject(
@@ -63,15 +66,60 @@ export default class NewQuestionDesigner extends React.Component {
                         : newQuestionText,
                     answers: {},
                     parentQuestionId: selectedParentId,
-                    parentAnswerId: selectedAnswerId,
+                    parentAnswerIds: selectedAnswerIds,
                     dataType,
                     componentType
                 };
                 setProjectDetails({surveyQuestions: {...surveyQuestions, [newId]: newQuestion}});
-                this.setState({selectedAnswerId: -1, newQuestionText: ""});
+                this.setState({selectedAnswerIds: [], newQuestionText: ""});
             }
         } else {
-            alert("Please enter a survey question first.");
+            alert("Please enter a survey question text.");
+        }
+    };
+
+    getCopy = (idOffset, copyQuestionId, parentId, answerIds = null) => {
+        const {copyChildren} = this.state;
+        const {surveyQuestions} = this.props;
+
+        const copyQuestion = surveyQuestions[copyQuestionId];
+        const repeatedQuestions = lengthObject(filterObject(
+            surveyQuestions,
+            ([_id, sq]) => removeEnumerator(sq.question) === copyQuestion.question
+        ));
+        const newQuestion = {
+            ...copyQuestion,
+            question: `${copyQuestion.question} (${repeatedQuestions})`,
+            parentQuestionId: parentId,
+            ...answerIds && {parentAnswerIds: answerIds}
+        };
+        const newId = idOffset + copyQuestionId;
+        const childQuestionIds = copyChildren
+            ? mapObjectArray(
+                filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === copyQuestionId),
+                ([key, _val]) => Number(key)
+            )
+            : [];
+
+        if (childQuestionIds.length) {
+            return childQuestionIds.reduce((acc, cur) =>
+                ({...acc, ...this.getCopy(idOffset, cur, newId)}), {[newId]: newQuestion});
+        } else {
+            return {
+                [newId]: newQuestion
+            };
+        }
+    };
+
+    copySurveyQuestion = () => {
+        const {selectedCopyId, selectedParentId, selectedAnswerIds} = this.state;
+        const {surveyQuestions, setProjectDetails} = this.props;
+        if (selectedCopyId >= 0) {
+            const idOffset = getNextInSequence(Object.keys(surveyQuestions)) - selectedCopyId;
+            const copies = this.getCopy(idOffset, selectedCopyId, selectedParentId, selectedAnswerIds);
+            setProjectDetails({surveyQuestions: {...surveyQuestions, ...copies}});
+        } else {
+            alert("Please select a question to copy");
         }
     };
 
@@ -87,107 +135,230 @@ export default class NewQuestionDesigner extends React.Component {
         );
     };
 
+    renderNew = parentAnswers => (
+        <>
+            <tr>
+                <td>
+                    <label htmlFor="value-component-type">Component Type:</label>
+                </td>
+                <td>
+                    <select
+                        className="form-control form-control-sm"
+                        id="value-component-type"
+                        onChange={e => this.setState({selectedType: parseInt(e.target.value)})}
+                        size="1"
+                        value={this.state.selectedType}
+                    >
+                        {this.componentTypes.map((type, idx) => (
+                            // eslint-disable-next-line react/no-array-index-key
+                            <option key={idx} value={idx}>
+                                {`${type.componentType} - ${type.dataType}`}
+                            </option>
+                        ))}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label htmlFor="value-parent">Parent Question:</label>
+                </td>
+                <td>
+                    <select
+                        className="form-control form-control-sm"
+                        id="value-parent"
+                        onChange={e => this.setState({selectedParentId: parseInt(e.target.value)})}
+                        size="1"
+                        value={this.state.selectedParentId}
+                    >
+                        <option key={-1} value={-1}>None</option>
+                        {this.renderOptions()}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label htmlFor="value-answer">Parent Answers:</label>
+                </td>
+                <td>
+                    <select
+                        className="form-control form-control-sm overflow-auto"
+                        multiple="multiple"
+                        onChange={e => this.setState({
+                            selectedAnswerIds: Array.from(e.target.selectedOptions, i => Number(i.value))
+                        })}
+                        value={this.state.selectedAnswerIds}
+                    >
+                        {mapObjectArray(
+                            parentAnswers,
+                            ([answerId, answer]) => (
+                                <option key={answerId} value={answerId}>
+                                    {answer.answer}
+                                </option>
+                            )
+                        )}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Question Text:</label>
+                </td>
+                <td>
+                    <div id="add-sample-value-group">
+                        <input
+                            autoComplete="off"
+                            maxLength="210"
+                            onChange={e => this.setState({newQuestionText: e.target.value})}
+                            type="text"
+                            value={this.state.newQuestionText}
+                        />
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td/>
+                <td>
+                    <button
+                        className="btn btn-sm btn-success"
+                        onClick={this.addSurveyQuestion}
+                        style={{
+                            alignItems: "center",
+                            display: "flex",
+                            justifyContent: "center"
+                        }}
+                        type="button"
+                    >
+                        <SvgIcon icon="plus" size="0.9rem"/>
+                            &nbsp;&nbsp;Add Survey Question
+                    </button>
+                </td>
+                <td/>
+            </tr>
+        </>
+    );
+
+    renderCopy = parentAnswers => (
+        <>
+            <tr>
+                <td>
+                    <label htmlFor="value-parent">Question to Copy:</label>
+                </td>
+                <td>
+                    <select
+                        className="form-control form-control-sm"
+                        id="value-parent"
+                        onChange={e => this.setState({selectedCopyId: parseInt(e.target.value)})}
+                        size="1"
+                        value={this.state.selectedCopyId}
+                    >
+                        <option key={-1} value={-1}>None</option>
+                        {this.renderOptions()}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label htmlFor="value-answer">Copy Children:</label>
+                </td>
+                <td>
+                    <input
+                        checked={this.state.copyChildren}
+                        onChange={() => this.setState({copyChildren: !this.state.copyChildren})}
+                        type="checkbox"
+                    />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label htmlFor="value-parent">Parent Question:</label>
+                </td>
+                <td>
+                    <select
+                        className="form-control form-control-sm"
+                        id="value-parent"
+                        onChange={e => this.setState({selectedParentId: parseInt(e.target.value)})}
+                        size="1"
+                        value={this.state.selectedParentId}
+                    >
+                        <option key={-1} value={-1}>None</option>
+                        {this.renderOptions()}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label htmlFor="value-answer">Parent Answers:</label>
+                </td>
+                <td>
+                    <select
+                        className="form-control form-control-sm overflow-auto"
+                        multiple="multiple"
+                        onChange={e => this.setState({
+                            selectedAnswerIds: Array.from(e.target.selectedOptions, i => Number(i.value))
+                        })}
+                        value={this.state.selectedAnswerIds}
+                    >
+                        {mapObjectArray(
+                            parentAnswers,
+                            ([answerId, answer]) => (
+                                <option key={answerId} value={answerId}>
+                                    {answer.answer}
+                                </option>
+                            )
+                        )}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td/>
+                <td>
+                    <div className="d-flex justify-content-end">
+                        <button
+                            className="btn btn-sm btn-success"
+                            onClick={this.copySurveyQuestion}
+                            style={{
+                                alignItems: "center",
+                                display: "flex",
+                                justifyContent: "center"
+                            }}
+                            type="button"
+                        >
+                            <SvgIcon icon="plus" size="0.9rem"/>
+                            &nbsp;&nbsp;Copy Survey Question
+                        </button>
+                    </div>
+                </td>
+                <td/>
+            </tr>
+        </>
+    );
+
     render() {
+        const {questionType} = this.state;
         const parentAnswers = _.get(this.props, ["surveyQuestions", this.state.selectedParentId, "answers"], {});
         return (
             <table className="mt-4">
                 <tbody>
                     <tr>
                         <td>
-                            <label htmlFor="value-component-type">Component Type:</label>
+                            <label htmlFor="value-component-type">Question Type:</label>
                         </td>
                         <td>
                             <select
                                 className="form-control form-control-sm"
                                 id="value-component-type"
-                                onChange={e => this.setState({selectedType: parseInt(e.target.value)})}
+                                onChange={e => this.setState({questionType: e.target.value})}
                                 size="1"
-                                value={this.state.selectedType}
+                                value={questionType}
                             >
-                                {this.componentTypes.map((type, idx) => (
-                                    // eslint-disable-next-line react/no-array-index-key
-                                    <option key={idx} value={idx}>
-                                        {`${type.componentType} - ${type.dataType}`}
-                                    </option>
-                                ))}
+                                <option value="new">New Question</option>
+                                <option value="copy">Copy Question</option>
                             </select>
                         </td>
                     </tr>
-                    <tr>
-                        <td>
-                            <label htmlFor="value-parent">Parent Question:</label>
-                        </td>
-                        <td>
-                            <select
-                                className="form-control form-control-sm"
-                                id="value-parent"
-                                onChange={e => this.setState({selectedParentId: parseInt(e.target.value)})}
-                                size="1"
-                                value={this.state.selectedParentId}
-                            >
-                                <option key={-1} value={-1}>None</option>
-                                {this.renderOptions()}
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <label htmlFor="value-answer">Parent Answer:</label>
-                        </td>
-                        <td>
-                            <select
-                                className="form-control form-control-sm"
-                                id="value-answer"
-                                onChange={e => this.setState({selectedAnswerId: parseInt(e.target.value)})}
-                                size="1"
-                                value={this.state.selectedAnswerId}
-                            >
-                                <option key={-1} value={-1}>Any</option>
-                                {mapObjectArray(
-                                    parentAnswers,
-                                    ([answerId, answer]) => (
-                                        <option key={answerId} value={answerId}>
-                                            {answer.answer}
-                                        </option>
-                                    )
-                                )}
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <label>New Question:</label>
-                        </td>
-                        <td>
-                            <div id="add-sample-value-group">
-                                <input
-                                    autoComplete="off"
-                                    maxLength="210"
-                                    onChange={e => this.setState({newQuestionText: e.target.value})}
-                                    type="text"
-                                    value={this.state.newQuestionText}
-                                />
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <button
-                                className="btn btn-sm btn-success"
-                                onClick={this.addSurveyQuestion}
-                                style={{
-                                    alignItems: "center",
-                                    display: "flex",
-                                    justifyContent: "center"
-                                }}
-                                type="button"
-                            >
-                                <SvgIcon icon="plus" size="0.9rem"/>
-                                &nbsp;&nbsp;Add Survey Question
-                            </button>
-                        </td>
-                        <td/>
-                    </tr>
+                    {questionType === "new"
+                        ? this.renderNew(parentAnswers)
+                        : this.renderCopy(parentAnswers)}
                 </tbody>
             </table>
         );

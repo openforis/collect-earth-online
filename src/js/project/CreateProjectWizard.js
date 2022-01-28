@@ -1,15 +1,15 @@
 import React from "react";
 import _ from "lodash";
 
-import {ImagerySelection} from "./ImagerySelection";
-import {Overview, OverviewIntro} from "./Overview";
-import {PlotDesign, PlotDesignReview} from "./PlotDesign";
+import AOIMap from "./AOIMap";
 import SurveyQuestionsDesigner from "../survey/SurveyQuestionsDesigner";
 import SurveyCollectionPreview from "../survey/SurveyCollectionPreview";
 import SurveyRulesDesigner from "../survey/SurveyRulesDesigner";
-import AOIMap from "./AOIMap";
-import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
+import PlotStep from "./PlotStep";
 import SvgIcon from "../components/svg/SvgIcon";
+import {ImagerySelection} from "./ImagerySelection";
+import {Overview, OverviewIntro} from "./Overview";
+import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
 import {mercator} from "../utils/mercator";
 import {last, lengthObject, removeFromSet, someObject} from "../utils/sequence";
@@ -51,15 +51,7 @@ export default class CreateProjectWizard extends React.Component {
             plots: {
                 title: "Plot Design",
                 description: "Area of interest and plot generation for collection",
-                StepComponent: () => (this.context.useTemplatePlots
-                    ? <PlotDesignReview/>
-                    : (
-                        <PlotDesign
-                            boundary={this.context.boundary}
-                            getTotalPlots={this.getTotalPlots}
-                            institutionUserList={this.context.institutionUserList}
-                        />
-                    )),
+                StepComponent: () => <PlotStep getTotalPlots={this.getTotalPlots}/>,
                 helpDescription: "Collection Map Preview",
                 StepHelpComponent: () => (
                     <AOIMap
@@ -90,7 +82,8 @@ export default class CreateProjectWizard extends React.Component {
                 description: "Questions to be answered during collection",
                 StepComponent: SurveyQuestionsDesigner,
                 helpDescription: "Question Preview",
-                StepHelpComponent: SurveyCollectionPreview,
+                StepHelpComponent: () =>
+                    <SurveyCollectionPreview surveyQuestions={this.context.surveyQuestions}/>,
                 validate: this.validateSurveyQuestions
             },
             rules: {
@@ -98,7 +91,8 @@ export default class CreateProjectWizard extends React.Component {
                 description: "Rules to ensure correct answers",
                 StepComponent: SurveyRulesDesigner,
                 helpDescription: "Question Preview",
-                StepHelpComponent: SurveyCollectionPreview,
+                StepHelpComponent: () =>
+                    <SurveyCollectionPreview surveyQuestions={this.context.surveyQuestions}/>,
                 validate: () => []
             }
         };

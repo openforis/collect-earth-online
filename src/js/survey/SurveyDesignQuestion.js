@@ -1,15 +1,26 @@
-import React, {useContext} from "react";
+import React, {useContext, useState} from "react";
 
+import AnswerDesigner from "./AnswerDesigner";
+import BulkAddAnswers from "./BulkAddAnswers";
 import SurveyRule from "./SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
-import NewAnswerDesigner from "./NewAnswerDesigner";
 
 import {removeEnumerator} from "../utils/generalUtils";
-import {mapObjectArray, filterObject} from "../utils/sequence";
+import {mapObjectArray, filterObject, lengthObject} from "../utils/sequence";
 import {ProjectContext} from "../project/constants";
 
 export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQuestionId}) {
     const {setProjectDetails, surveyQuestions, surveyRules} = useContext(ProjectContext);
+
+    const surveyQuestion = surveyQuestions[surveyQuestionId];
+    const parentQuestion = surveyQuestions[surveyQuestion.parentQuestionId];
+    const childNodeIds = mapObjectArray(
+        filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === surveyQuestionId),
+        ([key, _val]) => Number(key)
+    );
+
+    const [newQuestionText, setText] = useState(surveyQuestion.question);
+    const [showBulkAdd, setBulkAdd] = useState(false);
 
     const getChildQuestionIds = questionId => {
         const childQuestionIds = mapObjectArray(
@@ -21,21 +32,38 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
             : childQuestionIds.reduce((acc, cur) => [...acc, ...getChildQuestionIds(cur)], [questionId]);
     };
 
-    const removeQuestion = questionId => {
-        const childQuestionIds = getChildQuestionIds(questionId);
+    const maxAnswers = ({componentType, dataType, answers}) =>
+        lengthObject(answers) >= ((componentType || "").toLowerCase() === "input" ? 1
+            : (dataType || "").toLowerCase() === "boolean" ? 2
+                : 1000);
+
+    const removeQuestion = () => {
+        const childQuestionIds = getChildQuestionIds(surveyQuestionId);
         const newSurveyQuestions = filterObject(surveyQuestions, ([sqId]) => !childQuestionIds.includes(Number(sqId)));
         setProjectDetails({surveyQuestions: newSurveyQuestions});
     };
 
-    const surveyQuestion = surveyQuestions[surveyQuestionId];
-    const parentQuestion = surveyQuestions[surveyQuestion.parentQuestionId];
-    const childNodeIds = mapObjectArray(
-        filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === surveyQuestionId),
-        ([key, _val]) => Number(key)
-    );
+    const updateQuestion = () => {
+        if (newQuestionText !== "") {
+            const newQuestion = {
+                ...surveyQuestion,
+                question: newQuestionText
+            };
+            setProjectDetails({surveyQuestions: {...surveyQuestions, [surveyQuestionId]: newQuestion}});
+        } else {
+            alert("Please enter a text for survey question.");
+        }
+    };
 
     return (
         <>
+            {showBulkAdd && (
+                <BulkAddAnswers
+                    closeDialog={() => setBulkAdd(false)}
+                    surveyQuestion={surveyQuestion}
+                    surveyQuestionId={surveyQuestionId}
+                />
+            )}
             <div className="d-flex border-top pt-3 pb-1">
                 {[...Array(indentLevel)].map((l, idx) => (
                     // eslint-disable-next-line react/no-array-index-key
@@ -45,27 +73,42 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                 ))}
                 <div className="container mb-2">
                     <div className="pb-1 d-flex">
-                        {inDesignMode && (
-                            <button
-                                className="btn btn-outline-red py-0 px-2 mr-1"
-                                onClick={() => removeQuestion(surveyQuestionId)}
-                                type="button"
-                            >
-                                <SvgIcon icon="trash" size="1rem"/>
-                            </button>
-                        )}
-                        <h3 className="font-weight-bold">
-                            {inDesignMode ? surveyQuestion.question : removeEnumerator(surveyQuestion.question)}
-                        </h3>
+                        {inDesignMode
+                            ? (
+                                <>
+                                    <button
+                                        className="btn btn-outline-red py-0 px-2 mr-1"
+                                        onClick={removeQuestion}
+                                        type="button"
+                                    >
+                                        <SvgIcon icon="trash" size="1rem"/>
+                                    </button>
+                                    <button
+                                        className="btn btn-success py-0 px-2 mr-1"
+                                        onClick={updateQuestion}
+                                        type="button"
+                                    >
+                                        <SvgIcon icon="save" size="1rem"/>
+                                    </button>
+                                    <input
+                                        autoComplete="off"
+                                        maxLength="210"
+                                        onChange={e => setText(e.target.value)}
+                                        value={newQuestionText}
+                                    />
+                                </>
+                            ) : (
+                                <h3 className="font-weight-bold">
+                                    {removeEnumerator(surveyQuestion.question)}
+                                </h3>
+                            )}
                     </div>
                     <div className="pb-1">
-                        <ul className="mb-1">
-                            {surveyQuestion.componentType && (
-                                <li>
-                                    <span className="font-weight-bold">Component Type:  </span>
-                                    {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
-                                </li>
-                            )}
+                        <ul className="mb-1 pl-3">
+                            <li>
+                                <span className="font-weight-bold">Component Type: </span>
+                                {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
+                            </li>
                             {surveyRules && surveyRules.length > 0 && (
                                 <li>
                                     <b>Rules:</b>
@@ -104,36 +147,50 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                                             : removeEnumerator(parentQuestion.question)}
                                     </li>
                                     <li>
-                                        <span className="font-weight-bold">Parent Answer: </span>
-                                        {surveyQuestion.parentAnswerId === -1
+                                        <span className="font-weight-bold">Parent Answers: </span>
+                                        {surveyQuestion.parentAnswerIds.length === 0
                                             ? "Any"
-                                            : parentQuestion.answers[surveyQuestion.parentAnswerId].answer}
+                                            : surveyQuestion.parentAnswerIds
+                                                .map(paId => parentQuestion.answers[paId].answer)
+                                                .join(", ")}
                                     </li>
                                 </>
                             )}
+                            <li>
+                                <span className="font-weight-bold">
+                                    {surveyQuestion.componentType === "input" ? "Placeholder" : "Answers"}:
+                                </span>
+                            </li>
                         </ul>
-                        <h3 className="font-weight-bold ml-3">
-                            {surveyQuestion.componentType === "input" ? "Placeholder" : "Answers"}:
-                        </h3>
                     </div>
-                    <div>
+                    <div className="ml-3">
                         {mapObjectArray(surveyQuestion.answers, ([answerId, surveyAnswer]) => (
-                            <NewAnswerDesigner
+                            <AnswerDesigner
                                 key={`${surveyQuestionId}-${answerId}`}
                                 answer={surveyAnswer.answer}
                                 answerId={answerId}
                                 color={surveyAnswer.color}
                                 inDesignMode={inDesignMode}
+                                required={surveyAnswer.required}
                                 surveyQuestion={surveyQuestion}
                                 surveyQuestionId={surveyQuestionId}
                             />
                         ))}
-                        {inDesignMode && (
-                            <NewAnswerDesigner
+                        {inDesignMode && !maxAnswers(surveyQuestion) && (
+                            <AnswerDesigner
                                 inDesignMode={inDesignMode}
                                 surveyQuestion={surveyQuestion}
                                 surveyQuestionId={surveyQuestionId}
                             />
+                        )}
+                        {surveyQuestion.componentType !== "input" && (
+                            <button
+                                className="btn btn-sm btn-success"
+                                onClick={() => setBulkAdd(true)}
+                                type="button"
+                            >
+                                Bulk Add
+                            </button>
                         )}
                     </div>
                 </div>

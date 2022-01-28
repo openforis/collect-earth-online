@@ -12,7 +12,6 @@ function AnswerButton({surveyNodeId, surveyNode, selectedSampleId, validateAndSe
             {mapObjectArray(answers, ([strId, ans]) => {
                 const ansId = Number(strId);
                 return (
-                    // TODO, do these need compound keys
                     <li key={ansId} className="mb-1">
                         <button
                             className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
@@ -120,7 +119,6 @@ class AnswerInput extends React.Component {
         const {surveyNode, surveyNodeId, validateAndSetCurrentValue} = this.props;
         const {answers, dataType} = surveyNode;
         const [answerId, answer] = firstEntry(answers);
-        const required = false;
         return answer
             ? (
                 <div className="d-inline-flex">
@@ -140,7 +138,7 @@ class AnswerInput extends React.Component {
                             ? Number(e.target.value)
                             : e.target.value)}
                         placeholder={answer.answer}
-                        required={required}
+                        required={answer.required}
                         type={dataType}
                         value={newInput}
                     />
@@ -149,7 +147,7 @@ class AnswerInput extends React.Component {
                         id="save-input"
                         name="save-input"
                         onClick={() => {
-                            if (!required || newInput) {
+                            if (!answer.required || newInput.length) {
                                 validateAndSetCurrentValue(surveyNodeId, answerId, newInput);
                             }
                         }}

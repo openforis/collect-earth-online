@@ -802,7 +802,7 @@ class Collection extends React.Component {
 
     calcVisibleSamples = currentQuestionId => {
         const {currentProject: {surveyQuestions}, userSamples} = this.state;
-        const {parentQuestionId, parentAnswerId} = surveyQuestions[currentQuestionId];
+        const {parentQuestionId, parentAnswerIds} = surveyQuestions[currentQuestionId];
 
         if (parentQuestionId === -1) {
             return this.state.currentPlot.samples;
@@ -810,7 +810,8 @@ class Collection extends React.Component {
             return this.calcVisibleSamples(parentQuestionId)
                 .filter(sample => {
                     const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestionId, "answerId"]);
-                    return sampleAnswerId != null && (parentAnswerId === -1 || parentAnswerId === sampleAnswerId);
+                    return sampleAnswerId != null
+                        && (parentAnswerIds.length === 0 || parentAnswerIds.includes(sampleAnswerId));
                 });
         }
     };
