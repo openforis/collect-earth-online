@@ -12,7 +12,8 @@
             [triangulum.type-conversion :as tc]
             [triangulum.utils           :as u]
             [collect-earth-online.utils.part-utils :as pu]
-            [collect-earth-online.views      :refer [data-response]]
+            [collect-earth-online.views                    :refer [data-response]]
+            [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
             [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples]]))
 
@@ -383,8 +384,12 @@
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
-        aoi-features         (tc/clj->jsonb (:aoiFeatures params))
-        aoi-file-name        (:aoiFileName params)
+        aoi-features         (or (tc/clj->jsonb (:aoiFeatures params))
+                                 [(make-geo-json-polygon (tc/val->double (:lonMin params))
+                                                         (tc/val->double (:latMin params))
+                                                         (tc/val->double (:lonMax params))
+                                                         (tc/val->double (:latMax params)))])
+        aoi-file-name        (:aoiFileName params "")
         plot-distribution    (:plotDistribution params)
         num-plots            (tc/val->int (:numPlots params))
         plot-spacing         (tc/val->float (:plotSpacing params))
@@ -519,7 +524,11 @@
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
-        aoi-features         (:aoiFeatures params)
+        aoi-features         (or (tc/clj->jsonb (:aoiFeatures params))
+                                 [(make-geo-json-polygon (tc/val->double (:lonMin params))
+                                                         (tc/val->double (:latMin params))
+                                                         (tc/val->double (:lonMax params))
+                                                         (tc/val->double (:latMax params)))])
         aoi-file-name        (:aoiFileName params)
         plot-distribution    (:plotDistribution params)
         num-plots            (tc/val->int (:numPlots params))

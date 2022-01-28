@@ -8,12 +8,12 @@
   (format "POINT(%s %s)" lon lat))
 
 (defn make-geo-json-polygon [lon-min lat-min lon-max lat-max]
-  (tc/clj->json {:type        "Polygon"
-                 :coordinates [[[lon-min lat-min]
-                                [lon-min lat-max]
-                                [lon-max lat-max]
-                                [lon-max lat-min]
-                                [lon-min lat-min]]]}))
+  {:type        "Polygon"
+   :coordinates [[[lon-min lat-min]
+                  [lon-min lat-max]
+                  [lon-max lat-max]
+                  [lon-max lat-min]
+                  [lon-min lat-min]]]})
 
 (defn EPSG:4326->3857
   "Convert wgs84(4326) lon/lat coordinates to web mercator(3857) x/y coordinates"
