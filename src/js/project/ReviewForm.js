@@ -60,21 +60,21 @@ export default function ReviewForm() {
                 <AOIMap canDrag={false} context={context}/>
                 <div className="row" style={{borderBottom: "1px solid lightgray"}}>
                     <div className="col-6 pt-3" style={{borderRight: "1px solid lightgray"}}>
-                        <h2>Imagery Selection</h2>
+                        <h3>Imagery Selection</h3>
                         <ImageryReview/>
                     </div>
                     <div className="col-6 pt-3">
-                        <h2>AOI Boundary</h2>
+                        <h3>AOI Boundary</h3>
                         <AOIReview/>
                     </div>
                 </div>
                 <div className="row">
                     <div className="col-6 pt-3" style={{borderRight: "1px solid lightgray"}}>
-                        <h2>Plot Design</h2>
+                        <h3>Plot Design</h3>
                         <PlotReview/>
                     </div>
                     <div className="col-6 pt-3">
-                        <h2>Sample Design</h2>
+                        <h3>Sample Design</h3>
                         <SampleReview/>
                     </div>
                 </div>
@@ -82,14 +82,14 @@ export default function ReviewForm() {
                     && (
                         <div className="row" style={{borderTop: "1px solid lightgray"}}>
                             <div className="col-6 pt-3" style={{borderRight: "1px solid lightgray"}}>
-                                <h2>User Assignment</h2>
+                                <h3>User Assignment</h3>
                                 <UserAssignmentReview
                                     designSettings={context.designSettings}
                                     institutionUserList={context.institutionUserList}
                                 />
                             </div>
                             <div className="col-6 pt-3">
-                                <h2>Quality Control</h2>
+                                <h3>Quality Control</h3>
                                 <QAQCReview
                                     designSettings={context.designSettings}
                                     institutionUserList={context.institutionUserList}

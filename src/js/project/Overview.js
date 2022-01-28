@@ -1,162 +1,164 @@
-import React from "react";
+import React, {useContext} from "react";
 
 import {capitalizeFirst} from "../utils/generalUtils";
 import {ProjectContext} from "./constants";
 
 export function Overview(props) {
+    const {
+        name,
+        description,
+        privacyLevel,
+        setProjectDetails,
+        projectOptions,
+        projectOptions: {showGEEScript, showPlotInformation, collectConfidence, autoLaunchGeoDash},
+        projectId
+    } = useContext(ProjectContext);
     return (
-        <ProjectContext.Consumer>
-            {({
-                name,
-                description,
-                privacyLevel,
-                setProjectDetails,
-                projectOptions,
-                projectOptions: {showGEEScript, showPlotInformation, collectConfidence, autoLaunchGeoDash},
-                projectId
-            }) => (
-                <div id="project-info">
-                    {projectId < 0 && <ProjectTemplateSelection {...props}/>}
-                    <div className="form-group">
-                        <h3 htmlFor="project-name">Name</h3>
-                        <input
-                            className="form-control form-control-sm"
-                            id="project-name"
-                            maxLength="200"
-                            onChange={e => setProjectDetails({name: e.target.value})}
-                            type="text"
-                            value={name}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <h3 htmlFor="project-description">Description</h3>
-                        <textarea
-                            className="form-control form-control-sm"
-                            id="project-description"
-                            maxLength="2000"
-                            onChange={e => setProjectDetails({description: e.target.value})}
-                            value={description}
-                        />
-                    </div>
-                    <h3>Visibility</h3>
-                    <div className="mb-3" id="project-visibility">
-                        <div className="form-check form-check-inline">
-                            <input
-                                checked={privacyLevel === "public"}
-                                className="form-check-input"
-                                id="privacy-public"
-                                onChange={() => setProjectDetails({privacyLevel: "public"})}
-                                type="radio"
-                            />
-                            <label
-                                className="form-check-label"
-                                htmlFor="privacy-public"
-                            >
-                                Public: <i>All Users</i>
-                            </label>
-                        </div>
-                        <div className="form-check form-check-inline">
-                            <input
-                                checked={privacyLevel === "users"}
-                                className="form-check-input"
-                                id="privacy-users"
-                                onChange={() => setProjectDetails({privacyLevel: "users"})}
-                                type="radio"
-                            />
-                            <label className="form-check-label" htmlFor="privacy-users">
-                                Users: <i>Logged In Users</i>
-                            </label>
-                        </div>
-                        <div className="form-check form-check-inline">
-                            <input
-                                checked={privacyLevel === "institution"}
-                                className="form-check-input"
-                                id="privacy-institution"
-                                onChange={() => setProjectDetails({privacyLevel: "institution"})}
-                                type="radio"
-                            />
-                            <label className="form-check-label" htmlFor="privacy-institution">
-                                Institution: <i>Group Members</i>
-                            </label>
-                        </div>
-                        <div className="form-check form-check-inline">
-                            <input
-                                checked={privacyLevel === "private"}
-                                className="form-check-input"
-                                id="privacy-private"
-                                onChange={() => setProjectDetails({privacyLevel: "private"})}
-                                type="radio"
-                            />
-                            <label className="form-check-label" htmlFor="privacy-private">
-                                Private: <i>Group Admins</i>
-                            </label>
-                        </div>
-                        <p className="font-italic ml-2 small" id="privacy-level-text">
-                            {(privacyLevel === "public" || privacyLevel === "users")
-                                && "**Public imagery will be visible to all users, and institution imagery will only be available"
-                                    + " to the users in this institution."}
-                        </p>
-                    </div>
-                    <h3>Project Options</h3>
-                    <div className="form-check">
-                        <input
-                            checked={showGEEScript}
-                            className="form-check-input"
-                            id="showGEEScript"
-                            onChange={() => setProjectDetails({
-                                projectOptions: {...projectOptions, showGEEScript: !showGEEScript}
-                            })}
-                            type="checkbox"
-                        />
-                        <label className="form-check-label" htmlFor="showGEEScript">
-                            Show GEE Script Link on Collection Page
-                        </label>
-                    </div>
-                    <div className="form-check">
-                        <input
-                            checked={showPlotInformation}
-                            className="form-check-input"
-                            id="showPlotInformation"
-                            onChange={() => setProjectDetails({
-                                projectOptions: {...projectOptions, showPlotInformation: !showPlotInformation}
-                            })}
-                            type="checkbox"
-                        />
-                        <label className="form-check-label" htmlFor="showPlotInformation">
-                            Show Extra Plot Columns on Collection Page
-                        </label>
-                    </div>
-                    <div className="form-check">
-                        <input
-                            checked={collectConfidence}
-                            className="form-check-input"
-                            id="collectConfidence"
-                            onChange={() => setProjectDetails({
-                                projectOptions: {...projectOptions, collectConfidence: !collectConfidence}
-                            })}
-                            type="checkbox"
-                        />
-                        <label className="form-check-label" htmlFor="collectConfidence">
-                            Collect Plot Confidence on Collection Page
-                        </label>
-                    </div>
-                    <div className="form-check">
-                        <input
-                            checked={autoLaunchGeoDash}
-                            className="form-check-input"
-                            id="autoLaunchGeoDash"
-                            onChange={() => setProjectDetails({
-                                projectOptions: {...projectOptions, autoLaunchGeoDash: !autoLaunchGeoDash}
-                            })}
-                            type="checkbox"
-                        />
-                        <label className="form-check-label" htmlFor="autoLaunchGeoDash">
-                            Auto-launch Geo-Dash
-                        </label>
-                    </div>
+        <div id="project-info">
+            {projectId < 0 && <ProjectTemplateSelection {...props}/>}
+            <h3>Project Information</h3>
+            <div className="ml-3">
+                <div className="form-group">
+                    <label htmlFor="project-name">Name</label>
+                    <input
+                        className="form-control form-control-sm"
+                        id="project-name"
+                        maxLength="200"
+                        onChange={e => setProjectDetails({name: e.target.value})}
+                        type="text"
+                        value={name}
+                    />
                 </div>
-            )}
-        </ProjectContext.Consumer>
+                <div className="form-group">
+                    <label htmlFor="project-description">Description</label>
+                    <textarea
+                        className="form-control form-control-sm"
+                        id="project-description"
+                        maxLength="2000"
+                        onChange={e => setProjectDetails({description: e.target.value})}
+                        value={description}
+                    />
+                </div>
+            </div>
+            <h3>Visibility</h3>
+            <div className="mb-3 ml-3" id="project-visibility">
+                <div className="form-check form-check-inline">
+                    <input
+                        checked={privacyLevel === "public"}
+                        className="form-check-input"
+                        id="privacy-public"
+                        onChange={() => setProjectDetails({privacyLevel: "public"})}
+                        type="radio"
+                    />
+                    <label
+                        className="form-check-label"
+                        htmlFor="privacy-public"
+                    >
+                        Public: <i>All Users</i>
+                    </label>
+                </div>
+                <div className="form-check form-check-inline">
+                    <input
+                        checked={privacyLevel === "users"}
+                        className="form-check-input"
+                        id="privacy-users"
+                        onChange={() => setProjectDetails({privacyLevel: "users"})}
+                        type="radio"
+                    />
+                    <label className="form-check-label" htmlFor="privacy-users">
+                        Users: <i>Logged In Users</i>
+                    </label>
+                </div>
+                <div className="form-check form-check-inline">
+                    <input
+                        checked={privacyLevel === "institution"}
+                        className="form-check-input"
+                        id="privacy-institution"
+                        onChange={() => setProjectDetails({privacyLevel: "institution"})}
+                        type="radio"
+                    />
+                    <label className="form-check-label" htmlFor="privacy-institution">
+                        Institution: <i>Group Members</i>
+                    </label>
+                </div>
+                <div className="form-check form-check-inline">
+                    <input
+                        checked={privacyLevel === "private"}
+                        className="form-check-input"
+                        id="privacy-private"
+                        onChange={() => setProjectDetails({privacyLevel: "private"})}
+                        type="radio"
+                    />
+                    <label className="form-check-label" htmlFor="privacy-private">
+                        Private: <i>Group Admins</i>
+                    </label>
+                </div>
+                <p className="font-italic ml-2 small" id="privacy-level-text">
+                    {(privacyLevel === "public" || privacyLevel === "users")
+                        && "**Public imagery will be visible to all users, and institution imagery will only be available"
+                            + " to the users in this institution."}
+                </p>
+            </div>
+            <h3>Project Options</h3>
+            <div className="ml-3">
+                <div className="form-check">
+                    <input
+                        checked={showGEEScript}
+                        className="form-check-input"
+                        id="showGEEScript"
+                        onChange={() => setProjectDetails({
+                            projectOptions: {...projectOptions, showGEEScript: !showGEEScript}
+                        })}
+                        type="checkbox"
+                    />
+                    <label className="form-check-label" htmlFor="showGEEScript">
+                    Show GEE Script Link on Collection Page
+                    </label>
+                </div>
+                <div className="form-check">
+                    <input
+                        checked={showPlotInformation}
+                        className="form-check-input"
+                        id="showPlotInformation"
+                        onChange={() => setProjectDetails({
+                            projectOptions: {...projectOptions, showPlotInformation: !showPlotInformation}
+                        })}
+                        type="checkbox"
+                    />
+                    <label className="form-check-label" htmlFor="showPlotInformation">
+                    Show Extra Plot Columns on Collection Page
+                    </label>
+                </div>
+                <div className="form-check">
+                    <input
+                        checked={collectConfidence}
+                        className="form-check-input"
+                        id="collectConfidence"
+                        onChange={() => setProjectDetails({
+                            projectOptions: {...projectOptions, collectConfidence: !collectConfidence}
+                        })}
+                        type="checkbox"
+                    />
+                    <label className="form-check-label" htmlFor="collectConfidence">
+                    Collect Plot Confidence on Collection Page
+                    </label>
+                </div>
+                <div className="form-check">
+                    <input
+                        checked={autoLaunchGeoDash}
+                        className="form-check-input"
+                        id="autoLaunchGeoDash"
+                        onChange={() => setProjectDetails({
+                            projectOptions: {...projectOptions, autoLaunchGeoDash: !autoLaunchGeoDash}
+                        })}
+                        type="checkbox"
+                    />
+                    <label className="form-check-label" htmlFor="autoLaunchGeoDash">
+                    Auto-launch Geo-Dash
+                    </label>
+                </div>
+            </div>
+        </div>
     );
 }
 
@@ -182,9 +184,10 @@ class ProjectTemplateSelection extends React.Component {
         const {setProjectTemplate, clearTemplateSelection, templateProjectList} = this.props;
         return (
             <div id="project-template-selector">
-                <div className="d-flex justify-content-between">
+                <h3>Template Seletion</h3>
+                <div className="d-flex justify-content-between ml-3">
                     <div className="form-group d-flex flex-column">
-                        <h3 htmlFor="project-filter">Template Filter (Name or ID)</h3>
+                        <label htmlFor="project-filter">Template Filter (Name or ID)</label>
                         <input
                             className="form-control form-control-sm"
                             id="project-filter"
@@ -213,7 +216,7 @@ class ProjectTemplateSelection extends React.Component {
                         style={{height: "fit-content", flex: "1"}}
                     >
                         <div className="form-group mx-3" style={{flex: "1 1 1px"}}>
-                            <h3 htmlFor="project-template">Select Template</h3>
+                            <label htmlFor="project-template">Select Template</label>
                             <select
                                 className="form-control-sm form-control"
                                 id="project-template"
@@ -260,7 +263,7 @@ class ProjectTemplateSelection extends React.Component {
                 {templateProjectId > 0 && (
                     <div className="pb-2">
                         <h3 className="mb-1">Copy Options</h3>
-                        <div className="d-flex">
+                        <div className="d-flex ml-3">
                             <div className="form-check form-check-inline">
                                 <input
                                     checked={useTemplatePlots}
@@ -301,35 +304,32 @@ class ProjectTemplateSelection extends React.Component {
 ProjectTemplateSelection.contextType = ProjectContext;
 
 export function OverviewReview() {
+    const {name, description, privacyLevel, projectOptions} = useContext(ProjectContext);
     return (
-        <ProjectContext.Consumer>
-            {({name, description, privacyLevel, projectOptions}) => (
-                <div className="d-flex flex-column">
-                    <label><b>Name:</b> {name}</label>
-                    <label><b>Description:</b> {description}</label>
-                    <label><b>Visibility:</b> {capitalizeFirst(privacyLevel)}</label>
-                    <label className="font-weight-bold">Project Options:</label>
-                    <ul>
-                        <li>
-                            <b>{projectOptions.showGEEScript ? "Show " : "Don't Show "}</b>
-                            GEE Script Link on Collection Page
-                        </li>
-                        <li>
-                            <b>{projectOptions.showPlotInformation ? "Show " : "Don't Show "}</b>
-                            Extra Plot Columns on Collection Page
-                        </li>
-                        <li>
-                            <b>{projectOptions.collectConfidence ? "Collect " : "Don't Collect "}</b>
-                            Plot Confidence
-                        </li>
-                        <li>
-                            <b>{projectOptions.autoLaunchGeoDash ? "Auto-launch " : "Don't Auto-launch "}</b>
-                            Geo-Dash Window
-                        </li>
-                    </ul>
-                </div>
-            )}
-        </ProjectContext.Consumer>
+        <div className="d-flex flex-column">
+            <label><b>Name:</b> {name}</label>
+            <label><b>Description:</b> {description}</label>
+            <label><b>Visibility:</b> {capitalizeFirst(privacyLevel)}</label>
+            <label className="font-weight-bold">Project Options:</label>
+            <ul>
+                <li>
+                    <b>{projectOptions.showGEEScript ? "Show " : "Don't Show "}</b>
+                    GEE Script Link on Collection Page
+                </li>
+                <li>
+                    <b>{projectOptions.showPlotInformation ? "Show " : "Don't Show "}</b>
+                    Extra Plot Columns on Collection Page
+                </li>
+                <li>
+                    <b>{projectOptions.collectConfidence ? "Collect " : "Don't Collect "}</b>
+                    Plot Confidence
+                </li>
+                <li>
+                    <b>{projectOptions.autoLaunchGeoDash ? "Auto-launch " : "Don't Auto-launch "}</b>
+                    Geo-Dash Window
+                </li>
+            </ul>
+        </div>
     );
 }
 

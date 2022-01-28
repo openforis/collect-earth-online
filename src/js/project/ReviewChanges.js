@@ -3,7 +3,6 @@ import React from "react";
 import ReviewForm from "./ReviewForm";
 
 import {ProjectContext} from "./constants";
-import {mercator} from "../utils/mercator";
 
 export default class ReviewChanges extends React.Component {
     constructor(props) {
@@ -91,38 +90,32 @@ export default class ReviewChanges extends React.Component {
 
     /// Helper Functions
 
-    buildProjectObject = () => {
-        // TODO pass boundary instead of lon / lat.  Boundary will be arbitrary.
-        const boundaryExtent = mercator.parseGeoJson(this.context.boundary, false).getExtent();
-        return {
-            imageryId: this.context.imageryId,
-            projectImageryList: this.context.projectImageryList,
-            lonMin: boundaryExtent[0],
-            latMin: boundaryExtent[1],
-            lonMax: boundaryExtent[2],
-            latMax: boundaryExtent[3],
-            description: this.context.description,
-            name: this.context.name,
-            privacyLevel: this.context.privacyLevel,
-            projectOptions: this.context.projectOptions,
-            designSettings: this.context.designSettings,
-            numPlots: this.context.numPlots,
-            plotDistribution: this.context.plotDistribution,
-            plotShape: this.context.plotShape,
-            plotSize: this.context.plotSize,
-            plotSpacing: this.context.plotSpacing,
-            sampleDistribution: this.context.sampleDistribution,
-            samplesPerPlot: this.context.samplesPerPlot,
-            sampleResolution: this.context.sampleResolution,
-            allowDrawnSamples: this.context.allowDrawnSamples,
-            surveyQuestions: this.context.surveyQuestions,
-            surveyRules: this.context.surveyRules,
-            plotFileName: this.context.plotFileName,
-            plotFileBase64: this.context.plotFileBase64,
-            sampleFileName: this.context.sampleFileName,
-            sampleFileBase64: this.context.sampleFileBase64
-        };
-    };
+    buildProjectObject = () => ({
+        imageryId: this.context.imageryId,
+        projectImageryList: this.context.projectImageryList,
+        aoiFeatures: this.context.aoiFeatures,
+        aoiFileName: this.context.aoiFileName,
+        description: this.context.description,
+        name: this.context.name,
+        privacyLevel: this.context.privacyLevel,
+        projectOptions: this.context.projectOptions,
+        designSettings: this.context.designSettings,
+        numPlots: this.context.numPlots,
+        plotDistribution: this.context.plotDistribution,
+        plotShape: this.context.plotShape,
+        plotSize: this.context.plotSize,
+        plotSpacing: this.context.plotSpacing,
+        sampleDistribution: this.context.sampleDistribution,
+        samplesPerPlot: this.context.samplesPerPlot,
+        sampleResolution: this.context.sampleResolution,
+        allowDrawnSamples: this.context.allowDrawnSamples,
+        surveyQuestions: this.context.surveyQuestions,
+        surveyRules: this.context.surveyRules,
+        plotFileName: this.context.plotFileName,
+        plotFileBase64: this.context.plotFileBase64,
+        sampleFileName: this.context.sampleFileName,
+        sampleFileBase64: this.context.sampleFileBase64
+    });
 
     /// Render Functions
 
@@ -155,7 +148,7 @@ export default class ReviewChanges extends React.Component {
                                 type="checkbox"
                             />
                             <label className="form-check-label" htmlFor="tos-check">
-                            I agree to the <a href="/terms-of-service" target="_blank">Terms of Service</a>.
+                                I agree to the <a href="/terms-of-service" target="_blank">Terms of Service</a>.
                             </label>
                         </div>
                         <input
@@ -204,6 +197,10 @@ export default class ReviewChanges extends React.Component {
                         style={{border: "1px solid black", borderRadius: "6px"}}
                     >
                         <h2 className="bg-lightgreen w-100 py-1">Project Management</h2>
+                        <p>
+                            You will be able to continue to make changes to the project after creating it.
+                            Once satisfied with the project, click publish to begin final collection.
+                        </p>
                         <div className="p-3">
                             {this.renderButtons()}
                         </div>

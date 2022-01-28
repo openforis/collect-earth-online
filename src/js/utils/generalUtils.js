@@ -67,10 +67,16 @@ export function formatDateISO(date) {
     ].join("-");
 }
 
-export function encodeFileAsBase64(file, callback) {
+export function readFileAsBase64Url(file, callback) {
     const reader = new FileReader();
     reader.onloadend = () => callback(reader.result);
     reader.readAsDataURL(file);
+}
+
+export function readFileAsArrayBuffer(file, callback) {
+    const reader = new FileReader();
+    reader.onloadend = () => callback(reader.result);
+    reader.readAsArrayBuffer(file);
 }
 
 export function KBtoBase64Length(kb) {
