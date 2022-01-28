@@ -50,7 +50,10 @@
          (map EPSG:3857->4326))))
 
 (defn- create-gridded-plots-in-bounds [project-id plot-size plot-spacing]
-  (let [plots (call-sql "gridded_points_in_bounds" project-id plot-spacing (/ plot-size 2.0))]
+  (let [plots (->> (call-sql "select_project_features" project-id)
+                   (mapcat
+                    (fn [{:keys [feature]}]
+                      (call-sql "gridded_points_in_bounds" {:log? false} feature plot-spacing (/ plot-size 2.0)))))]
     (check-plot-limits (count plots) 5000.0)
     (map (fn [{:keys [lon lat]}] [lon lat]) plots)))
 
@@ -103,11 +106,14 @@
          (map EPSG:3857->4326))))
 
 (defn- create-random-plots-in-bounds [project-id plot-size num-plots]
-  (check-plot-limits num-plots 5000.0)
-  (->> (call-sql "random_points_in_bounds" project-id (/ plot-size 2) (* 2 num-plots))
-       (map (fn [{:keys [x y]}] [x y]))
-       (filter-random-points num-plots plot-size)
-       (map EPSG:3857->4326)))
+  (let [features (call-sql "select_project_features" project-id)]
+    (check-plot-limits (* num-plots (count features)) 5000.0)
+    (->> features
+         (mapcat (fn [{:keys [feature]}]
+                   (->> (call-sql "random_points_in_bounds" {:log? false} feature (/ plot-size 2) (* 2 num-plots))
+                        (map (fn [{:keys [x y]}] [x y]))
+                        (filter-random-points num-plots plot-size)
+                        (map EPSG:3857->4326)))))))
 
 (defn generate-point-samples [plots
                               plot-count

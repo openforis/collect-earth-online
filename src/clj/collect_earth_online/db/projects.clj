@@ -13,7 +13,6 @@
             [triangulum.utils           :as u]
             [collect-earth-online.utils.part-utils :as pu]
             [collect-earth-online.views      :refer [data-response]]
-            [collect-earth-online.utils.geom :refer [make-geo-json-polygon]]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
             [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples]]))
 
@@ -108,7 +107,9 @@
      :name               (:name project)
      :description        (:description project)
      :privacyLevel       (:privacy_level project)
-     :boundary           (:boundary project)
+     :boundary           (:boundary project) ;; Boundary is only used for Planet queries
+     :aoiFeatures        (tc/jsonb->clj (:aoi_features project))
+     :aoiFileName        (:aoi_file_name project)
      :plotDistribution   (:plot_distribution project)
      :numPlots           (:num_plots project)
      :plotSpacing        (:plot_spacing project)
@@ -141,7 +142,8 @@
     (data-response {:imageryId          (:imagery_id project)
                     :name               (:name project)
                     :description        (:description project)
-                    :boundary           (:boundary project)
+                    :aoiFeatures        (tc/jsonb->clj (:aoi_features project))
+                    :aoiFileName        (:aoi_file_name project)
                     :plotDistribution   (:plot_distribution project)
                     :numPlots           (:num_plots project)
                     :plotSpacing        (:plot_spacing project)
@@ -350,12 +352,13 @@
                                       plot-size))]
     (insert-rows! "plots" plots))
 
-  ;; Validate plots after insert
-  (when (#{"csv" "shp"} plot-distribution)
-    (pu/try-catch-throw #(call-sql "set_boundary"
-                                   project-id
-                                   (if (= plot-distribution "shp") 0 plot-size))
-                        "SQL Error: cannot create a project AOI."))
+  ;; Boundary is only used for Planet at this point.
+  (pu/try-catch-throw #(call-sql "set_boundary"
+                                 project-id
+                                 (if (= plot-distribution "shp") 0 plot-size))
+                      "SQL Error: cannot create a project AOI.")
+
+  (when (#{"csv" "shp"} plot-distribution) (call-sql "boundary_to_aoi" project-id))
 
   (when-not (sql-primitive (call-sql "valid_project_boundary" project-id))
     (pu/init-throw (str "The project boundary is invalid. "
@@ -380,7 +383,8 @@
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
-        boundary             (tc/json->jsonb (:boundary params))
+        aoi-features         (tc/clj->jsonb (:aoiFeatures params))
+        aoi-file-name        (:aoiFileName params)
         plot-distribution    (:plotDistribution params)
         num-plots            (tc/val->int (:numPlots params))
         plot-spacing         (tc/val->float (:plotSpacing params))
@@ -409,7 +413,8 @@
                                                       description
                                                       privacy-level
                                                       imagery-id
-                                                      boundary
+                                                      aoi-features
+                                                      aoi-file-name
                                                       plot-distribution
                                                       num-plots
                                                       plot-spacing
@@ -508,39 +513,14 @@
                                  allow-drawn-samples?
                                  (call-sql "get_plot_centers_by_project" project-id))))))
 
-(defn- exterior-ring [coords]
-  (map (fn [[a b]] [(tc/val->double a) (tc/val->double b)])
-       (first coords)))
-
-(defn- same-ring? [[start1 :as ring1] ring2]
-  (and (some #(= start1 %) ring2)
-       (or (= ring1 ring2)
-           (= ring1 (reverse ring2))
-           (= ring1 (take (count ring1) (drop-while #(not= start1 %) (cycle (rest ring2)))))
-           (= ring1 (take (count ring1) (drop-while #(not= start1 %) (cycle (reverse (rest ring2)))))))))
-
-;; NOTE: This only works for polygons (and only compares their
-;;       exterior rings). If you need to compare linestrings or points, you
-;;       will need a different function.
-(defn- same-polygon-boundary? [geom1 geom2]
-  (and (= "polygon" (str/lower-case (:type geom1)) (str/lower-case (:type geom2)))
-       (same-ring? (exterior-ring (:coordinates geom1))
-                   (exterior-ring (:coordinates geom2)))))
-
 (defn update-project! [{:keys [params]}]
   (let [project-id           (tc/val->int (:projectId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
-        lon-min              (tc/val->double (:lonMin params))
-        lat-min              (tc/val->double (:latMin params))
-        lon-max              (tc/val->double (:lonMax params))
-        lat-max              (tc/val->double (:latMax params))
-        boundary             (make-geo-json-polygon lon-min
-                                                    lat-min
-                                                    lon-max
-                                                    lat-max)
+        aoi-features         (:aoiFeatures params)
+        aoi-file-name        (:aoiFileName params)
         plot-distribution    (:plotDistribution params)
         num-plots            (tc/val->int (:numPlots params))
         plot-spacing         (tc/val->float (:plotSpacing params))
@@ -568,7 +548,8 @@
                   description
                   privacy-level
                   imagery-id
-                  boundary
+                  (tc/clj->jsonb aoi-features)
+                  aoi-file-name
                   plot-distribution
                   num-plots
                   plot-spacing
@@ -596,8 +577,7 @@
           (or (not= plot-distribution (:plot_distribution original-project))
               (if (#{"csv" "shp"} plot-distribution)
                 plot-file-base64
-                (or (not (same-polygon-boundary? (tc/jsonb->clj boundary)
-                                                 (tc/jsonb->clj (:boundary original-project))))
+                (or (not= aoi-features (tc/jsonb->clj (:aoi_features original-project)))
                     (not= num-plots    (:num_plots original-project))
                     (not= plot-shape   (:plot_shape original-project))
                     (not= plot-size    (:plot_size original-project))

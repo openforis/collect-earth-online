@@ -88,7 +88,7 @@ class Collection extends React.Component {
 
         // Initialize map when imagery list is returned
         if (this.state.imageryList.length > 0
-            && this.state.currentProject.boundary
+            && this.state.currentProject.aoiFeatures
             && this.state.mapConfig == null) {
             this.initializeProjectMap();
         }
@@ -270,17 +270,16 @@ class Collection extends React.Component {
         });
 
     initializeProjectMap = () => {
-        const mapConfig = mercator.createMap("image-analysis-pane",
-                                             [0.0, 0.0],
-                                             1,
-                                             this.state.imageryList,
-                                             this.state.currentProject.boundary);
+        const mapConfig = mercator.createMap(
+            "image-analysis-pane",
+            [0.0, 0.0],
+            1,
+            this.state.imageryList
+        );
         mercator.addVectorLayer(
             mapConfig,
             "currentAOI",
-            mercator.geometryToVectorSource(
-                mercator.parseGeoJson(this.state.currentProject.boundary, true)
-            ),
+            mercator.geomArrayToVectorSource(this.state.currentProject.aoiFeatures),
             mercator.ceoMapStyles("geom", "yellow")
         );
         mercator.zoomMapToLayer(mapConfig, "currentAOI", 48);
@@ -288,11 +287,11 @@ class Collection extends React.Component {
     };
 
     showProjectOverview = () => {
-        mercator.addPlotLayer(this.state.mapConfig,
-                              this.state.plotList,
-                              feature => {
-                                  this.getPlotData(feature.get("features")[0].get("plotId"), "id");
-                              });
+        mercator.addPlotLayer(
+            this.state.mapConfig,
+            this.state.plotList,
+            feature => this.getPlotData(feature.get("features")[0].get("plotId"), "id")
+        );
     };
 
     setBaseMapSource = newBaseMapSource => {

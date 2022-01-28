@@ -265,8 +265,7 @@ class SimpleCollection extends React.Component {
             "mobile-analysis-pane",
             [0.0, 0.0],
             1,
-            this.state.imageryList,
-            this.state.currentProject.boundary
+            this.state.imageryList
         );
         mercator.addVectorLayer(
             mapConfig,

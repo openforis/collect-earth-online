@@ -22,7 +22,8 @@ CREATE OR REPLACE FUNCTION create_project(
     _description            text,
     _privacy_level          text,
     _imagery_id             integer,
-    _boundary               jsonb,
+    _aoi_features           jsonb,
+    _aoi_file_name          text,
     _plot_distribution      text,
     _num_plots              integer,
     _plot_spacing           real,
@@ -48,7 +49,8 @@ CREATE OR REPLACE FUNCTION create_project(
         description,
         privacy_level,
         imagery_rid,
-        boundary,
+        aoi_features,
+        aoi_file_name,
         plot_distribution,
         num_plots,
         plot_spacing,
@@ -73,7 +75,8 @@ CREATE OR REPLACE FUNCTION create_project(
         _description,
         _privacy_level,
         _imagery_id,
-        ST_SetSRID(ST_GeomFromGeoJSON(_boundary), 4326),
+        _aoi_features,
+        _aoi_file_name,
         _plot_distribution,
         _num_plots,
         _plot_spacing,
@@ -164,7 +167,8 @@ CREATE OR REPLACE FUNCTION update_project(
     _description            text,
     _privacy_level          text,
     _imagery_id             integer,
-    _boundary               jsonb,
+    _aoi_features           jsonb,
+    _aoi_file_name          text,
     _plot_distribution      text,
     _num_plots              integer,
     _plot_spacing           real,
@@ -187,7 +191,8 @@ CREATE OR REPLACE FUNCTION update_project(
         description = _description,
         privacy_level = _privacy_level,
         imagery_rid = _imagery_id,
-        boundary = ST_SetSRID(ST_GeomFromGeoJSON(_boundary), 4326),
+        aoi_features= _aoi_features,
+        aoi_file_name = _aoi_file_name,
         plot_distribution = _plot_distribution,
         num_plots = _num_plots,
         plot_spacing = _plot_spacing,
@@ -397,8 +402,17 @@ CREATE OR REPLACE FUNCTION valid_project_boundary(_project_id integer)
 
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION select_project_features(_project_id integer)
+ RETURNS table (feature jsonb) AS $$
+
+    SELECT value
+    FROM projects, jsonb_array_elements(aoi_features)
+    WHERE project_uid = _project_id
+
+$$ LANGUAGE SQL;
+
 -- Points in 4326
-CREATE OR REPLACE FUNCTION gridded_points_in_bounds(_project_id integer, _m_spacing real, _m_buffer real)
+CREATE OR REPLACE FUNCTION gridded_points_in_bounds(_geo_json jsonb, _m_spacing real, _m_buffer real)
  RETURNS table (
     lon   float,
     lat   float
@@ -414,7 +428,7 @@ CREATE OR REPLACE FUNCTION gridded_points_in_bounds(_project_id integer, _m_spac
     _x_padding          float;
     _y_padding          float;
  BEGIN
-    SELECT ST_Transform(boundary, 3857) FROM projects WHERE project_uid = _project_id INTO _meters_boundary;
+    SELECT ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(_geo_json), 4326), 3857) INTO _meters_boundary;
     SELECT ST_Buffer(_meters_boundary, -1 * _m_buffer) INTO _buffered_extent;
     SELECT ST_XMax(_buffered_extent) - ST_XMin(_buffered_extent) INTO _x_range;
     SELECT ST_YMax(_buffered_extent) - ST_YMin(_buffered_extent) INTO _y_range;
@@ -427,7 +441,12 @@ CREATE OR REPLACE FUNCTION gridded_points_in_bounds(_project_id integer, _m_spac
     SELECT ST_X(ST_Centroid(geom)),
         ST_Y(ST_Centroid(geom))
     FROM (
-        SELECT ST_Transform( ST_SetSRID(ST_POINT(x::float + _x_padding, y::float + _y_padding), ST_SRID(_buffered_extent)), 4326) as geom
+        SELECT ST_Transform(
+            ST_SetSRID(
+                ST_POINT(x::float + _x_padding, y::float + _y_padding), ST_SRID(_buffered_extent)
+            ),
+            4326
+        ) as geom
         FROM
             generate_series(floor(st_xmin(_buffered_extent))::int, ceiling(st_xmax(_buffered_extent))::int, _m_spacing::int) AS x,
             generate_series(floor(st_ymin(_buffered_extent))::int, ceiling(st_ymax(_buffered_extent))::int, _m_spacing::int) AS y
@@ -442,7 +461,7 @@ CREATE OR REPLACE FUNCTION gridded_points_in_bounds(_project_id integer, _m_spac
 $$ LANGUAGE PLPGSQL;
 
 -- Points in 3857
-CREATE OR REPLACE FUNCTION random_points_in_bounds(_project_id integer, _m_buffer real, _num_points integer = 2000)
+CREATE OR REPLACE FUNCTION random_points_in_bounds(_geo_json jsonb, _m_buffer real, _num_points integer = 2000)
  RETURNS table (
     x    float,
     y    float
@@ -450,7 +469,15 @@ CREATE OR REPLACE FUNCTION random_points_in_bounds(_project_id integer, _m_buffe
 
     SELECT ST_X(ST_Centroid(geom)),
         ST_Y(ST_Centroid(geom))
-    FROM projects, ST_Dump(ST_GeneratePoints(ST_Buffer(ST_Transform(boundary, 3857), -1 * _m_buffer / 2), _num_points))
+    FROM ST_Dump(ST_GeneratePoints(ST_Buffer(ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(_geo_json), 4326), 3857), -1 * _m_buffer / 2), _num_points))
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION boundary_to_aoi(_project_id integer)
+ RETURNS void AS $$
+
+    UPDATE projects
+    SET aoi_features = ('[' || ST_AsGeoJSON(boundary) || ']')::jsonb
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
@@ -466,6 +493,8 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     description            text,
     privacy_level          text,
     boundary               text,
+    aoi_features           jsonb,
+    aoi_file_name          text,
     plot_distribution      text,
     num_plots              integer,
     plot_spacing           real,
@@ -496,6 +525,8 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         description,
         privacy_level,
         ST_AsGeoJSON(boundary),
+        aoi_features,
+        aoi_file_name,
         plot_distribution,
         num_plots,
         plot_spacing,
