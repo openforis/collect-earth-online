@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useContext} from "react";
 
 import {formatNumberWithCommas, readFileAsBase64Url} from "../utils/generalUtils";
 import {ProjectContext, perPlotLimit, sampleLimit} from "./constants";
@@ -86,36 +86,36 @@ export class SampleDesign extends React.Component {
             random: {
                 display: "Random",
                 description: "Sample points will be randomly distributed within the plot boundary.",
-                inputs: [() => this.renderLabeledInput("Number of samples", "samplesPerPlot")],
+                inputs: this.renderLabeledInput("Number of samples", "samplesPerPlot"),
                 disabled: plotDistribution === "shp"
             },
             gridded: {
                 display: "Gridded",
                 description: "Sample points will be arranged on a grid within the plot boundary using the sample spacing selected below.",
-                inputs: [() => this.renderLabeledInput("Sample spacing (m)", "sampleResolution")],
+                inputs: this.renderLabeledInput("Sample spacing (m)", "sampleResolution"),
                 disabled: plotDistribution === "shp"
             },
             center: {
                 display: "Center",
                 description: "A single sample point will be placed in the center of the plot.",
-                inputs: []
+                inputs: null
             },
             csv: {
                 display: "CSV File",
                 description: "Specify your own sample points by uploading a CSV with these fields: LON,LAT,PLOTID,SAMPLEID.",
-                inputs: [() => this.renderFileInput("csv")],
+                inputs: this.renderFileInput("csv"),
                 disabled: !["csv", "shp"].includes(plotDistribution)
             },
             shp: {
                 display: "SHP File",
                 description: "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.",
-                inputs: [() => this.renderFileInput("shp")],
+                inputs: this.renderFileInput("shp"),
                 disabled: !["csv", "shp"].includes(plotDistribution)
             },
             none: {
                 display: "None",
                 description: "Do not predefine any samples. Requires users to draw their own samples during collection.",
-                inputs: [() => <h3>Users will draw samples at collection time.</h3>],
+                inputs: null,
                 disabled: qaqcEnabled
             }
         };
@@ -135,78 +135,73 @@ export class SampleDesign extends React.Component {
 
         return (
             <div id="sample-design">
-                <h2>Sample Generation</h2>
-                <div className="form-check form-check-inline">
-                    <label>Spatial Distribution</label>
-                    <select
-                        className="form-control form-control-sm ml-3"
-                        onChange={e => {
-                            const newDistributionType = e.target.value;
-                            const pointRequired = ["random", "gridded", "center"].includes(newDistributionType);
-                            const {points} = sampleGeometries;
-                            setProjectDetails({
-                                allowDrawnSamples: (newDistributionType === "none") || allowDrawnSamples,
-                                sampleDistribution: newDistributionType,
-                                designSettings: {
-                                    ...this.context.designSettings,
-                                    sampleGeometries: {
-                                        ...sampleGeometries,
-                                        points: points || pointRequired
+                <h3>Sample Generation</h3>
+                <div className="ml-3">
+                    <div className="form-group" style={{width: "fit-content"}}>
+                        <label>Spatial Distribution</label>
+                        <select
+                            className="form-control form-control-sm"
+                            onChange={e => {
+                                const newDistributionType = e.target.value;
+                                const pointRequired = ["random", "gridded", "center"].includes(newDistributionType);
+                                const {points} = sampleGeometries;
+                                setProjectDetails({
+                                    allowDrawnSamples: (newDistributionType === "none") || allowDrawnSamples,
+                                    sampleDistribution: newDistributionType,
+                                    designSettings: {
+                                        ...this.context.designSettings,
+                                        sampleGeometries: {
+                                            ...sampleGeometries,
+                                            points: points || pointRequired
+                                        }
                                     }
-                                }
-                            });
-                        }}
-                        style={{width: "initial"}}
-                        value={sampleDistribution}
-                    >
-                        {Object.entries(sampleOptions).map(([key, options]) => (
-                            <option key={key} disabled={options.disabled} value={key}>
-                                {options.display}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <p className="font-italic ml-2 small" id="sample-design-text">
-                    - {sampleOptions[sampleDistribution].description}
-                </p>
-                <div style={{display: "flex"}}>
-                    {sampleOptions[sampleDistribution].inputs.map((i, idx) => (
-                        // eslint-disable-next-line react/no-array-index-key
-                        <div key={idx} className="mr-3">
-                            {i()}
-                        </div>
-                    ))}
-                </div>
-                <p
-                    className="font-italic ml-2"
-                    style={{
-                        color: (samplesPerPlot > perPlotLimit
+                                });
+                            }}
+                            value={sampleDistribution}
+                        >
+                            {Object.entries(sampleOptions).map(([key, options]) => (
+                                <option key={key} disabled={options.disabled} value={key}>
+                                    {options.display}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <p className="font-italic ml-2">{`- ${sampleOptions[sampleDistribution].description}`}</p>
+                    <div style={{display: "flex"}}>
+                        {sampleOptions[sampleDistribution].inputs}
+                    </div>
+                    <p
+                        className="font-italic ml-2"
+                        style={{
+                            color: (samplesPerPlot > perPlotLimit
                                  || samplesPerPlot * totalPlots > sampleLimit
                                  || (sampleDistribution === "gridded"
                                       && plotShape === "circle"
                                       && sampleResolution >= plotSize / Math.sqrt(2)))
-                            ? "#8B0000"
-                            : "#006400",
-                        fontSize: "1rem",
-                        whiteSpace: "pre-line"
-                    }}
-                >
-                    {samplesPerPlot > 0 && `Each plot will contain around ${formatNumberWithCommas(samplesPerPlot)} samples.`}
-                    {totalPlots > 0 && samplesPerPlot > 0
-                        ? `  There will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} total samples in the project.`
-                        : sampleDistribution === "none"
-                            ? "  No samples will be added to the plot."
-                            : ""}
-                    {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot > perPlotLimit
+                                ? "#8B0000"
+                                : "#006400",
+                            fontSize: "1rem",
+                            whiteSpace: "pre-line"
+                        }}
+                    >
+                        {samplesPerPlot > 0 && `Each plot will contain around ${formatNumberWithCommas(samplesPerPlot)} samples.`}
+                        {totalPlots > 0 && samplesPerPlot > 0
+                            ? `  There will be around ${formatNumberWithCommas(totalPlots * samplesPerPlot)} total samples in the project.`
+                            : sampleDistribution === "none"
+                                ? "  No samples will be added to the plot."
+                                : ""}
+                        {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot > perPlotLimit
                         && `\n* The maximum allowed for the selected sample distribution is ${formatNumberWithCommas(perPlotLimit)} samples per plot.`}
-                    {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot * totalPlots > sampleLimit
+                        {totalPlots > 0 && samplesPerPlot > 0 && samplesPerPlot * totalPlots > sampleLimit
                         && `\n* The maximum allowed samples per project is ${formatNumberWithCommas(sampleLimit)}.`}
-                    {sampleDistribution === "gridded"
+                        {sampleDistribution === "gridded"
                         && plotShape === "circle"
                         && sampleResolution >= plotSize / Math.sqrt(2)
                         && `\n* You must use a sample spacing that is less than ${Math.round((plotSize / Math.sqrt(2)) * 100) / 100} meters.`}
-                </p>
-                <div className="mb-3">
+                    </p>
+                </div>
+                <h3>User Drawn Samples</h3>
+                <div className="mb-3 ml-3">
                     <div className="form-check form-check-inline">
                         <input
                             checked={allowDrawnSamples || sampleDistribution === "none"}
@@ -223,26 +218,19 @@ export class SampleDesign extends React.Component {
                             Allow users to draw their own samples
                         </label>
                     </div>
-                    <p className="font-italic ml-2 small">
+                    <p className="font-italic ml-2">
                         - Enable this to allow users to draw and label points, lines,
                         and polygons during data collection.
                     </p>
                     {qaqcEnabled && (
-                        <p className="font-italic ml-2 small">
+                        <p className="font-italic ml-2">
                             - When Quality Control is enabled, the project can no longer support User Drawn samples.
                             Set Quality Control to &quot;None&quot; to re-enable User-Drawn Samples.
                         </p>
                     )}
                     {allowDrawnSamples && (
                         <div className="form-group">
-                            <label
-                                htmlFor="restrict-sample-geometry"
-                            >
-                                Allowed sample geometries:
-                            </label>
-                            <p className="font-italic ml-2 small">
-                                - Allow sample geometries to points, lines, and/or polygons.
-                            </p>
+                            <label htmlFor="restrict-sample-geometry">Allowed sample geometries</label>
                             {Object.entries(geometries).map(([geometry, options]) => (
                                 <div key={geometry} className="form-check">
                                     <input
@@ -275,107 +263,105 @@ function Badge({children}) {
 }
 
 export function SampleReview() {
+    const {
+        allowDrawnSamples,
+        designSettings: {sampleGeometries},
+        sampleDistribution,
+        sampleFileName,
+        sampleResolution,
+        samplesPerPlot,
+        useTemplatePlots
+    } = useContext(ProjectContext);
     return (
-        <ProjectContext.Consumer>
-            {({
-                allowDrawnSamples,
-                designSettings: {sampleGeometries},
-                sampleDistribution,
-                sampleFileName,
-                sampleResolution,
-                samplesPerPlot,
-                useTemplatePlots
-            }) => (
-                <div id="sample-review">
-                    {useTemplatePlots && <h3 className="mb-3">Samples will be copied from template project</h3>}
-                    {sampleDistribution === "none"
-                        ? <h3>No samples are predefined.</h3>
-                        : (
-                            <div className="d-flex">
-                                <div id="sample-review-col1">
-                                    <table className="table table-sm" id="sample-review-table">
-                                        <tbody>
-                                            <tr>
-                                                <td className="w-80 pr-5">Spatial Distribution</td>
-                                                <td className="w-20 text-center">
-                                                    <Badge>{sampleDistribution}</Badge>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="w-80">Samples Per Plot</td>
-                                                <td className="w-20 text-center">
-                                                    <Badge>{samplesPerPlot} / plot</Badge>
-                                                </td>
-                                            </tr>
-                                            {sampleDistribution === "gridded" && (
-                                                <tr>
-                                                    <td className="w-80">Sample Spacing</td>
-                                                    <td className="w-20 text-center">
-                                                        <Badge>{sampleResolution} m</Badge>
-                                                    </td>
-                                                </tr>
-                                            )}
-                                            {["shp", "csv"].includes(sampleDistribution) && (
-                                                <tr>
-                                                    <td className="w-80">Sample File</td>
-                                                    <td className="w-20 text-center">
-                                                        <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
-                                                            {sampleFileName
-                                                                ? sampleFileName.length > 13 ? `${sampleFileName.substring(0, 13)}...` : sampleFileName
-                                                                : "null"}
-                                                            {sampleFileName && <div className="tooltip_content">{sampleFileName}</div>}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            )}
-                                            {allowDrawnSamples && (
-                                                <tr>
-                                                    <td className="w-80">Allowed sample geometries</td>
-                                                    <td className="w-20 text-center">
-                                                        {Object.entries(sampleGeometries)
-                                                            .map(([geometry, isUsed]) => (
-                                                                isUsed && <Badge key={geometry}>{geometry}</Badge>))}
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        )}
-                </div>
-            )}
-        </ProjectContext.Consumer>
+        <div id="sample-review">
+            {useTemplatePlots && <h3 className="mb-3">Samples will be copied from template project</h3>}
+            {sampleDistribution === "none"
+                ? <h3>No samples are predefined.</h3>
+                : (
+                    <div className="d-flex">
+                        <div id="sample-review-col1">
+                            <table className="table table-sm" id="sample-review-table">
+                                <tbody>
+                                    <tr>
+                                        <td className="w-80 pr-5">Spatial Distribution</td>
+                                        <td className="w-20 text-center">
+                                            <Badge>{sampleDistribution}</Badge>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="w-80">Samples Per Plot</td>
+                                        <td className="w-20 text-center">
+                                            <Badge>{samplesPerPlot} / plot</Badge>
+                                        </td>
+                                    </tr>
+                                    {sampleDistribution === "gridded" && (
+                                        <tr>
+                                            <td className="w-80">Sample Spacing</td>
+                                            <td className="w-20 text-center">
+                                                <Badge>{sampleResolution} m</Badge>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {["shp", "csv"].includes(sampleDistribution) && (
+                                        <tr>
+                                            <td className="w-80">Sample File</td>
+                                            <td className="w-20 text-center">
+                                                <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
+                                                    {sampleFileName
+                                                        ? sampleFileName.length > 13 ? `${sampleFileName.substring(0, 13)}...` : sampleFileName
+                                                        : "null"}
+                                                    {sampleFileName && <div className="tooltip_content">{sampleFileName}</div>}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {allowDrawnSamples && (
+                                        <tr>
+                                            <td className="w-80">Allowed sample geometries</td>
+                                            <td className="w-20 text-center">
+                                                {Object.entries(sampleGeometries)
+                                                    .map(([geometry, isUsed]) => (
+                                                        isUsed && <Badge key={geometry}>{geometry}</Badge>))}
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+        </div>
     );
 }
 
+// TODO: Update messaging so it's more clear when shp is defined at the plot level, especially with CSV samples
 export function SamplePreview() {
-    // TODO: Update messaging so it's more clear when shp is defined at the plot level, especially with CSV samples
-    return (
-        <ProjectContext.Consumer>
-            {({plotDistribution, sampleDistribution, plotShape}) => (
-                <div className="p-3">
-                    {(plotDistribution === "shp")
-                        ? <h3>The system cannot currently generate a preview of plot shp files.</h3>
-                        : (sampleDistribution === "csv")
-                            ? <h3>The system cannot currently generate a preview of sample csv files.</h3>
-                            : (sampleDistribution === "shp")
-                                ? <h3>The system cannot currently generate a preview of sample shp files.</h3>
-                                : (
-                                    <div>
-                                        <h3>
-                                            The following is a mock up of a {plotShape} plot
-                                            with {sampleDistribution} samples.
-                                        </h3>
-                                        <img
-                                            alt="distribution"
-                                            className="w-100 h-100"
-                                            src={"/img/examples/" + plotShape + "-" + sampleDistribution + ".webp"}
-                                        />
-                                    </div>
-                                )}
+    const {plotDistribution, sampleDistribution, plotShape} = useContext(ProjectContext);
+    const renderMessage = () => {
+        if (plotDistribution === "shp") {
+            return <p>The system cannot currently generate a preview of plot shp files.</p>;
+        } else if (sampleDistribution === "csv") {
+            return <p>The system cannot currently generate a preview of sample csv files.</p>;
+        } else if (sampleDistribution === "shp") {
+            return <p>The system cannot currently generate a preview of sample shp files.</p>;
+        } else {
+            return (
+                <div>
+                    <p>
+                        The following is a mock up of a {plotShape} plot with {sampleDistribution} samples.
+                    </p>
+                    <img
+                        alt="distribution"
+                        className="w-100 h-100"
+                        src={"/img/examples/" + plotShape + "-" + sampleDistribution + ".webp"}
+                    />
                 </div>
-            )}
-        </ProjectContext.Consumer>
+            );
+        }
+    };
+    return (
+        <div className="p-3">
+            {renderMessage()}
+        </div>
     );
 }

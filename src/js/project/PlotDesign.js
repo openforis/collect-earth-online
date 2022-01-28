@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useContext} from "react";
 import shp from "shpjs";
 
 import {formatNumberWithCommas, readFileAsArrayBuffer, readFileAsBase64Url} from "../utils/generalUtils";
@@ -78,7 +78,7 @@ export class PlotDesign extends React.Component {
     /// Render Functions
 
     renderLabeledInput = (label, property) => (
-        <div className="form-group">
+        <div className="form-group" style={{width: "fit-content"}}>
             <label htmlFor={property}>{label}</label>
             <input
                 className="form-control form-control-sm"
@@ -136,9 +136,9 @@ export class PlotDesign extends React.Component {
     renderAOICoords = () => {
         const {latMax, lonMin, lonMax, latMin} = this.state;
         return (
-            <div>
+            <div style={{width: "20rem"}}>
                 <label>Boundary Coordinates</label>
-                <div className="form-group mx-4">
+                <div className="form-group ml-3">
                     <div className="row">
                         <div className="col-md-6 offset-md-3">
                             <input
@@ -212,31 +212,29 @@ export class PlotDesign extends React.Component {
     };
 
     renderBoundaryFileInput = () => (
-        <div>
-            <div style={{display: "flex"}}>
-                <label
-                    className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
-                    htmlFor="project-boundary-file"
-                    id="custom-upload"
-                    style={{display: "flex", alignItems: "center", width: "fit-content"}}
-                >
+        <div className="d-flex">
+            <label
+                className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+                htmlFor="project-boundary-file"
+                id="custom-upload"
+                style={{display: "flex", alignItems: "center", width: "fit-content"}}
+            >
                     Upload project boundary
-                    <input
-                        accept="application/zip"
-                        defaultValue=""
-                        id="project-boundary-file"
-                        onChange={e => {
-                            const file = e.target.files[0];
-                            readFileAsArrayBuffer(file, this.loadGeoJson);
-                        }}
-                        style={{display: "none"}}
-                        type="file"
-                    />
-                </label>
-                <label className="ml-3 text-nowrap">
+                <input
+                    accept="application/zip"
+                    defaultValue=""
+                    id="project-boundary-file"
+                    onChange={e => {
+                        const file = e.target.files[0];
+                        readFileAsArrayBuffer(file, this.loadGeoJson);
+                    }}
+                    style={{display: "none"}}
+                    type="file"
+                />
+            </label>
+            <label className="ml-3 text-nowrap">
                     File: {this.context.aoiFileName}
-                </label>
-            </div>
+            </label>
         </div>
     );
 
@@ -330,51 +328,46 @@ export class PlotDesign extends React.Component {
 
         return (
             <div id="plot-design">
-                <div className="row">
-                    <div className="col" id="plot-design-col1">
-                        <h2 className="mb-3">Plot Generation</h2>
-                        <div className="d-flex">
-                            <div className="d-flex flex-column">
-                                <div className="d-flex">
-                                    <label>Spatial Distribution</label>
-                                    <select
-                                        className="form-control form-control-sm ml-3"
-                                        onChange={e => this.setPlotDetails({plotDistribution: e.target.value})}
-                                        style={{width: "initial"}}
-                                        value={plotDistribution}
-                                    >
-                                        {Object.entries(plotOptions).map(([key, options]) =>
-                                            <option key={key} value={key}>{options.display}</option>)}
-                                    </select>
-                                </div>
-                                <p className="font-italic ml-2 small" id="plot-design-text">
-                                    - {plotOptions[plotDistribution].description}
-                                </p>
-                                <div style={{display: "flex"}}>
-                                    {plotOptions[plotDistribution].inputs.map((i, idx) => (
-                                        // eslint-disable-next-line react/no-array-index-key
-                                        <div key={idx} className="mr-3">
-                                            {i()}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            {plotOptions[plotDistribution].showAOI && this.renderAOISelector()}
+                <h3 className="mb-3">Plot Generation</h3>
+                <div className="ml-3">
+                    <div className="d-flex flex-column">
+                        <div className="form-group" style={{width: "fit-content"}}>
+                            <label>Spatial Distribution</label>
+                            <select
+                                className="form-control form-control-sm"
+                                onChange={e => this.setPlotDetails({plotDistribution: e.target.value})}
+                                value={plotDistribution}
+                            >
+                                {Object.entries(plotOptions).map(([key, options]) =>
+                                    <option key={key} value={key}>{options.display}</option>)}
+                            </select>
                         </div>
+                        <p className="font-italic ml-2">{`- ${plotOptions[plotDistribution].description}`}</p>
                     </div>
-                </div>
-                <p
-                    className="font-italic ml-2 small"
-                    style={{
-                        color: totalPlots > plotLimit ? "#8B0000" : "#006400",
-                        fontSize: "1rem",
-                        whiteSpace: "pre-line"
-                    }}
-                >
-                    {totalPlots > 0 && `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
-                    {totalPlots > 0 && totalPlots > plotLimit
+                    <div>
+                        <div style={{display: "flex"}}>
+                            {plotOptions[plotDistribution].inputs.map((i, idx) => (
+                            // eslint-disable-next-line react/no-array-index-key
+                                <div key={idx} className="mr-3">
+                                    {i()}
+                                </div>
+                            ))}
+                        </div>
+                        {plotOptions[plotDistribution].showAOI && this.renderAOISelector()}
+                    </div>
+                    <p
+                        className="font-italic ml-2 small"
+                        style={{
+                            color: totalPlots > plotLimit ? "#8B0000" : "#006400",
+                            fontSize: "1rem",
+                            whiteSpace: "pre-line"
+                        }}
+                    >
+                        {totalPlots > 0 && `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
+                        {totalPlots > 0 && totalPlots > plotLimit
                         && `\n* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
-                </p>
+                    </p>
+                </div>
             </div>
         );
     }
@@ -395,119 +388,111 @@ export function PlotDesignReview() {
 }
 
 export function PlotReview() {
+    const {
+        numPlots,
+        plotDistribution,
+        plotFileName,
+        plotShape,
+        plotSize,
+        plotSpacing,
+        useTemplatePlots
+    } = useContext(ProjectContext);
     return (
-        <ProjectContext.Consumer>
-            {({
-                numPlots,
-                plotDistribution,
-                plotFileName,
-                plotShape,
-                plotSize,
-                plotSpacing,
-                useTemplatePlots
-            }) => (
-                <div id="plot-review">
-                    {useTemplatePlots && <h3 className="mb-3">Plots will be copied from template project</h3>}
-                    <div className="d-flex">
-                        <div id="plot-review-col1">
-                            <table className="table table-sm" id="plot-review-table">
-                                <tbody>
+        <div id="plot-review">
+            {useTemplatePlots && <h3 className="mb-3">Plots will be copied from template project</h3>}
+            <div className="d-flex">
+                <div id="plot-review-col1">
+                    <table className="table table-sm" id="plot-review-table">
+                        <tbody>
+                            <tr>
+                                <td className="w-80 pr-5">Spatial distribution</td>
+                                <td className="w-20 text-center">
+                                    <span className="badge badge-pill bg-lightgreen">{plotDistribution}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="w-80">Number of plots</td>
+                                <td className="w-20 text-center">
+                                    <span className="badge badge-pill bg-lightgreen">{numPlots} plots</span>
+                                </td>
+                            </tr>
+                            {plotDistribution === "gridded" && (
+                                <tr>
+                                    <td className="w-80">Plot spacing</td>
+                                    <td className="w-20 text-center">
+                                        <span className="badge badge-pill bg-lightgreen">{plotSpacing} m</span>
+                                    </td>
+                                </tr>
+                            )}
+                            {plotDistribution !== "shp" && (
+                                <>
                                     <tr>
-                                        <td className="w-80 pr-5">Spatial distribution</td>
+                                        <td className="w-80">Plot shape</td>
                                         <td className="w-20 text-center">
-                                            <span className="badge badge-pill bg-lightgreen">{plotDistribution}</span>
+                                            <span className="badge badge-pill bg-lightgreen">{plotShape}</span>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className="w-80">Number of plots</td>
+                                        <td className="w-80">Plot size</td>
                                         <td className="w-20 text-center">
-                                            <span className="badge badge-pill bg-lightgreen">{numPlots} plots</span>
+                                            <span className="badge badge-pill bg-lightgreen">{plotSize} m</span>
                                         </td>
                                     </tr>
-                                    {plotDistribution === "gridded" && (
-                                        <tr>
-                                            <td className="w-80">Plot spacing</td>
-                                            <td className="w-20 text-center">
-                                                <span className="badge badge-pill bg-lightgreen">{plotSpacing} m</span>
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {plotDistribution !== "shp" && (
-                                        <>
-                                            <tr>
-                                                <td className="w-80">Plot shape</td>
-                                                <td className="w-20 text-center">
-                                                    <span className="badge badge-pill bg-lightgreen">{plotShape}</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="w-80">Plot size</td>
-                                                <td className="w-20 text-center">
-                                                    <span className="badge badge-pill bg-lightgreen">{plotSize} m</span>
-                                                </td>
-                                            </tr>
-                                        </>
-                                    )}
-                                    {["shp", "csv"].includes(plotDistribution) && (
-                                        <tr>
-                                            <td className="w-80">Plot file</td>
-                                            <td className="w-20 text-center">
-                                                <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
-                                                    {plotFileName
-                                                        ? plotFileName.length > 13 ? `${plotFileName.substring(0, 13)}...` : plotFileName
-                                                        : "null"}
-                                                    {plotFileName && <div className="tooltip_content">{plotFileName}</div>}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                </>
+                            )}
+                            {["shp", "csv"].includes(plotDistribution) && (
+                                <tr>
+                                    <td className="w-80">Plot file</td>
+                                    <td className="w-20 text-center">
+                                        <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
+                                            {plotFileName
+                                                ? plotFileName.length > 13 ? `${plotFileName.substring(0, 13)}...` : plotFileName
+                                                : "null"}
+                                            {plotFileName && <div className="tooltip_content">{plotFileName}</div>}
+                                        </span>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
-            )}
-        </ProjectContext.Consumer>
+            </div>
+        </div>
     );
 }
 
 export function AOIReview() {
+    const {aoiFeatures, aoiFileName} = useContext(ProjectContext);
+    const boundaryExtent = mercator.parseGeoJson(aoiFeatures[0], false).getExtent();
     return (
-        <ProjectContext.Consumer>
-            {({aoiFeatures, aoiFileName}) => {
-                const boundaryExtent = mercator.parseGeoJson(aoiFeatures[0], false).getExtent();
-                return (
-                    <div id="aoi-review">
-                        {aoiFileName.length
-                            ? <h3>Boundary will be calculated from {aoiFileName}</h3>
-                            : (
-                                <>
-                                    <h3>Boundary Coordinates</h3>
-                                    <div className="form-group mx-4">
-                                        <div className="row">
-                                            <div className="col-md-6 offset-md-3">
-                                                <label><b>North: </b>{boundaryExtent[3]}</label>
-                                            </div>
-                                        </div>
-                                        <div className="row">
-                                            <div className="col-md-6">
-                                                <label><b>West: </b>{boundaryExtent[0]}</label>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <label><b>East: </b>{boundaryExtent[2]}</label>
-                                            </div>
-                                        </div>
-                                        <div className="row">
-                                            <div className="col-md-6 offset-md-3">
-                                                <label><b>South: </b>{boundaryExtent[1]}</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-                    </div>
-                );
-            }}
-        </ProjectContext.Consumer>
+        <div id="aoi-review">
+            {aoiFileName.length
+                ? <h3>Boundary will be calculated from {aoiFileName}</h3>
+                : (
+                    <>
+                        <h3>Boundary Coordinates</h3>
+                        <div className="form-group mx-4">
+                            <div className="row">
+                                <div className="col-md-6 offset-md-3">
+                                    <label><b>North: </b>{boundaryExtent[3]}</label>
+                                </div>
+                            </div>
+                            <div className="row">
+                                <div className="col-md-6">
+                                    <label><b>West: </b>{boundaryExtent[0]}</label>
+                                </div>
+                                <div className="col-md-6">
+                                    <label><b>East: </b>{boundaryExtent[2]}</label>
+                                </div>
+                            </div>
+                            <div className="row">
+                                <div className="col-md-6 offset-md-3">
+                                    <label><b>South: </b>{boundaryExtent[1]}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
+        </div>
     );
 }
