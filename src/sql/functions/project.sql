@@ -221,7 +221,7 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
         FROM projects p
         INNER JOIN plots pl
             ON pl.project_rid = project_uid
-        INNER JOIN samples s
+        LEFT JOIN samples s
             ON plot_uid = s.plot_rid
         WHERE project_uid = _project_id
     )
@@ -854,8 +854,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     plotid                    integer,
     center_lon                 double precision,
     center_lat                 double precision,
-    size_m                     text,
-    shape                      real,
+    shape                      text,
+    size_m                     real,
     email                      text,
     flagged                    boolean,
     flagged_reason             text,

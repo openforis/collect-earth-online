@@ -243,6 +243,23 @@
                                                                     :plot_id))))))
       nil)))
 
+(defn- start-list-at
+  "Creates a new collection removing the item that matches pred, starting the list at item + 1,
+   and appending the beginning of the list on to the end."
+  [pred coll]
+  (loop [head coll
+         tail []]
+    (cond
+      (empty? head)
+      tail
+
+      (pred (first head))
+      (concat (rest head) tail)
+
+      :else
+      (recur (rest head)
+             (conj tail (first head))))))
+
 (defn- assign-qaqc
   "Assigns additional plots to users based on QA/QC method.  The two options are:
    {:qaqcMethod    \"overlap\"
@@ -269,7 +286,7 @@
                                            user-plots)]))
                      (reduce (fn [acc [user-id user-plots]]
                                (let [other-users (case qaqc-method
-                                                   "overlap" (remove #(= user-id %) users)
+                                                   "overlap" (start-list-at #(= % user-id) users)
                                                    "sme"     smes
                                                    nil)]
                                  (loop [to-users     other-users
@@ -769,8 +786,8 @@
 (def plot-base-headers [:plotid
                         :center_lon
                         :center_lat
-                        :size_m
                         :shape
+                        :size_m
                         :sample_points
                         :email
                         :flagged
