@@ -6,7 +6,6 @@ import SvgIcon from "./components/svg/SvgIcon";
 
 import {nicfiLayers} from "./imagery/imageryOptions";
 import {
-    UnicodeIcon,
     getQueryString,
     safeLength,
     isNumber,
@@ -686,6 +685,7 @@ class SimpleCollection extends React.Component {
                         >
                             <SvgIcon
                                 color="black"
+                                cursor="pointer"
                                 icon={this.state.showSidebar ? "rightDouble" : "leftDouble"}
                                 size="1.5rem"
                             />
@@ -694,7 +694,7 @@ class SimpleCollection extends React.Component {
                             onClick={() => this.setState({showSidebar: false})}
                             style={{position: "absolute", right: "1rem", top: "1rem"}}
                         >
-                            <SvgIcon color="black" icon="close" size="1.5rem"/>
+                            <SvgIcon color="black" cursor="pointer" icon="close" size="1.5rem"/>
                         </div>
                         <h2
                             className="header overflow-hidden text-truncate w-100 m-0"
@@ -904,14 +904,14 @@ class PlotNavigation extends React.Component {
                         onClick={navToPrevPlot}
                         type="button"
                     >
-                        <UnicodeIcon icon="leftCaret"/>
+                        <SvgIcon icon="leftArrow" size="0.9rem"/>
                     </button>
                     <button
                         className="btn btn-outline-lightgreen btn-sm mx-1"
                         onClick={navToNextPlot}
                         type="button"
                     >
-                        <UnicodeIcon icon="rightCaret"/>
+                        <SvgIcon icon="rightArrow" size="0.9rem"/>
                     </button>
                     <input
                         autoComplete="off"
@@ -1087,7 +1087,7 @@ function NavigationBar({children}) {
                 id="main-nav"
                 style={{backgroundColor: "white", borderBottom: "1px solid black"}}
             >
-                <a className="navbar-brand pt-1 pb-1" href="/home">
+                <a className="navbar-brand pt-1 pb-1" href="/home" target="_blank">
                     <img
                         alt="Home"
                         className="img-fluid"

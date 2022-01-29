@@ -20,9 +20,7 @@
    [:get  "/collection"]                     {:handler     (render-page "/collection")
                                               :auth-type   :collect
                                               :auth-action :redirect}
-   [:get  "/simple-collection"]              {:handler     (render-page "/simple-collection")
-                                              :auth-type   :token
-                                              :auth-action :block}
+   [:get  "/simple-collection"]              {:handler     (render-page "/simple-collection")}
    [:get  "/create-institution"]             {:handler     (render-page "/create-institution")
                                               :auth-type   :user
                                               :auth-action :redirect}
