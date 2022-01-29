@@ -18,10 +18,6 @@ CREATE OR REPLACE FUNCTION simple_val(_saved_answers jsonb, _survey_questions js
 
 $$ LANGUAGE SQL;
 
--- FIXME, this is temp for dev
-ALTER TABLE sample_values ADD COLUMN sa_bk jsonb;
-UPDATE sample_values SET sa_bk = saved_answers;
-
 UPDATE sample_values sv
 SET saved_answers = simple_val(sv.saved_answers, survey_questions)
 FROM (

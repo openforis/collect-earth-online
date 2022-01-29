@@ -1,12 +1,6 @@
 -- Drop archived projects with odd widgets
 SELECT delete_project(project_uid) FROM projects WHERE project_uid IN (4998, 1057, 1054, 1080);
 
-ALTER TABLE project_widgets ADD COLUMN widget_bk jsonb;
-UPDATE project_widgets SET widget_bk = widget;
-
-ALTER TABLE imagery ADD COLUMN sc_bk jsonb;
-UPDATE imagery SET sc_bk = source_config;
-
 -- Update Stats widgets
 UPDATE project_widgets
 SET widget = jsonb_build_object(

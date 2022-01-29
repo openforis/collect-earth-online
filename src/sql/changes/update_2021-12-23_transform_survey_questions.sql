@@ -48,6 +48,4 @@ CREATE OR REPLACE FUNCTION survey_reduce(_questions jsonb)
 
 $$ LANGUAGE SQL;
 
-ALTER TABLE projects ADD COLUMN sq_bk jsonb;
-UPDATE projects SET sq_bk = survey_questions;
 UPDATE projects SET survey_questions = survey_reduce(survey_questions);
