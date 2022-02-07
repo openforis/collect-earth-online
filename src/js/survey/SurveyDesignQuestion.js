@@ -183,7 +183,7 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                                 surveyQuestionId={surveyQuestionId}
                             />
                         )}
-                        {surveyQuestion.componentType !== "input" && (
+                        {inDesignMode && surveyQuestion.componentType !== "input" && (
                             <button
                                 className="btn btn-sm btn-success"
                                 onClick={() => setBulkAdd(true)}
