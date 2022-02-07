@@ -149,7 +149,16 @@ CREATE OR REPLACE FUNCTION delete_project(_project_id integer)
  RETURNS void AS $$
 
  BEGIN
-    -- Delete plots first for performance
+    -- Delete fks first for performance
+    DELETE FROM sample_values WHERE sample_rid IN (
+        SELECT sample_uid FROM samples, plots
+        WHERE plot_uid = plot_rid
+            AND project_rid = _project_id
+    );
+    DELETE FROM samples WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id);
+    DELETE FROM ext_samples WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id);
+    DELETE FROM user_plots WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id);
+    DELETE FROM plot_assignments WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id);
     DELETE FROM plots WHERE project_rid = _project_id;
     DELETE FROM projects WHERE project_uid = _project_id;
 

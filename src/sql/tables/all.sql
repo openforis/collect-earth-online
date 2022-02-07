@@ -42,6 +42,8 @@ CREATE TABLE institution_users (
     role_rid           integer NOT NULL REFERENCES roles (role_uid),
     CONSTRAINT per_institution_per_plot UNIQUE(institution_rid, user_rid)
 );
+CREATE INDEX institution_users_institution_rid ON institution_users (institution_rid);
+CREATE INDEX institution_users_user_rid        ON institution_users (user_rid);
 
 -- Stores imagery data
 -- 1 institution -> many imagery
@@ -58,6 +60,7 @@ CREATE TABLE imagery (
     archived_date      date,
     is_proxied         boolean DEFAULT FALSE
 );
+CREATE INDEX imagery_institution_rid ON imagery (institution_rid);
 
 -- Stores information about projects
 -- Each project must be associated with an institution
@@ -91,6 +94,7 @@ CREATE TABLE projects (
     plot_file_name         varchar(511),
     sample_file_name       varchar(511)
 );
+CREATE INDEX projects_institution_rid ON projects (institution_rid);
 
 -- Stores project imagery
 -- 1 project -> many imagery
@@ -100,6 +104,7 @@ CREATE TABLE project_imagery (
     imagery_rid            integer REFERENCES imagery (imagery_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT per_project_per_imagery UNIQUE(project_rid, imagery_rid)
 );
+CREATE INDEX project_imagery_project_rid ON project_imagery (project_rid);
 
 --            1 project -> many |plots ->                                       many samples|
 --                              |plots -> many user_plots -> many sample_values 1 <- samples|
@@ -113,6 +118,7 @@ CREATE TABLE plots (
     visible_id         integer,
     extra_plot_info    jsonb
 );
+CREATE INDEX plots_projects_rid ON plots (project_rid);
 
 -- Stores sample information, including a reference to external sample data if it exists
 CREATE TABLE samples (
@@ -122,6 +128,7 @@ CREATE TABLE samples (
     visible_id           integer,
     extra_sample_info    jsonb
 );
+CREATE INDEX samples_plot_rid ON samples (plot_rid);
 
 -- A duplicate of external file samples for restoring samples
 CREATE TABLE ext_samples (
@@ -131,6 +138,7 @@ CREATE TABLE ext_samples (
     visible_id           integer,
     extra_sample_info    jsonb
 );
+CREATE INDEX ext_samples_plot_rid ON ext_samples (plot_rid);
 
 -- Stores information about a plot as data is collected, including the user who collected it
 CREATE TABLE user_plots (
@@ -144,6 +152,8 @@ CREATE TABLE user_plots (
     flagged_reason      text,
     CONSTRAINT per_user_per_plot UNIQUE(user_rid, plot_rid)
 );
+CREATE INDEX user_plots_plot_rid ON user_plots (plot_rid);
+CREATE INDEX user_plots_user_rid ON user_plots (user_rid);
 
 -- Stores collected data for a single sample
 CREATE TABLE sample_values (
@@ -155,6 +165,9 @@ CREATE TABLE sample_values (
     saved_answers         jsonb,
     CONSTRAINT per_sample_per_user UNIQUE(sample_rid, user_plot_rid)
 );
+CREATE INDEX sample_values_user_plot_rid ON sample_values (user_plot_rid);
+CREATE INDEX sample_values_sample_rid    ON sample_values (sample_rid);
+CREATE INDEX sample_values_imagery_rid   ON sample_values (imagery_rid);
 
 -- Stores active user information for a plot
 -- many plots <-> many users, although by other means we restrict it to 1 user to 1 plot
@@ -172,6 +185,8 @@ CREATE TABLE plot_assignments (
     plot_rid    integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE,
     PRIMARY KEY(user_rid, plot_rid)
 );
+CREATE INDEX plot_assignments_plot_rid ON plot_assignments (plot_rid);
+CREATE INDEX plot_assignments_user_rid ON plot_assignments (user_rid);
 
 -- Stores widget information for a project
 -- 1 project -> many widgets
@@ -181,19 +196,5 @@ CREATE TABLE project_widgets (
     dashboard_id    uuid,
     widget          jsonb
 );
-
--- Indices
-CREATE INDEX project_widgets_dashboard_id      ON project_widgets (dashboard_id);
-
--- Indices on FK
-CREATE INDEX plots_projects_rid                ON plots (project_rid);
-CREATE INDEX samples_plot_rid                  ON samples (plot_rid);
-CREATE INDEX imagery_institution_rid           ON imagery (institution_rid);
-CREATE INDEX institution_users_institution_rid ON institution_users (institution_rid);
-CREATE INDEX institution_users_user_rid        ON institution_users (user_rid);
-CREATE INDEX user_plots_plot_rid               ON user_plots (plot_rid);
-CREATE INDEX user_plots_user_rid               ON user_plots (user_rid);
-CREATE INDEX sample_values_user_plot_rid       ON sample_values (user_plot_rid);
-CREATE INDEX sample_values_sample_rid          ON sample_values (sample_rid);
-CREATE INDEX sample_values_imagery_rid         ON sample_values (imagery_rid);
 CREATE INDEX project_widgets_project_rid       ON project_widgets (project_rid);
+CREATE INDEX project_widgets_dashboard_id      ON project_widgets (dashboard_id);
