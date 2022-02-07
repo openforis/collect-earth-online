@@ -9,7 +9,9 @@ Closes CEO-###
 - [ ] Code passes linter rules (`npm run eslint`/`clj-kondo --lint src`)
 
 ## Module(s) Impacted
-<!-- List the Module > Submodule impacted by this PR (e.g. GeoDash > Help Page) -->
+<!-- List the Module > Submodule impacted by this PR (e.g. GeoDash > Help Page). -->
+<!-- The current list of all Modules is: Home, Institution, Imagery, Projects, Wizard, Survey & Rules, Collection, and GeoDash. -->
+<!-- For a list of all of the SubModules, please see the CEO Testing Plan (All Tests) spreadsheet. -->
 
 ## Testing
 <!-- Create a BDD style test script -->
