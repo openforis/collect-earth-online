@@ -8,8 +8,6 @@
             [collect-earth-online.db.users        :as users]
             [collect-earth-online.proxy           :as proxy]))
 
-;; TODO: Flatten url structure, conform name and fn, and rename geo-dash to geodash everywhere.
-;; TODO: The call to render-page does not need the '/'.
 (def routes
   {;; Page Routes
    [:get  "/"]                               {:handler     (render-page "/home")}
