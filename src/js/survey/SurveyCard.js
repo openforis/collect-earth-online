@@ -9,7 +9,7 @@ import {ProjectContext} from "../project/constants";
 
 export default function SurveyCard({
     cardNumber,
-    inDesignMode,
+    editMode,
     surveyQuestionId,
     topLevelNodeIds
 }) {
@@ -79,10 +79,10 @@ export default function SurveyCard({
                         </button>
                         <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
                         <h3 className="m-3">
-                            {!showQuestions && `-- ${inDesignMode ? question : removeEnumerator(question)}`}
+                            {!showQuestions && `-- ${editMode === "review" ? removeEnumerator(question) : question}`}
                         </h3>
                     </div>
-                    {inDesignMode && (
+                    {editMode !== "review" && (
                         <div className="col-2 d-flex pr-1 justify-content-end">
                             <button
                                 className="btn btn-outline-lightgreen my-1 px-3 py-0"
@@ -109,8 +109,8 @@ export default function SurveyCard({
                     <div className="row d-block">
                         <SurveyDesignQuestion
                             key={surveyQuestionId}
+                            editMode={editMode}
                             indentLevel={0}
-                            inDesignMode={inDesignMode}
                             surveyQuestionId={surveyQuestionId}
                         />
                     </div>
