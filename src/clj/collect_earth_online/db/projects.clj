@@ -117,6 +117,7 @@
      :plotShape          (:plot_shape project)
      :plotSize           (:plot_size project)
      :plotFileName       (:plot_file_name project)
+     :shufflePlots       (:shuffle_plots project)
      :sampleDistribution (:sample_distribution project)
      :samplesPerPlot     (:samples_per_plot project)
      :sampleResolution   (:sample_resolution project)
@@ -356,6 +357,7 @@
                               sample-file-name
                               sample-file-base64
                               allow-drawn-samples?
+                              shuffle-plots?
                               design-settings]
   ;; Create plots
   (let [plots (if (#{"csv" "shp"} plot-distribution)
@@ -367,7 +369,8 @@
                                       plot-distribution
                                       num-plots
                                       plot-spacing
-                                      plot-size))]
+                                      plot-size
+                                      shuffle-plots?))]
     (insert-rows! "plots" plots))
 
   ;; Boundary is only used for Planet at this point.
@@ -412,6 +415,7 @@
         plot-spacing         (tc/val->float (:plotSpacing params))
         plot-shape           (:plotShape params)
         plot-size            (tc/val->float (:plotSize params))
+        shuffle-plots?       (tc/val->bool (:shufflePlots params))
         sample-distribution  (:sampleDistribution params)
         samples-per-plot     (tc/val->int (:samplesPerPlot params))
         sample-resolution    (tc/val->float (:sampleResolution params))
@@ -443,6 +447,7 @@
                                                       plot-shape
                                                       plot-size
                                                       plot-file-name
+                                                      shuffle-plots?
                                                       sample-distribution
                                                       samples-per-plot
                                                       sample-resolution
@@ -471,6 +476,7 @@
                                sample-file-name
                                sample-file-base64
                                allow-drawn-samples?
+                               shuffle-plots?
                                design-settings))
       ;; Final clean up
       (call-sql "update_project_counts" project-id)
@@ -552,6 +558,7 @@
         plot-spacing         (tc/val->float (:plotSpacing params))
         plot-shape           (:plotShape params)
         plot-size            (tc/val->float (:plotSize params))
+        shuffle-plots?       (tc/val->bool (:shufflePlots params))
         sample-distribution  (:sampleDistribution params)
         samples-per-plot     (tc/val->int (:samplesPerPlot params))
         sample-resolution    (tc/val->float (:sampleResolution params))
@@ -582,6 +589,7 @@
                   plot-shape
                   plot-size
                   plot-file-name
+                  shuffle-plots?
                   sample-distribution
                   samples-per-plot
                   sample-resolution
@@ -603,11 +611,12 @@
           (or (not= plot-distribution (:plot_distribution original-project))
               (if (#{"csv" "shp"} plot-distribution)
                 plot-file-base64
-                (or (not= aoi-features (tc/jsonb->clj (:aoi_features original-project)))
-                    (not= num-plots    (:num_plots original-project))
-                    (not= plot-shape   (:plot_shape original-project))
-                    (not= plot-size    (:plot_size original-project))
-                    (not= plot-spacing (:plot_spacing original-project)))))
+                (or (not= aoi-features   (tc/jsonb->clj (:aoi_features original-project)))
+                    (not= num-plots      (:num_plots original-project))
+                    (not= plot-shape     (:plot_shape original-project))
+                    (not= plot-size      (:plot_size original-project))
+                    (not= plot-spacing   (:plot_spacing original-project))
+                    (not= shuffle-plots? (:shuffle_plots original-project)))))
           (do
             (call-sql "delete_plots_by_project" project-id)
             (create-project-plots! project-id
@@ -624,6 +633,7 @@
                                    sample-file-name
                                    sample-file-base64
                                    allow-drawn-samples?
+                                   shuffle-plots?
                                    design-settings))
 
           :else

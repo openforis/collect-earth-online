@@ -90,7 +90,8 @@ CREATE TABLE projects (
     allow_drawn_samples    boolean,
     design_settings        jsonb NOT NULL DEFAULT '{}'::jsonb,
     plot_file_name         varchar(511),
-    sample_file_name       varchar(511)
+    sample_file_name       varchar(511),
+    shuffle_plots          boolean,
 );
 
 -- Stores project imagery

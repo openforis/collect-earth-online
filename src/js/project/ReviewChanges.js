@@ -105,6 +105,7 @@ export default class ReviewChanges extends React.Component {
         plotShape: this.context.plotShape,
         plotSize: this.context.plotSize,
         plotSpacing: this.context.plotSpacing,
+        shufflePlots: this.context.shufflePlots,
         sampleDistribution: this.context.sampleDistribution,
         samplesPerPlot: this.context.samplesPerPlot,
         sampleResolution: this.context.sampleResolution,
