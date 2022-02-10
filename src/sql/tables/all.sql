@@ -86,7 +86,7 @@ CREATE TABLE projects (
     archived_date          date,
     token_key              text DEFAULT NULL,
     options                jsonb NOT NULL DEFAULT '{}'::jsonb,
-    imagery_rid            integer REFERENCES imagery (imagery_uid),
+    imagery_rid            integer REFERENCES imagery (imagery_uid) ON DELETE SET NULL,
     allow_drawn_samples    boolean,
     design_settings        jsonb NOT NULL DEFAULT '{}'::jsonb,
     plot_file_name         varchar(511),
@@ -97,7 +97,7 @@ CREATE TABLE projects (
 -- 1 project -> many imagery
 CREATE TABLE project_imagery (
     project_imagery_uid    SERIAL PRIMARY KEY,
-    project_rid            integer REFERENCES projects(project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+    project_rid            integer REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     imagery_rid            integer REFERENCES imagery (imagery_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT per_project_per_imagery UNIQUE(project_rid, imagery_rid)
 );
@@ -151,7 +151,7 @@ CREATE TABLE sample_values (
     sample_value_uid      SERIAL PRIMARY KEY,
     user_plot_rid         integer NOT NULL REFERENCES user_plots (user_plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     sample_rid            integer NOT NULL REFERENCES samples (sample_uid) ON DELETE CASCADE ON UPDATE CASCADE,
-    imagery_rid           integer REFERENCES imagery (imagery_uid),
+    imagery_rid           integer REFERENCES imagery (imagery_uid) ON DELETE SET NULL,
     imagery_attributes    jsonb,
     saved_answers         jsonb,
     CONSTRAINT per_sample_per_user UNIQUE(sample_rid, user_plot_rid)
