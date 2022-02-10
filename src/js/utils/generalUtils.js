@@ -1,5 +1,3 @@
-import {partition} from "./sequence";
-
 export function sortAlphabetically(a, b) {
     return a < b ? -1
         : a > b ? 1
@@ -133,19 +131,6 @@ export function isFunction(val) { return toString.call(val) === "[object Functio
 export function isString(val) { return toString.call(val) === "[object String]"; }
 export function isDate(val) { return toString.call(val) === "[object Date]"; }
 export function isRegExp(val) { return toString.call(val) === "[object RegExp]"; }
-
-export function cleanJSON(str) {
-    const params = str
-        .replace(/\n/g, ",")
-        .replace(/[{} "']/g, "")
-        .split(/[,:]/)
-        .filter(u => u !== "");
-    return params.length % 2 === 0
-        ? `{${partition(params, 2)
-            .map(([k, v]) => `"${k}": "${v}"`)
-            .join(",")}}`
-        : str;
-}
 
 export function isValidJSON(str) {
     try {

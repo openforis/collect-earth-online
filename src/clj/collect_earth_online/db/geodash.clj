@@ -27,8 +27,6 @@
       (initialize ee-account ee-key-path)
       (reset! last-initialized (System/currentTimeMillis)))))
 
-(check-initialized)
-
 (defn- parse-py-errors [e]
   (let [error-parts (as-> e %
                       (ex-message %)
