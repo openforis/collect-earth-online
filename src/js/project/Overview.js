@@ -112,7 +112,7 @@ export function Overview(props) {
                         type="checkbox"
                     />
                     <label className="form-check-label" htmlFor="showGEEScript">
-                    Show GEE Script Link on Collection Page
+                        Show GEE Script Link on Collection Page
                     </label>
                 </div>
                 <div className="form-check">
@@ -126,7 +126,7 @@ export function Overview(props) {
                         type="checkbox"
                     />
                     <label className="form-check-label" htmlFor="showPlotInformation">
-                    Show Extra Plot Columns on Collection Page
+                        Show Extra Plot Columns on Collection Page
                     </label>
                 </div>
                 <div className="form-check">
@@ -140,7 +140,7 @@ export function Overview(props) {
                         type="checkbox"
                     />
                     <label className="form-check-label" htmlFor="collectConfidence">
-                    Collect Plot Confidence on Collection Page
+                        Collect Plot Confidence on Collection Page
                     </label>
                 </div>
                 <div className="form-check">
@@ -154,7 +154,7 @@ export function Overview(props) {
                         type="checkbox"
                     />
                     <label className="form-check-label" htmlFor="autoLaunchGeoDash">
-                    Auto-launch Geo-Dash
+                        Auto-launch Geo-Dash
                     </label>
                 </div>
             </div>

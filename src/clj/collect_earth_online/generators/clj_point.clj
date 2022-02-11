@@ -166,11 +166,13 @@
                             plot-distribution
                             num-plots
                             plot-spacing
-                            plot-size]
-  (map-indexed (fn [idx [lon lat]]
-                 {:project_rid project-id
-                  :visible_id  (inc idx)
-                  :plot_geom   (tc/str->pg (make-wkt-point lon lat) "geometry")})
-               (if (= "gridded" plot-distribution)
-                 (create-gridded-plots-in-bounds project-id plot-size plot-spacing)
-                 (create-random-plots-in-bounds  project-id plot-size num-plots))))
+                            plot-size
+                            shuffle-plots?]
+  (let [plots (if (= "gridded" plot-distribution)
+                (create-gridded-plots-in-bounds project-id plot-size plot-spacing)
+                (create-random-plots-in-bounds  project-id plot-size num-plots))]
+    (->> (if shuffle-plots? (shuffle plots) plots)
+         (map-indexed (fn [idx [lon lat]]
+                        {:project_rid project-id
+                         :visible_id  (inc idx)
+                         :plot_geom   (tc/str->pg (make-wkt-point lon lat) "geometry")})))))
