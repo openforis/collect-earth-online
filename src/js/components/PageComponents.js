@@ -146,58 +146,16 @@ export class NavigationBar extends React.Component {
         };
     }
 
-    componentDidMount() {
-        // fetch("/locale/help.json",
-        //       {headers: {"Cache-Control": "no-cache", "Pragma": "no-cache", "Accept": "application/json"}})
-        //     .then(response => (response.ok ? response.json() : Promise.reject(response)))
-        //     .then(data => {
-        //         const location = window.location.pathname.slice(1);
-        //         const page = location === "" ? "home" : location;
-        //         const availableLanguages = data[page];
-        //         if (availableLanguages) this.getHelpSlides(availableLanguages, page);
-        //     })
-        //     .catch(error => console.log(error));
-    }
-
-    autoShowHelpMenu = page => {
-        const autoShowPages = ["home"];
-        const key = `${page}:seen`;
-        if (autoShowPages.includes(page) && !getPreference(key)) {
-            this.setState({showHelpMenu: true});
-            setPreference(key, true);
-        }
-    };
-
-    getHelpSlides = (availableLanguages, page) => {
-        fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`,
-              {headers: {"Cache-Control": "no-cache", "Pragma": "no-cache", "Accept": "application/json"}})
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => { this.setState({helpSlides: data, page}); this.autoShowHelpMenu(page); })
-            .catch(error => console.log(page, getLanguage(availableLanguages), error));
-    };
-
-    closeHelpMenu = () => this.setState({showHelpMenu: false});
-
     render() {
-        const {userName, userId, children} = this.props;
-        const uri = window.location.pathname;
-        const loggedOut = !userName || userName === "guest";
-
+        const {children} = this.props;
         return (
             <>
-                {/* {this.state.showHelpMenu && (
-                    <HelpSlideDialog
-                        closeHelpMenu={this.closeHelpMenu}
-                        helpSlides={this.state.helpSlides}
-                        page={this.state.page}
-                    />
-                )} */}
                 <nav
                     className="navbar navbar-expand-lg navbar-light fixed-top py-0"
                     id="main-nav"
                     style={{backgroundColor: "white", borderBottom: "1px solid black"}}
                 >
-                    <a className="navbar-brand pt-1 pb-1" href="/home">
+                    <a className="navbar-brand pt-1 pb-1" href="https://collect.earth/home">
                         <div className="d-flex flex-column align-items-center justify-content-center">
                             <img
                                 alt="Home"
@@ -206,9 +164,6 @@ export class NavigationBar extends React.Component {
                                 src="/img/ceo-logo.png"
                                 style={{maxHeight: "40px"}}
                             />
-                            <div className="badge badge-pill badge-light" style={{fontSize: "0.6rem"}}>
-                                Version: {this.props.version}
-                            </div>
                         </div>
                     </a>
                     <button
@@ -224,26 +179,15 @@ export class NavigationBar extends React.Component {
                     </button>
                     <div className="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul className="navbar-nav mr-auto">
-                            {["About", "Support"].map(page => (
-                                <li key={page} className="nav-item">
-                                    <a className="nav-link" href={"http://collect.earth/" + page.toLowerCase()} rel="noreferrer" target="_blank">{page}</a>
-                                </li>
-                            ))}
-                            {/* {!loggedOut && (
-                                <li className={"nav-item" + (uri === "/account" && " active")}>
-                                    <a className="nav-link" href={"/account?accountId=" + userId}>Account</a>
-                                </li>
-                            )} */}
+                            {["About", "Support"].map(page => {
+                                console.log(page);
+                                return (
+                                    <li key={page} className="nav-item">
+                                        <a className="nav-link" href={"http://collect.earth/" + page.toLowerCase()} rel="noreferrer" target="_blank">{page}</a>
+                                    </li>
+                                );
+                            })}
                         </ul>
-                        {/* <ul className="navbar-nav mr-0" id="login-info">
-                            <LogOutButton uri={uri} userName={userName}/>
-                        </ul> */}
-                        {/* <div
-                            className="ml-3"
-                            onClick={() => this.setState({showHelpMenu: true})}
-                        >
-                            {this.state.helpSlides.length > 0 && <SvgIcon color="purple" cursor="pointer" icon="help" size="2rem"/>}
-                        </div> */}
                     </div>
                 </nav>
                 {children}

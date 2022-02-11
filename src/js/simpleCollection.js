@@ -1087,7 +1087,7 @@ function NavigationBar({children}) {
                 id="main-nav"
                 style={{backgroundColor: "white", borderBottom: "1px solid black"}}
             >
-                <a className="navbar-brand pt-1 pb-1" href="/home" target="_blank">
+                <a className="navbar-brand pt-1 pb-1" href="https://collect.earth/home" rel="noreferrer" target="_blank">
                     <img
                         alt="Home"
                         className="img-fluid"
@@ -1095,7 +1095,6 @@ function NavigationBar({children}) {
                         src="/img/ceo-logo.png"
                     />
                 </a>
-                {/* <a className="nav-link" href="/collection">Desktop</a> */}
             </nav>
             {children}
         </>
