@@ -192,7 +192,7 @@ mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
             if (data && data.hasOwnProperty("url")) {
                 geeSource.setUrl(data.url);
             } else {
-                console.warn("Wrong Data Returned");
+                console.error(data.errMsg);
             }
         }).catch(response => {
             console.error("Error loading " + sourceConfig.type + " imagery: ");

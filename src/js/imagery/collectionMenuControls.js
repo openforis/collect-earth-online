@@ -15,7 +15,7 @@ export class PlanetMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.updatePlanetLayer();
+        this.updateImageryInformation();
     }
 
     componentDidUpdate(prevProps) {
@@ -100,7 +100,7 @@ export class PlanetDailyMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.updatePlanetDailyLayer();
+        this.updateImageryInformation();
     }
 
     componentDidUpdate(prevProps) {
@@ -195,7 +195,7 @@ export class PlanetNICFIMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.updatePlanetLayer();
+        this.updateImageryInformation();
     }
 
     componentDidUpdate(prevProps) {
@@ -465,7 +465,7 @@ export class SentinelMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.updateSentinelLayer();
+        this.updateImageryInformation();
     }
 
     componentDidUpdate(prevProps) {
@@ -577,7 +577,7 @@ export class GEEImageMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.updateGEEImagery();
+        this.updateImageryInformation();
     }
 
     componentDidUpdate(prevProps) {
@@ -646,7 +646,7 @@ export class GEEImageCollectionMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.updateGEEImageCollection();
+        this.updateImageryInformation();
     }
 
     componentDidUpdate(prevProps) {

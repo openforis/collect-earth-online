@@ -49,7 +49,7 @@ def imageCollection(requestDict):
     values = imageCollectionToMapId(
         getDefault(requestDict, 'assetId', None),
         getDefault(requestDict, 'visParams', None),
-        getDefault(requestDict, 'reducer', None),
+        getDefault(requestDict, 'reducer', 'Mean'),
         getDefault(requestDict, 'startDate', None),
         getDefault(requestDict, 'endDate', None)
     )

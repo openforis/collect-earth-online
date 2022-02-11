@@ -20,7 +20,7 @@ import SvgIcon from "./components/svg/SvgIcon";
 import WidgetContainer from "./geodash/WidgetContainer";
 
 import {EditorContext, graphWidgetList, gridRowHeight, mapWidgetList} from "./geodash/constants";
-import {cleanJSON, isValidJSON} from "./utils/generalUtils";
+import {isValidJSON} from "./utils/generalUtils";
 import {getNextInSequence, last} from "./utils/sequence";
 
 const ReactGridLayout = WidthProvider(RGL);
@@ -296,8 +296,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         return {
             name: title,
             type,
-            ...widgetDesign,
-            ...widgetDesign.hasOwnProperty("visParams") && {visParams: cleanJSON(widgetDesign.visParams)}
+            ...widgetDesign
         };
     };
 
