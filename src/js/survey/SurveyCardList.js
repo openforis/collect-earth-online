@@ -5,7 +5,7 @@ import SurveyCard from "./SurveyCard";
 import {mapObjectArray, filterObject} from "../utils/sequence";
 import {ProjectContext} from "../project/constants";
 
-export default function SurveyCardList({inDesignMode}) {
+export default function SurveyCardList({editMode}) {
     const {surveyQuestions} = useContext(ProjectContext);
     const topLevelNodes = mapObjectArray(
         filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === -1),
@@ -15,7 +15,7 @@ export default function SurveyCardList({inDesignMode}) {
         <SurveyCard
             key={nodeId}
             cardNumber={idx + 1}
-            inDesignMode={inDesignMode}
+            editMode={editMode}
             surveyQuestionId={nodeId}
             topLevelNodeIds={topLevelNodes}
         />

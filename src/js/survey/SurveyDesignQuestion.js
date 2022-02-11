@@ -9,7 +9,7 @@ import {removeEnumerator} from "../utils/generalUtils";
 import {mapObjectArray, filterObject, lengthObject} from "../utils/sequence";
 import {ProjectContext} from "../project/constants";
 
-export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQuestionId}) {
+export default function SurveyDesignQuestion({indentLevel, editMode, surveyQuestionId}) {
     const {setProjectDetails, surveyQuestions, surveyRules} = useContext(ProjectContext);
 
     const surveyQuestion = surveyQuestions[surveyQuestionId];
@@ -73,16 +73,22 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                 ))}
                 <div className="container mb-2">
                     <div className="pb-1 d-flex">
-                        {inDesignMode
+                        {editMode === "review"
                             ? (
+                                <h3 className="font-weight-bold">
+                                    {removeEnumerator(surveyQuestion.question)}
+                                </h3>
+                            ) : (
                                 <>
-                                    <button
-                                        className="btn btn-outline-red py-0 px-2 mr-1"
-                                        onClick={removeQuestion}
-                                        type="button"
-                                    >
-                                        <SvgIcon icon="trash" size="1rem"/>
-                                    </button>
+                                    {editMode === "full" && (
+                                        <button
+                                            className="btn btn-outline-red py-0 px-2 mr-1"
+                                            onClick={removeQuestion}
+                                            type="button"
+                                        >
+                                            <SvgIcon icon="trash" size="1rem"/>
+                                        </button>
+                                    )}
                                     <button
                                         className="btn btn-success py-0 px-2 mr-1"
                                         onClick={updateQuestion}
@@ -97,10 +103,6 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                                         value={newQuestionText}
                                     />
                                 </>
-                            ) : (
-                                <h3 className="font-weight-bold">
-                                    {removeEnumerator(surveyQuestion.question)}
-                                </h3>
                             )}
                     </div>
                     <div className="pb-1">
@@ -125,7 +127,7 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                                                             {`Rule ${rule.id + 1}: ${rule.ruleType}`}
                                                             <div className="tooltip_content survey_rule">
                                                                 <SurveyRule
-                                                                    inDesignMode={inDesignMode}
+                                                                    editMode={editMode}
                                                                     rule={rule}
                                                                     setProjectDetails={setProjectDetails}
                                                                     surveyQuestions={surveyQuestions}
@@ -142,7 +144,7 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                                 <>
                                     <li>
                                         <span className="font-weight-bold">Parent Question: </span>
-                                        {inDesignMode
+                                        {editMode !== "review"
                                             ? parentQuestion.question
                                             : removeEnumerator(parentQuestion.question)}
                                     </li>
@@ -170,20 +172,20 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
                                 answer={surveyAnswer.answer}
                                 answerId={answerId}
                                 color={surveyAnswer.color}
-                                inDesignMode={inDesignMode}
+                                editMode={editMode}
                                 required={surveyAnswer.required}
                                 surveyQuestion={surveyQuestion}
                                 surveyQuestionId={surveyQuestionId}
                             />
                         ))}
-                        {inDesignMode && !maxAnswers(surveyQuestion) && (
+                        {editMode === "full" && !maxAnswers(surveyQuestion) && (
                             <AnswerDesigner
-                                inDesignMode={inDesignMode}
+                                editMode={editMode}
                                 surveyQuestion={surveyQuestion}
                                 surveyQuestionId={surveyQuestionId}
                             />
                         )}
-                        {inDesignMode && surveyQuestion.componentType !== "input" && (
+                        {editMode === "full" && surveyQuestion.componentType !== "input" && (
                             <button
                                 className="btn btn-sm btn-success"
                                 onClick={() => setBulkAdd(true)}
@@ -198,8 +200,8 @@ export default function SurveyDesignQuestion({indentLevel, inDesignMode, surveyQ
             {childNodeIds.map(childId => (
                 <SurveyDesignQuestion
                     key={childId}
+                    editMode={editMode}
                     indentLevel={indentLevel + 1}
-                    inDesignMode={inDesignMode}
                     surveyQuestionId={childId}
                 />
             ))}

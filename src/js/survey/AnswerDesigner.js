@@ -92,7 +92,7 @@ export default class AnswerDesigner extends React.Component {
     };
 
     renderNew = () => {
-        const {surveyQuestion, answerId} = this.props;
+        const {surveyQuestion, answerId, editMode} = this.props;
         const {newAnswerText, selectedColor} = this.state;
         return (
             <div className="d-flex flex-column">
@@ -100,13 +100,15 @@ export default class AnswerDesigner extends React.Component {
                     {answerId != null
                         ? (
                             <>
-                                <button
-                                    className="btn btn-outline-red py-0 px-2 mr-1"
-                                    onClick={this.removeAnswer}
-                                    type="button"
-                                >
-                                    <SvgIcon icon="trash" size="0.9rem"/>
-                                </button>
+                                {editMode === "full" && (
+                                    <button
+                                        className="btn btn-outline-red py-0 px-2 mr-1"
+                                        onClick={this.removeAnswer}
+                                        type="button"
+                                    >
+                                        <SvgIcon icon="trash" size="0.9rem"/>
+                                    </button>
+                                )}
                                 <button
                                     className="btn btn-success py-0 px-2 mr-1"
                                     onClick={this.saveSurveyAnswer}
@@ -157,12 +159,12 @@ export default class AnswerDesigner extends React.Component {
     };
 
     render() {
-        const {inDesignMode} = this.props;
+        const {editMode} = this.props;
         return (
             <div id="new-answer-designer">
-                {inDesignMode
-                    ? this.renderNew()
-                    : this.renderExisting()}
+                {editMode === "review"
+                    ? this.renderExisting()
+                    : this.renderNew()}
             </div>
         );
     }
