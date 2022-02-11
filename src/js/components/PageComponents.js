@@ -38,103 +38,103 @@ function LogOutButton({userName, uri}) {
         );
 }
 
-class HelpSlideDialog extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            currentSlideIdx: 0
-        };
-    }
+// class HelpSlideDialog extends React.Component {
+//     constructor(props) {
+//         super(props);
+//         this.state = {
+//             currentSlideIdx: 0
+//         };
+//     }
 
-    render() {
-        const {currentSlideIdx} = this.state;
-        const {alt, body, img, title} = this.props.helpSlides[currentSlideIdx];
-        const isLastSlide = currentSlideIdx === this.props.helpSlides.length - 1;
-        const {closeHelpMenu, page} = this.props;
-        return (
-            <div
-                onClick={closeHelpMenu}
-                style={{
-                    position: "fixed",
-                    zIndex: "100",
-                    left: "0",
-                    top: "0",
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: "rgba(0,0,0,0.4)"
-                }}
-            >
-                <div className="col-8 col-sm-12">
-                    <div
-                        className="overflow-hidden container-fluid d-flex flex-column"
-                        onClick={e => e.stopPropagation()}
-                        style={{
-                            backgroundColor: "white",
-                            border: "1.5px solid",
-                            borderRadius: "5px",
-                            height: "600px",
-                            margin: "90px auto",
-                            width: "fit-content"
-                        }}
-                    >
-                        <div className="row justify-content-between bg-lightgreen p-2" style={{position: "relative"}}>
-                            <h2 className="ml-2" style={{color: "white"}}>
-                                {title || `${capitalizeFirst(page)} Help`}
-                            </h2>
-                            <div onClick={closeHelpMenu} style={{position: "absolute", top: "10px", right: "10px"}}>
-                                <SvgIcon icon="close" size="2rem"/>
-                            </div>
-                        </div>
-                        <div className="d-flex align-items-center" style={{height: "100%"}}>
-                            <div className="d-flex flex-column align-items-center">
-                                <button
-                                    className="btn btn-dark btn-sm m-2"
-                                    disabled={currentSlideIdx === 0}
-                                    onClick={() => this.setState({currentSlideIdx: currentSlideIdx - 1})}
-                                    style={{borderRadius: "50%", margin: "2rem", height: "3rem", width: "3rem"}}
-                                    title="Previous"
-                                    type="button"
-                                >
-                                    <SvgIcon color="white" icon="leftArrow" size="2rem"/>
-                                </button>
-                            </div>
-                            <div className="d-flex flex-column align-items-center justify-content-between">
-                                <p className="p-3" style={{width: "22vw"}}>{body}</p>
-                            </div>
-                            <div
-                                className="d-flex align-items-center justify-content-center"
-                                style={{height: "100%", width: "33vw"}}
-                            >
-                                <img
-                                    alt={alt || ""}
-                                    src={"locale/" + page + img}
-                                    style={{height: "auto", maxWidth: "100%", padding: "2rem"}}
-                                />
-                            </div>
-                            <div className="d-flex flex-column align-items-center">
-                                <button
-                                    className="btn btn-dark btn-sm m-2"
-                                    onClick={() => {
-                                        if (isLastSlide) {
-                                            closeHelpMenu();
-                                        } else {
-                                            this.setState({currentSlideIdx: currentSlideIdx + 1});
-                                        }
-                                    }}
-                                    style={{borderRadius: "50%", margin: "2rem", height: "3rem", width: "3rem"}}
-                                    title="Next"
-                                    type="button"
-                                >
-                                    <SvgIcon color="white" icon={isLastSlide ? "check" : "rightArrow"} size="2rem"/>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-}
+//     render() {
+//         const {currentSlideIdx} = this.state;
+//         const {alt, body, img, title} = this.props.helpSlides[currentSlideIdx];
+//         const isLastSlide = currentSlideIdx === this.props.helpSlides.length - 1;
+//         const {closeHelpMenu, page} = this.props;
+//         return (
+//             <div
+//                 onClick={closeHelpMenu}
+//                 style={{
+//                     position: "fixed",
+//                     zIndex: "100",
+//                     left: "0",
+//                     top: "0",
+//                     width: "100%",
+//                     height: "100%",
+//                     backgroundColor: "rgba(0,0,0,0.4)"
+//                 }}
+//             >
+//                 <div className="col-8 col-sm-12">
+//                     <div
+//                         className="overflow-hidden container-fluid d-flex flex-column"
+//                         onClick={e => e.stopPropagation()}
+//                         style={{
+//                             backgroundColor: "white",
+//                             border: "1.5px solid",
+//                             borderRadius: "5px",
+//                             height: "600px",
+//                             margin: "90px auto",
+//                             width: "fit-content"
+//                         }}
+//                     >
+//                         <div className="row justify-content-between bg-lightgreen p-2" style={{position: "relative"}}>
+//                             <h2 className="ml-2" style={{color: "white"}}>
+//                                 {title || `${capitalizeFirst(page)} Help`}
+//                             </h2>
+//                             <div onClick={closeHelpMenu} style={{position: "absolute", top: "10px", right: "10px"}}>
+//                                 <SvgIcon icon="close" size="2rem"/>
+//                             </div>
+//                         </div>
+//                         <div className="d-flex align-items-center" style={{height: "100%"}}>
+//                             <div className="d-flex flex-column align-items-center">
+//                                 <button
+//                                     className="btn btn-dark btn-sm m-2"
+//                                     disabled={currentSlideIdx === 0}
+//                                     onClick={() => this.setState({currentSlideIdx: currentSlideIdx - 1})}
+//                                     style={{borderRadius: "50%", margin: "2rem", height: "3rem", width: "3rem"}}
+//                                     title="Previous"
+//                                     type="button"
+//                                 >
+//                                     <SvgIcon color="white" icon="leftArrow" size="2rem"/>
+//                                 </button>
+//                             </div>
+//                             <div className="d-flex flex-column align-items-center justify-content-between">
+//                                 <p className="p-3" style={{width: "22vw"}}>{body}</p>
+//                             </div>
+//                             <div
+//                                 className="d-flex align-items-center justify-content-center"
+//                                 style={{height: "100%", width: "33vw"}}
+//                             >
+//                                 <img
+//                                     alt={alt || ""}
+//                                     src={"locale/" + page + img}
+//                                     style={{height: "auto", maxWidth: "100%", padding: "2rem"}}
+//                                 />
+//                             </div>
+//                             <div className="d-flex flex-column align-items-center">
+//                                 <button
+//                                     className="btn btn-dark btn-sm m-2"
+//                                     onClick={() => {
+//                                         if (isLastSlide) {
+//                                             closeHelpMenu();
+//                                         } else {
+//                                             this.setState({currentSlideIdx: currentSlideIdx + 1});
+//                                         }
+//                                     }}
+//                                     style={{borderRadius: "50%", margin: "2rem", height: "3rem", width: "3rem"}}
+//                                     title="Next"
+//                                     type="button"
+//                                 >
+//                                     <SvgIcon color="white" icon={isLastSlide ? "check" : "rightArrow"} size="2rem"/>
+//                                 </button>
+//                             </div>
+//                         </div>
+//                     </div>
+//                 </div>
+//             </div>
+//         );
+//     }
+// }
 
 export class NavigationBar extends React.Component {
     constructor(props) {
@@ -147,16 +147,16 @@ export class NavigationBar extends React.Component {
     }
 
     componentDidMount() {
-        fetch("/locale/help.json",
-              {headers: {"Cache-Control": "no-cache", "Pragma": "no-cache", "Accept": "application/json"}})
-            .then(response => (response.ok ? response.json() : Promise.reject(response)))
-            .then(data => {
-                const location = window.location.pathname.slice(1);
-                const page = location === "" ? "home" : location;
-                const availableLanguages = data[page];
-                if (availableLanguages) this.getHelpSlides(availableLanguages, page);
-            })
-            .catch(error => console.log(error));
+        // fetch("/locale/help.json",
+        //       {headers: {"Cache-Control": "no-cache", "Pragma": "no-cache", "Accept": "application/json"}})
+        //     .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        //     .then(data => {
+        //         const location = window.location.pathname.slice(1);
+        //         const page = location === "" ? "home" : location;
+        //         const availableLanguages = data[page];
+        //         if (availableLanguages) this.getHelpSlides(availableLanguages, page);
+        //     })
+        //     .catch(error => console.log(error));
     }
 
     autoShowHelpMenu = page => {
@@ -185,13 +185,13 @@ export class NavigationBar extends React.Component {
 
         return (
             <>
-                {this.state.showHelpMenu && (
+                {/* {this.state.showHelpMenu && (
                     <HelpSlideDialog
                         closeHelpMenu={this.closeHelpMenu}
                         helpSlides={this.state.helpSlides}
                         page={this.state.page}
                     />
-                )}
+                )} */}
                 <nav
                     className="navbar navbar-expand-lg navbar-light fixed-top py-0"
                     id="main-nav"
@@ -224,26 +224,26 @@ export class NavigationBar extends React.Component {
                     </button>
                     <div className="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul className="navbar-nav mr-auto">
-                            {["Home", "About", "Support", "Blog"].map(page => (
-                                <li key={page} className={"nav-item" + ("/" + page.toLowerCase() === uri && " active")}>
-                                    <a className="nav-link" href={page === "Blog" ? "https://blog.collect.earth" : "/" + page.toLowerCase()}>{page}</a>
+                            {["About", "Support"].map(page => (
+                                <li key={page} className="nav-item">
+                                    <a className="nav-link" href={"http://collect.earth/" + page.toLowerCase()} rel="noreferrer" target="_blank">{page}</a>
                                 </li>
                             ))}
-                            {!loggedOut && (
+                            {/* {!loggedOut && (
                                 <li className={"nav-item" + (uri === "/account" && " active")}>
                                     <a className="nav-link" href={"/account?accountId=" + userId}>Account</a>
                                 </li>
-                            )}
+                            )} */}
                         </ul>
-                        <ul className="navbar-nav mr-0" id="login-info">
+                        {/* <ul className="navbar-nav mr-0" id="login-info">
                             <LogOutButton uri={uri} userName={userName}/>
-                        </ul>
-                        <div
+                        </ul> */}
+                        {/* <div
                             className="ml-3"
                             onClick={() => this.setState({showHelpMenu: true})}
                         >
                             {this.state.helpSlides.length > 0 && <SvgIcon color="purple" cursor="pointer" icon="help" size="2rem"/>}
-                        </div>
+                        </div> */}
                     </div>
                 </nav>
                 {children}
