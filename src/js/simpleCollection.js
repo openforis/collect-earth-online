@@ -306,10 +306,10 @@ class SimpleCollection extends React.Component {
                 .then(data => {
                     if (data === "not-found") {
                         alert(direction === "id"
-                            ? this.localeText.plotNotFound
+                            ? this.state.localeText.plotNotFound
                             : direction === "next"
-                                ? this.localeText.navNextEnd
-                                : this.localeText.navPrevEnd);
+                                ? this.state.localeText.navNextEnd
+                                : this.state.localeText.navPrevEnd);
                     } else {
                         this.setState({
                             currentPlot: data[0],
