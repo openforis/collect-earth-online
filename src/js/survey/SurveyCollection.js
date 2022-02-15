@@ -46,10 +46,10 @@ export default class SurveyCollection extends React.Component {
     calculateTopLevelNodes = () => {
         const {surveyQuestions} = this.props;
         this.setState({
-            topLevelNodeIds: mapObjectArray(
-                filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === -1),
-                ([nodeId, _node]) => Number(nodeId)
-            )
+            topLevelNodeIds: mapObjectArray(surveyQuestions, ([id, sq]) => ({nodeId: id, cardOrder: sq.cardOrder}))
+                .filter(({cardOrder}) => isNumber(cardOrder))
+                .sort((a, b) => a.cardOrder - b.cardOrder)
+                .map(({nodeId}) => Number(nodeId))
         });
     };
 
