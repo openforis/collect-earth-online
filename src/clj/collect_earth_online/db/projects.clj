@@ -752,9 +752,10 @@
 
 (defn- sort-questions [survey-questions]
   (append-children survey-questions
-                   (filter (fn [[_id question]]
-                             (= -1 (:parentQuestionId question)))
-                           survey-questions)))
+                   (->> survey-questions
+                        (filter (fn [[_id question]]
+                                  (= -1 (:parentQuestionId question))))
+                        (sort-by #(get-in % [1 :cardOrder])))))
 
 ;;;
 ;;; Dump aggregate
