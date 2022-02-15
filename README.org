@@ -53,8 +53,6 @@ ORDER BY created_date DESC;
 
 to find all institutions created in 2022 sorted from newest to oldest.
 
-to find projects with
-
 *** Performance Settings
 
 If you want to improve the performance of your Postgresql server, one way is to visit the [[https://pgtune.leopard.in.ua/][pgtune]] website and input your system settings. This will generate a set of configuration options that you can add to the postgresql.conf file in your system-specific Postgresql data directory.
@@ -159,9 +157,9 @@ Now, in a separate terminal window (because webpack needs to be running in the b
 npm run server-dev
 #+end_src
 
-The website will then be available at http://localhost:8080 unless a port is specified. These can also be configured using the ~:server~ section in your ~config.edn~ file. When using the `clojure -M:server start` command (which is what `npm run server-dev` is an alias for) an http port can be specified with -p and an https port can be specified with -P. In dev mode, server-side exceptions will be displayed in the browser and JavaScript source files will be reloaded whenever you refresh the page.
+The website will then be available at http://localhost:8080 unless a port is specified. These can also be configured using the ~:server~ section in your ~config.edn~ file. When using the ~clojure -M:server start~ command (which is what ~npm run server-dev~ is an alias for) an http port can be specified with -p and an https port can be specified with -P. In dev mode, server-side exceptions will be displayed in the browser and JavaScript source files will be reloaded whenever you refresh the page.
 
-Going forward you will usually only need to run `npm run webpack-dev` and `npm run server-dev` (still in separate terminals) to get your dev environment set up.  Watch for updates to SQL files or package.json and run ~npm run build-db-functions~ or ~npm install~ respectively.
+Going forward you will usually only need to run ~npm run webpack-dev~ and ~npm run server-dev~ (still in separate terminals) to get your dev environment set up.  Watch for updates to SQL files or ~package.json~ and run ~npm run build-db-functions~ or ~npm install~ respectively.
 
 *** Checking for Reflection Warnings
 
