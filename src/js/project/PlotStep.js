@@ -5,7 +5,7 @@ import AssignPlots from "./AssignPlots";
 import QualityControl from "./QualityControl";
 import {PlotDesign, PlotDesignReview} from "./PlotDesign";
 
-export default function PlotStep({getTotalPlots}) {
+export default function PlotStep({getTotalPlots, disableHelpComponent}) {
     const {institutionUserList, aoiFeatures, useTemplatePlots} = useContext(ProjectContext);
     const totalPlots = getTotalPlots();
     return (
@@ -14,6 +14,7 @@ export default function PlotStep({getTotalPlots}) {
                 ? <PlotDesignReview/>
                 : (
                     <PlotDesign
+                        disableHelpComponent={disableHelpComponent}
                         aoiFeatures={aoiFeatures}
                         institutionUserList={institutionUserList}
                         totalPlots={totalPlots}
