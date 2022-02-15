@@ -1,4 +1,4 @@
-import React, {useContext} from "react";
+import React, {useContext, useState} from "react";
 import shp from "shpjs";
 
 import {formatNumberWithCommas, readFileAsArrayBuffer, readFileAsBase64Url} from "../utils/generalUtils";
@@ -137,7 +137,6 @@ export class PlotDesign extends React.Component {
         const {latMax, lonMin, lonMax, latMin} = this.state;
         return (
             <div style={{width: "20rem"}}>
-                <label>Boundary Coordinates</label>
                 <div className="form-group ml-3">
                     <div className="row">
                         <div className="col-md-6 offset-md-3">
@@ -244,6 +243,32 @@ export class PlotDesign extends React.Component {
             {this.renderBoundaryFileInput()}
         </div>
     );
+
+    AOISelector = () => {
+        const [current, setValue] = useState("coordinates");
+        return (
+            <div>
+                <fieldset style={{width: "100%"}}>
+                    <select
+                        className="custom-select"
+                        name="aoi"
+                        onChange={e => {
+                            const v = e.target.value;
+                            setValue(v);
+                            this.props.disableHelpComponent(v === "files");
+                        }}
+                        style={{width: "40%"}}
+                        value={current}
+                    >
+                        <option value="coordinates">Input Boundary Coordinates</option>
+                        <option value="files">Upload Boundary File</option>
+                    </select>
+                </fieldset>
+                <br/>
+                {current === "coordinates" ? this.renderAOICoords() : this.renderBoundaryFileInput()}
+            </div>
+        );
+    };
 
     renderFileInput = fileType => (
         <div>
@@ -353,7 +378,7 @@ export class PlotDesign extends React.Component {
                                 </div>
                             ))}
                         </div>
-                        {plotOptions[plotDistribution].showAOI && this.renderAOISelector()}
+                        {plotOptions[plotDistribution].showAOI && <this.AOISelector/>}
                     </div>
                     <p
                         className="font-italic ml-2 small"
