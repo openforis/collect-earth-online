@@ -14,8 +14,8 @@ export default function PlotStep({getTotalPlots, disableHelpComponent}) {
                 ? <PlotDesignReview/>
                 : (
                     <PlotDesign
-                        disableHelpComponent={disableHelpComponent}
                         aoiFeatures={aoiFeatures}
+                        disableHelpComponent={disableHelpComponent}
                         institutionUserList={institutionUserList}
                         totalPlots={totalPlots}
                     />

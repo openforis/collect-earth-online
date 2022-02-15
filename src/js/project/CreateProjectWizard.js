@@ -51,7 +51,12 @@ export default class CreateProjectWizard extends React.Component {
             plots: {
                 title: "Plot Design",
                 description: "Area of interest and plot generation for collection",
-                StepComponent: () => <PlotStep getTotalPlots={this.getTotalPlots} disableHelpComponent={this.disableHelpComponent}/>,
+                StepComponent: () => (
+                    <PlotStep
+                        disableHelpComponent={this.disableHelpComponent}
+                        getTotalPlots={this.getTotalPlots}
+                    />
+                ),
                 helpDescription: "Collection Map Preview",
                 StepHelpComponent: () => (
                     <AOIMap
