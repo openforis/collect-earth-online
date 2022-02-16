@@ -94,7 +94,7 @@ CREATE TABLE projects (
     design_settings        jsonb NOT NULL DEFAULT '{}'::jsonb,
     plot_file_name         varchar(511),
     sample_file_name       varchar(511),
-    shuffle_plots          boolean,
+    shuffle_plots          boolean
 );
 CREATE INDEX projects_institution_rid ON projects (institution_rid);
 
