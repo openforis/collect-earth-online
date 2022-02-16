@@ -12,7 +12,7 @@ import {Overview, OverviewIntro} from "./Overview";
 import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
 import {mercator} from "../utils/mercator";
-import {last, lengthObject, removeFromSet, someObject} from "../utils/sequence";
+import {last, lengthObject, removeFromSet, someObject, filterObject} from "../utils/sequence";
 import {ProjectContext, plotLimit, perPlotLimit, sampleLimit} from "./constants";
 
 export default class CreateProjectWizard extends React.Component {
@@ -366,12 +366,12 @@ export default class CreateProjectWizard extends React.Component {
 
     /// Changing Step
 
-    getSteps = () => ((this.context.projectId === -1 || this.context.originalProject.availability === "unpublished")
-        ? this.steps
-        : {
-            overview: this.steps.overview,
-            imagery: this.steps.imagery
-        });
+    getSteps = () => {
+        const {projectId, originalProject} = this.context;
+        return ((projectId === -1 || originalProject.availability === "unpublished")
+            ? this.steps
+            : filterObject(this.steps, ([key, _val]) => ["overview", "imagery", "questions"].includes(key)));
+    };
 
     checkAllSteps = () => {
         const validSteps = Object.entries(this.getSteps())

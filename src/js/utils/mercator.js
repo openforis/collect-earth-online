@@ -192,7 +192,8 @@ mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
             if (data && data.hasOwnProperty("url")) {
                 geeSource.setUrl(data.url);
             } else {
-                console.warn("Wrong Data Returned");
+                geeSource.setUrl("img/source-not-found.png");
+                console.error(data.errMsg);
             }
         }).catch(response => {
             console.error("Error loading " + sourceConfig.type + " imagery: ");
@@ -254,12 +255,11 @@ mercator.createSource = (sourceConfig,
             layerCount: 20, // FIXME: what should this optimally be?
             geometry: extent
         };
-        const planetSource = new XYZ({
-            // some random tiles to be replaced later
-            url: "https://tiles0.planet.com/data/v1/layers/DkTnYnMW_G7i-E6Nj6lb9s7PaG8PG-Hy23Iyug/{z}/{x}/{y}.png",
+        // loading message, to be replaced later
+        const messageSource = new XYZ({
+            url: "img/source-loading.png",
             attributions: attribution
         });
-        planetSource.setProperties({id: imageryId});
         fetch("/geo-dash/gateway-request", {
             method: "POST",
             headers: {
@@ -268,15 +268,8 @@ mercator.createSource = (sourceConfig,
             },
             body: JSON.stringify(theJson)
         })
-            .then(res => {
-                if (res.ok) {
-                    return res.json();
-                } else {
-                    return Promise.reject();
-                }
-            })
+            .then(res => (res.ok ? res.json() : Promise.reject()))
             .then(data => {
-                console.log("Here's the response data:\n\n" + JSON.stringify(data));
                 // arrange in ascending order of dates
                 const sortedData = data
                     .filter(d => d.hasOwnProperty("layerID") && d.layerID !== "null" && d.hasOwnProperty("date"))
@@ -287,36 +280,35 @@ mercator.createSource = (sourceConfig,
                         if (dateA > dateB) return 1;
                         return 0;
                     });
-                if (sortedData.length === 0) alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
-                const planetLayers = sortedData.map(d => new TileLayer({
-                    source: new XYZ({
-                        url: "https://tiles0.planet.com/data/v1/layers/" + d.layerID + "/{z}/{x}/{y}.png",
-                        attributions: attribution
-                    }),
-                    title: d.date
-                }));
-                // FIXME, dont use mercator.currentMap
-                const dummyPlanetLayer = mercator.currentMap.getLayers().getArray()
-                    .find(lyr => imageryId === lyr.getSource().get("id"));
-                mercator.currentMap.removeLayer(dummyPlanetLayer);
-                const layerGroup = new LayerGroup({
-                    id: imageryId,
-                    visible: show,
-                    layers: planetLayers,
-                    zIndex: 0
-                });
-                mercator.currentMap.addLayer(layerGroup);
-                const layerGroupArrays = layerGroup.getLayers().getArray();
-                // FIXME CEO-125, move to planet control so it is only shown when planet is selected
-                if (layerGroupArrays.length > 0) {
+                if (sortedData.length === 0) {
+                    messageSource.setUrl("img/source-not-found.png");
+                    alert("No usable results found for Planet Daily imagery. Check your access token and/or change the date.");
+                } else {
+                    const planetLayers = sortedData.map(d => new TileLayer({
+                        source: new XYZ({
+                            url: "https://tiles0.planet.com/data/v1/layers/" + d.layerID + "/{z}/{x}/{y}.png",
+                            attributions: attribution
+                        }),
+                        title: d.date
+                    }));
+                    // FIXME, dont use mercator.currentMap
+                    mercator.currentMap.removeLayer(messageSource);
+                    const layerGroup = new LayerGroup({
+                        id: imageryId,
+                        visible: show,
+                        layers: planetLayers,
+                        zIndex: 0
+                    });
+                    mercator.currentMap.addLayer(layerGroup);
+                    // FIXME CEO-125, move to planet control so it is only shown when planet is selected
                     mercator.currentMap.addControl(
-                        new PlanetLayerSwitcher({layers: layerGroupArrays})
+                        new PlanetLayerSwitcher({layers: layerGroup.getLayers().getArray()})
                     );
                 }
             }).catch(response => {
                 console.error("Error loading Planet Daily imagery: ", response);
             });
-        return planetSource;
+        return messageSource;
     } else if (type === "BingMaps") {
         return new BingMaps({
             imagerySet: sourceConfig.imageryId,

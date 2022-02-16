@@ -92,6 +92,24 @@ export class PlotDesign extends React.Component {
         </div>
     );
 
+    renderShufflePlots = () => {
+        const {shufflePlots} = this.context;
+        return (
+            <div className="form-check">
+                <input
+                    checked={shufflePlots}
+                    className="form-check-input"
+                    id="shufflePlots"
+                    onChange={() => this.setPlotDetails({shufflePlots: !shufflePlots})}
+                    type="checkbox"
+                />
+                <label className="form-check-label" htmlFor="shufflePlots">
+                    Shuffle plot order
+                </label>
+            </div>
+        );
+    };
+
     renderPlotShape = () => {
         const {plotShape} = this.context;
         return (
@@ -301,7 +319,8 @@ export class PlotDesign extends React.Component {
                 description: "Plot centers will be randomly distributed within the project boundary.",
                 inputs: [() => this.renderLabeledInput("Number of plots", "numPlots"),
                          this.renderPlotShape,
-                         () => this.renderLabeledInput(plotUnits, "plotSize")],
+                         () => this.renderLabeledInput(plotUnits, "plotSize"),
+                         this.renderShufflePlots],
                 showAOI: true
             },
             gridded: {
@@ -309,7 +328,8 @@ export class PlotDesign extends React.Component {
                 description: "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.",
                 inputs: [() => this.renderLabeledInput("Plot spacing (m)", "plotSpacing"),
                          this.renderPlotShape,
-                         () => this.renderLabeledInput(plotUnits, "plotSize")],
+                         () => this.renderLabeledInput(plotUnits, "plotSize"),
+                         this.renderShufflePlots],
                 showAOI: true
             },
             csv: {

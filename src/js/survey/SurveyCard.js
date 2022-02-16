@@ -4,62 +4,32 @@ import SvgIcon from "../components/svg/SvgIcon";
 import SurveyDesignQuestion from "./SurveyDesignQuestion";
 
 import {removeEnumerator} from "../utils/generalUtils";
-import {mapObject, replaceNumber} from "../utils/sequence";
+import {findObject, last, mapVals} from "../utils/sequence";
 import {ProjectContext} from "../project/constants";
 
 export default function SurveyCard({
     cardNumber,
-    inDesignMode,
+    editMode,
     surveyQuestionId,
     topLevelNodeIds
 }) {
     const [showQuestions, setShow] = useState(true);
-    const {setProjectDetails, surveyQuestions, surveyRules} = useContext(ProjectContext);
+    const {setProjectDetails, surveyQuestions} = useContext(ProjectContext);
 
     const swapId = (val, checkVal, swapVal) => (val === checkVal ? swapVal
         : val === swapVal ? checkVal
             : val);
 
-    const swapIdArray = (arr, checkVal, swapVal) => {
-        if (arr.includes(checkVal) && !arr.includes(swapVal)) {
-            return replaceNumber(arr, checkVal, swapVal);
-        } else if (arr.includes(swapVal) && !arr.includes(checkVal)) {
-            return replaceNumber(arr, swapVal, checkVal);
-        } else return arr;
-    };
-
-    const updateRuleQuestionIds = (rule, oldQuestionId, newQuestionId) => {
-        if (rule.ruleType === "text-match" || rule.ruleType === "numeric-range") {
-            const questionId = swapId(rule.questionId, oldQuestionId, newQuestionId);
-            return {...rule, questionId};
-        }
-        if (rule.ruleType === "incompatible-answers") {
-            const questionId1 = swapId(rule.questionId1, oldQuestionId, newQuestionId);
-            const questionId2 = swapId(rule.questionId2, oldQuestionId, newQuestionId);
-            return {...rule, questionId1, questionId2};
-        }
-        if (rule.ruleType === "sum-of-answers") {
-            const questionIds = swapIdArray(rule.questionIds, oldQuestionId, newQuestionId);
-            return {...rule, questionIds};
-        }
-        if (rule.ruleType === "matching-sums") {
-            const questionIds1 = swapIdArray(rule.questionIds1, oldQuestionId, newQuestionId);
-            const questionIds2 = swapIdArray(rule.questionIds2, oldQuestionId, newQuestionId);
-            return {...rule, questionIds1, questionIds2};
-        } else return rule;
-    };
-
-    const swapQuestionIds = upOrDown => {
+    const swapCardOrder = upOrDown => {
+        const originalOrder = findObject(surveyQuestions, ([id, _sq]) => Number(id) === surveyQuestionId)[1].cardOrder;
         const newId = topLevelNodeIds[
             topLevelNodeIds.indexOf(surveyQuestionId) + upOrDown
         ];
+        const newOrder = findObject(surveyQuestions, ([id, _sq]) => Number(id) === newId)[1].cardOrder;
         setProjectDetails({
-            surveyQuestions: mapObject(surveyQuestions, ([key, val]) => [
-                swapId(Number(key), surveyQuestionId, newId),
-                {...val, parentQuestionId: swapId(val.parentQuestionId, surveyQuestionId, newId)}
-            ]),
-            surveyRules: surveyRules.map(rule =>
-                updateRuleQuestionIds(rule, surveyQuestionId, newId))
+            surveyQuestions: mapVals(surveyQuestions, val => (val.cardOrder
+                ? {...val, cardOrder: swapId(val.cardOrder, originalOrder, newOrder)}
+                : val))
         });
     };
 
@@ -79,15 +49,15 @@ export default function SurveyCard({
                         </button>
                         <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
                         <h3 className="m-3">
-                            {!showQuestions && `-- ${inDesignMode ? question : removeEnumerator(question)}`}
+                            {!showQuestions && `-- ${editMode === "review" ? removeEnumerator(question) : question}`}
                         </h3>
                     </div>
-                    {inDesignMode && (
+                    {editMode !== "review" && (
                         <div className="col-2 d-flex pr-1 justify-content-end">
                             <button
                                 className="btn btn-outline-lightgreen my-1 px-3 py-0"
                                 disabled={surveyQuestionId === topLevelNodeIds[0]}
-                                onClick={() => swapQuestionIds(-1)}
+                                onClick={() => swapCardOrder(-1)}
                                 style={{opacity: surveyQuestionId === topLevelNodeIds[0] ? "0.25" : "1.0"}}
                                 type="button"
                             >
@@ -95,9 +65,9 @@ export default function SurveyCard({
                             </button>
                             <button
                                 className="btn btn-outline-lightgreen my-1 px-3 py-0"
-                                disabled={surveyQuestionId === topLevelNodeIds[topLevelNodeIds.length - 1]}
-                                onClick={() => swapQuestionIds(1)}
-                                style={{opacity: surveyQuestionId === topLevelNodeIds[topLevelNodeIds.length - 1] ? "0.25" : "1.0"}}
+                                disabled={surveyQuestionId === last(topLevelNodeIds)}
+                                onClick={() => swapCardOrder(1)}
+                                style={{opacity: surveyQuestionId === last(topLevelNodeIds) ? "0.25" : "1.0"}}
                                 type="button"
                             >
                                 <SvgIcon icon="downCaret" size="1rem"/>
@@ -109,8 +79,8 @@ export default function SurveyCard({
                     <div className="row d-block">
                         <SurveyDesignQuestion
                             key={surveyQuestionId}
+                            editMode={editMode}
                             indentLevel={0}
-                            inDesignMode={inDesignMode}
                             surveyQuestionId={surveyQuestionId}
                         />
                     </div>

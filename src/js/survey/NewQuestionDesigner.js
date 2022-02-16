@@ -60,6 +60,9 @@ export default class NewQuestionDesigner extends React.Component {
                 || confirm("Warning: This is a duplicate name.  It will be added as "
                            + `${newQuestionText} (${repeatedQuestions}) in design mode.`)) {
                 const newId = getNextInSequence(Object.keys(surveyQuestions));
+                const newCardOrder = getNextInSequence(
+                    mapObjectArray(surveyQuestions, ([_id, sql]) => sql.cardOrder)
+                );
                 const newQuestion = {
                     question: repeatedQuestions > 0
                         ? newQuestionText + ` (${repeatedQuestions})`
@@ -68,7 +71,8 @@ export default class NewQuestionDesigner extends React.Component {
                     parentQuestionId: selectedParentId,
                     parentAnswerIds: selectedAnswerIds,
                     dataType,
-                    componentType
+                    componentType,
+                    ...selectedParentId === -1 && {cardOrder: newCardOrder}
                 };
                 setProjectDetails({surveyQuestions: {...surveyQuestions, [newId]: newQuestion}});
                 this.setState({selectedAnswerIds: [], newQuestionText: ""});

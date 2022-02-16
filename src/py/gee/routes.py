@@ -18,7 +18,7 @@ def safeListGet(l, idx, default=None):
 
 def getDefault(dict, key, default=None):
     val = dict.get(key)
-    if val is None or val == "":
+    if val is None or val == '':
         return default
     else:
         return val
@@ -49,7 +49,7 @@ def imageCollection(requestDict):
     values = imageCollectionToMapId(
         getDefault(requestDict, 'assetId', None),
         getDefault(requestDict, 'visParams', None),
-        getDefault(requestDict, 'reducer', None),
+        getDefault(requestDict, 'reducer', 'Mean'),
         getDefault(requestDict, 'startDate', None),
         getDefault(requestDict, 'endDate', None)
     )
@@ -61,14 +61,14 @@ def imageCollection(requestDict):
 
 def getActualCollection(name):
     lowerName = name.lower()
-    if lowerName == "landsat5":
-        return "LANDSAT/LT05/C01/T1"
-    elif lowerName == "landsat7":
-        return "LANDSAT/LE07/C01/T1"
-    elif lowerName == "landsat8":
-        return "LANDSAT/LC08/C01/T1_RT"
-    elif lowerName == "sentinel2":
-        return "COPERNICUS/S2"
+    if lowerName == 'landsat5':
+        return 'LANDSAT/LT05/C01/T1'
+    elif lowerName == 'landsat7':
+        return 'LANDSAT/LE07/C01/T1'
+    elif lowerName == 'landsat8':
+        return 'LANDSAT/LC08/C01/T1_RT'
+    elif lowerName == 'sentinel2':
+        return 'COPERNICUS/S2'
     else:
         return name
 
@@ -136,7 +136,7 @@ def imageCollectionByIndex(requestDict):
 def featureCollection(requestDict):
     visParams = getDefault(requestDict, 'visParams', {})
     values = {
-        "url": getFeatureCollectionTileUrl(
+        'url': getFeatureCollectionTileUrl(
             getDefault(requestDict, 'assetId', None),
             getDefault(requestDict, 'field', 'PLOTID'),
             int(getDefault(requestDict, 'matchID', 1)),
@@ -229,11 +229,11 @@ def degradationTileUrl(requestDict):
         elif stretch == 453:
             visParams = {'bands': 'NIR,SWIR1,RED', 'min': 0, 'max': 7000}
         values = {
-            "url": getDegradationTileUrlByDate(geometry, imageDate, visParams)
+            'url': getDegradationTileUrlByDate(geometry, imageDate, visParams)
         }
     else:
         values = {
-            "url": getDegradationTileUrlByDateS1(
+            'url': getDegradationTileUrlByDateS1(
                 geometry,
                 imageDate,
                 {

@@ -1,4 +1,4 @@
-import {cleanJSON, isValidJSON} from "../utils/generalUtils";
+import {isValidJSON} from "../utils/generalUtils";
 
 export const nicfiLayers = [
     "2015-12_2016-05",
@@ -25,7 +25,9 @@ export const nicfiLayers = [
     "2021-08",
     "2021-09",
     "2021-10",
-    "2021-11"
+    "2021-11",
+    "2021-12",
+    "2022-01"
 ];
 
 const outOfRange = (num, low, high) => isNaN(num) || parseInt(num) < low || parseInt(num) > high;
@@ -63,7 +65,6 @@ export const imageryOptions = [
                 display: "Additional WMS Params (JSON format)",
                 required: false,
                 type: "JSON",
-                sanitizer: cleanJSON,
                 validator: value => (!isValidJSON(value)
                     ? "Invalid JSON in the \"Visualization Parameters\" field."
                     : !olProjectionValidator(value)
@@ -336,7 +337,6 @@ export const imageryOptions = [
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"R\", \"G\", \"B\"], \"min\": 0-100, \"max\": 2800-3200}"},
-                sanitizer: cleanJSON,
                 validator: value => (!isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "")
             }
         ]
@@ -369,7 +369,6 @@ export const imageryOptions = [
                 display: "Visualization Parameters (JSON format)",
                 type: "JSON",
                 options: {placeholder: "{\"bands\": [\"B4\", \"B3\", \"B2\"], \"min\": 0-100, \"max\": 2800-3200}"},
-                sanitizer: cleanJSON,
                 validator: value => (!isValidJSON(value) ? "Invalid JSON in the \"Visualization Parameters\" field." : "")
             }
         ],

@@ -48,6 +48,7 @@ class Project extends React.Component {
             plotSpacing: "",
             plotShape: "square",
             plotSize: "",
+            shufflePlots: false,
             sampleDistribution: "random",
             sampleResolution: "",
             samplesPerPlot: "",

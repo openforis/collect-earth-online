@@ -30,6 +30,7 @@ CREATE OR REPLACE FUNCTION create_project(
     _plot_shape             text,
     _plot_size              real,
     _plot_file_name         varchar,
+    _shuffle_plots          boolean,
     _sample_distribution    text,
     _samples_per_plot       integer,
     _sample_resolution      real,
@@ -57,6 +58,7 @@ CREATE OR REPLACE FUNCTION create_project(
         plot_shape,
         plot_size,
         plot_file_name,
+        shuffle_plots,
         sample_distribution,
         samples_per_plot,
         sample_resolution,
@@ -83,6 +85,7 @@ CREATE OR REPLACE FUNCTION create_project(
         _plot_shape,
         _plot_size,
         _plot_file_name,
+        _shuffle_plots,
         _sample_distribution,
         _samples_per_plot,
         _sample_resolution,
@@ -152,7 +155,16 @@ CREATE OR REPLACE FUNCTION delete_project(_project_id integer)
  RETURNS void AS $$
 
  BEGIN
-    -- Delete plots first for performance
+    -- Delete fks first for performance
+    DELETE FROM sample_values WHERE sample_rid IN (
+        SELECT sample_uid FROM samples, plots
+        WHERE plot_uid = plot_rid
+            AND project_rid = _project_id
+    );
+    DELETE FROM samples WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id);
+    DELETE FROM ext_samples WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id);
+    DELETE FROM user_plots WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id);
+    DELETE FROM plot_assignments WHERE plot_rid IN (SELECT plot_uid FROM plots WHERE project_rid = _project_id);
     DELETE FROM plots WHERE project_rid = _project_id;
     DELETE FROM projects WHERE project_uid = _project_id;
 
@@ -175,6 +187,7 @@ CREATE OR REPLACE FUNCTION update_project(
     _plot_shape             text,
     _plot_size              real,
     _plot_file_name         varchar,
+    _shuffle_plots          boolean,
     _sample_distribution    text,
     _samples_per_plot       integer,
     _sample_resolution      real,
@@ -199,6 +212,7 @@ CREATE OR REPLACE FUNCTION update_project(
         plot_shape = _plot_shape,
         plot_size = _plot_size,
         plot_file_name = _plot_file_name,
+        shuffle_plots = _shuffle_plots,
         sample_distribution = _sample_distribution,
         samples_per_plot = _samples_per_plot,
         sample_resolution = _sample_resolution,
@@ -310,6 +324,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_id integer, _ne
         plot_shape = n.plot_shape,
         plot_size = n.plot_size,
         plot_file_name = n.plot_file_name,
+        shuffle_plots = n.shuffle_plots,
         sample_distribution = n.sample_distribution,
         samples_per_plot = n.samples_per_plot,
         sample_resolution = n.sample_resolution,
@@ -323,6 +338,7 @@ CREATE OR REPLACE FUNCTION copy_project_plots_stats(_old_project_id integer, _ne
             plot_shape,
             plot_size,
             plot_file_name,
+            shuffle_plots,
             sample_distribution,
             samples_per_plot,
             sample_resolution,
@@ -515,6 +531,7 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     plot_shape             text,
     plot_size              real,
     plot_file_name         varchar,
+    shuffle_plots          boolean,
     sample_distribution    text,
     samples_per_plot       integer,
     sample_resolution      real,
@@ -547,6 +564,7 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         plot_shape,
         plot_size,
         plot_file_name,
+        shuffle_plots,
         sample_distribution,
         samples_per_plot,
         sample_resolution,

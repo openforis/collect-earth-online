@@ -68,10 +68,10 @@ def imageToMapId(image, visParams):
 ########## ee.ImageCollection ##########
 
 
-def imageCollectionToMapId(assetId, visParams, reducer, dateFrom, dateTo):
+def imageCollectionToMapId(assetId, visParams, reducer, startDate, endDate):
     eeCollection = ee.ImageCollection(assetId)
-    if (dateFrom and dateTo):
-        eeFilterDate = ee.Filter.date(dateFrom, dateTo)
+    if (startDate and endDate):
+        eeFilterDate = ee.Filter.date(startDate, endDate)
         eeCollection = eeCollection.filter(eeFilterDate)
     if reducer.lower() == 'mosaic':
         reducedImage = ee.Image(eeCollection.mosaic())
@@ -82,7 +82,7 @@ def imageCollectionToMapId(assetId, visParams, reducer, dateFrom, dateTo):
 # TODO, should we allow user to select first cloud free image again?
 
 
-def firstCloudFreeImageInMosaicToMapId(assetId, visParams, dateFrom, dateTo):
+def firstCloudFreeImageInMosaicToMapId(assetId, visParams, startDate, endDate):
     skipCloudMask = False
     eeCollection = ee.ImageCollection(assetId)
     lowerAsset = assetId.lower()
@@ -96,8 +96,8 @@ def firstCloudFreeImageInMosaicToMapId(assetId, visParams, dateFrom, dateTo):
         skipCloudMask = False
     else:
         skipCloudMask = True
-    if (dateFrom and dateTo):
-        eeFilterDate = ee.Filter.date(dateFrom, dateTo)
+    if (startDate and endDate):
+        eeFilterDate = ee.Filter.date(startDate, endDate)
         eeCollection = eeCollection.filter(eeFilterDate)
     eeFirstImage = ee.Image(eeCollection.mosaic())
     try:
@@ -309,10 +309,10 @@ def filteredImageByIndexToMapId(startDate, endDate, index):
         return filteredImageNDWIToMapId(startDate, endDate)
 
 
-def filteredImageCompositeToMapId(assetId, visParams, dateFrom, dateTo, metadataCloudCoverMax, simpleCompositeVariable):
+def filteredImageCompositeToMapId(assetId, visParams, startDate, endDate, metadataCloudCoverMax, simpleCompositeVariable):
     eeCollection = ee.ImageCollection(assetId)
-    if (dateFrom and dateTo):
-        eeCollection = eeCollection.filterDate(dateFrom, dateTo)
+    if (startDate and endDate):
+        eeCollection = eeCollection.filterDate(startDate, endDate)
     eeCollection.filterMetadata(
         'CLOUD_COVER',
         'less_than',
@@ -328,7 +328,7 @@ def filteredImageCompositeToMapId(assetId, visParams, dateFrom, dateTo, metadata
     return imageToMapId(eeMosaicImage, visParams)
 
 
-def filteredSentinelComposite(visParams, dateFrom, dateTo, metadataCloudCoverMax):
+def filteredSentinelComposite(visParams, startDate, endDate, metadataCloudCoverMax):
     def cloudScore(img):
         def rescale(img, exp, thresholds):
             return img.expression(exp, {'img': img}).subtract(thresholds[0]).divide(thresholds[1] - thresholds[0])
@@ -347,14 +347,14 @@ def filteredSentinelComposite(visParams, dateFrom, dateTo, metadataCloudCoverMax
         return img.addBands(score)
 
     sentinel2 = ee.ImageCollection('COPERNICUS/S2')
-    f2017s2 = sentinel2.filterDate(dateFrom, dateTo).filterMetadata(
+    f2017s2 = sentinel2.filterDate(startDate, endDate).filterMetadata(
         'CLOUDY_PIXEL_PERCENTAGE', 'less_than', metadataCloudCoverMax)
     m2017s2 = f2017s2.map(cloudScoreS2)
     m2017s3 = m2017s2.median()
     return imageToMapId(m2017s3, visParams)
 
 
-def filteredSentinelSARComposite(visParams, dateFrom, dateTo):
+def filteredSentinelSARComposite(visParams, startDate, endDate):
     def toNatural(img):
         return ee.Image(10).pow(img.divide(10))
 
@@ -367,7 +367,7 @@ def filteredSentinelSARComposite(visParams, dateFrom, dateTo):
         return vv.addBands(vh).addBands(vv_vh).addBands(vh_vv)
 
     sentinel1 = ee.ImageCollection('COPERNICUS/S1_GRD')
-    sentinel1 = sentinel1.filterDate(dateFrom, dateTo) \
+    sentinel1 = sentinel1.filterDate(startDate, endDate) \
         .filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VV')) \
         .filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VH')) \
         .filter(ee.Filter.eq('instrumentMode', 'IW'))
@@ -380,7 +380,7 @@ def filteredSentinelSARComposite(visParams, dateFrom, dateTo):
 ########## Time Series ##########
 
 
-def getTimeSeriesByCollectionAndIndex(assetId, indexName, scale, coords, dateFrom, dateTo, reducer):
+def getTimeSeriesByCollectionAndIndex(assetId, indexName, scale, coords, startDate, endDate, reducer):
     geometry = None
     indexCollection = None
     if isinstance(coords[0], list):
@@ -389,10 +389,10 @@ def getTimeSeriesByCollectionAndIndex(assetId, indexName, scale, coords, dateFro
         geometry = ee.Geometry.Point(coords)
     if indexName != None:
         indexCollection = ee.ImageCollection(assetId).filterDate(
-            dateFrom, dateTo).select(indexName)
+            startDate, endDate).select(indexName)
     else:
         indexCollection = ee.ImageCollection(
-            assetId).filterDate(dateFrom, dateTo)
+            assetId).filterDate(startDate, endDate)
 
     def getIndex(image):
         theReducer = getReducer(reducer)
@@ -415,7 +415,7 @@ def getTimeSeriesByCollectionAndIndex(assetId, indexName, scale, coords, dateFro
     return indexCollection2.getInfo()
 
 
-def getTimeSeriesByIndex(indexName, scale, coords, dateFrom, dateTo, reducer):
+def getTimeSeriesByIndex(indexName, scale, coords, startDate, endDate, reducer):
     bandsByCollection = {
         'LANDSAT/LC08/C01/T1_TOA': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
         'LANDSAT/LC08/C01/T2_TOA': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
@@ -470,8 +470,8 @@ def getTimeSeriesByIndex(indexName, scale, coords, dateFrom, dateTo, reducer):
             image = maskClouds(image)
             return toIndex(image).set('system:time_start', time)
         #
-        if dateFrom and dateTo:
-            return ee.ImageCollection(name).filterDate(dateFrom, dateTo).filterBounds(geometry).map(toIndexWithTimeStart, True)
+        if startDate and endDate:
+            return ee.ImageCollection(name).filterDate(startDate, endDate).filterBounds(geometry).map(toIndexWithTimeStart, True)
         else:
             return ee.ImageCollection(name).filterBounds(geometry).map(toIndexWithTimeStart, True)
 
