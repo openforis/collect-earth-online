@@ -15,20 +15,23 @@ export default function BulkAddAnswers({closeDialog, surveyQuestionId, surveyQue
         } else {
             const newId = getNextInSequence(Object.keys(surveyQuestion.answers));
             const pairs = partition(splitArr, 2);
-            pairs.forEach(([color, answer], idx) => {
+            const updatedAnswers = pairs.reduce((answers, [color, answer], idx) => {
                 const newAnswer = {answer: answer.trim(), color};
-                setProjectDetails({
-                    surveyQuestions: {
-                        ...surveyQuestions,
-                        [surveyQuestionId]: {
-                            ...surveyQuestion,
-                            answers: {
-                                ...surveyQuestion.answers,
-                                [newId + idx]: newAnswer
-                            }
+                return {
+                    [newId + idx]: newAnswer,
+                    ...answers
+                };
+            }, surveyQuestion.answers);
+            setProjectDetails({
+                surveyQuestions: {
+                    ...surveyQuestions,
+                    [surveyQuestionId]: {
+                        ...surveyQuestion,
+                        answers: {
+                            ...updatedAnswers
                         }
                     }
-                });
+                }
             });
             closeDialog();
         }
