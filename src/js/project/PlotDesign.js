@@ -1,14 +1,16 @@
-import React, {useContext, useState} from "react";
+import React, {useContext} from "react";
 import shp from "shpjs";
 
 import {formatNumberWithCommas, readFileAsArrayBuffer, readFileAsBase64Url} from "../utils/generalUtils";
 import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator";
+import Select from "../components/Select";
 
 export class PlotDesign extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            boundaryInputType: "manual",
             lonMin: "",
             latMin: "",
             lonMax: "",
@@ -237,39 +239,6 @@ export class PlotDesign extends React.Component {
         </div>
     );
 
-    renderAOISelector = () => (
-        <div>
-            {this.renderAOICoords()}
-            {this.renderBoundaryFileInput()}
-        </div>
-    );
-
-    AOISelector = () => {
-        const [current, setValue] = useState("coordinates");
-        return (
-            <div>
-                <fieldset style={{width: "100%"}}>
-                    <select
-                        className="custom-select"
-                        name="aoi"
-                        onChange={e => {
-                            const v = e.target.value;
-                            setValue(v);
-                            this.props.disableHelpComponent(v === "files");
-                        }}
-                        style={{width: "40%"}}
-                        value={current}
-                    >
-                        <option value="coordinates">Input Boundary Coordinates</option>
-                        <option value="files">Upload Boundary File</option>
-                    </select>
-                </fieldset>
-                <br/>
-                {current === "coordinates" ? this.renderAOICoords() : this.renderBoundaryFileInput()}
-            </div>
-        );
-    };
-
     renderFileInput = fileType => (
         <div>
             <div style={{display: "flex"}}>
@@ -316,8 +285,9 @@ export class PlotDesign extends React.Component {
     );
 
     render() {
+        const {boundaryInputType} = this.state;
         const {plotDistribution, plotShape} = this.context;
-        const {totalPlots} = this.props;
+        const {totalPlots, disableHelpComponent} = this.props;
         const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
 
         const plotOptions = {
@@ -378,7 +348,25 @@ export class PlotDesign extends React.Component {
                                 </div>
                             ))}
                         </div>
-                        {plotOptions[plotDistribution].showAOI && <this.AOISelector/>}
+                        {plotOptions[plotDistribution].showAOI && (
+                            <div>
+                                <div className="mb-3">
+                                    <Select
+                                        id="aoi"
+                                        label="Select input"
+                                        onChange={e => {
+                                            const newBoundaryInputType = e.target.value;
+                                            this.setState({boundaryInputType: newBoundaryInputType});
+                                            disableHelpComponent(newBoundaryInputType === "file");
+                                        }}
+                                        options={[{value: "manual", label: "Input Boundary Coordinates"},
+                                                  {value: "file", label: "Upload Boundary File"}]}
+                                        value={boundaryInputType}
+                                    />
+                                </div>
+                                {boundaryInputType === "manual" ? this.renderAOICoords() : this.renderBoundaryFileInput()}
+                            </div>
+                        )}
                     </div>
                     <p
                         className="font-italic ml-2 small"

@@ -53,7 +53,7 @@ export default class CreateProjectWizard extends React.Component {
                 description: "Area of interest and plot generation for collection",
                 StepComponent: () => (
                     <PlotStep
-                        disableHelpComponent={this.disableHelpComponent}
+                        disableHelpComponent={this.deactivateHelpComponent}
                         getTotalPlots={this.getTotalPlots}
                     />
                 ),
@@ -61,7 +61,7 @@ export default class CreateProjectWizard extends React.Component {
                 StepHelpComponent: () => (
                     <AOIMap
                         canDrag={!this.context.useTemplatePlots
-                                 && !["csv", "shp"].includes(this.context.plotDistribution) && !this.state.disabledHelpComponent}
+                                 && !["csv", "shp"].includes(this.context.plotDistribution) && !this.state.isHelpComponentInactive}
                         context={this.context}
                     />
                 ),
@@ -107,7 +107,7 @@ export default class CreateProjectWizard extends React.Component {
             templateProject: {},
             templatePlots: [],
             templateProjectList: [{id: -1, name: "Loading..."}],
-            disabledHelpComponent: false
+            isHelpComponentInactive: false
         };
     }
 
@@ -514,9 +514,9 @@ export default class CreateProjectWizard extends React.Component {
         );
     };
 
-    disableHelpComponent = bool => {
+    deactivateHelpComponent = bool => {
         this.setState({
-            disabledHelpComponent: bool
+            isHelpComponentInactive: bool
         });
     };
 
@@ -553,10 +553,10 @@ export default class CreateProjectWizard extends React.Component {
                     <div className="col-4">
                         <div className="d-flex flex-column h-100">
                             <div
-                                className={`h-100 overflow-auto ${this.state.disabledHelpComponent ? "bg-light" : "bg-lightgray"}`}
+                                className={`h-100 overflow-auto ${this.state.isHelpComponentInactive ? "bg-light" : "bg-lightgray"}`}
                                 style={{border: "1px solid black", borderRadius: "6px"}}
                             >
-                                <h2 className={`${this.state.disabledHelpComponent ? "bg-light" : "bg-lightgreen"} w-100 py-1`}>{helpDescription}</h2>
+                                <h2 className={`${this.state.isHelpComponentInactive ? "bg-light" : "bg-lightgreen"} w-100 py-1`}>{helpDescription}</h2>
                                 <StepHelpComponent/>
                             </div>
                             <NavigationButtons
