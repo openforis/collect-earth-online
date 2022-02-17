@@ -99,7 +99,7 @@ export default function ReviewForm() {
                     )}
             </div>
             <div id="survey-review">
-                {renderSectionHeader("Survey Questions", "questions", new Set([undefined, "unpublished", "published"]).has(context.availability))}
+                {renderSectionHeader("Survey Questions", "questions", !["closed", "archived"].includes(context.availability))}
                 <SurveyCardList editMode="review"/>
             </div>
             <div id="survey-rules-review">
