@@ -110,7 +110,7 @@ export default class AnswerDesigner extends React.Component {
                                     </button>
                                 )}
                                 <button
-                                    className="btn btn-success py-0 px-2 mr-1"
+                                    className="btn btn-lightgreen py-0 px-2 mr-1"
                                     onClick={this.saveSurveyAnswer}
                                     type="button"
                                 >
@@ -119,7 +119,7 @@ export default class AnswerDesigner extends React.Component {
                             </>
                         ) : (
                             <button
-                                className="btn btn-success py-0 px-2 mr-1"
+                                className="btn btn-lightgreen py-0 px-2 mr-1"
                                 onClick={this.saveSurveyAnswer}
                                 type="button"
                             >

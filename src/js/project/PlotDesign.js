@@ -4,11 +4,13 @@ import shp from "shpjs";
 import {formatNumberWithCommas, readFileAsArrayBuffer, readFileAsBase64Url} from "../utils/generalUtils";
 import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator";
+import Select from "../components/Select";
 
 export class PlotDesign extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            boundaryInputType: "manual",
             lonMin: "",
             latMin: "",
             lonMax: "",
@@ -155,7 +157,6 @@ export class PlotDesign extends React.Component {
         const {latMax, lonMin, lonMax, latMin} = this.state;
         return (
             <div style={{width: "20rem"}}>
-                <label>Boundary Coordinates</label>
                 <div className="form-group ml-3">
                     <div className="row">
                         <div className="col-md-6 offset-md-3">
@@ -256,13 +257,6 @@ export class PlotDesign extends React.Component {
         </div>
     );
 
-    renderAOISelector = () => (
-        <div>
-            {this.renderAOICoords()}
-            {this.renderBoundaryFileInput()}
-        </div>
-    );
-
     renderFileInput = fileType => (
         <div>
             <div style={{display: "flex"}}>
@@ -309,8 +303,9 @@ export class PlotDesign extends React.Component {
     );
 
     render() {
+        const {boundaryInputType} = this.state;
         const {plotDistribution, plotShape} = this.context;
-        const {totalPlots} = this.props;
+        const {totalPlots, setIsHelpInactive} = this.props;
         const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
 
         const plotOptions = {
@@ -373,7 +368,25 @@ export class PlotDesign extends React.Component {
                                 </div>
                             ))}
                         </div>
-                        {plotOptions[plotDistribution].showAOI && this.renderAOISelector()}
+                        {plotOptions[plotDistribution].showAOI && (
+                            <div>
+                                <div className="mb-3">
+                                    <Select
+                                        id="aoi"
+                                        label="Select input"
+                                        onChange={e => {
+                                            const newBoundaryInputType = e.target.value;
+                                            this.setState({boundaryInputType: newBoundaryInputType});
+                                            setIsHelpInactive(newBoundaryInputType === "file");
+                                        }}
+                                        options={[{value: "manual", label: "Input Boundary Coordinates"},
+                                                  {value: "file", label: "Upload Boundary File"}]}
+                                        value={boundaryInputType}
+                                    />
+                                </div>
+                                {boundaryInputType === "manual" ? this.renderAOICoords() : this.renderBoundaryFileInput()}
+                            </div>
+                        )}
                     </div>
                     <p
                         className="font-italic ml-2 small"

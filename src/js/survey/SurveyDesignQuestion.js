@@ -90,7 +90,7 @@ export default function SurveyDesignQuestion({indentLevel, editMode, surveyQuest
                                         </button>
                                     )}
                                     <button
-                                        className="btn btn-success py-0 px-2 mr-1"
+                                        className="btn btn-lightgreen py-0 px-2 mr-1"
                                         onClick={updateQuestion}
                                         type="button"
                                     >
@@ -187,7 +187,7 @@ export default function SurveyDesignQuestion({indentLevel, editMode, surveyQuest
                         )}
                         {editMode === "full" && surveyQuestion.componentType !== "input" && (
                             <button
-                                className="btn btn-sm btn-success"
+                                className="btn btn-sm btn-lightgreen"
                                 onClick={() => setBulkAdd(true)}
                                 type="button"
                             >
