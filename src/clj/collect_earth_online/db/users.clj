@@ -49,20 +49,20 @@
         password-confirmation (:passwordConfirmation params)]
     (if-let [error-msg (get-register-errors email password password-confirmation)]
       (data-response error-msg)
-      (let [timestamp (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
-                          (.format (LocalDateTime/now)))
-            email-msg (format (str "Dear %s,\n\n"
-                                   "Thank you for signing up for CEO!\n\n"
-                                   "Your Account Summary Details:\n\n"
-                                   "  Email: %s\n"
-                                   "  Created on: %s\n\n"
-                                   "  Click the following link to verify your email:\n"
-                                   "  %sverify-email?email=%s&passwordResetKey=%s\n\n"
-                                   "Kind Regards,\n"
-                                   "  The CEO Team")
-                              email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)
+      (let [timestamp      (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
+                               (.format (LocalDateTime/now)))
+            email-msg      (format (str "Dear %s,\n\n"
+                                        "Thank you for signing up for CEO!\n\n"
+                                        "Your Account Summary Details:\n\n"
+                                        "  Email: %s\n"
+                                        "  Created on: %s\n\n"
+                                        "  Click the following link to verify your email:\n"
+                                        "  %sverify-email?email=%s&passwordResetKey=%s\n\n"
+                                        "Kind Regards,\n"
+                                        "  The CEO Team")
+                                   email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)
             auto-validate? (get-config :mail :auto-validate?)
-            user-id (sql-primitive (call-sql "add_user" {:log? false} email password reset-key))]
+            user-id        (sql-primitive (call-sql "add_user" {:log? false} email password reset-key))]
         (if auto-validate?
           (do (call-sql "user_verified" user-id)
               (data-response "You have successfully created an account"))
