@@ -51,12 +51,17 @@ export default class CreateProjectWizard extends React.Component {
             plots: {
                 title: "Plot Design",
                 description: "Area of interest and plot generation for collection",
-                StepComponent: () => <PlotStep getTotalPlots={this.getTotalPlots}/>,
+                StepComponent: () => (
+                    <PlotStep
+                        getTotalPlots={this.getTotalPlots}
+                        setIsHelpInactive={this.setIsHelpInactive}
+                    />
+                ),
                 helpDescription: "Collection Map Preview",
                 StepHelpComponent: () => (
                     <AOIMap
                         canDrag={!this.context.useTemplatePlots
-                                 && !["csv", "shp"].includes(this.context.plotDistribution)}
+                                 && !["csv", "shp"].includes(this.context.plotDistribution) && !this.state.isHelpInactive}
                         context={this.context}
                     />
                 ),
@@ -101,7 +106,8 @@ export default class CreateProjectWizard extends React.Component {
             complete: new Set(),
             templateProject: {},
             templatePlots: [],
-            templateProjectList: [{id: -1, name: "Loading..."}]
+            templateProjectList: [{id: -1, name: "Loading..."}],
+            isHelpInactive: false
         };
     }
 
@@ -510,6 +516,12 @@ export default class CreateProjectWizard extends React.Component {
         );
     };
 
+    setIsHelpInactive = bool => {
+        this.setState({
+            isHelpInactive: bool
+        });
+    };
+
     render() {
         const steps = this.getSteps();
         const {description, StepComponent, helpDescription, StepHelpComponent} = steps[this.context.wizardStep];
@@ -543,10 +555,10 @@ export default class CreateProjectWizard extends React.Component {
                     <div className="col-4">
                         <div className="d-flex flex-column h-100">
                             <div
-                                className="h-100 overflow-auto bg-lightgray"
+                                className={`h-100 overflow-auto ${this.state.isHelpInactive ? "bg-light" : "bg-lightgray"}`}
                                 style={{border: "1px solid black", borderRadius: "6px"}}
                             >
-                                <h2 className="bg-lightgreen w-100 py-1">{helpDescription}</h2>
+                                <h2 className={`${this.state.isHelpInactive ? "bg-light" : "bg-lightgreen"} w-100 py-1`}>{helpDescription}</h2>
                                 <StepHelpComponent/>
                             </div>
                             <NavigationButtons
