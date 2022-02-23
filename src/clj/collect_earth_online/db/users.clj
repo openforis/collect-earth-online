@@ -6,6 +6,7 @@
   (:require [clojure.string :as str]
             [triangulum.database :refer [call-sql sql-primitive]]
             [triangulum.type-conversion :as tc]
+            [triangulum.config  :refer [get-config]]
             [collect-earth-online.utils.mail :refer [email? send-mail get-base-url]]
             [collect-earth-online.views      :refer [data-response]]))
 
@@ -59,13 +60,16 @@
                                    "  %sverify-email?email=%s&passwordResetKey=%s\n\n"
                                    "Kind Regards,\n"
                                    "  The CEO Team")
-                              email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)]
-        (call-sql "add_user" {:log? false} email password reset-key)
-        (try
-          (send-mail email nil nil "Welcome to CEO!" email-msg "text/plain")
-          (data-response "")
-          (catch Exception _
-            (data-response (str "A new user account was created but there was a server error.  Please contact support@sig-gis.com."))))))))
+                              email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)
+            auto-validate? (get-config :mail :auto-validate?)
+            user-id (sql-primitive (call-sql "add_user" {:log? false} email password reset-key))]
+        (if auto-validate?
+          (do (call-sql "user_verified" user-id)
+              (data-response "You have successfully created an account"))
+          (try
+            (send-mail email nil nil "Welcome to CEO!" email-msg "text/plain")
+            (catch Exception _
+              (data-response (str "A new user account was created but there was a server error.  Please contact support@sig-gis.com.")))))))))
 
 (defn logout [_]
   (data-response "" {:session nil}))
