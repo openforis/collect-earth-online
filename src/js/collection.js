@@ -1541,7 +1541,7 @@ class ProjectTitle extends React.Component {
             <div
                 style={{
                     alignItems: "center",
-                    background: "#31bab0",
+                    background: "var(--lightgreen)",
                     display: "flex",
                     marginLeft: "-15px",
                     marginRight: "-15px"

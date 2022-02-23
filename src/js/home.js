@@ -485,7 +485,7 @@ function CreateInstitutionButton() {
         <div
             className="text-center p-2"
             style={{
-                backgroundColor: "#fccf07",
+                backgroundColor: "var(--yellow)",
                 display: "flex",
                 justifyContent: "center"
             }}
