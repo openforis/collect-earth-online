@@ -223,7 +223,7 @@ export default class NewQuestionDesigner extends React.Component {
                 <td/>
                 <td>
                     <button
-                        className="btn btn-sm btn-success"
+                        className="btn btn-sm btn-lightgreen"
                         onClick={this.addSurveyQuestion}
                         style={{
                             alignItems: "center",
