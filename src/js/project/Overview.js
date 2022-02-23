@@ -184,7 +184,7 @@ class ProjectTemplateSelection extends React.Component {
         const {setProjectTemplate, clearTemplateSelection, templateProjectList} = this.props;
         return (
             <div id="project-template-selector">
-                <h3>Template Section</h3>
+                <h3>Template Selection</h3>
                 <div className="d-flex justify-content-between ml-3">
                     <div className="form-group d-flex flex-column">
                         <label htmlFor="project-filter">Template Filter (Name or ID)</label>
