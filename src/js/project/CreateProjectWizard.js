@@ -472,9 +472,8 @@ export default class CreateProjectWizard extends React.Component {
         const isLast = last(Object.keys(steps)) === stepName;
         const isSelected = stepName === this.context.wizardStep;
         const stepComplete = this.state.complete.has(stepName);
-        const yellow = "#31bab0";
-        const lightgreen = "#fccf07";
-        const stepColor = isSelected ? lightgreen : stepComplete ? yellow : "gray";
+        const stepColor = `var(--${isSelected ? "lightgreen" : stepComplete ? "yellow" : "gray"})`;
+
         return (
             <div
                 key={stepName}

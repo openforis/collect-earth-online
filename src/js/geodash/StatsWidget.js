@@ -74,7 +74,7 @@ export default class StatsWidget extends React.Component {
                     width: "50px",
                     height: "50px",
                     borderRadius: "25px",
-                    backgroundColor: "#31bab0"
+                    backgroundColor: "var(--lightgreen)"
                 }}
             />
             <div>

@@ -19,7 +19,7 @@ export default function ReviewForm() {
         <div
             className="header my-2 p-2 d-flex flex-row justify-content-center align-items-center"
             style={{
-                background: "#31bab0",
+                background: "var(--lightgreen)",
                 margin:"0 -15px 10px -15px",
                 padding: "1rem",
                 fontSize: "1.1rem",

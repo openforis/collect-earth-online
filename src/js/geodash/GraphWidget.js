@@ -164,7 +164,7 @@ export default class GraphWidget extends React.Component {
                 data: _.cloneDeep(this.getChartData(chartKey)),
                 valueDecimals: 20,
                 connectNulls: true,
-                color: "#31bab0",
+                color: "var(--lightgreen)",
                 allowPointSelect: true,
                 point: {
                     cursor: "pointer",
@@ -186,7 +186,7 @@ export default class GraphWidget extends React.Component {
                 type: "area",
                 name: chartKey,
                 data: this.getChartData(chartKey),
-                color: "#31bab0"
+                color: "var(--lightgreen)"
             };
         }
     };
