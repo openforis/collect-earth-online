@@ -10,6 +10,9 @@
     --yellow-on-hover:      #ecbc0d;
     --lightgray:            #eceeef;
     --lightgray-on-hover:   #dadcdf;
+    --gray:                  #808080;
+    --darkgray:             #5e5f60;
+    --darkgray-on-hover:    #3a3b3c;
 }
 
 /***********/
@@ -232,18 +235,18 @@ bg-darkgreen {
     border-color: var(--lightgray-on-hover);
 }
 .btn-outline-darkgray {
-    color: #5e5f60;
+    color: var(--darkgray);
     background-color: white;
     background-image: none;
-    border-color: #5e5f60;
+    border-color: var(--darkgray);
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-outline-darkgray:hover {
     color: #ffff;
-    background-color: #3a3b3c;
-    border-color: #3a3b3c;
+    background-color: var(--darkgray-on-hover);
+    border-color: var(--darkgray-on-hover);
 }
 .btn-outline-yellow {
     color: #f1c00f;
