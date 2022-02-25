@@ -141,9 +141,9 @@ h3 {
     font-weight: bolder;
 }
 h4 {font-size: 0.8rem;}
-bg-darkgreen {
-    background-color: var(--darkgreen);
-    color: white;
+.bg-darkgreen {
+  background-color: var(--darkgreen);
+  color: white;
 }
 .bg-darkgreen h1,.bg-darkgreen h2 {
     padding: 1rem;
@@ -157,7 +157,12 @@ bg-darkgreen {
 .bg-lightgray {
     background-color: var(--lightgray);
 }
-
+.bg-darkgray {
+  background-color: var(--darkgray);
+}
+.bg-gray {
+  background-color: var(--gray);
+}
 /***********/
 /* Buttons */
 /***********/
