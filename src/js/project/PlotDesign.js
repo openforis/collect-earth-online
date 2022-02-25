@@ -116,7 +116,7 @@ export class PlotDesign extends React.Component {
         const {plotShape} = this.context;
         return (
             <div className="form-group" style={{display: "flex", flexDirection: "column"}}>
-                <label>Plot Shape</label>
+                <label>Plot shape</label>
                 <div>
                     <div className="form-check form-check-inline">
                         <input
@@ -347,7 +347,7 @@ export class PlotDesign extends React.Component {
                 <div className="ml-3">
                     <div className="d-flex flex-column">
                         <div className="form-group" style={{width: "fit-content"}}>
-                            <label>Spatial Distribution</label>
+                            <label>Spatial distribution</label>
                             <select
                                 className="form-control form-control-sm"
                                 onChange={e => this.setPlotDetails({plotDistribution: e.target.value})}
@@ -373,14 +373,14 @@ export class PlotDesign extends React.Component {
                                 <div className="mb-3">
                                     <Select
                                         id="aoi"
-                                        label="Select input"
+                                        label="Boundary type"
                                         onChange={e => {
                                             const newBoundaryInputType = e.target.value;
                                             this.setState({boundaryInputType: newBoundaryInputType});
                                             setIsHelpInactive(newBoundaryInputType === "file");
                                         }}
-                                        options={[{value: "manual", label: "Input Boundary Coordinates"},
-                                                  {value: "file", label: "Upload Boundary File"}]}
+                                        options={[{value: "manual", label: "Input boundary coordinates"},
+                                                  {value: "file", label: "Upload boundary file"}]}
                                         value={boundaryInputType}
                                     />
                                 </div>
