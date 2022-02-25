@@ -54,14 +54,14 @@ export default class CreateProjectWizard extends React.Component {
                 StepComponent: () => (
                     <PlotStep
                         getTotalPlots={this.getTotalPlots}
-                        setIsHelpInactive={this.setIsHelpInactive}
+                        setIsMapInactive={this.setIsMapInactive}
                     />
                 ),
                 helpDescription: "Collection Map Preview",
                 StepHelpComponent: () => (
                     <AOIMap
                         canDrag={!this.context.useTemplatePlots
-                                 && !["csv", "shp"].includes(this.context.plotDistribution) && !this.state.isHelpInactive}
+                            && !["csv", "shp"].includes(this.context.plotDistribution) && !this.state.isMapInactive}
                         context={this.context}
                     />
                 ),
@@ -107,7 +107,7 @@ export default class CreateProjectWizard extends React.Component {
             templateProject: {},
             templatePlots: [],
             templateProjectList: [{id: -1, name: "Loading..."}],
-            isHelpInactive: false
+            isMapInactive: false
         };
     }
 
@@ -515,9 +515,9 @@ export default class CreateProjectWizard extends React.Component {
         );
     };
 
-    setIsHelpInactive = bool => {
+    setIsMapInactive = bool => {
         this.setState({
-            isHelpInactive: bool
+            isMapInactive: bool
         });
     };
 
@@ -525,6 +525,7 @@ export default class CreateProjectWizard extends React.Component {
         const steps = this.getSteps();
         const {description, StepComponent, helpDescription, StepHelpComponent} = steps[this.context.wizardStep];
         const isLast = last(Object.keys(steps)) === this.context.wizardStep;
+        const isMapInactive = this.state.isMapInactive && this.context.wizardStep === "plots";
         return (
             <div
                 className="d-flex pb-5 full-height align-items-center flex-column"
@@ -554,10 +555,10 @@ export default class CreateProjectWizard extends React.Component {
                     <div className="col-4">
                         <div className="d-flex flex-column h-100">
                             <div
-                                className={`h-100 overflow-auto ${this.state.isHelpInactive ? "bg-light" : "bg-lightgray"}`}
+                                className={`h-100 overflow-auto ${isMapInactive ? "bg-light" : "bg-lightgray"}`}
                                 style={{border: "1px solid black", borderRadius: "6px"}}
                             >
-                                <h2 className={`${this.state.isHelpInactive ? "bg-light" : "bg-lightgreen"} w-100 py-1`}>{helpDescription}</h2>
+                                <h2 className={`${isMapInactive ? "bg-light" : "bg-lightgreen"} w-100 py-1`}>{helpDescription}</h2>
                                 <StepHelpComponent/>
                             </div>
                             <NavigationButtons

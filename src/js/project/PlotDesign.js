@@ -305,7 +305,7 @@ export class PlotDesign extends React.Component {
     render() {
         const {boundaryInputType} = this.state;
         const {plotDistribution, plotShape} = this.context;
-        const {totalPlots, setIsHelpInactive} = this.props;
+        const {totalPlots, setIsMapInactive} = this.props;
         const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
 
         const plotOptions = {
@@ -377,7 +377,7 @@ export class PlotDesign extends React.Component {
                                         onChange={e => {
                                             const newBoundaryInputType = e.target.value;
                                             this.setState({boundaryInputType: newBoundaryInputType});
-                                            setIsHelpInactive(newBoundaryInputType === "file");
+                                            setIsMapInactive(newBoundaryInputType === "file");
                                         }}
                                         options={[{value: "manual", label: "Input boundary coordinates"},
                                                   {value: "file", label: "Upload boundary file"}]}
