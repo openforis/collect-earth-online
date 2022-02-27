@@ -2,17 +2,16 @@
 /* Colors */
 /**********/
 :root {
-    --lightgreen:           #31bab0;
-    --lightgreen-hover:     #279b93;
-    --darkgreen:            #0c4d48;
-    --darkgreen-on-hover:   #0b302c;
-    --yellow:               #fccf07;
-    --yellow-on-hover:      #ecbc0d;
-    --lightgray:            #eceeef;
-    --lightgray-on-hover:   #dadcdf;
-    --gray:                 #808080;
-    --darkgray:             #5e5f60;
-    --darkgray-on-hover:    #3a3b3c;
+    --lightgreen:       #31bab0;
+    --lightgreen-hover: #279b93;
+    --darkgreen:        #0c4d48;
+    --yellow:           #fccf07;
+    --yellow-hover:     #ecbc0d;
+    --lightgray:        #eceeef;
+    --lightgray-hover:  #dadcdf;
+    --gray:             #808080;
+    --darkgray:         #5e5f60;
+    --darkgray-hover:   #3a3b3c;
 }
 
 /***********/
@@ -141,9 +140,9 @@ h3 {
     font-weight: bolder;
 }
 h4 {font-size: 0.8rem;}
-bg-darkgreen {
-    background-color: var(--darkgreen);
-    color: white;
+.bg-darkgreen {
+  background-color: var(--darkgreen);
+  color: white;
 }
 .bg-darkgreen h1,.bg-darkgreen h2 {
     padding: 1rem;
@@ -157,7 +156,12 @@ bg-darkgreen {
 .bg-lightgray {
     background-color: var(--lightgray);
 }
-
+.bg-darkgray {
+  background-color: var(--darkgray);
+}
+.bg-gray {
+  background-color: var(--gray);
+}
 /***********/
 /* Buttons */
 /***********/
@@ -172,18 +176,18 @@ bg-darkgreen {
     transition: background-color 50ms linear;
 }
 .btn-lightgray:hover {
-    background-color: var(--lightgray-on-hover);
+    background-color: var(--lightgray-hover);
 }
 .btn-yellow {
     background-color: var(--yellow);
-    color: var(--lightgreen-on-hover);
+    color: var(--lightgreen-hover);
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-yellow a:hover {
-    background-color: var(--yellow-on-hover);
-    color: var(--lightgreen-on-hover);
+    background-color: var(--yellow-hover);
+    color: var(--lightgreen-hover);
 }
 .btn-lightgreen {
     background-color: var(--lightgreen);
@@ -193,7 +197,7 @@ bg-darkgreen {
     transition: background-color 50ms linear;
 }
 .btn-lightgreen:hover {
-    background-color: var(--lightgreen-on-hover);
+    background-color: var(--lightgreen-hover);
     color: white;
 }
 .btn-red {
@@ -231,8 +235,8 @@ bg-darkgreen {
     transition: background-color 50ms linear;
 }
 .btn-outline-lightgray:hover {
-    background-color: var(--lightgray-on-hover);
-    border-color: var(--lightgray-on-hover);
+    background-color: var(--lightgray-hover);
+    border-color: var(--lightgray-hover);
 }
 .btn-outline-darkgray {
     color: var(--darkgray);
@@ -245,8 +249,8 @@ bg-darkgreen {
 }
 .btn-outline-darkgray:hover {
     color: #ffff;
-    background-color: var(--darkgray-on-hover);
-    border-color: var(--darkgray-on-hover);
+    background-color: var(--darkgray-hover);
+    border-color: var(--darkgray-hover);
 }
 .btn-outline-yellow {
     color: #f1c00f;
@@ -303,7 +307,7 @@ a {
     color: var(--lightgreen);
 }
 a:hover {
-    color: var(--lightgreen-on-hover);
+    color: var(--lightgreen-hover);
     text-decoration: none;
 }
 
@@ -411,7 +415,7 @@ a:hover {
 /* Tool Tip */
 /************/
 .tooltip_wrapper {
-    color: var(--lightgreen-on-hover);
+    color: var(--lightgreen-hover);
     position: relative;
     display: inline-block;
 }
@@ -502,7 +506,7 @@ a:hover {
     margin-bottom: 0;
 }
 #lPanel a li.bg-yellow:hover {
-    background-color: var(--yellow-on-hover);
+    background-color: var(--yellow-hover);
     color: white;
 }
 #lPanel .btn.bg-lightgreen, #lPanel .btn.btn-outline-lightgreen {
