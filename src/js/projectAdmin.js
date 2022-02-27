@@ -44,6 +44,7 @@ class Project extends React.Component {
             imageryId: -1,
             aoiFeatures: [],
             aoiFileName: "",
+            boundaryType: "manual",
             numPlots: "",
             plotSpacing: "",
             plotShape: "square",

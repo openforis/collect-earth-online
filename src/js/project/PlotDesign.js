@@ -4,13 +4,11 @@ import shp from "shpjs";
 import {formatNumberWithCommas, readFileAsArrayBuffer, readFileAsBase64Url} from "../utils/generalUtils";
 import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator";
-import Select from "../components/Select";
 
 export class PlotDesign extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            boundaryInputType: "manual",
             lonMin: "",
             latMin: "",
             lonMax: "",
@@ -257,6 +255,28 @@ export class PlotDesign extends React.Component {
         </div>
     );
 
+    renderAOISelector = () => {
+        const {boundaryType} = this.context;
+        const boundaryOptions = [{value: "manual", label: "Input boundary coordinates"},
+                                 {value: "file", label: "Upload boundary file"}];
+        return (
+            <>
+                <div className="form-group" style={{width: "fit-content"}}>
+                    <label>Boundary type</label>
+                    <select
+                        className="form-control form-control-sm"
+                        onChange={e => this.setPlotDetails({boundaryType: e.target.value})}
+                        value={boundaryType}
+                    >
+                        {boundaryOptions.map(({value, label}) =>
+                            <option key={value} value={value}>{label}</option>)}
+                    </select>
+                </div>
+                {boundaryType === "manual" ? this.renderAOICoords() : this.renderBoundaryFileInput()}
+            </>
+        );
+    };
+
     renderFileInput = fileType => (
         <div>
             <div style={{display: "flex"}}>
@@ -303,9 +323,8 @@ export class PlotDesign extends React.Component {
     );
 
     render() {
-        const {boundaryInputType} = this.state;
         const {plotDistribution, plotShape} = this.context;
-        const {totalPlots, setIsHelpInactive} = this.props;
+        const {totalPlots} = this.props;
         const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
 
         const plotOptions = {
@@ -362,31 +381,13 @@ export class PlotDesign extends React.Component {
                     <div>
                         <div style={{display: "flex"}}>
                             {plotOptions[plotDistribution].inputs.map((i, idx) => (
-                            // eslint-disable-next-line react/no-array-index-key
+                                // eslint-disable-next-line react/no-array-index-key
                                 <div key={idx} className="mr-3">
                                     {i()}
                                 </div>
                             ))}
                         </div>
-                        {plotOptions[plotDistribution].showAOI && (
-                            <div>
-                                <div className="mb-3">
-                                    <Select
-                                        id="aoi"
-                                        label="Boundary type"
-                                        onChange={e => {
-                                            const newBoundaryInputType = e.target.value;
-                                            this.setState({boundaryInputType: newBoundaryInputType});
-                                            setIsHelpInactive(newBoundaryInputType === "file");
-                                        }}
-                                        options={[{value: "manual", label: "Input boundary coordinates"},
-                                                  {value: "file", label: "Upload boundary file"}]}
-                                        value={boundaryInputType}
-                                    />
-                                </div>
-                                {boundaryInputType === "manual" ? this.renderAOICoords() : this.renderBoundaryFileInput()}
-                            </div>
-                        )}
+                        {plotOptions[plotDistribution].showAOI && this.renderAOISelector()}
                     </div>
                     <p
                         className="font-italic ml-2 small"
