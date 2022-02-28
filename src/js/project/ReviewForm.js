@@ -30,7 +30,6 @@ export default function ReviewForm() {
                 className="text-truncate"
                 style={{
                     color: "white",
-                    fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol'",
                     fontSize: "1.25rem",
                     margin: "0 1rem"
                 }}
