@@ -195,7 +195,7 @@ export class PlanetNICFIMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.updateImageryInformation();
+        this.updatePlanetLayer();
     }
 
     componentDidUpdate(prevProps) {
