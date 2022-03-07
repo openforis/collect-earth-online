@@ -188,7 +188,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     editWidgetDesign = widget => {
         // eslint-disable-next-line no-unused-vars
-        const {id, layout, name, type, ...widgetDesign} = widget;
+        const {_id, _layout, name, type, ...widgetDesign} = widget;
         this.setState({
             type,
             title: name,
@@ -204,7 +204,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         if ((pathPrefix === "image1" || pathPrefix === "image2")) {
             if (dataKey === "type") {
                 // eslint-disable-next-line no-unused-vars
-                const {basemapId, ...blankWidget} = this.widgetTypes[val].blankWidget;
+                const {_basemapId, ...blankWidget} = this.widgetTypes[val].blankWidget;
                 this.setState({widgetDesign: {...widgetDesign, [pathPrefix]: {...blankWidget, type: val}}});
             } else {
                 this.setState({
