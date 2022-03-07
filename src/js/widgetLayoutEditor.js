@@ -188,7 +188,7 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     editWidgetDesign = widget => {
         // eslint-disable-next-line no-unused-vars
-        const {_id, _layout, name, type, ...widgetDesign} = widget;
+        const {id, layout, name, type, ...widgetDesign} = widget;
         this.setState({
             type,
             title: name,
@@ -204,7 +204,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         if ((pathPrefix === "image1" || pathPrefix === "image2")) {
             if (dataKey === "type") {
                 // eslint-disable-next-line no-unused-vars
-                const {_basemapId, ...blankWidget} = this.widgetTypes[val].blankWidget;
+                const {basemapId, ...blankWidget} = this.widgetTypes[val].blankWidget;
                 this.setState({widgetDesign: {...widgetDesign, [pathPrefix]: {...blankWidget, type: val}}});
             } else {
                 this.setState({
@@ -259,7 +259,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                 const row = layouts.filter(l => l.y === y);
                 const emptyX = _.range(10)
                     .filter(x => row.every(l => (x < l.x && x + width <= l.x)
-                        || (x >= l.x + l.w && x + width >= l.x + l.w)));
+                    || (x >= l.x + l.w && x + width >= l.x + l.w)));
                 return {x: _.first(emptyX), y};
             }).find(({x}) => _.isNumber(x)) || {x: 0, y: nextY};
 
@@ -283,11 +283,11 @@ class WidgetLayoutEditor extends React.PureComponent {
         return [
             !title.length && "You must add a title for the widget.",
             widgetDesign.hasOwnProperty("visParams")
-            && !isValidJSON(widgetDesign.visParams)
-            && "You have entered invalid JSON for Image Parameters",
+                && !isValidJSON(widgetDesign.visParams)
+                && "You have entered invalid JSON for Image Parameters",
             widgetDesign.hasOwnProperty("assetId")
-            && !widgetDesign.assetId
-            && "Asset ID is required."
+                && !widgetDesign.assetId
+                && "Asset ID is required."
         ].filter(e => e);
     };
 
@@ -554,7 +554,7 @@ class WidgetLayoutEditor extends React.PureComponent {
                                                     width: "fit-content"
                                                 }}
                                             >
-                                                Sample Image
+                                            Sample Image
                                             </div>
                                         </div>
                                     </WidgetContainer>
@@ -571,8 +571,8 @@ class WidgetLayoutEditor extends React.PureComponent {
                         >
                             <SvgIcon icon="alert" size="1.2rem"/>
                             <p style={{marginLeft: "0.4rem"}}>
-                                You don&apos;t have any GeoDash Widgets.
-                                Click Copy Layout or Add Widget above to get started!
+                              You don&apos;t have any GeoDash Widgets.
+                              Click Copy Layout or Add Widget above to get started!
                             </p>
                         </div>
                     )}
