@@ -408,16 +408,16 @@ class WidgetLayoutEditor extends React.PureComponent {
     editDialogButtons = () => (
         <>
             <button
-                className="btn btn-secondary"
-                data-dismiss="modal"
+          className="btn btn-red"
+          data-dismiss="modal"
                 onClick={this.cancelEditWidget}
                 type="button"
             >
                 Cancel
             </button>
             <button
-                className="btn btn-primary"
-                onClick={this.saveWidgetEdits}
+          className="btn btn-yellow"
+          onClick={this.saveWidgetEdits}
                 type="button"
             >
                 Update
