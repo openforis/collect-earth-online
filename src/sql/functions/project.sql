@@ -577,7 +577,7 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         created_date,
         published_date,
         closed_date,
-        count(widget_uid) > 1,
+        count(widget_uid) > 0,
         token_key
     FROM projects
     LEFT JOIN project_widgets
