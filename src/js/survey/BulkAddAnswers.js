@@ -2,20 +2,25 @@ import React, {useContext, useState} from "react";
 
 import SvgIcon from "../components/svg/SvgIcon";
 import {ProjectContext} from "../project/constants";
-import {getNextInSequence, partition} from "../utils/sequence";
+import {getNextInSequence, partition, last} from "../utils/sequence";
 
 export default function BulkAddAnswers({closeDialog, surveyQuestionId, surveyQuestion}) {
     const [newAnswers, setAnswers] = useState("");
     const {surveyQuestions, setProjectDetails} = useContext(ProjectContext);
 
+    const getAnswerErrors = answerPairs => [
+        last(answerPairs).length !== 2 && "You must provide pairs of color and answer.  If you feel like you have correct data, check for extra separators (comma, tab, or new line)",
+        answerPairs.find(([c, _a]) => !c.match(/#[0-9|a-f]{6}/)) && "Colors must be 6 digit hex values."
+    ].filter(e => e);
+
     const addAnswers = () => {
-        const splitArr = newAnswers.split(/[,|\n|\t] */);
-        if (splitArr.length % 2 !== 0) {
-            alert("You must provide pairs of color and answer.  If you feel like you have correct data, check for extra separators (comma, tab, or new line)");
+        const answerPairs = partition(newAnswers.split(/[,|\n|\t] */), 2);
+        const answerErrors = getAnswerErrors(answerPairs);
+        if (answerErrors.length) {
+            alert(answerErrors.join("\n"));
         } else {
             const newId = getNextInSequence(Object.keys(surveyQuestion.answers));
-            const pairs = partition(splitArr, 2);
-            const updatedAnswers = pairs.reduce((answers, [color, answer], idx) => {
+            const updatedAnswers = answerPairs.reduce((answers, [color, answer], idx) => {
                 const newAnswer = {answer: answer.trim(), color};
                 return {
                     [newId + idx]: newAnswer,
