@@ -104,7 +104,8 @@ module.exports = {
         "no-return-assign": 1, // Error
         "no-use-before-define": [1, "nofunc"], // Error
         "no-useless-return": 1,
-        "no-unused-vars": 0,
+        "no-unused-vars": [1, {"argsIgnorePattern": "^_"}],
+        "no-unused-imports": 0,
         "no-var": 1, // Error
         "object-curly-newline": [1, {"multiline": true, "consistent": true}],
         "object-curly-spacing": [1, "never"],
