@@ -27,7 +27,7 @@ export default function SurveyCard({
         ];
         const newOrder = findObject(surveyQuestions, ([id, _sq]) => Number(id) === newId)[1].cardOrder;
         setProjectDetails({
-            surveyQuestions: mapVals(surveyQuestions, val => (val.cardOrder
+            surveyQuestions: mapVals(surveyQuestions, val => (val.cardOrder !== undefined
                 ? {...val, cardOrder: swapId(val.cardOrder, originalOrder, newOrder)}
                 : val))
         });
