@@ -8,7 +8,6 @@ module.exports = {
     },
     plugins: [
         "@babel",
-        "unused-imports",
         "react"
     ],
     env: {
@@ -71,11 +70,6 @@ module.exports = {
         "@babel/no-unused-expressions": "error",
         "@babel/object-curly-spacing": "error",
         "@babel/semi": "error",
-        "unused-imports/no-unused-imports": "warn",
-        "unused-imports/no-unused-vars": [
-            "warn",
-            {"vars": "all", "varsIgnorePattern": "^_", "args": "after-used", "argsIgnorePattern": "^_"}
-        ],
 
         // ESLint
         "arrow-parens": ["error", "as-needed"],

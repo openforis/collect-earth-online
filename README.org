@@ -6,7 +6,7 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 
 *** Required
 
-- [[https://jdk.java.net][Java Development Kit (version 14)]]
+- [[https://jdk.java.net][Java Development Kit (version 17)]]
 - [[https://clojure.org/guides/getting_started][Clojure CLI tools 1.10]]
 - [[https://www.postgresql.org/download][Postgresql (version 12)]]
 - [[https://postgis.net/install/][PostGIS (version 3)]]
@@ -142,9 +142,9 @@ earthengine authenticate
 
 This command will open a window in your browser containing a key that you should copy and paste back into your terminal. You do not need to update the ~:gee~ section of ~config.edn~ if you use this method.
 
-*** Create accounts 
+*** Create accounts
 
-To be able to crate accounts without having to send email for confirmation, set ~:auto-validate?~ of ~:mail~ to ~true~ in ~config.edn~. 
+To be able to crate accounts without having to send email for confirmation, set ~:auto-validate?~ of ~:mail~ to ~true~ in ~config.edn~.
 
 *** Compile and run
 
