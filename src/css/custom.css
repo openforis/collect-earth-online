@@ -180,7 +180,7 @@ h4 {font-size: 0.8rem;}
 }
 .btn-yellow {
     background-color: var(--yellow);
-    color: var(--lightgreen-hover);
+    color: white;
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
