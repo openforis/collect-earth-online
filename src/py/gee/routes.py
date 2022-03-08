@@ -5,7 +5,7 @@ from gee.utils import initialize, listAvailableBands, imageToMapId, imageCollect
     filteredImageCompositeToMapId, filteredSentinelComposite, filteredSentinelSARComposite, \
     filteredImageByIndexToMapId, getFeatureCollectionTileUrl, getTimeSeriesByCollectionAndIndex, \
     getTimeSeriesByIndex, getStatistics, getDegradationPlotsByPoint, getDegradationPlotsByPointS1, \
-    getDegradationTileUrlByDate, getDegradationTileUrlByDateS1
+    getDegradationTileUrlByDate, getDegradationTileUrlByDateS1, safeParseJSON
 from gee.planet import getPlanetMapID
 
 
@@ -38,7 +38,7 @@ def getAvailableBands(requestDict):
 def image(requestDict):
     values = imageToMapId(
         getDefault(requestDict, 'assetId'),
-        getDefault(requestDict, 'visParams', {})
+        safeParseJSON(getDefault(requestDict, 'visParams', {}))
     )
     return values
 
@@ -48,7 +48,7 @@ def image(requestDict):
 def imageCollection(requestDict):
     values = imageCollectionToMapId(
         getDefault(requestDict, 'assetId', None),
-        getDefault(requestDict, 'visParams', None),
+        safeParseJSON(getDefault(requestDict, 'visParams', {})),
         getDefault(requestDict, 'reducer', 'Mean'),
         getDefault(requestDict, 'startDate', None),
         getDefault(requestDict, 'endDate', None)
@@ -134,7 +134,7 @@ def imageCollectionByIndex(requestDict):
 
 # # TODO, this route inst really generic to any feature collections like the name suggests.
 def featureCollection(requestDict):
-    visParams = getDefault(requestDict, 'visParams', {})
+    visParams = safeParseJSON(getDefault(requestDict, 'visParams', {}))
     values = {
         'url': getFeatureCollectionTileUrl(
             getDefault(requestDict, 'assetId', None),
