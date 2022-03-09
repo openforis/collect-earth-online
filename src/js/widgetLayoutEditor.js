@@ -127,7 +127,11 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     getInstitutionImagery = () => fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
         .then(response => (response.ok ? response.json() : Promise.reject(response)))
-        .then(data => this.setState({imagery: data}));
+        .then(data => this.setState({imagery: data}))
+        .catch(error => {
+            console.log(error);
+            alert("Error loading imagery.  See console for details.");
+        });
 
     getProjectTemplateList = () => fetch("/get-template-projects")
         .then(response => (response.ok ? response.json() : Promise.reject(response)));
