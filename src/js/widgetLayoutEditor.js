@@ -540,9 +540,12 @@ class WidgetLayoutEditor extends React.PureComponent {
                                     >
                                         <div
                                             style={{
-                                                backgroundImage: "url(" + this.getImageByType(widget.type) + ")",
-                                                backgroundSize: "cover",
-                                                height: "100%"
+                                                height: "100%",
+                                                position: "relative",
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                width: "100%"
                                             }}
                                         >
                                             <div
@@ -551,11 +554,21 @@ class WidgetLayoutEditor extends React.PureComponent {
                                                     background: "#f1f1f1",
                                                     borderRadius: ".5rem",
                                                     padding: "0 .5rem",
-                                                    width: "fit-content"
+                                                    zIndex: 100
                                                 }}
                                             >
-                                            Sample Image
+                                                Sample Image
                                             </div>
+                                            <img
+                                                alt="preview of widget"
+                                                src={this.getImageByType(widget.type)}
+                                                style={{
+                                                    height: "100%",
+                                                    position: "absolute",
+                                                    width: "100%",
+                                                    objectFit: "contain"
+                                                }}
+                                            />
                                         </div>
                                     </WidgetContainer>
                                 </div>
