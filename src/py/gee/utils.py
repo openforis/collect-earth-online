@@ -40,6 +40,16 @@ def getReducer(reducer):
     else:
         return ee.Reducer.median()
 
+def safeParseJSON(val):
+    if type(val) == "<class 'dict'>":
+        return val
+    else:
+        try:
+            return json.loads(val)
+        except Exception as e:
+            return {}
+
+
 ########## Helper routes ##########
 
 
@@ -73,6 +83,7 @@ def imageCollectionToMapId(assetId, visParams, reducer, startDate, endDate):
     if (startDate and endDate):
         eeFilterDate = ee.Filter.date(startDate, endDate)
         eeCollection = eeCollection.filter(eeFilterDate)
+
     if reducer.lower() == 'mosaic':
         reducedImage = ee.Image(eeCollection.mosaic())
     else:
