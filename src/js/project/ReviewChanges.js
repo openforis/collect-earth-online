@@ -54,7 +54,8 @@ export default class ReviewChanges extends React.Component {
     };
 
     updateProject = () => {
-        if (confirm("Collection data will cleared to reset the project. Do you really want to update this project?")) {
+        if (this.context.availability !== "unpublished"
+            || confirm("Collection data will cleared to reset the project. Do you really want to update this project?")) {
             this.context.processModal(
                 "Updating Project",
                 () => fetch(
