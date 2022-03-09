@@ -365,12 +365,13 @@ class WidgetLayoutEditor extends React.PureComponent {
 
     onLayoutChange = layout => {
         const {widgets} = this.state;
-        widgets.filter((stateWidget, idx) => !this.sameLayout(stateWidget.layout, layout[idx]))
-            .forEach((stateWidget, idx) => {
-                const {x, y, h, w} = layout[idx];
-                const newWidget = {...stateWidget, layout: {x, y, h, w}};
-                this.widgetAPIWrapper("update-widget", newWidget);
-            });
+        widgets.forEach(stateWidget => {
+            const thisLayout = layout.find(l => Number(l.i) === stateWidget.id);
+            if (!this.sameLayout(stateWidget.layout, thisLayout)) {
+                const {x, y, h, w} = thisLayout;
+                this.widgetAPIWrapper("update-widget", {...stateWidget, layout: {x, y, h, w}});
+            }
+        });
     };
 
     /// Render
