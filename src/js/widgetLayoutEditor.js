@@ -110,9 +110,10 @@ class WidgetLayoutEditor extends React.PureComponent {
     /// Lifecycle
 
     componentDidMount() {
-        Promise.all([this.fetchProjectWidgets(), this.getInstitutionImagery(), this.getProjectTemplateList()])
-            .then(([widgets, imagery, projectTemplateList]) =>
-                this.setState({widgets, imagery, projectTemplateList}))
+        this.getInstitutionImagery();
+        Promise.all([this.fetchProjectWidgets(), this.getProjectTemplateList()])
+            .then(([widgets, projectTemplateList]) =>
+                this.setState({widgets, projectTemplateList}))
             .catch(error => {
                 console.error(error);
                 alert("Error loading widget designer.  See console for details.");
@@ -125,7 +126,8 @@ class WidgetLayoutEditor extends React.PureComponent {
         .then(response => (response.ok ? response.json() : Promise.reject(response)));
 
     getInstitutionImagery = () => fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
-        .then(response => (response.ok ? response.json() : Promise.reject(response)));
+        .then(response => (response.ok ? response.json() : Promise.reject(response)))
+        .then(data => this.setState({imagery: data}));
 
     getProjectTemplateList = () => fetch("/get-template-projects")
         .then(response => (response.ok ? response.json() : Promise.reject(response)));
