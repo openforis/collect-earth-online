@@ -145,6 +145,8 @@ This command will open a window in your browser containing a key that you should
 *** Create accounts
 
 To be able to crate accounts without having to send email for confirmation, set ~:auto-validate?~ of ~:mail~ to ~true~ in ~config.edn~.
+There can only be one superuser account with ~user_uid~ of ~1~ ~adminstrator~ flag set to ~true~.
+Activating this flag for other users can cause their queries to sometimes not return the full result, as some of those queries assume only one root superuser to be existing.
 
 *** Compile and run
 
