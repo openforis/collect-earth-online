@@ -111,35 +111,32 @@ export default function SurveyDesignQuestion({indentLevel, editMode, surveyQuest
                                 <span className="font-weight-bold">Component Type: </span>
                                 {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
                             </li>
-                            {surveyRules && surveyRules.length > 0 && (
-                                <li>
-                                    <b>Rules:</b>
-                                    <ul>
-                                        {surveyRules.map(rule =>
-                                            [rule.questionId, rule.questionId1, rule.questionId2]
-                                                .concat(rule.questionIds)
-                                                .concat(rule.questionIds1)
-                                                .concat(rule.questionIds2)
-                                                .includes(surveyQuestionId)
-                                                && (
-                                                    <li key={rule.id}>
-                                                        <div className="tooltip_wrapper">
-                                                            {`Rule ${rule.id + 1}: ${rule.ruleType}`}
-                                                            <div className="tooltip_content survey_rule">
-                                                                <SurveyRule
-                                                                    editMode={editMode}
-                                                                    rule={rule}
-                                                                    setProjectDetails={setProjectDetails}
-                                                                    surveyQuestions={surveyQuestions}
-                                                                    surveyRules={surveyRules}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                ))}
-                                    </ul>
-                                </li>
-                            )}
+                            {surveyRules && surveyRules.length > 0 && surveyRules.map(rule =>
+                                [rule.questionId, rule.questionId1, rule.questionId2]
+                                    .concat(rule.questionIds)
+                                    .concat(rule.questionIds1)
+                                    .concat(rule.questionIds2)
+                                    .includes(surveyQuestionId) && (
+                                    <li>
+                                        <b>Rules:</b>
+                                        <ul>
+                                            <li key={rule.id}>
+                                                <div className="tooltip_wrapper">
+                                                    {`Rule ${rule.id + 1}: ${rule.ruleType}`}
+                                                    <div className="tooltip_content survey_rule">
+                                                        <SurveyRule
+                                                            editMode={editMode}
+                                                            rule={rule}
+                                                            setProjectDetails={setProjectDetails}
+                                                            surveyQuestions={surveyQuestions}
+                                                            surveyRules={surveyRules}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                ))}
                             {parentQuestion && (
                                 <>
                                     <li>
