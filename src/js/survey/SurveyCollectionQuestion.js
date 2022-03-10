@@ -19,7 +19,7 @@ export default function SurveyCollectionQuestion({
     const [showAnswers, setShow] = useState(true);
     const childNodes = filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === surveyNodeId);
     const nodeQuestion = surveyQuestions[surveyNodeId];
-    return (
+    return nodeQuestion ? (
         <>
             <fieldset
                 className="justify-content-center text-center"
@@ -90,5 +90,5 @@ export default function SurveyCollectionQuestion({
                 );
             })}
         </>
-    );
+    ) : null;
 }
