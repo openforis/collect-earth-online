@@ -343,7 +343,7 @@ export const imageryOptions = [
     },
     {
         type: "GEEImageCollection",
-        label: "GEE ImageCollection Asset",
+        label: "GEE Image Collection Asset",
         optionalProxy: false,
         defaultProxy: false,
         params: [
