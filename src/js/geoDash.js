@@ -148,7 +148,7 @@ class Geodash extends React.Component {
                     ))
                     ) : (
                         <div style={{gridArea: "2 / 2 / span 2 / span 10"}}>
-                            <h1>Retrieving Geo-Dash configuration for this project</h1>
+                            <h1>There is no Geo-Dash widgets for this project</h1>
                         </div>
                     )}
             </div>
