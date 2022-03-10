@@ -21,7 +21,7 @@ class Geodash extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            widgets: [],
+            widgets: null,
             mapCenter: null,
             mapZoom: null,
             imageryList: [],
@@ -129,7 +129,11 @@ class Geodash extends React.Component {
                     gap: ".5rem"
                 }}
             >
-                {widgets.length > 0
+                {widgets === null ? (
+                    <div style={{gridArea: "2 / 2 / span 2 / span 10"}}>
+                        <h1>Retrieving Geo-Dash configuration for this project</h1>
+                    </div>
+                ) : widgets.length > 0
                     ? (widgets.map((widget, idx) => (
                         <WidgetGridItem
                             key={widget.id}
