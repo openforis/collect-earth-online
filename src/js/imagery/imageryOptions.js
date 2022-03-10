@@ -27,7 +27,8 @@ export const nicfiLayers = [
     "2021-10",
     "2021-11",
     "2021-12",
-    "2022-01"
+    "2022-01",
+    "2022-02"
 ];
 
 const outOfRange = (num, low, high) => isNaN(num) || parseInt(num) < low || parseInt(num) > high;
