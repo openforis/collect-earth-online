@@ -131,7 +131,7 @@ export default function SurveyDesignQuestion({indentLevel, editMode, surveyQuest
                                                         {`Rule ${rule.id + 1}: ${rule.ruleType}`}
                                                         <div className="tooltip_content survey_rule">
                                                             <SurveyRule
-                                                                editMode={editMode}
+                                                                inDesignMode={editMode === "full"}
                                                                 rule={rule}
                                                                 setProjectDetails={setProjectDetails}
                                                                 surveyQuestions={surveyQuestions}
