@@ -55,12 +55,14 @@ export default function SurveyDesignQuestion({indentLevel, editMode, surveyQuest
         }
     };
 
-    const filteredRules = surveyRules && surveyRules.filter(rule =>
-        [rule.questionId, rule.questionId1, rule.questionId2]
-            .concat(rule.questionIds)
-            .concat(rule.questionIds1)
-            .concat(rule.questionIds2)
-            .includes(surveyQuestionId));
+    const filteredRules = surveyRules
+        ? surveyRules.filter(rule =>
+            [rule.questionId, rule.questionId1, rule.questionId2]
+                .concat(rule.questionIds)
+                .concat(rule.questionIds1)
+                .concat(rule.questionIds2)
+                .includes(surveyQuestionId))
+        : [];
 
     return (
         <>
@@ -118,7 +120,7 @@ export default function SurveyDesignQuestion({indentLevel, editMode, surveyQuest
                                 <span className="font-weight-bold">Component Type: </span>
                                 {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
                             </li>
-                            {filteredRules && filteredRules.length > 0 && (
+                            {filteredRules.length > 0 && (
                                 <li>
                                     <b>Rules:</b>
                                     <ul>
