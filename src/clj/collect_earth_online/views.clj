@@ -63,7 +63,7 @@
                           :width            "100vw"
                           :z-index          "10000"}}
      [:script {:type "text/javascript"}
-      "setTimeout (function () {document.getElementById ('banner') .style.display='none'}, 10000);"]
+      "setTimeout (function () {document.getElementById ('banner') .style.display='none'}, 5000);"]
      [:p {:style {:font-size   "18px"
                   :font-weight "bold"
                   :margin      "0 30px 0 0"}}
