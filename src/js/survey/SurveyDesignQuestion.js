@@ -55,6 +55,15 @@ export default function SurveyDesignQuestion({indentLevel, editMode, surveyQuest
         }
     };
 
+    const filteredRules = surveyRules
+        ? surveyRules.filter(rule =>
+            [rule.questionId, rule.questionId1, rule.questionId2]
+                .concat(rule.questionIds)
+                .concat(rule.questionIds1)
+                .concat(rule.questionIds2)
+                .includes(surveyQuestionId))
+        : [];
+
     return (
         <>
             {showBulkAdd && (
@@ -111,32 +120,27 @@ export default function SurveyDesignQuestion({indentLevel, editMode, surveyQuest
                                 <span className="font-weight-bold">Component Type: </span>
                                 {surveyQuestion.componentType + " - " + surveyQuestion.dataType}
                             </li>
-                            {surveyRules && surveyRules.length > 0 && (
+                            {filteredRules.length > 0 && (
                                 <li>
                                     <b>Rules:</b>
                                     <ul>
-                                        {surveyRules.map(rule =>
-                                            [rule.questionId, rule.questionId1, rule.questionId2]
-                                                .concat(rule.questionIds)
-                                                .concat(rule.questionIds1)
-                                                .concat(rule.questionIds2)
-                                                .includes(surveyQuestionId)
-                                                && (
-                                                    <li key={rule.id}>
-                                                        <div className="tooltip_wrapper">
-                                                            {`Rule ${rule.id + 1}: ${rule.ruleType}`}
-                                                            <div className="tooltip_content survey_rule">
-                                                                <SurveyRule
-                                                                    editMode={editMode}
-                                                                    rule={rule}
-                                                                    setProjectDetails={setProjectDetails}
-                                                                    surveyQuestions={surveyQuestions}
-                                                                    surveyRules={surveyRules}
-                                                                />
-                                                            </div>
+                                        {filteredRules.map(rule =>
+                                            (
+                                                <li key={rule.id}>
+                                                    <div className="tooltip_wrapper">
+                                                        {`Rule ${rule.id + 1}: ${rule.ruleType}`}
+                                                        <div className="tooltip_content survey_rule">
+                                                            <SurveyRule
+                                                                editMode={editMode}
+                                                                rule={rule}
+                                                                setProjectDetails={setProjectDetails}
+                                                                surveyQuestions={surveyQuestions}
+                                                                surveyRules={surveyRules}
+                                                            />
                                                         </div>
-                                                    </li>
-                                                ))}
+                                                    </div>
+                                                </li>
+                                            ))}
                                     </ul>
                                 </li>
                             )}
