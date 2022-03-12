@@ -130,10 +130,9 @@ export default function SurveyRule({inDesignMode, rule, surveyQuestions, setProj
                             alignItems: "baseline",
                             display: "flex",
                             flexDirection: "row",
-                            justifyContent: "space-between"
+                            justifyContent: "start"
                         }}
                     >
-                        <h3 style={{marginBottom: 0}}>{rule.id + 1}. {title}</h3>
                         {inDesignMode && (
                             <button
                                 className="btn btn-sm btn-outline-red"
@@ -144,6 +143,7 @@ export default function SurveyRule({inDesignMode, rule, surveyQuestions, setProj
                                 <SvgIcon icon="trash" size="1rem"/>
                             </button>
                         )}
+                        <h3 style={{marginBottom: 0, marginLeft: 6}}>{rule.id + 1}. {title}</h3>
                     </div>
                     <hr style={{margin: "0.5rem 0"}}/>
                     <RuleBody/>
