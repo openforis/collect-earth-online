@@ -1,4 +1,5 @@
 const path = require("path");
+const webpack = require("webpack");
 const fs = require("fs");
 
 const outdir = "target/public/js";
@@ -79,7 +80,15 @@ module.exports = env => {
                 }
             ]
         },
+        resolve: {
+            fallback: {
+                buffer: require.resolve("buffer/")
+            }
+        },
         plugins: [
+            new webpack.ProvidePlugin({
+                Buffer: ["buffer", "Buffer"]
+            }),
             {
                 apply: compiler => {
                     compiler.hooks.initialize.tap("InitializePlugin", () => {
