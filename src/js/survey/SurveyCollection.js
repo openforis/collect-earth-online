@@ -164,7 +164,7 @@ export default class SurveyCollection extends React.Component {
         return _.get(surveyQuestions, [questionId, "answers", answerId, "answer"], "");
     };
 
-    checkRuleTextMatch = (surveyRule, questionIdToSet, answerId, answerText) => {
+    checkRuleTextMatch = (surveyRule, questionIdToSet, _answerId, answerText) => {
         if (surveyRule.questionId === questionIdToSet
             && !RegExp(surveyRule.regex).test(answerText)) {
             return `Text match validation failed.\r\n\nPlease enter an answer that matches the expression: ${surveyRule.regex}`;
@@ -173,7 +173,7 @@ export default class SurveyCollection extends React.Component {
         }
     };
 
-    checkRuleNumericRange = (surveyRule, questionIdToSet, answerId, answerText) => {
+    checkRuleNumericRange = (surveyRule, questionIdToSet, _answerId, answerText) => {
         if (surveyRule.questionId === questionIdToSet
             && (!isNumber(answerText)
                 || answerText < surveyRule.min
@@ -184,39 +184,54 @@ export default class SurveyCollection extends React.Component {
         }
     };
 
-    // TODO, sqId needs to be integer for all checks
+    sumAnsweredQuestionsPerSample = (answeredQuestions, sampleId) =>
+        Object.entries(answeredQuestions)
+            .reduce((acc, [qId, aq]) => {
+                const answeredVal = Number(this.getSurveyAnswerText(qId, aq.answered.find(ans =>
+                    ans.sampleId === sampleId).answerId));
+                return acc + answeredVal;
+            }, 0);
 
-    checkRuleSumOfAnswers = (surveyRule, questionIdToSet, answerId, answerText) => {
+    getAnsweredQuestions = (ruleQuestions, questionIdToSet) => filterObject(
+        this.props.surveyQuestions,
+        ([sqId, sq]) => {
+            const numSqId = Number(sqId);
+            return ruleQuestions.includes(numSqId)
+                && sq.answered.length > 0 && numSqId !== questionIdToSet;
+        }
+    );
+
+    getAnsweredSampleIds = answeredQuestions => mapObjectArray(
+        answeredQuestions,
+        ([_sqId, aq]) => aq.answered.map(a => a.sampleId)
+    );
+
+    checkRuleSumOfAnswers = (surveyRule, questionIdToSet, answerId, _answerText) => {
+        const answerVal = Number(this.getSurveyAnswerText(questionIdToSet, answerId));
         if (surveyRule.questionIds.includes(questionIdToSet)) {
-            const answeredQuestions = filterObject(
-                this.props.surveyQuestions,
-                ([sqId, sq]) => surveyRule.questionIds.includes(sqId)
-                    && sq.answered.length > 0 && sqId !== questionIdToSet
-            );
-            if (surveyRule.questionIds.length === answeredQuestions.length + 1) {
+            const answeredQuestions = this.getAnsweredQuestions(surveyRule.questionIds, questionIdToSet);
+            if (surveyRule.questionIds.length === lengthObject(answeredQuestions) + 1) {
                 const sampleIds = this.props.getSelectedSampleIds(questionIdToSet);
-                const answeredSampleIds = answeredQuestions.map(aq => aq.answered.map(a => a.sampleId));
+                const answeredSampleIds = this.getAnsweredSampleIds(answeredQuestions);
                 const commonSampleIds = answeredSampleIds.reduce(intersection, sampleIds);
                 if (commonSampleIds.length > 0) {
-                    return commonSampleIds.map(sampleId => {
-                        const answeredSum = answeredQuestions
-                            .map(aq => aq.answered.find(ans => ans.sampleId === sampleId).answerText)
-                            .reduce((sum, num) => sum + parseInt(num), 0);
-                        if (answeredSum + parseInt(answerText) !== surveyRule.validSum) {
-                            const {question} = this.props.surveyQuestions[questionIdToSet];
-                            return `Sum of answers validation failed.\r\n\nSum for questions [${
+                    const invalidSum = commonSampleIds
+                        .map(sampleId => this.sumAnsweredQuestionsPerSample(answeredQuestions, sampleId))
+                        .find(s => s + answerVal !== surveyRule.validSum);
+                    if (invalidSum) {
+                        const {question} = this.props.surveyQuestions[questionIdToSet];
+                        return `Sum of answers validation failed.\r\n\nSum for questions [${
                                 surveyRule.questionIds.map(q => this.getSurveyQuestionText(q)).toString()
                             }] must be ${
                                 (surveyRule.validSum).toString()
                             }.\r\n\nAn acceptable answer for "${
                                 question
                             }" is ${
-                                (surveyRule.validSum - answeredSum).toString()
+                                (surveyRule.validSum - invalidSum).toString()
                             }.`;
-                        } else {
-                            return null;
-                        }
-                    }).find(res => res !== null);
+                    } else {
+                        return null;
+                    }
                 } else {
                     return null;
                 }
@@ -228,47 +243,40 @@ export default class SurveyCollection extends React.Component {
         }
     };
 
-    checkRuleMatchingSums = (surveyRule, questionIdToSet, answerId, answerText) => {
-        if (surveyRule.questionIds1.includes(questionIdToSet)
-                || surveyRule.questionIds2.includes(questionIdToSet)) {
-            const answeredQuestions1 = filterObject(
-                this.props.surveyQuestions,
-                ([sqId, sq]) => surveyRule.questionIds1.includes(sqId)
-                    && sq.answered.length > 0 && sqId !== questionIdToSet
-            );
-            const answeredQuestions2 = filterObject(
-                this.props.surveyQuestions,
-                ([sqId, sq]) => surveyRule.questionIds2.includes(sqId)
-                    && sq.answered.length > 0 && sqId !== questionIdToSet
-            );
-            if (surveyRule.questionIds1.length + surveyRule.questionIds2.length
-                    === answeredQuestions1.length + answeredQuestions2.length + 1) {
+    checkRuleMatchingSums = (surveyRule, questionIdToSet, answerId, _answerText) => {
+        const answerVal = Number(this.getSurveyAnswerText(questionIdToSet, answerId));
+        if (surveyRule.questionIds1.concat(surveyRule.questionIds2).includes(questionIdToSet)) {
+            const answeredQuestions1 = this.getAnsweredQuestions(surveyRule.questionIds1, questionIdToSet);
+            const answeredQuestions2 = this.getAnsweredQuestions(surveyRule.questionIds2, questionIdToSet);
+            const ansLen1 = lengthObject(answeredQuestions1);
+            const ansLen2 = lengthObject(answeredQuestions2);
+            const ruleLen1 = lengthObject(surveyRule.questionIds1);
+            const ruleLen2 = lengthObject(surveyRule.questionIds2);
+            const ready = (al1, rl1, al2, rl2) => al1 > 1 && rl1 === al1 && rl2 === al2 + 1;
+            if (ready(ansLen1, ruleLen1, ansLen2, ruleLen2) || ready(ansLen2, ruleLen2, ansLen1, ruleLen1)) {
                 const sampleIds = this.props.getSelectedSampleIds(questionIdToSet);
-                const answeredSampleIds1 = answeredQuestions1.map(aq => aq.answered.map(a => a.sampleId));
+                const answeredSampleIds1 = this.getAnsweredSampleIds(answeredQuestions1);
                 const commonSampleIds1 = answeredSampleIds1.reduce(intersection, sampleIds);
-                const answeredSampleIds2 = answeredQuestions2.map(aq => aq.answered.map(a => a.sampleId));
+                const answeredSampleIds2 = this.getAnsweredSampleIds(answeredQuestions2);
                 const commonSampleIds2 = answeredSampleIds2.reduce(intersection, sampleIds);
                 const commonSampleIds = intersection(commonSampleIds1, commonSampleIds2);
                 if (commonSampleIds.length > 0) {
-                    const sampleSums = commonSampleIds.map(sampleId => {
-                        const sum1 = answeredQuestions1
-                            .map(aq => aq.answered.find(a => a.sampleId === sampleId).answerText)
-                            .reduce((sum, num) => sum + parseInt(num), 0);
-                        const sum2 = answeredQuestions2
-                            .map(aq => aq.answered.find(a => a.sampleId === sampleId).answerText)
-                            .reduce((sum, num) => sum + parseInt(num), 0);
-                        return [sum1, sum2];
-                    });
-                    const q1Value = surveyRule.questionIds1.includes(questionIdToSet) ? parseInt(answerText) : 0;
-                    const q2Value = surveyRule.questionIds2.includes(questionIdToSet) ? parseInt(answerText) : 0;
-                    const invalidSum = sampleSums.find(sums => sums[0] + q1Value !== sums[1] + q2Value);
+                    const q1Value = surveyRule.questionIds1.includes(questionIdToSet) ? answerVal : 0;
+                    const q2Value = surveyRule.questionIds2.includes(questionIdToSet) ? answerVal : 0;
+                    const invalidSum = commonSampleIds
+                        .map(sampleId => {
+                            const sum1 = this.sumAnsweredQuestionsPerSample(answeredQuestions1, sampleId);
+                            const sum2 = this.sumAnsweredQuestionsPerSample(answeredQuestions2, sampleId);
+                            return [sum1, sum2];
+                        })
+                        .find(sums => sums[0] + q1Value !== sums[1] + q2Value);
                     if (invalidSum) {
                         const {question} = this.props.surveyQuestions[questionIdToSet];
                         return "Matching sums validation failed.\r\n\n"
                             + `Totals of the question sets [${
-                                surveyRule.questionSet1.map(q => this.getSurveyQuestionText(q)).toString()
+                                surveyRule.questionIds1.map(q => this.getSurveyQuestionText(q)).toString()
                             }] and [${
-                                surveyRule.questionSet2.map(q => this.getSurveyQuestionText(q)).toString()
+                                surveyRule.questionIds2.map(q => this.getSurveyQuestionText(q)).toString()
                             }] do not match.\r\n\n`
                             + `An acceptable answer for "${question}" is ${Math.abs(invalidSum[0] - invalidSum[1])}.`;
                     } else {

@@ -61,7 +61,7 @@ export default class NewQuestionDesigner extends React.Component {
                            + `${newQuestionText} (${repeatedQuestions}) in design mode.`)) {
                 const newId = getNextInSequence(Object.keys(surveyQuestions));
                 const newCardOrder = getNextInSequence(
-                    mapObjectArray(surveyQuestions, ([_id, sql]) => sql.cardOrder)
+                    mapObjectArray(surveyQuestions, ([_id, sql]) => sql.cardOrder).filter(c => c)
                 );
                 const newQuestion = {
                     question: repeatedQuestions > 0
