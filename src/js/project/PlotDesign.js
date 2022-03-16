@@ -1,7 +1,7 @@
 import React, {useContext} from "react";
 import shp from "shpjs";
 
-import {formatNumberWithCommas, readFileAsArrayBuffer, readFileAsBase64Url} from "../utils/generalUtils";
+import {formatNumberWithCommas, isNumber, readFileAsArrayBuffer, readFileAsBase64Url} from "../utils/generalUtils";
 import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator";
 
@@ -46,14 +46,24 @@ export class PlotDesign extends React.Component {
         }
     };
 
+    validBoundary = (latMin, latMax, lonMin, lonMax) =>
+        isNumber(latMin)
+        && isNumber(latMax)
+        && isNumber(lonMin)
+        && isNumber(lonMax)
+        && latMax > latMin
+        && lonMax > lonMin;
+
     updateBoundaryFromCoords = newCoord => {
         this.setState(
             newCoord,
             () => {
                 const {latMin, latMax, lonMin, lonMax} = this.state;
-                this.setPlotDetails({
-                    aoiFeatures: [mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)]
-                });
+                if (this.validBoundary(latMin, latMax, lonMin, lonMax)) {
+                    this.setPlotDetails({
+                        aoiFeatures: [mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)]
+                    });
+                }
             }
         );
     };
@@ -236,7 +246,7 @@ export class PlotDesign extends React.Component {
                 id="custom-upload"
                 style={{display: "flex", alignItems: "center", width: "fit-content"}}
             >
-                    Upload project boundary
+                    Upload shp file (zip)
                 <input
                     accept="application/zip"
                     defaultValue=""
@@ -257,8 +267,8 @@ export class PlotDesign extends React.Component {
 
     renderAOISelector = () => {
         const {boundaryType} = this.context;
-        const boundaryOptions = [{value: "manual", label: "Input boundary coordinates"},
-                                 {value: "file", label: "Upload boundary file"}];
+        const boundaryOptions = [{value: "manual", label: "Input coordinates"},
+                                 {value: "file", label: "Upload shp file"}];
         return (
             <>
                 <div className="form-group" style={{width: "fit-content"}}>
