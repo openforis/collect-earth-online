@@ -92,23 +92,23 @@ module.exports = env => {
             {
                 apply: compiler => {
                     compiler.hooks.initialize.tap("InitializePlugin", () => {
-                    // Ensure that outdir exists.
+                        // Ensure that outdir exists.
                         if (!fs.existsSync("./" + outdir)) {
                             fs.mkdirSync("./" + outdir, {recursive: true});
                         }
                     });
                     compiler.hooks.beforeCompile.tap("BeforeCompilePlugin", () => {
-                    // Remove old entry-points at the beginning
-                    // so a browser refresh does not show stale data.
+                        // Remove old entry-points at the beginning
+                        // so a browser refresh does not show stale data.
                         if (env.dev) {
                             fs.unlink("./target/entry-points.json", () => null);
                         }
                     });
                     compiler.hooks.done.tap("DonePlugin", stats => {
-                    // Map entrypoint name -> chunk files
+                        // Map entrypoint name -> chunk files
                         const entryPoints = Array.from(stats.compilation.entrypoints.entries());
                         const newMap = entryPoints.reduce((acc, [name, ep]) =>
-                            ({...acc, [name]: ep.chunks.map(c => "/js/" + c.files[0])}),
+                            ({...acc, [name]: ep.chunks.map(c => { const [file] = c.files; return "/js/" + file; })}),
                                                           {});
                         fs.writeFile("./target/entry-points.json", JSON.stringify(newMap), "utf8", e => {
                             if (e) console.log(e);
