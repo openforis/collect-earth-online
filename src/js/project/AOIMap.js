@@ -120,9 +120,9 @@ export default class AOIMap extends React.Component {
             <div style={{height: "25rem", width: "100%"}}>
                 <div id="project-map" style={{height: "25rem", width: "100%"}}/>
                 {this.props.canDrag && (
-                    <div className="col small text-center mt-4 mb-2">
+                    <label className="col text-center mt-4 mb-2">
                         {`Hold ${detectMacOS() ? "CMD ⌘" : "CTRL"} and click-and-drag a bounding box on the map`}
-                    </div>
+                    </label>
                 )}
             </div>
         );
