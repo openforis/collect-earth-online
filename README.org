@@ -9,7 +9,7 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 - [[https://jdk.java.net][Java Development Kit (version 17)]]
 - [[https://clojure.org/guides/getting_started][Clojure CLI tools 1.10]]
 - [[https://www.postgresql.org/download][Postgresql (version 12)]]
-- [[https://postgis.net/install/][PostGIS (version 3)]]
+- [[https://postgis.net/install/][PostGIS (version 3.2+)]]
 - [[https://www.7-zip.org/][p7zip]]
 - [[https://nodejs.org/en/][node 10]]
 - [[https://www.python.org/downloads/][Python 3]]
@@ -24,7 +24,7 @@ Please note that you must replace all values surrounded with angle brackets (e.g
 
 *Postgresql* needs to be installed on the machine that will be hosting this website. This installation task is system specific and is beyond the scope of this README, so please follow the instructions for your operating system and Postgresql version. However, please ensure that the database server's superuser account is named "postgres" and that you know its database connection password before proceeding.
 
-Once the Postgresql database server is running on your machine, you should navigate to the toplevel directory (i.e., the directory containing this README) and run the database build command as follows:
+Once the Postgresql database server is running on your machine, you should navigate to the top level directory (i.e., the directory containing this README) and run the database build command as follows:
 
 #+begin_src sh
 clojure -M:build-db build-all [--dev-data]
@@ -32,26 +32,7 @@ clojure -M:build-db build-all [--dev-data]
 
 This will begin by creating a new database and role called ~ceo~ and then add the postgis and pgcrypto extensions to it. Next, the script will populate the database with the schemas, tables, and functions that are necessary for storing and processing ceo's data. Finally, it will load some default data into these tables that is necessary for the website to function properly. You can optionally load dev data with ~--dev-data~.  This will initialize the DB with 3 users, an imagery source, and a project.
 
-If you wish to use a live copy of the CEO database isntead of the dev data, please see the documentation of the ~build-db~ command in the [[https://github.com/sig-gis/triangulum#triangulumbuild-db][Triangulum README]].
-
-*** Example Database Queries
-
-To make queries on the database it is suggested to use pgAdmin, which you can download [[https://www.pgadmin.org/download/][here]]. Once you have pgAdmin installed and set up, you can use the Query Tool to make useful queries such as:
-
-#+begin_src sql
-SELECT * from projects
-WHERE num_plots > 10000;
-#+end_src
-
-to find projects with large numbers of plots or
-
-#+begin_src sql
-SELECT * FROM institutions
-WHERE created_date > '20220101'
-ORDER BY created_date DESC;
-#+end_src
-
-to find all institutions created in 2022 sorted from newest to oldest.
+If you wish to use a live copy of the CEO database instead of the dev data, please see the documentation of the ~build-db~ command in the [[https://github.com/sig-gis/triangulum#triangulumbuild-db][Triangulum README]].
 
 *** Performance Settings
 
@@ -145,8 +126,8 @@ This command will open a window in your browser containing a key that you should
 *** Create accounts
 
 To be able to crate accounts without having to send email for confirmation, set ~:auto-validate?~ of ~:mail~ to ~true~ in ~config.edn~.
-There can only be one superuser account with ~user_uid~ of ~1~ ~adminstrator~ flag set to ~true~.
-Activating this flag for other users can cause their queries to sometimes not return the full result, as some of those queries assume only one root superuser to be existing.
+
+There can only be one superuser account with ~user_uid~ of ~1~ ~adminstrator~ flag set to ~true~. Activating this flag for other users can cause their queries to sometimes not return the full result, as some of those queries assume only one root superuser to be existing.
 
 *** Compile and run
 
@@ -169,7 +150,7 @@ Going forward you will usually only need to run ~npm run webpack-dev~ and ~npm r
 
 *** Checking for Reflection Warnings
 
-From the toplevel project directory run:
+From the top level project directory run:
 
 #+begin_src sh
 clojure -M:check-reflection
@@ -179,11 +160,6 @@ This will emit warnings when reflection is needed to resolve Java method calls o
 
 ** Production Web Server
 
-*** Installation Requirements
-
-- [[https://certbot.eff.org/][certbot]]
-- [[https://www.openssl.org/source/][openssl]]
-
 *** Sessions
 
 It is very important to change the default ~:session-key~ in ~config.edn~.  This key is used to encrypt user session data and should be unique to each deployment. The key must be exactly 16 characters long.
@@ -192,9 +168,9 @@ It is very important to change the default ~:session-key~ in ~config.edn~.  This
 
 To set up the email server for system emails, open the "config.edn" file in the root directory of the application. Edit the default EDN object containing server details to the file, replacing the values with your own.
 
-*** Enabling HTTPS
+*** Enabling HTTPS (optional)
 
-View the [[https://github.com/sig-gis/triangulum#triangulumhttps][Triangulum HTTPS]] page for further instructions on enabling HTTPS.
+To enable HTTPS from within the server, view the [[https://github.com/sig-gis/triangulum#triangulumhttps][Triangulum HTTPS]] page for further instructions on enabling HTTPS.
 
 *** Google Earth Engine service account
 
@@ -224,7 +200,7 @@ View the [[https://github.com/sig-gis/triangulum#triangulumsystemd][Triangulum S
 
 *** Maintaining Daily Logs
 
-By default the server will log to standard out. If you would like to have the system log to YYYY-DD-MM.log, use the "-o path" option to specify an output path. You can either specify a path relative to the toplevel directory of this repository or an absolute path on your filesystem. The logger will keep the 10 most recent logs.
+By default the server will log to standard out. If you would like to have the system log to YYYY-DD-MM.log, use the "-o path" option to specify an output path. You can either specify a path relative to the top level directory of this repository or an absolute path on your filesystem. The logger will keep the 10 most recent logs.
 
 *** Using the Announcement Banner
 
