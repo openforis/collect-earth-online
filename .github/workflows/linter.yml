@@ -11,7 +11,7 @@ jobs:
       - run: yarn install
       - uses: sibiraj-s/action-eslint@v1.1.0
         with:
-          eslintArgs: ''
+          eslintArgs: '--ignore-path=.eslintignore'
           extensions: 'js'
           annotations: true
         env:

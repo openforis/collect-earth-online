@@ -1,6 +1,8 @@
 import React from "react";
+
 import {mercator} from "../utils/mercator";
-import {monthlyMapping, last} from "../utils/generalUtils";
+import {monthlyMapping} from "../utils/generalUtils";
+import {last} from "../utils/sequence";
 import {nicfiLayers} from "./imageryOptions";
 
 export class PlanetMenu extends React.Component {
@@ -13,7 +15,7 @@ export class PlanetMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.updatePlanetLayer();
+        this.updateImageryInformation();
     }
 
     componentDidUpdate(prevProps) {
@@ -98,7 +100,7 @@ export class PlanetDailyMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.updatePlanetDailyLayer();
+        this.updateImageryInformation();
     }
 
     componentDidUpdate(prevProps) {
@@ -463,7 +465,7 @@ export class SentinelMenu extends React.Component {
     }
 
     componentDidMount() {
-        this.updateSentinelLayer();
+        this.updateImageryInformation();
     }
 
     componentDidUpdate(prevProps) {
@@ -570,12 +572,12 @@ export class GEEImageMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            visParams: this.props.sourceConfig.imageVisParams
+            visParams: this.props.sourceConfig.visParams
         };
     }
 
     componentDidMount() {
-        this.updateGEEImagery();
+        this.updateImageryInformation();
     }
 
     componentDidUpdate(prevProps) {
@@ -586,9 +588,9 @@ export class GEEImageMenu extends React.Component {
 
     updateImageryInformation = () => {
         if (this.props.visible) {
-            this.props.setImageryAttribution(` | ${this.state.visParams}`);
+            this.props.setImageryAttribution(` | ${this.props.sourceConfig.assetId}`);
             this.props.setImageryAttributes({
-                geeImageryAssetId: this.props.sourceConfig.imageId
+                geeImageryAssetId: this.props.sourceConfig.assetId
             });
         }
     };
@@ -601,7 +603,7 @@ export class GEEImageMenu extends React.Component {
             this.props.currentProjectBoundary,
             sourceConfig => ({
                 ...sourceConfig,
-                imageVisParams: this.state.visParams
+                visParams: this.state.visParams
             })
         );
     };
@@ -639,12 +641,12 @@ export class GEEImageCollectionMenu extends React.Component {
         this.state = {
             startDate: this.props.sourceConfig.startDate,
             endDate: this.props.sourceConfig.endDate,
-            visParams: this.props.sourceConfig.collectionVisParams
+            visParams: this.props.sourceConfig.visParams
         };
     }
 
     componentDidMount() {
-        this.updateGEEImageCollection();
+        this.updateImageryInformation();
     }
 
     componentDidUpdate(prevProps) {
@@ -655,10 +657,9 @@ export class GEEImageCollectionMenu extends React.Component {
 
     updateImageryInformation = () => {
         if (this.props.visible) {
-            this.props.setImageryAttribution(` | ${this.state.startDate} to `
-                + `${this.state.endDate} | ${this.state.visParams}`);
+            this.props.setImageryAttribution(` | ${this.props.sourceConfig.assetId}`);
             this.props.setImageryAttributes({
-                geeImageCollectionAssetId: this.props.sourceConfig.collectionId,
+                geeImageCollectionAssetId: this.props.sourceConfig.assetId,
                 geeImageCollectionStartDate: this.state.startDate,
                 geeImageCollectionEndDate: this.state.endDate
             });
@@ -677,7 +678,7 @@ export class GEEImageCollectionMenu extends React.Component {
                 this.props.currentProjectBoundary,
                 sourceConfig => ({
                     ...sourceConfig,
-                    collectionVisParams: visParams,
+                    visParams,
                     startDate,
                     endDate
                 })

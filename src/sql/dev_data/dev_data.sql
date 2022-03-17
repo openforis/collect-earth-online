@@ -30,9 +30,11 @@ SELECT setval(pg_get_serial_sequence('institution_users', 'inst_user_uid'), (SEL
 
 -- Adds an institution imagery
 INSERT INTO imagery
-    (institution_rid, visibility, title, attribution, extent, source_config)
+    (imagery_uid, institution_rid, visibility, title, attribution, extent, source_config)
 VALUES
-    (1, 'public', 'Open Street Maps', 'Open Street Maps', null, '{"type": "OSM"}');
+    (1, 1, 'public', 'Open Street Maps', 'Open Street Maps', null, '{"type": "OSM"}');
+
+SELECT setval(pg_get_serial_sequence('imagery', 'imagery_uid'), (SELECT MAX(imagery_uid) FROM imagery) + 1);
 
 -- Adds a project
 INSERT INTO projects (
@@ -71,8 +73,8 @@ INSERT INTO projects (
     200,
     'random',
     10,
-    '[{"id":1,"answers":[{"id":1,"color":"#1ec61b","answer":"Forest"},{"id":2,"color":"#9cf135","answer":"Grassland"},{"id":3,"color":"#d5de85","answer":"Bare Surface"},{"id":4,"color":"#8B9084","answer":"Impervious Surface"},{"id":5,"color":"#f2c613","answer":"Agriculture"},{"id":6,"color":"#6a3a75","answer":"Urban"},{"id":7,"color":"#2f4dc0","answer":"Water"},{"id":8,"color":"#ffffff","answer":"Cloud"},{"id":9,"color":"#000000","answer":"Unknown"}],"dataType":"text","question":"Land Use","parentAnswer":-1,"componentType":"button","parentQuestion":-1},{"id":2,"answers":[{"id":1,"color":"#1527f6","answer":"Placeholder"}],"dataType":"text","question":"TEST - Text Regex Match","parentAnswer":-1,"componentType":"input","parentQuestion":-1},{"id":3,"answers":[{"id":1,"color":"#1527f6","answer":"100"}],"dataType":"number","question":"TEST - Numeric Range","parentAnswer":-1,"componentType":"input","parentQuestion":-1},{"id":4,"answers":[{"id":1,"color":"#1527f6","answer":"100"}],"dataType":"number","question":"TEST - Sum of Answers","parentAnswer":-1,"componentType":"input","parentQuestion":-1},{"id":5,"answers":[{"id":1,"color":"#1527f6","answer":"100"}],"dataType":"number","question":"TEST - Matching Sums 1","parentAnswer":-1,"componentType":"input","parentQuestion":-1},{"id":6,"answers":[{"id":1,"color":"#1527f6","answer":"100"}],"dataType":"number","question":"TEST - Matching Sums 2","parentAnswer":-1,"componentType":"input","parentQuestion":-1},{"id":7,"answers":[{"id":1,"color":"#1ec61b","answer":"Forest"},{"id":2,"color":"#9cf135","answer":"Grassland"},{"id":3,"color":"#d5de85","answer":"Bare Surface"},{"id":4,"color":"#8B9084","answer":"Impervious Surface"},{"id":5,"color":"#f2c613","answer":"Agriculture"},{"id":6,"color":"#6a3a75","answer":"Urban"},{"id":7,"color":"#2f4dc0","answer":"Water"},{"id":8,"color":"#ffffff","answer":"Cloud"},{"id":9,"color":"#000000","answer":"Unknown"}],"dataType":"text","question":"TEST - Incompatible Answers","parentAnswer":-1,"componentType":"button","parentQuestion":-1}]',
-    '[{"id":1,"regex":"^[a-zA-Z0-9_.-]*$","ruleType":"text-match","questionId":2,"questionsText":["TEST - Text Regex Match"]},{"id":2,"max":100,"min":0,"ruleType":"numeric-range","questionId":3,"questionsText":["TEST - Numeric Range"]},{"id":3,"ruleType":"sum-of-answers","validSum":200,"questions":[3,4],"questionsText":["TEST - Numeric Range","TEST - Sum of Answers"]},{"id":4,"ruleType":"matching-sums","questionSetIds1":[3,4],"questionSetIds2":[5,6],"questionSetText1":["TEST - Numeric Range","TEST - Sum of Answers"],"questionSetText2":["TEST - Matching Sums","TEST - Matching Sums 2"]}]',
+    '{"0":{"answers":{"0":{"color":"#1ec61b","answer":"Forest"},"1":{"color":"#9cf135","answer":"Grassland"},"2":{"color":"#d5de85","answer":"Bare Surface"},"3":{"color":"#8b9084","answer":"Impervious Surface"},"4":{"color":"#f2c613","answer":"Agriculture"},"5":{"color":"#6a3a75","answer":"Urban"},"6":{"color":"#2f4dc0","answer":"Water"},"7":{"color":"#ffffff","answer":"Cloud"},"8":{"color":"#000000","answer":"Unknown"}},"dataType":"text","question":"Land Use","componentType":"button","parentAnswerIds":[],"parentQuestionId":-1},"1":{"answers":{"0":{"color":"#1527f6","answer":"Placeholder Text"}},"dataType":"text","question":"Test Regex Match","componentType":"input","parentAnswerIds":[],"parentQuestionId":-1},"2":{"answers":{"0":{"color":"#1527f6","answer":"100"}},"dataType":"number","question":"Test Numeric Range","componentType":"input","parentAnswerIds":[],"parentQuestionId":-1},"3":{"answers":{"0":{"color":"#1527f6","answer":"100"}},"dataType":"number","question":"Test Sum of Answers","componentType":"input","parentAnswerIds":[],"parentQuestionId":-1},"4":{"answers":{"0":{"color":"#1527f6","answer":"100"}},"dataType":"number","question":"Test Matching Sums 1","componentType":"input","parentAnswerIds":[],"parentQuestionId":-1},"5":{"answers":{"0":{"color":"#1527f6","answer":"100"}},"dataType":"number","question":"Test Matching Sums 2","componentType":"input","parentAnswerIds":[],"parentQuestionId":-1},"6":{"answers":{"0":{"color":"#1ec61b","answer":"Forest"},"1":{"color":"#9cf135","answer":"Grassland"},"2":{"color":"#d5de85","answer":"Bare Surface"},"3":{"color":"#8b9084","answer":"Impervious Surface"},"4":{"color":"#f2c613","answer":"Agriculture"},"5":{"color":"#6a3a75","answer":"Urban"},"6":{"color":"#2f4dc0","answer":"Water"},"7":{"color":"#ffffff","answer":"Cloud"},"8":{"color":"#000000","answer":"Unknown"}},"dataType":"text","question":"Test Incompatible Answers","componentType":"button","parentAnswerIds":[],"parentQuestionId":-1}}',
+    '[{"id":0,"regex":"^[a-zA-Z0-9_.-]*$","ruleType":"text-match","questionId":1},{"id":1,"max":100,"min":0,"ruleType":"numeric-range","questionId":2},{"id":2,"ruleType":"sum-of-answers","validSum":200,"questionIds":[2,3]},{"id":3,"ruleType":"matching-sums","questionIds1":[2,3],"questionIds2":[4,5]},{"id":4,"ruleType":"incompatible-answers","answerId1":0,"answerId2":8,"questionId1":0,"questionId2":6}]',
     Now(),
     '{"showGEEScript": false, "autoLaunchGeoDash": false, "collectConfidence": true, "showPlotInformation": false}',
     1,
@@ -147,9 +149,10 @@ VALUES
     (3, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[106.718562527415,13.7452788216232]}'), 4326), 44),
     (3, ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Point","coordinates":[106.717809924561,13.7458799404487]}'), 4326), 45);
 
--- Add 2 widgets
+-- Add 3 widgets
 INSERT INTO project_widgets
-    (project_rid, dashboard_id, widget)
+    (project_rid, widget)
 VALUES
-    (1, 'fe78e98b-83b0-42be-9374-b47a98bdf937', '{"id":0,"name":"Image Collection","layout":{"h":1,"i":"0","w":3,"x":0,"y":0,"minW":3,"moved":false,"static":false},"dualLayer":false,"properties":["ImageCollectionNDVI","","2019-01-01","2020-12-31","NDVI"]}'),
-    (1, 'fe78e98b-83b0-42be-9374-b47a98bdf937', '{"id":1,"name":"Time Series Graph","layout":{"h":1,"i":"1","w":3,"x":0,"y":1,"minW":3,"moved":false,"static":false},"dualLayer":false,"properties":["ndviTimeSeries","","2019-01-01","2019-12-31","NDVI"]}');
+    (1, '{"name":"Image Collection","type":"preImageCollection","layout":{"h":1,"w":3,"x":0,"y":0},"endDate":"2022-01-07","basemapId":1,"indexName":"NDVI","startDate":"2022-01-01"}'),
+    (1, '{"name":"Time Series Graph","type":"timeSeries","layout":{"h":1,"w":3,"x":3,"y":0},"endDate":"2022-01-07","indexName":"EVI","startDate":"2021-12-31"}'),
+    (1, '{"name":"Statistics","type":"statistics","layout":{"h":1,"w":3,"x":6,"y":0}}');

@@ -5,6 +5,7 @@
             [ring.adapter.jetty :refer [run-jetty]]
             [triangulum.cli     :refer [get-cli-options]]
             [triangulum.config  :refer [get-config]]
+            [triangulum.notify  :as notify]
             [triangulum.logging :refer [log-str set-log-path!]]
             [triangulum.sockets :refer [send-to-server! socket-open?]]
             [collect-earth-online.handler :refer [create-handler-stack]]))
@@ -81,7 +82,9 @@
           (reset! repl-server (start-server {:name :ceo-repl :port 5555 :accept 'clojure.core.server/repl})))
         (reset! server (run-jetty handler config))
         (reset! clean-up-service (start-clean-up-service!))
-        (set-log-path! log-dir)))))
+        (set-log-path! log-dir)
+        (when (notify/available?)
+          (notify/ready!))))))
 
 (defn stop-server! []
   (set-log-path! "")

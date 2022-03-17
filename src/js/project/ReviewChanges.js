@@ -1,10 +1,8 @@
 import React from "react";
-import _ from "lodash";
 
 import ReviewForm from "./ReviewForm";
 
 import {ProjectContext} from "./constants";
-import {mercator} from "../utils/mercator";
 
 export default class ReviewChanges extends React.Component {
     constructor(props) {
@@ -56,19 +54,8 @@ export default class ReviewChanges extends React.Component {
     };
 
     updateProject = () => {
-        // TODO: Match project details in context as in state (i.e. do not spread into context).
-        const updateSurvey = this.surveyQuestionUpdated(this.context, this.context.originalProject);
-        const extraMessage = (this.plotsUpdated(this.context, this.context.originalProject)
-          || this.plotDesignChanged(this.context, this.context.originalProject))
-            ? "  Plots and samples will be recreated, losing all collection data."
-            : this.samplesUpdated(this.context, this.context.originalProject)
-                ? "  Samples will be recreated, losing all collection data."
-                : updateSurvey
-                    ? "  Updating survey questions or rules will reset all collected data."
-                    : this.allowDrawnSamplesDisallowed(this.context, this.context.originalProject)
-                        ? "  Disallowing users to draw samples will reset all collected data."
-                        : "";
-        if (confirm("Do you really want to update this project?" + extraMessage)) {
+        if (this.context.availability !== "unpublished"
+            || confirm("Collection data will cleared to reset the project. Do you really want to update this project?")) {
             this.context.processModal(
                 "Updating Project",
                 () => fetch(
@@ -81,8 +68,7 @@ export default class ReviewChanges extends React.Component {
                         },
                         body: JSON.stringify({
                             projectId: this.context.projectId,
-                            ...this.buildProjectObject(),
-                            updateSurvey // FIXME this is a shim for when stored questions are in an old format.
+                            ...this.buildProjectObject()
                         })
                     }
                 )
@@ -105,65 +91,33 @@ export default class ReviewChanges extends React.Component {
 
     /// Helper Functions
 
-    buildProjectObject = () => {
-        // TODO pass boundary instead of lon / lat.  Boundary will be arbitrary.
-        const boundaryExtent = mercator.parseGeoJson(this.context.boundary, false).getExtent();
-        return {
-            imageryId: this.context.imageryId,
-            projectImageryList: this.context.projectImageryList,
-            lonMin: boundaryExtent[0],
-            latMin: boundaryExtent[1],
-            lonMax: boundaryExtent[2],
-            latMax: boundaryExtent[3],
-            description: this.context.description,
-            name: this.context.name,
-            privacyLevel: this.context.privacyLevel,
-            projectOptions: this.context.projectOptions,
-            designSettings: this.context.designSettings,
-            numPlots: this.context.numPlots,
-            plotDistribution: this.context.plotDistribution,
-            plotShape: this.context.plotShape,
-            plotSize: this.context.plotSize,
-            plotSpacing: this.context.plotSpacing,
-            sampleDistribution: this.context.sampleDistribution,
-            samplesPerPlot: this.context.samplesPerPlot,
-            sampleResolution: this.context.sampleResolution,
-            allowDrawnSamples: this.context.allowDrawnSamples,
-            surveyQuestions: this.context.surveyQuestions,
-            surveyRules: this.context.surveyRules,
-            plotFileName: this.context.plotFileName,
-            plotFileBase64: this.context.plotFileBase64,
-            sampleFileName: this.context.sampleFileName,
-            sampleFileBase64: this.context.sampleFileBase64
-        };
-    };
-
-    allowDrawnSamplesDisallowed = (projectDetails, originalProject) =>
-        originalProject.allowDrawnSamples && !projectDetails.allowDrawnSamples;
-
-    surveyQuestionUpdated = (projectDetails, originalProject) =>
-        !_.isEqual(projectDetails.surveyQuestions, originalProject.surveyQuestions)
-            || !_.isEqual(projectDetails.surveyRules, originalProject.surveyRules);
-
-    plotDesignChanged = ({designSettings}, {designSettings: originalDesignSettings}) =>
-        !(_.isEqual(designSettings, originalDesignSettings));
-
-    plotsUpdated = (projectDetails, originalProject) =>
-        projectDetails.plotDistribution !== originalProject.plotDistribution
-            || (["csv", "shp"].includes(this.context.plotDistribution)
-                ? projectDetails.plotFileBase64
-                : projectDetails.boundary !== originalProject.boundary
-                    || projectDetails.numPlots !== originalProject.numPlots
-                    || projectDetails.plotShape !== originalProject.plotShape
-                    || projectDetails.plotSize !== originalProject.plotSize
-                    || projectDetails.plotSpacing !== originalProject.plotSpacing);
-
-    samplesUpdated = (projectDetails, originalProject) =>
-        projectDetails.sampleDistribution !== originalProject.sampleDistribution
-            || (["csv", "shp"].includes(this.context.sampleDistribution)
-                ? projectDetails.sampleFileBase64
-                : projectDetails.samplesPerPlot !== originalProject.samplesPerPlot
-                    || projectDetails.sampleResolution !== originalProject.sampleResolution);
+    buildProjectObject = () => ({
+        imageryId: this.context.imageryId,
+        projectImageryList: this.context.projectImageryList,
+        aoiFeatures: this.context.aoiFeatures,
+        aoiFileName: this.context.aoiFileName,
+        description: this.context.description,
+        name: this.context.name,
+        privacyLevel: this.context.privacyLevel,
+        projectOptions: this.context.projectOptions,
+        designSettings: this.context.designSettings,
+        numPlots: this.context.numPlots,
+        plotDistribution: this.context.plotDistribution,
+        plotShape: this.context.plotShape,
+        plotSize: this.context.plotSize,
+        plotSpacing: this.context.plotSpacing,
+        shufflePlots: this.context.shufflePlots,
+        sampleDistribution: this.context.sampleDistribution,
+        samplesPerPlot: this.context.samplesPerPlot,
+        sampleResolution: this.context.sampleResolution,
+        allowDrawnSamples: this.context.allowDrawnSamples,
+        surveyQuestions: this.context.surveyQuestions,
+        surveyRules: this.context.surveyRules,
+        plotFileName: this.context.plotFileName,
+        plotFileBase64: this.context.plotFileBase64,
+        sampleFileName: this.context.sampleFileName,
+        sampleFileBase64: this.context.sampleFileBase64
+    });
 
     /// Render Functions
 
@@ -196,7 +150,7 @@ export default class ReviewChanges extends React.Component {
                                 type="checkbox"
                             />
                             <label className="form-check-label" htmlFor="tos-check">
-                            I agree to the <a href="/terms-of-service" target="_blank">Terms of Service</a>.
+                                I agree to the <a href="/terms-of-service" target="_blank">Terms of Service</a>.
                             </label>
                         </div>
                         <input
@@ -245,7 +199,11 @@ export default class ReviewChanges extends React.Component {
                         style={{border: "1px solid black", borderRadius: "6px"}}
                     >
                         <h2 className="bg-lightgreen w-100 py-1">Project Management</h2>
-                        <div className="p-3">
+                        <p className="p-3">
+                            You will be able to continue to make changes to the project after creating it.
+                            Once satisfied with the project, click publish to begin final collection.
+                        </p>
+                        <div className="pl-4">
                             {this.renderButtons()}
                         </div>
                     </div>

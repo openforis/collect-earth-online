@@ -1,11 +1,12 @@
 import React from "react";
-import {encodeFileAsBase64} from "../utils/generalUtils";
+import {readFileAsBase64Url} from "../utils/generalUtils";
 import RequiredInput from "./RequiredInput";
 
 export default function InstitutionEditor({
     title,
     name,
     description,
+    imageName,
     url,
     acceptTOS,
     buttonGroup,
@@ -48,12 +49,14 @@ export default function InstitutionEditor({
                             className="custom-file-input mb-1 mr-sm-2"
                             id="institution-logo"
                             onChange={e => {
-                                setInstitutionDetails("logo", e.target.files[0].name);
-                                encodeFileAsBase64(e.target.files[0], r => setInstitutionDetails("base64Image", r));
+                                setInstitutionDetails("imageName", e.target.files[0].name);
+                                readFileAsBase64Url(e.target.files[0], r => setInstitutionDetails("base64Image", r));
                             }}
                             type="file"
                         />
-                        <label className="custom-file-label" htmlFor="institution-logo">Choose image...</label>
+                        <label className="custom-file-label" htmlFor="institution-logo">
+                            {imageName === "" ? "Choose image..." : imageName}
+                        </label>
                     </div>
                 </div>
                 <div className="mb-3">

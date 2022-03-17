@@ -1,10 +1,9 @@
-import React from "react";
+import React, {useContext} from "react";
+import shp from "shpjs";
 
-import {formatNumberWithCommas, encodeFileAsBase64, truncate} from "../utils/generalUtils";
+import {formatNumberWithCommas, isNumber, readFileAsArrayBuffer, readFileAsBase64Url} from "../utils/generalUtils";
 import {ProjectContext, plotLimit} from "./constants";
 import {mercator} from "../utils/mercator";
-import AssignPlots from "./AssignPlots";
-import QualityControl from "./QualityControl";
 
 export class PlotDesign extends React.Component {
     constructor(props) {
@@ -22,40 +21,56 @@ export class PlotDesign extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.boundary && prevProps.boundary !== this.props.boundary) {
+        if (this.props.aoiFeatures && prevProps.aoiFeatures !== this.props.aoiFeatures) {
             this.setCoordsFromBoundary();
         }
     }
 
     setCoordsFromBoundary = () => {
-        const boundaryExtent = mercator.parseGeoJson(this.props.boundary, false).getExtent();
-        this.setState({
-            lonMin: boundaryExtent[0],
-            latMin: boundaryExtent[1],
-            lonMax: boundaryExtent[2],
-            latMax: boundaryExtent[3]
-        });
+        const {aoiFeatures} = this.props;
+        if (aoiFeatures?.length === 1) {
+            const boundaryExtent = mercator.parseGeoJson(aoiFeatures[0], false).getExtent();
+            this.setState({
+                lonMin: boundaryExtent[0],
+                latMin: boundaryExtent[1],
+                lonMax: boundaryExtent[2],
+                latMax: boundaryExtent[3]
+            });
+        } else {
+            this.setState({
+                lonMin: "",
+                latMin: "",
+                lonMax: "",
+                latMax: ""
+            });
+        }
     };
 
-    generateGeoJSON = () => {
-        const {latMin, latMax, lonMin, lonMax} = this.state;
-        return mercator.hasValidBounds(latMin, latMax, lonMin, lonMax)
-            ? {
-                type: "Polygon",
-                coordinates: [[
-                    [lonMin, latMin],
-                    [lonMin, latMax],
-                    [lonMax, latMax],
-                    [lonMax, latMin],
-                    [lonMin, latMin]
-                ]]
+    validBoundary = (latMin, latMax, lonMin, lonMax) =>
+        isNumber(latMin)
+        && isNumber(latMax)
+        && isNumber(lonMin)
+        && isNumber(lonMax)
+        && latMax > latMin
+        && lonMax > lonMin;
+
+    updateBoundaryFromCoords = newCoord => {
+        this.setState(
+            newCoord,
+            () => {
+                const {latMin, latMax, lonMin, lonMax} = this.state;
+                if (this.validBoundary(latMin, latMax, lonMin, lonMax)) {
+                    this.setPlotDetails({
+                        aoiFeatures: [mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)]
+                    });
+                }
             }
-            : null;
+        );
     };
 
     setPlotDetails = newDetail => {
-        const resetBoundary = ["csv", "shp"].includes(newDetail.plotDistribution);
-        if (resetBoundary) {
+        const resetAOI = ["csv", "shp"].includes(newDetail.plotDistribution);
+        if (resetAOI) {
             this.setState({
                 lonMin: "",
                 latMin: "",
@@ -66,19 +81,14 @@ export class PlotDesign extends React.Component {
         this.context.setProjectDetails(Object.assign(
             newDetail,
             {plots: []},
-            resetBoundary ? {boundary: null} : {}
+            resetAOI ? {aoiFeatures: [], aoiFileName: ""} : {}
         ));
     };
-
-    updateBoundaryFromCoords = newCoord => this.setState(
-        newCoord,
-        () => this.setPlotDetails({boundary: this.generateGeoJSON()})
-    );
 
     /// Render Functions
 
     renderLabeledInput = (label, property) => (
-        <div className="form-group">
+        <div className="form-group" style={{width: "fit-content"}}>
             <label htmlFor={property}>{label}</label>
             <input
                 className="form-control form-control-sm"
@@ -92,11 +102,29 @@ export class PlotDesign extends React.Component {
         </div>
     );
 
+    renderShufflePlots = () => {
+        const {shufflePlots} = this.context;
+        return (
+            <div className="form-check">
+                <input
+                    checked={shufflePlots}
+                    className="form-check-input"
+                    id="shufflePlots"
+                    onChange={() => this.setPlotDetails({shufflePlots: !shufflePlots})}
+                    type="checkbox"
+                />
+                <label className="form-check-label" htmlFor="shufflePlots">
+                    Shuffle plot order
+                </label>
+            </div>
+        );
+    };
+
     renderPlotShape = () => {
         const {plotShape} = this.context;
         return (
             <div className="form-group" style={{display: "flex", flexDirection: "column"}}>
-                <label>Plot Shape</label>
+                <label>Plot shape</label>
                 <div>
                     <div className="form-check form-check-inline">
                         <input
@@ -136,9 +164,8 @@ export class PlotDesign extends React.Component {
     renderAOICoords = () => {
         const {latMax, lonMin, lonMax, latMin} = this.state;
         return (
-            <div>
-                <label>Boundary Coordinates</label>
-                <div className="form-group mx-4">
+            <div style={{width: "20rem"}}>
+                <div className="form-group ml-3">
                     <div className="row">
                         <div className="col-md-6 offset-md-3">
                             <input
@@ -198,6 +225,68 @@ export class PlotDesign extends React.Component {
         );
     };
 
+    loadGeoJson = shpFile => {
+        try {
+            shp(shpFile).then(g => {
+                this.context.setProjectDetails({
+                    aoiFeatures: g.features.map(f => f.geometry),
+                    aoiFileName: g.fileName
+                });
+            });
+        } catch {
+            alert("Unknown error loading shape file.");
+        }
+    };
+
+    renderBoundaryFileInput = () => (
+        <div className="d-flex">
+            <label
+                className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+                htmlFor="project-boundary-file"
+                id="custom-upload"
+                style={{display: "flex", alignItems: "center", width: "fit-content"}}
+            >
+                    Upload shp file (zip)
+                <input
+                    accept="application/zip"
+                    defaultValue=""
+                    id="project-boundary-file"
+                    onChange={e => {
+                        const file = e.target.files[0];
+                        readFileAsArrayBuffer(file, this.loadGeoJson);
+                    }}
+                    style={{display: "none"}}
+                    type="file"
+                />
+            </label>
+            <label className="ml-3 text-nowrap">
+                    File: {this.context.aoiFileName}
+            </label>
+        </div>
+    );
+
+    renderAOISelector = () => {
+        const {boundaryType} = this.context;
+        const boundaryOptions = [{value: "manual", label: "Input coordinates"},
+                                 {value: "file", label: "Upload shp file"}];
+        return (
+            <>
+                <div className="form-group" style={{width: "fit-content"}}>
+                    <label>Boundary type</label>
+                    <select
+                        className="form-control form-control-sm"
+                        onChange={e => this.setPlotDetails({boundaryType: e.target.value})}
+                        value={boundaryType}
+                    >
+                        {boundaryOptions.map(({value, label}) =>
+                            <option key={value} value={value}>{label}</option>)}
+                    </select>
+                </div>
+                {boundaryType === "manual" ? this.renderAOICoords() : this.renderBoundaryFileInput()}
+            </>
+        );
+    };
+
     renderFileInput = fileType => (
         <div>
             <div style={{display: "flex"}}>
@@ -214,7 +303,7 @@ export class PlotDesign extends React.Component {
                         id="plot-distribution-file"
                         onChange={e => {
                             const file = e.target.files[0];
-                            encodeFileAsBase64(file, base64 => this.setPlotDetails({
+                            readFileAsBase64Url(file, base64 => this.setPlotDetails({
                                 plotFileName: file.name,
                                 plotFileBase64: base64
                             }));
@@ -245,8 +334,7 @@ export class PlotDesign extends React.Component {
 
     render() {
         const {plotDistribution, plotShape} = this.context;
-        const {institutionUserList} = this.props;
-        const totalPlots = this.props.getTotalPlots();
+        const {totalPlots} = this.props;
         const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
 
         const plotOptions = {
@@ -255,7 +343,8 @@ export class PlotDesign extends React.Component {
                 description: "Plot centers will be randomly distributed within the project boundary.",
                 inputs: [() => this.renderLabeledInput("Number of plots", "numPlots"),
                          this.renderPlotShape,
-                         () => this.renderLabeledInput(plotUnits, "plotSize")],
+                         () => this.renderLabeledInput(plotUnits, "plotSize"),
+                         this.renderShufflePlots],
                 showAOI: true
             },
             gridded: {
@@ -263,7 +352,8 @@ export class PlotDesign extends React.Component {
                 description: "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.",
                 inputs: [() => this.renderLabeledInput("Plot spacing (m)", "plotSpacing"),
                          this.renderPlotShape,
-                         () => this.renderLabeledInput(plotUnits, "plotSize")],
+                         () => this.renderLabeledInput(plotUnits, "plotSize"),
+                         this.renderShufflePlots],
                 showAOI: true
             },
             csv: {
@@ -282,54 +372,45 @@ export class PlotDesign extends React.Component {
 
         return (
             <div id="plot-design">
-                <div className="row">
-                    <div className="col" id="plot-design-col1">
-                        <h2 className="mb-3">Plot Generation</h2>
-                        <div className="d-flex">
-                            <div className="d-flex flex-column">
-                                <div className="d-flex">
-                                    <label>Spatial Distribution</label>
-                                    <select
-                                        className="form-control form-control-sm ml-3"
-                                        onChange={e => this.setPlotDetails({plotDistribution: e.target.value})}
-                                        style={{width: "initial"}}
-                                        value={plotDistribution}
-                                    >
-                                        {Object.entries(plotOptions).map(([key, options]) =>
-                                            <option key={key} value={key}>{options.display}</option>)}
-                                    </select>
-                                </div>
-                                <p className="font-italic ml-2 small" id="plot-design-text">
-                                    - {plotOptions[plotDistribution].description}
-                                </p>
-                                <div style={{display: "flex"}}>
-                                    {plotOptions[plotDistribution].inputs.map((i, idx) => (
-                                        // eslint-disable-next-line react/no-array-index-key
-                                        <div key={idx} className="mr-3">
-                                            {i()}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            {plotOptions[plotDistribution].showAOI && this.renderAOICoords()}
+                <h3 className="mb-3">Plot Generation</h3>
+                <div className="ml-3">
+                    <div className="d-flex flex-column">
+                        <div className="form-group" style={{width: "fit-content"}}>
+                            <label>Spatial distribution</label>
+                            <select
+                                className="form-control form-control-sm"
+                                onChange={e => this.setPlotDetails({plotDistribution: e.target.value})}
+                                value={plotDistribution}
+                            >
+                                {Object.entries(plotOptions).map(([key, options]) =>
+                                    <option key={key} value={key}>{options.display}</option>)}
+                            </select>
                         </div>
+                        <p className="font-italic ml-2">{`- ${plotOptions[plotDistribution].description}`}</p>
                     </div>
-                </div>
-                <p
-                    className="font-italic ml-2 small"
-                    style={{
-                        color: totalPlots > plotLimit ? "#8B0000" : "#006400",
-                        fontSize: "1rem",
-                        whiteSpace: "pre-line"
-                    }}
-                >
-                    {totalPlots > 0 && `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
-                    {totalPlots > 0 && totalPlots > plotLimit
+                    <div>
+                        <div style={{display: "flex"}}>
+                            {plotOptions[plotDistribution].inputs.map((i, idx) => (
+                                // eslint-disable-next-line react/no-array-index-key
+                                <div key={idx} className="mr-3">
+                                    {i()}
+                                </div>
+                            ))}
+                        </div>
+                        {plotOptions[plotDistribution].showAOI && this.renderAOISelector()}
+                    </div>
+                    <p
+                        className="font-italic ml-2 small"
+                        style={{
+                            color: totalPlots > plotLimit ? "#8B0000" : "#006400",
+                            fontSize: "1rem",
+                            whiteSpace: "pre-line"
+                        }}
+                    >
+                        {totalPlots > 0 && `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
+                        {totalPlots > 0 && totalPlots > plotLimit
                         && `\n* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(plotLimit)}.`}
-                </p>
-                <div className="row mr-1">
-                    <AssignPlots institutionUserList={institutionUserList} totalPlots={totalPlots}/>
-                    <QualityControl institutionUserList={institutionUserList} totalPlots={totalPlots}/>
+                    </p>
                 </div>
             </div>
         );
@@ -351,90 +432,89 @@ export function PlotDesignReview() {
 }
 
 export function PlotReview() {
+    const {
+        numPlots,
+        plotDistribution,
+        plotFileName,
+        plotShape,
+        plotSize,
+        plotSpacing,
+        useTemplatePlots
+    } = useContext(ProjectContext);
     return (
-        <ProjectContext.Consumer>
-            {({
-                numPlots,
-                plotDistribution,
-                plotFileName,
-                plotShape,
-                plotSize,
-                plotSpacing,
-                useTemplatePlots
-            }) => (
-                <div id="plot-review">
-                    {useTemplatePlots && <h3 className="mb-3">Plots will be copied from template project</h3>}
-                    <div className="d-flex">
-                        <div id="plot-review-col1">
-                            <table className="table table-sm" id="plot-review-table">
-                                <tbody>
+        <div id="plot-review">
+            {useTemplatePlots && <h3 className="mb-3">Plots will be copied from template project</h3>}
+            <div className="d-flex">
+                <div id="plot-review-col1">
+                    <table className="table table-sm" id="plot-review-table">
+                        <tbody>
+                            <tr>
+                                <td className="w-80 pr-5">Spatial distribution</td>
+                                <td className="w-20 text-center">
+                                    <span className="badge badge-pill bg-lightgreen">{plotDistribution}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="w-80">Number of plots</td>
+                                <td className="w-20 text-center">
+                                    <span className="badge badge-pill bg-lightgreen">{numPlots} plots</span>
+                                </td>
+                            </tr>
+                            {plotDistribution === "gridded" && (
+                                <tr>
+                                    <td className="w-80">Plot spacing</td>
+                                    <td className="w-20 text-center">
+                                        <span className="badge badge-pill bg-lightgreen">{plotSpacing} m</span>
+                                    </td>
+                                </tr>
+                            )}
+                            {plotDistribution !== "shp" && (
+                                <>
                                     <tr>
-                                        <td className="w-80 pr-5">Spatial distribution</td>
+                                        <td className="w-80">Plot shape</td>
                                         <td className="w-20 text-center">
-                                            <span className="badge badge-pill bg-lightgreen">{plotDistribution}</span>
+                                            <span className="badge badge-pill bg-lightgreen">{plotShape}</span>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className="w-80">Number of plots</td>
+                                        <td className="w-80">Plot size</td>
                                         <td className="w-20 text-center">
-                                            <span className="badge badge-pill bg-lightgreen">{numPlots} plots</span>
+                                            <span className="badge badge-pill bg-lightgreen">{plotSize} m</span>
                                         </td>
                                     </tr>
-                                    {plotDistribution === "gridded" && (
-                                        <tr>
-                                            <td className="w-80">Plot spacing</td>
-                                            <td className="w-20 text-center">
-                                                <span className="badge badge-pill bg-lightgreen">{plotSpacing} m</span>
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {plotDistribution !== "shp" && (
-                                        <>
-                                            <tr>
-                                                <td className="w-80">Plot shape</td>
-                                                <td className="w-20 text-center">
-                                                    <span className="badge badge-pill bg-lightgreen">{plotShape}</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="w-80">Plot size</td>
-                                                <td className="w-20 text-center">
-                                                    <span className="badge badge-pill bg-lightgreen">{plotSize} m</span>
-                                                </td>
-                                            </tr>
-                                        </>
-                                    )}
-                                    {["shp", "csv"].includes(plotDistribution) && (
-                                        <tr>
-                                            <td className="w-80">Plot file</td>
-                                            <td className="w-20 text-center">
-                                                <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
-                                                    {plotFileName
-                                                        ? plotFileName.length > 13 ? `${plotFileName.substring(0, 13)}...` : plotFileName
-                                                        : "null"}
-                                                    {plotFileName && <div className="tooltip_content">{plotFileName}</div>}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                </>
+                            )}
+                            {["shp", "csv"].includes(plotDistribution) && (
+                                <tr>
+                                    <td className="w-80">Plot file</td>
+                                    <td className="w-20 text-center">
+                                        <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
+                                            {plotFileName
+                                                ? plotFileName.length > 13 ? `${plotFileName.substring(0, 13)}...` : plotFileName
+                                                : "null"}
+                                            {plotFileName && <div className="tooltip_content">{plotFileName}</div>}
+                                        </span>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
-            )}
-        </ProjectContext.Consumer>
+            </div>
+        </div>
     );
 }
 
 export function AOIReview() {
+    const {aoiFeatures, aoiFileName} = useContext(ProjectContext);
+    const boundaryExtent = mercator.parseGeoJson(aoiFeatures[0], false).getExtent();
     return (
-        <ProjectContext.Consumer>
-            {({boundary}) => {
-                const boundaryExtent = mercator.parseGeoJson(boundary, false).getExtent();
-                return (
-                    <div id="aoi-review">
-                        <h3>Boundary Coordinates</h3>
+        <div id="aoi-review">
+            {aoiFileName.length
+                ? <label>Boundary will be calculated from {aoiFileName}</label>
+                : (
+                    <>
+                        <label>Boundary Coordinates</label>
                         <div className="form-group mx-4">
                             <div className="row">
                                 <div className="col-md-6 offset-md-3">
@@ -455,9 +535,8 @@ export function AOIReview() {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                );
-            }}
-        </ProjectContext.Consumer>
+                    </>
+                )}
+        </div>
     );
 }

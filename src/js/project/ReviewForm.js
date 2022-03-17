@@ -5,8 +5,8 @@ import {ImageryReview} from "./ImagerySelection";
 import {OverviewReview} from "./Overview";
 import {AOIReview, PlotReview} from "./PlotDesign";
 import {SampleReview} from "./SampleDesign";
-import SurveyCardList from "./SurveyCardList";
-import {SurveyRulesList} from "./SurveyRules";
+import SurveyCardList from "../survey/SurveyCardList";
+import SurveyRulesList from "../survey/SurveyRulesList";
 import SvgIcon from "../components/svg/SvgIcon";
 import UserAssignmentReview from "./UserAssignmentReview";
 import QAQCReview from "./QAQCReview";
@@ -19,7 +19,7 @@ export default function ReviewForm() {
         <div
             className="header my-2 p-2 d-flex flex-row justify-content-center align-items-center"
             style={{
-                background: "#31bab0",
+                background: "var(--lightgreen)",
                 margin:"0 -15px 10px -15px",
                 padding: "1rem",
                 fontSize: "1.1rem",
@@ -30,7 +30,6 @@ export default function ReviewForm() {
                 className="text-truncate"
                 style={{
                     color: "white",
-                    fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol'",
                     fontSize: "1.25rem",
                     margin: "0 1rem"
                 }}
@@ -51,28 +50,30 @@ export default function ReviewForm() {
 
     return (
         <div className="px-2 pb-2" id="project-design-form">
-            {renderSectionHeader("Overview", "overview", true)}
-            <OverviewReview/>
+            <div id="overview-review">
+                {renderSectionHeader("Overview", "overview", true)}
+                <OverviewReview/>
+            </div>
             <div id="collection-review">
                 {renderSectionHeader("Collection Design", "imagery", true)}
                 <AOIMap canDrag={false} context={context}/>
                 <div className="row" style={{borderBottom: "1px solid lightgray"}}>
                     <div className="col-6 pt-3" style={{borderRight: "1px solid lightgray"}}>
-                        <h2>Imagery Selection</h2>
+                        <h3>Imagery Selection</h3>
                         <ImageryReview/>
                     </div>
                     <div className="col-6 pt-3">
-                        <h2>AOI Boundary</h2>
+                        <h3>AOI Boundary</h3>
                         <AOIReview/>
                     </div>
                 </div>
                 <div className="row">
                     <div className="col-6 pt-3" style={{borderRight: "1px solid lightgray"}}>
-                        <h2>Plot Design</h2>
+                        <h3>Plot Design</h3>
                         <PlotReview/>
                     </div>
                     <div className="col-6 pt-3">
-                        <h2>Sample Design</h2>
+                        <h3>Sample Design</h3>
                         <SampleReview/>
                     </div>
                 </div>
@@ -80,14 +81,14 @@ export default function ReviewForm() {
                     && (
                         <div className="row" style={{borderTop: "1px solid lightgray"}}>
                             <div className="col-6 pt-3" style={{borderRight: "1px solid lightgray"}}>
-                                <h2>User Assignment</h2>
+                                <h3>User Assignment</h3>
                                 <UserAssignmentReview
                                     designSettings={context.designSettings}
                                     institutionUserList={context.institutionUserList}
                                 />
                             </div>
                             <div className="col-6 pt-3">
-                                <h2>Quality Control</h2>
+                                <h3>Quality Control</h3>
                                 <QAQCReview
                                     designSettings={context.designSettings}
                                     institutionUserList={context.institutionUserList}
@@ -96,10 +97,13 @@ export default function ReviewForm() {
                         </div>
                     )}
             </div>
-            {renderSectionHeader("Survey Questions", "questions", context.availability === "unpublished")}
             <div id="survey-review">
-                <SurveyCardList {...context} inDesignMode={false}/>
-                <SurveyRulesList {...context} inDesignMode={false}/>
+                {renderSectionHeader("Survey Questions", "questions", !["closed", "archived"].includes(context.availability))}
+                <SurveyCardList editMode="review"/>
+            </div>
+            <div id="survey-rules-review">
+                {renderSectionHeader("Survey Rules", "rules", context.availability === "unpublished")}
+                <SurveyRulesList inDesignMode={false}/>
             </div>
         </div>
     );

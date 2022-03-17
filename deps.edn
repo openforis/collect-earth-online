@@ -2,6 +2,7 @@
 
  :deps {bk/ring-gzip              {:mvn/version "0.3.0"}
         clj-http/clj-http         {:mvn/version "3.10.3"}
+        clj-python/libpython-clj  {:mvn/version "2.003"}
         com.draines/postal        {:mvn/version "2.0.3"}
         com.cognitect/transit-clj {:mvn/version "1.0.324"}
         hiccup/hiccup             {:mvn/version "2.0.0-alpha2"}
@@ -16,12 +17,14 @@
         ring/ring-json            {:mvn/version "0.5.0"}
         seancorfield/next.jdbc    {:mvn/version "1.1.613"}
         sig-gis/triangulum        {:git/url "https://github.com/sig-gis/triangulum"
-                                   :sha     "eca491ec19149da885624b692a0cc2a476dd19ec"}}
+                                   :sha     "d2c5cab0985e0f660ff7ed1879f0fa4d0020003e"}}
 
  :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
            :config           {:main-opts ["-m" "triangulum.config"]}
            :https            {:main-opts ["-m" "triangulum.https"]}
-           :server           {:main-opts ["-m" "collect-earth-online.server"]}
+           :server           {:main-opts ["-m" "collect-earth-online.server"]
+                              :jvm-opts  ["--add-modules=jdk.incubator.foreign"
+                                          "--enable-native-access=ALL-UNNAMED"]}
            :systemd          {:main-opts ["-m" "triangulum.systemd"]}
            :rebel            {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
                               :main-opts  ["-m" "rebel-readline.main"]}

@@ -96,7 +96,7 @@ class ProjectDashboard extends React.Component {
     );
 
     showProjectMap() {
-        const {imageryId, boundary} = this.state.projectDetails;
+        const {imageryId, aoiFeatures} = this.state.projectDetails;
         // TODO, CEO-286 have mercator only load imagery as selected. For now, only pass single imagery.
         const singleImagery = this.state.imageryList.find(i => i.id === imageryId);
         // Initialize the basemap
@@ -111,9 +111,7 @@ class ProjectDashboard extends React.Component {
         mercator.addVectorLayer(
             mapConfig,
             "currentAOI",
-            mercator.geometryToVectorSource(
-                mercator.parseGeoJson(boundary, true)
-            ),
+            mercator.geomArrayToVectorSource(aoiFeatures),
             mercator.ceoMapStyles("geom", "yellow")
         );
         mercator.zoomMapToLayer(mapConfig, "currentAOI");

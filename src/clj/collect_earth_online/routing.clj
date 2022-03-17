@@ -30,7 +30,7 @@
    [:get  "/geo-dash"]                       {:handler     (render-page "/geo-dash")
                                               :auth-type   :collect
                                               :auth-action :redirect}
-   [:get  "/geo-dash/geo-dash-help"]         {:handler     (render-page "/geo-dash/geo-dash-help")}
+   [:get  "/geo-dash-help"]                  {:handler     (render-page "/geo-dash-help")}
    [:get  "/home"]                           {:handler     (render-page "/home")}
    [:get  "/institution-dashboard"]          {:handler     (render-page "/institution-dashboard")
                                               :auth-type   :admin
@@ -157,7 +157,8 @@
                                               :auth-type   :admin
                                               :auth-action :block}
    ;; GeoDash API
-   [:get  "/geo-dash/get-by-projid"]         {:handler     geodash/geodash-id}
+   [:get  "/geo-dash/get-project-widgets"]   {:handler     geodash/get-project-widgets}
+   [:post "/geo-dash/copy-project-widgets"]  {:handler     geodash/copy-project-widgets}
    [:post "/geo-dash/create-widget"]         {:handler     geodash/create-dashboard-widget-by-id}
    [:post "/geo-dash/delete-widget"]         {:handler     geodash/delete-dashboard-widget-by-id}
    [:post "/geo-dash/gateway-request"]       {:handler     geodash/gateway-request}

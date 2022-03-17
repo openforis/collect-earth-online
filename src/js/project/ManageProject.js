@@ -226,7 +226,7 @@ class ProjectManagement extends React.Component {
                         <p>This project is <b>{availability === "unpublished" ? "in draft mode" : availability}</b>. {description}</p>
                     </div>
                     <div className="col-5 d-flex flex-column align-items-center">
-                        <h3 className="my-2">Modify Project Details</h3>
+                        <label className="my-2">Modify Project Details</label>
                         <input
                             className="btn btn-outline-red btn-sm w-100"
                             onClick={() => update()}
@@ -251,13 +251,11 @@ class ProjectManagement extends React.Component {
                             type="button"
                             value="Delete Project"
                         />
-                        <h3 className="my-2">External Links</h3>
+                        <label className="my-2">External Links</label>
                         <input
                             className="btn btn-outline-lightgreen btn-sm w-100"
                             onClick={() => window.open(
-                                "/widget-layout-editor?editable=true&" // TODO, drop unused 'editable'
-                                    + `institutionId=${institution}`
-                                    + `&projectId=${id}`
+                                `/widget-layout-editor?institutionId=${institution}&projectId=${id}`
                             )}
                             type="button"
                             value="Configure Geo-Dash"
@@ -274,7 +272,7 @@ class ProjectManagement extends React.Component {
                             type="button"
                             value="Project Dashboard"
                         />
-                        <h3 className="my-2">Export Data</h3>
+                        <label className="my-2">Export Data</label>
                         <input
                             className="btn btn-outline-lightgreen btn-sm w-100"
                             onClick={() => window.open(`/dump-project-aggregate-data?projectId=${id}`, "_blank")}

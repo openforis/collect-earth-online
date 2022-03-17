@@ -1,3 +1,19 @@
+/**********/
+/* Colors */
+/**********/
+:root {
+    --lightgreen:       #31bab0;
+    --lightgreen-hover: #279b93;
+    --darkgreen:        #0c4d48;
+    --yellow:           #fccf07;
+    --yellow-hover:     #ecbc0d;
+    --lightgray:        #eceeef;
+    --lightgray-hover:  #dadcdf;
+    --gray:             #808080;
+    --darkgray:         #5e5f60;
+    --darkgray-hover:   #3a3b3c;
+}
+
 /***********/
 /* General */
 /***********/
@@ -52,14 +68,14 @@
     width: 25px;
     height: 25px;
     border-radius: 50%;
-    background: #31bab0;
+    background: var(--lightgreen);
     cursor: pointer;
 }
 .slider::-moz-range-thumb {
     width: 25px;
     height: 25px;
     border-radius: 50%;
-    background: #31bab0;
+    background: var(--lightgreen);
     cursor: pointer;
 }
 .full-height {
@@ -95,49 +111,38 @@
     font-family: 'CaviarDreams';
     src: url('/fonts/CaviarDreams.eot');
     src: local('☺'),
-        url('/fonts/CaviarDreams.woff') format('woff'),
-        url('/fonts/CaviarDreams.ttf') format('truetype'),
-        url('/fonts/CaviarDreams.svg') format('svg');
+         url('/fonts/CaviarDreams.woff') format('woff'),
+         url('/fonts/CaviarDreams.ttf') format('truetype'),
+         url('/fonts/CaviarDreams.svg') format('svg');
 }
 @font-face {
     font-family: 'CaviarDreams_Bold';
     src: url('/fonts/CaviarDreams_Bold.eot');
     src: local('☺'),
-        url('/fonts/CaviarDreams_Bold.woff') format('woff'),
-        url('/fonts/CaviarDreams_Bold.ttf') format('truetype'),
-        url('/fonts/CaviarDreams_Bold.svg') format('svg');
+         url('/fonts/CaviarDreams_Bold.woff') format('woff'),
+         url('/fonts/CaviarDreams_Bold.ttf') format('truetype'),
+         url('/fonts/CaviarDreams_Bold.svg') format('svg');
 }
 
 /**************/
 /* Typography */
 /**************/
-h1, h2 {
+h1, h2, h3 {
     font-family: 'CaviarDreams';
-    color: #707070;
+}
+h1, h2 {
     text-align: center;
 }
 h1 {font-size: 2rem;}
 h2 {font-size: 1.5rem;}
-h3 {font-size: 1rem;}
+h3 {
+    font-size: 1.125rem;
+    font-weight: bolder;
+}
 h4 {font-size: 0.8rem;}
-
-/**********/
-/* Colors */
-/**********/
-/* Lightgreen           #31bab0 */
-/* Lightgreen:hover     #279b93 */
-/* Darkgreen            #0c4d48 */
-/* Darkgreen:hover      #0b302c */
-/* Yellow               #fccf07 */
-/* Yellow:hover         #ecbc0d */
-/* Lightgray            #eceeef */
-/* Lightgray:hover      #dadcdf */
-/* Darkgray             #0c4d48 */
-/* Darkgray:hover       #0b302c */
-
 .bg-darkgreen {
-    background-color: #0c4d48;
-    color: white;
+  background-color: var(--darkgreen);
+  color: white;
 }
 .bg-darkgreen h1,.bg-darkgreen h2 {
     padding: 1rem;
@@ -145,13 +150,18 @@ h4 {font-size: 0.8rem;}
     margin: 0;
 }
 .bg-lightgreen {
-    background-color: #31bab0;
+    background-color: var(--lightgreen);
     color: white;
 }
 .bg-lightgray {
-    background-color: #eceeef;
+    background-color: var(--lightgray);
 }
-
+.bg-darkgray {
+  background-color: var(--darkgray);
+}
+.bg-gray {
+  background-color: var(--gray);
+}
 /***********/
 /* Buttons */
 /***********/
@@ -160,34 +170,34 @@ h4 {font-size: 0.8rem;}
     font-weight: bold;
 }
 .btn-lightgray {
-    background-color: #eceeef;
+    background-color: var(--lightgray);
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-lightgray:hover {
-    background-color: #dadcdf;
+    background-color: var(--lightgray-hover);
 }
 .btn-yellow {
-    background-color: #fccf07;
-    color: #279b93;
+    background-color: var(--yellow);
+    color: white;
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-yellow a:hover {
-    background-color: #ecbc0d;
-    color: #279b93;
+    background-color: var(--yellow-hover);
+    color: var(--lightgreen-hover);
 }
 .btn-lightgreen {
-    background-color: #31bab0;
+    background-color: var(--lightgreen);
     color: white;
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-lightgreen:hover {
-    background-color: #279b93;
+    background-color: var(--lightgreen-hover);
     color: white;
 }
 .btn-red {
@@ -202,59 +212,59 @@ h4 {font-size: 0.8rem;}
     color: white;
 }
 .btn-outline-lightgreen {
-    color: #31bab0;
+    color: var(--lightgreen);
     background-color: white;
     background-image: none;
-    border-color: #31bab0;
+    border-color: var(--lightgreen);
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-outline-lightgreen:hover {
     color: #ffff;
-    background-color: #31bab0;
-    border-color: #31bab0;
+    background-color: var(--lightgreen);
+    border-color: var(--lightgreen);
 }
 .btn-outline-lightgray {
     color: black;
     background-color: white;
     background-image: none;
-    border-color: #eceeef;
+    border-color: var(--lightgray);
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-outline-lightgray:hover {
-    background-color: #dadcdf;
-    border-color: #dadcdf;
+    background-color: var(--lightgray-hover);
+    border-color: var(--lightgray-hover);
 }
 .btn-outline-darkgray {
-    color: #5e5f60;
+    color: var(--darkgray);
     background-color: white;
     background-image: none;
-    border-color: #5e5f60;
+    border-color: var(--darkgray);
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-outline-darkgray:hover {
     color: #ffff;
-    background-color: #3a3b3c;
-    border-color: #3a3b3c;
+    background-color: var(--darkgray-hover);
+    border-color: var(--darkgray-hover);
 }
 .btn-outline-yellow {
     color: #f1c00f;
     background-color: white;
     background-image: none;
-    border-color: #fccf07;
+    border-color: var(--yellow);
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-outline-yellow:hover {
     color: white;
-    background-color: #fccf07;
-    border-color: #fccf07;
+    background-color: var(--yellow);
+    border-color: var(--yellow);
 }
 .btn-outline-red {
     color: #c42121;
@@ -294,10 +304,10 @@ h4 {font-size: 0.8rem;}
 /* Links */
 /*********/
 a {
-    color: #31bab0;
+    color: var(--lightgreen);
 }
 a:hover {
-    color: #279b93;
+    color: var(--lightgreen-hover);
     text-decoration: none;
 }
 
@@ -309,11 +319,11 @@ a:hover {
     margin-top: 1rem;
     margin-bottom: 1rem;
     font-size: 1rem;
-    border-color: #31bab0;
+    border-color: var(--lightgreen);
 }
 .card-header-lightgreen {
     color: white;
-    background-color: #31bab0;
+    background-color: var(--lightgreen);
     text-align: center;
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
     font-size: 1.1rem;
@@ -366,12 +376,12 @@ a:hover {
 /**************/
 @media (min-width: 992px) {
     #main-nav .nav-item.active, #main-nav .nav-item.active:hover {
-        border-top: solid 4px #31bab0;
+        border-top: solid 4px var(--lightgreen);
         margin-top: -10px;
         padding-top: 6px;
     }
     #main-nav .nav-item:hover {
-        border-top: solid 4px #fccf07;
+        border-top: solid 4px var(--yellow);
         margin-top: -10px;
         padding-top: 6px;
     }
@@ -385,12 +395,12 @@ a:hover {
         padding-bottom: 1rem;
     }
     #main-nav .nav-item.active, #main-nav .nav-item.active:hover {
-        border-left: solid 4px #31bab0;
+        border-left: solid 4px var(--lightgreen);
         margin-left: -9px;
         padding-left: 5px;
     }
     #main-nav .nav-item:hover {
-        border-left: solid 4px #fccf07;
+        border-left: solid 4px var(--yellow);
         margin-left: -9px;
         padding-left: 5px;
     }
@@ -405,7 +415,7 @@ a:hover {
 /* Tool Tip */
 /************/
 .tooltip_wrapper {
-    color: #279b93;
+    color: var(--lightgreen-hover);
     position: relative;
     display: inline-block;
 }
@@ -443,6 +453,24 @@ a:hover {
     padding: 5px 5px 5px 25px;
     width: 300px;
 }
+.tooltip_content.survey_rule {
+    visibility: hidden;
+    background-color: transparent;
+    border-radius: 0;
+    color: #000000;
+    left: 0;
+    font-weight: normal;
+    max-width: max-content;
+    text-align: start;
+    padding: 0;
+    position: absolute;
+    top: 110%;
+    width: 500px;
+    z-index: 1;
+}
+.tooltip_content.survey_rule::after {
+    border-color: transparent transparent white transparent;
+}
 
 /*************/
 /* Home Page */
@@ -478,7 +506,7 @@ a:hover {
     margin-bottom: 0;
 }
 #lPanel a li.bg-yellow:hover {
-    background-color: #ecbc0d;
+    background-color: var(--yellow-hover);
     color: white;
 }
 #lPanel .btn.bg-lightgreen, #lPanel .btn.btn-outline-lightgreen {
@@ -487,7 +515,7 @@ a:hover {
 .visit-btn {
     border: 1px solid white;
     color: white;
-    background-color: #31bab0;
+    background-color: var(--lightgreen);
 }
 .visit-btn:hover {
     color: black;
@@ -529,7 +557,7 @@ a.ol-popup-closer.close {
     font-weight: 400;
 }
 .ol-overlay-container .cTitle {
-    background-color: #31bab0;
+    background-color: var(--lightgreen);
 }
 .ol-overlay-container td {border-top: none;}
 .ol-overlay-container tr {border-top: 1px solid #dee2e6;}
@@ -540,7 +568,7 @@ a.ol-popup-closer.close {
 /***********************/
 h2.header {
     color: white;
-    background: #31bab0;
+    background: var(--lightgreen);
     margin: 0 -15px 10px -15px;;
     padding: 1rem;
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
@@ -550,16 +578,12 @@ h2.header {
 .modal-content {
     max-height: calc(100vh - 50px);
 }
-.input-group-addon {
-    margin: 8px;
-}
 .modal-body {
     overflow-y: auto;
 }
 .modal-header {
     color: white;
-    background: #31bab0;
-    margin: 0 0px 10px 0px;;
+    background: var(--lightgreen);
     padding: 1rem;
     min-height: 57px;
 }
@@ -582,7 +606,7 @@ h2.header {
     margin: 0rem auto;
 }
 #project-design.bg-lightgray:hover, #account-page.bg-lightgray:hover {
-    background-color: #eceeef;
+    background-color: var(--lightgray);
 }
 #project-design h3 {
     margin-top: 1rem;
@@ -633,7 +657,7 @@ ul.samplevalue {
 /********************/
 #institution .header {margin: 1rem 0;}
 #institution .badge-light {
-    color: #31bab0;
+    color: var(--lightgreen);
     background-color: #f8f9fa;
 }
 
@@ -698,56 +722,69 @@ ul.samplevalue {
 /* Switch */
 /**********/
 .switch {
-  position: relative;
-  display: inline-block;
-  width: 40px;
-  height: 24px;
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 24px;
 }
 
 /* Hide default HTML checkbox */
 .switch > input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
 /* The slider */
 .switch > .switch-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 24px;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 24px;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
 }
 
 .switch > .switch-slider:before {
-  position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 4px;
-  bottom: 4px;
-  border-radius: 50%;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    border-radius: 50%;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
 }
 
 input:checked + .switch-slider {
-  background-color: #2196F3;
+    background-color: #2196F3;
 }
 
 input:focus + .switch-slider {
-  box-shadow: 0 0 1px #2196F3;
+    box-shadow: 0 0 1px #2196F3;
 }
 
 input:checked + .switch-slider:before {
-  -webkit-transform: translateX(16px);
-  -ms-transform: translateX(16px);
-  transform: translateX(16px);
+    -webkit-transform: translateX(16px);
+    -ms-transform: translateX(16px);
+    transform: translateX(16px);
+}
+
+/***********************/
+/* Help Icon Animation */
+/***********************/
+
+@keyframes glow {
+    from, 50% {
+        box-shadow: none;
+    }
+    to {
+        box-shadow: 0 0 15px 5px purple;
+    }
 }

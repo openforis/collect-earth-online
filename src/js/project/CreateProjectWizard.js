@@ -1,17 +1,18 @@
 import React from "react";
 import _ from "lodash";
 
+import AOIMap from "./AOIMap";
+import SurveyQuestionsDesigner from "../survey/SurveyQuestionsDesigner";
+import SurveyCollectionPreview from "../survey/SurveyCollectionPreview";
+import SurveyRulesDesigner from "../survey/SurveyRulesDesigner";
+import PlotStep from "./PlotStep";
+import SvgIcon from "../components/svg/SvgIcon";
 import {ImagerySelection} from "./ImagerySelection";
 import {Overview, OverviewIntro} from "./Overview";
-import {PlotDesign, PlotDesignReview} from "./PlotDesign";
-import {SurveyQuestionDesign, SurveyQuestionHelp} from "./SurveyQuestions";
-import {SurveyRuleDesign} from "./SurveyRules";
-import AOIMap from "./AOIMap";
 import {SampleDesign, SampleReview, SamplePreview} from "./SampleDesign";
 
-import SvgIcon from "../components/svg/SvgIcon";
 import {mercator} from "../utils/mercator";
-import {last, removeFromSet} from "../utils/generalUtils";
+import {last, lengthObject, removeFromSet, someObject, filterObject} from "../utils/sequence";
 import {ProjectContext, plotLimit, perPlotLimit, sampleLimit} from "./constants";
 
 export default class CreateProjectWizard extends React.Component {
@@ -50,20 +51,13 @@ export default class CreateProjectWizard extends React.Component {
             plots: {
                 title: "Plot Design",
                 description: "Area of interest and plot generation for collection",
-                StepComponent: () => (this.context.useTemplatePlots
-                    ? <PlotDesignReview/>
-                    : (
-                        <PlotDesign
-                            boundary={this.context.boundary}
-                            getTotalPlots={this.getTotalPlots}
-                            institutionUserList={this.context.institutionUserList}
-                        />
-                    )),
+                StepComponent: () => <PlotStep getTotalPlots={this.getTotalPlots}/>,
                 helpDescription: "Collection Map Preview",
                 StepHelpComponent: () => (
                     <AOIMap
                         canDrag={!this.context.useTemplatePlots
-                                 && !["csv", "shp"].includes(this.context.plotDistribution)}
+                                 && !["csv", "shp"].includes(this.context.plotDistribution)
+                                 && this.context.boundaryType === "manual"}
                         context={this.context}
                     />
                 ),
@@ -87,17 +81,19 @@ export default class CreateProjectWizard extends React.Component {
             questions: {
                 title: "Survey Questions",
                 description: "Questions to be answered during collection",
-                StepComponent: SurveyQuestionDesign,
+                StepComponent: SurveyQuestionsDesigner,
                 helpDescription: "Question Preview",
-                StepHelpComponent: SurveyQuestionHelp,
+                StepHelpComponent: () =>
+                    <SurveyCollectionPreview surveyQuestions={this.context.surveyQuestions}/>,
                 validate: this.validateSurveyQuestions
             },
             rules: {
                 title: "Survey Rules",
                 description: "Rules to ensure correct answers",
-                StepComponent: SurveyRuleDesign,
+                StepComponent: SurveyRulesDesigner,
                 helpDescription: "Question Preview",
-                StepHelpComponent: SurveyQuestionHelp,
+                StepHelpComponent: () =>
+                    <SurveyCollectionPreview surveyQuestions={this.context.surveyQuestions}/>,
                 validate: () => []
             }
         };
@@ -195,17 +191,19 @@ export default class CreateProjectWizard extends React.Component {
     getTotalPlots = () => {
         if (this.context.plotDistribution === "random"
             && this.context.numPlots) {
-            return this.context.numPlots;
+            return this.context.numPlots * this.context.aoiFeatures.length;
         } else if (this.context.plotDistribution === "gridded"
                     && this.context.plotSize
                     && this.context.plotSpacing) {
-            const boundaryExtent = mercator.parseGeoJson(this.context.boundary, true).getExtent();
-            const buffer = this.context.plotSize;
-            const xRange = boundaryExtent[2] - boundaryExtent[0] - buffer;
-            const yRange = boundaryExtent[3] - boundaryExtent[1] - buffer;
-            const xSteps = Math.floor(xRange / this.context.plotSpacing) + 1;
-            const ySteps = Math.floor(yRange / this.context.plotSpacing) + 1;
-            return xSteps * ySteps;
+            return this.context.aoiFeatures.reduce((acc, cur) => {
+                const boundaryExtent = mercator.parseGeoJson(cur, true).getExtent();
+                const buffer = this.context.plotSize;
+                const xRange = boundaryExtent[2] - boundaryExtent[0] - buffer;
+                const yRange = boundaryExtent[3] - boundaryExtent[1] - buffer;
+                const xSteps = Math.floor(xRange / this.context.plotSpacing) + 1;
+                const ySteps = Math.floor(yRange / this.context.plotSpacing) + 1;
+                return acc + xSteps * ySteps;
+            }, 0);
         } else {
             return 0;
         }
@@ -257,7 +255,7 @@ export default class CreateProjectWizard extends React.Component {
     validatePlotData = () => {
         const {
             projectId,
-            boundary,
+            aoiFeatures,
             plotDistribution,
             numPlots,
             plotSpacing,
@@ -274,7 +272,7 @@ export default class CreateProjectWizard extends React.Component {
         const plotFileNeeded = !useTemplatePlots
             && (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
         const errorList = [
-            (["random", "gridded"].includes(plotDistribution) && !boundary)
+            (["random", "gridded"].includes(plotDistribution) && !aoiFeatures.length)
                 && "Please select a valid boundary.",
             (plotDistribution === "random" && !numPlots)
                 && "A number of plots is required for random plot distribution.",
@@ -359,9 +357,9 @@ export default class CreateProjectWizard extends React.Component {
     validateSurveyQuestions = () => {
         const {surveyQuestions} = this.context;
         const errorList = [
-            (surveyQuestions.length === 0)
+            (lengthObject(surveyQuestions) === 0)
                 && "A survey must include at least one question.",
-            (surveyQuestions.some(sq => sq.answers.length === 0))
+            (someObject(surveyQuestions, ([_id, sq]) => lengthObject(sq.answers) === 0))
                 && "All survey questions must contain at least one answer."
         ];
         return errorList.filter(e => e);
@@ -369,12 +367,12 @@ export default class CreateProjectWizard extends React.Component {
 
     /// Changing Step
 
-    getSteps = () => ((this.context.projectId === -1 || this.context.originalProject.availability === "unpublished")
-        ? this.steps
-        : {
-            overview: this.steps.overview,
-            imagery: this.steps.imagery
-        });
+    getSteps = () => {
+        const {projectId, originalProject} = this.context;
+        return ((projectId === -1 || originalProject.availability === "unpublished")
+            ? this.steps
+            : filterObject(this.steps, ([key, _val]) => ["overview", "imagery", "questions"].includes(key)));
+    };
 
     checkAllSteps = () => {
         const validSteps = Object.entries(this.getSteps())
@@ -448,7 +446,8 @@ export default class CreateProjectWizard extends React.Component {
             this.context.setProjectDetails({
                 useTemplatePlots: true,
                 plots: this.state.templatePlots,
-                boundary: this.state.templateProject.boundary,
+                aoiFeatures: this.state.templateProject.aoiFeatures,
+                aoiFileName: this.state.templateProject.aoiFileName,
                 numPlots: this.state.templateProject.numPlots,
                 plotDistribution: this.state.templateProject.plotDistribution,
                 plotShape: this.state.templateProject.plotShape,
@@ -468,7 +467,8 @@ export default class CreateProjectWizard extends React.Component {
         const isLast = last(Object.keys(steps)) === stepName;
         const isSelected = stepName === this.context.wizardStep;
         const stepComplete = this.state.complete.has(stepName);
-        const stepColor = isSelected ? "blue" : stepComplete ? "green" : "gray";
+        const stepColor = `var(--${isSelected ? "yellow" : stepComplete ? "lightgreen" : "gray"})`;
+
         return (
             <div
                 key={stepName}
@@ -495,6 +495,7 @@ export default class CreateProjectWizard extends React.Component {
                     style={{
                         borderRadius: "50%",
                         backgroundColor: stepColor,
+                        cursor: "pointer",
                         height: "2.5rem",
                         width: "2.5rem",
                         padding: "calc((2.5rem - 1.25rem) / 2)"
@@ -502,7 +503,7 @@ export default class CreateProjectWizard extends React.Component {
                 >
                     {stepComplete && <SvgIcon color="white" icon="check" size="1.25rem" verticalAlign="initial"/>}
                 </div>
-                <label style={{color: stepColor, fontWeight: "bold"}}>
+                <label style={{color: stepColor, cursor: "pointer", fontWeight: "bold"}}>
                     {steps[stepName].title}
                 </label>
             </div>

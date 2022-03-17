@@ -8,9 +8,12 @@
                :pass     ""
                :tls      true
                :port     587
-               :base-url "https://my.domain/"}
+               :base-url "https://my.domain/"
+               :auto-validate? false}
  :server      {:http-port 8080
                :mode      "prod"
                :log-dir   "logs"}
  :ga-id       nil
- :session-key "changeme12345678"}
+ :session-key "changeme12345678"
+ :gee         {:ee-account  ""
+               :ee-key-path ""}}

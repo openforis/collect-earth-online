@@ -1,62 +1,107 @@
 (ns collect-earth-online.db.geodash
-  (:import java.util.UUID)
-  (:require [clojure.string  :as str]
-            [clj-http.client :as client]
+  (:require [libpython-clj2.require :refer [require-python]]
+            [libpython-clj2.python  :refer [py. get-attr] :as py]
+            [libpython-clj2.python.copy :refer [*item-tuple-cutoff*]]
             [triangulum.database :refer [call-sql]]
             [triangulum.type-conversion :as tc]
-            [collect-earth-online.views :refer [data-response]]))
+            [triangulum.config :refer [get-config]]
+            [collect-earth-online.views :refer [data-response]]
+            [clojure.string :as str]))
 
-;;; TODO, we no longer need dashboardID, projectId should be sufficient
+;;; Constants
 
-;; TODO, this function name is not clear
-(defn geodash-id [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))
-        dashboard  (call-sql "get_project_widgets_by_project_id" project-id)]
-    ;; TODO, we should not need to pass back projectId
-    (data-response {:projectId   project-id
-                    :dashboardID (if (seq dashboard)
-                                   (str (:dashboard_id (first dashboard)))
-                                   (str (UUID/randomUUID)))
-                    :widgets     (mapv #(tc/jsonb->clj (:widget %)) dashboard)})))
+(def ^:private max-age (* 24 60 1000)) ; Once a day
+
+;;; GEE Python interface
+
+(require-python '[sys :bind-ns])
+(py. (get-attr sys "path") "append" "src/py")
+(require-python '[gee.routes :as gee]
+                '[gee.utils :refer [initialize]])
+
+(defonce last-initialized (atom 0))
+
+(defn- check-initialized []
+  (when (> (- (System/currentTimeMillis) @last-initialized) max-age)
+    (let [{:keys [ee-account ee-key-path]} (get-config :gee)]
+      (initialize ee-account ee-key-path)
+      (reset! last-initialized (System/currentTimeMillis)))))
+
+(defn- parse-py-errors [e]
+  (let [error-parts (as-> e %
+                      (ex-message %)
+                      (str/split % #"\n")
+                      (last %)
+                      (str/split % #": "))]
+    {:errType  (first error-parts)
+     :errMsg   (->> error-parts
+                    (rest)
+                    (str/join ": "))}))
+
+(def path->python
+  {"degradationTimeSeries"  gee/degradationTimeSeries
+   "degradationTileUrl"     gee/degradationTileUrl
+   "featureCollection"      gee/featureCollection
+   "filteredLandsat"        gee/filteredLandsat
+   "filteredSentinel2"      gee/filteredSentinel2
+   "filteredSentinelSAR"    gee/filteredSentinelSAR
+   "getAvailableBands"      gee/getAvailableBands
+   "getPlanetTile"          gee/getPlanetTile
+   "image"                  gee/image
+   "imageCollection"        gee/imageCollection
+   "imageCollectionByIndex" gee/imageCollectionByIndex
+   "statistics"             gee/statistics
+   "timeSeriesByAsset"      gee/timeSeriesByAsset
+   "timeSeriesByIndex"      gee/timeSeriesByIndex})
+
+(defn gateway-request [{:keys [params json-params]}]
+  (check-initialized)
+  (data-response (if-let [py-fn (some-> params :path path->python)]
+                   (binding [*item-tuple-cutoff* 0]
+                     (try (py-fn json-params)
+                          (catch Exception e (parse-py-errors e))))
+                   {:errMsg (str "No GEE function defined for path " (:path params) ".")})))
+
+;;; Widget Routes
+
+(defn- return-widgets [project-id]
+  (mapv (fn [{:keys [widget_id widget]}]
+          (-> widget
+              (tc/jsonb->clj)
+              (assoc :id widget_id)))
+        (call-sql "get_project_widgets_by_project_id" project-id)))
+
+(defn- split-widget-json [widget-json]
+  (let [widget (tc/json->clj widget-json)]
+    [(:id widget) (-> widget (dissoc :id) (tc/clj->jsonb))]))
+
+(defn get-project-widgets [{:keys [params]}]
+  (let [project-id (tc/val->int (:projectId params))]
+    (data-response (return-widgets project-id))))
 
 (defn create-dashboard-widget-by-id [{:keys [params]}]
-  (let [project-id         (tc/val->int (:projectId params))
-        dashboard-id       (tc/str->pg (:dashID params) "uuid")
-        widget-json-string (tc/json->jsonb (:widgetJSON params))]
+  (let [project-id (tc/val->int (:projectId params))
+        widget     (tc/json->jsonb (:widgetJSON params))]
     (call-sql "add_project_widget"
               project-id
-              dashboard-id
-              widget-json-string)
-    (data-response "")))
+              widget)
+    (data-response (return-widgets project-id))))
 
-;; TODO this route is called way too many times from the front end.
-;;      Preferred for me is to change the workflow to have a save button save
-;;      the entire layout at once. If we keep the same workflow, limit the live edit
-;;      calls by only updating the one widget that moves.
 (defn update-dashboard-widget-by-id [{:keys [params]}]
-  (let [widget-id          (tc/val->int (:widgetId params))
-        dashboard-id       (tc/str->pg (:dashID params) "uuid")
-        widget-json-string (tc/json->jsonb (:widgetJSON params))]
-    (call-sql "update_project_widget_by_widget_id"
-              widget-id
-              dashboard-id
-              widget-json-string)
-    (data-response "")))
+  (let [project-id (tc/val->int (:projectId params))
+        [widget-id widget] (split-widget-json (:widgetJSON params))]
+    (call-sql "update_project_widget_by_widget_id" widget-id widget)
+    (data-response (return-widgets project-id))))
 
 (defn delete-dashboard-widget-by-id [{:keys [params]}]
-  (let [widget-id    (tc/val->int (:widgetId params))
-        dashboard-id (tc/str->pg (:dashID params) "uuid")]
-    (call-sql "delete_project_widget_by_widget_id"
-              widget-id
-              dashboard-id)
-    (data-response "")))
+  (let [project-id (tc/val->int (:projectId params))
+        [widget-id _] (split-widget-json (:widgetJSON params))]
+    (call-sql "delete_project_widget_by_widget_id" widget-id)
+    (data-response (return-widgets project-id))))
 
-(defn gateway-request [{:keys [params json-params server-name]}]
-  (let [path (:path params)
-        url  (if (str/starts-with? server-name "local")
-               "https://ceodev.servirglobal.net:8888/"
-               "http://localhost:8881/")]
-    (client/post (str url path)
-                 {:body (tc/clj->json json-params)
-                  :content-type :json
-                  :accept :json})))
+(defn copy-project-widgets [{:keys [params]}]
+  (let [project-id  (tc/val->int (:projectId params))
+        template-id (tc/val->int (:templateId params))]
+    (call-sql "delete_project_widgets" project-id)
+    (call-sql "copy_project_widgets" template-id project-id)
+    (data-response (return-widgets project-id))))

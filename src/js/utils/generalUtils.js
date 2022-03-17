@@ -1,5 +1,3 @@
-import React from "react";
-
 export function sortAlphabetically(a, b) {
     return a < b ? -1
         : a > b ? 1
@@ -12,39 +10,6 @@ export function capitalizeFirst(str) {
     } else {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
-}
-
-export function UnicodeIcon({icon, backgroundColor}) {
-    return (
-        icon === "leftCaret" ? "\u25C0"
-            : icon === "rightCaret" ? "\u25B6"
-                : icon === "upCaret" ? "\u25B2"
-                    : icon === "downCaret" ? "\u25BC"
-                        : icon === "rightArrow" ? "\u27A1"
-                            : icon === "edit" ? "\u270D"
-                                : icon === "trash" ? <span style={{fontWeight: "normal"}}>{"\uD83D\uDDD1"}</span>
-                                    : icon === "noAction" ? <span className="ml-2 mr-3">{"\u20E0"}</span>
-                                        : icon === "magnify" ? "\uD83D\uDD0D"
-                                            : icon === "info" ? "\u24D8"
-                                                : icon === "save" ? "\uD83D\uDCBE"
-                                                    : icon === "expand" ? "\u21F1"
-                                                        : icon === "collapse" ? "\u21F2"
-                                                            : icon === "add" ? (
-                                                                <span
-                                                                    className="mr-1 px-1"
-                                                                    style={{
-                                                                        backgroundColor,
-                                                                        borderRadius: "2px",
-                                                                        color: "white",
-                                                                        fontSize: ".7rem",
-                                                                        marginTop: "2px"
-                                                                    }}
-                                                                >
-                                                                    {"\u2795"}
-                                                                </span>
-                                                            )
-                                                                : ""
-    );
 }
 
 export function getQueryString(params) {
@@ -100,43 +65,24 @@ export function formatDateISO(date) {
     ].join("-");
 }
 
-export function encodeFileAsBase64(file, callback) {
+export function readFileAsBase64Url(file, callback) {
     const reader = new FileReader();
     reader.onloadend = () => callback(reader.result);
     reader.readAsDataURL(file);
+}
+
+export function readFileAsArrayBuffer(file, callback) {
+    const reader = new FileReader();
+    reader.onloadend = () => callback(reader.result);
+    reader.readAsArrayBuffer(file);
 }
 
 export function KBtoBase64Length(kb) {
     return (kb * 1024 * 4) / 3;
 }
 
-export function last(array) {
-    return array[array.length - 1];
-}
-
-export function removeFromSet(set, value) {
-    set.delete(value);
-    return set;
-}
-
-export function safeLength(arr) {
-    return (arr || []).length;
-}
-
 export function removeEnumerator(questionText) {
     return questionText.replace(/[\s][(][\d]*[[)]$/, "");
-}
-
-export function sameContents(array1, array2) {
-    return array1.every(e => array2.includes(e)) && array2.every(e => array1.includes(e));
-}
-
-export function intersection(array1, array2) {
-    return array1.filter(value => array2.includes(value));
-}
-
-export function partition(array, n) {
-    return array.length ? [array.splice(0, n)].concat(partition(array, n)) : [];
 }
 
 export function invertColor(hex) {
@@ -186,12 +132,11 @@ export function isString(val) { return toString.call(val) === "[object String]";
 export function isDate(val) { return toString.call(val) === "[object Date]"; }
 export function isRegExp(val) { return toString.call(val) === "[object RegExp]"; }
 
-/**
-* Removes the item from array at index
-* @param {array} arr
-* @param {number} index
-* @returns {array}
-*/
-export function removeAtIndex(arr, index) {
-    return arr.slice(0, index).concat(arr.slice(index + 1, arr.length));
+export function isValidJSON(str) {
+    try {
+        JSON.parse(str);
+        return true;
+    } catch (e) {
+        return false;
+    }
 }

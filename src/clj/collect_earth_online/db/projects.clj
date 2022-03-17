@@ -12,8 +12,8 @@
             [triangulum.type-conversion :as tc]
             [triangulum.utils           :as u]
             [collect-earth-online.utils.part-utils :as pu]
-            [collect-earth-online.views      :refer [data-response]]
-            [collect-earth-online.utils.geom :refer [make-geo-json-polygon]]
+            [collect-earth-online.views                    :refer [data-response]]
+            [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
             [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples]]))
 
@@ -93,9 +93,10 @@
 
 (defn get-template-projects [{:keys [params]}]
   (let [user-id (:userId params -1)]
-    (data-response (mapv (fn [{:keys [project_id name]}]
-                           {:id   project_id
-                            :name name})
+    (data-response (mapv (fn [{:keys [project_id name institution_id]}]
+                           {:id            project_id
+                            :name          name
+                            :institutionId institution_id})
                          (call-sql "select_template_projects" user-id)))))
 
 (defn- build-project-by-id [user-id project-id]
@@ -107,13 +108,16 @@
      :name               (:name project)
      :description        (:description project)
      :privacyLevel       (:privacy_level project)
-     :boundary           (:boundary project)
+     :boundary           (:boundary project) ;; Boundary is only used for Planet queries
+     :aoiFeatures        (tc/jsonb->clj (:aoi_features project))
+     :aoiFileName        (:aoi_file_name project)
      :plotDistribution   (:plot_distribution project)
      :numPlots           (:num_plots project)
      :plotSpacing        (:plot_spacing project)
      :plotShape          (:plot_shape project)
      :plotSize           (:plot_size project)
      :plotFileName       (:plot_file_name project)
+     :shufflePlots       (:shuffle_plots project)
      :sampleDistribution (:sample_distribution project)
      :samplesPerPlot     (:samples_per_plot project)
      :sampleResolution   (:sample_resolution project)
@@ -136,11 +140,12 @@
 
 (defn get-template-by-id [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
-        project (first (call-sql "select_project_by_id" project-id))]
+        project    (first (call-sql "select_project_by_id" project-id))]
     (data-response {:imageryId          (:imagery_id project)
                     :name               (:name project)
                     :description        (:description project)
-                    :boundary           (:boundary project)
+                    :aoiFeatures        (tc/jsonb->clj (:aoi_features project))
+                    :aoiFileName        (:aoi_file_name project)
                     :plotDistribution   (:plot_distribution project)
                     :numPlots           (:num_plots project)
                     :plotSpacing        (:plot_spacing project)
@@ -334,11 +339,11 @@
                             (str/join ", " (take 10 bad-plots))
                             "]"))))))
 
+(defn- assign-plots [design-settings current-plots]
+  (when-let [assigned-plots (assign-user-plots current-plots design-settings)]
+    (p-insert-rows! "plot_assignments" (assign-qaqc assigned-plots design-settings))))
+
 (defn- create-project-plots! [project-id
-                              lon-min
-                              lat-min
-                              lon-max
-                              lat-max
                               plot-distribution
                               num-plots
                               plot-spacing
@@ -352,6 +357,7 @@
                               sample-file-name
                               sample-file-base64
                               allow-drawn-samples?
+                              shuffle-plots?
                               design-settings]
   ;; Create plots
   (let [plots (if (#{"csv" "shp"} plot-distribution)
@@ -360,30 +366,27 @@
                                      plot-file-name
                                      plot-file-base64)
                 (generate-point-plots project-id
-                                      lon-min
-                                      lat-min
-                                      lon-max
-                                      lat-max
                                       plot-distribution
                                       num-plots
                                       plot-spacing
-                                      plot-size))]
+                                      plot-size
+                                      shuffle-plots?))]
     (insert-rows! "plots" plots))
 
-  ;; Validate plots after insert
-  (when (#{"csv" "shp"} plot-distribution)
-    (pu/try-catch-throw #(call-sql "set_boundary"
-                                   project-id
-                                   (if (= plot-distribution "shp") 0 plot-size))
-                        "SQL Error: cannot create a project AOI."))
+  ;; Boundary is only used for Planet at this point.
+  (pu/try-catch-throw #(call-sql "set_boundary"
+                                 project-id
+                                 (if (= plot-distribution "shp") 0 plot-size))
+                      "SQL Error: cannot create a project AOI.")
+
+  (when (#{"csv" "shp"} plot-distribution) (call-sql "boundary_to_aoi" project-id))
 
   (when-not (sql-primitive (call-sql "valid_project_boundary" project-id))
     (pu/init-throw (str "The project boundary is invalid. "
                         "This can come from improper coordinates or projection when uploading shape or csv data.")))
 
   (let [saved-plots (call-sql "get_plot_centers_by_project" project-id)]
-    (when-let [assigned-plots (assign-user-plots saved-plots design-settings)]
-      (p-insert-rows! "plot_assignments" (assign-qaqc assigned-plots design-settings)))
+    (assign-plots design-settings saved-plots)
     (create-project-samples! project-id
                              plot-shape
                              plot-size
@@ -401,19 +404,18 @@
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
-        lon-min              (tc/val->double (:lonMin params))
-        lat-min              (tc/val->double (:latMin params))
-        lon-max              (tc/val->double (:lonMax params))
-        lat-max              (tc/val->double (:latMax params))
-        boundary             (make-geo-json-polygon lon-min
-                                                    lat-min
-                                                    lon-max
-                                                    lat-max)
+        aoi-features         (or (:aoiFeatures params)
+                                 [(make-geo-json-polygon (tc/val->double (:lonMin params))
+                                                         (tc/val->double (:latMin params))
+                                                         (tc/val->double (:lonMax params))
+                                                         (tc/val->double (:latMax params)))])
+        aoi-file-name        (:aoiFileName params "")
         plot-distribution    (:plotDistribution params)
         num-plots            (tc/val->int (:numPlots params))
         plot-spacing         (tc/val->float (:plotSpacing params))
         plot-shape           (:plotShape params)
         plot-size            (tc/val->float (:plotSize params))
+        shuffle-plots?       (tc/val->bool (:shufflePlots params))
         sample-distribution  (:sampleDistribution params)
         samples-per-plot     (tc/val->int (:samplesPerPlot params))
         sample-resolution    (tc/val->float (:sampleResolution params))
@@ -437,13 +439,15 @@
                                                       description
                                                       privacy-level
                                                       imagery-id
-                                                      boundary
+                                                      (tc/clj->jsonb aoi-features)
+                                                      aoi-file-name
                                                       plot-distribution
                                                       num-plots
                                                       plot-spacing
                                                       plot-shape
                                                       plot-size
                                                       plot-file-name
+                                                      shuffle-plots?
                                                       sample-distribution
                                                       samples-per-plot
                                                       sample-resolution
@@ -459,10 +463,6 @@
       (if (and (pos? project-template) use-template-plots)
         (call-sql "copy_template_plots" project-template project-id)
         (create-project-plots! project-id
-                               lon-min
-                               lat-min
-                               lon-max
-                               lat-max
                                plot-distribution
                                num-plots
                                plot-spacing
@@ -476,6 +476,7 @@
                                sample-file-name
                                sample-file-base64
                                allow-drawn-samples?
+                               shuffle-plots?
                                design-settings))
       ;; Final clean up
       (call-sql "update_project_counts" project-id)
@@ -483,17 +484,11 @@
       ;; Save project imagery
       (if-let [imagery-list (:projectImageryList params)]
         (insert-project-imagery! project-id imagery-list)
-        (call-sql "add_all_institution_imagery" project-id)) ; API backwards compatibility
-
+        ;; API backwards compatibility
+        (call-sql "add_all_institution_imagery" project-id))
       ;; Copy template widgets
-      ;; TODO this can be a simple SQL query once we drop the dashboard ID
       (when (and (pos? project-template) use-template-widgets)
-        (let [new-uuid (tc/str->pg (str (UUID/randomUUID)) "uuid")]
-          (doseq [{:keys [widget]} (call-sql "get_project_widgets_by_project_id" project-template)]
-            (call-sql "add_project_widget"
-                      project-id
-                      new-uuid
-                      widget))))
+        (call-sql "copy_project_widgets" project-template project-id))
       ;; Return new ID and token
       (data-response {:projectId project-id
                       :tokenKey  token-key})
@@ -546,48 +541,24 @@
                                  allow-drawn-samples?
                                  (call-sql "get_plot_centers_by_project" project-id))))))
 
-(defn- exterior-ring [coords]
-  (map (fn [[a b]] [(tc/val->double a) (tc/val->double b)])
-       (first coords)))
-
-(defn- same-ring? [[start1 :as ring1] ring2]
-  (and (some #(= start1 %) ring2)
-       (or (= ring1 ring2)
-           (= ring1 (reverse ring2))
-           (= ring1 (take (count ring1) (drop-while #(not= start1 %) (cycle (rest ring2)))))
-           (= ring1 (take (count ring1) (drop-while #(not= start1 %) (cycle (reverse (rest ring2)))))))))
-
-;; NOTE: This only works for polygons (and only compares their
-;;       exterior rings). If you need to compare linestrings or points, you
-;;       will need a different function.
-(defn- same-polygon-boundary? [geom1 geom2]
-  (and (= "polygon" (str/lower-case (:type geom1)) (str/lower-case (:type geom2)))
-       (same-ring? (exterior-ring (:coordinates geom1))
-                   (exterior-ring (:coordinates geom2)))))
-
-(defn modified-design? [ds1 ds2]
-  (not= (-> ds1 (tc/jsonb->clj))
-        (-> ds2 (tc/jsonb->clj))))
-
 (defn update-project! [{:keys [params]}]
   (let [project-id           (tc/val->int (:projectId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
         description          (:description params)
         privacy-level        (:privacyLevel params)
-        lon-min              (tc/val->double (:lonMin params))
-        lat-min              (tc/val->double (:latMin params))
-        lon-max              (tc/val->double (:lonMax params))
-        lat-max              (tc/val->double (:latMax params))
-        boundary             (make-geo-json-polygon lon-min
-                                                    lat-min
-                                                    lon-max
-                                                    lat-max)
+        aoi-features         (or (:aoiFeatures params)
+                                 [(make-geo-json-polygon (tc/val->double (:lonMin params))
+                                                         (tc/val->double (:latMin params))
+                                                         (tc/val->double (:lonMax params))
+                                                         (tc/val->double (:latMax params)))])
+        aoi-file-name        (:aoiFileName params)
         plot-distribution    (:plotDistribution params)
         num-plots            (tc/val->int (:numPlots params))
         plot-spacing         (tc/val->float (:plotSpacing params))
         plot-shape           (:plotShape params)
         plot-size            (tc/val->float (:plotSize params))
+        shuffle-plots?       (tc/val->bool (:shufflePlots params))
         sample-distribution  (:sampleDistribution params)
         samples-per-plot     (tc/val->int (:samplesPerPlot params))
         sample-resolution    (tc/val->float (:sampleResolution params))
@@ -595,9 +566,8 @@
                                  (tc/val->bool (:allowDrawnSamples params)))
         survey-questions     (tc/clj->jsonb (:surveyQuestions params))
         survey-rules         (tc/clj->jsonb (:surveyRules params))
-        update-survey        (tc/val->bool (:updateSurvey params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
-        design-settings      (tc/clj->jsonb (:designSettings params default-settings))
+        design-settings      (:designSettings params default-settings)
         plot-file-name       (:plotFileName params)
         plot-file-base64     (:plotFileBase64 params)
         sample-file-name     (:sampleFileName params)
@@ -611,13 +581,15 @@
                   description
                   privacy-level
                   imagery-id
-                  boundary
+                  (tc/clj->jsonb aoi-features)
+                  aoi-file-name
                   plot-distribution
                   num-plots
                   plot-spacing
                   plot-shape
                   plot-size
                   plot-file-name
+                  shuffle-plots?
                   sample-distribution
                   samples-per-plot
                   sample-resolution
@@ -626,7 +598,7 @@
                   survey-questions
                   survey-rules
                   project-options
-                  design-settings)
+                  (tc/clj->jsonb design-settings))
 
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
@@ -637,21 +609,17 @@
           nil
 
           (or (not= plot-distribution (:plot_distribution original-project))
-              (modified-design? design-settings (:design_settings original-project))
               (if (#{"csv" "shp"} plot-distribution)
                 plot-file-base64
-                (or (not (same-polygon-boundary? (tc/jsonb->clj boundary) (tc/jsonb->clj (:boundary original-project))))
-                    (not= num-plots    (:num_plots original-project))
-                    (not= plot-shape   (:plot_shape original-project))
-                    (not= plot-size    (:plot_size original-project))
-                    (not= plot-spacing (:plot_spacing original-project)))))
+                (or (not= aoi-features   (tc/jsonb->clj (:aoi_features original-project)))
+                    (not= num-plots      (:num_plots original-project))
+                    (not= plot-shape     (:plot_shape original-project))
+                    (not= plot-size      (:plot_size original-project))
+                    (not= plot-spacing   (:plot_spacing original-project))
+                    (not= shuffle-plots? (:shuffle_plots original-project)))))
           (do
             (call-sql "delete_plots_by_project" project-id)
             (create-project-plots! project-id
-                                   lon-min
-                                   lat-min
-                                   lon-max
-                                   lat-max
                                    plot-distribution
                                    num-plots
                                    plot-spacing
@@ -665,36 +633,40 @@
                                    sample-file-name
                                    sample-file-base64
                                    allow-drawn-samples?
+                                   shuffle-plots?
                                    design-settings))
 
-          (or (not= sample-distribution (:sample_distribution original-project))
-              (if (#{"csv" "shp"} sample-distribution)
-                sample-file-base64
-                (or (not= samples-per-plot (:samples_per_plot original-project))
-                    (not= sample-resolution (:sample_resolution original-project)))))
+          :else
           (do
-            (call-sql "delete_user_plots_by_project" project-id)
-            (call-sql "delete_all_samples_by_project" project-id)
-            (create-project-samples! project-id
-                                     plot-shape
-                                     plot-size
-                                     sample-distribution
-                                     samples-per-plot
-                                     sample-resolution
-                                     sample-file-name
-                                     sample-file-base64
-                                     allow-drawn-samples?
-                                     (call-sql "get_plot_centers_by_project" project-id)))
-
-          ;; NOTE: Old stored questions can have a different format than when passed from the UI.
-          ;;       This is why we check whether the survey questions are different on the front (for now).
-          (or update-survey
-              (and (:allow_drawn_samples original-project) (not allow-drawn-samples?)))
-          (reset-collected-samples! project-id))
+            ;; Always recreate samples or reset them
+            (if (or (not= sample-distribution (:sample_distribution original-project))
+                    (if (#{"csv" "shp"} sample-distribution)
+                      sample-file-base64
+                      (or (not= samples-per-plot (:samples_per_plot original-project))
+                          (not= sample-resolution (:sample_resolution original-project)))))
+              (do
+                (call-sql "delete_user_plots_by_project" project-id)
+                (call-sql "delete_all_samples_by_project" project-id)
+                (create-project-samples! project-id
+                                         plot-shape
+                                         plot-size
+                                         sample-distribution
+                                         samples-per-plot
+                                         sample-resolution
+                                         sample-file-name
+                                         sample-file-base64
+                                         allow-drawn-samples?
+                                         (call-sql "get_plot_centers_by_project" project-id)))
+              (reset-collected-samples! project-id))
+            ;; Redo assignments if they changed
+            (when (not= design-settings (tc/jsonb->clj (:design_settings original-project)))
+              (call-sql "delete_plot_assignments_by_project" project-id)
+              (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id)))))
 
         ;; Final clean up
         (call-sql "update_project_counts" project-id)
         (data-response "")
+
         (catch Exception e
           (let [causes (:causes (ex-data e))]
             ;; Log unknown errors
@@ -767,6 +739,24 @@
     (.format (SimpleDateFormat. "YYYY-MM-dd HH:mm")
              pg-time)))
 
+(defn- append-children [survey-questions questions]
+  (reduce (fn [acc cur]
+            (let [cur-id   (tc/val->int (get cur 0))
+                  children (filter (fn [[_id question]] (= cur-id (:parentQuestionId question)))
+                                   survey-questions)]
+              (cond-> (conj acc cur)
+                (seq children) (concat (append-children survey-questions children))
+                :always        (vec))))
+          []
+          questions))
+
+(defn- sort-questions [survey-questions]
+  (append-children survey-questions
+                   (->> survey-questions
+                        (filter (fn [[_id question]]
+                                  (= -1 (:parentQuestionId question))))
+                        (sort-by #(get-in % [1 :cardOrder])))))
+
 ;;;
 ;;; Dump aggregate
 ;;;
@@ -775,27 +765,34 @@
   "Returns a list of every question answer combo like
    (question1:answer1 question1:answer2 question2:answer1)"
   [survey-questions]
-  (->> survey-questions
-       (mapcat (fn [group]
-                 (let [question-label (name (get group :question))]
-                   (map (fn [answer]
-                          (str question-label ":" (name (get answer :answer))))
-                        (get group :answers)))))))
-
-(defn- count-answer [sample-size question-answers]
-  (u/mapm (fn [[question answers]]
-            [question (* 100.0 (count answers) (/ sample-size))])
-          (group-by str question-answers)))
+  (mapcat (fn [[_ {:keys [question answers]}]]
+            (map (fn [[_ {:keys [answer]}]]
+                   (str question ":" answer))
+                 answers))
+          survey-questions))
 
 (defn- get-value-distribution
   "Count the answers given, and return a map of {'question:answers' count}"
-  [samples]
-  (count-answer (count samples)
-                (mapcat (fn [sample]
-                          (map (fn [[question-label answer]]
-                                 (str (name question-label) ":" (:answer answer)))
-                               (:saved_answers sample)))
-                        samples)))
+  [survey-questions samples]
+  (->> samples
+       ;; Flatten answers from multiple samples into a single sequence.
+       (mapcat (fn [sample]
+                 (map (fn [[question-id {:keys [answerId answer]}]]
+                        {:question-id question-id
+                         :answer-id answerId
+                         :answer-text answer})
+                      (:saved_answers sample))))
+       (group-by (juxt :question-id :answer-id))
+       ;; Count number of answers in each group, or join free text answers.
+       (u/mapm (fn [[[question-id answer-id] answer-group]]
+                 (let [{:keys [question answers componentType]} (get survey-questions question-id)]
+                   [(str question ":" (get-in answers [(str answer-id) :answer]))
+                    (if (= "input" componentType)
+                      (->> answer-group
+                           (map :answer-text)
+                           (distinct)
+                           (str/join ";"))
+                      (format "%.2f" (* 100.0 (count answer-group) (/ (count samples)))))])))))
 
 (def plot-base-headers [:plotid
                         :center_lon
@@ -821,7 +818,7 @@
         text-headers     (concat (pu/remove-vector-items plot-base-headers
                                                          (when-not confidence? :confidence))
                                  (get-ext-headers plots :extra_plot_info "pl_"))
-        number-headers   (get-value-distribution-headers survey-questions)
+        number-headers   (-> survey-questions (sort-questions) (get-value-distribution-headers))
         headers-out      (->> (concat text-headers number-headers)
                               (map #(-> % name csv-quotes))
                               (str/join ",")
@@ -838,7 +835,7 @@
                                                                      (prefix-keys "pl_" extra-plot-info))
                                                               text-headers
                                                               "")
-                                                    (map->csv (get-value-distribution samples)
+                                                    (map->csv (get-value-distribution survey-questions samples)
                                                               number-headers
                                                               0)))))
                               plots)]
@@ -864,9 +861,14 @@
 ;;; Dump raw
 ;;;
 
-(defn- extract-answers [value]
+(defn- extract-answers [survey-questions value]
   (if value
-    (reduce (fn [acc [k v]] (merge acc {(name k) (:answer v)})) {} value)
+    (reduce (fn [acc [k v]]
+              (let [{:keys [question answers]} (get survey-questions k)]
+                (merge acc {question
+                            (get-in answers [(str (:answerId v)) :answer])})))
+            {}
+            value)
     ""))
 
 (def sample-base-headers [:plotid
@@ -889,7 +891,9 @@
             text-headers     (concat sample-base-headers
                                      (get-ext-headers samples :extra_plot_info "pl_")
                                      (get-ext-headers samples :extra_sample_info "smpl_")
-                                     (map :question survey-questions))
+                                     (->> survey-questions
+                                          (sort-questions)
+                                          (map (fn [[_ {:keys [question]}]] (or question "not-found")))))
             headers-out      (->> text-headers
                                   (map #(-> % name csv-quotes))
                                   (str/join ",")
@@ -904,7 +908,7 @@
                                                                      (update :analysis_duration #(when % (str % " secs"))))
                                                                  (prefix-keys "pl_" extra-plot-info)
                                                                  (prefix-keys "smpl_" extra-sample-info)
-                                                                 (extract-answers saved-answers))
+                                                                 (extract-answers survey-questions saved-answers))
                                                           text-headers
                                                           ""))))
                                   samples)]
