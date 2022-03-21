@@ -3,6 +3,7 @@ import os
 import ee
 import math
 import sys
+import json
 from ee.ee_exception import EEException
 from gee.inputs import getLandsat, getS1
 
@@ -41,7 +42,7 @@ def getReducer(reducer):
         return ee.Reducer.median()
 
 def safeParseJSON(val):
-    if type(val) == "<class 'dict'>":
+    if isinstance(val,  dict):
         return val
     else:
         try:
