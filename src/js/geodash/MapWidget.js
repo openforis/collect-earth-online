@@ -200,14 +200,13 @@ export default class MapWidget extends React.Component {
             this.resumeGeeLayer();
         });
 
-        map.getView().fit(
-            plotSampleLayer.getSource().getExtent(),
-            {
-                size: map.getSize(),
-                padding: [16, 16, 16, 16]
-            }
-        );
-
+        // map.getView().fit(
+        //     plotSampleLayer.getSource().getExtent(),
+        //     {
+        //         size: map.getSize(),
+        //         padding: [16, 16, 16, 16]
+        //     }
+        // );
         if (!this.props.mapCenter) {
             const view = map.getView();
             this.props.setCenterAndZoom(view.getCenter(), view.getZoom());
