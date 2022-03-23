@@ -61,7 +61,7 @@ class Geodash extends React.Component {
         } else if (plotShape === "square") {
             const point = new Point(projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"));
             const bufferedExtent = new ExtentBuffer(point.getExtent(), radius);
-            return [new Feature(fromExtent(bufferedExtent))];
+            return [new Feature(fromExtent(bufferedExtent.map(b => parseFloat(b))))];
         } else if (plotShape === "circle") {
             return [
                 new Feature(
