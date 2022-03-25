@@ -91,7 +91,10 @@ def imageCollectionToMapId(assetId, visParams, reducer, startDate, endDate):
     if reducer.lower() == 'mosaic':
         reducedImage = ee.Image(eeCollection.mosaic())
     else:
-        reducedImage = ee.Image(eeCollection.reduce(getReducer(reducer)))
+        bandNames = eeCollection.first().bandNames()
+        orderBandNames = ee.List.sequence(0,bandNames.length().subtract(1))
+        reducedImage = ee.Image(eeCollection.reduce(getReducer(reducer))) \
+            .select(orderBandNames, bandNames)
     return imageToMapId(reducedImage, visParams)
 
 # TODO, should we allow user to select first cloud free image again?
