@@ -1,8 +1,9 @@
 import React from "react";
 
 import SvgIcon from "../components/svg/SvgIcon";
-import {pluralize} from "../utils/generalUtils";
 import SurveyRule from "./SurveyRule";
+
+import {pluralize} from "../utils/generalUtils";
 
 /**
  * Helper Components
@@ -30,14 +31,11 @@ export default class RulesCollectionModal extends React.Component {
         return rules.length > 0 && (
             <>
                 <button
-                    className="text-center btn btn-outline-lightgreen mr-1 tooltip_wrapper"
+                    className="text-center btn btn-outline-lightgreen mr-1"
                     onClick={() => this.setState({showModal: true})}
                     type="button"
                 >
                     <SvgIcon icon="rule" size="1.5rem"/>
-                    <div className="tooltip_content survey_tree">
-                        {`This question has ${rules.length} ${pluralize(rules.length, "rule", "rules")}. Click to see the rule list.`}
-                    </div>
                 </button>
                 <div
                     aria-hidden="true"
