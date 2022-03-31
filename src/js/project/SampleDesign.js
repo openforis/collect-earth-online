@@ -308,8 +308,10 @@ export function SampleReview() {
                                             <td className="w-20 text-center">
                                                 <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
                                                     {sampleFileName
-                                                        ? sampleFileName.length > 13 ? `${sampleFileName.substring(0, 13)}...` : sampleFileName
-                                                        : "null"}
+                                                        ? sampleFileName.length > 13
+                                                            ? `${sampleFileName.substring(0, 13)}...`
+                                                            : sampleFileName
+                                                        : "Unknown"}
                                                     {sampleFileName && <div className="tooltip_content">{sampleFileName}</div>}
                                                 </span>
                                             </td>
