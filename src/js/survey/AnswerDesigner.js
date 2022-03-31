@@ -146,10 +146,10 @@ export default class AnswerDesigner extends React.Component {
                 {surveyQuestion.componentType === "input" && (
                     <div className="d-flex ml-4 align-items-center">
                         <input
+                            checked={this.state.required}
                             id="required"
                             onChange={() => this.setState({required: !this.state.required})}
                             type="checkbox"
-                            value={this.state.required}
                         />
                         <label className="mb-0 ml-1" htmlFor="required">Text Required?</label>
                     </div>
