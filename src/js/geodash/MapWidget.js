@@ -113,6 +113,8 @@ export default class MapWidget extends React.Component {
         }
     };
 
+    /// Cache
+
     wrapCache = async widget => {
         const postObject = this.getPostObject(widget);
         const cacheUrl = this.checkForCache(postObject);
@@ -123,21 +125,6 @@ export default class MapWidget extends React.Component {
             return url;
         }
     };
-
-    loadWidgetSource = async () => {
-        const {widget, idx} = this.props;
-        if (widget.type === "dualImagery") {
-            const [url1, url2] = await Promise.all([this.wrapCache(widget.image1), this.wrapCache(widget.image2)]);
-            this.upsertTileSource(url1, widget.id, idx);
-            this.upsertTileSource(url2, widget.id, idx, this.addOverlay);
-        } else {
-            const url = await this.wrapCache(widget);
-            this.upsertTileSource(url, widget.id, idx);
-        }
-        this.resumeGeeLayer();
-    };
-
-    /// Cache
 
     checkForCache = postObject => {
         const msPerDay = 24 * 60 * 60 * 1000;
@@ -214,11 +201,42 @@ export default class MapWidget extends React.Component {
         }
     };
 
+    addOverlay = layer => {
+        layer.on("prerender", event => {
+            const {overlayValue} = this.state;
+            const ctx = event.context;
+            const width = Math.abs(ctx.canvas.width * (overlayValue / 100.0));
+            ctx.save();
+            ctx.beginPath();
+            if (overlayValue >= 0) {
+                ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
+            } else {
+                // Secret code just in case.  It may not be as useful as I thought.
+                ctx.rect(0, 0, ctx.canvas.width - width, ctx.canvas.height);
+            }
+            ctx.clip();
+        });
+
+        layer.on("postrender", event => {
+            const ctx = event.context;
+            ctx.restore();
+        });
+    };
+
     centerAndZoomMap = (center, zoom) => {
         const {mapRef} = this.state;
         const view = mapRef.getView();
         view.setCenter(center);
         view.setZoom(zoom);
+    };
+
+    setOpacity = newOpacity => {
+        this.state.mapRef.getLayers().forEach(lyr => {
+            const layerId = lyr.get("layerId") || "";
+            if (layerId.includes(this.props.widget.id)) {
+                lyr.setOpacity(newOpacity / 100.0);
+            }
+        });
     };
 
     getLayerById = layerId => {
@@ -268,28 +286,6 @@ export default class MapWidget extends React.Component {
         return layer;
     };
 
-    addOverlay = layer => {
-        layer.on("prerender", event => {
-            const {overlayValue} = this.state;
-            const ctx = event.context;
-            const width = Math.abs(ctx.canvas.width * (overlayValue / 100.0));
-            ctx.save();
-            ctx.beginPath();
-            if (overlayValue >= 0) {
-                ctx.rect(width, 0, ctx.canvas.width - width, ctx.canvas.height);
-            } else {
-                // Secret code just in case.  It may not be as useful as I thought.
-                ctx.rect(0, 0, ctx.canvas.width - width, ctx.canvas.height);
-            }
-            ctx.clip();
-        });
-
-        layer.on("postrender", event => {
-            const ctx = event.context;
-            ctx.restore();
-        });
-    };
-
     upsertTileSource = (url, widgetId, idx, newLayerCallback = () => {}) => {
         const {mapRef} = this.state;
         const layerId = "layer-" + widgetId;
@@ -303,13 +299,17 @@ export default class MapWidget extends React.Component {
         }
     };
 
-    setOpacity = newOpacity => {
-        this.state.mapRef.getLayers().forEach(lyr => {
-            const layerId = lyr.get("layerId") || "";
-            if (layerId.includes(this.props.widget.id)) {
-                lyr.setOpacity(newOpacity / 100.0);
-            }
-        });
+    loadWidgetSource = async () => {
+        const {widget, idx} = this.props;
+        if (widget.type === "dualImagery") {
+            const [url1, url2] = await Promise.all([this.wrapCache(widget.image1), this.wrapCache(widget.image2)]);
+            this.upsertTileSource(url1, widget.id, idx);
+            this.upsertTileSource(url2, widget.id + "-2", idx, this.addOverlay);
+        } else {
+            const url = await this.wrapCache(widget);
+            this.upsertTileSource(url, widget.id, idx);
+        }
+        this.resumeGeeLayer();
     };
 
     /// Render functions
