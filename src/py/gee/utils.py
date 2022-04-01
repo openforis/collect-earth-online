@@ -41,6 +41,27 @@ def getReducer(reducer):
     else:
         return ee.Reducer.median()
 
+
+def reduceIC(imageCollection, reducer):
+    reducerName = reducer.lower()
+    if(reducerName == 'min'):
+        return imageCollection.min()
+    elif (reducerName == 'max'):
+        return imageCollection.max()
+    elif (reducerName == 'mean'):
+        return imageCollection.mean()
+    elif (reducerName == 'mode'):
+        return imageCollection.mode()
+    elif (reducerName == 'mosaic'):
+        return imageCollection.mosaic()
+    elif (reducerName == 'first'):
+        return imageCollection.first()
+    elif (reducerName == 'sum'):
+        return imageCollection.sum()
+    else:
+        return imageCollection.median()
+
+
 def safeParseJSON(val):
     if isinstance(val,  dict):
         return val
@@ -88,10 +109,7 @@ def imageCollectionToMapId(assetId, visParams, reducer, startDate, endDate):
         eeFilterDate = ee.Filter.date(startDate, endDate)
         eeCollection = eeCollection.filter(eeFilterDate)
 
-    if reducer.lower() == 'mosaic':
-        reducedImage = ee.Image(eeCollection.mosaic())
-    else:
-        reducedImage = ee.Image(eeCollection.reduce(getReducer(reducer)))
+    reducedImage = ee.Image(reduceIC(eeCollection, reducer))
     return imageToMapId(reducedImage, visParams)
 
 # TODO, should we allow user to select first cloud free image again?
