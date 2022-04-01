@@ -41,7 +41,6 @@ INSERT INTO projects (
     project_uid,
     institution_rid,
     availability,
-    published_date,
     name,
     description,
     privacy_level,
@@ -54,15 +53,16 @@ INSERT INTO projects (
     samples_per_plot,
     survey_questions,
     survey_rules,
+    published_date,
     created_date,
     options,
     imagery_rid,
-    allow_drawn_samples
+    allow_drawn_samples,
+    aoi_features
 ) VALUES (
     1,
     1,
     'published',
-    Now(),
     'Test Project',
     'This project is a default project for development testing.',
     'public',
@@ -76,9 +76,11 @@ INSERT INTO projects (
     '{"0":{"answers":{"0":{"color":"#1ec61b","answer":"Forest"},"1":{"color":"#9cf135","answer":"Grassland"},"2":{"color":"#d5de85","answer":"Bare Surface"},"3":{"color":"#8b9084","answer":"Impervious Surface"},"4":{"color":"#f2c613","answer":"Agriculture"},"5":{"color":"#6a3a75","answer":"Urban"},"6":{"color":"#2f4dc0","answer":"Water"},"7":{"color":"#ffffff","answer":"Cloud"},"8":{"color":"#000000","answer":"Unknown"}},"dataType":"text","question":"Land Use","componentType":"button","parentAnswerIds":[],"parentQuestionId":-1},"1":{"answers":{"0":{"color":"#1527f6","answer":"Placeholder Text"}},"dataType":"text","question":"Test Regex Match","componentType":"input","parentAnswerIds":[],"parentQuestionId":-1},"2":{"answers":{"0":{"color":"#1527f6","answer":"100"}},"dataType":"number","question":"Test Numeric Range","componentType":"input","parentAnswerIds":[],"parentQuestionId":-1},"3":{"answers":{"0":{"color":"#1527f6","answer":"100"}},"dataType":"number","question":"Test Sum of Answers","componentType":"input","parentAnswerIds":[],"parentQuestionId":-1},"4":{"answers":{"0":{"color":"#1527f6","answer":"100"}},"dataType":"number","question":"Test Matching Sums 1","componentType":"input","parentAnswerIds":[],"parentQuestionId":-1},"5":{"answers":{"0":{"color":"#1527f6","answer":"100"}},"dataType":"number","question":"Test Matching Sums 2","componentType":"input","parentAnswerIds":[],"parentQuestionId":-1},"6":{"answers":{"0":{"color":"#1ec61b","answer":"Forest"},"1":{"color":"#9cf135","answer":"Grassland"},"2":{"color":"#d5de85","answer":"Bare Surface"},"3":{"color":"#8b9084","answer":"Impervious Surface"},"4":{"color":"#f2c613","answer":"Agriculture"},"5":{"color":"#6a3a75","answer":"Urban"},"6":{"color":"#2f4dc0","answer":"Water"},"7":{"color":"#ffffff","answer":"Cloud"},"8":{"color":"#000000","answer":"Unknown"}},"dataType":"text","question":"Test Incompatible Answers","componentType":"button","parentAnswerIds":[],"parentQuestionId":-1}}',
     '[{"id":0,"regex":"^[a-zA-Z0-9_.-]*$","ruleType":"text-match","questionId":1},{"id":1,"max":100,"min":0,"ruleType":"numeric-range","questionId":2},{"id":2,"ruleType":"sum-of-answers","validSum":200,"questionIds":[2,3]},{"id":3,"ruleType":"matching-sums","questionIds1":[2,3],"questionIds2":[4,5]},{"id":4,"ruleType":"incompatible-answers","answerId1":0,"answerId2":8,"questionId1":0,"questionId2":6}]',
     Now(),
+    Now(),
     '{"showGEEScript": false, "autoLaunchGeoDash": false, "collectConfidence": true, "showPlotInformation": false}',
     1,
-    FALSE
+    FALSE,
+    '[{"type": "Polygon", "coordinates": [[[95, 10.5], [95, 22.5], [107, 22.5], [107, 10.5], [95, 10.5]]]}]'
 );
 
 SELECT setval(pg_get_serial_sequence('projects', 'project_uid'), (SELECT MAX(project_uid) FROM projects) + 1);
@@ -154,5 +156,5 @@ INSERT INTO project_widgets
     (project_rid, widget)
 VALUES
     (1, '{"name":"Image Collection","type":"preImageCollection","layout":{"h":1,"w":3,"x":0,"y":0},"endDate":"2022-01-07","basemapId":1,"indexName":"NDVI","startDate":"2022-01-01"}'),
-    (1, '{"name":"Time Series Graph","type":"timeSeries","layout":{"h":1,"w":3,"x":3,"y":0},"endDate":"2022-01-07","indexName":"EVI","startDate":"2021-12-31"}'),
+    (1, '{"name":"Time Series Graph","type":"timeSeries","layout":{"h":1,"w":3,"x":3,"y":0},"endDate":"2022-01-07","indexName":"EVI","startDate":"2017-12-31"}'),
     (1, '{"name":"Statistics","type":"statistics","layout":{"h":1,"w":3,"x":6,"y":0}}');
