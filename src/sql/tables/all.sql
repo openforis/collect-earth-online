@@ -94,6 +94,8 @@ CREATE TABLE projects (
     design_settings        jsonb NOT NULL DEFAULT '{}'::jsonb,
     plot_file_name         varchar(511),
     sample_file_name       varchar(511),
+    aoi_features           jsonb,
+    aoi_file_name          text DEFAULT '',
     shuffle_plots          boolean
 );
 CREATE INDEX projects_institution_rid ON projects (institution_rid);
