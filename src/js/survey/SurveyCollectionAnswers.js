@@ -97,8 +97,13 @@ class AnswerInput extends React.Component {
         };
     }
 
+    componentDidMount() {
+        this.resetInputText();
+    }
+
     componentDidUpdate(prevProps) {
-        if (this.props.selectedSampleId !== prevProps.selectedSampleId) {
+        if (this.props.selectedSampleId !== prevProps.selectedSampleId
+            || this.props.surveyNode.answered !== prevProps.surveyNode.answered) {
             this.resetInputText();
         }
     }
