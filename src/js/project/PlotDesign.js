@@ -488,10 +488,15 @@ export function PlotReview() {
                                 <tr>
                                     <td className="w-80">Plot file</td>
                                     <td className="w-20 text-center">
-                                        <span className="badge badge-pill bg-lightgreen tooltip_wrapper" style={{color: "white"}}>
+                                        <span
+                                            className="badge badge-pill bg-lightgreen tooltip_wrapper"
+                                            style={{color: "white"}}
+                                        >
                                             {plotFileName
-                                                ? plotFileName.length > 13 ? `${plotFileName.substring(0, 13)}...` : plotFileName
-                                                : "null"}
+                                                ? plotFileName.length > 13
+                                                    ? `${plotFileName.substring(0, 13)}...`
+                                                    : plotFileName
+                                                : "Unknown"}
                                             {plotFileName && <div className="tooltip_content">{plotFileName}</div>}
                                         </span>
                                     </td>
