@@ -866,7 +866,8 @@
     (reduce (fn [acc [k v]]
               (let [{:keys [question answers]} (get survey-questions k)]
                 (merge acc {question
-                            (get-in answers [(str (:answerId v)) :answer])})))
+                            (or (:answer v)
+                                (get-in answers [(str (:answerId v)) :answer]))})))
             {}
             value)
     ""))
