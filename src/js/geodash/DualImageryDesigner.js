@@ -53,7 +53,7 @@ export default function DualImageryDesigner() {
                         dataKey="type"
                         items={widgetSelectList}
                         prefixPath="image1"
-                        title="Bottom Imagery Type"
+                        title="Top Imagery Type"
                     />
                 ) : (
                     <GDSelect
@@ -61,7 +61,7 @@ export default function DualImageryDesigner() {
                         dataKey="type"
                         items={widgetSelectList}
                         prefixPath="image2"
-                        title="Top Imagery Type"
+                        title="Bottom Imagery Type"
                     />
                 )}
             {WidgetDesigner && <WidgetDesigner isDual prefixPath={step1 ? "image1" : "image2"}/>}
