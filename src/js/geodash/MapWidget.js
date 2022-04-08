@@ -15,7 +15,7 @@ export default class MapWidget extends React.Component {
         this.state = {
             mapRef: null,
             timeOutRefs: [],
-            overlayValue: 0,
+            overlayValue: 100,
             opacityValue: 100
         };
     }
@@ -303,8 +303,8 @@ export default class MapWidget extends React.Component {
         const {widget, idx} = this.props;
         if (widget.type === "dualImagery") {
             const [url1, url2] = await Promise.all([this.wrapCache(widget.image1), this.wrapCache(widget.image2)]);
-            this.upsertTileSource(url1, widget.id, idx);
-            this.upsertTileSource(url2, widget.id + "-2", idx, this.addOverlay);
+            this.upsertTileSource(url1, widget.id + "-top", idx);
+            this.upsertTileSource(url2, widget.id + "-bottom", idx, this.addOverlay);
         } else {
             const url = await this.wrapCache(widget);
             this.upsertTileSource(url, widget.id, idx);
