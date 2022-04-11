@@ -169,4 +169,10 @@
                                               :auth-action :block}
    [:get  "/get-securewatch-dates"]          {:handler     proxy/get-securewatch-dates
                                               :auth-type   :no-cross
+                                              :auth-action :block}
+   [:get "/get-nicfi-dates"]                 {:handler     proxy/get-nicfi-dates
+                                              :auth-type   :no-cross
+                                              :auth-action :block}
+   [:get  "/get-nicfi-tiles"]                {:handler     proxy/get-nicfi-tiles
+                                              :auth-type   :no-cross
                                               :auth-action :block}})
