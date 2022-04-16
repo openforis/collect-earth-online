@@ -44,6 +44,7 @@ export default class CreateProjectWizard extends React.Component {
                     <AOIMap
                         canDrag={false}
                         context={this.context}
+                        imagery={this.context.institutionImagery.filter(({title}) => title === "Mapbox Satellite")}
                     />
                 ),
                 validate: this.validateImagery
@@ -59,6 +60,7 @@ export default class CreateProjectWizard extends React.Component {
                                  && !["csv", "shp"].includes(this.context.plotDistribution)
                                  && this.context.boundaryType === "manual"}
                         context={this.context}
+                        imagery={this.context.institutionImagery.filter(({title}) => title === "Mapbox Satellite")}
                     />
                 ),
                 validate: this.validatePlotData

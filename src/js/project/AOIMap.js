@@ -26,10 +26,6 @@ export default class AOIMap extends React.Component {
                 this.updateAOIAreas();
             }
 
-            if (prevProps.context.imageryId !== this.props.context.imageryId) {
-                this.updateBaseMapImagery();
-            }
-
             if (prevProps.canDrag !== this.props.canDrag) {
                 if (this.props.canDrag) {
                     this.showDragBoxDraw();
@@ -49,18 +45,16 @@ export default class AOIMap extends React.Component {
     }
 
     initProjectMap = () => {
-        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.props.context.institutionImagery);
+        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.props.imagery);
         this.setState({mapConfig: newMapConfig}, () => {
-            this.updateBaseMapImagery();
+            mercator.setVisibleLayer(
+                this.state.mapConfig,
+                this.props.imagery[0].id
+            );
             if (this.props.context.aoiFeatures) this.updateAOIAreas();
             if (this.props.canDrag) this.showDragBoxDraw();
             if (this.props.context.plots.length > 0) this.showPlots();
         });
-    };
-
-    updateBaseMapImagery = () => {
-        mercator.setVisibleLayer(this.state.mapConfig,
-                                 this.props.context.imageryId || this.props.context.institutionImagery[0].id);
     };
 
     updateAOIAreas = () => {

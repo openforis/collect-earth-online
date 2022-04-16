@@ -56,7 +56,11 @@ export default function ReviewForm() {
             </div>
             <div id="collection-review">
                 {renderSectionHeader("Collection Design", "imagery", true)}
-                <AOIMap canDrag={false} context={context}/>
+                <AOIMap
+                    canDrag={false}
+                    context={context}
+                    imagery={context.institutionImagery.filter(({title}) => title === "Mapbox Satellite")}
+                />
                 <div className="row" style={{borderBottom: "1px solid lightgray"}}>
                     <div className="col-6 pt-3" style={{borderRight: "1px solid lightgray"}}>
                         <h3>Imagery Selection</h3>
