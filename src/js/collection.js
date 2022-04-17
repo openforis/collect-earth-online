@@ -624,12 +624,12 @@ class Collection extends React.Component {
                         })
                     }
                 )
-                    .then(response => {
-                        if (response.ok) {
+                    .then(response => (response.ok ? response.json() : Promise.reject(response)))
+                    .then(data => {
+                        if (data === "") {
                             return this.navToNextPlot(true);
                         } else {
-                            console.log(response);
-                            alert("Error flagging plot as bad. See console for details.");
+                            alert(data);
                         }
                     })
             );
@@ -663,12 +663,12 @@ class Collection extends React.Component {
                     })
                 }
             )
-                .then(response => {
-                    if (response.ok) {
+                .then(response => (response.ok ? response.json() : Promise.reject(response)))
+                .then(data => {
+                    if (data === "") {
                         return this.navToNextPlot(true);
                     } else {
-                        console.log(response);
-                        alert("Error saving your assignments to the database. See console for details.");
+                        alert(data);
                     }
                 })
         );
