@@ -156,8 +156,7 @@ export const imageryOptions = [
                 display: "Default Time",
                 type: "select",
                 options: [
-                    {label: "Newest Available", value: "newest"},
-                    ...nicfiLayers.map(layer => ({label: layer, value: layer}))
+                    {label: "Newest Available", value: "newest"}
                 ]
             },
             {

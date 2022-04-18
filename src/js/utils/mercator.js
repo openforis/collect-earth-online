@@ -238,11 +238,10 @@ mercator.createSource = (sourceConfig,
         });
     } else if (type === "PlanetNICFI") {
         return new XYZ({
-            url: "https://tiles{0-3}.planet.com/basemaps/v1/planet-tiles/planet_medres_normalized_analytic_"
-                + sourceConfig.time
-                + "_mosaic/gmap/{z}/{x}/{y}"
-                + `?api_key=${sourceConfig.accessToken}`
-                + `&proc=${sourceConfig.band}`,
+            url: "get-nicfi-tiles?z={z}&x={x}&y={y}"
+                + `&dataLayer=${sourceConfig.time}`
+                + `&band=${sourceConfig.band}`
+                + `&imageryId=${imageryId}`,
             attributions: attribution
         });
     } else if (type === "PlanetDaily") {
