@@ -104,13 +104,19 @@ $$ LANGUAGE SQL;
 
 -- Publish project
 CREATE OR REPLACE FUNCTION publish_project(_project_id integer)
- RETURNS integer AS $$
+ RETURNS void AS $$
 
     UPDATE projects
     SET availability = 'published',
         published_date = Now()
-    WHERE project_uid = _project_id
-    RETURNING _project_id
+    WHERE project_uid = _project_id;
+
+    DELETE FROM ext_samples
+    WHERE plot_rid IN (
+        SELECT plot_uid
+        FROM plots
+        WHERE project_rid = _project_id
+    );
 
 $$ LANGUAGE SQL;
 
