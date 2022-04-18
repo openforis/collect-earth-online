@@ -419,13 +419,14 @@ export class PlotDesign extends React.Component {
 PlotDesign.contextType = ProjectContext;
 
 export function PlotDesignReview() {
+    const {institutionImagery} = useContext(ProjectContext);
     return (
         <div className="d-flex">
             <div className="col-6">
                 <PlotReview/>
             </div>
             <div className="col-6">
-                <AOIReview/>
+                <AOIReview imagery={institutionImagery.filter(({title}) => title === "Mapbox Satellite")}/>
             </div>
         </div>
     );
