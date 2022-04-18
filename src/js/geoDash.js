@@ -60,8 +60,17 @@ class Geodash extends React.Component {
                 .map(geom => new Feature({geometry: mercator.parseGeoJson(geom, true)}));
         } else if (plotShape === "square") {
             const point = new Point(projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"));
-            const bufferedExtent = new ExtentBuffer(point.getExtent(), radius);
-            return [new Feature(fromExtent(bufferedExtent.map(b => parseFloat(b))))];
+            const pointCenter = point.getFlatCoordinates();
+            const [centerX, centerY] = pointCenter;
+            const numRadius = Number(radius);
+            return [
+                new Feature(fromExtent(
+                    [centerX - numRadius,
+                     centerY - numRadius,
+                     centerX + numRadius,
+                     centerY + numRadius]
+                ))
+            ];
         } else if (plotShape === "circle") {
             return [
                 new Feature(
