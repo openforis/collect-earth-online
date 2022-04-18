@@ -22,6 +22,7 @@ import WidgetContainer from "./geodash/WidgetContainer";
 import {EditorContext, graphWidgetList, gridRowHeight, mapWidgetList} from "./geodash/constants";
 import {isValidJSON} from "./utils/generalUtils";
 import {getNextInSequence, last} from "./utils/sequence";
+import BasemapSelector from "./geodash/form/BasemapSelector";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -56,6 +57,11 @@ class WidgetLayoutEditor extends React.PureComponent {
                     image2: {assetId: "", type: "imageAsset", visParams: ""}
                 },
                 WidgetDesigner: DualImageryDesigner
+            },
+            institutionImagery: {
+                title: "Institution Imagery",
+                blankWidget: {basemapId: "-1"},
+                WidgetDesigner: BasemapSelector
             },
             imageAsset: {
                 title: "Image Asset",
