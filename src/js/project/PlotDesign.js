@@ -347,7 +347,6 @@ export class PlotDesign extends React.Component {
                     <span className="mx-3">{this.renderPlotShape()}</span>
                     {this.renderLabeledInput(plotUnits, "plotSize")}
                 </div>
-                {this.renderShufflePlots}
             </div>
         );
     };
@@ -363,7 +362,7 @@ export class PlotDesign extends React.Component {
                     <span className="mx-3">{this.renderPlotShape()}</span>
                     {this.renderLabeledInput(plotUnits, "plotSize")}
                 </div>
-                {this.renderShufflePlots}
+                {this.renderShufflePlots()}
             </div>
         );
     };
