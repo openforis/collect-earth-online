@@ -86,36 +86,36 @@ export class SampleDesign extends React.Component {
             random: {
                 display: "Random",
                 description: "Sample points will be randomly distributed within the plot boundary.",
-                inputs: this.renderLabeledInput("Number of samples", "samplesPerPlot"),
+                layout: this.renderLabeledInput("Number of samples", "samplesPerPlot"),
                 disabled: plotDistribution === "shp"
             },
             gridded: {
                 display: "Gridded",
                 description: "Sample points will be arranged on a grid within the plot boundary using the sample spacing selected below.",
-                inputs: this.renderLabeledInput("Sample spacing (m)", "sampleResolution"),
+                layout: this.renderLabeledInput("Sample spacing (m)", "sampleResolution"),
                 disabled: plotDistribution === "shp"
             },
             center: {
                 display: "Center",
                 description: "A single sample point will be placed in the center of the plot.",
-                inputs: null
+                layout: null
             },
             csv: {
                 display: "CSV File",
                 description: "Specify your own sample points by uploading a CSV with these fields: LON,LAT,PLOTID,SAMPLEID.",
-                inputs: this.renderFileInput("csv"),
+                layout: this.renderFileInput("csv"),
                 disabled: !["csv", "shp"].includes(plotDistribution)
             },
             shp: {
                 display: "SHP File",
                 description: "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.",
-                inputs: this.renderFileInput("shp"),
+                layout: this.renderFileInput("shp"),
                 disabled: !["csv", "shp"].includes(plotDistribution)
             },
             none: {
                 display: "None",
                 description: "Do not predefine any samples. Requires users to draw their own samples during collection.",
-                inputs: null,
+                layout: null,
                 disabled: qaqcEnabled
             }
         };
@@ -168,7 +168,7 @@ export class SampleDesign extends React.Component {
                     </div>
                     <p className="font-italic ml-2">{`- ${sampleOptions[sampleDistribution].description}`}</p>
                     <div style={{display: "flex"}}>
-                        {sampleOptions[sampleDistribution].inputs}
+                        {sampleOptions[sampleDistribution].layout}
                     </div>
                     <p
                         className="font-italic ml-2"

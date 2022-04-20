@@ -288,7 +288,7 @@ export class PlotDesign extends React.Component {
     };
 
     renderFileInput = fileType => (
-        <div>
+        <div className="mb-3">
             <div style={{display: "flex"}}>
                 <label
                     className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
@@ -322,51 +322,74 @@ export class PlotDesign extends React.Component {
         </div>
     );
 
-    renderCSV = plotUnits => (
-        <div style={{display: "flex", flexDirection: "column"}}>
-            {this.renderFileInput("csv")}
-            <div style={{display: "flex"}}>
-                {this.renderPlotShape()}
-                {this.renderLabeledInput(plotUnits, "plotSize")}
+    renderCSV = () => {
+        const {plotShape} = this.context;
+        const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
+        return (
+            <div style={{display: "flex", flexDirection: "column"}}>
+                {this.renderFileInput("csv")}
+                <div style={{display: "flex"}}>
+                    <span className="mr-3">{this.renderPlotShape()}</span>
+                    {this.renderLabeledInput(plotUnits, "plotSize")}
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
+
+    renderRandom = () => {
+        const {plotShape} = this.context;
+        const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
+        return (
+            <div>
+                {this.renderAOISelector()}
+                <div className="d-flex">
+                    {this.renderLabeledInput("Number of plots", "numPlots")}
+                    <span className="mx-3">{this.renderPlotShape()}</span>
+                    {this.renderLabeledInput(plotUnits, "plotSize")}
+                </div>
+            </div>
+        );
+    };
+
+    renderGridded = () => {
+        const {plotShape} = this.context;
+        const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
+        return (
+            <div>
+                {this.renderAOISelector()}
+                <div className="d-flex">
+                    {this.renderLabeledInput("Plot spacing (m)", "plotSpacing")}
+                    <span className="mx-3">{this.renderPlotShape()}</span>
+                    {this.renderLabeledInput(plotUnits, "plotSize")}
+                </div>
+                {this.renderShufflePlots()}
+            </div>
+        );
+    };
 
     render() {
-        const {plotDistribution, plotShape} = this.context;
+        const {plotDistribution} = this.context;
         const {totalPlots} = this.props;
-        const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
-
         const plotOptions = {
             random: {
                 display: "Random",
                 description: "Plot centers will be randomly distributed within the project boundary.",
-                inputs: [() => this.renderLabeledInput("Number of plots", "numPlots"),
-                         this.renderPlotShape,
-                         () => this.renderLabeledInput(plotUnits, "plotSize"),
-                         this.renderShufflePlots],
-                showAOI: true
+                layout: this.renderRandom()
             },
             gridded: {
                 display: "Gridded",
                 description: "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.",
-                inputs: [() => this.renderLabeledInput("Plot spacing (m)", "plotSpacing"),
-                         this.renderPlotShape,
-                         () => this.renderLabeledInput(plotUnits, "plotSize"),
-                         this.renderShufflePlots],
-                showAOI: true
+                layout: this.renderGridded()
             },
             csv: {
                 display: "CSV File",
                 description: "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID.",
-                inputs: [() => this.renderCSV(plotUnits)],
-                showAOI: false
+                layout: this.renderCSV()
             },
             shp: {
                 display: "SHP File",
                 description: "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.",
-                inputs: [() => this.renderFileInput("shp")],
-                showAOI: false
+                layout: this.renderFileInput("shp")
             }
         };
 
@@ -389,15 +412,7 @@ export class PlotDesign extends React.Component {
                         <p className="font-italic ml-2">{`- ${plotOptions[plotDistribution].description}`}</p>
                     </div>
                     <div>
-                        <div style={{display: "flex"}}>
-                            {plotOptions[plotDistribution].inputs.map((i, idx) => (
-                                // eslint-disable-next-line react/no-array-index-key
-                                <div key={idx} className="mr-3">
-                                    {i()}
-                                </div>
-                            ))}
-                        </div>
-                        {plotOptions[plotDistribution].showAOI && this.renderAOISelector()}
+                        {plotOptions[plotDistribution].layout}
                     </div>
                     <p
                         className="font-italic ml-2 small"
