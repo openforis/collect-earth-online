@@ -26,6 +26,10 @@ export default class AOIMap extends React.Component {
                 this.updateAOIAreas();
             }
 
+            if (prevProps.context.selectedStrata !== this.props.context.selectedStrata) {
+                this.updateSelectedStrata();
+            }
+
             if (prevProps.canDrag !== this.props.canDrag) {
                 if (this.props.canDrag) {
                     this.showDragBoxDraw();
@@ -68,6 +72,19 @@ export default class AOIMap extends React.Component {
                 mercator.ceoMapStyles("geom", "yellow")
             );
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+        }
+    };
+
+    updateSelectedStrata = () => {
+        const {selectedStrata, aoiFeatures} = this.props.context;
+        mercator.removeLayerById(this.state.mapConfig, "selectedStrata");
+        if (selectedStrata > -1) {
+            mercator.addVectorLayer(
+                this.state.mapConfig,
+                "selectedStrata",
+                mercator.geomArrayToVectorSource([aoiFeatures[selectedStrata]]),
+                mercator.ceoMapStyles("geom", "blue")
+            );
         }
     };
 
