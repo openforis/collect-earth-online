@@ -229,6 +229,7 @@ export class PlotDesign extends React.Component {
         try {
             shp(shpFile).then(g => {
                 this.context.setProjectDetails({
+                    aoiDataDebug: g.features,
                     aoiFeatures: g.features.map(f => f.geometry),
                     aoiFileName: g.fileName
                 });
@@ -238,32 +239,38 @@ export class PlotDesign extends React.Component {
         }
     };
 
-    renderBoundaryFileInput = () => (
-        <div className="d-flex">
-            <label
-                className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
-                htmlFor="project-boundary-file"
-                id="custom-upload"
-                style={{display: "flex", alignItems: "center", width: "fit-content"}}
-            >
-                    Upload shp file (zip)
-                <input
-                    accept="application/zip"
-                    defaultValue=""
-                    id="project-boundary-file"
-                    onChange={e => {
-                        const file = e.target.files[0];
-                        readFileAsArrayBuffer(file, this.loadGeoJson);
-                    }}
-                    style={{display: "none"}}
-                    type="file"
-                />
-            </label>
-            <label className="ml-3 text-nowrap">
-                    File: {this.context.aoiFileName}
-            </label>
-        </div>
-    );
+    renderBoundaryFileInput = () => {
+        const {aoiFileName} = this.context;
+        return (
+            <div className="d-flex flex-column">
+                <div className="d-flex">
+                    <label
+                        className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+                        htmlFor="project-boundary-file"
+                        id="custom-upload"
+                        style={{display: "flex", alignItems: "center", width: "fit-content"}}
+                    >
+                        Upload shp file (zip)
+                        <input
+                            accept="application/zip"
+                            defaultValue=""
+                            id="project-boundary-file"
+                            onChange={e => {
+                                const file = e.target.files[0];
+                                readFileAsArrayBuffer(file, this.loadGeoJson);
+                            }}
+                            style={{display: "none"}}
+                            type="file"
+                        />
+                    </label>
+                    <label className="ml-3 text-nowrap">
+                    File: {aoiFileName}
+                    </label>
+                </div>
+            </div>
+
+        );
+    };
 
     renderAOISelector = () => {
         const {boundaryType} = this.context;
@@ -336,12 +343,33 @@ export class PlotDesign extends React.Component {
         );
     };
 
+    renderStrataRow = (feature, idx) => (
+        <div
+            key={idx}
+            onMouseEnter={() => this.setPlotDetails({selectedStrata: idx})}
+            onMouseLeave={() => this.setPlotDetails({selectedStrata: -1})}
+            style={{
+                background: "rgba(255,255,255,0.5)",
+                border: "1px solid black",
+                borderRadius: "3px",
+                display: "flex",
+                minWidth: "50%",
+                padding: ".5rem",
+                marginBottom: ".25rem"
+            }}
+        >
+            {`Strata ${idx + 1}: Area ${Math.round(mercator.calculateGeoJsonArea(feature))} ha`}
+        </div>
+    );
+
     renderRandom = () => {
-        const {plotShape} = this.context;
+        const {aoiFeatures, plotShape} = this.context;
         const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
         return (
             <div>
                 {this.renderAOISelector()}
+                <label>Plot properties</label>
+                {aoiFeatures.map(this.renderStrataRow)}
                 <div className="d-flex">
                     {this.renderLabeledInput("Number of plots", "numPlots")}
                     <span className="mx-3">{this.renderPlotShape()}</span>
@@ -352,11 +380,12 @@ export class PlotDesign extends React.Component {
     };
 
     renderGridded = () => {
-        const {plotShape} = this.context;
+        const {aoiFeatures, plotShape} = this.context;
         const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
         return (
             <div>
                 {this.renderAOISelector()}
+                {aoiFeatures.map(this.renderStrataRow)}
                 <div className="d-flex">
                     {this.renderLabeledInput("Plot spacing (m)", "plotSpacing")}
                     <span className="mx-3">{this.renderPlotShape()}</span>
