@@ -3,7 +3,7 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import _, {isArray} from "lodash";
 
-import {formatDateISO} from "../utils/generalUtils";
+import {formatDateISOString} from "../utils/generalUtils";
 
 window.Highcharts = Highcharts;
 
@@ -170,7 +170,7 @@ export default class GraphWidget extends React.Component {
                     cursor: "pointer",
                     events: {
                         select: e => {
-                            handleSelectDate(formatDateISO(new Date(e.target.x)));
+                            handleSelectDate(formatDateISOString(new Date(e.target.x)));
                         }
                     }
                 },
