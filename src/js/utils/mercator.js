@@ -20,7 +20,7 @@ import "ol/ol.css";
 import {Feature, Map, Overlay, View} from "ol";
 import {Control, ScaleLine, Attribution, Zoom, Rotate} from "ol/control";
 import {platformModifierKeyOnly} from "ol/events/condition";
-import {Circle, LineString, Point} from "ol/geom";
+import {Circle, LineString, Point, Polygon} from "ol/geom";
 import {DragBox, Select, Draw, Modify, Snap} from "ol/interaction";
 import {GeoJSON, KML} from "ol/format";
 import {Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup} from "ol/layer";
@@ -28,6 +28,7 @@ import {BingMaps, Cluster, OSM, TileWMS, Vector as VectorSource, XYZ} from "ol/s
 import {Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText} from "ol/style";
 import {fromLonLat, transform, transformExtent} from "ol/proj";
 import {fromExtent, fromCircle} from "ol/geom/Polygon";
+import {getArea} from "ol/sphere";
 import {formatDateISO, isNumber} from "./generalUtils";
 import {mapboxAttributionText} from "../imagery/mapbox-attribution";
 
@@ -1367,6 +1368,14 @@ mercator.asPolygonFeature = feature => (
         ? new Feature({geometry: fromCircle(feature.getGeometry())})
         : feature
 );
+
+mercator.calculateArea = poly => {
+    try {
+        return getArea(new Polygon(poly), {projection: "EPSG:4326"}) / 10000;
+    } catch (e) {
+        return "N/A";
+    }
+};
 
 mercator.getKMLFromFeatures = features =>
     (new KML()).writeFeatures(features, {featureProjection: "EPSG:3857"});

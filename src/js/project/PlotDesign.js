@@ -229,6 +229,7 @@ export class PlotDesign extends React.Component {
         try {
             shp(shpFile).then(g => {
                 this.context.setProjectDetails({
+                    aoiDataDebug: g.features,
                     aoiFeatures: g.features.map(f => f.geometry),
                     aoiFileName: g.fileName
                 });
@@ -238,32 +239,43 @@ export class PlotDesign extends React.Component {
         }
     };
 
-    renderBoundaryFileInput = () => (
-        <div className="d-flex">
-            <label
-                className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
-                htmlFor="project-boundary-file"
-                id="custom-upload"
-                style={{display: "flex", alignItems: "center", width: "fit-content"}}
-            >
-                    Upload shp file (zip)
-                <input
-                    accept="application/zip"
-                    defaultValue=""
-                    id="project-boundary-file"
-                    onChange={e => {
-                        const file = e.target.files[0];
-                        readFileAsArrayBuffer(file, this.loadGeoJson);
-                    }}
-                    style={{display: "none"}}
-                    type="file"
-                />
-            </label>
-            <label className="ml-3 text-nowrap">
-                    File: {this.context.aoiFileName}
-            </label>
-        </div>
-    );
+    renderBoundaryFileInput = () => {
+        const {aoiFeatures, aoiFileName} = this.context;
+        return (
+            <div className="d-flex flex-column">
+                <div className="d-flex">
+                    <label
+                        className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+                        htmlFor="project-boundary-file"
+                        id="custom-upload"
+                        style={{display: "flex", alignItems: "center", width: "fit-content"}}
+                    >
+                        Upload shp file (zip)
+                        <input
+                            accept="application/zip"
+                            defaultValue=""
+                            id="project-boundary-file"
+                            onChange={e => {
+                                const file = e.target.files[0];
+                                readFileAsArrayBuffer(file, this.loadGeoJson);
+                            }}
+                            style={{display: "none"}}
+                            type="file"
+                        />
+                    </label>
+                    <label className="ml-3 text-nowrap">
+                    File: {aoiFileName}
+                    </label>
+                </div>
+                {aoiFeatures.map((a, idx) => (
+                    <label>
+                        {`Strata ${idx}: Area ${mercator.calculateArea([[a.coordinates]])}`}
+                    </label>
+                ))}
+            </div>
+
+        );
+    };
 
     renderAOISelector = () => {
         const {boundaryType} = this.context;
