@@ -640,12 +640,20 @@ def getStatistics(extent):
     extentGeom = ee.Geometry.Polygon(extent)
     elev = ee.Image('USGS/GTOPO30')
     minmaxElev = elev.reduceRegion(
-        ee.Reducer.minMax(), extentGeom, 1000, maxPixels=500000000)
+        reducer=ee.Reducer.minMax(),
+        geometry=extentGeom,
+        scale=30,
+        bestEffort=True,
+        maxPixels=500000000)
     minElev = minmaxElev.get('elevation_min').getInfo()
     maxElev = minmaxElev.get('elevation_max').getInfo()
     ciesinPopGrid = ee.Image('CIESIN/GPWv4/population-count/2020')
     popDict = ciesinPopGrid.reduceRegion(
-        ee.Reducer.sum(), extentGeom, maxPixels=500000000)
+        reducer=ee.Reducer.sum(),
+        geometry=extentGeom,
+        scale=30,
+        bestEffort=True,
+        maxPixels=500000000)
     pop = popDict.get('population-count').getInfo()
     pop = int(pop)
     return {
