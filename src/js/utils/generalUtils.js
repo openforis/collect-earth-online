@@ -54,6 +54,13 @@ export const monthlyMapping = {
     "12": "December"
 };
 
+export function formatDateISOString(date) {
+    const str = date.toISOString()
+    const re = /(\d{4}-\d{2}-\d{2})/g
+    
+    return str.match(re)[0]
+}
+
 export function formatDateISO(date) {
     const month = date.getMonth() + 1; // getMonth() is zero-based
     const day = date.getDate();
