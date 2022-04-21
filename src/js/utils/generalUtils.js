@@ -55,10 +55,9 @@ export const monthlyMapping = {
 };
 
 export function formatDateISOString(date) {
-    const str = date.toISOString()
-    const re = /(\d{4}-\d{2}-\d{2})/g
-    
-    return str.match(re)[0]
+    const str = date.toISOString();
+    const re = /(\d{4}-\d{2}-\d{2})/g;
+    return str.match(re)[0];
 }
 
 export function formatDateISO(date) {

@@ -105,12 +105,7 @@
   (data-response @nicfi-layer-cache))
 
 (defn get-nicfi-tiles [{:keys [params]}]
-  (let [{:keys [x y z dataLayer imageryId]} params
-        source-config (get-imagery-source-config (tc/val->int imageryId))]
-    (client/get (format "https://tiles0.planet.com/basemaps/v1/planet-tiles/%s/gmap/%s/%s/%s.png?api_key=%s"
-                        dataLayer
-                        z
-                        x
-                        y
-                        (:accessToken source-config))
+  (let [{:keys [x y z dataLayer band]} params]
+    (client/get (format "https://tiles0.planet.com/basemaps/v1/planet-tiles/%s/gmap/%s/%s/%s.png?proc=%s&api_key=%s"
+                        dataLayer z x y band (get-config :nicfi-key))
                 {:as :stream})))
