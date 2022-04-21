@@ -2,8 +2,6 @@ import React from "react";
 
 import {mercator} from "../utils/mercator";
 import {monthlyMapping} from "../utils/generalUtils";
-import {last} from "../utils/sequence";
-import {nicfiLayers} from "./imageryOptions";
 
 export class PlanetMenu extends React.Component {
     constructor(props) {
@@ -187,15 +185,15 @@ export class PlanetNICFIMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selectedTime: this.props.sourceConfig.time === "newest"
-                ? last(nicfiLayers)
-                : this.props.sourceConfig.time,
-            selectedBand: this.props.sourceConfig.band
+            selectedTime: this.props.sourceConfig.time,
+            selectedBand: this.props.sourceConfig.band,
+            nicfiLayers: []
         };
     }
 
     componentDidMount() {
         this.updatePlanetLayer();
+        this.getNICFILayers();
     }
 
     componentDidUpdate(prevProps) {
@@ -203,6 +201,18 @@ export class PlanetNICFIMenu extends React.Component {
             this.updateImageryInformation();
         }
     }
+
+    getNICFILayers = () => {
+        fetch("/get-nicfi-dates")
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(layers => {
+                this.setState({
+                    nicfiLayers: layers,
+                    ...this.props.sourceConfig.time === "newest" && {selectedTime: layers[0]}
+                }, this.updatePlanetLayer);
+            })
+            .catch(error => console.error(error));
+    };
 
     updateImageryInformation = () => {
         if (this.props.visible) {
@@ -228,23 +238,25 @@ export class PlanetNICFIMenu extends React.Component {
     };
 
     render() {
-        return (
+        const {nicfiLayers, selectedTime, selectedBand} = this.state;
+        return nicfiLayers.length > 0 && (
             <div className="my-2" style={{display: this.props.visible ? "block" : "none"}}>
                 <div className="slide-container">
                     <label className="mb-0 mr-3" htmlFor="time-selection">Select Time</label>
                     <select
                         id="time-selection"
                         onChange={e => this.setState({selectedTime: e.target.value})}
-                        value={this.state.selectedTime}
+                        value={selectedTime}
                     >
-                        {nicfiLayers.map(time => <option key={time} value={time}>{time}</option>)}
+                        {nicfiLayers.map(time =>
+                            <option key={time} value={time}>{time.slice(34, time.length - 7)}</option>)}
                     </select>
                 </div>
                 <div className="slide-container">
                     <div id="radio-group">
                         <div className="form-check form-check-inline">
                             <input
-                                checked={this.state.selectedBand === "rgb"}
+                                checked={selectedBand === "rgb"}
                                 className="form-check-input"
                                 id="visible"
                                 onChange={() => this.setState({selectedBand: "rgb"})}
@@ -259,7 +271,7 @@ export class PlanetNICFIMenu extends React.Component {
                         </div>
                         <div className="form-check form-check-inline">
                             <input
-                                checked={this.state.selectedBand === "cir"}
+                                checked={selectedBand === "cir"}
                                 className="form-check-input"
                                 id="infrared"
                                 onChange={() => this.setState({selectedBand: "cir"})}

@@ -26,8 +26,8 @@ export default class AOIMap extends React.Component {
                 this.updateAOIAreas();
             }
 
-            if (prevProps.context.imageryId !== this.props.context.imageryId) {
-                this.updateBaseMapImagery();
+            if (prevProps.context.selectedStrata !== this.props.context.selectedStrata) {
+                this.updateSelectedStrata();
             }
 
             if (prevProps.canDrag !== this.props.canDrag) {
@@ -49,18 +49,16 @@ export default class AOIMap extends React.Component {
     }
 
     initProjectMap = () => {
-        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.props.context.institutionImagery);
+        const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.props.imagery);
         this.setState({mapConfig: newMapConfig}, () => {
-            this.updateBaseMapImagery();
+            mercator.setVisibleLayer(
+                this.state.mapConfig,
+                this.props.imagery[0].id
+            );
             if (this.props.context.aoiFeatures) this.updateAOIAreas();
             if (this.props.canDrag) this.showDragBoxDraw();
             if (this.props.context.plots.length > 0) this.showPlots();
         });
-    };
-
-    updateBaseMapImagery = () => {
-        mercator.setVisibleLayer(this.state.mapConfig,
-                                 this.props.context.imageryId || this.props.context.institutionImagery[0].id);
     };
 
     updateAOIAreas = () => {
@@ -74,6 +72,19 @@ export default class AOIMap extends React.Component {
                 mercator.ceoMapStyles("geom", "yellow")
             );
             mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+        }
+    };
+
+    updateSelectedStrata = () => {
+        const {selectedStrata, aoiFeatures} = this.props.context;
+        mercator.removeLayerById(this.state.mapConfig, "selectedStrata");
+        if (selectedStrata > -1) {
+            mercator.addVectorLayer(
+                this.state.mapConfig,
+                "selectedStrata",
+                mercator.geomArrayToVectorSource([aoiFeatures[selectedStrata]]),
+                mercator.ceoMapStyles("geom", "blue")
+            );
         }
     };
 
