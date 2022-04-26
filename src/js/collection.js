@@ -117,7 +117,7 @@ class Collection extends React.Component {
                 this.showGeoDash();
             }
             clearInterval(this.state.storedInterval);
-            this.setState({storedInterval: setInterval(this.resetPlotLock, 2.3 * 60 * 1000)});
+            this.setState({storedInterval: setInterval(this.resetPlotLock, 1 * 60 * 1000)}); // reset every minute
             //  updateMapImagery is poorly named, this function is detecting if we need to show the "zoom to" overlay
             this.updateMapImagery();
         }
@@ -1699,7 +1699,7 @@ class ProjectStats extends React.Component {
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked
-function QuitMenu({projectId, toggleQuitModal}) {
+function QuitMenu({toggleQuitModal}) {
     return (
         <div
             className="modal fade show"
