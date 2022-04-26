@@ -174,12 +174,11 @@ CREATE INDEX sample_values_sample_rid    ON sample_values (sample_rid);
 CREATE INDEX sample_values_imagery_rid   ON sample_values (imagery_rid);
 
 -- Stores active user information for a plot
--- many plots <-> many users, although by other means we restrict it to 1 user to 1 plot
+-- many plots <-> many users, each plot can only have 1 lock, each user can only have 1 lock
 CREATE TABLE plot_locks (
-    user_rid    integer NOT NULL REFERENCES users(user_uid),
-    plot_rid    integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE,
-    lock_end    timestamp,
-    PRIMARY KEY(user_rid, plot_rid)
+    user_rid    integer NOT NULL REFERENCES users(user_uid) UNIQUE,
+    plot_rid    integer NOT NULL REFERENCES plots(plot_uid) ON DELETE CASCADE UNIQUE,
+    lock_end    timestamp
 );
 
 -- Stores assigned user information for a plot
@@ -199,4 +198,4 @@ CREATE TABLE project_widgets (
     project_rid    integer NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     widget         jsonb
 );
-CREATE INDEX project_widgets_project_rid       ON project_widgets (project_rid);
+CREATE INDEX project_widgets_project_rid ON project_widgets (project_rid);

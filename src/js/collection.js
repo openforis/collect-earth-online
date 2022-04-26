@@ -73,10 +73,7 @@ class Collection extends React.Component {
         window.name = "_ceo_collection";
         window.addEventListener("beforeunload", this.unsavedWarning, {capture: true});
 
-        fetch(
-            `/release-plot-locks?projectId=${this.props.projectId}`,
-            {method: "POST"}
-        );
+        fetch("/release-plot-locks", {method: "POST"});
 
         this.getProjectData();
     }
@@ -1741,8 +1738,7 @@ function QuitMenu({projectId, toggleQuitModal}) {
                         <button
                             className="btn btn-danger btn-sm"
                             id="quit-button"
-                            onClick={() => fetch(`/release-plot-locks?projectId=${projectId}`,
-                                                 {method: "POST"})
+                            onClick={() => fetch("/release-plot-locks", {method: "POST"})
                                 .then(() => window.location.assign("/home"))}
                             type="button"
                         >
