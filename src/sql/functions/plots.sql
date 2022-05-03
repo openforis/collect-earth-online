@@ -250,9 +250,10 @@ CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
 
 $$ LANGUAGE SQL;
 
+
 -- Lock plot to user
 CREATE OR REPLACE FUNCTION lock_plot(_plot_id integer, _user_id integer, _lock_end timestamp)
- RETURNS void AS $$
+ RETURNS VOID AS $$
 
     INSERT INTO plot_locks
         (user_rid, plot_rid, lock_end)
@@ -263,7 +264,7 @@ $$ LANGUAGE SQL;
 
 -- Reset time on lock
 CREATE OR REPLACE FUNCTION lock_plot_reset(_plot_id integer, _user_id integer, _lock_end timestamp)
- RETURNS void AS $$
+ RETURNS VOID AS $$
 
     UPDATE plot_locks pl
     SET lock_end = _lock_end
@@ -274,25 +275,13 @@ $$ LANGUAGE SQL;
 
 -- Remove all locks from user and old locks
 CREATE OR REPLACE FUNCTION unlock_plots(_user_id integer)
- RETURNS void AS $$
+ RETURNS VOID AS $$
 
     DELETE FROM plot_locks pl
     WHERE pl.user_rid = _user_id
         OR pl.lock_end < localtimestamp
 
 $$ LANGUAGE SQL;
-
-CREATE OR REPLACE FUNCTION user_has_lock(_plot_id integer, _user_id integer)
- RETURNS boolean AS $$
-
-    SELECT count(1) > 0
-    FROM plot_locks
-    WHERE user_rid = _user_id
-        AND plot_rid = _plot_id
-        AND lock_end > localtimestamp
-
-$$ LANGUAGE SQL;
-
 
 --
 --  SAMPLE FUNCTIONS
