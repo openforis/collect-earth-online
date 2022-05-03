@@ -265,39 +265,37 @@
         review-mode?     (and (tc/val->bool (:inReviewMode params))
                               (pos? current-user-id)
                               (is-proj-admin? session-user-id project-id nil))
-        user-id          (if review-mode? current-user-id session-user-id)]
-    (if (sql-primitive (call-sql "user_has_lock" plot-id user-id))
-      (let [confidence       (tc/val->int (:confidence params))
-            collection-start (tc/val->long (:collectionStart params))
-            user-samples     (:userSamples params)
-            user-images      (:userImages params)
-            new-plot-samples (:newPlotSamples params)
-            ;; Samples created in the UI have IDs starting with 1. When the new sample is created
-            ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
-            id-translation   (when new-plot-samples
-                               (call-sql "delete_user_plot_by_plot" plot-id user-id)
-                               (call-sql "delete_samples_by_plot" plot-id)
-                               (reduce (fn [acc {:keys [id visibleId sampleGeom]}]
-                                         (let [new-id (sql-primitive (call-sql "create_project_plot_sample"
-                                                                               {:log? false}
-                                                                               plot-id
-                                                                               visibleId
-                                                                               (tc/json->jsonb sampleGeom)))]
-                                           (assoc acc (str id) (str new-id))))
-                                       {}
-                                       new-plot-samples))]
-        (if (some seq (vals user-samples))
-          (call-sql "upsert_user_samples"
-                    plot-id
-                    user-id
-                    (when (pos? confidence) confidence)
-                    (when-not review-mode? (Timestamp. collection-start))
-                    (tc/clj->jsonb (set/rename-keys user-samples id-translation))
-                    (tc/clj->jsonb (set/rename-keys user-images id-translation)))
-          (call-sql "delete_user_plot_by_plot" plot-id user-id))
-        (unlock-plots user-id)
-        (data-response ""))
-      (data-response "Session has expired, you can no longer save this plot.  Please refresh to continue collecting."))))
+        confidence       (tc/val->int (:confidence params))
+        collection-start (tc/val->long (:collectionStart params))
+        user-samples     (:userSamples params)
+        user-images      (:userImages params)
+        new-plot-samples (:newPlotSamples params)
+        user-id          (if review-mode? current-user-id session-user-id)
+        ;; Samples created in the UI have IDs starting with 1. When the new sample is created
+        ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
+        id-translation   (when new-plot-samples
+                           (call-sql "delete_user_plot_by_plot" plot-id user-id)
+                           (call-sql "delete_samples_by_plot" plot-id)
+                           (reduce (fn [acc {:keys [id visibleId sampleGeom]}]
+                                     (let [new-id (sql-primitive (call-sql "create_project_plot_sample"
+                                                                           {:log? false}
+                                                                           plot-id
+                                                                           visibleId
+                                                                           (tc/json->jsonb sampleGeom)))]
+                                       (assoc acc (str id) (str new-id))))
+                                   {}
+                                   new-plot-samples))]
+    (if (some seq (vals user-samples))
+      (call-sql "upsert_user_samples"
+                plot-id
+                user-id
+                (when (pos? confidence) confidence)
+                (when-not review-mode? (Timestamp. collection-start))
+                (tc/clj->jsonb (set/rename-keys user-samples id-translation))
+                (tc/clj->jsonb (set/rename-keys user-images id-translation)))
+      (call-sql "delete_user_plot_by_plot" plot-id user-id))
+    (unlock-plots user-id)
+    (data-response "")))
 
 (defn flag-plot [{:keys [params]}]
   (let [project-id       (tc/val->int (:projectId params))
