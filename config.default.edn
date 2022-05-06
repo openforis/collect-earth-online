@@ -13,4 +13,8 @@
                :mode      "prod"
                :log-dir   "logs"}
  :ga-id       nil
- :session-key "changeme12345678"}
+
+ :session-key "changeme12345678"
+ :gee         {:ee-account  ""
+               :ee-key-path ""}
+ :nicfi-key   ""}
