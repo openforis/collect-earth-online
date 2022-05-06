@@ -399,13 +399,15 @@ class ImageryList extends React.Component {
         super(props);
         this.state = {
             imageryToEdit: null,
-            imageryList: []
+            imageryList: [],
+            nicfiLayers: []
         };
     }
 
     //    Life Cycle Methods    //
 
     componentDidMount() {
+        this.getNICFILayers();
         this.getImageryList();
     }
 
@@ -426,6 +428,13 @@ class ImageryList extends React.Component {
                 console.log(response);
                 this.showAlert({title: "Error", body: "Error retrieving the imagery list. See console for details."});
             });
+    };
+
+    getNICFILayers = () => {
+        fetch("/get-nicfi-dates")
+            .then(response => (response.ok ? response.json() : Promise.reject(response)))
+            .then(layers => this.setState({nicfiLayers: layers}))
+            .catch(error => console.error(error));
     };
 
     selectAddImagery = () => this.setState({imageryToEdit: {id: -1}});
@@ -536,6 +545,7 @@ class ImageryList extends React.Component {
                         hideEditMode={this.hideEditMode}
                         imageryToEdit={this.state.imageryToEdit}
                         institutionId={this.props.institutionId}
+                        nicfiLayers={this.state.nicfiLayers}
                         titleIsTaken={this.titleIsTaken}
                     />
                 ) : (
@@ -885,8 +895,23 @@ class NewImagery extends React.Component {
     };
 
     render() {
-        const isNewImagery = this.props.imageryToEdit.id === -1;
+        const {nicfiLayers, imageryToEdit} = this.props;
+        const isNewImagery = imageryToEdit.id === -1;
         const {type, params, optionalProxy} = imageryOptions[this.state.selectedType];
+        // This is annoyingly hard coded.
+        const displayParams = type === "PlanetNICFI"
+            ? [
+                params[0],
+                {
+                    ...params[1],
+                    options: [
+                        ...params[1].options,
+                        ...nicfiLayers.map(l => ({label: l.slice(34, l.length - 7), value: l}))]
+                },
+                params[2]
+            ]
+            : params;
+
         return (
             <div className="mb-2 p-4 border rounded">
                 {/* Selection for imagery type */}
@@ -915,7 +940,7 @@ class NewImagery extends React.Component {
                         this.state.imageryAttribution,
                         e => this.setState({imageryAttribution: e.target.value})
                     )}
-                {params.map(o => this.formTemplate(o))}
+                {displayParams.map(o => this.formTemplate(o))}
                 {optionalProxy && this.formCheck("Proxy Imagery",
                                                  this.state.isProxied,
                                                  () => this.setState({isProxied: !this.state.isProxied}))}
