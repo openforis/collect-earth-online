@@ -701,9 +701,13 @@
 ;;;
 
 (defn- csv-quotes [string]
-  (if (and (string? string) (str/includes? string ","))
-    (str "\"" string "\"")
-    string))
+  (let [quoted-string (if (and (string? string) (str/includes? string ","))
+                         (str "\"" string "\"")
+                         string)
+        trimed-string (-> quoted-string
+                          str/trim
+                          (str/replace "\"" ""))]
+    trimed-string))
 
 (defn- get-ext-headers
   "Gets external headers"
