@@ -701,8 +701,9 @@
 ;;;
 
 (defn- csv-quotes [string]
-  (if (and (string? string) (str/includes? string ","))
-    (str "\"" string "\"")
+  (if (and (string? string) (str/includes? (str/replace string "\"" "") ","))
+    (-> (str "\"" string "\"")
+        str/trim)
     string))
 
 (defn- get-ext-headers
