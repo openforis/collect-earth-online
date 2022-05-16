@@ -713,6 +713,16 @@
       (-> (str "\"" cleaned-str "\""))
       cleaned-str)))
 
+(defn- get-ext-headers
+  "Gets external headers"
+  [rows ext-key prefix]
+  (->> rows
+       (first)
+       (ext-key)
+       (tc/jsonb->clj)
+       (keys)
+       (mapv #(str prefix (name %)))))
+
 (defn- prefix-keys [prefix in-map]
   (u/mapm (fn [[key val]]
             [(str prefix (name key)) val])
