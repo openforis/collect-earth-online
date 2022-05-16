@@ -700,20 +700,18 @@
 ;;; Dump data common helper functions
 ;;;
 
-(defn- csv-quotes [string]
-  (if (and (string? string) (str/includes? string ","))
-    (str "\"" string "\"")
+
+(defn clean-str-quotes [string]
+  (if (and (string? string) (str/includes? string "\""))
+    (str/replace string "\"" "")
     string))
 
-(defn- get-ext-headers
-  "Gets external headers"
-  [rows ext-key prefix]
-  (->> rows
-       (first)
-       (ext-key)
-       (tc/jsonb->clj)
-       (keys)
-       (mapv #(str prefix (name %)))))
+
+(defn- csv-quotes [string]
+  (let [cleaned-str (clean-str-quotes string)]
+    (if (and (string? string) (str/includes? string ","))
+      (-> (str "\"" cleaned-str "\""))
+      cleaned-str)))
 
 (defn- prefix-keys [prefix in-map]
   (u/mapm (fn [[key val]]
