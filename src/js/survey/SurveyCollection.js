@@ -161,7 +161,7 @@ export default class SurveyCollection extends React.Component {
 
     getSurveyAnswerText = (questionId, answerId) => {
         const {surveyQuestions} = this.props;
-        return _.get(surveyQuestions, [questionId, "answers", answerId, "answer"], "");
+        return _.get(surveyQuestions, [questionId, "answered", answerId, "answerText"], "");
     };
 
     checkRuleTextMatch = (surveyRule, questionIdToSet, _answerId, answerText) => {
