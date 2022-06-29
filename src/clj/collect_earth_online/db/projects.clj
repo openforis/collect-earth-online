@@ -1,4 +1,8 @@
 (ns collect-earth-online.db.projects
+  (:import
+   java.text.SimpleDateFormat
+   java.util.Date
+   java.util.UUID)
   (:require
    [clojure.set                                   :as set]
    [clojure.string                                :as str]
@@ -13,11 +17,7 @@
                                                           sql-primitive]]
    [triangulum.logging                            :refer [log]]
    [triangulum.type-conversion                    :as tc]
-   [triangulum.utils                              :as u])
-  (:import
-   java.text.SimpleDateFormat
-   java.util.Date
-   java.util.UUID))
+   [triangulum.utils                              :as u]))
 
 ;;;
 ;;; Auth functions
