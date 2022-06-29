@@ -498,9 +498,8 @@ class Collection extends React.Component {
             mercator.samplesToVectorSource(visible),
             mercator.ceoMapStyles("geom", unansweredColor)
         );
-        mercator.enableSelection(mapConfig, "currentSamples", sampleId => {
-            sampleId != -1 && this.setState({selectedSampleId: sampleId});
-        });
+        mercator.enableSelection(mapConfig, "currentSamples", sampleId =>
+            sampleId !== -1 && this.setState({selectedSampleId: sampleId}));
     };
 
     featuresToDrawLayer = drawTool => {
