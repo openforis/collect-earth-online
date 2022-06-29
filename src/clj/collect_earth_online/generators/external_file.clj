@@ -104,9 +104,16 @@
                                    (str/replace (re-pattern (str "^" design-type "id$")) "visible_id")
                                    (keyword))
                               hr))
+          split-row   (fn [row] (if (str/includes? row "\"")
+                                  (->> (str/split row #"\"")
+                                       (map #(if (or (str/ends-with? % ",") (str/starts-with? % ","))
+                                               (str/split % #",")
+                                               %))
+                                       flatten)
+                                  (str/split row #",")))
           body        (map (fn [row]
                              (as-> row r
-                               (str/split r #",")
+                               (split-row r)
                                (zipmap header-keys r)
                                (assoc r geom-key (tc/str->pg (make-wkt-point (:lon r) (:lat r)) "geometry"))
                                (update r :visible_id tc/val->int)

@@ -1,21 +1,23 @@
 (ns collect-earth-online.db.projects
-  (:import java.text.SimpleDateFormat
-           java.util.Date
-           java.util.UUID)
-  (:require [clojure.string :as str]
-            [clojure.set    :as set]
-            [triangulum.logging  :refer [log]]
-            [triangulum.database :refer [call-sql
-                                         sql-primitive
-                                         p-insert-rows!
-                                         insert-rows!]]
-            [triangulum.type-conversion :as tc]
-            [triangulum.utils           :as u]
-            [collect-earth-online.utils.part-utils :as pu]
-            [collect-earth-online.views                    :refer [data-response]]
-            [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
-            [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
-            [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples]]))
+  (:import
+   java.text.SimpleDateFormat
+   java.util.Date
+   java.util.UUID)
+  (:require
+   [clojure.set                                   :as set]
+   [clojure.string                                :as str]
+   [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
+   [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples]]
+   [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
+   [collect-earth-online.utils.part-utils         :as pu]
+   [collect-earth-online.views                    :refer [data-response]]
+   [triangulum.database                           :refer [call-sql
+                                                          insert-rows!
+                                                          p-insert-rows!
+                                                          sql-primitive]]
+   [triangulum.logging                            :refer [log]]
+   [triangulum.type-conversion                    :as tc]
+   [triangulum.utils                              :as u]))
 
 ;;;
 ;;; Auth functions
@@ -700,10 +702,20 @@
 ;;; Dump data common helper functions
 ;;;
 
-(defn- csv-quotes [string]
-  (if (and (string? string) (str/includes? string ","))
-    (str "\"" string "\"")
+(defn- clean-str-quotes
+  "Removes double quotes from string"
+  [string]
+  (if (and (string? string) (str/includes? string "\""))
+    (str/replace string "\"" "")
     string))
+
+(defn- csv-quotes
+  "Surrounds string containing commas with double quotes otherwise remove all quotes"
+  [string]
+  (let [cleaned-str (clean-str-quotes string)]
+    (if (and (string? string) (str/includes? string ","))
+      (-> (str "\"" cleaned-str "\""))
+      cleaned-str)))
 
 (defn- get-ext-headers
   "Gets external headers"
