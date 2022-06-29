@@ -1,15 +1,16 @@
 (ns collect-earth-online.server
-  (:require [clojure.java.io     :as io]
-            [clojure.string      :as str]
-            [nrepl.server :as nrepl-server]
-            [cider.nrepl :refer (cider-nrepl-handler)]
-            [ring.adapter.jetty :refer [run-jetty]]
-            [triangulum.cli     :refer [get-cli-options]]
-            [triangulum.config  :refer [get-config]]
-            [triangulum.notify  :as notify]
-            [triangulum.logging :refer [log-str set-log-path!]]
-            [triangulum.sockets :refer [send-to-server! socket-open?]]
-            [collect-earth-online.handler :refer [create-handler-stack]]))
+  (:require
+    [clojure.java.io              :as io]
+    [clojure.string               :as str]
+    [nrepl.server                 :as nrepl-server]
+    [cider.nrepl                  :refer (cider-nrepl-handler)]
+    [ring.adapter.jetty           :refer [run-jetty]]
+    [triangulum.cli               :refer [get-cli-options]]
+    [triangulum.config            :refer [get-config]]
+    [triangulum.notify            :as notify]
+    [triangulum.logging           :refer [log-str set-log-path!]]
+    [triangulum.sockets           :refer [send-to-server! socket-open?]]
+    [collect-earth-online.handler :refer [create-handler-stack]]))
 
 (defonce ^:private server           (atom nil))
 (defonce ^:private repl-server      (atom nil))
