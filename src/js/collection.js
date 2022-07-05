@@ -498,11 +498,8 @@ class Collection extends React.Component {
             mercator.samplesToVectorSource(visible),
             mercator.ceoMapStyles("geom", unansweredColor)
         );
-        mercator.enableSelection(
-            mapConfig,
-            "currentSamples",
-            sampleId => this.setState({selectedSampleId: sampleId})
-        );
+        mercator.enableSelection(mapConfig, "currentSamples", sampleId =>
+            sampleId !== -1 && this.setState({selectedSampleId: sampleId}));
     };
 
     featuresToDrawLayer = drawTool => {
@@ -796,7 +793,6 @@ class Collection extends React.Component {
 
                 mercator.highlightSampleGeometry(feature, color);
             });
-        this.setState({selectedSampleId: -1});
     };
 
     calcVisibleSamples = currentQuestionId => {
