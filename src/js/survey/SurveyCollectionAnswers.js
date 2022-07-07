@@ -149,10 +149,11 @@ class AnswerInput extends React.Component {
                     />
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm ml-2"
+                        disabled={!newInput}
                         id="save-input"
                         name="save-input"
                         onClick={() => {
-                            if (!answer.required || newInput.length) {
+                            if (!answer.required || newInput) {
                                 validateAndSetCurrentValue(surveyNodeId, answerId, newInput);
                             }
                         }}
