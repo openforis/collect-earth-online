@@ -187,8 +187,8 @@ export default class SurveyCollection extends React.Component {
     sumAnsweredQuestionsPerSample = (answeredQuestions, sampleId) =>
         Object.entries(answeredQuestions)
             .reduce((acc, [qId, aq]) => {
-                const answeredVal = Number(this.getSurveyAnswerText(qId, aq.answered.find(ans =>
-                    ans.sampleId === sampleId).answerId));
+                const answeredVal = Number(aq.answered.find(ans =>
+                    ans.sampleId === sampleId).answerText); 
                 return acc + answeredVal;
             }, 0);
 
@@ -207,7 +207,7 @@ export default class SurveyCollection extends React.Component {
     );
 
     checkRuleSumOfAnswers = (surveyRule, questionIdToSet, answerId, answerText) => {
-        const answerVal = answerText || Number(this.getSurveyAnswerText(questionIdToSet, answerId));
+        const answerVal = Number(answerText) || Number(this.getSurveyAnswerText(questionIdToSet, answerId));
         if (surveyRule.questionIds.includes(questionIdToSet)) {
             const answeredQuestions = this.getAnsweredQuestions(surveyRule.questionIds, questionIdToSet);
             if (surveyRule.questionIds.length === lengthObject(answeredQuestions) + 1) {
@@ -244,7 +244,7 @@ export default class SurveyCollection extends React.Component {
     };
 
     checkRuleMatchingSums = (surveyRule, questionIdToSet, answerId, answerText) => {
-        const answerVal = answerText || Number(this.getSurveyAnswerText(questionIdToSet, answerId));
+        const answerVal = Number(answerText) || Number(this.getSurveyAnswerText(questionIdToSet, answerId));
         if (surveyRule.questionIds1.concat(surveyRule.questionIds2).includes(questionIdToSet)) {
             const answeredQuestions1 = this.getAnsweredQuestions(surveyRule.questionIds1, questionIdToSet);
             const answeredQuestions2 = this.getAnsweredQuestions(surveyRule.questionIds2, questionIdToSet);

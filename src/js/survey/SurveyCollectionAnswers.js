@@ -16,7 +16,7 @@ function AnswerButton({surveyNodeId, surveyNode, selectedSampleId, validateAndSe
                         <button
                             className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
                             id={ans.answer + "_" + ansId}
-                            onClick={() => validateAndSetCurrentValue(surveyNodeId, ansId)}
+                            onClick={() => validateAndSetCurrentValue(surveyNodeId, ansId, ans.answer)}
                             style={{
                                 boxShadow: answered.some(a => a.answerId === ansId && a.sampleId === selectedSampleId)
                                     ? "0px 0px 8px 3px black inset"
@@ -61,7 +61,7 @@ function AnswerRadioButton({
                     <li key={ansId} className="mb-1">
                         <button
                             className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
-                            onClick={() => validateAndSetCurrentValue(surveyNodeId, ansId)}
+                            onClick={() => validateAndSetCurrentValue(surveyNodeId, ansId, ans.answer)}
                             title={ans.answer}
                             type="button"
                         >
@@ -149,7 +149,7 @@ class AnswerInput extends React.Component {
                     />
                     <button
                         className="text-center btn btn-outline-lightgreen btn-sm ml-2"
-                        disabled={!newInput}
+                        disabled={newInput === ""}
                         id="save-input"
                         name="save-input"
                         onClick={() => {
