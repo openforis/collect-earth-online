@@ -57,7 +57,7 @@ function Support() {
                     <div className="btn-group-vertical btn-block mb-4">
                         <a
                             className="btn btn-outline-lightgreen btn-block"
-                            href="/downloads/CEO_Manual_InstitutionProject_EN_20220421.pdf"
+                            href="/downloads/CEO_Manual_InstitutionProject_EN_20220708.pdf"
                             role="button"
                         >
                             <SvgIcon icon="file" size="1.2rem"/>
