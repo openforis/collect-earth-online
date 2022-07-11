@@ -236,7 +236,8 @@ def bandPassAdjustment(img):
 
 
 def getLandSatMergedCollection():
-    sensorBandDictLandsatTOA = {'L8': [1, 2, 3, 4, 5, 9, 6],
+    sensorBandDictLandsatTOA = {'L9': [1, 2, 3, 4, 5, 9, 6],
+                                'L8': [1, 2, 3, 4, 5, 9, 6],
                                 'L7': [0, 1, 2, 3, 4, 5, 7],
                                 'L5': [0, 1, 2, 3, 4, 5, 6],
                                 'L4': [0, 1, 2, 3, 4, 5, 6],
@@ -244,23 +245,26 @@ def getLandSatMergedCollection():
     bandNamesLandsatTOA = ['blue', 'green',
                            'red', 'nir', 'swir1', 'temp', 'swir2']
     metadataCloudCoverMax = 100
-    lt4 = ee.ImageCollection('LANDSAT/LT4_L1T_TOA') \
-        .filterMetadata('CLOUD_COVER', 'less_than', metadataCloudCoverMax) \
+    lt4 = ee.ImageCollection('LANDSAT/LT04/C02/T1_TOA') \
+        .filter(ee.Filter.lt('CLOUD_COVER', metadataCloudCoverMax)) \
         .select(sensorBandDictLandsatTOA['L4'], bandNamesLandsatTOA).map(lsMaskClouds)
-    lt5 = ee.ImageCollection('LANDSAT/LT5_L1T_TOA') \
-        .filterMetadata('CLOUD_COVER', 'less_than', metadataCloudCoverMax) \
+    lt5 = ee.ImageCollection('LANDSAT/LT05/C02/T1_TOA') \
+        .filter(ee.Filter.lt('CLOUD_COVER', metadataCloudCoverMax)) \
         .select(sensorBandDictLandsatTOA['L5'], bandNamesLandsatTOA).map(lsMaskClouds)
-    le7 = ee.ImageCollection('LANDSAT/LE7_L1T_TOA') \
-        .filterMetadata('CLOUD_COVER', 'less_than', metadataCloudCoverMax) \
+    le7 = ee.ImageCollection('LANDSAT/LE07/C02/T1_TOA') \
+        .filter(ee.Filter.lt('CLOUD_COVER', metadataCloudCoverMax)) \
         .select(sensorBandDictLandsatTOA['L7'], bandNamesLandsatTOA).map(lsMaskClouds)
-    lc8 = ee.ImageCollection('LANDSAT/LC08/C01/T1_TOA') \
-        .filterMetadata('CLOUD_COVER', 'less_than', metadataCloudCoverMax) \
+    lc8 = ee.ImageCollection('LANDSAT/LC08/C02/T1_TOA') \
+        .filter(ee.Filter.lt('CLOUD_COVER', metadataCloudCoverMax)) \
+        .select(sensorBandDictLandsatTOA['L8'], bandNamesLandsatTOA).map(lsMaskClouds)
+    lc9 = ee.ImageCollection('LANDSAT/LC09/C02/T1_TOA') \
+        .filter(ee.Filter.lt('CLOUD_COVER', metadataCloudCoverMax)) \
         .select(sensorBandDictLandsatTOA['L8'], bandNamesLandsatTOA).map(lsMaskClouds)
     s2 = ee.ImageCollection('COPERNICUS/S2') \
-        .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', metadataCloudCoverMax) \
+        .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', metadataCloudCoverMax)) \
         .map(s2MaskClouds).select(sensorBandDictLandsatTOA['S2'], bandNamesLandsatTOA) \
         .map(bandPassAdjustment)
-    return ee.ImageCollection(lt4.merge(lt5).merge(le7).merge(lc8).merge(s2))
+    return ee.ImageCollection(lt4.merge(lt5).merge(le7).merge(lc8).merge(lc9).merge(s2))
 
 
 def filteredImageNDVIToMapId(startDate, endDate):
@@ -450,14 +454,16 @@ def getTimeSeriesByCollectionAndIndex(assetId, indexName, scale, coords, startDa
 
 def getTimeSeriesByIndex(indexName, scale, coords, startDate, endDate, reducer):
     bandsByCollection = {
-        'LANDSAT/LC08/C01/T1_TOA': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
-        'LANDSAT/LC08/C01/T2_TOA': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
-        'LANDSAT/LE07/C01/T1_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
-        'LANDSAT/LE07/C01/T2_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
-        'LANDSAT/LT05/C01/T1_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
-        'LANDSAT/LT05/C01/T2_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
-        'LANDSAT/LT04/C01/T1_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
-        'LANDSAT/LT04/C01/T2_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7']
+        'LANDSAT/LC09/C02/T1_TOA': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
+        'LANDSAT/LC09/C02/T2_TOA': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
+        'LANDSAT/LC08/C02/T1_TOA': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
+        'LANDSAT/LC08/C02/T2_TOA': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
+        'LANDSAT/LE07/C02/T1_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
+        'LANDSAT/LE07/C02/T2_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
+        'LANDSAT/LT05/C02/T1_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
+        'LANDSAT/LT05/C02/T2_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
+        'LANDSAT/LT04/C02/T1_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
+        'LANDSAT/LT04/C02/T2_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7']
     }
     indexes = {
         'NDVI': '(nir - red) / (nir + red)',
@@ -474,18 +480,16 @@ def getTimeSeriesByIndex(indexName, scale, coords, startDate, endDate, reducer):
             def isSet(types):
                 """ https://landsat.usgs.gov/collectionqualityband """
                 typeByValue = {
-                    'badPixels': 15,
-                    'cloud': 16,
-                    'shadow': 256,
-                    'snow': 1024,
-                    'cirrus': 4096
+                    'cloud': 3,
+                    'shadow': 4,
+                    'snow': 5,
                 }
-                anySet = ee.Image(0)
+                anySet = ee.Image(1)
                 for Type in types:
                     anySet = anySet.Or(image.select(
-                        'BQA').bitwiseAnd(typeByValue[Type]).neq(0))
+                        'QA_PIXEL').bitwiseAnd(1 << typeByValue[Type]).eq(0))
                 return anySet
-            return image.updateMask(isSet(['badPixels', 'cloud', 'shadow', 'cirrus']).Not())
+            return image.updateMask(isSet(['cloud', 'shadow', 'snow']))
 
         def toIndex(image):
             bands = bandsByCollection[name]
