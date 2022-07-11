@@ -4,7 +4,6 @@ import SvgIcon from "../components/svg/SvgIcon";
 import RequiredInput from "../components/RequiredInput";
 
 import {firstEntry, mapObjectArray} from "../utils/sequence";
-import {isNumber} from "../utils/generalUtils";
 
 function AnswerButton({surveyNodeId, surveyNode, selectedSampleId, validateAndSetCurrentValue}) {
     const {answers, answered, dataType} = surveyNode;
@@ -18,8 +17,8 @@ function AnswerButton({surveyNodeId, surveyNode, selectedSampleId, validateAndSe
                             className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
                             id={ans.answer + "_" + ansId}
                             onClick={() => {
-                               const value = dataType === "number" ? Number(ans.answer) : ans.answer;
-                               validateAndSetCurrentValue(surveyNodeId, ansId, value)
+                                const value = dataType === "number" ? Number(ans.answer) : ans.answer;
+                                validateAndSetCurrentValue(surveyNodeId, ansId, value);
                             }}
                             style={{
                                 boxShadow: answered.some(a => a.answerId === ansId && a.sampleId === selectedSampleId)
@@ -66,8 +65,8 @@ function AnswerRadioButton({
                         <button
                             className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
                             onClick={() => {
-                              const value = dataType === "number" ? Number(ans.answer) : ans.answer;
-                                validateAndSetCurrentValue(surveyNodeId, ansId, value)
+                                const value = dataType === "number" ? Number(ans.answer) : ans.answer;
+                                validateAndSetCurrentValue(surveyNodeId, ansId, value);
                             }}
                             title={ans.answer}
                             type="button"

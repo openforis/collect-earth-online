@@ -188,7 +188,7 @@ export default class SurveyCollection extends React.Component {
         Object.entries(answeredQuestions)
             .reduce((acc, [qId, aq]) => {
                 const answeredVal = Number(aq.answered.find(ans =>
-                    ans.sampleId === sampleId).answerText); 
+                    ans.sampleId === sampleId).answerText);
                 return acc + answeredVal;
             }, 0);
 
