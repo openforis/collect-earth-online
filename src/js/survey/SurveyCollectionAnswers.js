@@ -4,9 +4,10 @@ import SvgIcon from "../components/svg/SvgIcon";
 import RequiredInput from "../components/RequiredInput";
 
 import {firstEntry, mapObjectArray} from "../utils/sequence";
+import {isNumber} from "../utils/generalUtils";
 
 function AnswerButton({surveyNodeId, surveyNode, selectedSampleId, validateAndSetCurrentValue}) {
-    const {answers, answered} = surveyNode;
+    const {answers, answered, dataType} = surveyNode;
     return (
         <ul className="samplevalue justify-content-center my-1">
             {mapObjectArray(answers, ([strId, ans]) => {
@@ -16,7 +17,10 @@ function AnswerButton({surveyNodeId, surveyNode, selectedSampleId, validateAndSe
                         <button
                             className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
                             id={ans.answer + "_" + ansId}
-                            onClick={() => validateAndSetCurrentValue(surveyNodeId, ansId, ans.answer)}
+                            onClick={() => {
+                               const value = dataType === "number" ? Number(ans.answer) : ans.answer;
+                               validateAndSetCurrentValue(surveyNodeId, ansId, value)
+                            }}
                             style={{
                                 boxShadow: answered.some(a => a.answerId === ansId && a.sampleId === selectedSampleId)
                                     ? "0px 0px 8px 3px black inset"
@@ -52,7 +56,7 @@ function AnswerRadioButton({
     selectedSampleId,
     validateAndSetCurrentValue
 }) {
-    const {answers, answered} = surveyNode;
+    const {answers, answered, dataType} = surveyNode;
     return (
         <ul className="samplevalue justify-content-center">
             {mapObjectArray(answers, ([strId, ans]) => {
@@ -61,7 +65,10 @@ function AnswerRadioButton({
                     <li key={ansId} className="mb-1">
                         <button
                             className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
-                            onClick={() => validateAndSetCurrentValue(surveyNodeId, ansId, ans.answer)}
+                            onClick={() => {
+                              const value = dataType === "number" ? Number(ans.answer) : ans.answer;
+                                validateAndSetCurrentValue(surveyNodeId, ansId, value)
+                            }}
                             title={ans.answer}
                             type="button"
                         >

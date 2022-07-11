@@ -218,7 +218,7 @@ export default class SurveyCollection extends React.Component {
                     const invalidSum = commonSampleIds
                         .map(sampleId => this.sumAnsweredQuestionsPerSample(answeredQuestions, sampleId))
                         .find(s => s + answerVal !== surveyRule.validSum);
-                    if (invalidSum) {
+                    if (invalidSum || invalidSum === 0) {
                         const {question} = this.props.surveyQuestions[questionIdToSet];
                         return `Sum of answers validation failed.\r\n\nSum for questions [${
                                 surveyRule.questionIds.map(q => this.getSurveyQuestionText(q)).toString()
