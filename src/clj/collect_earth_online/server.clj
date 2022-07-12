@@ -1,14 +1,16 @@
 (ns collect-earth-online.server
-  (:require [clojure.java.io     :as io]
-            [clojure.string      :as str]
-            [clojure.core.server :refer [start-server]]
-            [ring.adapter.jetty :refer [run-jetty]]
-            [triangulum.cli     :refer [get-cli-options]]
-            [triangulum.config  :refer [get-config]]
-            [triangulum.notify  :as notify]
-            [triangulum.logging :refer [log-str set-log-path!]]
-            [triangulum.sockets :refer [send-to-server! socket-open?]]
-            [collect-earth-online.handler :refer [create-handler-stack]]))
+  (:require
+    [clojure.java.io              :as io]
+    [clojure.string               :as str]
+    [nrepl.server                 :as nrepl-server]
+    [cider.nrepl                  :refer (cider-nrepl-handler)]
+    [ring.adapter.jetty           :refer [run-jetty]]
+    [triangulum.cli               :refer [get-cli-options]]
+    [triangulum.config            :refer [get-config]]
+    [triangulum.notify            :as notify]
+    [triangulum.logging           :refer [log-str set-log-path!]]
+    [triangulum.sockets           :refer [send-to-server! socket-open?]]
+    [collect-earth-online.handler :refer [create-handler-stack]]))
 
 (defonce ^:private server           (atom nil))
 (defonce ^:private repl-server      (atom nil))
@@ -78,8 +80,8 @@
                "  Create an SSL key for HTTPS or run without the --https-port (-P) option.")
       (do
         (when repl
-          (println "Starting REPL server on port 5555")
-          (reset! repl-server (start-server {:name :ceo-repl :port 5555 :accept 'clojure.core.server/repl})))
+          (println "Starting nREPL server on port 5555")
+          (reset! repl-server (nrepl-server/start-server :port 5555 :handler cider-nrepl-handler)))
         (reset! server (run-jetty handler config))
         (reset! clean-up-service (start-clean-up-service!))
         (set-log-path! log-dir)
