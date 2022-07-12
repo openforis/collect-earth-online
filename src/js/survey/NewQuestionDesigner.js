@@ -130,7 +130,7 @@ export default class NewQuestionDesigner extends React.Component {
     renderOptions = () => {
         const {surveyQuestions} = this.props;
         return mapObjectArray(
-            filterObject(surveyQuestions, ([_id, sq]) => sq.componentType !== "input"),
+            surveyQuestions,
             ([key, val]) => (
                 <option key={key} value={key}>
                     {val.question}
