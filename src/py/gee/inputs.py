@@ -2,11 +2,37 @@
 
 import ee
 
-##################################
-#
-# Utility functions for getting inputs for CCDC
-#
-# /*/
+
+LANDSAT_BAND_DICT = {
+    'L9': [1, 2, 3, 4, 5, 9, 6],
+    'L8': [1, 2, 3, 4, 5, 9, 6],
+    'L7': [0, 1, 2, 3, 4, 5, 7],
+    'L5': [0, 1, 2, 3, 4, 5, 6],
+    'L4': [0, 1, 2, 3, 4, 5, 6],
+    'S2': [1, 2, 3, 7, 11, 10, 12]
+}
+
+LANDSAT_BAND_NAMES = ['BLUE', 'GREEN',
+                        'RED', 'NIR', 'SWIR1', 'TEMP', 'SWIR2']
+
+def getBitMask(image:ee.Image, bandName:str, bitMasks:dict):
+    """ creates a binary mask from an images bitmask. Expects a dictionary where each item
+    has a dictionary of {'value':int, 'bit':int}. for example in the QA_PIXEL clouds are flagged
+    using bit 3 with a value of 1.
+    
+    bitMask = {
+        'clouds':{
+            'value':1, 'bit':3
+            }
+        }
+    
+     """
+    mask = ee.Image(1)
+    for _, maskItem in bitMasks.items():
+        mask = mask.Or(image.select(
+            bandName).bitwiseAnd(maskItem['value'] << maskItem['bit']).eq(0))
+    return mask
+
 
 def calcNDVI(image):
     ndvi = ee.Image(image).normalizedDifference(['NIR', 'RED']).rename('NDVI')
@@ -25,24 +51,23 @@ def calcNDFI(image):
     soil = [.2000, .3000, .3400, .5800, .6000, .5800]
     cloud = [.9000, .9600, .8000, .7800, .7200, .6500]
     cf = .1  # Not parameterized
+
+    # ensure bands are selected in correct order.
+    image = image.select(['BLUE', 'GREEN', 'RED', 'NIR', 'SWIR1', 'SWIR2'])
     cfThreshold = ee.Image.constant(cf)
     unmixImage = ee.Image(image).unmix([gv, shade, npv, soil, cloud], True, True) \
-        .rename(['band_0', 'band_1', 'band_2', 'band_3', 'band_4'])
-    newImage = ee.Image(image).addBands(unmixImage)
-    mask = newImage.select('band_4').lt(cfThreshold)
+        .rename(['GV', 'Shade', 'NPV', 'Soil', 'Cloud'])
+    mask = unmixImage.select('Cloud').lt(cfThreshold)
+
     ndfi = ee.Image(unmixImage).expression(
         '((GV / (1 - SHADE)) - (NPV + SOIL)) / ((GV / (1 - SHADE)) + NPV + SOIL)', {
             'GV': ee.Image(unmixImage).select('band_0'),
             'SHADE': ee.Image(unmixImage).select('band_1'),
             'NPV': ee.Image(unmixImage).select('band_2'),
             'SOIL': ee.Image(unmixImage).select('band_3')
-        })
+        }).rename(['NDFI'])
 
-    return ee.Image(newImage) \
-        .addBands(ee.Image(ndfi).rename(['NDFI'])) \
-        .select(['band_0', 'band_1', 'band_2', 'band_3', 'NDFI']) \
-        .rename(['GV', 'Shade', 'NPV', 'Soil', 'NDFI']) \
-        .updateMask(mask)
+    return ee.Image.cat([unmixImage, ndfi]).updateMask(mask)
 
 
 def calcEVI(image):
@@ -142,59 +167,77 @@ def doIndices(collection):
     return collection.map(indicesMapper)
 
 
+def getLandsatScaled(image, orderedBandNames, orderedReadableBandNames):
+    primaryScaleBands = ['BLUE', 'GREEN', 'RED', 'NIR', 'SWIR1', 'SWIR2']
+    thermalBand = 'TEMP'
+    tmp = ee.Image(image).select(orderedBandNames, orderedReadableBandNames)
+    return scaleLandsatSr(tmp, primaryScaleBands, thermalBand)
+
+
+def scaleLandsatSr(image, primaryBands, thermalBand):
+    primaryScale = 0.0000275
+    primaryOffset = -0.2
+    primaryImg = image.select(primaryBands).multiply(primaryScale).add(primaryOffset)
+
+    thermalScale = 0.00341802
+    thermalOffset = 149
+    thermalImg = image.select(thermalBand).multiply(thermalScale).add(thermalOffset)
+    
+    return ee.Image.cat([primaryImg, thermalImg])
+
+
 def prepareL4L5(image):
-    bandList = ['B1', 'B2', 'B3', 'B4', 'B5', 'B7', 'B6']
-    nameList = ['BLUE', 'GREEN', 'RED', 'NIR', 'SWIR1', 'SWIR2', 'TEMP']
-    scaling = [10000, 10000, 10000, 10000, 10000, 10000, 1000]
-    scaled = ee.Image(image).select(bandList).rename(
-        nameList).divide(ee.Image.constant(scaling))
-    validQA = [66, 130, 68, 132]
-    mask1 = ee.Image(image).select(['pixel_qa']).remap(
-        validQA, ee.List.repeat(1, len(validQA)), 0)
-    # Gat valid data mask, for pixels without band saturation
-    mask2 = image.select('radsat_qa').eq(0)
-    mask3 = image.select(bandList).reduce(ee.Reducer.min()).gt(0)
-    # Mask hazy pixels
-    mask4 = image.select("sr_atmos_opacity").lt(300)
-    return image.addBands(scaled).updateMask(mask1.And(mask2).And(mask3).And(mask4))
+    # L4 and L5 have same band order so either L5 or L5 can be used 
+    # in getLandsatScaled.
+    scaled = getLandsatScaled(image, LANDSAT_BAND_DICT['L4'],  LANDSAT_BAND_NAMES)
+    
+    # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT04_C02_T1_L2#bands
+    # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_L2#bands
+    cloudBitsToMask = {
+        'dialated_cloud':{'bit':1,'value':1},
+        'cloud': {'bit':3,'value':1},
+        'shadow': {'bit':4,'value':1},
+        }
+    mask1 = getBitMask(image, 'QA_PIXEL', cloudBitsToMask)
+    mask2 = image.select('QA_RADSAT').eq(0) # Gat valid data mask, for pixels without band saturation.
+    mask3 = scaled.select(LANDSAT_BAND_DICT['L4']).reduce(ee.Reducer.min()).gt(0) #mask invalid data. 
+    mask4 = image.select("SR_ATMOS_OPACITY").lt(300)  # Mask hazy pixels
+    return scaled.updateMask(mask1.And(mask2).And(mask3).And(mask4))
 
 
 def prepareL7(image):
-    bandList = ['B1', 'B2', 'B3', 'B4', 'B5', 'B7', 'B6']
-    nameList = ['BLUE', 'GREEN', 'RED', 'NIR', 'SWIR1', 'SWIR2', 'TEMP']
-    scaling = [10000, 10000, 10000, 10000, 10000, 10000, 1000]
-    scaled = ee.Image(image).select(bandList).rename(
-        nameList).divide(ee.Image.constant(scaling))
+    scaled = getLandsatScaled(image, LANDSAT_BAND_DICT['L7'],  LANDSAT_BAND_NAMES)
+    
+    cloudBitsToMask = {
+        'dialated_cloud':{'bit':1,'value':1},
+        'cloud': {'bit':3,'value':1},
+        'shadow': {'bit':4,'value':1},
+        }
+    mask1 = getBitMask(image, cloudBitsToMask)
+    mask2 = image.select('QA_RADSAT').eq(0)# Gat valid data mask, for pixels without band saturation
+    mask3 = image.select(LANDSAT_BAND_DICT['L7']).reduce(ee.Reducer.min()).gt(0)
+    mask4 = image.select("SR_ATMOS_OPACITY").lt(300)# Mask hazy pixels
+    mask5 = ee.Image(image).mask().reduce(ee.Reducer.min()).focal_min(2.5)# Slightly erode bands to get rid of artifacts due to scan lines
 
-    validQA = [66, 130, 68, 132]
-    mask1 = ee.Image(image).select(['pixel_qa']).remap(
-        validQA, ee.List.repeat(1, len(validQA)), 0)
-    # Gat valid data mask, for pixels without band saturation
-    mask2 = image.select('radsat_qa').eq(0)
-    mask3 = image.select(bandList).reduce(ee.Reducer.min()).gt(0)
-    # Mask hazy pixels
-    mask4 = image.select("sr_atmos_opacity").lt(300)
-    # Slightly erode bands to get rid of artifacts due to scan lines
-    mask5 = ee.Image(image).mask().reduce(ee.Reducer.min()).focal_min(2.5)
-    return image.addBands(scaled).updateMask(mask1.And(mask2).And(mask3).And(mask4).And(mask5))
+    return scaled.updateMask(mask1.And(mask2).And(mask3).And(mask4).And(mask5))
 
 
 def prepareL8(image):
-    bandList = ['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B10']
-    nameList = ['BLUE', 'GREEN', 'RED', 'NIR', 'SWIR1', 'SWIR2', 'TEMP']
-    scaling = [10000, 10000, 10000, 10000, 10000, 10000, 1000]
+    scaled = getLandsatScaled(image, LANDSAT_BAND_DICT['L8'],  LANDSAT_BAND_NAMES)
+    
+    cloudBitsToMask = {
+        'dialated_cloud':{'bit':1,'value':1},
+        'cloud': {'bit':3,'value':1},
+        'shadow': {'bit':4,'value':1},
+        }
+    aerosolBitsToMask = {
+        'high_aerosol':{'bit':7,'value':11}
+    }
 
-    validTOA = [66, 68, 72, 80, 96, 100, 130, 132, 136, 144, 160, 164]
-    validQA = [322, 386, 324, 388, 836, 900]
-
-    scaled = ee.Image(image).select(bandList).rename(
-        nameList).divide(ee.Image.constant(scaling))
-    mask1 = ee.Image(image).select(['pixel_qa']).remap(
-        validQA, ee.List.repeat(1, len(validQA)), 0)
-    mask2 = ee.Image(image).select('radsat_qa').eq(0)
-    mask3 = ee.Image(image).select(bandList).reduce(ee.Reducer.min()).gt(0)
-    mask4 = ee.Image(image).select(['sr_aerosol']).remap(
-        validTOA, ee.List.repeat(1, len(validTOA)), 0)
+    mask1 = getBitMask(image, 'QA_PIXEL', cloudBitsToMask)
+    mask2 = ee.Image(image).select('QA_RADSAT').eq(0)
+    mask3 = ee.Image(image).select(LANDSAT_BAND_DICT['L8']).reduce(ee.Reducer.min()).gt(0)
+    mask4 = getBitMask(image, 'SR_QA_AEROSOL ', aerosolBitsToMask)
     return ee.Image(image).addBands(scaled).updateMask(mask1.And(mask2).And(mask3).And(mask4))
 
 def filterRegion(collection, region=None):
@@ -254,13 +297,13 @@ def getLandsat(options):
 
         col = ee.ImageCollection([]) #Empt collection to merge as we go
 
-        fcollection4 = ee.ImageCollection('LANDSAT/LT04/C01/T1_SR')
+        fcollection4 = ee.ImageCollection('LANDSAT/LT04/C02/T1_L2')
         col = mergeLandsatCols(col, fcollection4, start, end, region, prepareL4L5)
-        fcollection5 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR')
+        fcollection5 = ee.ImageCollection('LANDSAT/LT05/C02/T1_L2')
         col = mergeLandsatCols(col, fcollection5, start, end, region, prepareL4L5)
-        fcollection7 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR')
+        fcollection7 = ee.ImageCollection('LANDSAT/LE07/C02/T1_L2')
         col = mergeLandsatCols(col, fcollection7, start, end, region, prepareL7)
-        fcollection8 = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR')
+        fcollection8 = ee.ImageCollection('LANDSAT/LC08/C02/T1_L2')
         col = mergeLandsatCols(col, fcollection8, start, end, region, prepareL8)
 
         indices = doIndices(col).select(targetBands)
@@ -335,3 +378,33 @@ def getS1(options):
     if region is not None:
         data = data.filterBounds(region)
     return data.select(targetBands)
+
+def getNICFI(options):
+    if options is None:
+        pass
+    else:
+        if 'region' in options:
+            region = options['region']
+        else:
+            region = None
+        if 'start' in options:
+            start = options['start']
+        else:
+            start = '2015-12-01'
+        if 'end' in options:
+            end = options['end']
+        else:
+            end = '2022-01-01'
+    
+    africa = ee.ImageCollection("projects/planet-nicfi/assets/basemaps/africa")
+    americas = ee.ImageCollection("projects/planet-nicfi/assets/basemaps/americas")
+    asia = ee.ImageCollection("projects/planet-nicfi/assets/basemaps/asia")
+
+    data = africa.merge(americas).merge(asia)
+
+    data = data.filterDate(start,end)
+    
+    if region is not None:
+        data = data.filterBounds(region)
+    
+    return data
