@@ -727,7 +727,7 @@ class Collection extends React.Component {
             const newSamples = sampleIds.reduce((acc, sampleId) => {
                 const newQuestion = {
                     answerId,
-                    ...answerText && {answer: answerText}
+                    ...answerText !== "" && {answer: answerText}
                 };
 
                 const childQuestionIds = this.getChildQuestionIds(questionId);
