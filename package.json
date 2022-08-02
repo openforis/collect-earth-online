@@ -89,6 +89,7 @@
     "eslint-plugin-react": "^7.29.2",
     "eslint-plugin-react-hooks": "^4.3.0",
     "prettier": "^2.7.1",
+    "quick-lint-js": "^2.8.0",
     "react-svg-loader": "^3.0.3",
     "style-loader": "^1.2.1",
     "tern": "^0.23.0",
@@ -102,6 +103,7 @@
     "webpack-prod": "webpack --config webpack.config.js --env prod",
     "server-dev": "clojure -M:server start -p 8080 -m dev",
     "server-prod": "clojure -M:production:server start -P 8443 -m prod",
-    "lint": "find src/js -type f -exec ./node_modules/.bin/quick-lint-js --snarky {} +"
+    "lint-js": "find src/js -type f -exec ./node_modules/.bin/quick-lint-js --snarky {} +",
+    "format-js": "./node_modules/.bin/prettier --write ."
   }
 }
