@@ -1,68 +1,68 @@
 /// Array Functions ///
 
 export function sameContents(array1, array2) {
-    return array1.every(e => array2.includes(e)) && array2.every(e => array1.includes(e));
+  return array1.every((e) => array2.includes(e)) && array2.every((e) => array1.includes(e));
 }
 
 export function intersection(array1, array2) {
-    return array1.filter(value => array2.includes(value));
+  return array1.filter((value) => array2.includes(value));
 }
 
 export function partition(array, n) {
-    return array.length ? [array.slice(0, n)].concat(partition(array.slice(n), n)) : [];
+  return array.length ? [array.slice(0, n)].concat(partition(array.slice(n), n)) : [];
 }
 
 export function last(array) {
-    return array[array.length - 1];
+  return array[array.length - 1];
 }
 
 export function safeLength(arr) {
-    return (arr || []).length;
+  return (arr || []).length;
 }
 
 export function getNextInSequence(arr) {
-    return Math.max(-1, ...arr) + 1;
+  return Math.max(-1, ...arr) + 1;
 }
 
 /**
-* Removes the item from array at index
-* @param {array} arr
-* @param {number} index
-* @returns {array}
-*/
+ * Removes the item from array at index
+ * @param {array} arr
+ * @param {number} index
+ * @returns {array}
+ */
 export function removeAtIndex(arr, index) {
-    return arr.slice(0, index).concat(arr.slice(index + 1, arr.length));
+  return arr.slice(0, index).concat(arr.slice(index + 1, arr.length));
 }
 
 /**
-* Replaces the given number in an array with a new value
-* @param {array} arr
-* @param {number} numToReplace
-* @param {number} newNum
-* @returns {array}
-*/
+ * Replaces the given number in an array with a new value
+ * @param {array} arr
+ * @param {number} numToReplace
+ * @param {number} newNum
+ * @returns {array}
+ */
 export function replaceNumber(arr, numToReplace, newNum) {
-    if (arr.includes(numToReplace)) {
-        const idx = arr.indexOf(numToReplace);
-        return arr.slice(0, idx).concat(newNum, arr.slice(idx + 1, arr.length));
-    } else return arr;
+  if (arr.includes(numToReplace)) {
+    const idx = arr.indexOf(numToReplace);
+    return arr.slice(0, idx).concat(newNum, arr.slice(idx + 1, arr.length));
+  } else return arr;
 }
 
 /**
-* Sums up all of the numbers in an array.
-* @param {array} arr
-* @returns {number}
-*/
+ * Sums up all of the numbers in an array.
+ * @param {array} arr
+ * @returns {number}
+ */
 export function sumArray(arr) {
-    return arr.reduce((acc, cur) => acc + cur, 0);
+  return arr.reduce((acc, cur) => acc + cur, 0);
 }
 
 /// Set Functions ///
 
 // set.delete is in place.  This function will then return the set so it can be referenced.
 export function removeFromSet(set, value) {
-    set.delete(value);
-    return set;
+  set.delete(value);
+  return set;
 }
 
 /// Object Functions ///
@@ -76,10 +76,10 @@ export function removeFromSet(set, value) {
  * @returns {object}
  **/
 export function mapObject(obj, fn) {
-    return Object.entries(obj).reduce((acc, cur) => {
-        const [key, val] = fn(cur);
-        return {...acc, [key]: val};
-    }, {});
+  return Object.entries(obj).reduce((acc, cur) => {
+    const [key, val] = fn(cur);
+    return { ...acc, [key]: val };
+  }, {});
 }
 
 /**
@@ -89,7 +89,7 @@ export function mapObject(obj, fn) {
  * @returns {array}
  **/
 export function mapObjectArray(obj, fn) {
-    return Object.entries(obj).reduce((acc, cur) => [...acc, fn(cur)], []);
+  return Object.entries(obj).reduce((acc, cur) => [...acc, fn(cur)], []);
 }
 
 /**
@@ -99,7 +99,7 @@ export function mapObjectArray(obj, fn) {
  * @returns {object}
  **/
 export function mapVals(obj, fn) {
-    return Object.entries(obj).reduce((acc, cur) => ({...acc, [cur[0]]: fn(cur[1])}), {});
+  return Object.entries(obj).reduce((acc, cur) => ({ ...acc, [cur[0]]: fn(cur[1]) }), {});
 }
 
 /**
@@ -109,11 +109,10 @@ export function mapVals(obj, fn) {
  * @returns {object}
  **/
 export function filterObject(obj, pred) {
-    return Object.entries(obj).reduce((acc, cur) => (
-        pred(cur)
-            ? {...acc, [cur[0]]: cur[1]}
-            : acc
-    ), {});
+  return Object.entries(obj).reduce(
+    (acc, cur) => (pred(cur) ? { ...acc, [cur[0]]: cur[1] } : acc),
+    {}
+  );
 }
 
 /**
@@ -123,7 +122,7 @@ export function filterObject(obj, pred) {
  * @returns {entry}
  **/
 export function findObject(obj, pred) {
-    return Object.entries(obj).find(entry => pred(entry));
+  return Object.entries(obj).find((entry) => pred(entry));
 }
 
 /**
@@ -132,7 +131,7 @@ export function findObject(obj, pred) {
  * @returns {entry}
  **/
 export function firstEntry(obj) {
-    return Object.entries(obj)[0] || [];
+  return Object.entries(obj)[0] || [];
 }
 
 /**
@@ -142,7 +141,7 @@ export function firstEntry(obj) {
  * @returns {boolean}
  **/
 export function everyObject(obj, pred) {
-    return Object.entries(obj).every(e => pred(e));
+  return Object.entries(obj).every((e) => pred(e));
 }
 
 /**
@@ -152,7 +151,7 @@ export function everyObject(obj, pred) {
  * @returns {boolean}
  **/
 export function someObject(obj, pred) {
-    return Object.entries(obj).some(e => pred(e));
+  return Object.entries(obj).some((e) => pred(e));
 }
 
 /**
@@ -161,5 +160,5 @@ export function someObject(obj, pred) {
  * @returns {integer}
  **/
 export function lengthObject(obj) {
-    return Object.keys(obj).length;
+  return Object.keys(obj).length;
 }
