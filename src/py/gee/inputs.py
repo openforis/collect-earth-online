@@ -22,7 +22,8 @@ def getBitMask(image:ee.Image, bandName:str, bitMasks:dict):
     
     bitMask = {
         'clouds':{
-            'value':1, 'bit':3
+            'value':1,
+            'bit':3
             }
         }
     
@@ -187,7 +188,7 @@ def scaleLandsatSr(image, primaryBands, thermalBand):
 
 
 def prepareL4L5(image):
-    # L4 and L5 have same band order so either L5 or L5 can be used 
+    # L4 and L5 have same band order so either L4 or L5 can be used 
     # in getLandsatScaled.
     scaled = getLandsatScaled(image, LANDSAT_BAND_DICT['L4'],  LANDSAT_BAND_NAMES)
     
@@ -200,7 +201,7 @@ def prepareL4L5(image):
         }
     mask1 = getBitMask(image, 'QA_PIXEL', cloudBitsToMask)
     mask2 = image.select('QA_RADSAT').eq(0) # Gat valid data mask, for pixels without band saturation.
-    mask3 = scaled.select(LANDSAT_BAND_DICT['L4']).reduce(ee.Reducer.min()).gt(0) #mask invalid data. 
+    mask3 = image.select(LANDSAT_BAND_DICT['L4']).reduce(ee.Reducer.min()).gt(0) #mask invalid data. 
     mask4 = image.select("SR_ATMOS_OPACITY").lt(300)  # Mask hazy pixels
     return scaled.updateMask(mask1.And(mask2).And(mask3).And(mask4))
 
@@ -213,7 +214,7 @@ def prepareL7(image):
         'cloud': {'bit':3,'value':1},
         'shadow': {'bit':4,'value':1},
         }
-    mask1 = getBitMask(image, cloudBitsToMask)
+    mask1 = getBitMask(image, 'QA_PIXEL', cloudBitsToMask)
     mask2 = image.select('QA_RADSAT').eq(0)# Gat valid data mask, for pixels without band saturation
     mask3 = image.select(LANDSAT_BAND_DICT['L7']).reduce(ee.Reducer.min()).gt(0)
     mask4 = image.select("SR_ATMOS_OPACITY").lt(300)# Mask hazy pixels
@@ -235,10 +236,11 @@ def prepareL8(image):
     }
 
     mask1 = getBitMask(image, 'QA_PIXEL', cloudBitsToMask)
-    mask2 = ee.Image(image).select('QA_RADSAT').eq(0)
-    mask3 = ee.Image(image).select(LANDSAT_BAND_DICT['L8']).reduce(ee.Reducer.min()).gt(0)
-    mask4 = getBitMask(image, 'SR_QA_AEROSOL ', aerosolBitsToMask)
-    return ee.Image(image).addBands(scaled).updateMask(mask1.And(mask2).And(mask3).And(mask4))
+    mask2 = image.select('QA_RADSAT').eq(0)
+    mask3 = image.select(LANDSAT_BAND_DICT['L8']).reduce(ee.Reducer.min()).gt(0)
+    mask4 = getBitMask(image, 'SR_QA_AEROSOL', aerosolBitsToMask)
+
+    return scaled.updateMask(mask1.And(mask2).And(mask3).And(mask4))
 
 def filterRegion(collection, region=None):
     if region is None:
@@ -284,16 +286,10 @@ def getLandsat(options):
         else:
             targetBands = ['BLUE', 'GREEN', 'RED', 'NIR', 'SWIR1',
                            'SWIR2', 'NBR', 'NDFI', 'NDVI', 'GV', 'NPV', 'Shade', 'Soil']
-        if 'useMask' in options:
-            useMask = options['useMask']
-        else:
-            useMask = True
         if 'sensors' in options:
             sensors = options['sensors']
         else:
             sensors = {"l4": True, "l5": True, "l7": True, "l8": True}
-        if useMask == 'No':
-            useMask = False
 
         col = ee.ImageCollection([]) #Empt collection to merge as we go
 
