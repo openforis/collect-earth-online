@@ -189,7 +189,7 @@ def scaleLandsatSr(image, primaryBands, thermalBand):
 
 def prepareL4L5(image):
     # L4 and L5 have same band order so either L4 or L5 can be used 
-    # in getLandsatScaled.
+    # as the orderedBandNames in getLandsatScaled.
     scaled = getLandsatScaled(image, LANDSAT_BAND_DICT['L4'],  LANDSAT_BAND_NAMES)
     
     # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT04_C02_T1_L2#bands
@@ -223,7 +223,9 @@ def prepareL7(image):
     return scaled.updateMask(mask1.And(mask2).And(mask3).And(mask4).And(mask5))
 
 
-def prepareL8(image):
+def prepareL8L9(image):
+    # L8 and L9 have same band order so either L8 or L9 can be used 
+    # as the orderedBandNames in getLandsatScaled.
     scaled = getLandsatScaled(image, LANDSAT_BAND_DICT['L8'],  LANDSAT_BAND_NAMES)
     
     cloudBitsToMask = {
@@ -300,7 +302,9 @@ def getLandsat(options):
         fcollection7 = ee.ImageCollection('LANDSAT/LE07/C02/T1_L2')
         col = mergeLandsatCols(col, fcollection7, start, end, region, prepareL7)
         fcollection8 = ee.ImageCollection('LANDSAT/LC08/C02/T1_L2')
-        col = mergeLandsatCols(col, fcollection8, start, end, region, prepareL8)
+        col = mergeLandsatCols(col, fcollection8, start, end, region, prepareL8L9)
+        fcollection9 = ee.ImageCollection('LANDSAT/LC09/C02/T1_L2')
+        col = mergeLandsatCols(col, fcollection9, start, end, region, prepareL8L9)
 
         indices = doIndices(col).select(targetBands)
         indices = indices.filter(ee.Filter.dayOfYear(startDOY, endDOY))
