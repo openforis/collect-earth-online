@@ -1114,7 +1114,9 @@ class SideBar extends React.Component {
     const hasSamples = safeLength(currentPlot.samples) > 0;
     const allAnswered = everyObject(
       surveyQuestions,
-      ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered)
+      ([_id, sq]) =>
+        (!sq.cardOrder && sq.parentQuestionId === -1) || // Skip over the duplicate questions
+        safeLength(sq.visible) === safeLength(sq.answered)
     );
     if (answerMode !== "question") {
       alert("You must be in question mode to save the collection.");
