@@ -93,6 +93,16 @@ export default class GraphWidget extends React.Component {
         }
     };
 
+    getScale = widget => {
+        if (widget.sourceName === "Landsat") {
+            return 30.0;
+        } else if (widget.sourceName === "NICFI") {
+            return 3.5;
+        } else if (widget.sourceName === "Custom") {
+            return Number(widget.scale);
+        }
+    };
+
     loadTimeSeries = () => {
         const {widget, plotExtentPolygon} = this.props;
         const path = this.widgetIsCustom()
@@ -108,7 +118,7 @@ export default class GraphWidget extends React.Component {
                 path,
                 ...widget,
                 geometry: plotExtentPolygon,
-                scale: 30
+                scale: this.getScale(widget)
             })
         })
             .then(res => (res.ok ? res.json() : Promise.reject()))

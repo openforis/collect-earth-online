@@ -183,6 +183,7 @@ def timeSeriesByAsset(requestDict):
 def timeSeriesByIndex(requestDict):
     values = {
         'timeseries': getTimeSeriesByIndex(
+            getDefault(requestDict, 'sourceName', 'Landsat'),
             getDefault(requestDict, 'indexName', 'NDVI'),
             float(getDefault(requestDict, 'scale', 30)),
             getDefault(requestDict, 'geometry', None),

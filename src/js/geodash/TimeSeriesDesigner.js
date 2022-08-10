@@ -13,11 +13,25 @@ export default function TimeSeriesDesigner() {
     return (
         <>
             <GDSelect
-                dataKey="indexName"
-                items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI", "Custom"]}
-                title="Data Type"
+                dataKey="sourceName"
+                items={["Landsat", "NICFI", "Custom"]}
+                title="Imagery Source"
             />
-            {getWidgetDesign("indexName") === "Custom" && (
+            {getWidgetDesign("sourceName") === "Landsat" && (
+                <GDSelect
+                    dataKey="indexName"
+                    items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI"]}
+                    title="Band to graph"
+                />
+            )}
+            {getWidgetDesign("sourceName") === "NICFI" && (
+                <GDSelect
+                    dataKey="indexName"
+                    items={["NDVI", "R", "G", "B", "N"]}
+                    title="Band to graph"
+                />
+            )}
+            {getWidgetDesign("sourceName") === "Custom" && (
                 <>
                     <GDInput
                         dataKey="assetId"
@@ -36,6 +50,11 @@ export default function TimeSeriesDesigner() {
                         dataKey="reducer"
                         items={["Min", "Max", "Mean", "Median", "Mode"]}
                         title="Reducer"
+                    />
+                    <GDInput
+                        dataKey="scale"
+                        placeholder="30"
+                        title="Spatial scale"
                     />
                 </>
             )}
