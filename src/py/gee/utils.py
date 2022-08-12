@@ -5,7 +5,7 @@ import math
 import sys
 import json
 from ee.ee_exception import EEException
-from gee.inputs import getLandsat, getS1
+from gee.inputs import getLandsat, getS1, getLandsatToa, getNICFI
 
 
 ########## Helper functions ##########
@@ -452,70 +452,12 @@ def getTimeSeriesByCollectionAndIndex(assetId, indexName, scale, coords, startDa
     return indexCollection2.getInfo()
 
 
-def getTimeSeriesByIndex(indexName, scale, coords, startDate, endDate, reducer):
-    bandsByCollection = {
-        'LANDSAT/LC09/C02/T1_TOA': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
-        'LANDSAT/LC09/C02/T2_TOA': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
-        'LANDSAT/LC08/C02/T1_TOA': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
-        'LANDSAT/LC08/C02/T2_TOA': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
-        'LANDSAT/LE07/C02/T1_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
-        'LANDSAT/LE07/C02/T2_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
-        'LANDSAT/LT05/C02/T1_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
-        'LANDSAT/LT05/C02/T2_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
-        'LANDSAT/LT04/C02/T1_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
-        'LANDSAT/LT04/C02/T2_TOA': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7']
-    }
-    indexes = {
-        'NDVI': '(nir - red) / (nir + red)',
-        'EVI': '2.5 * (nir - red) / (nir + 6.0 * red - 7.5 * blue + 1)',
-        'EVI2': '2.5 * (nir - red) / (nir + 2.4 * red + 1)',
-        'NDMI': '(nir - swir1) / (nir + swir1)',
-        'NDWI': '(green - nir) / (green + nir)',
-        'NBR': '(nir - swir2) / (nir + swir2)',
-        'LSAVI': '((nir - red) / (nir + red + 0.5)) * (1 + 0.5)'
-    }
-
-    def create(name):
-        def maskClouds(image):
-            def isSet(types):
-                """ https://landsat.usgs.gov/collectionqualityband """
-                typeByValue = {
-                    'cloud': 3,
-                    'shadow': 4,
-                    'snow': 5,
-                }
-                anySet = ee.Image(1)
-                for Type in types:
-                    anySet = anySet.Or(image.select(
-                        'QA_PIXEL').bitwiseAnd(1 << typeByValue[Type]).eq(0))
-                return anySet
-            return image.updateMask(isSet(['cloud', 'shadow', 'snow']))
-
-        def toIndex(image):
-            bands = bandsByCollection[name]
-            return image.expression(indexes[indexName], {
-                'blue': image.select(bands[0]),
-                'green': image.select(bands[1]),
-                'red': image.select(bands[2]),
-                'nir': image.select(bands[3]),
-                'swir1': image.select(bands[4]),
-                'swir2': image.select(bands[5]),
-            }).clamp(-1, 1).rename(['index'])
-
-        def toIndexWithTimeStart(image):
-            time = image.get('system:time_start')
-            image = maskClouds(image)
-            return toIndex(image).set('system:time_start', time)
-        #
-        if startDate and endDate:
-            return ee.ImageCollection(name).filterDate(startDate, endDate).filterBounds(geometry).map(toIndexWithTimeStart, True)
-        else:
-            return ee.ImageCollection(name).filterBounds(geometry).map(toIndexWithTimeStart, True)
-
+def getTimeSeriesByIndex(sourceName, indexName, scale, coords, startDate, endDate, reducer):
+ 
     def reduceRegion(image):
         theReducer = getReducer(reducer)
         reduced = image.reduceRegion(
-            theReducer, geometry=geometry, scale=scale, maxPixels=1e6)
+            theReducer, geometry=geometry, scale=scale, maxPixels=1e6, bestEffort=True)
         return ee.Feature(None, {
             'index': reduced.get('index'),
             'timeIndex': [image.get('system:time_start'), reduced.get('index')]
@@ -526,15 +468,26 @@ def getTimeSeriesByIndex(indexName, scale, coords, startDate, endDate, reducer):
         geometry = ee.Geometry.Polygon(coords)
     else:
         geometry = ee.Geometry.Point(coords)
-    collection = ee.ImageCollection([])
-    for name in bandsByCollection:
-        collection = collection.merge(create(name))
-    return ee.ImageCollection(ee.ImageCollection(collection).sort('system:time_start').distinct('system:time_start')) \
+
+    if sourceName.lower() == 'landsat':
+        collection = getLandsatToa(startDate, endDate, geometry)
+    elif sourceName.lower() == 'nicfi':
+        collection = getNICFI({
+            'start':startDate,
+            'end':endDate
+        })
+    else:
+        raise ValueError(f'imagery source {sourceName} is not implemented.') 
+
+    collection = collection.select([indexName],['index'])
+    result = ee.ImageCollection(ee.ImageCollection(collection).sort('system:time_start') \
+        .distinct('system:time_start')) \
         .map(reduceRegion) \
-        .filterMetadata('index', 'not_equals', None) \
+        .filter(ee.Filter.neq('index', None)) \
         .aggregate_array('timeIndex') \
         .getInfo()
 
+    return result
 
 ########## Degradation##########
 
@@ -644,7 +597,7 @@ def getStatistics(extent):
     extentGeom = ee.Geometry.Polygon(extent)
     elev = ee.Image('USGS/GTOPO30')
     minmaxElev = elev.reduceRegion(
-        ee.Reducer.minMax(), extentGeom, 1000, maxPixels=500000000)
+        ee.Reducer.minMax(), extentGeom, 0.1, bestEffort=True, maxPixels=500000000)
     minElev = minmaxElev.get('elevation_min').getInfo()
     maxElev = minmaxElev.get('elevation_max').getInfo()
     ciesinPopGrid = ee.Image('CIESIN/GPWv4/population-count/2020')
