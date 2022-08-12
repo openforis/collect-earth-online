@@ -145,7 +145,7 @@ export default class GraphWidget extends React.Component {
 
     validArray = arr => ((isArray(arr) && arr.length > 0) ? arr : null);
 
-    widgetIsCustom = () => this.props.widget.indexName === "Custom";
+    widgetIsCustom = () => this.props.widget.sourceName === "Custom";
 
     /// High Charts
 
