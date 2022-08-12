@@ -34,6 +34,26 @@ def getBitMask(image:ee.Image, bandName:str, bitMasks:dict):
             bandName).bitwiseAnd(maskItem['value'] << maskItem['bit']).eq(0))
     return mask
 
+def calcNDMI(image):
+    ndmi = ee.Image(image).normalizedDifference(['NIR', 'SWIR1']).rename('NDMI')
+    return ndmi
+
+def calcNDWI(image):
+    ndwi = ee.Image(image).normalizedDifference(['GREEN', 'NIR']).rename('NDWI')
+    return ndwi
+
+def calcLSAVI(image):
+    lsavi = image.expression(
+    '((nir - red) / (nir + red + 0.5)) * (1 + 0.5)', {
+        'blue': image.select('BLUE'),
+        'green': image.select('GREEN'),
+        'red': image.select('RED'),
+        'nir': image.select('NIR'),
+        'swir1': image.select('SWIR1'),
+        'swir2': image.select('SWIR2'),
+    }).rename(['LSAVI'])
+
+    return lsavi
 
 def calcNDVI(image):
     ndvi = ee.Image(image).normalizedDifference(['NIR', 'RED']).rename('NDVI')
@@ -62,10 +82,10 @@ def calcNDFI(image):
 
     ndfi = ee.Image(unmixImage).expression(
         '((GV / (1 - SHADE)) - (NPV + SOIL)) / ((GV / (1 - SHADE)) + NPV + SOIL)', {
-            'GV': ee.Image(unmixImage).select('band_0'),
-            'SHADE': ee.Image(unmixImage).select('band_1'),
-            'NPV': ee.Image(unmixImage).select('band_2'),
-            'SOIL': ee.Image(unmixImage).select('band_3')
+            'GV': unmixImage.select('GV'),
+            'SHADE': unmixImage.select('Shade'),
+            'NPV': unmixImage.select('NPV'),
+            'SOIL': unmixImage.select('Soil')
         }).rename(['NDFI'])
 
     return ee.Image.cat([unmixImage, ndfi]).updateMask(mask)
@@ -160,11 +180,16 @@ def doIndices(collection):
         NBR = calcNBR(image)
         EVI = calcEVI(image)
         EVI2 = calcEVI2(image)
+        NDWI = calcNDWI(image)
+        NDMI = calcNDMI(image)
+        LSAVI = calcLSAVI(image)
         TC = tcTrans(image)
+
         # NDFI function requires surface reflectance bands only
         BANDS = ['BLUE', 'GREEN', 'RED', 'NIR', 'SWIR1', 'SWIR2']
         NDFI = calcNDFI(image.select(BANDS))
-        return image.addBands([NDVI, NBR, EVI, EVI2, TC, NDFI])
+        return image.addBands([NDVI, NBR, EVI, EVI2, TC, NDFI, NDWI, NDMI, LSAVI])
+
     return collection.map(indicesMapper)
 
 
@@ -184,7 +209,7 @@ def scaleLandsatSr(image, primaryBands, thermalBand):
     thermalOffset = 149
     thermalImg = image.select(thermalBand).multiply(thermalScale).add(thermalOffset)
     
-    return ee.Image.cat([primaryImg, thermalImg])
+    return image.addBands(primaryImg, None, True).addBands(thermalImg, None, True)
 
 
 def prepareL4L5(image):
@@ -383,10 +408,6 @@ def getNICFI(options):
     if options is None:
         pass
     else:
-        if 'region' in options:
-            region = options['region']
-        else:
-            region = None
         if 'start' in options:
             start = options['start']
         else:
@@ -399,12 +420,60 @@ def getNICFI(options):
     africa = ee.ImageCollection("projects/planet-nicfi/assets/basemaps/africa")
     americas = ee.ImageCollection("projects/planet-nicfi/assets/basemaps/americas")
     asia = ee.ImageCollection("projects/planet-nicfi/assets/basemaps/asia")
-
+    ndvi = lambda img : img.addBands(img.normalizedDifference(['N','R']).rename('NDVI'))
+    
+    def mosaicByDate(date, collection):
+        start = ee.Date(date)
+        end = start.advance(1,'minute')
+        image = collection.filterDate(start, end).mosaic()
+        return image.set('system:time_start',date)
+    
     data = africa.merge(americas).merge(asia)
+    data = data.filterDate(start,end).map(ndvi)
+    
+    # NICFI footprints encapulate the entire wold making filtering by geometry useless.
+    # mosaicing ensures that filtering for timeserries widget doesn't result in only
+    # null values being kept after removing duplicate dates.
+    dates = data.aggregate_array('system:time_start').distinct()
+    mosaic_nicfi = dates.map(lambda img: mosaicByDate(img, data))
+    
+    return ee.ImageCollection(mosaic_nicfi)
 
-    data = data.filterDate(start,end)
+def prepareLsToa(image):
+    cloudBitsToMask = {
+        'cloud': {'bit':3,'value':1},
+        'shadow': {'bit':4,'value':1},
+        'snow': {'bit':5,'value':1},
+    }
+
+    mask = getBitMask(image,'QA_PIXEL',cloudBitsToMask)
+
+    return image.updateMask(mask)
+
+def getLandsatToa(startDate, endDate, geometry):
+    collectionIds = {
+        'LANDSAT/LC09/C02/T1_TOA' : LANDSAT_BAND_DICT['L9'],
+        'LANDSAT/LC09/C02/T2_TOA' : LANDSAT_BAND_DICT['L9'],
+        'LANDSAT/LC08/C02/T1_TOA' : LANDSAT_BAND_DICT['L8'],
+        'LANDSAT/LC08/C02/T2_TOA' : LANDSAT_BAND_DICT['L8'],
+        'LANDSAT/LE07/C02/T1_TOA' : LANDSAT_BAND_DICT['L7'],
+        'LANDSAT/LE07/C02/T2_TOA' : LANDSAT_BAND_DICT['L7'],
+        'LANDSAT/LT05/C02/T1_TOA' : LANDSAT_BAND_DICT['L5'],
+        'LANDSAT/LT05/C02/T2_TOA' : LANDSAT_BAND_DICT['L5'],
+        'LANDSAT/LT04/C02/T1_TOA' : LANDSAT_BAND_DICT['L4'],
+        'LANDSAT/LT04/C02/T2_TOA' : LANDSAT_BAND_DICT['L4'],
+    }
+
+
+    collection = ee.ImageCollection([])
+    for name, bands in collectionIds.items():
+        # make new lists with QA_PIXEL included for cloud masking
+        bands = bands + ['QA_PIXEL']
+        readableBands = LANDSAT_BAND_NAMES + ['QA_PIXEL']
+
+        tmpCollection = ee.ImageCollection(name).select(bands, readableBands)
+        collection = mergeLandsatCols(collection, tmpCollection, startDate, endDate, geometry, prepareLsToa)
     
-    if region is not None:
-        data = data.filterBounds(region)
-    
-    return data
+    collection = doIndices(collection)
+
+    return collection
