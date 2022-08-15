@@ -638,11 +638,11 @@ def getDegradationPlotsByPoint(geometry, start, end, band):
 
 def getStatistics(extent):
     extentGeom = ee.Geometry.Polygon(extent)
-    elev = ee.Image('USGS/GTOPO30')
-    ciesinPopGrid = ciesinPopGrid =ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Count").sort('system:time_start',False).first()
+    elevation = ee.Image('USGS/GTOPO30')
+    population = ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Count").sort('system:time_start',False).first()
 
     def reduceElev():
-        minmaxElev = elev.reduceRegion(**{
+        minmaxElev = elevation.reduceRegion(**{
             'reducer':ee.Reducer.minMax(),
             'geometry' :extentGeom, 
             'scale':30,
@@ -657,7 +657,7 @@ def getStatistics(extent):
         })
     
     def reducePop ():
-        popDict = ciesinPopGrid.reduceRegion(**{
+        popDict = population.reduceRegion(**{
             'reducer':ee.Reducer.sum().unweighted(),
             'geometry': extentGeom, 
             'maxPixels':1e13,
@@ -668,7 +668,7 @@ def getStatistics(extent):
 
     def sampleElve():
         centriod = extentGeom.centroid(1)
-        sampleElv =  elev.reduceRegion(**{
+        sampleElv =  elevation.reduceRegion(**{
             'reducer':ee.Reducer.first(),
             'geometry': centriod, 
             'maxPixels':1e13,
@@ -681,7 +681,7 @@ def getStatistics(extent):
 
     def samplePop():
         centriod = extentGeom.centroid(1)
-        sample = ciesinPopGrid.reduceRegion(**{
+        sample = population.reduceRegion(**{
             'reducer':ee.Reducer.first(),
             'geometry': centriod, 
             'maxPixels':1e13,
