@@ -645,16 +645,16 @@ def getStatistics(extent):
         minmaxElev = elev.reduceRegion(**{
             'reducer':ee.Reducer.minMax(),
             'geometry' :extentGeom, 
-            'scale':0.1,
+            'scale':30,
             'bestEffort':True, 
             'maxPixels':1e13
             
         })
 
-        return {
+        return ee.Dictionary({
             'minElev': minmaxElev.get('elevation_min'),
             'maxElev': minmaxElev.get('elevation_max'),
-        }
+        })
     
     def reducePop ():
         popDict = ciesinPopGrid.reduceRegion(**{
@@ -664,7 +664,7 @@ def getStatistics(extent):
             'scale':927.67  
         })
         pop = ee.Number(popDict.get('population_count')).int()
-        return {'pop':pop}
+        return ee.Dictionary({'pop':pop})
 
     def sampleElve():
         centriod = extentGeom.centroid(1)
@@ -674,10 +674,10 @@ def getStatistics(extent):
             'maxPixels':1e13,
             'scale':30  
         })
-        return {
+        return ee.Dictionary({
             'minElev': sampleElv.get('elevation'),
             'maxElev': sampleElv.get('elevation'),
-        }
+        })
 
     def samplePop():
         centriod = extentGeom.centroid(1)
@@ -688,22 +688,21 @@ def getStatistics(extent):
             'scale':927.67  
         })
         pop = ee.Number(sample.get('population_count')).int()
-        return {'pop':pop}
+        return ee.Dictionary({'pop':pop})
 
     # ~900m = 30m2
-    conditionSampleElev = extentGeom.area(1).lt(900)
+    conditionSampleElev = extentGeom.area(1).lt(900).getInfo()
     # ~859,329m = 927.67m2
-    conditionSamplePop = extentGeom.area(1).lt(860000)
+    conditionSamplePop = extentGeom.area(1).lt(860000).getInfo()
     
-    elevationResults =ee.Algorithms.If(
-        conditionSampleElev,
-        sampleElve(),
-        reduceElev()
-        ).getInfo()
-    populationResults = ee.Algorithms.If(
-        conditionSamplePop,
-        samplePop(),
-        reducePop()
-        ).getInfo()
+    if conditionSampleElev:
+        elevationResults = sampleElve()
+    else:
+        elevationResults = reduceElev()
+    
+    if conditionSamplePop:
+        populationResults = samplePop()
+    else:
+        populationResults = reducePop()
 
-    return {**elevationResults, **populationResults}
+    return elevationResults.combine(populationResults).getInfo()
