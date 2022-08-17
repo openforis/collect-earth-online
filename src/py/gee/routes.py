@@ -58,7 +58,7 @@ def imageCollection(requestDict):
 
 # ########## Pre defined ee.ImageCollection ##########
 
-
+# todo: clean this up
 def getActualCollection(name):
     lowerName = name.lower()
     if lowerName == 'landsat5':

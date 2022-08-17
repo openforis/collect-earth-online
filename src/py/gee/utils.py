@@ -5,7 +5,7 @@ import math
 import sys
 import json
 from ee.ee_exception import EEException
-from gee.inputs import getLandsat, getS1, getLandsatToa, getNICFI
+from gee.inputs import getLandsat, getS1, getLandsatToa, getNICFI, getSentinel2Toa, calcNDVI, calcEVI, calcEVI2, calcNDMI, calcNDWI
 
 
 ########## Helper functions ##########
@@ -167,112 +167,16 @@ def getFeatureCollectionTileUrl(featureCollection, field, matchID, visParams):
 # Index Image Collection
 
 
-def lsMaskClouds(img, cloudThresh=10):
-    score = ee.Image(1.0)
-    # Clouds are reasonably bright in the blue band.
-    blue_rescale = img.select('blue').subtract(ee.Number(0.1)).divide(
-        ee.Number(0.3).subtract(ee.Number(0.1)))
-    score = score.min(blue_rescale)
-
-    # Clouds are reasonably bright in all visible bands.
-    visible = img.select('red').add(
-        img.select('green')).add(img.select('blue'))
-    visible_rescale = visible.subtract(ee.Number(0.2)).divide(
-        ee.Number(0.8).subtract(ee.Number(0.2)))
-    score = score.min(visible_rescale)
-
-    # Clouds are reasonably bright in all infrared bands.
-    infrared = img.select('nir').add(
-        img.select('swir1')).add(img.select('swir2'))
-    infrared_rescale = infrared.subtract(ee.Number(0.3)).divide(
-        ee.Number(0.8).subtract(ee.Number(0.3)))
-    score = score.min(infrared_rescale)
-
-    # Clouds are reasonably cool in temperature.
-    temp_rescale = img.select('temp').subtract(ee.Number(300)).divide(
-        ee.Number(290).subtract(ee.Number(300)))
-    score = score.min(temp_rescale)
-
-    # However, clouds are not snow.
-    ndsi = img.normalizedDifference(['green', 'swir1'])
-    ndsi_rescale = ndsi.subtract(ee.Number(0.8)).divide(
-        ee.Number(0.6).subtract(ee.Number(0.8)))
-    score = score.min(ndsi_rescale).multiply(100).byte()
-    mask = score.lt(cloudThresh).rename(['cloudMask'])
-    img = img.updateMask(mask)
-    return img.addBands(score)
-
-
-def s2MaskClouds(img):
-    qa = img.select('QA60')
-
-    # Bits 10 and 11 are clouds and cirrus, respectively.
-    cloudBitMask = int(math.pow(2, 10))
-    cirrusBitMask = int(math.pow(2, 11))
-
-    # clear if both flags set to zero.
-    clear = qa.bitwiseAnd(cloudBitMask).eq(0).And(
-        qa.bitwiseAnd(cirrusBitMask).eq(0))
-
-    return img.divide(10000).updateMask(clear).set('system:time_start', img.get('system:time_start'))
-
-
-def bandPassAdjustment(img):
-    keep = img.select(['temp'])
-    bands = ['blue', 'green', 'red', 'nir', 'swir1', 'swir2']
-    # linear regression coefficients for adjustment
-    gain = ee.Array([[0.977], [1.005], [0.982], [1.001], [1.001], [0.996]])
-    bias = ee.Array([[-0.00411], [-0.00093], [0.00094],
-                    [-0.00029], [-0.00015], [-0.00097]])
-    # Make an Array Image, with a 2-D Array per pixel.
-    arrayImage2D = img.select(bands).toArray().toArray(1)
-
-    # apply correction factors and reproject array to geographic image
-    componentsImage = ee.Image(gain).multiply(arrayImage2D).add(ee.Image(bias)) \
-        .arrayProject([0]).arrayFlatten([bands]).float()
-
-    # .set('system:time_start',img.get('system:time_start'));
-    return keep.addBands(componentsImage)
-
-
-def getLandSatMergedCollection():
-    sensorBandDictLandsatTOA = {'L9': [1, 2, 3, 4, 5, 9, 6],
-                                'L8': [1, 2, 3, 4, 5, 9, 6],
-                                'L7': [0, 1, 2, 3, 4, 5, 7],
-                                'L5': [0, 1, 2, 3, 4, 5, 6],
-                                'L4': [0, 1, 2, 3, 4, 5, 6],
-                                'S2': [1, 2, 3, 7, 11, 10, 12]}
-    bandNamesLandsatTOA = ['blue', 'green',
-                           'red', 'nir', 'swir1', 'temp', 'swir2']
-    metadataCloudCoverMax = 100
-    lt4 = ee.ImageCollection('LANDSAT/LT04/C02/T1_TOA') \
-        .filter(ee.Filter.lt('CLOUD_COVER', metadataCloudCoverMax)) \
-        .select(sensorBandDictLandsatTOA['L4'], bandNamesLandsatTOA).map(lsMaskClouds)
-    lt5 = ee.ImageCollection('LANDSAT/LT05/C02/T1_TOA') \
-        .filter(ee.Filter.lt('CLOUD_COVER', metadataCloudCoverMax)) \
-        .select(sensorBandDictLandsatTOA['L5'], bandNamesLandsatTOA).map(lsMaskClouds)
-    le7 = ee.ImageCollection('LANDSAT/LE07/C02/T1_TOA') \
-        .filter(ee.Filter.lt('CLOUD_COVER', metadataCloudCoverMax)) \
-        .select(sensorBandDictLandsatTOA['L7'], bandNamesLandsatTOA).map(lsMaskClouds)
-    lc8 = ee.ImageCollection('LANDSAT/LC08/C02/T1_TOA') \
-        .filter(ee.Filter.lt('CLOUD_COVER', metadataCloudCoverMax)) \
-        .select(sensorBandDictLandsatTOA['L8'], bandNamesLandsatTOA).map(lsMaskClouds)
-    lc9 = ee.ImageCollection('LANDSAT/LC09/C02/T1_TOA') \
-        .filter(ee.Filter.lt('CLOUD_COVER', metadataCloudCoverMax)) \
-        .select(sensorBandDictLandsatTOA['L8'], bandNamesLandsatTOA).map(lsMaskClouds)
-    s2 = ee.ImageCollection('COPERNICUS/S2') \
-        .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', metadataCloudCoverMax)) \
-        .map(s2MaskClouds).select(sensorBandDictLandsatTOA['S2'], bandNamesLandsatTOA) \
-        .map(bandPassAdjustment)
-    return ee.ImageCollection(lt4.merge(lt5).merge(le7).merge(lc8).merge(lc9).merge(s2))
+def getLandSatMergedCollection(startDate, endDate):
+    # note originally only used LS T1. New call is same as time series
+    #  which pulls T1 & T2. Ask if we want this. 
+    ls = getLandsatToa(**{'startDate':startDate, 'endDate':endDate})
+    s2 = getSentinel2Toa({'adjustBands':True})
+    return ls.merge(s2)
 
 
 def filteredImageNDVIToMapId(startDate, endDate):
-    def calcNDVI(img):
-        return img.expression('(i.nir - i.red) / (i.nir + i.red)',  {'i': img}).rename(['NDVI']) \
-            .set('system:time_start', img.get('system:time_start'))
-
-    eeCollection = getLandSatMergedCollection().filterDate(startDate, endDate)
+    eeCollection = getLandSatMergedCollection(startDate, endDate)
     colorPalette = 'c9c0bf,435ebf,eee8aa,006400'
     visParams = {'opacity': 1, 'max': 1,
                  'min': -1, 'palette': colorPalette}
@@ -281,11 +185,7 @@ def filteredImageNDVIToMapId(startDate, endDate):
 
 
 def filteredImageEVIToMapId(startDate, endDate):
-    def calcEVI(img):
-        return img.expression('2.5 * (i.nir - i.red) / (i.nir + 6.0 * i.red - 7.5 * i.blue + 1)',  {'i': img}).rename(['EVI']) \
-            .set('system:time_start', img.get('system:time_start'))
-
-    eeCollection = getLandSatMergedCollection().filterDate(startDate, endDate)
+    eeCollection = getLandSatMergedCollection(startDate, endDate)
     colorPalette = 'F5F5F5,E6D3C5,C48472,B9CF63,94BF3D,6BB037,42A333,00942C,008729,007824,004A16'
     visParams = {'opacity': 1, 'max': 1,
                  'min': -1, 'palette': colorPalette}
@@ -294,11 +194,7 @@ def filteredImageEVIToMapId(startDate, endDate):
 
 
 def filteredImageEVI2ToMapId(startDate, endDate):
-    def calcEVI2(img):
-        return img.expression('2.5 * (i.nir - i.red) / (i.nir + 2.4 * i.red + 1)',  {'i': img}).rename(['EVI2']) \
-            .set('system:time_start', img.get('system:time_start'))
-
-    eeCollection = getLandSatMergedCollection().filterDate(startDate, endDate)
+    eeCollection = getLandSatMergedCollection(startDate, endDate)
     colorPalette = 'F5F5F5,E6D3C5,C48472,B9CF63,94BF3D,6BB037,42A333,00942C,008729,007824,004A16'
     visParams = {'opacity': 1, 'max': 1,
                  'min': -1, 'palette': colorPalette}
@@ -307,11 +203,7 @@ def filteredImageEVI2ToMapId(startDate, endDate):
 
 
 def filteredImageNDMIToMapId(startDate, endDate):
-    def calcNDMI(img):
-        return img.expression('(i.nir - i.swir1) / (i.nir + i.swir1)',  {'i': img}).rename(['NDMI']) \
-            .set('system:time_start', img.get('system:time_start'))
-
-    eeCollection = getLandSatMergedCollection().filterDate(startDate, endDate)
+    eeCollection = getLandSatMergedCollection(startDate, endDate)
     colorPalette = '0000FE,2E60FD,31B0FD,00FEFE,50FE00,DBFE66,FEFE00,FFBB00,FF6F00,FE0000'
     visParams = {'opacity': 1, 'max': 1,
                  'min': -1, 'palette': colorPalette}
@@ -320,11 +212,7 @@ def filteredImageNDMIToMapId(startDate, endDate):
 
 
 def filteredImageNDWIToMapId(startDate, endDate):
-    def calcNDWI(img):
-        return img.expression('(i.green - i.nir) / (i.green + i.nir)',  {'i': img}).rename(['NDWI']) \
-            .set('system:time_start', img.get('system:time_start'))
-
-    eeCollection = getLandSatMergedCollection().filterDate(startDate, endDate)
+    eeCollection = getLandSatMergedCollection(startDate, endDate)
     colorPalette = '505050,E8E8E8,00FF33,003300'
     visParams = {'opacity': 1, 'max': 1,
                  'min': -1, 'palette': colorPalette}

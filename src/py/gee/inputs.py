@@ -1,5 +1,7 @@
 # GitHub URL: https://github.com/giswqs/qgis-earthengine-examples/tree/master/inputs.py
 
+from ctypes import Union
+from typing import Optional
 import ee
 
 
@@ -9,9 +11,7 @@ LANDSAT_BAND_DICT = {
     'L7': [0, 1, 2, 3, 4, 5, 7],
     'L5': [0, 1, 2, 3, 4, 5, 6],
     'L4': [0, 1, 2, 3, 4, 5, 6],
-    'S2': [1, 2, 3, 7, 11, 10, 12]
 }
-
 LANDSAT_BAND_NAMES = ['BLUE', 'GREEN',
                         'RED', 'NIR', 'SWIR1', 'TEMP', 'SWIR2']
 
@@ -351,6 +351,87 @@ def getLandsat(options):
     return ee.ImageCollection(indices).sort('system:time_start')
 
 
+def prepareSentinel2Toa(image):
+    bandsReadable = [
+        "Aerosols",
+        "BLUE",
+        "GREEN",
+        "RED",
+        "RED_EDGE_1",
+        "RED_EDGE_2",
+        "RED_EDGE_3",
+        "NIR",
+        "RED_EDGE_4",
+        "WATER_VAPOR",
+        "CIRRUS",
+        "SWIR1",
+        "SWIR2",
+    ]
+    bands = [
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B8A",
+        "B9",
+        "B10",
+        "B11",
+        "B12",
+    ]
+    scaled = image.addBands(image.divide(10000), None, True) \
+        .select(bands,bandsReadable)
+    
+    cloudBitsToMask = {
+        'cloud': {'bit':10,'value':1},
+        'cirrus': {'bit':11,'value':1},
+    }
+    mask = getBitMask(image,'QA60',cloudBitsToMask)
+
+    return scaled.updateMask(mask)
+
+
+def bandPassAdjustment(img):
+    bands = ['BLUE', 'GREEN', 'RED', 'NIR', 'SWIR1', 'SWIR1']
+    # linear regression coefficients for adjustment
+    gain = ee.Array([[0.977], [1.005], [0.982], [1.001], [1.001], [0.996]])
+    bias = ee.Array([[-0.00411], [-0.00093], [0.00094],
+                    [-0.00029], [-0.00015], [-0.00097]])
+    # Make an Array Image, with a 2-D Array per pixel.
+    arrayImage2D = img.select(bands).toArray().toArray(1)
+
+    # apply correction factors and reproject array to geographic image
+    componentsImage = ee.Image(gain).multiply(arrayImage2D).add(ee.Image(bias)) \
+        .arrayProject([0]).arrayFlatten([bands]).float()
+
+    return img.addBands(componentsImage, None, True)
+
+
+def getSentinel2Toa(options):
+    if options is None:
+        return "Error"
+    
+    region:Union[ee.Geometry,None] = options.get('region',None)
+    adjustBands:bool = options.get('bandPassAdjustment', False)
+    start:str = options.get('start','2015-06-23')
+    end:str = options.get('end','2025-01-01')
+    startDOY:int = options.get('startDOY',1)
+    endDOY:int = options.get('endDOY',1)
+    
+    
+    s2 = ee.ImageCollection('COPERNICUS/S2_HARMONIZED').map(prepareSentinel2Toa)
+    
+    if adjustBands:
+        s2 = s2.map(bandPassAdjustment)
+    
+    s2 = filterRegion(s2, region).filterDate(start, end) \
+        .filter(ee.Filter.dayOfYear(startDOY, endDOY))
+    
+    return s2
+
 def getS1(options):
     if options is None:
         pass
@@ -450,7 +531,7 @@ def prepareLsToa(image):
 
     return image.updateMask(mask)
 
-def getLandsatToa(startDate, endDate, geometry):
+def getLandsatToa(startDate, endDate, geometry=None):
     collectionIds = {
         'LANDSAT/LC09/C02/T1_TOA' : LANDSAT_BAND_DICT['L9'],
         'LANDSAT/LC09/C02/T2_TOA' : LANDSAT_BAND_DICT['L9'],
