@@ -216,6 +216,9 @@ export default class SurveyCollection extends React.Component {
       );
     });
 
+    sumAnsweredQuestionsPerSample = (answeredQuestions, sampleId) =>
+                    ans.sampleId === sampleId).answerText);
+            .reduce((acc, [qId, aq]) => {
   getAnsweredSampleIds = (answeredQuestions) =>
     mapObjectArray(answeredQuestions, ([_sqId, aq]) => aq.answered.map((a) => a.sampleId));
 
