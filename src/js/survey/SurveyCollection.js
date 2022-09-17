@@ -202,11 +202,21 @@ export default class SurveyCollection extends React.Component {
     }
   };
 
-  sumAnsweredQuestionsPerSample = (answeredQuestions, sampleId) =>
+  sumAnsweredQuestionsPerSample = (answeredQuestions, sampleId) => (
     Object.entries(answeredQuestions).reduce((acc, [qId, aq]) => {
-      const answeredVal = Number(aq.answered.find((ans) => ans.sampleId === sampleId).answerText);
+      const answer = aq.answered.find((ans) => ans.sampleId === sampleId);
+      const answeredVal = Number(answer.answerText || aq.answers[answer.answerId].answer || 0)
       return acc + answeredVal;
-    }, 0);
+    }, 0));
+
+  getAnsweredQuestions = (ruleQuestions, questionIdToSet) =>
+
+    filterObject(this.props.surveyQuestions, ([sqId, sq]) => {
+      const numSqId = Number(sqId);
+      return (
+        ruleQuestions.includes(numSqId) && sq.answered.length > 0 && numSqId !== questionIdToSet
+      );
+    });
 
   getAnsweredQuestions = (ruleQuestions, questionIdToSet) =>
     filterObject(this.props.surveyQuestions, ([sqId, sq]) => {
@@ -216,9 +226,6 @@ export default class SurveyCollection extends React.Component {
       );
     });
 
-    sumAnsweredQuestionsPerSample = (answeredQuestions, sampleId) =>
-                    ans.sampleId === sampleId).answerText);
-            .reduce((acc, [qId, aq]) => {
   getAnsweredSampleIds = (answeredQuestions) =>
     mapObjectArray(answeredQuestions, ([_sqId, aq]) => aq.answered.map((a) => a.sampleId));
 
@@ -236,6 +243,7 @@ export default class SurveyCollection extends React.Component {
             .map((sampleId) => this.sumAnsweredQuestionsPerSample(answeredQuestions, sampleId))
             .find((s) => s + answerVal !== surveyRule.validSum);
           if (invalidSum || invalidSum === 0) {
+
             const { question } = this.props.surveyQuestions[questionIdToSet];
             return `Sum of answers validation failed.\r\n\nSum for questions [${surveyRule.questionIds
               .map((q) => this.getSurveyQuestionText(q))
@@ -259,6 +267,7 @@ export default class SurveyCollection extends React.Component {
   checkRuleMatchingSums = (surveyRule, questionIdToSet, answerId, answerText) => {
     const answerVal =
       Number(answerText) || Number(this.getSurveyAnswerText(questionIdToSet, answerId));
+
     if (surveyRule.questionIds1.concat(surveyRule.questionIds2).includes(questionIdToSet)) {
       const answeredQuestions1 = this.getAnsweredQuestions(
         surveyRule.questionIds1,
@@ -295,6 +304,7 @@ export default class SurveyCollection extends React.Component {
             .find((sums) => sums[0] + q1Value !== sums[1] + q2Value);
           if (invalidSum) {
             const { question } = this.props.surveyQuestions[questionIdToSet];
+
             return (
               "Matching sums validation failed.\r\n\n" +
               `Totals of the question sets [${surveyRule.questionIds1
