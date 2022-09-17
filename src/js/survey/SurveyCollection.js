@@ -243,13 +243,12 @@ export default class SurveyCollection extends React.Component {
             .map((sampleId) => this.sumAnsweredQuestionsPerSample(answeredQuestions, sampleId))
             .find((s) => s + answerVal !== surveyRule.validSum);
           if (invalidSum || invalidSum === 0) {
-
             const { question } = this.props.surveyQuestions[questionIdToSet];
             return `Sum of answers validation failed.\r\n\nSum for questions [${surveyRule.questionIds
               .map((q) => this.getSurveyQuestionText(q))
               .toString()}] must be ${surveyRule.validSum.toString()}.\r\n\nAn acceptable answer for "${question}" is ${(
-              surveyRule.validSum - invalidSum
-            ).toString()}.`;
+                surveyRule.validSum - invalidSum
+              ).toString()}.`;
           } else {
             return null;
           }
@@ -267,7 +266,6 @@ export default class SurveyCollection extends React.Component {
   checkRuleMatchingSums = (surveyRule, questionIdToSet, answerId, answerText) => {
     const answerVal =
       Number(answerText) || Number(this.getSurveyAnswerText(questionIdToSet, answerId));
-
     if (surveyRule.questionIds1.concat(surveyRule.questionIds2).includes(questionIdToSet)) {
       const answeredQuestions1 = this.getAnsweredQuestions(
         surveyRule.questionIds1,
@@ -304,14 +302,13 @@ export default class SurveyCollection extends React.Component {
             .find((sums) => sums[0] + q1Value !== sums[1] + q2Value);
           if (invalidSum) {
             const { question } = this.props.surveyQuestions[questionIdToSet];
-
             return (
               "Matching sums validation failed.\r\n\n" +
               `Totals of the question sets [${surveyRule.questionIds1
                 .map((q) => this.getSurveyQuestionText(q))
                 .toString()}] and [${surveyRule.questionIds2
-                .map((q) => this.getSurveyQuestionText(q))
-                .toString()}] do not match.\r\n\n` +
+                  .map((q) => this.getSurveyQuestionText(q))
+                  .toString()}] do not match.\r\n\n` +
               `An acceptable answer for "${question}" is ${Math.abs(
                 invalidSum[0] - invalidSum[1]
               )}.`
@@ -448,11 +445,10 @@ export default class SurveyCollection extends React.Component {
                 id="top-select"
                 onClick={() => this.setSurveyQuestionTree(i)}
                 style={{
-                  boxShadow: `${
-                    i === this.state.currentNodeIndex
-                      ? "0 0 4px 2px rgba(0, 0, 0, 1), "
-                      : "0 0 2px 1px rgba(0, 0, 0, 0.1), "
-                  }
+                  boxShadow: `${i === this.state.currentNodeIndex
+                    ? "0 0 4px 2px rgba(0, 0, 0, 1), "
+                    : "0 0 2px 1px rgba(0, 0, 0, 0.1), "
+                    }
                                         ${this.getTopColor(nodeId)}`,
                 }}
                 title={removeEnumerator(this.getNodeById(nodeId).question)}
