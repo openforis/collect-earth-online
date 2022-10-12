@@ -1,7 +1,5 @@
 # GitHub URL: https://github.com/giswqs/qgis-earthengine-examples/tree/master/inputs.py
 
-from ctypes import Union
-from typing import Optional
 import ee
 
 
@@ -275,11 +273,12 @@ def filterRegion(collection, region=None):
     else:
         return collection.filterBounds(region)
 
-def mergeLandsatCols(baseCollection, newCollection, start, end, region, func):
+def mergeLandsatCols(baseCollection, newCollection, start, end, region, func=None):
     filteredNewCollection = filterRegion(newCollection, region).filterDate(start, end)
     filteredNewCollectionSize = filteredNewCollection.toList(1).size().getInfo()
     if filteredNewCollectionSize > 0:
-        filteredNewCollection = filteredNewCollection.map(func, True)
+        if func:
+            filteredNewCollection = filteredNewCollection.map(func, True)
         baseCollection = baseCollection.merge(filteredNewCollection)
 
     return baseCollection
@@ -414,12 +413,12 @@ def getSentinel2Toa(options):
     if options is None:
         return "Error"
     
-    region:Union[ee.Geometry,None] = options.get('region',None)
-    adjustBands:bool = options.get('bandPassAdjustment', False)
-    start:str = options.get('start','2015-06-23')
-    end:str = options.get('end','2025-01-01')
-    startDOY:int = options.get('startDOY',1)
-    endDOY:int = options.get('endDOY',1)
+    region = options.get('region',None)
+    adjustBands = options.get('bandPassAdjustment', False)
+    start = options.get('start','2015-06-23')
+    end = options.get('end','2025-01-01')
+    startDOY = options.get('startDOY',1)
+    endDOY = options.get('endDOY',1)
     
     
     s2 = ee.ImageCollection('COPERNICUS/S2_HARMONIZED').map(prepareSentinel2Toa)
@@ -531,18 +530,21 @@ def prepareLsToa(image):
 
     return image.updateMask(mask)
 
-def getLandsatToa(startDate, endDate, geometry=None):
+def getLandsatToa(startDate, endDate, geometry=None, cloudFilter=60):
+    # note: Excluding tier 2 TOA imagery because it has poor quality, but
+    # leaving code commented out encase we choose to reinstate using
+    # tier 2 imagery.
     collectionIds = {
         'LANDSAT/LC09/C02/T1_TOA' : LANDSAT_BAND_DICT['L9'],
-        'LANDSAT/LC09/C02/T2_TOA' : LANDSAT_BAND_DICT['L9'],
         'LANDSAT/LC08/C02/T1_TOA' : LANDSAT_BAND_DICT['L8'],
-        'LANDSAT/LC08/C02/T2_TOA' : LANDSAT_BAND_DICT['L8'],
         'LANDSAT/LE07/C02/T1_TOA' : LANDSAT_BAND_DICT['L7'],
-        'LANDSAT/LE07/C02/T2_TOA' : LANDSAT_BAND_DICT['L7'],
         'LANDSAT/LT05/C02/T1_TOA' : LANDSAT_BAND_DICT['L5'],
-        'LANDSAT/LT05/C02/T2_TOA' : LANDSAT_BAND_DICT['L5'],
         'LANDSAT/LT04/C02/T1_TOA' : LANDSAT_BAND_DICT['L4'],
-        'LANDSAT/LT04/C02/T2_TOA' : LANDSAT_BAND_DICT['L4'],
+        # 'LANDSAT/LC09/C02/T2_TOA' : LANDSAT_BAND_DICT['L9'],
+        # 'LANDSAT/LC08/C02/T2_TOA' : LANDSAT_BAND_DICT['L8'],
+        # 'LANDSAT/LE07/C02/T2_TOA' : LANDSAT_BAND_DICT['L7'],
+        # 'LANDSAT/LT05/C02/T2_TOA' : LANDSAT_BAND_DICT['L5'],
+        # 'LANDSAT/LT04/C02/T2_TOA' : LANDSAT_BAND_DICT['L4'],
     }
 
 
@@ -552,7 +554,7 @@ def getLandsatToa(startDate, endDate, geometry=None):
         bands = bands + ['QA_PIXEL']
         readableBands = LANDSAT_BAND_NAMES + ['QA_PIXEL']
 
-        tmpCollection = ee.ImageCollection(name).select(bands, readableBands)
+        tmpCollection = ee.ImageCollection(name).select(bands, readableBands).filter(ee.Filter.lt('CLOUD_COVER', cloudFilter))
         collection = mergeLandsatCols(collection, tmpCollection, startDate, endDate, geometry, prepareLsToa)
     
     collection = doIndices(collection)

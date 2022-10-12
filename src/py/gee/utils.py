@@ -234,48 +234,35 @@ def filteredImageByIndexToMapId(startDate, endDate, index):
         return filteredImageNDWIToMapId(startDate, endDate)
 
 
-def filteredImageCompositeToMapId(assetId, visParams, startDate, endDate, metadataCloudCoverMax, simpleCompositeVariable):
-    eeCollection = ee.ImageCollection(assetId)
-    if (startDate and endDate):
-        eeCollection = eeCollection.filterDate(startDate, endDate)
-    eeCollection.filterMetadata(
+def filteredImageCompositeToMapId(eeCollection, visParams, metadataCloudCoverMax):
+    # todo: rename, this is only used for landsat
+    eeCollection = eeCollection.filterMetadata(
         'CLOUD_COVER',
         'less_than',
         metadataCloudCoverMax
-    )
-    eeMosaicImage = ee.Algorithms.Landsat.simpleComposite(
-        eeCollection,
-        simpleCompositeVariable,
-        10,
-        40,
-        True
-    )
+        )
+    eeMosaicImage = medoid(eeCollection,  ['BLUE', 'GREEN', 'RED', 'NIR', 'SWIR1', 'SWIR2'])
+
+    return imageToMapId(eeMosaicImage, visParams)
+
+
+def filteredNicfiCompositeToMapId(eeCollection, visParams):
+    eeMosaicImage = medoid(eeCollection,  ['B','G','R','N'])
+
     return imageToMapId(eeMosaicImage, visParams)
 
 
 def filteredSentinelComposite(visParams, startDate, endDate, metadataCloudCoverMax):
-    def cloudScore(img):
-        def rescale(img, exp, thresholds):
-            return img.expression(exp, {'img': img}).subtract(thresholds[0]).divide(thresholds[1] - thresholds[0])
-
-        score = ee.Image(1.0)
-        score = score.min(rescale(img, 'img.B2', [0.1, 0.3]))
-        score = score.min(rescale(img, 'img.B4 + img.B3 + img.B2', [0.2, 0.8]))
-        score = score.min(
-            rescale(img, 'img.B8 + img.B11 + img.B12', [0.3, 0.8]))
-        ndsi = img.normalizedDifference(['B3', 'B11'])
-        return score.min(rescale(ndsi, 'img', [0.8, 0.6]))
-
-    def cloudScoreS2(img):
+    def scaleAndCloudScore(img):
         rescale = img.divide(10000)
-        score = cloudScore(rescale).multiply(100).rename('cloudscore')
+        score = ee.Image(1).subtract(cloudScoreSentinel2(rescale)).rename('cloudscore')
         return img.addBands(score)
 
     sentinel2 = ee.ImageCollection('COPERNICUS/S2')
     f2017s2 = sentinel2.filterDate(startDate, endDate).filterMetadata(
         'CLOUDY_PIXEL_PERCENTAGE', 'less_than', metadataCloudCoverMax)
-    m2017s2 = f2017s2.map(cloudScoreS2)
-    m2017s3 = m2017s2.median()
+    m2017s2 = f2017s2.map(scaleAndCloudScore)
+    m2017s3 = m2017s2.qualityMosaic('cloudscore')
     return imageToMapId(m2017s3, visParams)
 
 
@@ -302,6 +289,54 @@ def filteredSentinelSARComposite(visParams, startDate, endDate):
     median = sentinel1.median()
     return imageToMapId(median, visParams)
 
+
+def cloudScoreLandsat(img):
+    def rescale(img, exp, thresholds):
+        return img.expression(exp, {'img': img}).subtract(thresholds[0]).divide(thresholds[1] - thresholds[0])
+
+    score = ee.Image(1.0)
+    score = score.min(rescale(img, 'img.BLUE', [0.1, 0.3]))
+    score = score.min(rescale(img, 'img.RED + img.GREEN + img.BLUE', [0.2, 0.8]))
+    score = score.min(
+        rescale(img, 'img.NIR + img.SWIR1 + img.SWIR2', [0.3, 0.8]))
+    # // Clouds are reasonably cool in temperature.
+    score = score.min(rescale(img, 'img.TEMP', [300, 290]))
+    ndsi = img.normalizedDifference(['GREEN', 'SWIR1'])
+    score = score.min(rescale(ndsi, 'img', [0.8, 0.6]))
+    score = ee.Image(1).subtract(score).rename('cloudscore')
+
+    return img.addBands(score)
+
+
+def cloudScoreSentinel2(img):
+    def rescale(img, exp, thresholds):
+        return img.expression(exp, {'img': img}).subtract(thresholds[0]).divide(thresholds[1] - thresholds[0])
+
+    score = ee.Image(1.0)
+    score = score.min(rescale(img, 'img.B2', [0.1, 0.3]))
+    score = score.min(rescale(img, 'img.B4 + img.B3 + img.B2', [0.2, 0.8]))
+    score = score.min(
+        rescale(img, 'img.B8 + img.B11 + img.B12', [0.3, 0.8]))
+    ndsi = img.normalizedDifference(['B3', 'B11'])
+    return score.min(rescale(ndsi, 'img', [0.8, 0.6]))
+
+
+def medoid(collection, distance_bands):
+    def prepareMedoid(image):
+        return (image.addBands(image.expression(
+            'pow(image - median, 2)', {
+                'image':image.select(distance_bands),
+                'median': collection.select(distance_bands).median()
+                })
+            .reduce(ee.Reducer.sum())
+            .sqrt()
+            .multiply(-1)
+            .rename('distanceToMedian')
+            )
+        )
+    return collection.map(prepareMedoid).qualityMosaic('distanceToMedian')
+
+    
 ########## Time Series ##########
 
 
