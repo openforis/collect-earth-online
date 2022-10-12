@@ -43,6 +43,7 @@
    "degradationTileUrl"     gee/degradationTileUrl
    "featureCollection"      gee/featureCollection
    "filteredLandsat"        gee/filteredLandsat
+   "filteredNicfi"          gee/filteredNicfi
    "filteredSentinel2"      gee/filteredSentinel2
    "filteredSentinelSAR"    gee/filteredSentinelSAR
    "getAvailableBands"      gee/getAvailableBands

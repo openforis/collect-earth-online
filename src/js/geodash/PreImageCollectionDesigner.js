@@ -10,36 +10,66 @@ import {EditorContext} from "./constants";
 export default function PreImageCollectionDesigner({isDual = false, prefixPath = ""}) {
     const {getWidgetDesign} = useContext(EditorContext);
     const currentIndex = getWidgetDesign("indexName", prefixPath);
+    const currentSourceType = getWidgetDesign("sourceType", prefixPath);
+    const currentSourceName = getWidgetDesign("sourceName", prefixPath);
     const availableBands = {
-        "LANDSAT5": "B1, B2, B3, B4, B5, B6, B7, BQA",
-        "LANDSAT7": "B1, B2, B3, B4, B5, B6_VCID_1, B6_VCID_2, B7, B8, BQA",
-        "LANDSAT8": "B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, BQA",
-        "Sentinel2": "B1, B2, B3, B4, B5, B6, B7, B8, B8A, B9, B10, B11, B12, QA10, QA20, QA60"
+        "Landsat": "BLUE, GREEN,RED, NIR, SWIR1, TEMP, SWIR2",
+        "Sentinel2": "Aerosols, BLUE, GREEN, RED, RED_EDGE_1, RED_EDGE_2, RED_EDGE_3, NIR, RED_EDGE_4, WATER_VAPOR, CIRRUS, SWIR1, SWIR2",
+        "NICFI": " R, G, B, N"
     };
 
     return (
         <>
             {!isDual && <BasemapSelector/>}
             <GDSelect
-                dataKey="indexName"
-                items={[
-                    "NDVI",
-                    "EVI",
-                    "EVI 2",
-                    "NDMI",
-                    "NDWI",
-                    "LANDSAT 5",
-                    "LANDSAT 7",
-                    "LANDSAT 8",
-                    "Sentinel-2"]}
+                dataKey="sourceName"
+                items={["Landsat", "Sentinel-2", "NICFI"]}
                 prefixPath={prefixPath}
-                title="Data Type"
+                title="Imagery Source"
+            />
+            <GDSelect
+                dataKey="sourceType"
+                items={["Index", "Composite"]}
+                prefixPath={prefixPath}
+                title="Imagery Source Type"
             />
             <GDDateRange prefixPath={prefixPath}/>
-            {["LANDSAT5", "LANDSAT7", "LANDSAT8", "Sentinel2"].includes(currentIndex) && (
+            { ["Index", undefined].includes(currentSourceType) && (
+                getWidgetDesign("sourceName") === "Landsat" ? (
+                    <GDSelect
+                        dataKey="indexName"
+                        items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI"]}
+                        prefixPath={prefixPath}
+                        title="Band to graph"
+                    />
+                ) : getWidgetDesign("sourceName") === "NICFI" ? (
+                    <GDSelect
+                        dataKey="indexName"
+                        items={["NDVI", "R", "G", "B", "N"]}
+                        prefixPath={prefixPath}
+                        title="Band to graph"
+                    />
+                ) : getWidgetDesign("sourceName") === "Sentinel2" ? (
+                    <GDSelect
+                        dataKey="indexName"
+                        items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI"]}
+                        prefixPath={prefixPath}
+                        title="Band to graph"
+                    />
+                ) : (
+                    // default undefined is Landsat.
+                    <GDSelect
+                        dataKey="indexName"
+                        items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI"]}
+                        prefixPath={prefixPath}
+                        title="Band to graph"
+                    />
+                )
+            )}
+            {["Composite"].includes(currentSourceType) && (
                 <>
-                    <label>Available Bands</label>
-                    <label>{availableBands[currentIndex]}</label>
+                    <label>Available Bands: </label>
+                    <label>{availableBands[currentSourceName]}</label>
                     <GDInput
                         dataKey="bands"
                         placeholder="XX,XX,XX"
