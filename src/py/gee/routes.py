@@ -120,7 +120,8 @@ def imageCollectionByIndex(requestDict):
     values = filteredImageByIndexToMapId(
         getDefault(requestDict, 'startDate', '1990-01-01'),
         getDefault(requestDict, 'endDate', '2100-01-01'),
-        getDefault(requestDict, 'indexName')
+        getDefault(requestDict, 'indexName'),
+        getDefault(requestDict, 'sourceName')
     )
     return values
 

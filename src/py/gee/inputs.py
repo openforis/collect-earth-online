@@ -108,7 +108,7 @@ def calcEVI2(image):
         {
             'B4': image.select('NIR'),
             'B3': image.select('RED')
-        })
+        }).rename('EVI2')
     return evi2
 
 
@@ -418,7 +418,7 @@ def getSentinel2Toa(options):
     start = options.get('start','2015-06-23')
     end = options.get('end','2025-01-01')
     startDOY = options.get('startDOY',1)
-    endDOY = options.get('endDOY',1)
+    endDOY = options.get('endDOY',365)
     
     
     s2 = ee.ImageCollection('COPERNICUS/S2_HARMONIZED').map(prepareSentinel2Toa)
@@ -429,7 +429,10 @@ def getSentinel2Toa(options):
     s2 = filterRegion(s2, region).filterDate(start, end) \
         .filter(ee.Filter.dayOfYear(startDOY, endDOY))
     
-    return s2
+    # note: indices includes TC and NDFI which are not Sentinel2 corrected
+    # they are not selectable anywhere but this should be refactored at some
+    # point.
+    return doIndices(s2)
 
 def getS1(options):
     if options is None:

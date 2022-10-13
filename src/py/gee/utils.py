@@ -175,63 +175,74 @@ def getLandSatMergedCollection(startDate, endDate):
     return ls.merge(s2)
 
 
-def filteredImageNDVIToMapId(startDate, endDate):
-    eeCollection = getLandSatMergedCollection(startDate, endDate)
+def filteredImageNDVIToMapId(startDate, endDate, source):
+    eeCollection = filteredCollectionBySourceName(startDate, endDate, source)
     colorPalette = 'c9c0bf,435ebf,eee8aa,006400'
     visParams = {'opacity': 1, 'max': 1,
                  'min': -1, 'palette': colorPalette}
-    eviImage = ee.Image(eeCollection.map(calcNDVI).mean())
-    return imageToMapId(eviImage, visParams)
+    image = eeCollection.select('NDVI').mean()
+    return imageToMapId(image, visParams)
 
 
-def filteredImageEVIToMapId(startDate, endDate):
-    eeCollection = getLandSatMergedCollection(startDate, endDate)
+def filteredImageEVIToMapId(startDate, endDate, source):
+    eeCollection = filteredCollectionBySourceName(startDate, endDate, source)
     colorPalette = 'F5F5F5,E6D3C5,C48472,B9CF63,94BF3D,6BB037,42A333,00942C,008729,007824,004A16'
     visParams = {'opacity': 1, 'max': 1,
                  'min': -1, 'palette': colorPalette}
-    eviImage = ee.Image(eeCollection.map(calcEVI).mean())
-    return imageToMapId(eviImage, visParams)
+    image = eeCollection.select('EVI').mean()
+    return imageToMapId(image, visParams)
 
 
-def filteredImageEVI2ToMapId(startDate, endDate):
-    eeCollection = getLandSatMergedCollection(startDate, endDate)
+def filteredImageEVI2ToMapId(startDate, endDate, source):
+    eeCollection = filteredCollectionBySourceName(startDate, endDate, source)
     colorPalette = 'F5F5F5,E6D3C5,C48472,B9CF63,94BF3D,6BB037,42A333,00942C,008729,007824,004A16'
     visParams = {'opacity': 1, 'max': 1,
                  'min': -1, 'palette': colorPalette}
-    eviImage = ee.Image(eeCollection.map(calcEVI2).mean())
-    return imageToMapId(eviImage, visParams)
+    image = eeCollection.select('EVI2').mean()
+    return imageToMapId(image, visParams)
 
 
-def filteredImageNDMIToMapId(startDate, endDate):
-    eeCollection = getLandSatMergedCollection(startDate, endDate)
+def filteredImageNDMIToMapId(startDate, endDate, source):
+    eeCollection = filteredCollectionBySourceName(startDate, endDate, source)
     colorPalette = '0000FE,2E60FD,31B0FD,00FEFE,50FE00,DBFE66,FEFE00,FFBB00,FF6F00,FE0000'
     visParams = {'opacity': 1, 'max': 1,
                  'min': -1, 'palette': colorPalette}
-    eviImage = ee.Image(eeCollection.map(calcNDMI).mean())
-    return imageToMapId(eviImage, visParams)
+    image = eeCollection.select('NDMI').mean()
+    return imageToMapId(image, visParams)
 
 
-def filteredImageNDWIToMapId(startDate, endDate):
-    eeCollection = getLandSatMergedCollection(startDate, endDate)
+def filteredImageNDWIToMapId(startDate, endDate, source):
+    eeCollection = filteredCollectionBySourceName(startDate, endDate, source)
     colorPalette = '505050,E8E8E8,00FF33,003300'
     visParams = {'opacity': 1, 'max': 1,
                  'min': -1, 'palette': colorPalette}
-    eviImage = ee.Image(eeCollection.map(calcNDWI).mean())
-    return imageToMapId(eviImage, visParams)
+    image = eeCollection.select('NDWI').mean()
+    return imageToMapId(image, visParams)
 
+def filteredCollectionBySourceName(startDate, endDate, source):
+    collection = None
+    if source == 'landsat':
+        collection = getLandsatToa(**{'startDate':startDate, 'endDate':endDate})
+    elif source == 'sentinel2':
+        collection =  getSentinel2Toa({'start':startDate, 'end':endDate})
+    elif source == 'nicfi':
+        collection = getNICFI({'start':startDate, 'end':endDate})
+    
+    return collection
 
-def filteredImageByIndexToMapId(startDate, endDate, index):
+def filteredImageByIndexToMapId(startDate, endDate, index, source):
     lowerIndex = index.lower()
+    lowerSource = source.lower()
     if (lowerIndex == 'ndvi'):
-        return filteredImageNDVIToMapId(startDate, endDate)
+        return filteredImageNDVIToMapId(startDate, endDate, lowerSource)
     elif (lowerIndex == 'evi'):
-        return filteredImageEVIToMapId(startDate, endDate)
+        return filteredImageEVIToMapId(startDate, endDate, lowerSource)
     elif (lowerIndex == 'evi2'):
-        return filteredImageEVI2ToMapId(startDate, endDate)
+        return filteredImageEVI2ToMapId(startDate, endDate, lowerSource)
     elif (lowerIndex == 'ndmi'):
-        return filteredImageNDMIToMapId(startDate, endDate)
+        return filteredImageNDMIToMapId(startDate, endDate, lowerSource)
     elif (lowerIndex == 'ndwi'):
-        return filteredImageNDWIToMapId(startDate, endDate)
+        return filteredImageNDWIToMapId(startDate, endDate, lowerSource)
 
 
 def filteredImageCompositeToMapId(eeCollection, visParams, metadataCloudCoverMax):
@@ -256,7 +267,7 @@ def filteredSentinelComposite(visParams, startDate, endDate, metadataCloudCoverM
     def scaleAndCloudScore(img):
         rescale = img.divide(10000)
         score = ee.Image(1).subtract(cloudScoreSentinel2(rescale)).rename('cloudscore')
-        return img.addBands(score)
+        return rescale.addBands(score)
 
     sentinel2 = ee.ImageCollection('COPERNICUS/S2')
     f2017s2 = sentinel2.filterDate(startDate, endDate).filterMetadata(
