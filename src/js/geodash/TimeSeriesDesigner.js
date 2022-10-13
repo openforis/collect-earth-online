@@ -58,7 +58,7 @@ export default function TimeSeriesDesigner() {
             placeholder="LANDSAT/LC8_L1T_TOA"
             title="GEE Image Collection Asset ID"
             onBlur={() => getBandsFromGateway(setBands, assetId, assetType)}
-            onKeyPress={(e) =>
+            onKeyDown={(e) =>
               e.key === "Enter" && getBandsFromGateway(setBands, assetId, assetType)
             }
           />

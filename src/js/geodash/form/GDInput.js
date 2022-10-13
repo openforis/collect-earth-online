@@ -8,7 +8,7 @@ export default function GDInput({
   dataKey,
   disabled,
   prefixPath = "",
-  onKeyPress,
+  onKeyDown,
   onBlur,
 }) {
   const { setWidgetDesign, getWidgetDesign } = useContext(EditorContext);
@@ -16,15 +16,15 @@ export default function GDInput({
     <div className="form-group">
       <label htmlFor={dataKey}>{title}</label>
       <input
-        className="form-control"
         disabled={disabled}
         id={dataKey}
+        onBlur={onBlur}
         onChange={(e) => setWidgetDesign(dataKey, e.target.value, prefixPath)}
+        onKeyDown={onKeyDown}
         placeholder={placeholder}
         type="text"
         value={getWidgetDesign(dataKey, prefixPath)}
-        onKeyPress={onKeyPress}
-        onBlur={onBlur}
+        className="form-control"
       />
     </div>
   );
