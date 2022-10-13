@@ -1,17 +1,7 @@
 {
-    "collection": [
-        "en"
-    ],
-    "create-imagery": [
-        "en"
-    ],
-    "create-project": [
-        "en"
-    ],
-    "home": [
-        "en"
-    ],
-    "review-institution": [
-        "en"
-    ]
+  "collection": ["en"],
+  "create-imagery": ["en"],
+  "create-project": ["en"],
+  "home": ["en"],
+  "review-institution": ["en"]
 }

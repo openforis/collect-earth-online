@@ -518,18 +518,71 @@ def getDegradationPlotsByPoint(geometry, start, end, band):
 
 def getStatistics(extent):
     extentGeom = ee.Geometry.Polygon(extent)
-    elev = ee.Image('USGS/GTOPO30')
-    minmaxElev = elev.reduceRegion(
-        ee.Reducer.minMax(), extentGeom, 0.1, bestEffort=True, maxPixels=500000000)
-    minElev = minmaxElev.get('elevation_min').getInfo()
-    maxElev = minmaxElev.get('elevation_max').getInfo()
-    ciesinPopGrid = ee.Image('CIESIN/GPWv4/population-count/2020')
-    popDict = ciesinPopGrid.reduceRegion(
-        ee.Reducer.sum(), extentGeom, maxPixels=500000000)
-    pop = popDict.get('population-count').getInfo()
-    pop = int(pop)
-    return {
-        'minElev': minElev,
-        'maxElev': maxElev,
-        'pop': pop
-    }
+    elevation = ee.Image('USGS/GTOPO30')
+    population = ee.ImageCollection("CIESIN/GPWv411/GPW_Population_Count").sort('system:time_start',False).first()
+
+    def reduceElev():
+        minmaxElev = elevation.reduceRegion(**{
+            'reducer':ee.Reducer.minMax(),
+            'geometry' :extentGeom, 
+            'scale':30,
+            'bestEffort':True, 
+            'maxPixels':1e13
+            
+        })
+
+        return ee.Dictionary({
+            'minElev': minmaxElev.get('elevation_min'),
+            'maxElev': minmaxElev.get('elevation_max'),
+        })
+    
+    def reducePop ():
+        popDict = population.reduceRegion(**{
+            'reducer':ee.Reducer.sum().unweighted(),
+            'geometry': extentGeom, 
+            'maxPixels':1e13,
+            'scale':927.67  
+        })
+        pop = ee.Number(popDict.get('population_count')).int()
+        return ee.Dictionary({'pop':pop})
+
+    def sampleElve():
+        centriod = extentGeom.centroid(1)
+        sampleElv =  elevation.reduceRegion(**{
+            'reducer':ee.Reducer.first(),
+            'geometry': centriod, 
+            'maxPixels':1e13,
+            'scale':30  
+        })
+        return ee.Dictionary({
+            'minElev': sampleElv.get('elevation'),
+            'maxElev': sampleElv.get('elevation'),
+        })
+
+    def samplePop():
+        centriod = extentGeom.centroid(1)
+        sample = population.reduceRegion(**{
+            'reducer':ee.Reducer.first(),
+            'geometry': centriod, 
+            'maxPixels':1e13,
+            'scale':927.67  
+        })
+        pop = ee.Number(sample.get('population_count')).int()
+        return ee.Dictionary({'pop':pop})
+
+    # ~900m = 30m2
+    conditionSampleElev = extentGeom.area(1).lt(900).getInfo()
+    # ~859,329m = 927.67m2
+    conditionSamplePop = extentGeom.area(1).lt(860000).getInfo()
+    
+    if conditionSampleElev:
+        elevationResults = sampleElve()
+    else:
+        elevationResults = reduceElev()
+    
+    if conditionSamplePop:
+        populationResults = samplePop()
+    else:
+        populationResults = reducePop()
+
+    return elevationResults.combine(populationResults).getInfo()
