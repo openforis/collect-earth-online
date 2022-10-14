@@ -8,8 +8,8 @@ export default function GDInput({
   dataKey,
   disabled,
   prefixPath = "",
-  onKeyDown,
-  onBlur,
+  onKeyDown = () => {},
+  onBlur = () => {},
 }) {
   const { setWidgetDesign, getWidgetDesign } = useContext(EditorContext);
   return (

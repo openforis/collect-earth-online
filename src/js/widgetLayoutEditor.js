@@ -96,6 +96,8 @@ class WidgetLayoutEditor extends React.PureComponent {
           basemapId: "-1",
           endDate: "",
           indexName: "NDVI",
+          sourceName: "Landsat",
+          sourceType: "Index",
           startDate: "",
         },
         WidgetDesigner: PreImageCollectionDesigner,
