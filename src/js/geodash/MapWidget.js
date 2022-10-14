@@ -101,16 +101,16 @@ export default class MapWidget extends React.Component {
       const { visiblePlotId } = this.props;
       return { path: "featureCollection", matchID: visiblePlotId, ...widget };
     } else if (widget.type === "preImageCollection") {
-        const {sourceName} = widget;
-        const {sourceType} = widget;
-        const path = sourceType === "Composite" && sourceName === "Landsat"
-            ? "filteredLandsat"
-            : sourceType === "Composite" && sourceName === "Sentinel2"
-                ? "filteredSentinel2"
-                : sourceType === "Composite" && sourceName === "NICFI"
-                    ? "filteredNicfi"
-                    : "imageCollectionByIndex";
-        return {path, ...widget};
+      const { sourceName, sourceType } = widget;
+      const sourceNameToPath = {
+        Landsat: "filteredLandsat",
+        Sentinel2: "filteredSentinel2",
+        NICFI: "filteredNicfi",
+      };
+      const path =
+        (sourceType === "Composite" && sourceNameToPath[sourceName]) || "imageCollectionByIndex";
+
+      return { path, ...widget };
     } else if (widget.type === "imageCollectionAsset") {
       return { path: "imageCollection", ...widget };
     } else {

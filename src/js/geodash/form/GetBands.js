@@ -11,7 +11,7 @@ export default function GetBands({ bands, setBands, assetId, assetType, hideLabe
         <label>Available Bands</label>
         <button
           className="btn btn-sm btn-secondary mb-1"
-          onClick={getBandsFromGateway(setBands, assetId, assetType)}
+          onClick={() => getBandsFromGateway(setBands, assetId, assetType)}
           title="Refresh Available Bands"
           type="button"
         >

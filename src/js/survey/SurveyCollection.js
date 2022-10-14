@@ -202,15 +202,14 @@ export default class SurveyCollection extends React.Component {
     }
   };
 
-  sumAnsweredQuestionsPerSample = (answeredQuestions, sampleId) => (
+  sumAnsweredQuestionsPerSample = (answeredQuestions, sampleId) =>
     Object.entries(answeredQuestions).reduce((acc, [qId, aq]) => {
       const answer = aq.answered.find((ans) => ans.sampleId === sampleId);
-      const answeredVal = Number(answer.answerText || aq.answers[answer.answerId].answer || 0)
+      const answeredVal = Number(answer.answerText || aq.answers[answer.answerId].answer || 0);
       return acc + answeredVal;
-    }, 0));
+    }, 0);
 
   getAnsweredQuestions = (ruleQuestions, questionIdToSet) =>
-
     filterObject(this.props.surveyQuestions, ([sqId, sq]) => {
       const numSqId = Number(sqId);
       return (
@@ -247,8 +246,8 @@ export default class SurveyCollection extends React.Component {
             return `Sum of answers validation failed.\r\n\nSum for questions [${surveyRule.questionIds
               .map((q) => this.getSurveyQuestionText(q))
               .toString()}] must be ${surveyRule.validSum.toString()}.\r\n\nAn acceptable answer for "${question}" is ${(
-                surveyRule.validSum - invalidSum
-              ).toString()}.`;
+              surveyRule.validSum - invalidSum
+            ).toString()}.`;
           } else {
             return null;
           }
@@ -307,8 +306,8 @@ export default class SurveyCollection extends React.Component {
               `Totals of the question sets [${surveyRule.questionIds1
                 .map((q) => this.getSurveyQuestionText(q))
                 .toString()}] and [${surveyRule.questionIds2
-                  .map((q) => this.getSurveyQuestionText(q))
-                  .toString()}] do not match.\r\n\n` +
+                .map((q) => this.getSurveyQuestionText(q))
+                .toString()}] do not match.\r\n\n` +
               `An acceptable answer for "${question}" is ${Math.abs(
                 invalidSum[0] - invalidSum[1]
               )}.`
@@ -445,10 +444,11 @@ export default class SurveyCollection extends React.Component {
                 id="top-select"
                 onClick={() => this.setSurveyQuestionTree(i)}
                 style={{
-                  boxShadow: `${i === this.state.currentNodeIndex
-                    ? "0 0 4px 2px rgba(0, 0, 0, 1), "
-                    : "0 0 2px 1px rgba(0, 0, 0, 0.1), "
-                    }
+                  boxShadow: `${
+                    i === this.state.currentNodeIndex
+                      ? "0 0 4px 2px rgba(0, 0, 0, 1), "
+                      : "0 0 2px 1px rgba(0, 0, 0, 0.1), "
+                  }
                                         ${this.getTopColor(nodeId)}`,
                 }}
                 title={removeEnumerator(this.getNodeById(nodeId).question)}

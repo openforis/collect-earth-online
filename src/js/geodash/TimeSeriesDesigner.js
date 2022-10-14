@@ -46,53 +46,49 @@ export default function TimeSeriesDesigner() {
 
   return (
     <>
+      <GDSelect
+        dataKey="sourceName"
+        items={["Landsat", "NICFI", "Custom"]}
+        title="Imagery Source"
+      />
+      {getWidgetDesign("sourceName") === "Landsat" && (
         <GDSelect
-            dataKey="sourceName"
-            items={["Landsat", "NICFI", "Custom"]}
-            title="Imagery Source"
+          dataKey="indexName"
+          items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI"]}
+          title="Band to graph"
         />
-        {getWidgetDesign("sourceName") === "Landsat" && (
-            <GDSelect
-                dataKey="indexName"
-                items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI"]}
-                title="Band to graph"
-            />
-        )}
-        {getWidgetDesign("sourceName") === "NICFI" && (
-            <GDSelect
-                dataKey="indexName"
-                items={["NDVI", "R", "G", "B", "N"]}
-                title="Band to graph"
-            />
-        )}
-        {getWidgetDesign("sourceName") === "Custom" && (
-            <>
-                <GDInput
-                    dataKey="assetId"
-                    placeholder="LANDSAT/LC8_L1T_TOA"
-                    title="GEE Image Collection Asset ID"
-                />
-                <GetBands
-                    assetId={getWidgetDesign("assetId")}
-                    assetType="imageCollection"
-                    bands={bands}
-                    hideLabel
-                    setBands={setBands}
-                />
-                <GDSelect dataKey="band" disabled items={bands} title="Band to graph"/>
-                <GDSelect
-                    dataKey="reducer"
-                    items={["Min", "Max", "Mean", "Median", "Mode"]}
-                    title="Reducer"
-                />
-                <GDInput
-                    dataKey="scale"
-                    placeholder="30"
-                    title="Spatial scale"
-                />
-            </>
-        )}
-        <GDDateRange/>
+      )}
+      {getWidgetDesign("sourceName") === "NICFI" && (
+        <GDSelect dataKey="indexName" items={["NDVI", "R", "G", "B", "N"]} title="Band to graph" />
+      )}
+      {getWidgetDesign("sourceName") === "Custom" && (
+        <>
+          <GDInput
+            dataKey="assetId"
+            placeholder="LANDSAT/LC8_L1T_TOA"
+            title="GEE Image Collection Asset ID"
+            onBlur={() => getBandsFromGateway(setBands, assetId, assetType)}
+            onKeyDown={(e) =>
+              e.key === "Enter" && getBandsFromGateway(setBands, assetId, assetType)
+            }
+          />
+          <GetBands
+            assetId={assetId}
+            assetType="imageCollection"
+            bands={bands}
+            hideLabel
+            setBands={setBands}
+          />
+          <GDSelect dataKey="band" disabled items={bands} title="Band to graph" />
+          <GDSelect
+            dataKey="reducer"
+            items={["Min", "Max", "Mean", "Median", "Mode"]}
+            title="Reducer"
+          />
+          <GDInput dataKey="scale" placeholder="30" title="Spatial scale" />
+        </>
+      )}
+      <GDDateRange />
     </>
   );
 }

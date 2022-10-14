@@ -99,16 +99,16 @@ export default class GraphWidget extends React.Component {
     }
   };
 
- getScale = widget => {
-      if (widget.sourceName === "Landsat") {
-          return 30.0;
-      } else if (widget.sourceName === "NICFI") {
-          return 3.5;
-      } else if (widget.sourceName === "Custom") {
-          return Number(widget.scale);
-      }
+  getScale = (widget) => {
+    if (widget.sourceName === "Landsat") {
+      return 30.0;
+    } else if (widget.sourceName === "NICFI") {
+      return 3.5;
+    } else if (widget.sourceName === "Custom") {
+      return Number(widget.scale);
+    }
   };
-  
+
   loadTimeSeries = () => {
     const { widget, plotExtentPolygon } = this.props;
     const path = this.widgetIsCustom() ? "timeSeriesByAsset" : "timeSeriesByIndex";
@@ -144,7 +144,6 @@ export default class GraphWidget extends React.Component {
   };
 
   /// Helpers
-
 
   validArray = (arr) => (isArray(arr) && arr.length > 0 ? arr : null);
 
