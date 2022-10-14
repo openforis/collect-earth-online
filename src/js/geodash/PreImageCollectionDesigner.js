@@ -19,7 +19,11 @@ export default function PreImageCollectionDesigner({ isDual = false, prefixPath 
 
   const sourceName = getWidgetDesign("sourceName");
 
-  sourceToItems = { Landsat: [], NICFI: [], Sentinel2: [] };
+  const sourceToItems = {
+    Landsat: ["NDVI", "EVI", "EVI 2", "NDMI", "NDWI"],
+    NICFI: ["NDVI", "R", "G", "B", "N"],
+    Sentinel2: ["NDVI", "EVI", "EVI 2", "NDMI", "NDWI"],
+  };
 
   return (
     <>
