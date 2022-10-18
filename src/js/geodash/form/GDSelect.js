@@ -9,7 +9,7 @@ function cleanString(str) {
 
 export default function GDSelect({ title, items, dataKey, prefixPath = "" }) {
   const { setWidgetDesign, getWidgetDesign } = useContext(EditorContext);
-  const val = getWidgetDesign(dataKey, prefixPath);
+  const val = getWidgetDesign(dataKey, prefixPath) || "-1";
   return (
     <div className="form-group">
       <label htmlFor={dataKey}>{title}</label>
