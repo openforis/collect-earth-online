@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import GDDateRange from "./form/GDDateRange";
 import GDInput from "./form/GDInput";
@@ -7,42 +7,46 @@ import GetBands from "./form/GetBands";
 
 import { EditorContext } from "./constants";
 
-export const getBandsFromGateway = (setBands, assetId, assetType) => {
+export async function getBandsFromGateway(setBands, assetId, assetType) {
   if (assetId?.length) {
-    fetch("/geo-dash/gateway-request", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        path: "getAvailableBands",
-        assetId,
-        assetType,
-      }),
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then((data) => {
-        if (data.hasOwnProperty("bands")) {
-          setBands(data.bands);
-        } else if (data.hasOwnProperty("errMsg")) {
-          setBands(data.errMsg);
-        } else {
-          setBands(null);
-        }
-      })
-      .catch((error) => {
-        console.error(error);
+    try {
+      const res = await fetch("/geo-dash/gateway-request", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          path: "getAvailableBands",
+          assetId,
+          assetType,
+        }),
+      }
+      );
+      const data = await res.json();
+      if (data.hasOwnProperty("bands")) {
+        setBands(data.bands);
+      } else if (data.hasOwnProperty("errMsg")) {
+        setBands(data.errMsg);
+      } else {
         setBands(null);
-      });
-  }
-};
+      }
+    } catch (e) {
+      console.error(e);
+      setBands(null);
+    }
+  };
+}
 
 export default function TimeSeriesDesigner() {
   const [bands, setBands] = useState(null);
   const { getWidgetDesign } = useContext(EditorContext);
   const assetId = getWidgetDesign("assetId");
   const assetType = "imageCollection";
+
+  useEffect(() => {
+    getBandsFromGateway(setBands, assetId, assetType).catch(console.error);
+  }, [])
 
   return (
     <>
@@ -79,7 +83,7 @@ export default function TimeSeriesDesigner() {
             hideLabel
             setBands={setBands}
           />
-          <GDSelect dataKey="band" disabled items={bands} title="Band to graph" />
+          <GDSelect dataKey="band" items={bands} title="Band to graph" />
           <GDSelect
             dataKey="reducer"
             items={["Min", "Max", "Mean", "Median", "Mode"]}
