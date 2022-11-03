@@ -238,7 +238,9 @@ export class NavigationBar extends React.Component {
                 >
                   <a
                     className="nav-link"
-                    href={page === "Blog" ? "https://blog.collect.earth" : "/" + page.toLowerCase()}
+                    href={page === "Blog" ? "https://collect.earth/blog" :
+                          page === "Support" ? "https://collect.earth/ceo-guides" :
+                          "/" + page.toLowerCase()}
                   >
                     {page}
                   </a>
