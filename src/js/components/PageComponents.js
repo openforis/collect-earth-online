@@ -240,7 +240,7 @@ export class NavigationBar extends React.Component {
               ].map(({ page, link }) => (
                 <li
                   key={page}
-                  className={"nav-item" + ("/" + page.toLowerCase() === uri && " active")}
+                  className={"nav-item" + (page === "CEO" && uri === "/home" && " active")}
                 >
                   <a className="nav-link" href={link}>
                     {page}
