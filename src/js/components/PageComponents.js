@@ -231,15 +231,18 @@ export class NavigationBar extends React.Component {
           </button>
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav mr-auto">
-              {["Home", "About", "Support", "Blog"].map((page) => (
+              {[
+                { page: "CEO", link: "/home" },
+                { page: "Home", link: "https://collect.earth/" },
+                { page: "About", link: "https://collect.earth/about/" },
+                { page: "Support", link: "https://collect.earth/ceo-guides" },
+                { page: "Blog", link: "https://collect.earth/blog" },
+              ].map(({ page, link }) => (
                 <li
                   key={page}
-                  className={"nav-item" + ("/" + page.toLowerCase() === uri && " active")}
+                  className={"nav-item" + (page === "CEO" && uri === "/home" && " active")}
                 >
-                  <a
-                    className="nav-link"
-                    href={page === "Blog" ? "https://blog.collect.earth" : "/" + page.toLowerCase()}
-                  >
+                  <a className="nav-link" href={link}>
                     {page}
                   </a>
                 </li>
