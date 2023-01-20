@@ -2,7 +2,7 @@
 
  :deps {bk/ring-gzip              {:mvn/version "0.3.0"}
         clj-http/clj-http         {:mvn/version "3.10.3"}
-        clj-python/libpython-clj  {:mvn/version "2.003"}
+        clj-python/libpython-clj  {:mvn/version "2.023"}
         com.draines/postal        {:mvn/version "2.0.3"}
         com.cognitect/transit-clj {:mvn/version "1.0.324"}
         hiccup/hiccup             {:mvn/version "2.0.0-alpha2"}
