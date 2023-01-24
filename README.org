@@ -6,8 +6,8 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 
 *** Required
 
-- [[https://jdk.java.net][Java Development Kit (version 8, 11 or 17)]]
-- [[https://clojure.org/guides/getting_started][Clojure CLI tools 1.10]]
+- [[https://jdk.java.net][Java Development Kit (version 8, 11, or 17)]]
+- [[https://clojure.org/guides/install_clojure][Clojure CLI tools 1.10+]]
 - [[https://www.postgresql.org/download][Postgresql (version 12)]]
 - [[https://postgis.net/install/][PostGIS (version 3.2+)]]
 - [[https://www.7-zip.org/][p7zip]]
@@ -27,12 +27,16 @@ Please note that you must replace all values surrounded with angle brackets (e.g
 Once the Postgresql database server is running on your machine, you should navigate to the top level directory (i.e., the directory containing this README) and run the database build command as follows:
 
 #+begin_src sh
-clojure -M:build-db build-all [--dev-data]
+clojure -M:build-db build-all --dev-data
 #+end_src
 
 This will begin by creating a new database and role called ~ceo~ and then add the postgis and pgcrypto extensions to it. Next, the script will populate the database with the schemas, tables, and functions that are necessary for storing and processing ceo's data. Finally, it will load some default data into these tables that is necessary for the website to function properly. You can optionally load dev data with ~--dev-data~.  This will initialize the DB with 3 users, an imagery source, and a project.
 
-If you wish to use a live copy of the CEO database instead of the dev data, please see the documentation of the ~build-db~ command in the [[https://github.com/sig-gis/triangulum#triangulumbuild-db][Triangulum README]].
+If you wish to use a live copy of the CEO database instead of the dev data and you have a ~.dump~ file, run the following commands:
+
+#+begin_src sh
+clojure -M:build-db restore -f /path/to/ceo/database/ceo-db-<year>-<month>-<day>.dump
+#+end_src
 
 *** Performance Settings
 
@@ -121,7 +125,7 @@ You will need a Google Earth Engine account to use the GeoDash. To apply for a G
 earthengine authenticate
 #+end_src
 
-This command will open a window in your browser containing a key that you should copy and paste back into your terminal. You do not need to update the ~:gee~ section of ~config.edn~ if you use this method.
+This command will open a window in your browser containing a key that you should copy and paste back into your terminal. You do not need to update the ~:gee~ section of ~config.edn~ if you use this method. If the above method is giving you issues, try following [[the official step-by-step instructions provided by Google][https://developers.google.com/earth-engine/guides/python_install#expandable-2]].
 
 *** Create accounts
 
