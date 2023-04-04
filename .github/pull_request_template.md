@@ -4,11 +4,11 @@
 
 ## Related Issues
 
-Closes SER-###
+Closes COL-###
 
 ## Submission Checklist
 
-- [ ] Included Jira issue in the PR title (e.g. `SER-### Did something here`)
+- [ ] Included Jira issue in the PR title (e.g. `COL-### Did something here`)
 - [ ] Code passes linter rules for each file you updated. To lint all files at once, run `npm run lint`. To just lint one specific file run `npx quick-lint-js src/js/<file-you-changed> --snarky`.
 - [ ] No new reflection warnings (`clojure -M:check-reflection`)
 
