@@ -61,7 +61,7 @@ clojure -M:build-db build-all --dev-data
 
 This will begin by creating a new database and role called ~ceo~ and then add the ~postgis~ and ~pgcrypto~ extensions to it. Next, the script will populate the database with the schemas, tables, and functions that are necessary for storing and processing ceo's data. Finally, it will load some default data into these tables that is necessary for the website to function properly. You can optionally load dev data with ~--dev-data~.  This will initialize the DB with 3 users, an imagery source, and a project.
 
-If you wish to use a live copy of the CEO database instead of the dev data and you have a ~.dump~ file, run the following commands:
+If you wish to use a live copy of the CEO database instead of the dev data and you have a ~.dump~ file, run the following command:
 
 #+begin_src sh
 clojure -M:build-db restore -f /path/to/ceo/database/ceo-db-<year>-<month>-<day>.dump
