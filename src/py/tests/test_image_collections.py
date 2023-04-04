@@ -156,5 +156,3 @@ class TestSentinel2:
     def test_sentinel2_toa_defaults(self):
         col = getSentinel2Toa({'region':self.region})
         self.main(col, "sentinel 2 toa default options")
-
-    
