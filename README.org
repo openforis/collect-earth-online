@@ -20,17 +20,46 @@ On startup, the CEO application reads a file called ~config.edn~ in the top leve
 
 Please note that you must replace all values surrounded with angle brackets (e.g., "<api-key>") with actual values for the application to work correctly. Most of the fields should be self-explanatory.
 
-** Postgresql Database Setup
+** PostgreSQL Database Setup
 
-*Postgresql* needs to be installed on the machine that will be hosting this website. This installation task is system specific and is beyond the scope of this README, so please follow the instructions for your operating system and Postgresql version. However, please ensure that the database server's superuser account is named "postgres" and that you know its database connection password before proceeding.
+*PostgreSQL* needs to be installed on the machine that will be hosting this website. This installation task is system specific and is beyond the scope of this README, so please follow the instructions for your operating system and PostgreSQL version. However, please ensure that the database server's superuser account is named ~postgres~ and that you know its database connection password before proceeding.
 
-Once the Postgresql database server is running on your machine, you should navigate to the top level directory (i.e., the directory containing this README) and run the database build command as follows:
+*** PostgreSQL Server
+
+To confirm that PostgreSQL is running as a server on your machine, you'll need to check its ~systmed~ or ~sysvinit~ process. To figure out which you're using on your system, run ~ps -p 1 -o comm=~. Once you know if you're using ~systemd~ or ~sysvinit~, you can run the following command:
+
+#+begin_src sh
+# If you're using systemd:
+sudo systemctl status postgresql.service
+# If you're using sysvinit:
+sudo service postgresql status
+#+end_src
+
+If it's not running, you'll need to start it by running:
+#+begin_src sh
+# If you're using systemd:
+sudo systemctl start postgresql.service
+# If you're using sysvinit:
+sudo service postgresql start
+#+end_src
+
+Finally, to ensure that your PostgreSQL server always restarts when your system reboots, you can run:
+#+begin_src sh
+# If you're using systemd:
+sudo systemctl enable postgresql.service
+# If you're using sysvinit:
+sudo update-rc.d postgresql enable
+#+end_src
+
+*** CEO Database
+
+Once the PostgreSQL database server is running on your machine, you should navigate to the top level directory (i.e., the directory containing this README) and run the database build command as follows:
 
 #+begin_src sh
 clojure -M:build-db build-all --dev-data
 #+end_src
 
-This will begin by creating a new database and role called ~ceo~ and then add the postgis and pgcrypto extensions to it. Next, the script will populate the database with the schemas, tables, and functions that are necessary for storing and processing ceo's data. Finally, it will load some default data into these tables that is necessary for the website to function properly. You can optionally load dev data with ~--dev-data~.  This will initialize the DB with 3 users, an imagery source, and a project.
+This will begin by creating a new database and role called ~ceo~ and then add the ~postgis~ and ~pgcrypto~ extensions to it. Next, the script will populate the database with the schemas, tables, and functions that are necessary for storing and processing ceo's data. Finally, it will load some default data into these tables that is necessary for the website to function properly. You can optionally load dev data with ~--dev-data~.  This will initialize the DB with 3 users, an imagery source, and a project.
 
 If you wish to use a live copy of the CEO database instead of the dev data and you have a ~.dump~ file, run the following commands:
 
@@ -126,6 +155,14 @@ earthengine authenticate
 #+end_src
 
 This command will open a window in your browser containing a key that you should copy and paste back into your terminal. You do not need to update the ~:gee~ section of ~config.edn~ if you use this method. If the above method is giving you issues, try following [[the official step-by-step instructions provided by Google][https://developers.google.com/earth-engine/guides/python_install#expandable-2]].
+
+*** Modifying hosts file
+
+Add the following line to your hosts file. This local URL should be used for local development in place of ~localhost~ due to CORS settings on CEO's Mapbox account.
+
+#+begin_src sh
+127.0.0.1 local.collect.earth
+#+end_src
 
 *** Create accounts
 
