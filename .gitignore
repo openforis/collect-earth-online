@@ -21,6 +21,7 @@ announcement.txt
 __pycache__
 classes
 ceo-gee-key.json
+*.pyc
 
 # MacOS X Backups
 .DS_Store

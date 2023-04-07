@@ -5,8 +5,9 @@ from gee.utils import initialize, listAvailableBands, imageToMapId, imageCollect
     filteredImageCompositeToMapId, filteredSentinelComposite, filteredSentinelSARComposite, \
     filteredImageByIndexToMapId, getFeatureCollectionTileUrl, getTimeSeriesByCollectionAndIndex, \
     getTimeSeriesByIndex, getStatistics, getDegradationPlotsByPoint, getDegradationPlotsByPointS1, \
-    getDegradationTileUrlByDate, getDegradationTileUrlByDateS1, safeParseJSON
+    getDegradationTileUrlByDate, getDegradationTileUrlByDateS1, safeParseJSON, filteredNicfiCompositeToMapId
 from gee.planet import getPlanetMapID
+from gee.inputs import getLandsatToa, getNICFI
 
 
 def safeListGet(l, idx, default=None):
@@ -58,37 +59,32 @@ def imageCollection(requestDict):
 
 # ########## Pre defined ee.ImageCollection ##########
 
-
-def getActualCollection(name):
-    lowerName = name.lower()
-    if lowerName == 'landsat5':
-        return 'LANDSAT/LT05/C01/T1'
-    elif lowerName == 'landsat7':
-        return 'LANDSAT/LE07/C01/T1'
-    elif lowerName == 'landsat8':
-        return 'LANDSAT/LC08/C01/T1_RT'
-    elif lowerName == 'sentinel2':
-        return 'COPERNICUS/S2'
-    else:
-        return name
-
-
 def filteredLandsat(requestDict):
-    indexName = getDefault(requestDict, 'indexName').lower()
+    startDate = getDefault(requestDict, 'startDate')
+    endDate = getDefault(requestDict, 'endDate')
     values = filteredImageCompositeToMapId(
-        getActualCollection(indexName),
+        getLandsatToa(startDate, endDate),
         {
             'min': getDefault(requestDict, 'min', '0.03,0.01,0.05'),
             'max': getDefault(requestDict, 'max', '0.45,0.5,0.4'),
             'bands': getDefault(requestDict, 'bands', 'B4,B5,B3')
         },
-        getDefault(requestDict, 'startDate'),
-        getDefault(requestDict, 'endDate'),
-        getDefault(requestDict, 'cloudLessThan', 90),
-        60 if indexName == 'landsat7' else 50
+        getDefault(requestDict, 'cloudLessThan', 60),
     )
     return values
 
+def filteredNicfi(requestDict):
+    startDate = getDefault(requestDict, 'startDate')
+    endDate = getDefault(requestDict, 'endDate')
+    values = filteredNicfiCompositeToMapId(
+        getNICFI({'start':startDate, 'end':endDate}),
+        {
+            'min': getDefault(requestDict, 'min', '113,113,113'),
+            'max': getDefault(requestDict, 'max', '1465,1465,1465'),
+            'bands': getDefault(requestDict, 'bands', 'R,G,B')
+        },
+    )
+    return values
 
 def filteredSentinel2(requestDict):
     values = filteredSentinelComposite(
@@ -124,7 +120,8 @@ def imageCollectionByIndex(requestDict):
     values = filteredImageByIndexToMapId(
         getDefault(requestDict, 'startDate', '1990-01-01'),
         getDefault(requestDict, 'endDate', '2100-01-01'),
-        getDefault(requestDict, 'indexName')
+        getDefault(requestDict, 'indexName'),
+        getDefault(requestDict, 'sourceName')
     )
     return values
 
@@ -183,6 +180,7 @@ def timeSeriesByAsset(requestDict):
 def timeSeriesByIndex(requestDict):
     values = {
         'timeseries': getTimeSeriesByIndex(
+            getDefault(requestDict, 'sourceName', 'Landsat'),
             getDefault(requestDict, 'indexName', 'NDVI'),
             float(getDefault(requestDict, 'scale', 30)),
             getDefault(requestDict, 'geometry', None),

@@ -39,71 +39,71 @@ import upCaretIcon from "./upCaretIcon.svg";
 import zoomInIcon from "./zoomInIcon.svg";
 
 const iconMap = {
-    "alert": alertIcon,
-    "cancel": cancelIcon,
-    "center": centerIcon,
-    "check": checkIcon,
-    "close": closeIcon,
-    "collapse": collapseIcon,
-    "copy": copyIcon,
-    "downCaret": downCaretIcon,
-    "downRightArrow": downRightArrowIcon,
-    "draw": drawIcon,
-    "edit": editIcon,
-    "expand": expandIcon,
-    "file": fileIcon,
-    "help": helpIcon,
-    "info": infoIcon,
-    "leftArrow": leftArrowIcon,
-    "leftDouble": leftDoubleIcon,
-    "lineString": lineStringIcon,
-    "link": linkIcon,
-    "minus": minusIcon,
-    "opacity": opacityIcon,
-    "overlay": overlayIcon,
-    "plus": plusIcon,
-    "point": pointIcon,
-    "polygon": polygonIcon,
-    "question": questionIcon,
-    "refresh": refreshIcon,
-    "rightArrow": rightArrowIcon,
-    "rightCaret": rightCaretIcon,
-    "rightDouble": rightDoubleIcon,
-    "rule": ruleIcon,
-    "save": saveIcon,
-    "settings": settingsIcon,
-    "trash": trashIcon,
-    "upArrow": upArrowIcon,
-    "upCaret": upCaretIcon,
-    "zoomIn": zoomInIcon
+  alert: alertIcon,
+  cancel: cancelIcon,
+  center: centerIcon,
+  check: checkIcon,
+  close: closeIcon,
+  collapse: collapseIcon,
+  copy: copyIcon,
+  downCaret: downCaretIcon,
+  downRightArrow: downRightArrowIcon,
+  draw: drawIcon,
+  edit: editIcon,
+  expand: expandIcon,
+  file: fileIcon,
+  help: helpIcon,
+  info: infoIcon,
+  leftArrow: leftArrowIcon,
+  leftDouble: leftDoubleIcon,
+  lineString: lineStringIcon,
+  link: linkIcon,
+  minus: minusIcon,
+  opacity: opacityIcon,
+  overlay: overlayIcon,
+  plus: plusIcon,
+  point: pointIcon,
+  polygon: polygonIcon,
+  question: questionIcon,
+  refresh: refreshIcon,
+  rightArrow: rightArrowIcon,
+  rightCaret: rightCaretIcon,
+  rightDouble: rightDoubleIcon,
+  rule: ruleIcon,
+  save: saveIcon,
+  settings: settingsIcon,
+  trash: trashIcon,
+  upArrow: upArrowIcon,
+  upCaret: upCaretIcon,
+  zoomIn: zoomInIcon,
 };
 
-function SvgIcon({icon, color, cursor, size, verticalAlign}) {
-    const Icon = iconMap[icon];
-    return (
-        <Icon
-            color={color}
-            cursor={cursor}
-            fill={color}
-            height={size}
-            style={{verticalAlign}}
-            width={size}
-        />
-    );
+function SvgIcon({ icon, color, cursor, size, verticalAlign }) {
+  const Icon = iconMap[icon];
+  return (
+    <Icon
+      color={color}
+      cursor={cursor}
+      fill={color}
+      height={size}
+      style={{ verticalAlign }}
+      width={size}
+    />
+  );
 }
 
 SvgIcon.propTypes = {
-    color: PropTypes.string,
-    cursor: PropTypes.string,
-    icon: PropTypes.string.isRequired,
-    size: PropTypes.string.isRequired,
-    verticalAlign: PropTypes.string
+  color: PropTypes.string,
+  cursor: PropTypes.string,
+  icon: PropTypes.string.isRequired,
+  size: PropTypes.string.isRequired,
+  verticalAlign: PropTypes.string,
 };
 
 SvgIcon.defaultProps = {
-    color: "currentColor",
-    cursor: "unset",
-    verticalAlign: "middle"
+  color: "currentColor",
+  cursor: "unset",
+  verticalAlign: "middle",
 };
 
 export default SvgIcon;

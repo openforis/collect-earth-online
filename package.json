@@ -1,106 +1,117 @@
 {
-    "name": "collect-earth-online",
-    "version": "1.0.0",
-    "description": "Collect Earth Online",
-    "keywords": [],
-    "author": {
-        "name": "Gary W. Johnson",
-        "email": "gjohnson@sig-gis.com"
+  "name": "collect-earth-online",
+  "version": "1.0.0",
+  "description": "Collect Earth Online",
+  "keywords": [],
+  "author": {
+    "name": "Gary W. Johnson",
+    "email": "gjohnson@sig-gis.com"
+  },
+  "contributors": [
+    {
+      "name": "Gary W. Johnson",
+      "email": "gjohnson@sig-gis.com"
     },
-    "contributors": [
-        {
-            "name": "Gary W. Johnson",
-            "email": "gjohnson@sig-gis.com"
-        },
-        {
-            "name": "David S. Saah",
-            "email": "dsaah@sig-gis.com"
-        },
-        {
-            "name": "Billy Ashmall",
-            "email": "billy.ashmall@nasa.gov"
-        },
-        {
-            "name": "Githika Tondapu",
-            "email": "githika.tondapu@nasa.gov"
-        },
-        {
-            "name": "Stefano Ricci",
-            "email": "stefano.ricci@fao.org"
-        },
-        {
-            "name": "Roberto Fontanarosa",
-            "email": "roberto.fontanarosa@fao.org"
-        },
-        {
-            "name": "Alfonso SanchezPausDiaz",
-            "email": "alfonso.sanchezpausdiaz@fao.org"
-        },
-        {
-            "name": "Matt Spencer",
-            "email": "mspencer@sig-gis.com"
-        },
-        {
-            "name": "Biplov Bhandari",
-            "email": "bbhandari@sig-gis.com"
-        }
-    ],
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/openforis/collect-earth-online/issues"
+    {
+      "name": "David S. Saah",
+      "email": "dsaah@sig-gis.com"
     },
-    "homepage": "https://github.com/openforis/collect-earth-online#readme",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/openforis/collect-earth-online.git"
+    {
+      "name": "Billy Ashmall",
+      "email": "billy.ashmall@nasa.gov"
     },
-    "private": true,
-    "dependencies": {
-        "@babel/plugin-transform-runtime": "^7.16.0",
-        "@ckeditor/ckeditor5-build-classic": "^19.0.0",
-        "@ckeditor/ckeditor5-react": "^2.1.0",
-        "airbnb-prop-types": "^2.16.0",
-        "highcharts": "^9.1.0",
-        "highcharts-react-official": "^3.0.0",
-        "lodash": "^4.17.20",
-        "ogr2ogr": "^1.5.0",
-        "ol": "^6.4.3",
-        "prop-types": "^15.7.2",
-        "react": "^16.13.1",
-        "react-dom": "^16.13.1",
-        "react-grid-layout": "^1.3.0",
-        "shpjs": "^4.0.2"
+    {
+      "name": "Githika Tondapu",
+      "email": "githika.tondapu@nasa.gov"
     },
-    "devDependencies": {
-        "@babel/core": "^7.11.6",
-        "@babel/eslint-plugin": "^7.14.5",
-        "@babel/plugin-proposal-class-properties": "^7.10.4",
-        "@babel/preset-env": "^7.11.5",
-        "@babel/preset-react": "^7.10.4",
-        "babel-eslint": "^10.1.0",
-        "babel-loader": "^8.2.3",
-        "babel-plugin-lodash": "^3.3.4",
-        "buffer": "^6.0.3",
-        "css-loader": "^4.3.0",
-        "eslint": "^7.32.0",
-        "eslint-config-airbnb": "^18.2.1",
-        "eslint-plugin-import": "^2.25.4",
-        "eslint-plugin-jsx-a11y": "^6.5.1",
-        "eslint-plugin-react": "^7.29.2",
-        "eslint-plugin-react-hooks": "^4.3.0",
-        "react-svg-loader": "^3.0.3",
-        "style-loader": "^1.2.1",
-        "tern": "^0.23.0",
-        "webpack": "^5.70.0",
-        "webpack-cli": "^4.9.2"
+    {
+      "name": "Stefano Ricci",
+      "email": "stefano.ricci@fao.org"
     },
-    "scripts": {
-        "build-db-all": "clojure -M:build-db build-all",
-        "build-db-functions": "clojure -M:build-db functions",
-        "webpack-dev": "webpack --config webpack.config.js --env dev",
-        "webpack-prod": "webpack --config webpack.config.js --env prod",
-        "server-dev": "clojure -M:server start -p 8080 -m dev",
-        "server-prod": "clojure -M:production:server start -P 8443 -m prod",
-        "lint": "./node_modules/.bin/eslint 'src/js/**/*.js' --fix"
+    {
+      "name": "Roberto Fontanarosa",
+      "email": "roberto.fontanarosa@fao.org"
+    },
+    {
+      "name": "Alfonso SanchezPausDiaz",
+      "email": "alfonso.sanchezpausdiaz@fao.org"
+    },
+    {
+      "name": "Matt Spencer",
+      "email": "mspencer@sig-gis.com"
+    },
+    {
+      "name": "Biplov Bhandari",
+      "email": "bbhandari@sig-gis.com"
+    },
+    {
+      "name": "Oliver Baldwin Edwards",
+      "email": "obaldwinedwards@sig-gis.com"
+    },
+    {
+      "name": "Sif Biri",
+      "email": "sbiri@sig-gis.com"
     }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/openforis/collect-earth-online/issues"
+  },
+  "homepage": "https://github.com/openforis/collect-earth-online#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openforis/collect-earth-online.git"
+  },
+  "private": true,
+  "dependencies": {
+    "@babel/plugin-transform-runtime": "^7.16.0",
+    "@ckeditor/ckeditor5-build-classic": "^19.0.0",
+    "@ckeditor/ckeditor5-react": "^2.1.0",
+    "airbnb-prop-types": "^2.16.0",
+    "highcharts": "^9.1.0",
+    "highcharts-react-official": "^3.0.0",
+    "lodash": "^4.17.20",
+    "ogr2ogr": "^1.5.0",
+    "ol": "^6.4.3",
+    "prop-types": "^15.7.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-grid-layout": "^1.3.0",
+    "shpjs": "^4.0.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.6",
+    "@babel/eslint-plugin": "^7.14.5",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/preset-env": "^7.11.5",
+    "@babel/preset-react": "^7.10.4",
+    "babel-eslint": "^10.1.0",
+    "babel-loader": "^8.2.3",
+    "babel-plugin-lodash": "^3.3.4",
+    "buffer": "^6.0.3",
+    "css-loader": "^4.3.0",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-jsx-a11y": "^6.5.1",
+    "eslint-plugin-react": "^7.29.2",
+    "eslint-plugin-react-hooks": "^4.3.0",
+    "prettier": "^2.7.1",
+    "quick-lint-js": "^2.8.0",
+    "react-svg-loader": "^3.0.3",
+    "style-loader": "^1.2.1",
+    "tern": "^0.23.0",
+    "webpack": "^5.70.0",
+    "webpack-cli": "^4.9.2"
+  },
+  "scripts": {
+    "build-db-all": "clojure -M:build-db build-all",
+    "build-db-functions": "clojure -M:build-db functions",
+    "webpack-dev": "webpack --config webpack.config.js --env dev",
+    "webpack-prod": "webpack --config webpack.config.js --env prod",
+    "server-dev": "clojure -M:server start -p 8080 -m dev",
+    "server-prod": "clojure -M:production:server start -P 8443 -m prod",
+    "lint-js": "find src/js -type f -exec ./node_modules/.bin/quick-lint-js --snarky {} +",
+    "format-js": "./node_modules/.bin/prettier --write ."
+  }
 }

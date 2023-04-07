@@ -1,22 +1,22 @@
 [
-    {
-        "title": "Welcome to Collect Earth Online!",
-        "body": "Welcome to the Home page! Here you’ll find the different projects available to work on, a list of institutions and their projects, and the navigation bar. If you ever need help throughout Collect Earth Online (CEO), click the purple help icon (\"?\") in the upper right corner!",
-        "img": "/img/home1.webp"
-    },
-    {
-        "title": "Welcome - CEO Menu",
-        "body": "This is the CEO menu. The \"Home\" button will bring you back to this screen. The \"Support\" page contains manuals and allows you to report bugs. Once you’re signed in, the \"Account\" page will show you user stats and account settings.",
-        "img": "/img/home2.webp"
-    },
-    {
-        "title": "Welcome - Projects",
-        "body": "Each pin represents a project that you can work on! Click on these pins to expand a list of projects in an area.",
-        "img": "/img/home3.webp"
-    },
-    {
-        "title": "Welcome - Insitutions",
-        "body": "This is the list of Institutions. Using the filter tool, you can search for an institution by name. Institutions you join will appear under Your Affiliations. Click on any institution’s name to expand a list of their projects. Click on \"Visit\" next to the institution’s name for more information or to apply to join the institution.",
-        "img": "/img/home4.webp"
-    }
+  {
+    "title": "Welcome to Collect Earth Online!",
+    "body": "Welcome to the Home page! Here you’ll find the different projects available to work on, a list of institutions and their projects, and the navigation bar. If you ever need help throughout Collect Earth Online (CEO), click the purple help icon (\"?\") in the upper right corner!",
+    "img": "/img/home1.webp"
+  },
+  {
+    "title": "Welcome - CEO Menu",
+    "body": "This is the CEO menu. The \"Home\" button will bring you back to this screen. The \"Support\" page contains manuals and allows you to report bugs. Once you’re signed in, the \"Account\" page will show you user stats and account settings.",
+    "img": "/img/home2.webp"
+  },
+  {
+    "title": "Welcome - Projects",
+    "body": "Each pin represents a project that you can work on! Click on these pins to expand a list of projects in an area.",
+    "img": "/img/home3.webp"
+  },
+  {
+    "title": "Welcome - Insitutions",
+    "body": "This is the list of Institutions. Using the filter tool, you can search for an institution by name. Institutions you join will appear under Your Affiliations. Click on any institution’s name to expand a list of their projects. Click on \"Visit\" next to the institution’s name for more information or to apply to join the institution.",
+    "img": "/img/home4.webp"
+  }
 ]

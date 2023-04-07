@@ -1,45 +1,99 @@
-import React, {useContext, useState} from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import GDDateRange from "./form/GDDateRange";
 import GDInput from "./form/GDInput";
 import GDSelect from "./form/GDSelect";
 import GetBands from "./form/GetBands";
 
-import {EditorContext} from "./constants";
+import { EditorContext } from "./constants";
+
+export async function getBandsFromGateway(setBands, assetId, assetType) {
+  if (assetId?.length) {
+    try {
+      const res = await fetch("/geo-dash/gateway-request", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          path: "getAvailableBands",
+          assetId,
+          assetType,
+        }),
+      }
+      );
+      const data = await res.json();
+      console.log("data is: ", data);
+      if (data.hasOwnProperty("bands")) {
+        setBands(data.bands);
+      } else if (data.hasOwnProperty("errMsg")) {
+        throw data.errMsg;
+      } else {
+        setBands(null);
+      }
+    } catch (e) {
+      console.error(e);
+      setBands(null);
+    }
+  };
+}
 
 export default function TimeSeriesDesigner() {
-    const [bands, setBands] = useState(null);
-    const {getWidgetDesign} = useContext(EditorContext);
-    return (
+  const [bands, setBands] = useState(null);
+  const { getWidgetDesign } = useContext(EditorContext);
+  const assetId = getWidgetDesign("assetId");
+  const assetType = "imageCollection";
+
+  useEffect(() => {
+    getBandsFromGateway(setBands, assetId, assetType).catch(console.error);
+  }, [])
+
+  return (
+    <>
+      <GDSelect
+        dataKey="sourceName"
+        items={["Landsat", "NICFI", "Custom"]}
+        title="Imagery Source"
+      />
+      {getWidgetDesign("sourceName") === "Landsat" && (
+        <GDSelect
+          dataKey="indexName"
+          items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI"]}
+          title="Band to graph"
+        />
+      )}
+      {getWidgetDesign("sourceName") === "NICFI" && (
+        <GDSelect dataKey="indexName" items={["NDVI", "R", "G", "B", "N"]} title="Band to graph" />
+      )}
+      {getWidgetDesign("sourceName") === "Custom" && (
         <>
-            <GDSelect
-                dataKey="indexName"
-                items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI", "Custom"]}
-                title="Data Type"
-            />
-            {getWidgetDesign("indexName") === "Custom" && (
-                <>
-                    <GDInput
-                        dataKey="assetId"
-                        placeholder="LANDSAT/LC8_L1T_TOA"
-                        title="GEE Image Collection Asset ID"
-                    />
-                    <GetBands
-                        assetId={getWidgetDesign("assetId")}
-                        assetType="imageCollection"
-                        bands={bands}
-                        hideLabel
-                        setBands={setBands}
-                    />
-                    <GDSelect dataKey="band" disabled items={bands} title="Band to graph"/>
-                    <GDSelect
-                        dataKey="reducer"
-                        items={["Min", "Max", "Mean", "Median", "Mode"]}
-                        title="Reducer"
-                    />
-                </>
-            )}
-            <GDDateRange/>
+          <GDInput
+            dataKey="assetId"
+            placeholder="LANDSAT/LC8_L1T_TOA"
+            title="GEE Image Collection Asset ID"
+            onBlur={() => getBandsFromGateway(setBands, assetId, assetType)}
+            onKeyDown={(e) =>
+              e.key === "Enter" && getBandsFromGateway(setBands, assetId, assetType)
+            }
+          />
+          <GetBands
+            assetId={assetId}
+            assetType="imageCollection"
+            bands={bands}
+            hideLabel
+            setBands={setBands}
+          />
+          <GDSelect dataKey="band" items={bands} title="Band to graph" />
+          <GDSelect
+            dataKey="reducer"
+            items={["Min", "Max", "Mean", "Median", "Mode"]}
+            title="Reducer"
+          />
+          <GDInput dataKey="scale" placeholder="30" title="Spatial scale" />
         </>
-    );
+      )}
+      <GDDateRange />
+    </>
+  );
 }

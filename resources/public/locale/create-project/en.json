@@ -1,67 +1,67 @@
 [
-    {
-        "title": "Create Project Help",
-        "body": "You can create a project based on an existing project template. You can only use your institution’s projects or publicly available projects as templates. \nAfter you select a project template to use, click \"Load.\" You can choose whether to \"Copy Template Plots and Samples\" and/or to \"Copy Template Widgets.\"\nClick \"Clear\" if you decide not to use that template.",
-        "img": "/img/create-project1.webp"
-    },
-    {
-        "title": "Create Project Help",
-        "body": "Specify the project name, description, and privacy level of your project. The project name is displayed on the home page and at the top of the project page. \nThe project description will appear on the home page for public projects. \nProject visibility determines who can view your project.",
-        "img": "/img/create-project2.webp"
-    },
-    {
-        "title": "Create Project Help",
-        "body": "Project Options allows you to customize the data collectors’ experience for your project. \n\"Show GEE Script Link\" will allow data collectors to access GEE forest degradation information, including historic NDVI trends. \n\"Show Extra Plot Columns\" is used with .csv and .shp plot designs to show any additional data columns (e.g. plot elevation or tree height). \n\"Auto-launch Geo-Dash\" will launch the Geo-Dash every time the data collector moves between plots.",
-        "img": "/img/create-project3.webp"
-    },
-    {
-        "title": "Create Project Help",
-        "body": "Imagery selection lets you choose what type of imagery will be available during collection. Default imagery is the default basemap imagery for your project. \nYou can select additional Public Imagery and Private Institution Imagery to make them available as basemaps to your data collectors. Private Institution Imagery is only visible to institution members.",
-        "img": "/img/create-project4.webp"
-    },
-    {
-        "title": "Create Project Help",
-        "body": "To use the built in sampling design in CEO, you need to first specify your Area of Interest. You can either type in Boundary Coordinates or CTRL and click-and-drag a bounding box on the map. \nYou will then need to choose either Random or Gridded for the Spatial Distribution of your plots. You will need to specify the number of plots, plot shape, and size.",
-        "img": "/img/create-project5.webp"
-    },
-    {
-        "title": "Create Project Help",
-        "body": "You can also upload your own .csv or .shp file containing your plot distribution. This is useful if you want to use a stratified sampling design or sample within a country’s boundary. \n.csv files specify plot centers and should have the fields LON, LAT, PLOTID. You will need to specify the number of plots, plot shape, and size. \n.shp files specify the boundary of the plot. They should have a unique PLOTID field and be uploaded as a zipped Shapefile containing SHP, SHX, DBF, and PRJ files.",
-        "img": "/img/create-project6.webp"
-    },
-    {
-        "title": "Create Project Help",
-        "body": "Next you will specify your samples within each plot. For any of these options, you can also decide if you want to allow users to draw their own samples during data collection. This is useful e.g. for digitizing land cover over the entire plot area or identifying rare features within a plot. You can use the built in tool in CEO or upload your own design. \nSampling designs include Random or Gridded distribution within the plot. You will need to specify the number or spacing of the samples. Center will place one sample in the middle of the plot. None will not generate any samples, and all samples will be user-drawn.",
-        "img": "/img/create-project7.webp"
-    },
-    {
-        "title": "Create Project Help",
-        "body": "You can also upload your own .csv or .shp file containing your sample distribution. \n.csv files specify the sample centers and should have the fields LON, LAT, PLOTID, and SAMPLEID. \n.shp files specify the boundary of the sample and should have PLOTID and SAMPLEID fields.",
-        "img": "/img/create-project8.webp"
-    },
-    {
-        "title": "Create Project Help",
-        "body": "You will create survey questions that data collectors will answer for each sample plot. A preview will appear in the \"Question Preview\" pane. Type your question under \"New Question.\" \nThe different question (component) types include button, radiobutton, and dropdown (user selects one answer per sample) as well as input (user types freely their answer). \nYou can select \"Parent Questions\" and \"Parent Answers\" for your question. If you do, your question will appear when specific answers are chosen (e.g. ask what type of forest after forest is chosen).",
-        "img": "/img/create-project9.webp"
-    },
-    {
-        "title": "Create Project Help",
-        "body": "After writing a question, you can add as many answers to that question as you need. Choose the color for the question by clicking on the color box. When the user assigns an answer to a sample, the sample will be colored using the selected color.",
-        "img": "/img/create-project10.webp"
-    },
-    {
-        "title": "Create Project Help",
-        "body": "Adding survey rules will restrict what answers users can input on the data collection page. Sample rules are useful when you have two or more questions with incompatible answers. For example, when asking about land cover in two years you would not expect to have year 1 Urban and year 2 Forest. More information on the survey rule types is found in the manual accessed via the Support page. \nAdding survey rules is not required.",
-        "img": "/img/create-project11.webp"
-    },
-    {
-        "title": "Create Project Help",
-        "body": "Review your project settings. If any of the settings are incorrect, you can go back and fix them by clicking \"Continue Editing.\" \nOnce you’re satisfied with your project settings, click on \"Create Project.\"",
-        "img": "/img/create-project12.webp"
-    },
-    {
-        "title": "Create Project Help",
-        "body": "Once you create your project you will see the Project Management pane. Here you can modify project details, including publish your project, and edit your project. Projects are fully editable before they are published. You can test your project by collecting data and then return to change the project. Any data collected while testing will be deleted when the project is published. \nYou can also edit your Geo-Dash interface (see manual) or immediately start collecting data. You can export your data either by plot or by sample.",
-        "img": "/img/create-project13.webp"
-    }
+  {
+    "title": "Create Project Help",
+    "body": "You can create a project based on an existing project template. You can only use your institution’s projects or publicly available projects as templates. \nAfter you select a project template to use, click \"Load.\" You can choose whether to \"Copy Template Plots and Samples\" and/or to \"Copy Template Widgets.\"\nClick \"Clear\" if you decide not to use that template.",
+    "img": "/img/create-project1.webp"
+  },
+  {
+    "title": "Create Project Help",
+    "body": "Specify the project name, description, and privacy level of your project. The project name is displayed on the home page and at the top of the project page. \nThe project description will appear on the home page for public projects. \nProject visibility determines who can view your project.",
+    "img": "/img/create-project2.webp"
+  },
+  {
+    "title": "Create Project Help",
+    "body": "Project Options allows you to customize the data collectors’ experience for your project. \n\"Show GEE Script Link\" will allow data collectors to access GEE forest degradation information, including historic NDVI trends. \n\"Show Extra Plot Columns\" is used with .csv and .shp plot designs to show any additional data columns (e.g. plot elevation or tree height). \n\"Auto-launch Geo-Dash\" will launch the Geo-Dash every time the data collector moves between plots.",
+    "img": "/img/create-project3.webp"
+  },
+  {
+    "title": "Create Project Help",
+    "body": "Imagery selection lets you choose what type of imagery will be available during collection. Default imagery is the default basemap imagery for your project. \nYou can select additional Public Imagery and Private Institution Imagery to make them available as basemaps to your data collectors. Private Institution Imagery is only visible to institution members.",
+    "img": "/img/create-project4.webp"
+  },
+  {
+    "title": "Create Project Help",
+    "body": "To use the built in sampling design in CEO, you need to first specify your Area of Interest. You can either type in Boundary Coordinates or CTRL and click-and-drag a bounding box on the map. \nYou will then need to choose either Random or Gridded for the Spatial Distribution of your plots. You will need to specify the number of plots, plot shape, and size.",
+    "img": "/img/create-project5.webp"
+  },
+  {
+    "title": "Create Project Help",
+    "body": "You can also upload your own .csv or .shp file containing your plot distribution. This is useful if you want to use a stratified sampling design or sample within a country’s boundary. \n.csv files specify plot centers and should have the fields LON, LAT, PLOTID. You will need to specify the number of plots, plot shape, and size. \n.shp files specify the boundary of the plot. They should have a unique PLOTID field and be uploaded as a zipped Shapefile containing SHP, SHX, DBF, and PRJ files.",
+    "img": "/img/create-project6.webp"
+  },
+  {
+    "title": "Create Project Help",
+    "body": "Next you will specify your samples within each plot. For any of these options, you can also decide if you want to allow users to draw their own samples during data collection. This is useful e.g. for digitizing land cover over the entire plot area or identifying rare features within a plot. You can use the built in tool in CEO or upload your own design. \nSampling designs include Random or Gridded distribution within the plot. You will need to specify the number or spacing of the samples. Center will place one sample in the middle of the plot. None will not generate any samples, and all samples will be user-drawn.",
+    "img": "/img/create-project7.webp"
+  },
+  {
+    "title": "Create Project Help",
+    "body": "You can also upload your own .csv or .shp file containing your sample distribution. \n.csv files specify the sample centers and should have the fields LON, LAT, PLOTID, and SAMPLEID. \n.shp files specify the boundary of the sample and should have PLOTID and SAMPLEID fields.",
+    "img": "/img/create-project8.webp"
+  },
+  {
+    "title": "Create Project Help",
+    "body": "You will create survey questions that data collectors will answer for each sample plot. A preview will appear in the \"Question Preview\" pane. Type your question under \"New Question.\" \nThe different question (component) types include button, radiobutton, and dropdown (user selects one answer per sample) as well as input (user types freely their answer). \nYou can select \"Parent Questions\" and \"Parent Answers\" for your question. If you do, your question will appear when specific answers are chosen (e.g. ask what type of forest after forest is chosen).",
+    "img": "/img/create-project9.webp"
+  },
+  {
+    "title": "Create Project Help",
+    "body": "After writing a question, you can add as many answers to that question as you need. Choose the color for the question by clicking on the color box. When the user assigns an answer to a sample, the sample will be colored using the selected color.",
+    "img": "/img/create-project10.webp"
+  },
+  {
+    "title": "Create Project Help",
+    "body": "Adding survey rules will restrict what answers users can input on the data collection page. Sample rules are useful when you have two or more questions with incompatible answers. For example, when asking about land cover in two years you would not expect to have year 1 Urban and year 2 Forest. More information on the survey rule types is found in the manual accessed via the Support page. \nAdding survey rules is not required.",
+    "img": "/img/create-project11.webp"
+  },
+  {
+    "title": "Create Project Help",
+    "body": "Review your project settings. If any of the settings are incorrect, you can go back and fix them by clicking \"Continue Editing.\" \nOnce you’re satisfied with your project settings, click on \"Create Project.\"",
+    "img": "/img/create-project12.webp"
+  },
+  {
+    "title": "Create Project Help",
+    "body": "Once you create your project you will see the Project Management pane. Here you can modify project details, including publish your project, and edit your project. Projects are fully editable before they are published. You can test your project by collecting data and then return to change the project. Any data collected while testing will be deleted when the project is published. \nYou can also edit your Geo-Dash interface (see manual) or immediately start collecting data. You can export your data either by plot or by sample.",
+    "img": "/img/create-project13.webp"
+  }
 ]
