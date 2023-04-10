@@ -67,9 +67,7 @@ export default class NewQuestionDesigner extends React.Component {
       ) {
         const newId = getNextInSequence(Object.keys(surveyQuestions));
         const newCardOrder = getNextInSequence(
-          mapObjectArray(surveyQuestions, ([_id, sql]) => {
-            return sql.cardOrder;
-          })
+          mapObjectArray(surveyQuestions, ([_id, sql]) => sql.cardOrder).filter((c) => c)
         );
         const newQuestion = {
           question:
