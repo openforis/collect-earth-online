@@ -127,6 +127,17 @@ export default class CreateProjectWizard extends React.Component {
     if (this.context.name !== "" || this.context.description !== "") this.checkAllSteps();
   }
 
+  clearTemplateUserAssignments = (templateProject) => {
+    if(this.context.institutionId != templateProject.templateInstitutionId) {
+      return {...templateProject,
+              designSettings: {...templateProject.designSettings,
+                               userAssignment: {
+                                 userMethod: null,
+                                 users: [],
+                                 percents: []}}}
+    } else return templateProject;
+  };
+
   /// API Calls
 
   getTemplateProjects = () =>
@@ -171,10 +182,11 @@ export default class CreateProjectWizard extends React.Component {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         this.setState({ templateProject: data });
+        const clearedTemplateAssignments = this.clearTemplateUserAssignments(data);
         const institutionImageryIds = this.context.institutionImagery.map((i) => i.id);
         this.context.setProjectDetails(
           {
-            ...data,
+            ...clearedTemplateAssignments,
             templateProjectId: projectId,
             imageryId: institutionImageryIds.includes(data.imageryId)
               ? data.imageryId
@@ -491,6 +503,7 @@ export default class CreateProjectWizard extends React.Component {
       this.getTemplateProject(newTemplateId)
     );
   };
+
 
   toggleTemplatePlots = () => {
     if (this.context.useTemplatePlots) {

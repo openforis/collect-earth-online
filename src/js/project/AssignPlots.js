@@ -17,6 +17,9 @@ export default class AssignPlots extends React.Component {
 
   getUserAssignment = () => this.context.designSettings.userAssignment;
 
+  getInstitutionId = () => this.context;
+
+
   setUserAssignment = (newUserAssignment, newQaqcAssignment = {}) => {
     const qaqcAssignment = this.getQaqcAssignment();
     const userAssignment = this.getUserAssignment();
@@ -150,9 +153,10 @@ export default class AssignPlots extends React.Component {
                 label="Assigned Users"
                 possibleUsers={possibleUsers}
               />
-              <div>
+                <div>
                 {users.map((userId, idx) => {
                   const { email } = institutionUserList.find(({ id }) => userId === id) || {};
+                  console.log(this.context);
                   return this.renderUserRow(
                     idx,
                     userId,
