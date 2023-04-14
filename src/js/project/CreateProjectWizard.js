@@ -490,7 +490,6 @@ export default class CreateProjectWizard extends React.Component {
     );
   };
 
-
   toggleTemplatePlots = () => {
     if (this.context.useTemplatePlots) {
       this.context.setProjectDetails({ useTemplatePlots: false, plots: [] });
