@@ -127,17 +127,6 @@ export default class CreateProjectWizard extends React.Component {
     if (this.context.name !== "" || this.context.description !== "") this.checkAllSteps();
   }
 
-  clearTemplateUserAssignments = (templateProject) => {
-    if(this.context.institutionId != templateProject.templateInstitutionId) {
-      return {...templateProject,
-              designSettings: {...templateProject.designSettings,
-                               userAssignment: {
-                                 userMethod: null,
-                                 users: [],
-                                 percents: []}}}
-    } else return templateProject;
-  };
-
   /// API Calls
 
   getTemplateProjects = () =>
@@ -211,11 +200,8 @@ export default class CreateProjectWizard extends React.Component {
     fetch("/get-project-imagery?projectId=" + projectId)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
-        const institutionImageryIds = this.context.institutionImagery.map((i) => i.id);
         this.context.setProjectDetails({
-          projectImageryList: data
-            .map((i) => i.id)
-            .filter((id) => institutionImageryIds.includes(id)),
+          projectImageryList: data.map((i) => i.id)
         });
       });
 
@@ -525,6 +511,19 @@ export default class CreateProjectWizard extends React.Component {
       });
     }
   };
+
+
+  clearTemplateUserAssignments = (templateProject) => {
+    this.context.institutionId != templateProject.templateInstitutionId ?
+      {...templateProject,
+       designSettings: {...templateProject.designSettings,
+                        userAssignment: {
+                            userMethod: null,
+                            users: [],
+                            percents: []}}}
+      : templateProject;
+  };
+
 
   /// Render Functions
 
