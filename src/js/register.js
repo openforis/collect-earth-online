@@ -59,7 +59,7 @@ class Register extends React.Component {
                   autoComplete="off"
                   className="form-control"
                   id="email"
-                  onChange={(e) => this.setState({ email: e.target.value.toLowerCase() })}
+                  onChange={(e) => this.setState({ email: e.target.value })}
                   placeholder="Email"
                   type="email"
                   value={this.state.email}
