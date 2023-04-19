@@ -1296,6 +1296,7 @@ class UserList extends React.Component {
   updateUserInstitutionRole = (accountId, newUserEmail, newInstitutionRole) => {
     const existingRole = (this.state.institutionUserList.find((u) => u.id === accountId) || {})
       .institutionRole;
+    const lowerCaseNewUserEmail = newUserEmail.toLowerCase();
     const adminCount = this.state.institutionUserList.filter(
       (user) => user.institutionRole === "admin"
     ).length;
@@ -1312,7 +1313,7 @@ class UserList extends React.Component {
           },
           body: JSON.stringify({
             accountId,
-            newUserEmail,
+            newUserEmail: lowerCaseNewUserEmail,
             institutionId: this.props.institutionId,
             institutionRole: newInstitutionRole,
           }),
