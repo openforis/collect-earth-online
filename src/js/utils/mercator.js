@@ -3,7 +3,7 @@
  *** Mercator-OpenLayers.js
  ***
  *** Author: Gary W. Johnson
- *** Copyright: 2017-2020 Spatial Informatics Group, LLC
+ *** Copyright: 2017-2023 Spatial Informatics Group, LLC
  *** License: LGPLv3
  ***
  *** Description: This library provides a set of functions for
@@ -1420,6 +1420,20 @@ mercator.addPlotLayer = (mapConfig, plots, _callback) => {
 
 /*****************************************************************************
  ***
+ *** Geodash Functions
+ ***
+ *****************************************************************************/
+
+mercator.calculateArea = (obj) => {
+  try {
+    return getArea(obj, { projection: "EPSG:4326" }) / 10000;
+  } catch (e) {
+    return "N/A";
+  }
+};
+
+/*****************************************************************************
+ ***
  *** Functions to export plot and sample features as KML
  ***
  *****************************************************************************/
@@ -1429,15 +1443,16 @@ mercator.asPolygonFeature = (feature) =>
     ? new Feature({ geometry: fromCircle(feature.getGeometry()) })
     : feature;
 
-mercator.calculateGeoJsonArea = (geoJson) => {
-  try {
-    return getArea(mercator.parseGeoJson(geoJson, false), { projection: "EPSG:4326" }) / 10000;
-  } catch (e) {
-    return "N/A";
-  }
-};
+mercator.calculateGeoJsonArea = (geoJson) =>
+  mercator.calculateArea(mercator.parseGeoJson(geoJson, false));
 
 mercator.getKMLFromFeatures = (features) =>
   new KML().writeFeatures(features, { featureProjection: "EPSG:3857" });
+
+/*****************************************************************************
+ ***
+ *** Export mercator
+ ***
+ *****************************************************************************/
 
 export { mercator };
