@@ -386,7 +386,7 @@ def getTimeSeriesByCollectionAndIndex(assetId, indexName, scale, coords, startDa
     return indexCollection2.getInfo()
 
 
-def getTimeSeriesByIndex(sourceName, indexName, scale, coords, startDate, endDate, reducer):
+def getTimeSeriesByIndex(sourceName, indexName, scale, coords, startDate, endDate, reducer, assetId, band):
  
     def reduceRegion(image):
         theReducer = getReducer(reducer)
@@ -404,16 +404,20 @@ def getTimeSeriesByIndex(sourceName, indexName, scale, coords, startDate, endDat
         geometry = ee.Geometry.Point(coords)
 
     if sourceName.lower() == 'landsat':
-        collection = getLandsatToa(startDate, endDate, geometry)
+        collection = (getLandsatToa(startDate, endDate, geometry)
+                      .select([indexName],['index']))
     elif sourceName.lower() == 'nicfi':
         collection = getNICFI({
             'start':startDate,
             'end':endDate
-        })
+        }).select([indexName],['index'])
+    elif sourceName.lower() == "custom":
+        collection = (ee.ImageCollection(assetId)
+                      .filterBounds(geometry).filterDate(startDate, endDate)).select([band],['index'])
     else:
         raise ValueError(f'imagery source {sourceName} is not implemented.') 
-
-    collection = collection.select([indexName],['index'])
+   
+    # collection = collection.select([indexName],['index']) 
     result = ee.ImageCollection(ee.ImageCollection(collection).sort('system:time_start') \
         .distinct('system:time_start')) \
         .map(reduceRegion) \
@@ -597,3 +601,13 @@ def getStatistics(extent):
         populationResults = reducePop()
 
     return elevationResults.combine(populationResults).getInfo()
+
+# # test timeSeriesByIndex
+# coords_ = [[-89.12767852122995, 37.608305443749586],
+#            [-89.12720791677006, 37.608305443749586],
+#            [-89.12720791677006, 37.60853990806565],
+#            [-89.12767852122995, 37.60853990806565],
+#            [-89.12767852122995, 37.608305443749586]]
+
+# test = getTimeSeriesByIndex("Custom","NDVI",30,coords_,"2021-01-01","2021-04-01",'mean',"LANDSAT/LC09/C02/T1")
+# print(test)

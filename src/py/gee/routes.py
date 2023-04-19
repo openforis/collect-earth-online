@@ -161,7 +161,7 @@ def getPlanetTile(requestDict):
 
 # ########## Time Series ##########
 
-
+# this would be deprecated if its not being used anywhere else
 def timeSeriesByAsset(requestDict):
     values = {
         'timeseries': getTimeSeriesByCollectionAndIndex(
@@ -186,7 +186,11 @@ def timeSeriesByIndex(requestDict):
             getDefault(requestDict, 'geometry', None),
             getDefault(requestDict, 'startDate', None),
             getDefault(requestDict, 'endDate', None),
-            'median'
+            'median',
+            getDefault(requestDict, 'assetId', None), # assetId is needed for the sourceName=='custom' case now
+            getDefault(requestDict, 'band', None), # band is needed for the sourceName=='custom' case now
+
+
         )
     }
     return values

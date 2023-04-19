@@ -111,7 +111,7 @@ export default class GraphWidget extends React.Component {
 
   loadTimeSeries = () => {
     const { widget, plotExtentPolygon } = this.props;
-    const path = this.widgetIsCustom() ? "timeSeriesByAsset" : "timeSeriesByIndex";
+    const path = this.widgetIsCustom() ? "timeSeriesByIndex" : "timeSeriesByIndex"; // how to remove this line and have fn work still..?
     fetch("/geo-dash/gateway-request", {
       method: "POST",
       headers: {
