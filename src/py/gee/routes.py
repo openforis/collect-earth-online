@@ -161,22 +161,6 @@ def getPlanetTile(requestDict):
 
 # ########## Time Series ##########
 
-# this would be deprecated if its not being used anywhere else
-def timeSeriesByAsset(requestDict):
-    values = {
-        'timeseries': getTimeSeriesByCollectionAndIndex(
-            getDefault(requestDict, 'assetId', None),
-            getDefault(requestDict, 'band', None),
-            float(getDefault(requestDict, 'scale', 30)),
-            getDefault(requestDict, 'geometry'),
-            getDefault(requestDict, 'startDate', None),
-            getDefault(requestDict, 'endDate', None),
-            getDefault(requestDict, 'reducer', 'min').lower()
-        )
-    }
-    return values
-
-
 def timeSeriesByIndex(requestDict):
     values = {
         'timeseries': getTimeSeriesByIndex(
