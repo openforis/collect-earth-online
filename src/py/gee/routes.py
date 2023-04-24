@@ -161,22 +161,6 @@ def getPlanetTile(requestDict):
 
 # ########## Time Series ##########
 
-
-def timeSeriesByAsset(requestDict):
-    values = {
-        'timeseries': getTimeSeriesByCollectionAndIndex(
-            getDefault(requestDict, 'assetId', None),
-            getDefault(requestDict, 'band', None),
-            float(getDefault(requestDict, 'scale', 30)),
-            getDefault(requestDict, 'geometry'),
-            getDefault(requestDict, 'startDate', None),
-            getDefault(requestDict, 'endDate', None),
-            getDefault(requestDict, 'reducer', 'min').lower()
-        )
-    }
-    return values
-
-
 def timeSeriesByIndex(requestDict):
     values = {
         'timeseries': getTimeSeriesByIndex(
@@ -186,7 +170,11 @@ def timeSeriesByIndex(requestDict):
             getDefault(requestDict, 'geometry', None),
             getDefault(requestDict, 'startDate', None),
             getDefault(requestDict, 'endDate', None),
-            'median'
+            'median',
+            getDefault(requestDict, 'assetId', None), # assetId is needed for the sourceName=='custom' case now
+            getDefault(requestDict, 'band', None), # band is needed for the sourceName=='custom' case now
+
+
         )
     }
     return values
