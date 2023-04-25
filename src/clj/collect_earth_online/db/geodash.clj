@@ -52,7 +52,6 @@
    "imageCollection"        gee/imageCollection
    "imageCollectionByIndex" gee/imageCollectionByIndex
    "statistics"             gee/statistics
-   "timeSeriesByAsset"      gee/timeSeriesByAsset
    "timeSeriesByIndex"      gee/timeSeriesByIndex})
 
 (defn gateway-request [{:keys [params json-params]}]
