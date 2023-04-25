@@ -512,7 +512,7 @@ export default class CreateProjectWizard extends React.Component {
   };
 
 
-  clearTemplateUserAssignments = (templateProject) => {
+  clearTemplateUserAssignments = (templateProject) => 
     this.context.institutionId != templateProject.templateInstitutionId ?
       {...templateProject,
        designSettings: {...templateProject.designSettings,
@@ -521,7 +521,6 @@ export default class CreateProjectWizard extends React.Component {
                             users: [],
                             percents: []}}}
       : templateProject;
-  };
 
 
   /// Render Functions
