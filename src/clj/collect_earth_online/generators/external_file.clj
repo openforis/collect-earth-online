@@ -275,6 +275,6 @@
     (sh-wrapper-quoted folder-name {}
                          (pgsql2shp-string db-config
                                            (str project-id "-plots")
-                                           (str "\"SELECT * FROM " table-name "_shapes WHERE p_id=" project-id "\""))
+                                           (str "\"SELECT * FROM " table-name "_shapes WHERE project_id=" project-id "\""))
                          (str "7z a " zip-name " " project-id "-plots*"))
-    zip-name))
+    (str folder-name zip-name)))
