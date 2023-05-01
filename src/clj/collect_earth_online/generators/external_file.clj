@@ -3,6 +3,7 @@
             [clojure.set        :as set]
             [clojure.java.io    :as io]
             [clojure.java.shell :as sh]
+            [triangulum.config  :refer [get-config]]
             [triangulum.type-conversion :as tc]
             [triangulum.utils :refer [parse-as-sh-cmd]]
             [collect-earth-online.utils.part-utils :as pu]
@@ -43,6 +44,14 @@
         (if (= 0 exit)
           out
           (pu/init-throw  err))))))
+
+(defn- sh-wrapper-quoted [dir env & commands]
+  (sh/with-sh-dir dir
+    (sh/with-sh-env (merge {:PATH path-env} env)
+      (doseq [cmd commands]
+        (let [{:keys [exit err]} (sh/sh "bash" "-c" cmd)]
+          (when-not (= 0 exit)
+            (pu/init-throw err)))))))
 
 ;;;
 ;;; Load Information
@@ -241,3 +250,31 @@
                (assoc :project_rid project-id)
                (split-ext :extra_plot_info [:project_rid :visible_id :plot_geom])))
          ext-plots)))
+
+(defn pgsql2shp-string
+  [db-config file-name query]
+  (let [db-name (:dbname db-config)
+        db-user (:user db-config)]
+    (str "pgsql2shp -f " file-name " -u " db-user " " db-name " " query)))
+
+(defn export-table-to-file
+  [folder-name project-id table-name db-config]
+  (sh-wrapper-quoted folder-name {}
+                         (pgsql2shp-string db-config
+                                           (str project-id "-plots")
+                                           (str "\"SELECT * FROM " table-name "_shapes WHERE p_id=" project-id "\""))
+                         (str "7z a " project-id "-" table-name ".zip " project-id "-plots*")))
+
+
+(defn create-shape-files
+  [table-name project-id]
+  (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "-" table-name "/")
+        db-config   (get-config :database)
+        zip-name    (str project-id "-" table-name ".zip")]
+    (sh-wrapper tmp-dir {} (str "rm -rf " folder-name) (str "mkdir " folder-name))
+    (sh-wrapper-quoted folder-name {}
+                         (pgsql2shp-string db-config
+                                           (str project-id "-plots")
+                                           (str "\"SELECT * FROM " table-name "_shapes WHERE p_id=" project-id "\""))
+                         (str "7z a " zip-name " " project-id "-plots*"))
+    zip-name))
