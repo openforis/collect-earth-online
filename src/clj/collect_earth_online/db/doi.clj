@@ -3,22 +3,22 @@
             [clojure.java.io :as io]
             [triangulum.database :refer [call-sql
                                          sql-primitive]]
+            [triangulum.config  :refer [get-config]]
             [triangulum.type-conversion :as tc]
             [collect-earth-online.generators.external-file :refer [create-shape-files]])
   (:import java.time.format.DateTimeFormatter
            java.time.LocalDateTime))
 
-(def auth-token "jAzGJCULvXi6HQNCIPNc1oL2wMJoW3LiDnyPXfDk4eb59ONrecKA08TejQe5")
-
-(def base-url "https://sandbox.zenodo.org/api")
+(def base-url (:url (get-config :zenodo)))
 
 (defn req-headers
-  [auth-token]
-  {"Authorization" (str "Bearer " auth-token)})
+  []
+  (let [auth-token (:api-key (get-config :zenodo))]
+    {"Authorization" (str "Bearer " auth-token)}))
 
 (defn get-zenodo-deposition
   [deposition-id]
-  (let [headers (req-headers auth-token)]
+  (let [headers (req-headers)]
     (http/get (str base-url "/deposit/depositions/" deposition-id) {:headers headers :as :json})))
 
 (defn create-contributors-list
@@ -34,7 +34,7 @@
    project-name
    user users-assigned
    description]
-  (let [headers  (req-headers auth-token)
+  (let [headers  (req-headers)
         metadata {:upload_type      "dataset"
                   :title            (str institution-name "_" project-name)
                   :publication_date (-> (DateTimeFormatter/ofPattern "yyyy-MM-dd")
@@ -51,7 +51,7 @@
 
 (defn upload-deposition-file
   [bucket-url project-id table-name]
-  (let [headers    (req-headers auth-token)
+  (let [headers    (req-headers)
         shape-file (create-shape-files table-name project-id)]
     (http/put (str bucket-url "/" table-name "-" project-id ".zip")
               {:content-type :multipart/form-data
