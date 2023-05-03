@@ -162,7 +162,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
                     {surveyQuestion.parentAnswerIds.length === 0
                       ? "Any"
                       : surveyQuestion.parentAnswerIds
-                          .map((paId) => parentQuestion.answers[paId].answer)
+                          .map((paId) => parentQuestion.answers[paId]?.answer)
                           .join(", ")}
                   </li>
                 </>
