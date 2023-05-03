@@ -60,8 +60,8 @@ def imageCollection(requestDict):
 # ########## Pre defined ee.ImageCollection ##########
 
 def filteredLandsat(requestDict):
-    startDate = getDefault(requestDict, 'startDate')
-    endDate = getDefault(requestDict, 'endDate')
+    startDate = getDefault(requestDict, 'startDate', '1990-01-01')
+    endDate = getDefault(requestDict, 'endDate', '2100-01-01')
     values = filteredImageCompositeToMapId(
         getLandsatToa(startDate, endDate),
         {
@@ -74,8 +74,8 @@ def filteredLandsat(requestDict):
     return values
 
 def filteredNicfi(requestDict):
-    startDate = getDefault(requestDict, 'startDate')
-    endDate = getDefault(requestDict, 'endDate')
+    startDate = getDefault(requestDict, 'startDate', '1990-01-01')
+    endDate = getDefault(requestDict, 'endDate', '2100-01-01')
     values = filteredNicfiCompositeToMapId(
         getNICFI({'start':startDate, 'end':endDate}),
         {
