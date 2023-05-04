@@ -271,7 +271,7 @@ def filteredSentinelComposite(visParams, startDate, endDate, metadataCloudCoverM
 
     sentinel2 = ee.ImageCollection('COPERNICUS/S2')
     f2017s2 = sentinel2.filterDate(startDate, endDate).filterMetadata(
-        'CLOUDY_PIXEL_PERCENTAGE', 'less_than', metadataCloudCoverMax)
+        'CLOUDY_PIXEL_PERCENTAGE', 'less_than', int(metadataCloudCoverMax))
     m2017s2 = f2017s2.map(scaleAndCloudScore)
     m2017s3 = m2017s2.qualityMosaic('cloudscore')
     return imageToMapId(m2017s3, visParams)
