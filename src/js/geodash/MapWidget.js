@@ -132,7 +132,6 @@ export default class MapWidget extends React.Component {
   };
 
   checkForCache = (postObject) => {
-    return null;
     const msPerDay = 24 * 60 * 60 * 1000;
     const jsonKey = JSON.stringify(postObject);
     const { url, lastGatewayUpdate } = JSON.parse(localStorage.getItem(jsonKey)) || {};
