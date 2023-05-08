@@ -250,7 +250,7 @@ def filteredImageCompositeToMapId(eeCollection, visParams, metadataCloudCoverMax
     eeCollection = eeCollection.filterMetadata(
         'CLOUD_COVER',
         'less_than',
-        metadataCloudCoverMax
+        int(metadataCloudCoverMax)
         )
     eeMosaicImage = medoid(eeCollection,  ['BLUE', 'GREEN', 'RED', 'NIR', 'SWIR1', 'SWIR2'])
 

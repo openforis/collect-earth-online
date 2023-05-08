@@ -67,7 +67,7 @@ def filteredLandsat(requestDict):
         {
             'min': getDefault(requestDict, 'min', '0.03,0.01,0.05'),
             'max': getDefault(requestDict, 'max', '0.45,0.5,0.4'),
-            'bands': getDefault(requestDict, 'bands', 'B4,B5,B3')
+            'bands': getDefault(requestDict, 'bands', 'BLUE,RED,GREEN')
         },
         getDefault(requestDict, 'cloudLessThan', 60),
     )
