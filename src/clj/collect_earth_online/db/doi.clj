@@ -29,10 +29,11 @@
           :affiliation institution-name})
        users))
 
-(defn create-zenodo-deposition
+(defn create-zenodo-deposition!
   [institution-name
    project-name
-   user users-assigned
+   user
+   users-assigned
    description]
   (let [headers  (req-headers)
         metadata {:upload_type      "dataset"
@@ -49,7 +50,7 @@
                 :as           :json
                 :headers      headers})))
 
-(defn upload-deposition-file
+(defn upload-deposition-file!
   [bucket-url project-id table-name]
   (let [headers    (req-headers)
         shape-file (create-shape-files table-name project-id)]
@@ -78,7 +79,7 @@
         creator          (first (call-sql "get_user_by_id" user-id))
         contributors     (call-sql "select_assigned_users_by_project" project-id)]
     (->
-     (create-zenodo-deposition institution-name project-name creator contributors description)
+     (create-zenodo-deposition! institution-name project-name creator contributors description)
      :body
      (insert-doi! project-id user-id))))
 
@@ -88,4 +89,4 @@
         doi        (first (call-sql "select_doi_by_project" project-id))
         bucket     (-> doi :links :bucket)
         options    (:options params)]
-    (upload-deposition-file bucket project-id options)))
+    (upload-deposition-file! bucket project-id options)))
