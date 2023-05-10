@@ -50,8 +50,9 @@ export default class SurveyCollection extends React.Component {
 
   calculateTopLevelNodes = () => {
     const { surveyQuestions } = this.props;
+    const visibleSurveyQuestions = filterObject(surveyQuestions, ([_id, val]) => val.hideQuestion != true);
     this.setState({
-      topLevelNodeIds: mapObjectArray(surveyQuestions, ([id, sq]) => ({
+      topLevelNodeIds: mapObjectArray(visibleSurveyQuestions, ([id, sq]) => ({
         nodeId: id,
         cardOrder: sq.cardOrder,
       }))
@@ -84,9 +85,11 @@ export default class SurveyCollection extends React.Component {
 
   checkAllSubAnswers = (currentQuestionId) => {
     const { surveyQuestions } = this.props;
-    const { visible, answered } = this.getNodeById(currentQuestionId);
+    const visibleSurveyQuestions = filterObject(surveyQuestions, ([_id, val]) => val.hideQuestion != true);
+    const { visible, answered, hideQuestion } = this.getNodeById(currentQuestionId);
     const childQuestionIds = mapObjectArray(
-      filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === currentQuestionId),
+      filterObject(visibleSurveyQuestions, ([_id, sq]) =>
+        (sq.parentQuestionId === currentQuestionId) && !hideQuestion),
       ([key, _val]) => Number(key)
     );
     return (
@@ -175,7 +178,8 @@ export default class SurveyCollection extends React.Component {
 
   getSurveyQuestionText = (questionId) => {
     const { surveyQuestions } = this.props;
-    return _.get(surveyQuestions, [questionId, "question"], "");
+    const visibleSurveyQuestions = filterObject(surveyQuestions, ([_id, val]) => val.hideQuestion != true);
+    return _.get(visibleSurveyQuestions, [questionId, "question"], "");
   };
 
   getSurveyAnswerText = (questionId, answerId) => {
@@ -484,6 +488,7 @@ export default class SurveyCollection extends React.Component {
               surveyQuestions={this.props.surveyQuestions}
               surveyRules={this.props.surveyRules}
               validateAndSetCurrentValue={this.validateAndSetCurrentValue}
+              hideQuestion={this.hideQuestion}
             />
           )}
         </>

@@ -20,6 +20,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
   );
 
   const [newQuestionText, setText] = useState(surveyQuestion.question);
+  const [hideQuestion, setHideQuestion] = useState(surveyQuestion.hideQuestion);
   const [showBulkAdd, setBulkAdd] = useState(false);
 
   const getChildQuestionIds = (questionId) => {
@@ -54,6 +55,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
       const newQuestion = {
         ...surveyQuestion,
         question: newQuestionText,
+        hideQuestion,
       };
       setProjectDetails({
         surveyQuestions: { ...surveyQuestions, [surveyQuestionId]: newQuestion },
@@ -122,6 +124,15 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
           </div>
           <div className="pb-1">
             <ul className="mb-1 pl-3">
+              <li>
+                <span className="font-weight-bold"> Hide Question: </span>
+                <input
+                  checked={hideQuestion || false}
+                  id="hide"
+                  type="checkbox"
+                  onChange={(e) => setHideQuestion(!hideQuestion)}
+                />
+              </li>
               <li>
                 <span className="font-weight-bold">Component Type: </span>
                 {surveyQuestion.componentType + " - " + surveyQuestion.dataType}

@@ -29,6 +29,7 @@ export default class NewQuestionDesigner extends React.Component {
       newQuestionText: "",
       selectedCopyId: -1,
       copyChildren: true,
+      hideQuestion: false,
     };
   }
 
