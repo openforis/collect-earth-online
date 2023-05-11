@@ -194,6 +194,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
                 color={surveyAnswer.color}
                 editMode={editMode}
                 required={surveyAnswer.required}
+                hide={surveyAnswer.hide}
                 surveyQuestion={surveyQuestion}
                 surveyQuestionId={surveyQuestionId}
               />
