@@ -1110,14 +1110,12 @@ function ImageAnalysisPane({ imageryAttribution }) {
 class SideBar extends React.Component {
   checkCanSave = () => {
     const { answerMode, currentPlot, inReviewMode, surveyQuestions } = this.props;
-    const noneAnswered = everyObject(surveyQuestions, ([_id, sq]) => safeLength(sq.answered) === 0);
+    const visibleSurveyQuestions = filterObject(surveyQuestions, ([_id, val]) => val.hideQuestion != true);
+    const noneAnswered = everyObject(visibleSurveyQuestions, ([_id, sq]) => safeLength(sq.answered) === 0);
     const hasSamples = safeLength(currentPlot.samples) > 0;
     const allAnswered = everyObject(
-      surveyQuestions,
-      ([_id, sq]) =>
-        (!sq.cardOrder && sq.parentQuestionId === -1) || // Skip over the duplicate questions
-        safeLength(sq.visible) === safeLength(sq.answered)
-    );
+      visibleSurveyQuestions,
+      ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered));
     if (answerMode !== "question") {
       alert("You must be in question mode to save the collection.");
       return false;
