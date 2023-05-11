@@ -49,7 +49,7 @@ export default class NewQuestionDesigner extends React.Component {
 
   addSurveyQuestion = () => {
     if (this.state.newQuestionText !== "") {
-      const { selectedType, newQuestionText, selectedParentId, selectedAnswerIds } = this.state;
+      const { selectedType, newQuestionText, selectedParentId, selectedAnswerIds, hideQuestion } = this.state;
       const { surveyQuestions, setProjectDetails } = this.props;
       const { dataType, componentType } = this.componentTypes[selectedType];
       const repeatedQuestions = lengthObject(
@@ -77,6 +77,7 @@ export default class NewQuestionDesigner extends React.Component {
           parentQuestionId: selectedParentId,
           parentAnswerIds: selectedAnswerIds,
           dataType,
+          hideQuestion,
           componentType,
           ...(selectedParentId === -1 && { cardOrder: newCardOrder }),
         };

@@ -19,7 +19,8 @@ export default function SurveyCollectionQuestion({
   const [showAnswers, setShow] = useState(true);
   const childNodes = filterObject(
     surveyQuestions,
-    ([_id, sq]) => sq.parentQuestionId === surveyNodeId
+    ([_id, sq]) => ((sq.parentQuestionId === surveyNodeId)
+                    && sq.hideQuestion != true)
   );
   const nodeQuestion = surveyQuestions[surveyNodeId];
   return nodeQuestion ? (
