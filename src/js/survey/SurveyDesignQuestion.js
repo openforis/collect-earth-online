@@ -54,11 +54,18 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
     const matchingRule = findObject(
       surveyRules,
       ([_id, rl]) => (
-        rl.questionIds1?.includes(questionId) ||
-          rl.questionIds2?.includes(questionId)
+        // Rules for matching sums
+        (rl.questionIds1?.includes(questionId) ||
+         rl.questionIds2?.includes(questionId)) ||
+        // Rules for Incompatible Answers
+        (rl.questionId1 === questionId ||
+         rl.questionId2 === questionId) ||
+        // Rules for Sums of answers
+        (rl.questionIds?.includes(questionId))
       ));
     return matchingRule;
   }
+
 
   const updateQuestion = () => {
     const questionHasRules = checkQuestionRules(surveyQuestionId);

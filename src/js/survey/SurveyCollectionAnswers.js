@@ -162,7 +162,7 @@ class AnswerInput extends React.Component {
         />
         <button
           className="text-center btn btn-outline-lightgreen btn-sm ml-2"
-          disabled={newInput === ""}
+          disabled={(answer.required && newInput === "")}
           id="save-input"
           name="save-input"
           onClick={() => {
