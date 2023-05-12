@@ -166,7 +166,7 @@ class AnswerInput extends React.Component {
           id="save-input"
           name="save-input"
           onClick={() => {
-            if (!answer.required || newInput) {
+            if (!answer.required || newInput || newInput === 0) {
               validateAndSetCurrentValue(surveyNodeId, answerId, newInput);
             }
           }}

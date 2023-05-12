@@ -173,7 +173,6 @@ export default class AnswerDesigner extends React.Component {
             </label>
           </div>
         )}
-
         {surveyQuestion.componentType === "input" && (
           <div className="d-flex ml-4 align-items-center">
             <input
