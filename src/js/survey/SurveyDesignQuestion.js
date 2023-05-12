@@ -6,7 +6,7 @@ import SurveyRule from "./SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
 
 import { removeEnumerator } from "../utils/generalUtils";
-import { mapObjectArray, filterObject, lengthObject } from "../utils/sequence";
+import { mapObjectArray, filterObject, lengthObject, findObject } from "../utils/sequence";
 import { ProjectContext } from "../project/constants";
 
 export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQuestionId }) {
@@ -50,7 +50,22 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
     setProjectDetails({ surveyQuestions: newSurveyQuestions });
   };
 
+  const checkQuestionRules = (questionId) => {
+    const matchingRule = findObject(
+      surveyRules,
+      ([_id, rl]) => (
+        rl.questionIds1?.includes(questionId) ||
+          rl.questionIds2?.includes(questionId)
+      ));
+    return matchingRule;
+  }
+
   const updateQuestion = () => {
+    const questionHasRules = checkQuestionRules(surveyQuestionId);
+    if (hideQuestion && questionHasRules) {
+      alert("This question is being used in a rule. Please either delete or update the rule before hiding the question");
+      return null;
+    }
     if (newQuestionText !== "") {
       const newQuestion = {
         ...surveyQuestion,
