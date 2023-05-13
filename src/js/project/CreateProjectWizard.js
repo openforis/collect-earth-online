@@ -401,12 +401,17 @@ export default class CreateProjectWizard extends React.Component {
     return errorList.filter((e) => e);
   };
 
+  allAnswersHidden = (answers) => {
+    const hiddenAnswers = filterObject(answers, ([_id, ans]) => ans.hide);
+    return lengthObject(answers) === lengthObject(hiddenAnswers);
+  }
+
   validateSurveyQuestions = () => {
     const { surveyQuestions } = this.context;
     const errorList = [
       lengthObject(surveyQuestions) === 0 && "A survey must include at least one question.",
-      someObject(surveyQuestions, ([_id, sq]) => lengthObject(sq.answers) === 0) &&
-        "All survey questions must contain at least one answer.",
+      someObject(surveyQuestions, ([_id, sq]) => (lengthObject(sq.answers) === 0 || this.allAnswersHidden(sq.answers))) &&
+        "All survey questions must contain at least one (unhidden) answer.",
     ];
     return errorList.filter((e) => e);
   };
