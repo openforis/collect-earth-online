@@ -1,11 +1,12 @@
 (ns collect-earth-online.db.doi
   (:require [clj-http.client :as http]
             [clojure.java.io :as io]
-            [triangulum.database :refer [call-sql
-                                         sql-primitive]]
+            [triangulum.database :refer [call-sql]]
             [triangulum.config  :refer [get-config]]
             [triangulum.type-conversion :as tc]
-            [collect-earth-online.generators.external-file :refer [create-shape-files]])
+            [collect-earth-online.views :refer [data-response redirect]]
+            [collect-earth-online.generators.external-file :refer [create-and-zip-files-for-doi]]
+            [clojure.data.json :as json])
   (:import java.time.format.DateTimeFormatter
            java.time.LocalDateTime))
 
@@ -49,27 +50,14 @@
                 :content-type :json
                 :as           :json
                 :headers      headers})))
-
-(defn upload-deposition-file!
-  [bucket-url project-id table-name]
-  (let [headers    (req-headers)
-        shape-file (create-shape-files table-name project-id)]
-    (http/put (str bucket-url "/" table-name "-" project-id ".zip")
-              {:content-type :multipart/form-data
-               :headers      headers
-               :multipart    [{:name "Content/type" :content "application/zip"}
-                              {:name "file" :content (io/file shape-file)}]})))
-
 (defn insert-doi!
   [{:keys [id metadata] :as doi-info}
    project-id user-id]
   (let [doi-path (-> metadata :prereserve_doi :doi)]
-    (-> "insert_doi"
-        (call-sql id project-id user-id doi-path doi-info)
-        first
-        sql-primitive)))
+    (first
+     (call-sql "insert_doi" id project-id user-id doi-path (tc/clj->jsonb doi-info)))))
 
-(defn create-doi
+(defn create-doi!
   [{:keys [params]}]
   (let [user-id          (:userId params -1)
         project-id       (tc/val->int (:projectId params))
@@ -81,12 +69,82 @@
     (->
      (create-zenodo-deposition! institution-name project-name creator contributors description)
      :body
-     (insert-doi! project-id user-id))))
+     (insert-doi! project-id user-id)
+     data-response)))
+
+
+(defn build-survey-data
+  [plot-data]
+  (reduce (fn [acc surv]
+            (let [edn-sample-data (tc/jsonb->clj (:samples surv))]
+              (conj acc
+                    {:email             (:email surv)
+                     :analysis_duration (:analysis_duration surv)
+                     :collection_time   (-> surv :collection_time str)
+                     :flagged           (:flagged surv)
+                     :flagged_reason    (:flagged_reason surv)
+                     :confidence        (:confidence surv)
+                     :answers           (group-by (fn [s] (-> s :id )) edn-sample-data)})))
+          [] plot-data))
+
+(defn merge-plot-data
+  [plot-data]
+  (let [merged-plot-data (apply merge plot-data)
+        survey-data      (build-survey-data plot-data)]
+    (-> merged-plot-data
+        (dissoc :samples)
+        (dissoc :email)
+        (dissoc :analysis_duration)
+        (dissoc :collection_time)
+        (dissoc :flagged)  
+        (dissoc :flagged_reason)
+        (dissoc :confidence)
+        (assoc  :survey survey-data))))
+
+
+(defn group-plot-data
+  [plot-data]
+  (->> plot-data
+   (group-by (fn [s] (-> s :plotid str keyword)))
+   (map (fn [[key value]]
+          [key (merge-plot-data value)]))
+   (into {})))
+
+(defn get-project-data
+  [project-id]
+  (let [project-data (first (call-sql "select_project_info_for_doi" project-id))
+        plot-data    (call-sql "dump_project_plot_data" project-id)]
+    (-> project-data
+        (assoc :plot-info (group-plot-data plot-data))
+        (update :survey_rules #(tc/jsonb->clj %))
+        (update :survey_questions #(tc/jsonb->clj %))
+        (update :aoi_features #(tc/jsonb->clj %))
+        (update :created_date #(str %))
+        (update :published_date #(str %)))))
+
+
+(defn upload-deposition-files!
+  [bucket-url project-id zip-file]
+  (let [headers    (req-headers)]
+    (http/put (str bucket-url "/" project-id "-files" ".zip")
+              {:content-type :multipart/form-data
+               :headers      headers
+               :multipart    [{:name "Content/type" :content "application/zip"}
+                              {:name "file" :content (io/file zip-file)}]})))
 
 (defn upload-doi-files!
   [{:keys [params]}]
+  (let [project-id   (:projectId params)
+        doi          (first (call-sql "select_doi_by_project" project-id))
+        bucket       (-> doi :full_data tc/jsonb->clj :links :bucket)
+        project-data (json/write-str (get-project-data project-id))
+        zip-file     (create-and-zip-files-for-doi project-id project-data)]
+    (upload-deposition-files! bucket project-id zip-file)
+    (data-response {})))
+
+(defn download-doi-files
+  [{:keys [params]}]
   (let [project-id (:projectId params)
-        doi        (first (call-sql "select_doi_by_project" project-id))
-        bucket     (-> doi :links :bucket)
-        options    (:options params)]
-    (upload-deposition-file! bucket project-id options)))
+        doi (first (call-sql "select_doi_by_project" project-id))
+        bucket (-> doi :full_data tc/jsonb->clj :links :bucket)]
+    (data-response (str bucket "/" project-id "-files.zip"))))

@@ -1,5 +1,5 @@
 CREATE VIEW plot_shapes AS
-SELECT plot_geom AS geometry, project_rid as p_id
+SELECT plot_geom AS geometry, project_rid as project_id
 FROM plots;
 
 CREATE VIEW sample_shapes AS
