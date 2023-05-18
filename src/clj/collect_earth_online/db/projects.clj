@@ -7,7 +7,7 @@
    [clojure.set                                   :as set]
    [clojure.string                                :as str]
    [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
-   [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples]]
+   [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples zip-shape-files]]
    [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
    [collect-earth-online.utils.part-utils         :as pu]
    [collect-earth-online.views                    :refer [data-response]]
@@ -17,7 +17,8 @@
                                                           sql-primitive]]
    [triangulum.logging                            :refer [log]]
    [triangulum.type-conversion                    :as tc]
-   [triangulum.utils                              :as u]))
+   [triangulum.utils                              :as u]
+   [clojure.java.io :as io]))
 
 ;;;
 ;;; Auth functions
@@ -932,3 +933,16 @@
                                               ".csv")}
          :body (str/join "\n" (cons headers-out data-rows))})
       (data-response "Project not found."))))
+
+(defn create-shape-files
+  [{:keys [params]}]
+  (let [project-id (:projectId params)
+        zip-file (zip-shape-files project-id)
+        file-name (last (str/split zip-file "/"))]
+    (if zip-file
+      {:headers {"Content-Type" "application/zip"
+                 "Content-Disposition" (str "attachment; filename=" file-name)}
+       :body (io/file zip-file)
+       :status 200}
+      {:status 500
+       :body "Error generating shape files."})))
