@@ -938,7 +938,7 @@
   [{:keys [params]}]
   (let [project-id (:projectId params)
         zip-file (zip-shape-files project-id)
-        file-name (last (str/split zip-file "/"))]
+        file-name (last (str/split zip-file #"/"))]
     (if zip-file
       {:headers {"Content-Type" "application/zip"
                  "Content-Disposition" (str "attachment; filename=" file-name)}

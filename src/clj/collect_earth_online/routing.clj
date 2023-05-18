@@ -104,7 +104,9 @@
    [:post "/update-project"]                 {:handler     projects/update-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/create-shape-files"]             {:handler projects/create-shape-files}
+   [:get "/create-shape-files"]             {:handler projects/create-shape-files
+                                              :auth-type :user
+                                              :auth-action :block}
    ;; Plots API
    [:get  "/get-collection-plot"]            {:handler     plots/get-collection-plot
                                               :auth-type   :collect
