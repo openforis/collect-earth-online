@@ -262,8 +262,7 @@
   (sh-wrapper-quoted folder-name {}
                          (pgsql2shp-string db-config
                                            (str project-id "-" table-name)
-                                           (str "\"SELECT * FROM " table-name "_shapes WHERE project_id=" project-id "\""))))
-
+                                           (str "\"SELECT * FROM get_" table-name "_shapes(" project-id ")\""))))
 
 (defn create-shape-files
   [folder-name table-name project-id]
