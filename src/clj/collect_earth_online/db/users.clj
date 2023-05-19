@@ -44,7 +44,7 @@
 
 (defn register [{:keys [params]}]
   (let [reset-key             (str (UUID/randomUUID))
-        email                 (:email params)
+        email                 (str/lower-case (:email params))
         password              (:password params)
         password-confirmation (:passwordConfirmation params)]
     (if-let [error-msg (get-register-errors email password password-confirmation)]
@@ -196,7 +196,7 @@
       (data-response {}))))
 
 (defn update-institution-role [{:keys [params]}]
-  (let [new-user-email   (:newUserEmail params)
+  (let [new-user-email   (str/lower-case (:newUserEmail params))
         account-id       (if-let [id (:accountId params)]
                            (tc/val->int id)
                            (-> (call-sql "get_user_by_email" new-user-email)

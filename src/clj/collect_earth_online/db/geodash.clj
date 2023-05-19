@@ -16,15 +16,15 @@
 
 (require-python '[sys :bind-ns])
 (py. (get-attr sys "path") "append" "src/py")
-(require-python '[gee.routes :as gee]
-                '[gee.utils :refer [initialize]])
+(require-python '[gee.routes :as gee :reload]
+                '[gee.utils :as utils :reload])
 
 (defonce last-initialized (atom 0))
 
 (defn- check-initialized []
   (when (> (- (System/currentTimeMillis) @last-initialized) max-age)
     (let [{:keys [ee-account ee-key-path]} (get-config :gee)]
-      (initialize ee-account ee-key-path)
+      (utils/initialize ee-account ee-key-path)
       (reset! last-initialized (System/currentTimeMillis)))))
 
 (defn- parse-py-errors [e]
@@ -52,7 +52,6 @@
    "imageCollection"        gee/imageCollection
    "imageCollectionByIndex" gee/imageCollectionByIndex
    "statistics"             gee/statistics
-   "timeSeriesByAsset"      gee/timeSeriesByAsset
    "timeSeriesByIndex"      gee/timeSeriesByIndex})
 
 (defn gateway-request [{:keys [params json-params]}]

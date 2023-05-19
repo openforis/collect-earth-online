@@ -1,7 +1,6 @@
 import React from "react";
-
 import { Polygon } from "ol/geom";
-import { getArea as sphereGetArea } from "ol/sphere";
+import { mercator } from "../utils/mercator";
 
 export default class StatsWidget extends React.Component {
   constructor(props) {
@@ -58,13 +57,8 @@ export default class StatsWidget extends React.Component {
     }
   };
 
-  calculateArea = (poly) => {
-    try {
-      return sphereGetArea(new Polygon([poly]), { projection: "EPSG:4326" }) / 10000;
-    } catch (e) {
-      return "N/A";
-    }
-  };
+  calculateArea = (plotExtentPolygon) => 
+    mercator.calculateArea(new Polygon([plotExtentPolygon]));
 
   renderRow = (label, value, image) => (
     <div className="d-flex align-items-center mb-3">

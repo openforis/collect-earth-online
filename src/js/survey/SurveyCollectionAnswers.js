@@ -11,40 +11,42 @@ function AnswerButton({ surveyNodeId, surveyNode, selectedSampleId, validateAndS
     <ul className="samplevalue justify-content-center my-1">
       {mapObjectArray(answers, ([strId, ans]) => {
         const ansId = Number(strId);
-        return (
-          <li key={ansId} className="mb-1">
-            <button
-              className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
-              id={ans.answer + "_" + ansId}
-              onClick={() => {
-                const value = dataType === "number" ? Number(ans.answer) : ans.answer;
-                validateAndSetCurrentValue(surveyNodeId, ansId, value);
-              }}
-              style={{
-                boxShadow: answered.some(
-                  (a) => a.answerId === ansId && a.sampleId === selectedSampleId
-                )
-                  ? "0px 0px 8px 3px black inset"
-                  : answered.some((a) => a.answerId === ansId)
-                  ? "0px 0px 8px 3px grey inset"
-                  : "initial",
-              }}
-              title={ans.answer}
-              type="button"
-            >
-              <div
-                className="circle mr-2"
-                style={{
-                  backgroundColor: ans.color,
-                  border: "1px solid",
-                  float: "left",
-                  marginTop: "4px",
+        if (!ans.hide) {
+          return (
+            <li key={ansId} className="mb-1">
+              <button
+                className="btn btn-outline-darkgray btn-sm btn-block pl-1 text-truncate"
+                id={ans.answer + "_" + ansId}
+                onClick={() => {
+                  const value = dataType === "number" ? Number(ans.answer) : ans.answer;
+                  validateAndSetCurrentValue(surveyNodeId, ansId, value);
                 }}
-              />
-              <span className="small">{ans.answer}</span>
-            </button>
-          </li>
-        );
+                style={{
+                  boxShadow: answered.some(
+                    (a) => a.answerId === ansId && a.sampleId === selectedSampleId
+                  )
+                    ? "0px 0px 8px 3px black inset"
+                    : answered.some((a) => a.answerId === ansId)
+                      ? "0px 0px 8px 3px grey inset"
+                      : "initial",
+                }}
+                title={ans.answer}
+                type="button"
+              >
+                <div
+                  className="circle mr-2"
+                  style={{
+                    backgroundColor: ans.color,
+                    border: "1px solid",
+                    float: "left",
+                    marginTop: "4px",
+                  }}
+                />
+                <span className="small">{ans.answer}</span>
+              </button>
+            </li>
+          );
+        }
       })}
     </ul>
   );
@@ -85,8 +87,8 @@ function AnswerRadioButton({
                   )
                     ? "black"
                     : answered.some((a) => a.answerId === ansId)
-                    ? "#e8e8e8"
-                    : "white",
+                      ? "#e8e8e8"
+                      : "white",
                 }}
               />
               <span className="small">{ans.answer}</span>
@@ -160,11 +162,11 @@ class AnswerInput extends React.Component {
         />
         <button
           className="text-center btn btn-outline-lightgreen btn-sm ml-2"
-          disabled={newInput === ""}
+          disabled={(answer.required && newInput === "")}
           id="save-input"
           name="save-input"
           onClick={() => {
-            if (!answer.required || newInput) {
+            if (!answer.required || newInput || newInput === 0) {
               validateAndSetCurrentValue(surveyNodeId, answerId, newInput);
             }
           }}

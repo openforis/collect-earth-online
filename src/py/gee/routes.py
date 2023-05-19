@@ -60,22 +60,22 @@ def imageCollection(requestDict):
 # ########## Pre defined ee.ImageCollection ##########
 
 def filteredLandsat(requestDict):
-    startDate = getDefault(requestDict, 'startDate')
-    endDate = getDefault(requestDict, 'endDate')
+    startDate = getDefault(requestDict, 'startDate', '1990-01-01')
+    endDate = getDefault(requestDict, 'endDate', '2023-01-01')
     values = filteredImageCompositeToMapId(
         getLandsatToa(startDate, endDate),
         {
             'min': getDefault(requestDict, 'min', '0.03,0.01,0.05'),
             'max': getDefault(requestDict, 'max', '0.45,0.5,0.4'),
-            'bands': getDefault(requestDict, 'bands', 'B4,B5,B3')
+            'bands': getDefault(requestDict, 'bands', 'BLUE,RED,GREEN')
         },
         getDefault(requestDict, 'cloudLessThan', 60),
     )
     return values
 
 def filteredNicfi(requestDict):
-    startDate = getDefault(requestDict, 'startDate')
-    endDate = getDefault(requestDict, 'endDate')
+    startDate = getDefault(requestDict, 'startDate', '1990-01-01')
+    endDate = getDefault(requestDict, 'endDate', '2023-01-01')
     values = filteredNicfiCompositeToMapId(
         getNICFI({'start':startDate, 'end':endDate}),
         {
@@ -161,22 +161,6 @@ def getPlanetTile(requestDict):
 
 # ########## Time Series ##########
 
-
-def timeSeriesByAsset(requestDict):
-    values = {
-        'timeseries': getTimeSeriesByCollectionAndIndex(
-            getDefault(requestDict, 'assetId', None),
-            getDefault(requestDict, 'band', None),
-            float(getDefault(requestDict, 'scale', 30)),
-            getDefault(requestDict, 'geometry'),
-            getDefault(requestDict, 'startDate', None),
-            getDefault(requestDict, 'endDate', None),
-            getDefault(requestDict, 'reducer', 'min').lower()
-        )
-    }
-    return values
-
-
 def timeSeriesByIndex(requestDict):
     values = {
         'timeseries': getTimeSeriesByIndex(
@@ -186,7 +170,11 @@ def timeSeriesByIndex(requestDict):
             getDefault(requestDict, 'geometry', None),
             getDefault(requestDict, 'startDate', None),
             getDefault(requestDict, 'endDate', None),
-            'median'
+            'median',
+            getDefault(requestDict, 'assetId', None), # assetId is needed for the sourceName=='custom' case now
+            getDefault(requestDict, 'band', None), # band is needed for the sourceName=='custom' case now
+
+
         )
     }
     return values

@@ -111,7 +111,7 @@ export default class GraphWidget extends React.Component {
 
   loadTimeSeries = () => {
     const { widget, plotExtentPolygon } = this.props;
-    const path = this.widgetIsCustom() ? "timeSeriesByAsset" : "timeSeriesByIndex";
+    const path = "timeSeriesByIndex";
     fetch("/geo-dash/gateway-request", {
       method: "POST",
       headers: {

@@ -171,10 +171,11 @@ export default class CreateProjectWizard extends React.Component {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         this.setState({ templateProject: data });
+        const clearedTemplateAssignments = this.clearTemplateUserAssignments(data);
         const institutionImageryIds = this.context.institutionImagery.map((i) => i.id);
         this.context.setProjectDetails(
           {
-            ...data,
+            ...clearedTemplateAssignments,
             templateProjectId: projectId,
             imageryId: institutionImageryIds.includes(data.imageryId)
               ? data.imageryId
@@ -199,11 +200,8 @@ export default class CreateProjectWizard extends React.Component {
     fetch("/get-project-imagery?projectId=" + projectId)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
-        const institutionImageryIds = this.context.institutionImagery.map((i) => i.id);
         this.context.setProjectDetails({
-          projectImageryList: data
-            .map((i) => i.id)
-            .filter((id) => institutionImageryIds.includes(id)),
+          projectImageryList: data.map((i) => i.id)
         });
       });
 
@@ -403,12 +401,17 @@ export default class CreateProjectWizard extends React.Component {
     return errorList.filter((e) => e);
   };
 
+  allAnswersHidden = (answers) => {
+    const hiddenAnswers = filterObject(answers, ([_id, ans]) => ans.hide);
+    return lengthObject(answers) === lengthObject(hiddenAnswers);
+  }
+
   validateSurveyQuestions = () => {
     const { surveyQuestions } = this.context;
     const errorList = [
       lengthObject(surveyQuestions) === 0 && "A survey must include at least one question.",
-      someObject(surveyQuestions, ([_id, sq]) => lengthObject(sq.answers) === 0) &&
-        "All survey questions must contain at least one answer.",
+      someObject(surveyQuestions, ([_id, sq]) => (lengthObject(sq.answers) === 0 || this.allAnswersHidden(sq.answers))) &&
+        "All survey questions must contain at least one (unhidden) answer.",
     ];
     return errorList.filter((e) => e);
   };
@@ -512,6 +515,18 @@ export default class CreateProjectWizard extends React.Component {
       });
     }
   };
+
+
+  clearTemplateUserAssignments = (templateProject) => 
+    this.context.institutionId != templateProject.templateInstitutionId ?
+      {...templateProject,
+       designSettings: {...templateProject.designSettings,
+                        userAssignment: {
+                            userMethod: null,
+                            users: [],
+                            percents: []}}}
+      : templateProject;
+
 
   /// Render Functions
 

@@ -29,6 +29,7 @@ export default class NewQuestionDesigner extends React.Component {
       newQuestionText: "",
       selectedCopyId: -1,
       copyChildren: true,
+      hideQuestion: false,
     };
   }
 
@@ -48,7 +49,7 @@ export default class NewQuestionDesigner extends React.Component {
 
   addSurveyQuestion = () => {
     if (this.state.newQuestionText !== "") {
-      const { selectedType, newQuestionText, selectedParentId, selectedAnswerIds } = this.state;
+      const { selectedType, newQuestionText, selectedParentId, selectedAnswerIds, hideQuestion } = this.state;
       const { surveyQuestions, setProjectDetails } = this.props;
       const { dataType, componentType } = this.componentTypes[selectedType];
       const repeatedQuestions = lengthObject(
@@ -68,7 +69,7 @@ export default class NewQuestionDesigner extends React.Component {
         const newId = getNextInSequence(Object.keys(surveyQuestions));
         const newCardOrder = getNextInSequence(
           mapObjectArray(surveyQuestions, ([_id, sql]) => sql.cardOrder).filter((c) => c)
-        );
+        ) || 1;
         const newQuestion = {
           question:
             repeatedQuestions > 0 ? newQuestionText + ` (${repeatedQuestions})` : newQuestionText,
@@ -76,6 +77,7 @@ export default class NewQuestionDesigner extends React.Component {
           parentQuestionId: selectedParentId,
           parentAnswerIds: selectedAnswerIds,
           dataType,
+          hideQuestion,
           componentType,
           ...(selectedParentId === -1 && { cardOrder: newCardOrder }),
         };

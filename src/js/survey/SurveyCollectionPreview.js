@@ -36,8 +36,9 @@ export default class SurveyCollectionPreview extends React.Component {
 
   getChildQuestionIds = (currentQuestionId) => {
     const { surveyQuestions } = this.context;
+    const visibleSurveyQuestions = filterObject(surveyQuestions, ([_id, val]) => val.hideQuestion != true);
     const childQuestionIds = mapObjectArray(
-      filterObject(surveyQuestions, ([_id, val]) => val.parentQuestionId === currentQuestionId),
+      filterObject(visibleSurveyQuestions, ([_id, val]) => val.parentQuestionId === currentQuestionId),
       ([key, _val]) => Number(key)
     );
     return childQuestionIds.length
@@ -140,10 +141,12 @@ export default class SurveyCollectionPreview extends React.Component {
           setFlaggedReason={this.setFlaggedReason}
           setSelectedQuestion={this.setSelectedQuestion}
           setUnansweredColor={(color) => this.setState({ unansweredColor: color })}
-          surveyQuestions={mapObject(this.context.surveyQuestions, ([sqId, sq]) => [
-            sqId,
-            { ...sq, answered: [], visible: [], ...this.state.visibleAnswered[sqId] },
-          ])}
+          surveyQuestions={mapObject(filterObject(this.context.surveyQuestions,
+                                                  ([_id, val]) => val.hideQuestion != true),
+                                     ([sqId, sq]) => [
+                                       sqId,
+                                       { ...sq, answered: [], visible: [], ...this.state.visibleAnswered[sqId] },
+                                     ])}
           surveyRules={this.context.surveyRules}
           toggleFlagged={this.toggleFlagged}
           unansweredColor={this.state.unansweredColor}

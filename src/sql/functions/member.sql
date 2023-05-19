@@ -420,3 +420,22 @@ CREATE OR REPLACE FUNCTION update_institution_user_role(_institution_id integer,
     RETURNING inst_user_uid
 
 $$ LANGUAGE SQL;
+
+-- Returns users assigned to project's plots
+CREATE OR REPLACE FUNCTION select_assigned_users_by_project(_project_id INTEGER)
+RETURNS TABLE (
+        email text
+) AS $$
+
+   SELECT DISTINCT u.email
+   FROM projects p
+   INNER JOIN plots pl
+        ON pl.project_rid = p.project_uid
+   INNER JOIN plot_assignments pa
+        ON pa.plot_rid = pl.plot_uid
+   INNER JOIN users u
+        ON u.user_uid = pa.user_rid
+   WHERE p.project_uid = _project_id
+
+$$ LANGUAGE SQL; 
+  

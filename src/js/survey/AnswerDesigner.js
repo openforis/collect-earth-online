@@ -12,6 +12,7 @@ export default class AnswerDesigner extends React.Component {
       selectedColor: this.props.color || "#1527f6",
       newAnswerText: this.props.answer || "",
       required: this.props.required || false,
+      hide: this.props.hide || false,
     };
   }
 
@@ -42,6 +43,18 @@ export default class AnswerDesigner extends React.Component {
     }
   };
 
+  answerRule = (questionId, answerId) => {
+    const { surveyRules } = this.context;
+    const matchingAnswer = findObject(
+      surveyRules,
+      ([_id, rl]) => (
+      (rl.questionId1 === questionId && (rl.answerId1 === answerId ||
+                                         rl.answerId2 === answerId) ||
+      (rl.questionId2 === questionId && (rl.answerId1 === answerId ||
+                                         rl.answerId2 === answerId)))));
+    return matchingAnswer;
+  }
+
   saveSurveyAnswer = () => {
     const { surveyQuestionId, surveyQuestion, answerId } = this.props;
     const { surveyQuestions, setProjectDetails } = this.context;
@@ -50,8 +63,16 @@ export default class AnswerDesigner extends React.Component {
       const newAnswer = {
         answer: this.state.newAnswerText,
         color: this.state.selectedColor,
+        hide: this.state.hide,
         ...(surveyQuestion.componentType === "input" && { required: this.state.required }),
       };
+      const answerHasRule = this.answerRule(surveyQuestionId, parseInt(answerId));
+      if(this.state.hide && answerHasRule) {
+        alert(
+          "This answer is being used in a rule. Please either delete or update the rule before hiding the answer");
+        return null;
+
+      }
       setProjectDetails({
         surveyQuestions: {
           ...surveyQuestions,
@@ -139,6 +160,19 @@ export default class AnswerDesigner extends React.Component {
             value={newAnswerText}
           />
         </div>
+        {surveyQuestion.componentType != "input" && (
+          <div className="d-flex ml-4 mb-1 align-items-center">
+            <input
+              type="checkbox"
+              checked={this.state.hide}
+              id="hideAnswer"
+              onChange = {() => this.setState({ hide: !this.state.hide })}
+            />
+            <label className="mb-0 ml-1 mr-1" htmlFor="hideAnswer" >
+              Hide Answer?
+            </label>
+          </div>
+        )}
         {surveyQuestion.componentType === "input" && (
           <div className="d-flex ml-4 align-items-center">
             <input
