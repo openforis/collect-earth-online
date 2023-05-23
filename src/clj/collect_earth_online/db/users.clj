@@ -196,7 +196,7 @@
       (data-response {}))))
 
 (defn update-institution-role [{:keys [params]}]
-  (let [new-user-email   (str/lower-case (:newUserEmail params))
+  (let [new-user-email   (:newUserEmail params)
         account-id       (if-let [id (:accountId params)]
                            (tc/val->int id)
                            (-> (call-sql "get_user_by_email" new-user-email)
