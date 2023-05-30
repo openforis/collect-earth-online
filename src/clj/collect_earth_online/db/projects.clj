@@ -10,7 +10,7 @@
    [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples]]
    [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
    [collect-earth-online.utils.part-utils         :as pu]
-   [collect-earth-online.views                    :refer [data-response]]
+   [triangulum.response                           :refer [data-response]]
    [triangulum.database                           :refer [call-sql
                                                           insert-rows!
                                                           p-insert-rows!

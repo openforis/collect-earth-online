@@ -9,11 +9,11 @@
   (:import java.time.format.DateTimeFormatter
            java.time.LocalDateTime))
 
-(def base-url (:url (get-config :zenodo)))
+(def base-url (get-config :zenodo :url))
 
 (defn req-headers
   []
-  (let [auth-token (:api-key (get-config :zenodo))]
+  (let [auth-token (get-config :zenodo :api-key)]
     {"Authorization" (str "Bearer " auth-token)}))
 
 (defn get-zenodo-deposition

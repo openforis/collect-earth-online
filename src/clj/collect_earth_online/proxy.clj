@@ -6,7 +6,7 @@
             [triangulum.utils           :as u]
             [triangulum.config          :refer [get-config]]
             [collect-earth-online.db.imagery :refer [get-imagery-source-config]]
-            [collect-earth-online.views      :refer [data-response]]))
+            [triangulum.response        :refer [data-response]]))
 
 ;;; Cache options
 

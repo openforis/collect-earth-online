@@ -6,7 +6,7 @@
             [triangulum.database :refer [call-sql sql-primitive]]
             [triangulum.utils    :refer [filterm]]
             [collect-earth-online.db.projects :refer [is-proj-admin?]]
-            [collect-earth-online.views       :refer [data-response]]))
+            [triangulum.response       :refer [data-response]]))
 
 ;;;
 ;;; Helpers

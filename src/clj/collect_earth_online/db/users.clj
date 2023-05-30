@@ -8,7 +8,7 @@
             [triangulum.type-conversion :as tc]
             [triangulum.config  :refer [get-config]]
             [collect-earth-online.utils.mail :refer [email? send-mail get-base-url]]
-            [collect-earth-online.views      :refer [data-response]]))
+            [triangulum.response      :refer [data-response]]))
 
 (defn- get-login-errors [user]
   (cond (nil? user)
