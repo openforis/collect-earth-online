@@ -17,13 +17,13 @@
         ring/ring-json            {:mvn/version "0.5.0"}
         seancorfield/next.jdbc    {:mvn/version "1.1.613"}
         sig-gis/triangulum        {:git/url "https://github.com/sig-gis/triangulum"
-                                   :sha     "6a92593c2764060a3a8d0e6db72e5a8b411b1655"}
+                                   :sha     "7c928a8594d84e1d1408b9275a216a0c3bd312d5"}
         cider/cider-nrepl         {:mvn/version "0.28.3"}}
 
  :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
            :config           {:main-opts ["-m" "triangulum.config"]}
            :https            {:main-opts ["-m" "triangulum.https"]}
-           :server           {:main-opts ["-m" "collect-earth-online.server"]
+           :server           {:main-opts ["-m" "triangulum.server"]
                               :jvm-opts  ["--add-modules=jdk.incubator.foreign"
                                           "--enable-native-access=ALL-UNNAMED"]}
            :systemd          {:main-opts ["-m" "triangulum.systemd"]}
@@ -31,6 +31,6 @@
                               :main-opts  ["-m" "rebel-readline.main"]}
            :production       {:jvm-opts  ["-XX:MaxRAMPercentage=90" "-XX:+PrintFlagsFinal"]}
            :check-reflection {:main-opts ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
-                                          "-e" "(require,'collect-earth-online.server)"]}
+                                          "-e" "(require,'triangulum.server)"]}
            :check-deps       {:extra-deps {olical/depot {:mvn/version "1.8.4"}}
                               :main-opts  ["-m" "depot.outdated.main"]}}}
