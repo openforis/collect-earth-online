@@ -541,10 +541,10 @@ CREATE OR REPLACE FUNCTION get_plot_centers_by_project(_project_id integer)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_plot_shapes(_project_id integer)
-  RETURNS TABLE (project_id integer,
-                 plot_id    integer,
-                 plot_geom  geometry(Geometry, 4326))
-  AS $$
+ RETURNS TABLE (project_id integer,
+                plot_id    integer,
+                plot_geom  geometry(Geometry, 4326)
+ ) AS $$
 
     WITH plot_geoms AS (SELECT project_rid, plot_distribution, plot_shape, plot_size, plot_uid,
                                ST_Transform(plot_geom, 3857) AS plot_geom
@@ -576,11 +576,11 @@ CREATE OR REPLACE FUNCTION get_plot_shapes(_project_id integer)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_sample_shapes(_project_id integer)
-  RETURNS TABLE (project_id integer,
-                 plot_id integer,
-                 sample_id integer,
-                 sample_geom geometry(Geometry, 4326))
-  AS $$
+ RETURNS TABLE (project_id integer,
+                plot_id integer,
+                sample_id integer,
+                sample_geom geometry(Geometry, 4326)
+ ) AS $$
 
     (SELECT project_rid, plot_rid, sample_uid, sample_geom
        FROM samples s
