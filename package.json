@@ -70,6 +70,7 @@
     "@ckeditor/ckeditor5-react": "^2.1.0",
     "@emotion/react": "^11.11.0",
     "@rollup/plugin-node-resolve": "^15.1.0",
+    "@svgr/core": "^8.0.0",
     "@vitejs/plugin-react-swc": "^3.3.1",
     "airbnb-prop-types": "^2.16.0",
     "highcharts": "^9.1.0",
@@ -81,7 +82,8 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-grid-layout": "^1.3.0",
-    "shpjs": "^4.0.2"
+    "shpjs": "^4.0.2",
+    "vite-plugin-svgr": "^3.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.11.6",
@@ -89,6 +91,7 @@
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/preset-env": "^7.11.5",
     "@babel/preset-react": "^7.10.4",
+    "@svgr/cli": "^8.0.1",
     "@vitejs/plugin-react": "^4.0.0",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.2.3",
@@ -101,13 +104,12 @@
     "eslint-plugin-jsx-a11y": "^6.5.1",
     "eslint-plugin-react": "^7.29.2",
     "eslint-plugin-react-hooks": "^4.3.0",
-    "prettier": "^2.7.1",
-    "quick-lint-js": "^2.8.0",
     "react-svg-loader": "^3.0.3",
     "style-loader": "^1.2.1",
     "tern": "^0.23.0",
     "vite": "^4.3.9",
     "vite-plugin-html": "^3.2.0",
+    "vite-plugin-svgr": "^3.2.0",
     "webpack": "^5.70.0",
     "webpack-cli": "^4.9.2"
   },
@@ -119,7 +121,6 @@
     "preview": "vite preview",
     "server-dev": "clojure -M:server start -p 8080 -m dev",
     "server-prod": "clojure -M:production:server start -P 8443 -m prod",
-    "lint-js": "find src/js -type f -exec ./node_modules/.bin/quick-lint-js --snarky {} +",
-    "format-js": "./node_modules/.bin/prettier --write ."
+    "lint-js": "find src/js -type f -exec ./node_modules/.bin/quick-lint-js --snarky {} +"
   }
 }

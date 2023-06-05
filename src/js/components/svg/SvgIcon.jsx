@@ -1,44 +1,44 @@
 import React from "react";
 import PropTypes from "prop-types";
-import alertIcon from "./alertIcon.svg";
-import cancelIcon from "./cancelIcon.svg";
-import centerIcon from "./centerIcon.svg";
-import checkIcon from "./checkIcon.svg";
-import closeIcon from "./closeIcon.svg";
-import collapseIcon from "./collapseIcon.svg";
-import copyIcon from "./copyIcon.svg";
-import downCaretIcon from "./downCaretIcon.svg";
-import downRightArrowIcon from "./downRightArrowIcon.svg";
-import drawIcon from "./drawIcon.svg";
-import editIcon from "./editIcon.svg";
-import expandIcon from "./expandIcon.svg";
-import fileIcon from "./fileIcon.svg";
-import helpIcon from "./helpIcon.svg";
-import infoIcon from "./infoIcon.svg";
-import leftArrowIcon from "./leftArrowIcon.svg";
-import leftDoubleIcon from "./leftDoubleIcon.svg";
-import lineStringIcon from "./lineStringIcon.svg";
-import linkIcon from "./linkIcon.svg";
-import minusIcon from "./minus.svg";
-import overlayIcon from "./overlayIcon.svg";
-import opacityIcon from "./opacityIcon.svg";
-import plusIcon from "./plus.svg";
-import pointIcon from "./pointIcon.svg";
-import polygonIcon from "./polygonIcon.svg";
-import questionIcon from "./questionIcon.svg";
-import refreshIcon from "./refreshIcon.svg";
-import rightArrowIcon from "./rightArrowIcon.svg";
-import rightCaretIcon from "./rightCaretIcon.svg";
-import rightDoubleIcon from "./rightDoubleIcon.svg";
-import ruleIcon from "./ruleIcon.svg";
-import saveIcon from "./saveIcon.svg";
-import settingsIcon from "./settingsIcon.svg";
-import trashIcon from "./trashIcon.svg";
-import upArrowIcon from "./upArrowIcon.svg";
-import upCaretIcon from "./upCaretIcon.svg";
-import zoomInIcon from "./zoomInIcon.svg";
+import { ReactComponent as alertIcon } from "./alertIcon.svg";
+import { ReactComponent as cancelIcon } from "./cancelIcon.svg";
+import { ReactComponent as centerIcon } from "./centerIcon.svg";
+import { ReactComponent as checkIcon } from "./checkIcon.svg";
+import { ReactComponent as closeIcon } from "./closeIcon.svg";
+import { ReactComponent as collapseIcon } from "./collapseIcon.svg";
+import { ReactComponent as copyIcon } from "./copyIcon.svg";
+import { ReactComponent as downCaretIcon } from "./downCaretIcon.svg";
+import { ReactComponent as downRightArrowIcon } from "./downRightArrowIcon.svg";
+import { ReactComponent as drawIcon } from "./drawIcon.svg";
+import { ReactComponent as editIcon } from "./editIcon.svg";
+import { ReactComponent as expandIcon } from "./expandIcon.svg";
+import { ReactComponent as fileIcon } from "./fileIcon.svg";
+import { ReactComponent as helpIcon } from "./helpIcon.svg";
+import { ReactComponent as infoIcon } from "./infoIcon.svg";
+import { ReactComponent as leftArrowIcon } from "./leftArrowIcon.svg";
+import { ReactComponent as leftDoubleIcon } from "./leftDoubleIcon.svg";
+import { ReactComponent as lineStringIcon } from "./lineStringIcon.svg";
+import { ReactComponent as linkIcon } from "./linkIcon.svg";
+import { ReactComponent as minusIcon } from "./minus.svg";
+import { ReactComponent as overlayIcon } from "./overlayIcon.svg";
+import { ReactComponent as opacityIcon } from "./opacityIcon.svg";
+import { ReactComponent as plusIcon } from "./plus.svg";
+import { ReactComponent as pointIcon } from "./pointIcon.svg";
+import { ReactComponent as polygonIcon } from "./polygonIcon.svg";
+import { ReactComponent as questionIcon } from "./questionIcon.svg";
+import { ReactComponent as refreshIcon } from "./refreshIcon.svg";
+import { ReactComponent as rightArrowIcon } from "./rightArrowIcon.svg";
+import { ReactComponent as rightCaretIcon } from "./rightCaretIcon.svg";
+import { ReactComponent as rightDoubleIcon } from "./rightDoubleIcon.svg";
+import { ReactComponent as ruleIcon } from "./ruleIcon.svg";
+import { ReactComponent as saveIcon } from "./saveIcon.svg";
+import { ReactComponent as settingsIcon } from "./settingsIcon.svg";
+import { ReactComponent as trashIcon } from "./trashIcon.svg";
+import { ReactComponent as upArrowIcon } from "./upArrowIcon.svg";
+import { ReactComponent as upCaretIcon } from "./upCaretIcon.svg";
+import { ReactComponent as zoomInIcon } from "./zoomInIcon.svg";
 
-const iconMap = {
+export const iconMap = {
   alert: alertIcon,
   cancel: cancelIcon,
   center: centerIcon,
@@ -79,9 +79,9 @@ const iconMap = {
 };
 
 function SvgIcon({ icon, color, cursor, size, verticalAlign }) {
-  const selectedIcon = iconMap[icon];
+  const Icon = iconMap[icon];
   return (
-    <selectedIcon
+    <Icon
       color={color}
       cursor={cursor}
       fill={color}

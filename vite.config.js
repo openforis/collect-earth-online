@@ -1,6 +1,7 @@
 import resolve from "@rollup/plugin-node-resolve";
 import { defineConfig, splitVendorChunkPlugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import svgr from "vite-plugin-svgr";
 
 // import babel from "@rollup/plugin-babel";
 
@@ -8,7 +9,7 @@ import react from "@vitejs/plugin-react-swc";
 // // TODO add conditions (prod/dev)
 export default defineConfig({
   server: {
-    origin: "http://127.0.0.1:8080",
+    origin: "http://local.collect.earth:8080",
     hmr: {
       overlay: true,
     },
@@ -34,5 +35,6 @@ export default defineConfig({
       },
     },
   },
-  plugins: [react({ jsxImportSource: "@emotion/react" })],
+  plugins: [react({ jsxImportSource: "@emotion/react" }),
+            svgr()],
 });
