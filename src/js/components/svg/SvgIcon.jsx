@@ -79,9 +79,9 @@ const iconMap = {
 };
 
 function SvgIcon({ icon, color, cursor, size, verticalAlign }) {
-  const Icon = iconMap[icon];
+  const selectedIcon = iconMap[icon];
   return (
-    <Icon
+    <selectedIcon
       color={color}
       cursor={cursor}
       fill={color}
