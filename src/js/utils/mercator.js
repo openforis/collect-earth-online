@@ -220,7 +220,8 @@ mercator.createSource = (
     [-180, 90],
     [-180, -90],
   ],
-  show = false
+  show = false,
+  newestNicfiLayer = ""
 ) => {
   const { type } = sourceConfig;
   if (isProxied) {
@@ -252,14 +253,16 @@ mercator.createSource = (
       attributions: attribution,
     });
   } else if (type === "PlanetNICFI") {
+    const dataLayer = (sourceConfig.time === "newest") ? newestNicfiLayer : sourceConfig.time;
     return new XYZ({
       url:
-        "get-nicfi-tiles?z={z}&x={x}&y={y}" +
-        `&dataLayer=${sourceConfig.time}` +
+      "get-nicfi-tiles?z={z}&x={x}&y={y}" +
+        `&dataLayer=${dataLayer}` +
         `&band=${sourceConfig.band}` +
         `&imageryId=${imageryId}`,
-      attributions: attribution,
+      attributions: attribution
     });
+
   } else if (type === "PlanetDaily") {
     // make ajax call to get layerid then add xyz layer
     const theJson = {
