@@ -256,11 +256,11 @@ mercator.createSource = (
     const dataLayer = (sourceConfig.time === "newest") ? newestNicfiLayer : sourceConfig.time;
     return new XYZ({
       url:
-      "get-nicfi-tiles?z={z}&x={x}&y={y}" +
+        "get-nicfi-tiles?z={z}&x={x}&y={y}" +
         `&dataLayer=${dataLayer}` +
         `&band=${sourceConfig.band}` +
         `&imageryId=${imageryId}`,
-      attributions: attribution
+      attributions: attribution,
     });
 
   } else if (type === "PlanetDaily") {
