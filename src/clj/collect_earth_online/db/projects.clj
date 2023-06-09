@@ -347,6 +347,10 @@
   (when-let [assigned-plots (assign-user-plots current-plots design-settings)]
     (p-insert-rows! "plot_assignments" (assign-qaqc assigned-plots design-settings))))
 
+(defn- copy-template-plots [project-id template-id design-settings]
+  (call-sql "copy_template_plots" template-id project-id)
+  (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id)))
+
 (defn- create-project-plots! [project-id
                               plot-distribution
                               num-plots
@@ -465,7 +469,7 @@
     (try
       ;; Create or copy plots
       (if (and (pos? project-template) use-template-plots)
-        (call-sql "copy_template_plots" project-template project-id)
+        (copy-template-plots project-id project-template design-settings)
         (create-project-plots! project-id
                                plot-distribution
                                num-plots
