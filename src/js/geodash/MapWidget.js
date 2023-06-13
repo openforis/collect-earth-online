@@ -17,20 +17,13 @@ export default class MapWidget extends React.Component {
       timeOutRefs: [],
       overlayValue: 100,
       opacityValue: 100,
-      newestNicfiLayer: "",
     };
   }
 
   /// Lifecycle
 
   componentDidMount() {
-    fetch("/get-nicfi-dates")
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((layers) => {
-        this.setState({ newestNicfiLayer: layers[0] })
-        this.initMap();
-      })
-      .catch((error) => console.error(error));
+    this.initMap();
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -166,17 +159,7 @@ export default class MapWidget extends React.Component {
       this.props.imageryList.find((imagery) => imagery.title === "Open Street Map") ||
       this.props.imageryList[0];
     const basemapLayer = new TileLayer({
-      source: mercator.createSource(sourceConfig,
-                                    id,
-                                    attribution,
-                                    isProxied,
-                                    [[-180, -90],
-                                     [180, -90],
-                                     [180, 90],
-                                     [-180, 90],
-                                     [-180, -90]],
-                                    false,
-                                    this.state.newestNicfiLayer),
+      source: mercator.createSource(sourceConfig, id, attribution, isProxied),
     });
     const plotSampleLayer = new VectorLayer({
       source: this.props.vectorSource,
