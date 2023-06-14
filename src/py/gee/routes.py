@@ -152,12 +152,11 @@ def featureCollection(requestDict):
 def getPlanetTile(requestDict):
     values = getPlanetMapID(
         getDefault(requestDict, 'apiKey'),
-        getDefault(requestDict, 'geometry'), getDefault(
-            requestDict, 'startDate'),
+        getDefault(requestDict, 'geometry'),
+        getDefault(requestDict, 'startDate'),
         getDefault(requestDict, 'endDate', None),
         getDefault(requestDict, 'layerCount', 1),
-        getDefault(requestDict, 'itemTypes', [
-                    'PSScene3Band', 'PSScene4Band']),
+        getDefault(requestDict, 'itemTypes', ['PSScene']),
         float(getDefault(requestDict, 'buffer', 0.5)),
         bool(strtobool(getDefault(requestDict, 'addsimilar', 'True')))
     )
