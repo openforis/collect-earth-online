@@ -1,26 +1,32 @@
 (ns collect-earth-online.db.doi
-  (:require [clj-http.client :as http]
-            [clojure.java.io :as io]
-            [triangulum.database :refer [call-sql]]
-            [triangulum.config  :refer [get-config]]
-            [triangulum.type-conversion :as tc]
-            [collect-earth-online.views :refer [data-response redirect]]
-            [collect-earth-online.generators.external-file :refer [create-and-zip-files-for-doi]]
-            [clojure.data.json :as json])
-  (:import java.time.format.DateTimeFormatter
-           java.time.LocalDateTime))
+  (:require
+    [clj-http.client :as http]
+    [clojure.data.json :as json]
+    [clojure.java.io :as io]
+    [collect-earth-online.generators.external-file :refer [create-and-zip-files-for-doi]]
+    [collect-earth-online.views :refer [data-response redirect]]
+    [triangulum.config  :refer [get-config]]
+    [triangulum.database :refer [call-sql]]
+    [triangulum.type-conversion :as tc])
+  (:import
+    java.time.LocalDateTime
+    java.time.format.DateTimeFormatter))
+
 
 (def base-url (:url (get-config :zenodo)))
+
 
 (defn req-headers
   []
   (let [auth-token (:api-key (get-config :zenodo))]
     {"Authorization" (str "Bearer " auth-token)}))
 
+
 (defn get-zenodo-deposition
   [deposition-id]
   (let [headers (req-headers)]
     (http/get (str base-url "/deposit/depositions/" deposition-id) {:headers headers :as :json})))
+
 
 (defn create-contributors-list
   [users institution-name]
@@ -29,6 +35,7 @@
           :type        "DataCurator"
           :affiliation institution-name})
        users))
+
 
 (defn create-zenodo-deposition!
   [institution-name
@@ -50,12 +57,15 @@
                 :content-type :json
                 :as           :json
                 :headers      headers})))
+
+
 (defn insert-doi!
   [{:keys [id metadata] :as doi-info}
    project-id user-id]
   (let [doi-path (-> metadata :prereserve_doi :doi)]
     (first
-     (call-sql "insert_doi" id project-id user-id doi-path (tc/clj->jsonb doi-info)))))
+      (call-sql "insert_doi" id project-id user-id doi-path (tc/clj->jsonb doi-info)))))
+
 
 (defn create-doi!
   [{:keys [params]}]
@@ -67,10 +77,10 @@
         creator          (first (call-sql "get_user_by_id" user-id))
         contributors     (call-sql "select_assigned_users_by_project" project-id)]
     (->
-     (create-zenodo-deposition! institution-name project-name creator contributors description)
-     :body
-     (insert-doi! project-id user-id)
-     data-response)))
+      (create-zenodo-deposition! institution-name project-name creator contributors description)
+      :body
+      (insert-doi! project-id user-id)
+      data-response)))
 
 
 (defn build-survey-data
@@ -84,8 +94,9 @@
                      :flagged           (:flagged surv)
                      :flagged_reason    (:flagged_reason surv)
                      :confidence        (:confidence surv)
-                     :answers           (group-by (fn [s] (-> s :id )) edn-sample-data)})))
+                     :answers           (group-by (fn [s] (-> s :id)) edn-sample-data)})))
           [] plot-data))
+
 
 (defn merge-plot-data
   [plot-data]
@@ -96,7 +107,7 @@
         (dissoc :email)
         (dissoc :analysis_duration)
         (dissoc :collection_time)
-        (dissoc :flagged)  
+        (dissoc :flagged)
         (dissoc :flagged_reason)
         (dissoc :confidence)
         (assoc  :survey survey-data))))
@@ -105,10 +116,11 @@
 (defn group-plot-data
   [plot-data]
   (->> plot-data
-   (group-by (fn [s] (-> s :plotid str keyword)))
-   (map (fn [[key value]]
-          [key (merge-plot-data value)]))
-   (into {})))
+       (group-by (fn [s] (-> s :plotid str keyword)))
+       (map (fn [[key value]]
+              [key (merge-plot-data value)]))
+       (into {})))
+
 
 (defn get-project-data
   [project-id]
@@ -132,6 +144,7 @@
                :multipart    [{:name "Content/type" :content "application/zip"}
                               {:name "file" :content (io/file zip-file)}]})))
 
+
 (defn upload-doi-files!
   [{:keys [params]}]
   (let [project-id   (:projectId params)
@@ -141,6 +154,7 @@
         zip-file     (create-and-zip-files-for-doi project-id project-data)]
     (upload-deposition-files! bucket project-id zip-file)
     (data-response {})))
+
 
 (defn download-doi-files
   [{:keys [params]}]
