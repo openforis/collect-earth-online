@@ -310,6 +310,12 @@ class ProjectManagement extends React.Component {
               type="button"
               value="Download Sample Data"
             />
+            <input
+              className="btn btn-outline-lightgreen btn-sm w-100"
+              onClick={() => window.open(`/create-shape-files?projectId=${id}`, "_blank")}
+              type="button"
+              value="Download Shape Files"
+            />
           </div>
         </div>
       </div>
