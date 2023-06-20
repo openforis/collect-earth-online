@@ -575,6 +575,7 @@ CREATE OR REPLACE FUNCTION get_plot_shapes(_project_id integer)
       USING (plot_uid)
 $$ LANGUAGE SQL;
 
+
 CREATE OR REPLACE FUNCTION get_sample_shapes(_project_id integer)
  RETURNS TABLE (project_id integer,
                 plot_id integer,

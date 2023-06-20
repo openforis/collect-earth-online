@@ -6,6 +6,7 @@
             [collect-earth-online.db.plots        :as plots]
             [collect-earth-online.db.projects     :as projects]
             [collect-earth-online.db.users        :as users]
+            [collect-earth-online.db.doi          :as doi]
             [collect-earth-online.proxy           :as proxy]))
 
 (def routes
@@ -107,6 +108,17 @@
    [:get "/create-shape-files"]              {:handler projects/create-shape-files!
                                               :auth-type :user
                                               :auth-action :block}
+
+   ;; DOI API
+   [:post "/create-doi"]                     {:handler     doi/create-doi!
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:post "/upload-doi-files"]               {:hander      doi/upload-doi-files!
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:get "/doi"]                             {:handler     doi/get-zenodo-deposition}
+   [:get "/doi/files"]                       {:handler     doi/download-doi-files}
+
    ;; Plots API
    [:get  "/get-collection-plot"]            {:handler     plots/get-collection-plot
                                               :auth-type   :collect
@@ -179,3 +191,4 @@
    [:get  "/get-nicfi-tiles"]                {:handler     proxy/get-nicfi-tiles
                                               :auth-type   :no-cross
                                               :auth-action :block}})
+
