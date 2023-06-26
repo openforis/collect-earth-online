@@ -1050,3 +1050,52 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
     ORDER BY plot_uid, sample_uid
 
 $$ LANGUAGE SQL;
+
+-- Returns relevant information for DOI creation by ID.
+CREATE OR REPLACE FUNCTION select_project_info_for_doi(_project_id integer)
+ RETURNS table (
+    project_id             integer,
+    availability           text,
+    name                   text,
+    description            text,
+    boundary               text,
+    aoi_features           jsonb,
+    plot_distribution      text,
+    num_plots              integer,
+    plot_shape             text,
+    plot_size              real,
+    sample_distribution    text,
+    samples_per_plot       integer,
+    sample_resolution      real,
+    survey_questions       jsonb,
+    survey_rules           jsonb,
+    created_date           date,
+    published_date         date,
+    closed_date            date
+ ) AS $$
+
+    SELECT project_uid,
+        availability,
+        name,
+        description,
+        ST_AsGeoJSON(boundary),
+        aoi_features,
+        plot_distribution,
+        num_plots,
+        plot_shape,
+        plot_size,
+        sample_distribution,
+        samples_per_plot,
+        sample_resolution,
+        survey_questions,
+        survey_rules,
+        created_date,
+        published_date,
+        closed_date
+    FROM projects
+    WHERE project_uid = _project_id
+        AND availability <> 'archived'
+    GROUP BY project_uid
+
+$$ LANGUAGE SQL;
+

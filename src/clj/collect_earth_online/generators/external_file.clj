@@ -271,6 +271,23 @@
     (sh-wrapper folder-name {} (str "rm -rf " shape-folder-name) (str "mkdir " shape-folder-name))
     (export-table-to-file shape-folder-name project-id table-name db-config)))
 
+
+(defn create-data-file
+  [folder-name json-data]
+  (spit (str folder-name "data.json")
+        json-data))
+
+(defn create-and-zip-files-for-doi
+  [project-id project-data]
+    (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "-files/")]
+    (sh-wrapper tmp-dir {} (str "rm -rf " folder-name) (str "mkdir " folder-name))
+    (create-shape-files folder-name "plot" project-id)
+    (create-shape-files folder-name "sample" project-id)
+    (create-data-file folder-name project-data)
+    (sh-wrapper tmp-dir {}
+                (str "7z a " folder-name "/files" ".zip " folder-name "/*"))
+    (str folder-name "files.zip")))
+
 (defn zip-shape-files
   [project-id]
   (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "-files/")]
