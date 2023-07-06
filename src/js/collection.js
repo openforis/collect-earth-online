@@ -127,7 +127,7 @@ class Collection extends React.Component {
         this.showGeoDash();
       }
       clearInterval(this.state.storedInterval);
-      this.setState({ storedInterval: setInterval(this.resetPlotLock, 2.3 * 60 * 1000) });
+      this.setState({ storedInterval: setInterval(this.resetPlotLock, 1 * 60 * 1000) });
       //  updateMapImagery is poorly named, this function is detecting if we need to show the "zoom to" overlay
       this.updateMapImagery();
     }
