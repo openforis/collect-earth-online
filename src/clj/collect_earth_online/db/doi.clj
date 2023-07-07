@@ -4,7 +4,7 @@
     [clojure.data.json :as json]
     [clojure.java.io :as io]
     [collect-earth-online.generators.external-file :refer [create-and-zip-files-for-doi]]
-    [collect-earth-online.views :refer [data-response redirect]]
+    [collect-earth-online.views :refer [data-response]]
     [triangulum.config  :refer [get-config]]
     [triangulum.database :refer [call-sql]]
     [triangulum.type-conversion :as tc])
