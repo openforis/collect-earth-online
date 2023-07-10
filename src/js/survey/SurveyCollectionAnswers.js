@@ -123,12 +123,22 @@ class AnswerInput extends React.Component {
 
   resetInputText = () => {
     const answerId = Number(firstEntry(this.props.surveyNode.answers)[0]);
+    const answerText = this.props.surveyNode.answered[0]?.answerText;
+    const allSamplesMatch = this.props.surveyNode.answered.every(
+      (a) => {
+        return (a.answerId === answerId && (a.answerText === answerText && a.answerText != undefined))}
+    );
     const matchingNode = this.props.surveyNode.answered.find(
       (a) => a.answerId === answerId && a.sampleId === this.props.selectedSampleId
     );
-    this.setState({
-      newInput: matchingNode ? matchingNode.answerText : "",
-    });
+    if(allSamplesMatch) {
+      this.setState ({
+        newInput: this.props.surveyNode.answered[0] ? answerText : ""});
+    } else {
+      this.setState({
+        newInput: matchingNode ? matchingNode.answerText : ""
+      });
+    }
   };
 
   updateInputValue = (value) => this.setState({ newInput: value });
@@ -167,7 +177,7 @@ class AnswerInput extends React.Component {
           name="save-input"
           onClick={() => {
             if (!answer.required || newInput || newInput === 0) {
-              validateAndSetCurrentValue(surveyNodeId, answerId, newInput);
+              validateAndSetCurrentValue(surveyNodeId, answerId, newInput, answer.answer);
             }
           }}
           style={{ height: "2.5rem" }}
