@@ -207,6 +207,13 @@ mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
   return geeSource;
 };
 
+mercator.newestNICFILayer = () => {
+  const latestDate = new Date(new Date().setDate(1));
+  const month = latestDate.getMonth().toString().padStart(2, "0");
+  const dateMonth = `${latestDate.getFullYear()}-${month}`;
+  return `planet_medres_normalized_analytic_${dateMonth}_mosaic`;
+}
+
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig is invalid.
 mercator.createSource = (
   sourceConfig,
@@ -252,14 +259,15 @@ mercator.createSource = (
       attributions: attribution,
     });
   } else if (type === "PlanetNICFI") {
+    const dataLayer = (sourceConfig.time === "newest") ? mercator.newestNICFILayer() : sourceConfig.time;
     return new XYZ({
       url:
-        "get-nicfi-tiles?z={z}&x={x}&y={y}" +
-        `&dataLayer=${sourceConfig.time}` +
+       "get-nicfi-tiles?z={z}&x={x}&y={y}" +
+        `&dataLayer=${dataLayer}` +
         `&band=${sourceConfig.band}` +
         `&imageryId=${imageryId}`,
-      attributions: attribution,
-    });
+       attributions: attribution,
+      });
   } else if (type === "PlanetDaily") {
     // make ajax call to get layerid then add xyz layer
     const theJson = {
