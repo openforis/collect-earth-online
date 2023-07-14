@@ -48,7 +48,8 @@ def image(requestDict):
 
 def imageCollection(requestDict):
     visParams = safeParseJSON(getDefault(requestDict, 'visParams', {}))
-    if visParams.get("bands"):
+    bands = visParams.get("bands")
+    if bands and isinstance(bands, str):
         bands = visParams.get("bands").replace(' ', '')
         visParams.update({"bands": bands})
     values = imageCollectionToMapId(

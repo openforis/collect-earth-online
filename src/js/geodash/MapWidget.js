@@ -159,7 +159,12 @@ export default class MapWidget extends React.Component {
       this.props.imageryList.find((imagery) => imagery.title === "Open Street Map") ||
       this.props.imageryList[0];
     const basemapLayer = new TileLayer({
-      source: mercator.createSource(sourceConfig, id, attribution, isProxied),
+      source: mercator.createSource(
+        sourceConfig,
+        id,
+        attribution,
+        isProxied,
+      ),
     });
     const plotSampleLayer = new VectorLayer({
       source: this.props.vectorSource,
