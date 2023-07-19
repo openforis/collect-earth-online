@@ -56,8 +56,8 @@ def imageCollection(requestDict):
         getDefault(requestDict, 'assetId', None),
         visParams,
         getDefault(requestDict, 'reducer', 'Mean'),
-        getDefault(requestDict, 'startDate', '2022-01-01'),
-        getDefault(requestDict, 'endDate', '2022-12-31')
+        getDefault(requestDict, 'startDate', None),
+        getDefault(requestDict, 'endDate', None)
     )
     return values
 
