@@ -129,7 +129,7 @@
         {:keys [lon lat]} (first plots)
         correction-factor (epsg3857-point-resolution (EPSG:4326->3857 [lon lat]))
         radius            (/ plot-size 2.0 correction-factor)
-        buffer            (/ radius 25.0)
+        buffer            (/ radius 25.0 correction-factor)
         samples-per-plot  (case sample-distribution
                             "gridded" (count (create-gridded-sample-set
                                               circle?
@@ -146,11 +146,13 @@
                          samples-per-plot
                          200.0)
     (mapcat (fn [{:keys [plot_id visible_id lon lat]}]
-              (let [[center-x center-y] (EPSG:4326->3857 [lon lat])
-                    visible-offset      (-> (dec visible_id)
-                                            (* samples-per-plot)
-                                            (inc))
-                    plot-radius         (/ plot-size 2.0 (epsg3857-point-resolution [center-x center-y]))]
+              (let [[center-x center-y]    (EPSG:4326->3857 [lon lat])
+                    visible-offset         (-> (dec visible_id)
+                                               (* samples-per-plot)
+                                               (inc))
+                    plot-correction-factor (epsg3857-point-resolution [center-x center-y])
+                    plot-radius            (/ plot-size 2.0 plot-correction-factor)
+                    plot-sample-resolution (/ sample-resolution plot-correction-factor)]
                 (map-indexed (fn [idx [sample-lon sample-lat]]
                                {:plot_rid    plot_id
                                 :visible_id  (+ idx visible-offset)
@@ -160,7 +162,7 @@
                                [[lon lat]]
 
                                (= "gridded" sample-distribution)
-                               (create-gridded-sample-set circle? center-x center-y plot-radius buffer sample-resolution)
+                               (create-gridded-sample-set circle? center-x center-y plot-radius buffer plot-sample-resolution)
 
                                (= "random" sample-distribution)
                                (create-random-sample-set circle? center-x center-y plot-radius buffer samples-per-plot)
