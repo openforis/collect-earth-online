@@ -4,6 +4,8 @@
 
 ;;; GeoJSON
 
+(def wsg84-radius 6378136.98)
+
 (defn make-wkt-point [lon lat]
   (format "POINT(%s %s)" lon lat))
 
@@ -20,7 +22,7 @@
   [& points]
   (let [points (mapv (fn [[lon lat]]
                        [(* lon 111319.490778)
-                        (-> lat (+ 90.0) (/ 360.0) (* Math/PI) (Math/tan) (Math/log) (* 6378136.98))])
+                        (-> lat (+ 90.0) (/ 360.0) (* Math/PI) (Math/tan) (Math/log) (* wsg84-radius))])
                      points)]
     (if (= 1 (count points))
       (first points)
@@ -31,8 +33,12 @@
   [& points]
   (let [points (mapv (fn [[x y]]
                        [(/ x 111319.490778)
-                        (-> y (/ 6378136.98) (Math/exp) (Math/atan) (/ Math/PI) (* 360.0) (- 90.0))])
+                        (-> y (/ wsg84-radius) (Math/exp) (Math/atan) (/ Math/PI) (* 360.0) (- 90.0))])
                      points)]
     (if (= 1 (count points))
       (first points)
       points)))
+
+(defn epsg3857-point-resolution
+  [point]
+  (/ 1 (Math/cosh (/ (second point) wsg84-radius))))

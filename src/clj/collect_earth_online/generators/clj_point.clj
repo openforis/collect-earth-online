@@ -2,7 +2,10 @@
   (:require [triangulum.type-conversion :as tc]
             [triangulum.database        :refer [call-sql]]
             [collect-earth-online.utils.project    :refer [check-plot-limits check-sample-limits]]
-            [collect-earth-online.utils.geom       :refer [make-wkt-point EPSG:3857->4326 EPSG:4326->3857]]
+            [collect-earth-online.utils.geom       :refer [make-wkt-point
+                                                           EPSG:3857->4326
+                                                           EPSG:4326->3857
+                                                           epsg3857-point-resolution]]
             [collect-earth-online.utils.part-utils :refer [init-throw]]))
 
 ;;; Helpers
@@ -122,20 +125,22 @@
                               sample-distribution
                               samples-per-plot
                               sample-resolution]
-  (let [circle?          (= plot-shape "circle")
-        radius           (/ plot-size 2.0)
-        buffer           (/ radius 25.0)
-        samples-per-plot (case sample-distribution
-                           "gridded" (count (create-gridded-sample-set
-                                             circle?
-                                             45
-                                             45
-                                             radius
-                                             buffer
-                                             sample-resolution))
-                           "random"  samples-per-plot
-                           "center"  1.0
-                           "none"    1.0)]
+  (let [circle?           (= plot-shape "circle")
+        {:keys [lon lat]} (first plots)
+        correction-factor (epsg3857-point-resolution (EPSG:4326->3857 [lon lat]))
+        radius            (/ plot-size 2.0 correction-factor)
+        buffer            (/ radius 25.0)
+        samples-per-plot  (case sample-distribution
+                            "gridded" (count (create-gridded-sample-set
+                                              circle?
+                                              45
+                                              45
+                                              radius
+                                              buffer
+                                              sample-resolution))
+                            "random"  samples-per-plot
+                            "center"  1.0
+                            "none"    1.0)]
     (check-sample-limits (* plot-count samples-per-plot)
                          50000.0
                          samples-per-plot
@@ -144,7 +149,8 @@
               (let [[center-x center-y] (EPSG:4326->3857 [lon lat])
                     visible-offset      (-> (dec visible_id)
                                             (* samples-per-plot)
-                                            (inc))]
+                                            (inc))
+                    plot-radius         (/ plot-size 2.0 (epsg3857-point-resolution [center-x center-y]))]
                 (map-indexed (fn [idx [sample-lon sample-lat]]
                                {:plot_rid    plot_id
                                 :visible_id  (+ idx visible-offset)
@@ -154,10 +160,10 @@
                                [[lon lat]]
 
                                (= "gridded" sample-distribution)
-                               (create-gridded-sample-set circle? center-x center-y radius buffer sample-resolution)
+                               (create-gridded-sample-set circle? center-x center-y plot-radius buffer sample-resolution)
 
                                (= "random" sample-distribution)
-                               (create-random-sample-set circle? center-x center-y radius buffer samples-per-plot)
+                               (create-random-sample-set circle? center-x center-y plot-radius buffer samples-per-plot)
 
                                :else []))))
             plots)))
