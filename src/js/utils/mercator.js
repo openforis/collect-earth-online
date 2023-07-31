@@ -26,7 +26,7 @@ import { GeoJSON, KML } from "ol/format";
 import { Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup } from "ol/layer";
 import { BingMaps, Cluster, OSM, TileWMS, Vector as VectorSource, XYZ } from "ol/source";
 import { Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText } from "ol/style";
-import { fromLonLat, transform, transformExtent } from "ol/proj";
+import { fromLonLat, transform, transformExtent, getPointResolution } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
 import { getArea } from "ol/sphere";
 import { formatDateISO, isNumber } from "./generalUtils";
@@ -207,6 +207,13 @@ mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
   return geeSource;
 };
 
+mercator.newestNICFILayer = () => {
+  const latestDate = new Date(new Date().setDate(1));
+  const month = latestDate.getMonth().toString().padStart(2, "0");
+  const dateMonth = `${latestDate.getFullYear()}-${month}`;
+  return `planet_medres_normalized_analytic_${dateMonth}_mosaic`;
+}
+
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig is invalid.
 mercator.createSource = (
   sourceConfig,
@@ -252,14 +259,15 @@ mercator.createSource = (
       attributions: attribution,
     });
   } else if (type === "PlanetNICFI") {
+    const dataLayer = (sourceConfig.time === "newest") ? mercator.newestNICFILayer() : sourceConfig.time;
     return new XYZ({
       url:
-        "get-nicfi-tiles?z={z}&x={x}&y={y}" +
-        `&dataLayer=${sourceConfig.time}` +
+       "get-nicfi-tiles?z={z}&x={x}&y={y}" +
+        `&dataLayer=${dataLayer}` +
         `&band=${sourceConfig.band}` +
         `&imageryId=${imageryId}`,
-      attributions: attribution,
-    });
+       attributions: attribution,
+      });
   } else if (type === "PlanetDaily") {
     // make ajax call to get layerid then add xyz layer
     const theJson = {
@@ -980,13 +988,15 @@ mercator.geometryToGeoJSON = (geometry, toProjection, fromProjection = null, dec
   });
 };
 
+
 // [Pure] Returns a polygon geometry matching the passed in parameters.
 mercator.getPlotPolygon = (center, size, shape) => {
   const [centerX, centerY] = mercator.parseGeoJson(center, true).getCoordinates();
-  const radius = size / 2;
+  const radius = (size / 2) / (getPointResolution('EPSG:3857', 1, [centerX, centerY]));
+  
   return shape === "circle"
-    ? new Circle([centerX, centerY], radius)
-    : fromExtent([centerX - radius, centerY - radius, centerX + radius, centerY + radius]);
+    ? new Circle(center, radius)
+    : fromExtent([centerX - radius, centerY - radius, centerX + radius, centerY + radius])
 };
 
 // [Pure] Returns a new vector source containing the passed in plots.

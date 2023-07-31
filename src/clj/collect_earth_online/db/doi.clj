@@ -1,14 +1,16 @@
 (ns collect-earth-online.db.doi
-  (:require [clj-http.client                               :as http]
-            [clojure.java.io                               :as io]
-            [collect-earth-online.generators.external-file :refer [create-shape-files]]
-            [triangulum.config                             :refer [get-config]]
-            [triangulum.database                           :refer [call-sql
-                                                                   sql-primitive]]
-            [triangulum.response                           :refer [data-response]]
-            [triangulum.type-conversion                    :as tc])
-  (:import java.time.format.DateTimeFormatter
-           java.time.LocalDateTime))
+  (:require
+    [clj-http.client                               :as http]
+    [clojure.data.json                             :as json]
+    [clojure.java.io                               :as io]
+    [collect-earth-online.generators.external-file :refer [create-and-zip-files-for-doi]]
+    [collect-earth-online.views                    :refer [data-response]]
+    [triangulum.config                             :refer [get-config]]
+    [triangulum.database                           :refer [call-sql]]
+    [triangulum.type-conversion                    :as tc])
+  (:import
+    java.time.LocalDateTime
+    java.time.format.DateTimeFormatter))
 
 (def base-url (get-config :zenodo :url))
 
@@ -73,7 +75,6 @@
       (insert-doi! project-id user-id)
       data-response)))
 
-
 (defn build-survey-data
   [plot-data]
   (reduce (fn [acc surv]
@@ -88,7 +89,6 @@
                      :answers           (group-by (fn [s] (-> s :id)) edn-sample-data)})))
           [] plot-data))
 
-
 (defn merge-plot-data
   [plot-data]
   (let [merged-plot-data (apply merge plot-data)
@@ -102,7 +102,6 @@
         (dissoc :flagged_reason)
         (dissoc :confidence)
         (assoc  :survey survey-data))))
-
 
 (defn group-plot-data
   [plot-data]

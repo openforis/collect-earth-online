@@ -19,6 +19,12 @@ export default class AnswerDesigner extends React.Component {
   removeAnswer = () => {
     const { surveyQuestionId, answerId } = this.props;
     const { surveyQuestions, setProjectDetails } = this.context;
+    const answerHasRule = this.answerRule(surveyQuestionId, parseInt(answerId));
+    if (answerHasRule) {
+      alert(
+        "This answer is being used in a rule. Please either delete or update the rule before removing the answer.");
+      return null;
+    }
     const matchingQuestion = findObject(
       surveyQuestions,
       ([_id, sq]) =>

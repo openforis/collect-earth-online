@@ -402,9 +402,10 @@ export default class SurveyCollection extends React.Component {
     );
   };
 
-  validateAndSetCurrentValue = (questionIdToSet, answerId, answerText = null) => {
+  validateAndSetCurrentValue = (questionIdToSet, answerId, answerText = null, previousAnswer = null) => {
     const ruleError = this.rulesViolated(questionIdToSet, answerId, answerText);
     if (ruleError) {
+      this.props.setCurrentValue(questionIdToSet, answerId, previousAnswer);
       alert(ruleError);
     } else {
       this.props.setCurrentValue(questionIdToSet, answerId, answerText);
