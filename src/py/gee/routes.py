@@ -48,7 +48,8 @@ def image(requestDict):
 
 def imageCollection(requestDict):
     visParams = safeParseJSON(getDefault(requestDict, 'visParams', {}))
-    if visParams.get("bands"):
+    bands = visParams.get("bands")
+    if bands and isinstance(bands, str):
         bands = visParams.get("bands").replace(' ', '')
         visParams.update({"bands": bands})
     values = imageCollectionToMapId(
@@ -152,12 +153,11 @@ def featureCollection(requestDict):
 def getPlanetTile(requestDict):
     values = getPlanetMapID(
         getDefault(requestDict, 'apiKey'),
-        getDefault(requestDict, 'geometry'), getDefault(
-            requestDict, 'startDate'),
+        getDefault(requestDict, 'geometry'),
+        getDefault(requestDict, 'startDate'),
         getDefault(requestDict, 'endDate', None),
         getDefault(requestDict, 'layerCount', 1),
-        getDefault(requestDict, 'itemTypes', [
-                    'PSScene3Band', 'PSScene4Band']),
+        getDefault(requestDict, 'itemTypes', ['PSScene']),
         float(getDefault(requestDict, 'buffer', 0.5)),
         bool(strtobool(getDefault(requestDict, 'addsimilar', 'True')))
     )
