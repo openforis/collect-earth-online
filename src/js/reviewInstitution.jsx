@@ -1261,18 +1261,6 @@ function Project({ project, isAdmin, deleteProject }) {
               S
             </button>
           </div>
-          <div className="col-1 pl-0">
-            <button
-              className="btn btn-sm btn-outline-lightgreen btn-block"
-              onClick={() =>
-                window.open(`/create-shape-files?projectId=${project.id}`, "_blank")
-              }
-              title="Download Shape Files"
-              type="button"
-            >
-              Shapes
-            </button>
-          </div>
         </>
       )}
     </div>

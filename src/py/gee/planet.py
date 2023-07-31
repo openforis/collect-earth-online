@@ -154,7 +154,7 @@ def add_similar_features(feature, geometry, buffer):
     return features_layer(features, name)
 
 
-def getPlanetMapID(api_key, geometry, start, end=None, layerCount=1, item_types=['PSScene'], buffer=0.5, addsimilar=True):
+def getPlanetMapID(api_key, geometry, start, end=None, layerCount=1, item_types=['PSScene3Band', 'PSScene4Band'], buffer=0.5, addsimilar=True):
     fullList = []
     global PLANET_API_KEY
     PLANET_API_KEY = api_key

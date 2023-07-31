@@ -4,21 +4,20 @@
    java.util.Date
    java.util.UUID)
   (:require
-   [clojure.java.io :as io]
-   [clojure.set                                   :as    set]
-   [clojure.string                                :as    str]
+   [clojure.set                                   :as set]
+   [clojure.string                                :as str]
    [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
-   [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples zip-shape-files]]
+   [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples]]
    [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
-   [collect-earth-online.utils.part-utils         :as    pu]
+   [collect-earth-online.utils.part-utils         :as pu]
    [triangulum.response                           :refer [data-response]]
    [triangulum.database                           :refer [call-sql
                                                           insert-rows!
                                                           p-insert-rows!
                                                           sql-primitive]]
    [triangulum.logging                            :refer [log]]
-   [triangulum.type-conversion                    :as    tc]
-   [triangulum.utils                              :as    u]))
+   [triangulum.type-conversion                    :as tc]
+   [triangulum.utils                              :as u]))
 
 ;;;
 ;;; Auth functions
@@ -347,10 +346,6 @@
   (when-let [assigned-plots (assign-user-plots current-plots design-settings)]
     (p-insert-rows! "plot_assignments" (assign-qaqc assigned-plots design-settings))))
 
-(defn- copy-template-plots [project-id template-id design-settings]
-  (call-sql "copy_template_plots" template-id project-id)
-  (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id)))
-
 (defn- create-project-plots! [project-id
                               plot-distribution
                               num-plots
@@ -469,7 +464,7 @@
     (try
       ;; Create or copy plots
       (if (and (pos? project-template) use-template-plots)
-        (copy-template-plots project-id project-template design-settings)
+        (call-sql "copy_template_plots" project-template project-id)
         (create-project-plots! project-id
                                plot-distribution
                                num-plots
@@ -937,16 +932,3 @@
                                               ".csv")}
          :body (str/join "\n" (cons headers-out data-rows))})
       (data-response "Project not found."))))
-
-(defn create-shape-files!
-  [{:keys [params]}]
-  (let [project-id (:projectId params)
-        zip-file (zip-shape-files project-id)
-        file-name (last (str/split zip-file #"/"))]
-    (if zip-file
-      {:headers {"Content-Type" "application/zip"
-                 "Content-Disposition" (str "attachment; filename=" file-name)}
-       :body (io/file zip-file)
-       :status 200}
-      {:status 500
-       :body "Error generating shape files."})))

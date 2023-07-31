@@ -1,17 +1,16 @@
 (ns collect-earth-online.routing
-  (:require [collect-earth-online.db.geodash      :as geodash]
-            [collect-earth-online.db.imagery      :as imagery]
-            [collect-earth-online.db.institutions :as institutions]
-            [collect-earth-online.db.plots        :as plots]
-            [collect-earth-online.db.projects     :as projects]
-            [collect-earth-online.db.users        :as users]
-            [collect-earth-online.db.doi          :as doi]
-            [collect-earth-online.proxy           :as proxy]
-            [ring.util.response                   :refer [redirect]]
-            [ring.util.codec                      :refer [url-encode]]
-            [triangulum.type-conversion           :as tc]
-            [triangulum.response                  :refer [forbidden-response no-cross-traffic?]]
-            [triangulum.views                     :refer [render-page not-found-page]]))
+  (:require [triangulum.views                      :refer [render-page not-found-page]]
+            [ring.util.response                    :refer [redirect]]
+            [ring.util.codec                       :refer [url-encode]]
+            [triangulum.type-conversion            :as tc]
+            [triangulum.response                   :refer [forbidden-response no-cross-traffic?]]
+            [collect-earth-online.db.geodash       :as geodash]
+            [collect-earth-online.db.imagery       :as imagery]
+            [collect-earth-online.db.institutions  :as institutions]
+            [collect-earth-online.db.plots         :as plots]
+            [collect-earth-online.db.projects      :as projects]
+            [collect-earth-online.db.users         :as users]
+            [collect-earth-online.proxy            :as proxy]))
 
 (def routes
   {;; Page Routes
@@ -109,20 +108,6 @@
    [:post "/update-project"]                 {:handler     projects/update-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get "/create-shape-files"]              {:handler projects/create-shape-files!
-                                              :auth-type :user
-                                              :auth-action :block}
-
-   ;; DOI API
-   [:post "/create-doi"]                     {:handler     doi/create-doi!
-                                              :auth-type   :admin
-                                              :auth-action :block}
-   [:post "/upload-doi-files"]               {:hander      doi/upload-doi-files!
-                                              :auth-type   :admin
-                                              :auth-action :block}
-   [:get "/doi"]                             {:handler     doi/get-zenodo-deposition}
-   [:get "/doi/files"]                       {:handler     doi/download-doi-files}
-
    ;; Plots API
    [:get  "/get-collection-plot"]            {:handler     plots/get-collection-plot
                                               :auth-type   :collect
@@ -233,4 +218,3 @@
                              forbidden-response))
                          not-found-page)]
     (next-handler request)))
-
