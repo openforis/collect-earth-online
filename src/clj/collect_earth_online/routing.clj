@@ -217,5 +217,4 @@
                              (redirect-auth user-id)
                              forbidden-response))
                          not-found-page)]
-    
     (next-handler request)))

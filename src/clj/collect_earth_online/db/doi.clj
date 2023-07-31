@@ -1,11 +1,12 @@
 (ns collect-earth-online.db.doi
-  (:require [clj-http.client :as http]
-            [clojure.java.io :as io]
-            [triangulum.database :refer [call-sql
-                                         sql-primitive]]
-            [triangulum.config  :refer [get-config]]
-            [triangulum.type-conversion :as tc]
-            [collect-earth-online.generators.external-file :refer [create-shape-files]])
+  (:require [clj-http.client                               :as http]
+            [clojure.java.io                               :as io]
+            [collect-earth-online.generators.external-file :refer [create-shape-files]]
+            [triangulum.config                             :refer [get-config]]
+            [triangulum.database                           :refer [call-sql
+                                                                   sql-primitive]]
+            [triangulum.response                           :refer [data-response]]
+            [triangulum.type-conversion                    :as tc])
   (:import java.time.format.DateTimeFormatter
            java.time.LocalDateTime))
 
@@ -69,7 +70,7 @@
         first
         sql-primitive)))
 
-(defn create-doi
+(defn create-doi!
   [{:keys [params]}]
   (let [user-id          (:userId params -1)
         project-id       (tc/val->int (:projectId params))
@@ -81,7 +82,8 @@
     (->
      (create-zenodo-deposition! institution-name project-name creator contributors description)
      :body
-     (insert-doi! project-id user-id))))
+     (insert-doi! project-id user-id)
+     (data-response))))
 
 (defn upload-doi-files!
   [{:keys [params]}]
