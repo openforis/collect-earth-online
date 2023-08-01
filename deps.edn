@@ -13,17 +13,17 @@
                                    :sha     "7c928a8594d84e1d1408b9275a216a0c3bd312d5"}
         cider/cider-nrepl         {:mvn/version "0.28.3"}}
 
- :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
-           :config           {:main-opts ["-m" "triangulum.config"]}
-           :https            {:main-opts ["-m" "triangulum.https"]}
-           :server           {:main-opts ["-m" "triangulum.server"]
-                              :jvm-opts  ["--add-modules=jdk.incubator.foreign"
+ :aliases {:build-db         {:main-opts  ["-m" "triangulum.build-db"]}
+           :config           {:main-opts  ["-m" "triangulum.config"]}
+           :https            {:main-opts  ["-m" "triangulum.https"]}
+           :server           {:main-opts  ["-m" "triangulum.server"]
+                              :jvm-opts   ["--add-modules=jdk.incubator.foreign"
                                           "--enable-native-access=ALL-UNNAMED"]}
-           :systemd          {:main-opts ["-m" "triangulum.systemd"]}
+           :systemd          {:main-opts  ["-m" "triangulum.systemd"]}
            :rebel            {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
                               :main-opts  ["-m" "rebel-readline.main"]}
-           :production       {:jvm-opts  ["-XX:MaxRAMPercentage=90" "-XX:+PrintFlagsFinal"]}
-           :check-reflection {:main-opts ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
+           :production       {:jvm-opts   ["-XX:MaxRAMPercentage=90" "-XX:+PrintFlagsFinal"]}
+           :check-reflection {:main-opts  ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
                                           "-e" "(require,'collect-earth-online.routing)"]}
-           :check-deps       {:extra-deps      {com.github.liquidz/antq {:mvn/version "RELEASE"}}
-                              :main-opts ["-m" "antq.core"]}}}
+           :check-deps       {:extra-deps {com.github.liquidz/antq {:mvn/version "RELEASE"}}
+                              :main-opts  ["-m" "antq.core"]}}}
