@@ -25,7 +25,7 @@
 ;;; Fill cache
 
 (defn nicfi-dates []
-  (as-> (client/get (str "https://api.planet.com/basemaps/v1/mosaics?api_key=" (get-config :nicfi-key))) $
+  (as-> (client/get (str "https://api.planet.com/basemaps/v1/mosaics?api_key=" (get-config :proxy :nicfi-key))) $
     (:body $)
     (json/read-str $ :key-fn keyword)
     (:mosaics $)
@@ -107,5 +107,5 @@
 (defn get-nicfi-tiles [{:keys [params]}]
   (let [{:keys [x y z dataLayer band]} params]
     (client/get (format "https://tiles0.planet.com/basemaps/v1/planet-tiles/%s/gmap/%s/%s/%s.png?proc=%s&api_key=%s"
-                        dataLayer z x y band (get-config :nicfi-key))
+                        dataLayer z x y band (get-config :proxy :nicfi-key))
                 {:as :stream})))

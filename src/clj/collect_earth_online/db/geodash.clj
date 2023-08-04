@@ -23,7 +23,7 @@
 
 (defn- check-initialized []
   (when (> (- (System/currentTimeMillis) @last-initialized) max-age)
-    (let [{:keys [ee-account ee-key-path]} (get-config :gee)]
+    (let [{:keys [ee-account ee-key-path]} (get-config :py-interop)]
       (utils/initialize ee-account ee-key-path)
       (reset! last-initialized (System/currentTimeMillis)))))
 
