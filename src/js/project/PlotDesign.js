@@ -425,13 +425,13 @@ export class PlotDesign extends React.Component {
       csv: {
         display: "CSV File",
         description:
-          "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID.",
+          "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
         layout: this.renderCSV(),
       },
       shp: {
         display: "SHP File",
         description:
-          "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID field.",
+          "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
         layout: this.renderFileInput("shp"),
       },
     };
