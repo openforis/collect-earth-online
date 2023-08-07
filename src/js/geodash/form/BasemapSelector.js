@@ -24,6 +24,7 @@ export default function BasemapSelector() {
         id="basemap-select"
         onChange={(e) => setWidgetDesign("basemapId", parseInt(e.target.value))}
         value={getWidgetDesign("basemapId")}
+        required
       >
         {(imagery || []).map(({ id, title }) => (
           <option key={id} value={id}>
