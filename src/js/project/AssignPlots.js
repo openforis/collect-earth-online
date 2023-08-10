@@ -174,7 +174,7 @@ export default class AssignPlots extends React.Component {
               {userMethod === "equal" && users.length > 0 && (
                 <p className="font-italic ml-2 mt-2 small">
                   {["shp", "csv"].includes(plotDistribution)
-                    ? "- Unable to estimate assignments for external files."
+                    ? "- CEO will use the file plot distribution information for plot assignment."
                     : `- Each user will be assigned ~${formatNumberWithCommas(
                         Math.round(totalPlots / users.length)
                       )} plots.`}

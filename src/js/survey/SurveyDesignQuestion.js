@@ -43,6 +43,11 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
 
   const removeQuestion = () => {
     const childQuestionIds = getChildQuestionIds(surveyQuestionId);
+    const questionHasRules = checkQuestionRules(surveyQuestionId);
+    if(questionHasRules) {
+      alert("This question is being used in a rule. Please either delete or update the rule before removing the question");
+      return null;
+    }
     const newSurveyQuestions = filterObject(
       surveyQuestions,
       ([sqId]) => !childQuestionIds.includes(Number(sqId))
@@ -61,7 +66,9 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
         (rl.questionId1 === questionId ||
          rl.questionId2 === questionId) ||
         // Rules for Sums of answers
-        (rl.questionIds?.includes(questionId))
+        (rl.questionIds?.includes(questionId)) ||
+        // Rules for Regex Matching or Number Range
+        (rl.questionId === questionId)
       ));
     return matchingRule;
   }
