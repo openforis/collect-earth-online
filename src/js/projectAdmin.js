@@ -78,12 +78,14 @@ class Project extends React.Component {
       designMode: this.props.projectId > 0 ? "manage" : "wizard",
       modalMessage: null,
       wizardStep: "overview",
+      doiPath: "",
     };
   }
 
   /// Lifecycle Methods
 
   componentDidMount() {
+    this.getDoiPath(this.props.projectId);
     if (this.props.institutionId > 0) {
       this.getInstitutionImagery(this.props.institutionId);
     } else if (!this.props.projectId > 0) {
@@ -140,6 +142,13 @@ class Project extends React.Component {
         alert("Error retrieving the imagery list. See console for details.");
       });
 
+  getDoiPath = (projectId) => {
+    fetch(`/doi?projectId=${projectId}`)
+      .then((response) => {
+        return (response.ok ? response.json() : Promise.reject(response))})
+      .then((data) => this.setState({ doiPath: data.doiPath }))
+  }
+
   /// Functions
 
   processModal = (message, callBack) => {
@@ -165,6 +174,7 @@ class Project extends React.Component {
           resetProject: this.resetProject,
           processModal: this.processModal,
           wizardStep: this.state.wizardStep,
+          doiPath: this.state.doiPath,
         }}
       >
         {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}

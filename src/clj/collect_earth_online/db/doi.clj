@@ -21,12 +21,16 @@
   (let [auth-token (:api-key (get-config :zenodo))]
     {"Authorization" (str "Bearer " auth-token)}))
 
-
 (defn get-zenodo-deposition
   [deposition-id]
   (let [headers (req-headers)]
     (http/get (str base-url "/deposit/depositions/" deposition-id) {:headers headers :as :json})))
 
+(defn get-doi-reference
+  [{:keys [params]}]
+  (let [project-id (tc/val->int (:projectId params))
+        doi-path   (:doi_path (first (call-sql "select_doi_by_project" project-id)))]
+    (data-response {:doiPath doi-path})))
 
 (defn create-contributors-list
   [users institution-name]
@@ -35,7 +39,6 @@
           :type        "DataCurator"
           :affiliation institution-name})
        users))
-
 
 (defn create-zenodo-deposition!
   [institution-name
@@ -58,30 +61,12 @@
                 :as           :json
                 :headers      headers})))
 
-
 (defn insert-doi!
   [{:keys [id metadata] :as doi-info}
    project-id user-id]
   (let [doi-path (-> metadata :prereserve_doi :doi)]
     (first
       (call-sql "insert_doi" id project-id user-id doi-path (tc/clj->jsonb doi-info)))))
-
-
-(defn create-doi!
-  [{:keys [params]}]
-  (let [user-id          (:userId params -1)
-        project-id       (tc/val->int (:projectId params))
-        project-name     (:projectName params)
-        institution-name (:institution params)
-        description      (:description params)
-        creator          (first (call-sql "get_user_by_id" user-id))
-        contributors     (call-sql "select_assigned_users_by_project" project-id)]
-    (->
-      (create-zenodo-deposition! institution-name project-name creator contributors description)
-      :body
-      (insert-doi! project-id user-id)
-      data-response)))
-
 
 (defn build-survey-data
   [plot-data]
@@ -97,7 +82,6 @@
                      :answers           (group-by (fn [s] (-> s :id)) edn-sample-data)})))
           [] plot-data))
 
-
 (defn merge-plot-data
   [plot-data]
   (let [merged-plot-data (apply merge plot-data)
@@ -112,7 +96,6 @@
         (dissoc :confidence)
         (assoc  :survey survey-data))))
 
-
 (defn group-plot-data
   [plot-data]
   (->> plot-data
@@ -120,7 +103,6 @@
        (map (fn [[key value]]
               [key (merge-plot-data value)]))
        (into {})))
-
 
 (defn get-project-data
   [project-id]
@@ -134,31 +116,58 @@
         (update :created_date #(str %))
         (update :published_date #(str %)))))
 
-
 (defn upload-deposition-files!
   [bucket-url project-id zip-file]
   (let [headers    (req-headers)]
-    (http/put (str bucket-url "/" project-id "-files" ".zip")
+    (http/put (str bucket-url "/" project-id)
               {:content-type :multipart/form-data
                :headers      headers
-               :multipart    [{:name "Content/type" :content "application/zip"}
+               :multipart    [{:name "Content/type" :content "application/octet-stream"}
                               {:name "file" :content (io/file zip-file)}]})))
 
-
 (defn upload-doi-files!
-  [{:keys [params]}]
-  (let [project-id   (:projectId params)
-        doi          (first (call-sql "select_doi_by_project" project-id))
+  [doi-id project-id]
+  (let [project-id   project-id
+        doi          (first (call-sql "select_doi_by_id" doi-id))
         bucket       (-> doi :full_data tc/jsonb->clj :links :bucket)
         project-data (json/write-str (get-project-data project-id))
         zip-file     (create-and-zip-files-for-doi project-id project-data)]
-    (upload-deposition-files! bucket project-id zip-file)
-    (data-response {})))
+    (try
+      (upload-deposition-files! bucket project-id zip-file)
+      (catch Exception e
+        {:message "Failed to upload files."}
+        {:status 500}))))
 
+(defn create-doi!
+  [{:keys [params]}]
+  (let [user-id          (:userId params -1)
+        project-id       (:projectId params)
+        project-name     (:projectName params)
+        institution-name (:name (first (call-sql "select_institution_by_id" (-> params :institution) user-id)))
+        description      (:description params)
+        creator          (first (call-sql "get_user_by_id" user-id))
+        contributors     (call-sql "select_assigned_users_by_project" project-id)]
+    (try
+      (->
+       (create-zenodo-deposition! institution-name project-name creator contributors description)
+       :body
+       (insert-doi! project-id user-id)
+       (:insert_doi)
+       (upload-doi-files! project-id)
+       data-response)
+      (catch Exception _
+        (data-response {:message "Failed to create DOI."}
+                       {:status 500})))))
 
-(defn download-doi-files
+(defn publish-doi!
+  "request zenodo to publish the DOI on DataCite"
   [{:keys [params]}]
   (let [project-id (:projectId params)
-        doi (first (call-sql "select_doi_by_project" project-id))
-        bucket (-> doi :full_data tc/jsonb->clj :links :bucket)]
-    (data-response (str bucket "/" project-id "-files.zip"))))
+        doi-id     (:doi_uid (first (call-sql "select_doi_by_project" project-id)))]
+    (try
+      (http/post (str base-url "/deposition/depositions/" doi-id "/actions/publish")
+                 {:headers (req-headers)})
+      (data-response {})
+      (catch Exception _
+        (data-response {:message "Failed to publish DOI"}
+                       {:status 500})))))
