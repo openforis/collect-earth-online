@@ -1,20 +1,18 @@
 (ns collect-earth-online.db.doi
   (:require
-    [clj-http.client :as http]
-    [clojure.data.json :as json]
-    [clojure.java.io :as io]
-    [collect-earth-online.generators.external-file :refer [create-and-zip-files-for-doi]]
-    [collect-earth-online.views :refer [data-response]]
-    [triangulum.config  :refer [get-config]]
-    [triangulum.database :refer [call-sql]]
-    [triangulum.type-conversion :as tc])
+   [clj-http.client :as http]
+   [clojure.data.json :as json]
+   [clojure.java.io :as io]
+   [collect-earth-online.generators.external-file :refer [create-and-zip-files-for-doi]]
+   [collect-earth-online.views :refer [data-response]]
+   [triangulum.config  :refer [get-config]]
+   [triangulum.database :refer [call-sql]]
+   [triangulum.type-conversion :as tc])
   (:import
-    java.time.LocalDateTime
-    java.time.format.DateTimeFormatter))
-
+   java.time.LocalDateTime
+   java.time.format.DateTimeFormatter))
 
 (def base-url (:url (get-config :zenodo)))
-
 
 (defn req-headers
   []
@@ -86,14 +84,14 @@
   [plot-data]
   (let [merged-plot-data (apply merge plot-data)
         survey-data      (build-survey-data plot-data)]
-    (-> merged-plot-data
-        (dissoc :samples)
-        (dissoc :email)
-        (dissoc :analysis_duration)
-        (dissoc :collection_time)
-        (dissoc :flagged)
-        (dissoc :flagged_reason)
-        (dissoc :confidence)
+    (-> (select-keys merged-plot-data [:center_lat
+                                       :center_lon
+                                       :extra_plot_info
+                                       :total_securewatch_dates
+                                       :size_m
+                                       :shape
+                                       :common_securewatch_date])
+        (update :extra_plot_info #(tc/jsonb->clj %))
         (assoc  :survey survey-data))))
 
 (defn group-plot-data
@@ -109,7 +107,7 @@
   (let [project-data (first (call-sql "select_project_info_for_doi" project-id))
         plot-data    (call-sql "dump_project_plot_data" project-id)]
     (-> project-data
-        (assoc :plot-info (group-plot-data plot-data))
+        (assoc :plot_info (group-plot-data plot-data))
         (update :survey_rules #(tc/jsonb->clj %))
         (update :survey_questions #(tc/jsonb->clj %))
         (update :aoi_features #(tc/jsonb->clj %))
@@ -133,10 +131,10 @@
         project-data (json/write-str (get-project-data project-id))
         zip-file     (create-and-zip-files-for-doi project-id project-data)]
     (try
-      (upload-deposition-files! bucket project-id zip-file)
-      (catch Exception e
-        {:message "Failed to upload files."}
-        {:status 500}))))
+      (:body (upload-deposition-files! bucket project-id zip-file))
+      (catch Exception _
+        (throw (ex-info "Failed to upload files."
+                        {:details "Error in file upload to zenodo"}))))))
 
 (defn create-doi!
   [{:keys [params]}]
