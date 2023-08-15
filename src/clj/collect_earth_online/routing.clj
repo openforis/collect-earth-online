@@ -113,11 +113,10 @@
    [:post "/create-doi"]                     {:handler     doi/create-doi!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/upload-doi-files"]               {:hander      doi/upload-doi-files!
+   [:post "/publish-doi"]                    {:handler     doi/publish-doi!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get "/doi"]                             {:handler     doi/get-zenodo-deposition}
-   [:get "/doi/files"]                       {:handler     doi/download-doi-files}
+   [:get "/doi"]                             {:handler     doi/get-doi-reference}
 
    ;; Plots API
    [:get  "/get-collection-plot"]            {:handler     plots/get-collection-plot
