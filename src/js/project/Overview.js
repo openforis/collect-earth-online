@@ -312,7 +312,7 @@ class ProjectTemplateSelection extends React.Component {
 ProjectTemplateSelection.contextType = ProjectContext;
 
 export function OverviewReview() {
-  const { name, description, privacyLevel, projectOptions } = useContext(ProjectContext);
+  const { doiPath , name, description, privacyLevel, projectOptions } = useContext(ProjectContext);
   return (
     <div className="d-flex flex-column">
       <label>
@@ -324,6 +324,10 @@ export function OverviewReview() {
       <label>
         <b>Visibility:</b> {capitalizeFirst(privacyLevel)}
       </label>
+      <label>
+        <b>Data Object Identifier reference:</b> {doiPath}
+      </label>
+
       <label className="font-weight-bold">Project Options:</label>
       <ul>
         <li>
