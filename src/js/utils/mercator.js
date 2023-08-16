@@ -995,7 +995,7 @@ mercator.getPlotPolygon = (center, size, shape) => {
   const radius = (size / 2) / (getPointResolution('EPSG:3857', 1, [centerX, centerY]));
   
   return shape === "circle"
-    ? new Circle(center, radius)
+    ? new Circle([centerX, centerY], radius)
     : fromExtent([centerX - radius, centerY - radius, centerX + radius, centerY + radius])
 };
 
