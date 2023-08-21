@@ -108,6 +108,19 @@
    [:post "/update-project"]                 {:handler     projects/update-project!
                                               :auth-type   :admin
                                               :auth-action :block}
+   [:get "/create-shape-files"]              {:handler projects/create-shape-files!
+                                              :auth-type :user
+                                              :auth-action :block}
+
+   ;; DOI API
+   [:post "/create-doi"]                     {:handler     doi/create-doi!
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:post "/publish-doi"]                    {:handler     doi/publish-doi!
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:get "/doi"]                             {:handler     doi/get-doi-reference}
+
    ;; Plots API
    [:get  "/get-collection-plot"]            {:handler     plots/get-collection-plot
                                               :auth-type   :collect

@@ -25,6 +25,7 @@ export default function GDInput({
         type="text"
         value={getWidgetDesign(dataKey, prefixPath)}
         className="form-control"
+        required
       />
     </div>
   );

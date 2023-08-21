@@ -18,6 +18,7 @@ export default function GDSelect({ title, items, dataKey, prefixPath = "" }) {
         id={dataKey}
         onChange={(e) => setWidgetDesign(dataKey, e.target.value, prefixPath)}
         value={val}
+        required
       >
         {val === "-1" && (
           <option className="" value="-1">

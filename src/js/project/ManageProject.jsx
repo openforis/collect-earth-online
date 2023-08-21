@@ -188,6 +188,55 @@ class ProjectManagement extends React.Component {
     }
   };
 
+  createDoi = () => {
+    const { projectId, institution, description, name } = this.context;
+    if (confirm("Do you want to create a DOI for this project?\nBy creating a DOI, collection data and plot/samples shape files will be uploaded to Zenodo.")) {
+      fetch("/create-doi", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+          body: JSON.stringify({
+            projectId,
+            description,
+            institution,
+            projectName: name
+          }),
+      }).then((response) => {
+        if(response.ok) {
+          alert("A Digital Object Identifier was created for this project.");
+        } else {
+          console.log(response);
+          alert("Error creating a Digital Object Identifier.");
+        }
+      });
+    }
+  }
+
+  publishDoi = () => {
+    const { projectId } = this.context;
+    if (confirm("Do you wish to publish the Data Object Identifier?\nThis will make the collection data public.")) {
+      fetch("/publish-doi", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+          body: JSON.stringify({
+            projectId,
+          }),
+      }).then((response) => {
+        if(response.ok) {
+          alert("The Digital Object Identifier was published for this project.");
+        } else {
+          console.log(response);
+          alert("Error publishing the Digital Object Identifier.");
+        }
+      });
+    }
+  }
+
   render() {
     const { button, update, description, canEdit } =
       this.projectStates[this.context.availability] || {};
@@ -310,6 +359,21 @@ class ProjectManagement extends React.Component {
               type="button"
               value="Download Sample Data"
             />
+            <input
+              className="btn btn-outline-lightgreen btn-sm w-100"
+              onClick={() => window.open(`/create-shape-files?projectId=${id}`, "_blank")}
+              type="button"
+              value="Download Shape Files"
+            />
+            <label className="my-2"> Digital Object Identifier </label>
+            <input className="btn btn-outline-lightgreen btn-sm w-100"
+                   onClick={() => this.createDoi()}
+                   type="button"
+                   value="Create DOI"/>
+            <input className="btn btn-outline-lightgreen btn-sm w-100"
+                   onClick={() => this.publishDoi()}
+                   type="button"
+                   value="Publish DOI"/>
           </div>
         </div>
       </div>

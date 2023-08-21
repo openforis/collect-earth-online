@@ -118,14 +118,14 @@ export class SampleDesign extends React.Component {
       csv: {
         display: "CSV File",
         description:
-          "Specify your own sample points by uploading a CSV with these fields: LON,LAT,PLOTID,SAMPLEID.",
+          "Specify your own sample points by uploading a CSV with these fields: LON,LAT,PLOTID,SAMPLEID. Each feature must have PLOTID and SAMPLEID fields. Each sample within a unique plot must have a unique SAMPLEID.",
         layout: this.renderFileInput("csv"),
         disabled: !["csv", "shp"].includes(plotDistribution),
       },
       shp: {
         display: "SHP File",
         description:
-          "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields.",
+          "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields. Each sample within a unique plot must have a unique SAMPLEID.",
         layout: this.renderFileInput("shp"),
         disabled: !["csv", "shp"].includes(plotDistribution),
       },

@@ -15,6 +15,7 @@ export default function GDTextArea({ title, placeholder, dataKey, prefixPath = "
         rows="4"
         style={{ overflow: "hidden", overflowWrap: "break-word", resize: "vertical" }}
         value={getWidgetDesign(dataKey, prefixPath)}
+        required
       />
     </div>
   );
