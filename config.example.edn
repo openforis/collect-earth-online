@@ -6,17 +6,22 @@
  :triangulum.server/cider-nrepl       true
  :triangulum.server/mode              "dev"
  :triangulum.server/log-dir           "logs"
- 
+
  :triangulum.server/handler           collect-earth-online.routing/authenticated-routing-handler
- :triangulum.handler/private-request-keys  #{:base64Image :plotFileBase64 :sampleFileBase64}
- :triangulum.handler/private-response-keys #{}
  :triangulum.server/keystore-file     "keystore.pkcs12"
  :triangulum.server/keystore-type     "pkcs12"
  :triangulum.server/keystore-password "foobar"
 
  ;; handler (server)
- :triangulum.handler/session-key      "changeme12345678" ; must be 16 characters
- :triangulum.handler/bad-tokens       #{".php"}
+ :triangulum.handler/session-key           "changeme12345678" ; must be 16 characters
+ :triangulum.handler/bad-tokens            #{".php"}
+ :triangulum.handler/private-request-keys  #{:base64Image :plotFileBase64 :sampleFileBase64}
+ :triangulum.handler/private-response-keys #{}
+
+ ;;workers (server)
+ :triangulum.worker/workers [{:triangulum.worker/name "clean-up-service"
+                              :triangulum.worker/start collect-earth-online.workers/start-clean-up-service!
+                              :triangulum.worker/stop collect-earth-online.workers/stop-clean-up-service!}]
 
  ;; response (server)
  :triangulum.response/response-type   :json ; :edn or :transit
@@ -66,8 +71,6 @@
  :triangulum.https/webroot            "./resources/public"
 
  ;; product-ns (my-keys)
- :product-ns.py-interop/ee-account    ""
- :product-ns.py-interop/ee-key-path   ""
- :product-ns.views/mapbox-token       "pk..."
- :product-ns.views/mapquest-key       "GF..."
- :product-ns.proxy/nicfi-key          "e5..."}
+ :collect-earth-online.py-interop/ee-account    ""
+ :collect-earth-online.py-interop/ee-key-path   ""
+ :collect-earth-online.proxy/nicfi-key          "e5..."}

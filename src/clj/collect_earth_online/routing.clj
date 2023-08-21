@@ -1,16 +1,16 @@
 (ns collect-earth-online.routing
-  (:require [triangulum.views                      :refer [render-page not-found-page]]
-            [ring.util.response                    :refer [redirect]]
-            [ring.util.codec                       :refer [url-encode]]
-            [triangulum.type-conversion            :as tc]
-            [triangulum.response                   :refer [forbidden-response no-cross-traffic?]]
-            [collect-earth-online.db.geodash       :as geodash]
-            [collect-earth-online.db.imagery       :as imagery]
-            [collect-earth-online.db.institutions  :as institutions]
-            [collect-earth-online.db.plots         :as plots]
-            [collect-earth-online.db.projects      :as projects]
-            [collect-earth-online.db.users         :as users]
-            [collect-earth-online.proxy            :as proxy]))
+  (:require [triangulum.views                     :refer [render-page not-found-page]]
+            [ring.util.response                   :refer [redirect]]
+            [ring.util.codec                      :refer [url-encode]]
+            [triangulum.type-conversion           :as tc]
+            [triangulum.response                  :refer [forbidden-response no-cross-traffic?]]
+            [collect-earth-online.db.geodash      :as geodash]
+            [collect-earth-online.db.imagery      :as imagery]
+            [collect-earth-online.db.institutions :as institutions]
+            [collect-earth-online.db.plots        :as plots]
+            [collect-earth-online.db.projects     :as projects]
+            [collect-earth-online.db.users        :as users]
+            [collect-earth-online.proxy           :as proxy]))
 
 (def routes
   {;; Page Routes

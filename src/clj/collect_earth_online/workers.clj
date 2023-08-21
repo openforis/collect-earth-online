@@ -3,8 +3,6 @@
             [clojure.string     :as str]
             [triangulum.logging :refer [log-str]]))
 
-(defonce ^:private clean-up-service (atom nil))
-
 (def ^:private expires-in "1 hour in msecs" (* 1000 60 60))
 
 (defn- expired? [last-mod-time]
@@ -29,9 +27,5 @@
         (try (delete-tmp)
              (catch Exception _)))))
 
-(defn start-clean-up-worker! []
-  (reset! clean-up-service (start-clean-up-service!)))
-
-(defn stop-cleanup-worker! []
-  (future-cancel @clean-up-service)
-  (reset! clean-up-service nil))
+(defn stop-clean-up-service! [service-thread]
+  (future-cancel service-thread))

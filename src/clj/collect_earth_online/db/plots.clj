@@ -37,7 +37,7 @@
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn get-plotters
-  "Gets all users that have collected plots on a project.  If optional plotId
+  "Gets all users that have collected plots on a project. If optional plotId
    is passed, return results only for that plot."
   [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
