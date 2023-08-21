@@ -539,3 +539,61 @@ CREATE OR REPLACE FUNCTION get_plot_centers_by_project(_project_id integer)
     WHERE project_rid = _project_id
 
 $$ LANGUAGE SQL;
+
+-- Get plot shapes for DOI creation
+CREATE OR REPLACE FUNCTION get_plot_shapes(_project_id integer)
+ RETURNS TABLE (project_id integer,
+                plot_id    integer,
+                plot_geom  geometry(Geometry, 4326)
+ ) AS $$
+
+    WITH plot_geoms AS (SELECT project_rid, plot_distribution, plot_shape, plot_size, plot_uid,
+                               ST_Transform(plot_geom, 3857) AS plot_geom
+                        FROM projects AS pr
+                        INNER JOIN plots AS pl
+                        ON pr.project_uid = pl.project_rid
+                        WHERE project_uid = _project_id),
+
+         plot_boundaries AS (SELECT plot_uid,
+                                    CASE
+                                      WHEN plot_distribution = 'shp'
+                                      THEN plot_geom
+                                      WHEN plot_shape = 'circle'
+                                      THEN ST_Buffer(plot_geom, plot_size/2)
+                                      WHEN plot_shape = 'square'
+                                      THEN ST_MakeEnvelope(ST_X(plot_geom) - plot_size/2,
+                                                           ST_Y(plot_geom) - plot_size/2,
+                                                           ST_X(plot_geom) + plot_size/2,
+                                                           ST_Y(plot_geom) + plot_size/2,
+                                                           3857)
+                                      ELSE plot_geom
+                                    END AS plot_boundary
+                             FROM plot_geoms)
+
+      SELECT project_rid, plot_uid, ST_Transform(plot_geom, 4326) AS plot_geom
+      FROM plot_geoms
+      INNER JOIN plot_boundaries
+      USING (plot_uid)
+$$ LANGUAGE SQL;
+
+-- Get sample shapes for DOI creation
+CREATE OR REPLACE FUNCTION get_sample_shapes(_project_id integer)
+ RETURNS TABLE (project_id integer,
+                plot_id integer,
+                sample_id integer,
+                sample_geom geometry(Geometry, 4326)
+ ) AS $$
+
+    (SELECT project_rid, plot_rid, sample_uid, sample_geom
+       FROM samples s
+       INNER JOIN plots pl
+       ON pl.plot_uid = s.plot_rid
+       WHERE pl.project_rid = _project_id)
+    UNION
+    (SELECT project_rid, plot_rid, sample_uid, sample_geom
+       FROM ext_samples s
+       INNER JOIN plots pl
+       ON pl.plot_uid = s.plot_rid
+       WHERE pl.project_rid = _project_id)
+
+$$ LANGUAGE SQL;
