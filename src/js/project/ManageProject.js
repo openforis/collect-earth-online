@@ -171,7 +171,6 @@ class ProjectManagement extends React.Component {
   };
 
   deleteProject = () => {
-    console.log(this.context);
     if (confirm("Do you want to delete this project? This operation cannot be undone.")) {
       this.context.processModal("Deleting project", () =>
         fetch(`/archive-project?projectId=${this.context.id}`, { method: "POST" }).then(
