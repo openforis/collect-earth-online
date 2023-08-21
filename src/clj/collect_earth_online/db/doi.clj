@@ -1,16 +1,16 @@
 (ns collect-earth-online.db.doi
   (:require
-    [clj-http.client                               :as http]
-    [clojure.data.json                             :as json]
-    [clojure.java.io                               :as io]
-    [collect-earth-online.generators.external-file :refer [create-and-zip-files-for-doi]]
-    [triangulum.config                             :refer [get-config]]
-    [triangulum.database                           :refer [call-sql]]
-    [triangulum.response                           :refer [data-response]]
-    [triangulum.type-conversion                    :as tc])
+   [clj-http.client                               :as http]
+   [clojure.data.json                             :as json]
+   [clojure.java.io                               :as io]
+   [collect-earth-online.generators.external-file :refer [create-and-zip-files-for-doi]]
+   [triangulum.config                             :refer [get-config]]
+   [triangulum.database                           :refer [call-sql]]
+   [triangulum.response                           :refer [data-response]]
+   [triangulum.type-conversion                    :as tc])
   (:import
-    java.time.LocalDateTime
-    java.time.format.DateTimeFormatter))
+   java.time.LocalDateTime
+   java.time.format.DateTimeFormatter))
 
 (def base-url (get-config :zenodo :url))
 
