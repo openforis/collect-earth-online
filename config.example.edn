@@ -73,4 +73,6 @@
  ;; product-ns (my-keys)
  :collect-earth-online.py-interop/ee-account    ""
  :collect-earth-online.py-interop/ee-key-path   ""
- :collect-earth-online.proxy/nicfi-key          "e5..."}
+ :collect-earth-online.proxy/nicfi-key          "e5..."
+ :collect-earth-online.zenodo/url               ""
+ :collect-earth-online.zenodo/api-key           ""}
