@@ -18,7 +18,7 @@
  :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
            :config           {:main-opts ["-m" "triangulum.config"]}
            :https            {:main-opts ["-m" "triangulum.https"]}
-           :server           {:main-opts ["-m" "collect-earth-online.server"]
+           :server           {:main-opts ["-m" "triangulum.server"]
                               :jvm-opts  ["--add-modules=jdk.incubator.foreign"
                                           "--enable-native-access=ALL-UNNAMED"]}
            :systemd          {:main-opts ["-m" "triangulum.systemd"]}
