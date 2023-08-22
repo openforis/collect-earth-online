@@ -589,7 +589,7 @@ CREATE OR REPLACE FUNCTION get_sample_shapes(_project_id integer)
        ON pl.plot_uid = s.plot_rid
        WHERE pl.project_rid = _project_id)
     UNION
-    (SELECT project_rid, plot_rid, sample_uid, sample_geom
+    (SELECT project_rid, plot_rid, ext_sample_uid as sample_uid, sample_geom
        FROM ext_samples s
        INNER JOIN plots pl
        ON pl.plot_uid = s.plot_rid
