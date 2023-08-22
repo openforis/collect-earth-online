@@ -209,7 +209,6 @@
 
 (defn authenticated-routing-handler [{:keys [uri request-method params headers session] :as request}]
   (let [{:keys [auth-type auth-action handler] :as route} (get routes [request-method uri])
-        _ (println session params)
         user-id        (:userId session -1)
         institution-id (tc/val->int (:institutionId params))
         project-id     (tc/val->int (:projectId params))
