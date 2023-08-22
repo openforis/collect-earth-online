@@ -261,20 +261,39 @@
   [folder-name project-id table-name db-config]
   (sh-wrapper-quoted folder-name {}
                          (pgsql2shp-string db-config
-                                           (str project-id "-plots")
-                                           (str "\"SELECT * FROM " table-name "_shapes WHERE p_id=" project-id "\""))
-                         (str "7z a " project-id "-" table-name ".zip " project-id "-plots*")))
-
+                                           (str project-id "-" table-name)
+                                           (str "\"SELECT * FROM get_" table-name "_shapes(" project-id ")\""))))
 
 (defn create-shape-files
-  [table-name project-id]
-  (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "-" table-name "/")
-        db-config   (get-config :database)
-        zip-name    (str project-id "-" table-name ".zip")]
+  [folder-name table-name project-id]
+  (let [shape-folder-name (str folder-name table-name "-shape-files/")
+        db-config   (get-config :database)]
+    (sh-wrapper folder-name {} (str "rm -rf " shape-folder-name) (str "mkdir " shape-folder-name))
+    (export-table-to-file shape-folder-name project-id table-name db-config)))
+
+
+(defn create-data-file
+  [folder-name json-data]
+  (spit (str folder-name "data.json")
+        json-data))
+
+(defn create-and-zip-files-for-doi
+  [project-id project-data]
+    (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "-files/")]
     (sh-wrapper tmp-dir {} (str "rm -rf " folder-name) (str "mkdir " folder-name))
-    (sh-wrapper-quoted folder-name {}
-                         (pgsql2shp-string db-config
-                                           (str project-id "-plots")
-                                           (str "\"SELECT * FROM " table-name "_shapes WHERE project_id=" project-id "\""))
-                         (str "7z a " zip-name " " project-id "-plots*"))
-    (str folder-name zip-name)))
+    (create-shape-files folder-name "plot" project-id)
+    (create-shape-files folder-name "sample" project-id)
+    (create-data-file folder-name project-data)
+    (sh-wrapper tmp-dir {}
+                (str "7z a " folder-name "/files" ".zip " folder-name "/*"))
+    (str folder-name "files.zip")))
+
+(defn zip-shape-files
+  [project-id]
+  (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "-files/")]
+    (sh-wrapper tmp-dir {} (str "rm -rf " folder-name) (str "mkdir " folder-name))
+    (create-shape-files folder-name "plot" project-id)
+    (create-shape-files folder-name "sample" project-id)
+    (sh-wrapper tmp-dir {}
+                (str "7z a " folder-name "/files" ".zip " folder-name "/*"))
+    (str folder-name "files.zip")))

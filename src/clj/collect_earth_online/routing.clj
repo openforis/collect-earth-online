@@ -4,6 +4,7 @@
             [ring.util.codec                      :refer [url-encode]]
             [triangulum.type-conversion           :as tc]
             [triangulum.response                  :refer [forbidden-response no-cross-traffic?]]
+            [collect-earth-online.db.doi          :as doi]
             [collect-earth-online.db.geodash      :as geodash]
             [collect-earth-online.db.imagery      :as imagery]
             [collect-earth-online.db.institutions :as institutions]
