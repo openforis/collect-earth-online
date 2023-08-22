@@ -136,9 +136,9 @@ class Register extends React.Component {
   }
 }
 
-export function pageInit(args) {
+export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={-1} userName="" version={args.version}>
+    <NavigationBar userId={-1} userName="" version={session.version}>
       <Register />
     </NavigationBar>,
     document.getElementById("app")

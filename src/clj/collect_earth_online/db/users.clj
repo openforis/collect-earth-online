@@ -19,13 +19,14 @@
 
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params
-        user (first (call-sql "check_login" {:log? false} email password))]
+        user (first (call-sql "check_login" {:log? false} email password))
+        user-info {:userId   (:user_id user)
+                   :userName email
+                   :userRole (if (:administrator user) "admin" "user")}]
     (if-let [error-msg (get-login-errors user)]
       (data-response error-msg)
       (data-response ""
-                     {:session {:userId   (:user_id user)
-                                :userName email
-                                :userRole (if (:administrator user) "admin" "user")}})))) ; TODO user 1 is the only superuser
+                     {:session user-info})))) ; TODO user 1 is the only superuser
 
 (defn- get-register-errors [email password password-confirmation]
   (cond (sql-primitive (call-sql "email_taken" email -1))

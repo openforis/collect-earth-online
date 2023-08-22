@@ -148,14 +148,14 @@
 (defn- unlock-plots [user-id]
   (call-sql "unlock_plots" {:log? false} user-id))
 
-(defn reset-plot-lock [{:keys [params]}]
+(defn reset-plot-lock [{:keys [params session]}]
   (let [plot-id (tc/val->int (:plotId params))
-        user-id (:userId params -1)]
+        user-id (:userId session -1)]
     (call-sql "lock_plot_reset" {:log? false} plot-id user-id (time-plus-five-min))
     (data-response "")))
 
-(defn release-plot-locks [{:keys [params]}]
-  (unlock-plots (:userId params -1))
+(defn release-plot-locks [{:keys [params session]}]
+  (unlock-plots (:userId session -1))
   (data-response ""))
 
 (defn- prepare-samples-array [plot-id user-id]
@@ -194,13 +194,13 @@
    returned is based off of the navigation mode and direction.  Valid
    navigation modes are analyzed, unanalyzed, and all.  Valid directions
    are previous, next, and id."
-  [{:keys [params]}]
+  [{:keys [params session]}]
   (let [navigation-mode (:navigationMode params "unanalyzed")
         direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
         old-visible-id  (tc/val->int (:visibleId params))
         threshold       (tc/val->int (:threshold params))
-        user-id         (:userId params -1)
+        user-id         (:userId session -1)
         current-user-id (tc/val->int (:currentUserId params -1))
         review-mode?     (and (tc/val->bool (:inReviewMode params))
                               (is-proj-admin? user-id project-id nil))

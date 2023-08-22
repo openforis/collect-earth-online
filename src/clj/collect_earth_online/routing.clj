@@ -207,9 +207,23 @@
                        "&flash_message=You must login to see "
                        full-url))))))
 
-(defn authenticated-routing-handler [{:keys [uri request-method params headers] :as request}]
+(def updatable-session-keys [:tokenKey])
+
+(defn wrap-persistent-session [handler]
+  (fn [request]
+    (let [{:keys [params session]} request
+          to-update    (select-keys params updatable-session-keys)
+          session      (apply dissoc session (keys to-update))
+          response     (handler (update request :params merge session))]
+      (if (and (contains? response :session)
+               (nil? (:session response)))
+        response
+        (update response :session #(merge session to-update %))))))
+
+(defn authenticated-routing-handler [{:keys [uri request-method params headers session] :as request}]
   (let [{:keys [auth-type auth-action handler] :as route} (get routes [request-method uri])
-        user-id        (:userId params -1)
+        _ (println session params)
+        user-id        (:userId session -1)
         institution-id (tc/val->int (:institutionId params))
         project-id     (tc/val->int (:projectId params))
         next-handler   (if route
@@ -232,3 +246,8 @@
                              forbidden-response))
                          not-found-page)]
     (next-handler request)))
+
+(defn ceo-handler [request]
+  (-> request
+      (authenticated-routing-handler)
+      (wrap-persistent-session)))

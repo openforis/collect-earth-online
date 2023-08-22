@@ -148,14 +148,14 @@ class UserDisagreement extends React.Component {
   }
 }
 
-export function pageInit(args) {
+export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={args.userId} userName={args.userName} version={args.version}>
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
       <UserDisagreement
-        plotId={args.plotId}
-        projectId={args.projectId}
-        threshold={args.threshold}
-        visibleId={args.visibleId}
+        plotId={params.plotId}
+        projectId={params.projectId}
+        threshold={params.threshold}
+        visibleId={params.visibleId}
       />
     </NavigationBar>,
     document.getElementById("app")

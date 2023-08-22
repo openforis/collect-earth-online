@@ -67,7 +67,7 @@ class ReviewInstitution extends React.Component {
 
   setUsersCount = (newCount) => this.setState({ usersCount: newCount });
 
-  setIsAdmin = (isAdmin) => this.setState({ isAdmin });
+  setIsAdmin = (isAdmin) => { console.log(isAdmin); return this.setState({ isAdmin })};
 
   /// Helpers
 
@@ -1180,6 +1180,7 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
 }
 
 function Project({ project, isAdmin, deleteProject }) {
+  console.log(isAdmin);
   return (
     <div className="row mb-1 d-flex">
       <div className="col-2 pr-0">
@@ -1561,12 +1562,12 @@ class NewUserButtons extends React.Component {
   }
 }
 
-export function pageInit(args) {
+export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={args.userId} userName={args.userName} version={args.version}>
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
       <ReviewInstitution
-        institutionId={parseInt(args.institutionId || "-1")}
-        userId={args.userId || -1}
+        institutionId={parseInt(params.institutionId || "-1")}
+        userId={session.userId || -1}
       />
     </NavigationBar>,
     document.getElementById("app")

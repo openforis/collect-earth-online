@@ -137,8 +137,8 @@
                         {:details "Error in file upload to zenodo"}))))))
 
 (defn create-doi!
-  [{:keys [params]}]
-  (let [user-id          (:userId params -1)
+  [{:keys [params session]}]
+  (let [user-id          (:userId session -1)
         project-id       (:projectId params)
         project-name     (:projectName params)
         institution-name (:name (first (call-sql "select_institution_by_id" (-> params :institution) user-id)))

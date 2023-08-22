@@ -42,10 +42,10 @@ class VerifyEmail extends React.Component {
   }
 }
 
-export function pageInit(args) {
+export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={-1} userName="" version={args.version}>
-      <VerifyEmail email={args.email || ""} passwordResetKey={args.passwordResetKey || ""} />
+    <NavigationBar userId={-1} userName="" version={session.version}>
+      <VerifyEmail email={params.email || ""} passwordResetKey={params.passwordResetKey || ""} />
     </NavigationBar>,
     document.getElementById("app")
   );

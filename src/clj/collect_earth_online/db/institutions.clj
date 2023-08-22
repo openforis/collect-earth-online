@@ -14,17 +14,17 @@
        (pos? institution-id)
        (sql-primitive (call-sql "is_institution_admin" {:log? false} user-id institution-id))))
 
-(defn get-all-institutions [{:keys [params]}]
-  (->> (call-sql "select_all_institutions" (:userId params -1))
+(defn get-all-institutions [{:keys [session]}]
+  (->> (call-sql "select_all_institutions" (:userId session -1))
        (mapv (fn [{:keys [institution_id name is_member]}]
                {:id       institution_id
                 :name     name
                 :isMember is_member}))
        (data-response)))
 
-(defn get-institution-by-id [{:keys [params]}]
+(defn get-institution-by-id [{:keys [params session]}]
   (let [institution-id (tc/val->int (:institutionId params))
-        user-id        (:userId params -1)]
+        user-id        (:userId session -1)]
     (if-let [institution (first (call-sql "select_institution_by_id" institution-id user-id))]
       (data-response (let [{:keys [name image_name base64_image url description institution_admin]} institution]
                        {:name             name
@@ -53,8 +53,8 @@
   (when (sql-primitive (call-sql "institution_name_taken" name -1))
     (str "Institution with the name " name " already exists.")))
 
-(defn create-institution [{:keys [params]}]
-  (let [user-id      (:userId params -1)
+(defn create-institution [{:keys [params session]}]
+  (let [user-id      (:userId session -1)
         name         (:name params)
         image-name   (:imageName params)
         base64-image (:base64Image params)
@@ -80,8 +80,8 @@
     (sql-primitive (call-sql "institution_name_taken" name institution-id))
     (str "Institution with the name " name " already exists.")))
 
-(defn update-institution [{:keys [params]}]
-  (let [user-id        (:userId params -1)
+(defn update-institution [{:keys [params session]}]
+  (let [user-id        (:userId session -1)
         institution-id (tc/val->int (:institutionId params))
         name           (:name params)
         image-name     (:imageName params)

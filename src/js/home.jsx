@@ -78,6 +78,7 @@ class Home extends React.Component {
     this.setState({ showSidePanel: !this.state.showSidePanel }, () => mercator.resize(mapConfig));
 
   render() {
+    console.log(this.props.userId);
     return (
       <div id="bcontainer">
         <span id="mobilespan" />
@@ -709,10 +710,10 @@ class ProjectPopup extends React.Component {
   }
 }
 
-export function pageInit(args) {
+export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={args.userId} userName={args.userName} version={args.version}>
-      <Home userId={args.userId || -1} userRole={args.userRole || ""} />
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
+      <Home userId={session.userId || -1} userRole={session.userRole || ""} />
     </NavigationBar>,
     document.getElementById("app")
   );
