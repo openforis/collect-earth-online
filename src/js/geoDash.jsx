@@ -185,12 +185,12 @@ class Geodash extends React.Component {
   }
 }
 
-export function pageInit(args) {
+export function pageInit(params, session) {
   ReactDOM.render(
     <GeoDashNavigationBar
-      page={() => <Geodash {...args} />}
-      userName={args.userName || "guest"}
-      visiblePlotId={args.visiblePlotId ? parseInt(args.visiblePlotId) : -1}
+      page={() => <Geodash {...params} />}
+      userName={session.userName || "guest"}
+      visiblePlotId={params.visiblePlotId ? parseInt(params.visiblePlotId) : -1}
     />,
     document.getElementById("app")
   );

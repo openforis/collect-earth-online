@@ -327,8 +327,9 @@ export function OverviewReview() {
       <label>
         <b>Data Object Identifier reference:</b> {doiPath}
       </label>
-
-      <label className="font-weight-bold">Project Options:</label>
+      <label>
+        <b>Project Options:</b>
+      </label>
       <ul>
         <li>
           <b>{projectOptions.showGEEScript ? "Show " : "Don't Show "}</b>

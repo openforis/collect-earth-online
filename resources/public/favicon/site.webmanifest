@@ -1,0 +1,14 @@
+{
+    "name": "Collect Earth Online",
+    "short_name": "CEO",
+    "icons": [
+        {
+            "src": "/favicon/favicon.ico",
+            "sizes": "144x144",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#ffffff",
+    "background_color": "#ffffff",
+    "display": "standalone"
+}

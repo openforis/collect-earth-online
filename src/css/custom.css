@@ -857,3 +857,7 @@ input:checked + .switch-slider:before {
     box-shadow: 0 0 15px 5px purple;
   }
 }
+
+body {
+    padding-top:60px;
+}

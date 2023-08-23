@@ -591,7 +591,7 @@ class WidgetLayoutEditor extends React.PureComponent {
   }
 }
 
-export function pageInit(args) {
+export function pageInit(params, session) {
   ReactDOM.render(
     <GeoDashNavigationBar
       editor
@@ -600,11 +600,11 @@ export function pageInit(args) {
           addDialog={addDialog}
           closeDialogs={closeDialogs}
           copyDialog={copyDialog}
-          institutionId={parseInt(args.institutionId || -1)}
-          projectId={parseInt(args.projectId || -1)}
+          institutionId={parseInt(params.institutionId || -1)}
+          projectId={parseInt(params.projectId || -1)}
         />
       )}
-      userName={args.userName || ""}
+      userName={session.userName || ""}
     />,
     document.getElementById("app")
   );

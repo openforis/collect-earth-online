@@ -2,7 +2,7 @@
   (:require [triangulum.database :refer [call-sql sql-primitive]]
             [triangulum.type-conversion :as tc]
             [collect-earth-online.db.institutions :refer [is-inst-admin?]]
-            [collect-earth-online.views :refer [data-response]]))
+            [triangulum.response :refer [data-response]]))
 
 (defn- clean-source [source-config]
   (let [image-type (:type source-config)]
@@ -25,15 +25,15 @@
                              (clean-source source-config))}))
         imagery))
 
-(defn get-institution-imagery [{:keys [params]}]
+(defn get-institution-imagery [{:keys [params session]}]
   (let [institution-id (tc/val->int (:institutionId params))
-        user-id        (:userId params -1)]
+        user-id        (:userId session -1)]
     (data-response (prepare-imagery (call-sql "select_imagery_by_institution" institution-id user-id)
                                     (is-inst-admin? user-id institution-id)))))
 
-(defn get-project-imagery [{:keys [params]}]
+(defn get-project-imagery [{:keys [params session]}]
   (let [project-id (tc/val->int (:projectId params))
-        user-id    (:userId params -1)
+        user-id    (:userId session -1)
         token-key  (:tokenKey params)]
     (data-response (prepare-imagery (call-sql "select_imagery_by_project" project-id user-id token-key)
                                     false))))

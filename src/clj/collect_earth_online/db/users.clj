@@ -3,12 +3,12 @@
            java.time.format.DateTimeFormatter
            java.time.LocalDateTime
            java.util.UUID)
-  (:require [clojure.string :as str]
-            [triangulum.database :refer [call-sql sql-primitive]]
+  (:require [clojure.string             :as str]
+            [triangulum.database        :refer [call-sql sql-primitive]]
             [triangulum.type-conversion :as tc]
-            [triangulum.config  :refer [get-config]]
-            [collect-earth-online.utils.mail :refer [email? send-mail get-base-url]]
-            [collect-earth-online.views      :refer [data-response]]))
+            [triangulum.config          :refer [get-config]]
+            [triangulum.email           :refer [email? send-mail get-base-url]]
+            [triangulum.response        :refer [data-response]]))
 
 (defn- get-login-errors [user]
   (cond (nil? user)
@@ -19,13 +19,13 @@
 
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params
-        user (first (call-sql "check_login" {:log? false} email password))]
+        user      (first (call-sql "check_login" {:log? false} email password))
+        user-info {:userId   (:user_id user)
+                   :userName email
+                   :userRole (if (:administrator user) "admin" "user")}]
     (if-let [error-msg (get-login-errors user)]
       (data-response error-msg)
-      (data-response ""
-                     {:session {:userId   (:user_id user)
-                                :userName email
-                                :userRole (if (:administrator user) "admin" "user")}})))) ; TODO user 1 is the only superuser
+      (data-response "" {:session user-info})))) ; TODO user 1 is the only superuser
 
 (defn- get-register-errors [email password password-confirmation]
   (cond (sql-primitive (call-sql "email_taken" email -1))

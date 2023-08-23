@@ -197,12 +197,12 @@ class ProjectManagement extends React.Component {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-          body: JSON.stringify({
-            projectId,
-            description,
-            institution,
-            projectName: name
-          }),
+        body: JSON.stringify({
+          projectId,
+          description,
+          institution,
+          projectName: name,
+        }),
       }).then((response) => {
         if(response.ok) {
           alert("A Digital Object Identifier was created for this project.");
@@ -223,9 +223,7 @@ class ProjectManagement extends React.Component {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-          body: JSON.stringify({
-            projectId,
-          }),
+        body: JSON.stringify({ projectId })
       }).then((response) => {
         if(response.ok) {
           alert("The Digital Object Identifier was published for this project.");

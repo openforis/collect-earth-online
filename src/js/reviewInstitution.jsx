@@ -1261,18 +1261,6 @@ function Project({ project, isAdmin, deleteProject }) {
               S
             </button>
           </div>
-          <div className="col-1 pl-0">
-            <button
-              className="btn btn-sm btn-outline-lightgreen btn-block"
-              onClick={() =>
-                window.open(`/create-shape-files?projectId=${project.id}`, "_blank")
-              }
-              title="Download Shape Files"
-              type="button"
-            >
-              Shapes
-            </button>
-          </div>
         </>
       )}
     </div>
@@ -1573,12 +1561,12 @@ class NewUserButtons extends React.Component {
   }
 }
 
-export function pageInit(args) {
+export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={args.userId} userName={args.userName} version={args.version}>
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
       <ReviewInstitution
-        institutionId={parseInt(args.institutionId || "-1")}
-        userId={args.userId || -1}
+        institutionId={parseInt(params.institutionId || "-1")}
+        userId={session.userId || -1}
       />
     </NavigationBar>,
     document.getElementById("app")

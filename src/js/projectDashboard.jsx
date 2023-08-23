@@ -243,10 +243,10 @@ function ProjectAOI() {
   );
 }
 
-export function pageInit(args) {
+export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={args.userId} userName={args.userName} version={args.version}>
-      <ProjectDashboard projectId={args.projectId || "0"} userName={args.userName} />
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
+      <ProjectDashboard projectId={params.projectId || "0"} userName={session.userName} />
     </NavigationBar>,
     document.getElementById("app")
   );

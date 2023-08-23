@@ -1,29 +1,18 @@
 {:paths ["src/clj" "resources" "target"]
 
- :deps {bk/ring-gzip              {:mvn/version "0.3.0"}
-        clj-http/clj-http         {:mvn/version "3.10.3"}
+ :deps {clj-http/clj-http         {:mvn/version "3.10.3"}
         clj-python/libpython-clj  {:mvn/version "2.023"}
-        com.draines/postal        {:mvn/version "2.0.3"}
-        com.cognitect/transit-clj {:mvn/version "1.0.324"}
-        hiccup/hiccup             {:mvn/version "2.0.0-alpha2"}
         org.clojure/clojure       {:mvn/version "1.11.1"}
-        org.clojure/core.async    {:mvn/version "1.3.610"}
         org.clojure/data.json     {:mvn/version "1.0.0"}
-        org.clojure/tools.cli     {:mvn/version "1.0.194"}
-        org.postgresql/postgresql {:mvn/version "42.2.18"}
         ring/ring                 {:mvn/version "1.8.2"}
-        ring/ring-headers         {:mvn/version "0.3.0"}
-        ring/ring-ssl             {:mvn/version "0.3.0"}
-        ring/ring-json            {:mvn/version "0.5.0"}
-        seancorfield/next.jdbc    {:mvn/version "1.1.613"}
         sig-gis/triangulum        {:git/url "https://github.com/sig-gis/triangulum"
-                                   :sha     "d2c5cab0985e0f660ff7ed1879f0fa4d0020003e"}
-        cider/cider-nrepl         {:mvn/version "0.28.3"}}
+                                   :git/sha "4a597e121996129b2a5a5cbf1b4822796d856714"
+                                   :git/tag "2023.08.10-4a597e1"}}
 
  :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
            :config           {:main-opts ["-m" "triangulum.config"]}
            :https            {:main-opts ["-m" "triangulum.https"]}
-           :server           {:main-opts ["-m" "collect-earth-online.server"]
+           :server           {:main-opts ["-m" "triangulum.server"]
                               :jvm-opts  ["--add-modules=jdk.incubator.foreign"
                                           "--enable-native-access=ALL-UNNAMED"]}
            :systemd          {:main-opts ["-m" "triangulum.systemd"]}
@@ -31,6 +20,6 @@
                               :main-opts  ["-m" "rebel-readline.main"]}
            :production       {:jvm-opts  ["-XX:MaxRAMPercentage=90" "-XX:+PrintFlagsFinal"]}
            :check-reflection {:main-opts ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
-                                          "-e" "(require,'collect-earth-online.server)"]}
-           :check-deps       {:extra-deps {olical/depot {:mvn/version "1.8.4"}}
-                              :main-opts  ["-m" "depot.outdated.main"]}}}
+                                          "-e" "(require,'collect-earth-online.handler)"]}
+           :check-deps       {:deps      {olical/depot {:mvn/version "1.8.4"}}
+                              :main-opts ["-m" "depot.outdated.main"]}}}

@@ -267,10 +267,9 @@
 (defn create-shape-files
   [folder-name table-name project-id]
   (let [shape-folder-name (str folder-name table-name "-shape-files/")
-        db-config   (get-config :database)]
+        db-config         (get-config :database)]
     (sh-wrapper folder-name {} (str "rm -rf " shape-folder-name) (str "mkdir " shape-folder-name))
     (export-table-to-file shape-folder-name project-id table-name db-config)))
-
 
 (defn create-data-file
   [folder-name json-data]

@@ -1140,10 +1140,10 @@ function NavigationBar({ children }) {
   );
 }
 
-export function pageInit(args) {
+export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar version={args.version}>
-      <SimpleCollection locale={args.locale} projectId={args.projectId} />
+    <NavigationBar version={session.version}>
+      <SimpleCollection locale={params.locale} projectId={params.projectId} />
     </NavigationBar>,
     document.getElementById("app")
   );
