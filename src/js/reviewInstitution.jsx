@@ -67,7 +67,7 @@ class ReviewInstitution extends React.Component {
 
   setUsersCount = (newCount) => this.setState({ usersCount: newCount });
 
-  setIsAdmin = (isAdmin) => { console.log(isAdmin); return this.setState({ isAdmin })};
+  setIsAdmin = (isAdmin) => this.setState({ isAdmin });
 
   /// Helpers
 
@@ -1180,7 +1180,6 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
 }
 
 function Project({ project, isAdmin, deleteProject }) {
-  console.log(isAdmin);
   return (
     <div className="row mb-1 d-flex">
       <div className="col-2 pr-0">

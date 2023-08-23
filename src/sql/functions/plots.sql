@@ -574,6 +574,7 @@ CREATE OR REPLACE FUNCTION get_plot_shapes(_project_id integer)
       FROM plot_geoms
       INNER JOIN plot_boundaries
       USING (plot_uid)
+
 $$ LANGUAGE SQL;
 
 -- Get sample shapes for DOI creation

@@ -98,7 +98,6 @@ class InstitutionDashboard extends React.Component {
 }
 
 export function pageInit(params, session) {
-  console.log(session);
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
       <InstitutionDashboard institutionId={params.institutionId || "0"} />

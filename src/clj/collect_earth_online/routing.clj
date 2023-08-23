@@ -109,8 +109,8 @@
    [:post "/update-project"]                 {:handler     projects/update-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get "/create-shape-files"]              {:handler projects/create-shape-files!
-                                              :auth-type :user
+   [:get "/create-shape-files"]              {:handler     projects/create-shape-files!
+                                              :auth-type   :user
                                               :auth-action :block}
 
    ;; DOI API

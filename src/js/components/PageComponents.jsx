@@ -189,7 +189,6 @@ export class NavigationBar extends React.Component {
     const { userName, userId, children } = this.props;
     const uri = window.location.pathname;
     const loggedOut = !userName || userName === "guest";
-    console.log(userId);
 
     return (
       <>

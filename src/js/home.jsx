@@ -78,7 +78,6 @@ class Home extends React.Component {
     this.setState({ showSidePanel: !this.state.showSidePanel }, () => mercator.resize(mapConfig));
 
   render() {
-    console.log(this.props.userId);
     return (
       <div id="bcontainer">
         <span id="mobilespan" />

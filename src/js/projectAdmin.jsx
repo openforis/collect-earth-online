@@ -144,8 +144,7 @@ class Project extends React.Component {
 
   getDoiPath = (projectId) => {
     fetch(`/doi?projectId=${projectId}`)
-      .then((response) => {
-        return (response.ok ? response.json() : Promise.reject(response))})
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => this.setState({ doiPath: data.doiPath }))
   }
 
