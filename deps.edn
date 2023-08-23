@@ -4,7 +4,6 @@
         clj-python/libpython-clj  {:mvn/version "2.023"}
         org.clojure/clojure       {:mvn/version "1.11.1"}
         org.clojure/data.json     {:mvn/version "1.0.0"}
-        org.postgresql/postgresql {:mvn/version "42.2.18"}
         ring/ring                 {:mvn/version "1.8.2"}
         sig-gis/triangulum        {:git/url "https://github.com/sig-gis/triangulum"
                                    :git/sha "4a597e121996129b2a5a5cbf1b4822796d856714"
