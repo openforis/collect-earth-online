@@ -136,7 +136,7 @@ CREATE INDEX samples_plot_rid ON samples (plot_rid);
 
 -- A duplicate of external file samples for restoring samples
 CREATE TABLE ext_samples (
-    ext_sample_uid       SERIAL PRIMARY KEY,
+    sample_uid           SERIAL PRIMARY KEY,
     plot_rid             integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     sample_geom          geometry(geometry,4326),
     visible_id           integer,
