@@ -1,7 +1,8 @@
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import resolve from "@rollup/plugin-node-resolve";
+import { babel } from "@rollup/plugin-babel";
 
 // import babel from "@rollup/plugin-babel";
 
@@ -9,23 +10,21 @@ import resolve from "@rollup/plugin-node-resolve";
 // // TODO add conditions (prod/dev)
 export default defineConfig({
   server: {
-    origin: "http://0.0.0.0:8080",
+    origin: "http://127.0.0.1:8080",
     hmr: {
       overlay: false,
     },
   },
-  publicDir: "./resources/public",
   build: {
     chunkSizeWarningLimit: 9000,
-    minify: true,
+    minify: false,
     manifest: true,
     sourcemap: true,
-    plugins: [resolve()],
+    plugins: [resolve(), babel({ exclude: "node_modules/**" })],
     rollupOptions: {
       external: ["react-dom/client"],
       preserveEntrySignatures: "exports-only",
       input: [
-        "src/js/main.jsx",
         "src/js/about.jsx",
         "src/js/account.jsx",
         "src/js/collection.jsx",
@@ -59,9 +58,19 @@ export default defineConfig({
       },
     },
   },
-  plugins: [react({ jsxImportSource: "@emotion/react" }),
-            svgr()],
-  define: {
-    global: {}
-  }
+  plugins: [
+    svgr(),
+    react({
+      fastRefresh: true,
+      jsxImportSource: "@emotion/react",
+      presets: ["@babel/preset-env", "@babel/preset-react"],
+      plugins: [
+        // "@vitejs/plugin-react",
+        "@babel/plugin-proposal-class-properties",
+        "@babel/plugin-transform-runtime",
+        "babel-plugin-macros",
+        "@emotion",
+      ],
+    }),
+  ],
 });

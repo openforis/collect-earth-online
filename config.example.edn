@@ -36,7 +36,6 @@
  :triangulum.views/static-css-files   ["/css/bootstrap.min.css"]      ; in resources/public/
  :triangulum.views/static-js-files    ["/js/jquery-3.5.1.slim.min.js"
                                        "/js/bootstrap.min.js"] ; in resources/public/
- :triangulum.views/js-init            "/src/js/home.jsx"
  :triangulum.views/client-keys        {:mapbox-token "token123"}
 
  ;; git (app)
