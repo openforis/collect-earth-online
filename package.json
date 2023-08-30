@@ -124,7 +124,7 @@
   "scripts": {
     "build-db-all": "clojure -M:build-db build-all",
     "build-db-functions": "clojure -M:build-db functions",
-    "vite-dev": "npx vite build --mode dev --watch npx vite serve dist/public",
+    "vite-dev": "npx vite build --mode dev --watch & npx vite serve dist/public",
     "vite-prod": "npx vite build",
     "preview": "vite preview",
     "server-dev": "clojure -M:server start",
