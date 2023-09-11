@@ -1,7 +1,6 @@
 (ns collect-earth-online.generators.clj-point
   (:require [triangulum.type-conversion :as tc]
             [triangulum.database        :refer [call-sql]]
-            [collect-earth-online.utils.project    :refer [check-plot-limits check-sample-limits]]
             [collect-earth-online.utils.geom       :refer [make-wkt-point
                                                            EPSG:3857->4326
                                                            EPSG:4326->3857
@@ -57,7 +56,6 @@
                    (mapcat
                     (fn [{:keys [feature]}]
                       (call-sql "gridded_points_in_bounds" {:log? false} feature plot-spacing (/ plot-size 2.0)))))]
-    (check-plot-limits (count plots) 5000.0)
     (map (fn [{:keys [lon lat]}] [lon lat]) plots)))
 
 ;;; Random
@@ -110,7 +108,6 @@
 
 (defn- create-random-plots-in-bounds [project-id plot-size num-plots]
   (let [features (call-sql "select_project_features" project-id)]
-    (check-plot-limits (* num-plots (count features)) 5000.0)
     (->> features
          (mapcat (fn [{:keys [feature]}]
                    (->> (call-sql "random_points_in_bounds" {:log? false} feature (/ plot-size 2) (* 2 num-plots))
@@ -141,10 +138,6 @@
                             "random"  samples-per-plot
                             "center"  1.0
                             "none"    1.0)]
-    (check-sample-limits (* plot-count samples-per-plot)
-                         50000.0
-                         samples-per-plot
-                         200.0)
     (mapcat (fn [{:keys [plot_id visible_id lon lat]}]
               (let [[center-x center-y]    (EPSG:4326->3857 [lon lat])
                     visible-offset         (-> (dec visible_id)
@@ -184,3 +177,9 @@
                         {:project_rid project-id
                          :visible_id  (inc idx)
                          :plot_geom   (tc/str->pg (make-wkt-point lon lat) "geometry")})))))
+
+
+
+
+
+
