@@ -741,7 +741,7 @@ class Collection extends React.Component {
           if (this.state.inReviewMode) {
             this.setState({ remainingPlotters: this.state.remainingPlotters.filter((plotter) => plotter.userId != this.state.currentUserId) });
             if(this.state.remainingPlotters.length > 0) {
-              alert("There are more interpretations for this plot. Please select the user from the user dropdown to review another interpretation")
+              alert("There are more interpretations for this plot.\nPlease select the user from the user dropdown to review another interpretation.")
               return null;
             }
           }
