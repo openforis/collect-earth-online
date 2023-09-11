@@ -52,6 +52,8 @@ class Collection extends React.Component {
       messageBox: null,
       plotList: [],
       plotters: [],
+      userPlotList: [],
+      remainingPlotters: [],
       unansweredColor: "black",
       selectedQuestionId: -1,
       selectedSampleId: -1,
@@ -406,6 +408,7 @@ class Collection extends React.Component {
           } else {
             this.setState({
               userPlotList: data,
+              remainingPlotters: data,
               currentPlot: data[0],
               currentUserId: data[0].userId,
               ...this.newPlotValues(data[0]),
@@ -735,6 +738,13 @@ class Collection extends React.Component {
         }),
       }).then((response) => {
         if (response.ok) {
+          if (this.state.inReviewMode) {
+            this.setState({ remainingPlotters: this.state.remainingPlotters.filter((plotter) => plotter.userId != this.state.currentUserId) });
+            if(this.state.remainingPlotters.length > 0) {
+              alert("There are more interpretations for this plot. Please select the user from the user dropdown to review another interpretation")
+              return null;
+            }
+          }
           return this.navToNextPlot(true);
         } else {
           console.log(response);
