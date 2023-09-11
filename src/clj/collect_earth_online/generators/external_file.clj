@@ -7,7 +7,7 @@
             [triangulum.type-conversion :as tc]
             [triangulum.utils :refer [parse-as-sh-cmd]]
             [collect-earth-online.utils.part-utils :as pu]
-            [collect-earth-online.utils.geom    :refer [make-wkt-point]]1))
+            [collect-earth-online.utils.geom    :refer [make-wkt-point]]))
 
 ;;;
 ;;; Constants

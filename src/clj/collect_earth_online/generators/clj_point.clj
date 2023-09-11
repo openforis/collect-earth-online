@@ -177,9 +177,3 @@
                         {:project_rid project-id
                          :visible_id  (inc idx)
                          :plot_geom   (tc/str->pg (make-wkt-point lon lat) "geometry")})))))
-
-
-
-
-
-

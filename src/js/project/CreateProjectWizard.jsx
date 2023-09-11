@@ -332,7 +332,6 @@ export default class CreateProjectWizard extends React.Component {
 
   tryChangeStep = (newStep, alertUser = true) => {
     const errorList = this.getSteps()[this.context.wizardStep].validate();
-    console.log("project/CreateProjectWizard/tryChangeStep errorList: ", errorList);
     this.setState({
       complete:
         errorList.length > 0
