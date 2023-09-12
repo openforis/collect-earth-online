@@ -10,7 +10,7 @@ export default function DegradationDesigner() {
       <BasemapSelector />
       <GDSelect
         dataKey="band"
-        items={["NDFI", "SWIR1", "NIR", "RED", "GREEN", "BLUE", "SWIR2"]}
+        items={["NDFI", "SWIR1", "NIR", "RED", "GREEN", "BLUE", "SWIR2", "NDVI", "NBR", "NDWI"]}
         title="Band to graph"
       />
       <GDDateRange />

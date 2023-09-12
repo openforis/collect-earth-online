@@ -29,7 +29,7 @@ export default class DegradationWidget extends React.Component {
   render() {
     const { degDataType } = this.state;
     const { widget } = this.props;
-    const selectOptions = [
+    const sarBandOptions = [
       { label: "VV", value: "VV" },
       { label: "VH", value: "VH" },
       { label: "VV/VH", value: "VV/VH" },
@@ -103,7 +103,7 @@ export default class DegradationWidget extends React.Component {
                     height: "30px",
                   }}
                 >
-                  {selectOptions.map(({ value, label }) => (
+                  {sarBandOptions.map(({ value, label }) => (
                     <option key={value} value={value}>
                       {label}
                     </option>
