@@ -7,8 +7,7 @@
             [triangulum.type-conversion :as tc]
             [triangulum.utils :refer [parse-as-sh-cmd]]
             [collect-earth-online.utils.part-utils :as pu]
-            [collect-earth-online.utils.geom    :refer [make-wkt-point]]
-            [collect-earth-online.utils.project :refer [check-plot-limits check-sample-limits]]))
+            [collect-earth-online.utils.geom    :refer [make-wkt-point]]))
 
 ;;;
 ;;; Constants
@@ -221,10 +220,6 @@
                                 (assoc! acc (str visible_id) plot_id))
                               (transient {})
                               plots))]
-    (check-sample-limits sample-count
-                         350000.0
-                         (/ sample-count plot-count)
-                         200.0)
     ;; TODO check for samples with no plots - OR - ensure that PG errors pass through.
     (map (fn [s]
            (-> s
@@ -243,8 +238,6 @@
                                        plot-file-base64
                                        "plot"
                                        [:visible_id])]
-    (check-plot-limits (count ext-plots)
-                       50000.0)
     (map (fn [p]
            (-> p
                (assoc :project_rid project-id)
