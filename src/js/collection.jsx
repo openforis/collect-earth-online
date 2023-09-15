@@ -636,13 +636,24 @@ class Collection extends React.Component {
   };
 
   createPlotKML = () => {
+    const Parser = new DOMParser();
+    const Serializer = new XMLSerializer();
     const plotFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentPlot");
     const sampleFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
+    let KMLFeatures = mercator.getKMLFromFeatures([
+      mercator.asPolygonFeature(plotFeatures[0]),
+      ...sampleFeatures,
+    ]);
+    const parsedKML = Parser.parseFromString(KMLFeatures, "text/xml");
+    const styleNode = parsedKML.createElement('Style');
+    const polyStyleNode = parsedKML.createElement('PolyStyle');
+    const fillNode = parsedKML.createElement('fill');
+    fillNode.textContent = '0';
+    polyStyleNode.appendChild(fillNode);
+    styleNode.appendChild(polyStyleNode);
+    parsedKML.getElementsByTagName("Placemark")[0].insertBefore(styleNode, parsedKML.getElementsByTagName("Placemark")[0].children[0]);
     this.setState({
-      KMLFeatures: mercator.getKMLFromFeatures([
-        mercator.asPolygonFeature(plotFeatures[0]),
-        ...sampleFeatures,
-      ]),
+      KMLFeatures: Serializer.serializeToString(parsedKML)
     });
   };
 
@@ -1504,7 +1515,7 @@ class ExternalTools extends React.Component {
       }
       href={
         "data:earth.kml+xml application/vnd.google-earth.kmz, " +
-          encodeURIComponent(this.props.KMLFeatures.replace(/Placemark><Polygon/, 'Placemark><Style><PolyStyle><fill>0</fill></PolyStyle> </Style><Polygon'))
+          encodeURIComponent(this.props.KMLFeatures)
       }
     >
       Download Plot KML
@@ -1513,8 +1524,6 @@ class ExternalTools extends React.Component {
 
   render() {
 
-    if (typeof(this.props.KMLFeatures) === "string") {
-      console.log("js/collection KMLFeatures");};
     return this.props.currentPlot.id ? (
       <>
         <CollapsibleTitle
