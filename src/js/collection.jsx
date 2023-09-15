@@ -1504,7 +1504,7 @@ class ExternalTools extends React.Component {
       }
       href={
         "data:earth.kml+xml application/vnd.google-earth.kmz, " +
-        encodeURIComponent(this.props.KMLFeatures)
+          encodeURIComponent(this.props.KMLFeatures.replace(/Placemark><Polygon/, 'Placemark><Style><PolyStyle><fill>0</fill></PolyStyle> </Style><Polygon'))
       }
     >
       Download Plot KML
@@ -1512,6 +1512,9 @@ class ExternalTools extends React.Component {
   );
 
   render() {
+
+    if (typeof(this.props.KMLFeatures) === "string") {
+      console.log("js/collection KMLFeatures");};
     return this.props.currentPlot.id ? (
       <>
         <CollapsibleTitle

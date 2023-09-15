@@ -829,13 +829,21 @@ mercator.getCircleStyle = (radius, fillColor, border) =>
   new Style({
     image: new CircleStyle({
       radius,
-      fill: new Fill({ color: fillColor || "rgba(255, 255, 255, 0)" }),
+      fill: new Fill({ color: fillColor || "tansparent" }),
       stroke: new Stroke({
         color: border || "black",
         width: border ? 3 : 2,
       }),
     }),
   });
+
+mercator.outlineStyle = new Style({
+  fill: new Fill({
+    color: 'transparent'}),
+  stroke: new Stroke({
+    color: 'white',
+    width: 2})
+});
 
 // [Pure] Returns a style object that displays all geometry types to which it
 // is applied wth the specified lineColor, lineWidth, pointColor, pointRadius, pointFillColor, fillColor.
@@ -849,7 +857,7 @@ mercator.getGeomStyle = (
 ) =>
   new Style({
     fill: new Fill({
-      color: fillColor || "rgba(255, 255, 255, 0)",
+      color: fillColor || "transparent",
     }),
     stroke: new Stroke({
       color: lineColor,
@@ -857,7 +865,7 @@ mercator.getGeomStyle = (
     }),
     image: new CircleStyle({
       radius: pointRadius,
-      fill: new Fill({ color: pointFillColor || "rgba(255, 255, 255, 0)" }),
+      fill: new Fill({ color: pointFillColor || "transparent" }),
       stroke: new Stroke({
         color: pointColor,
         width: lineWidth,
@@ -879,7 +887,7 @@ const ceoMapPresets = {
 const ceoMapStyleFunctions = {
   geom: (color) => mercator.getGeomStyle(color, 4, color, 6),
   answered: (color) => mercator.getGeomStyle(color, 6, color, 6, color),
-  draw: (color) => mercator.getGeomStyle(color, 4, color, 6, null, "rgba(255, 255, 255, 0.2)"),
+  draw: (color) => mercator.getGeomStyle(color, 4, color, 6, null, "transparent"),
   overview: ({ color, border }) => mercator.getCircleStyle(6, color, border),
   cluster: (numPlots) => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
 };
@@ -1007,7 +1015,7 @@ mercator.plotsToVectorSource = (plots) =>
       (plot) =>
         new Feature({
           plotId: plot.id,
-          geometry: mercator.parseGeoJson(plot.center, true),
+          geometry: mercator.parseGeoJson(plot.center, true)
         })
     ),
   });
@@ -1312,7 +1320,7 @@ mercator.enableDragBoxDraw = (mapConfig, callBack) => {
 // associated layer from mapConfig's map object.
 mercator.disableDragBoxDraw = (mapConfig) => {
   mercator.removeInteractionByTitle(mapConfig, "dragBoxDraw");
-  mercator.removeLayerById(mapConfig, "dragBoxLayer");
+  mercator.removnneLayerById(mapConfig, "dragBoxLayer");
   return mapConfig;
 };
 
@@ -1450,13 +1458,13 @@ mercator.calculateArea = (obj) => {
 
 mercator.asPolygonFeature = (feature) =>
   feature.getGeometry().getType() === "Circle"
-    ? new Feature({ geometry: fromCircle(feature.getGeometry()) })
-    : feature;
+  ? new Feature({ geometry: fromCircle(feature.getGeometry())})
+  : feature;
 
 mercator.calculateGeoJsonArea = (geoJson) =>
   mercator.calculateArea(mercator.parseGeoJson(geoJson, false));
 
-mercator.getKMLFromFeatures = (features) =>
+mercator.getKMLFromFeatures = (features) => 
   new KML().writeFeatures(features, { featureProjection: "EPSG:3857" });
 
 /*****************************************************************************
