@@ -635,6 +635,26 @@ class Collection extends React.Component {
     );
   };
 
+  fillNode = (kml, fill) => {
+    const styleNode = kml.createElement('Style');
+    const polyStyleNode = kml.createElement('PolyStyle');
+    const fillNode = kml.createElement('fill');
+    fillNode.textContent = fill | '0';
+    polyStyleNode.appendChild(fillNode);
+    styleNode.appendChild(polyStyleNode);
+    return styleNode;
+  };
+  
+  outlineKML = (KMLString) => {
+    const Parser = new DOMParser();
+    const Serializer = new XMLSerializer();
+    const parsedKML = Parser.parseFromString(KMLString, "text/xml");
+    const styleNode = this.fillNode(parsedKML, '0');
+    parsedKML.getElementsByTagName("Placemark")[0].insertBefore(styleNode, parsedKML.getElementsByTagName("Placemark")[0].children[0]);
+    return Serializer.serializeToString(parsedKML);
+ 
+  };
+
   createPlotKML = () => {
     const Parser = new DOMParser();
     const Serializer = new XMLSerializer();
@@ -644,16 +664,9 @@ class Collection extends React.Component {
       mercator.asPolygonFeature(plotFeatures[0]),
       ...sampleFeatures,
     ]);
-    const parsedKML = Parser.parseFromString(KMLFeatures, "text/xml");
-    const styleNode = parsedKML.createElement('Style');
-    const polyStyleNode = parsedKML.createElement('PolyStyle');
-    const fillNode = parsedKML.createElement('fill');
-    fillNode.textContent = '0';
-    polyStyleNode.appendChild(fillNode);
-    styleNode.appendChild(polyStyleNode);
-    parsedKML.getElementsByTagName("Placemark")[0].insertBefore(styleNode, parsedKML.getElementsByTagName("Placemark")[0].children[0]);
+
     this.setState({
-      KMLFeatures: Serializer.serializeToString(parsedKML)
+      KMLFeatures: this.outlineKML(KMLFeatures)
     });
   };
 
