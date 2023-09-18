@@ -1,6 +1,6 @@
 import  _ from "lodash";
 import {  plotLimit, perPlotLimit, sampleLimit } from "../project/constants";
-import { lengthObject, someObject } from "./sequence";
+import { lengthObject, someObject, filterObject } from "./sequence";
 
 
 export default function getErrors (form) {
@@ -132,11 +132,16 @@ export default function getErrors (form) {
         "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
       allowDrawnSamples &&
         !Object.values(sampleGeometries).some((g) => g) &&
-        "At least one geometry type must be enabled.",];
+      "At least one geometry type must be enabled.",];
+
+  const allAnswersHidden = (answers) => {
+    const hiddenAnswers = filterObject(answers, ([_id, ans]) => ans.hide);
+    return lengthObject(answers) === lengthObject(hiddenAnswers);
+  }
 
   const questionsErrors = [
     lengthObject(surveyQuestions) === 0 && "A survey must include at least one question.",
-      someObject(surveyQuestions, ([_id, sq]) => (lengthObject(sq.answers) === 0 || this.allAnswersHidden(sq.answers))) &&
+      someObject(surveyQuestions, ([_id, sq]) => (lengthObject(sq.answers) === 0 || allAnswersHidden(sq.answers))) &&
         "All survey questions must contain at least one (unhidden) answer.",
   ];
 

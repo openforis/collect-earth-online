@@ -746,6 +746,17 @@ export class GEEImageCollectionMenu extends React.Component {
           />
         </div>
         <div className="slide-container">
+          <label>Reducer</label>
+          <input
+            className="form-control"
+            id="geeImageCollectionEndDate"
+            max={new Date().toJSON().split("T")[0]}
+            onChange={(e) => this.setState({ endDate: e.target.value })}
+            type="date"
+            value={this.state.endDate}
+          />
+        </div>
+        <div className="slide-container">
           <label>Visualization Parameters</label>
           <textarea
             className="form-control"
