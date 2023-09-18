@@ -652,12 +652,9 @@ class Collection extends React.Component {
     const styleNode = this.fillNode(parsedKML, '0');
     parsedKML.getElementsByTagName("Placemark")[0].insertBefore(styleNode, parsedKML.getElementsByTagName("Placemark")[0].children[0]);
     return Serializer.serializeToString(parsedKML);
- 
   };
 
   createPlotKML = () => {
-    const Parser = new DOMParser();
-    const Serializer = new XMLSerializer();
     const plotFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentPlot");
     const sampleFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
     let KMLFeatures = mercator.getKMLFromFeatures([
