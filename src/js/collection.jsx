@@ -32,6 +32,7 @@ import {
 } from "./utils/sequence";
 import { getProjectPreferences, setProjectPreferences } from "./utils/preferences";
 import { mercator } from "./utils/mercator";
+import { outlineKML } from "./utils/kml";
 
 class Collection extends React.Component {
   constructor(props) {
@@ -635,24 +636,6 @@ class Collection extends React.Component {
     );
   };
 
-  fillNode = (kml, fill) => {
-    const styleNode = kml.createElement('Style');
-    const polyStyleNode = kml.createElement('PolyStyle');
-    const fillNode = kml.createElement('fill');
-    fillNode.textContent = fill | '0';
-    polyStyleNode.appendChild(fillNode);
-    styleNode.appendChild(polyStyleNode);
-    return styleNode;
-  };
-  
-  outlineKML = (KMLString) => {
-    const Parser = new DOMParser();
-    const Serializer = new XMLSerializer();
-    const parsedKML = Parser.parseFromString(KMLString, "text/xml");
-    const styleNode = this.fillNode(parsedKML, '0');
-    parsedKML.getElementsByTagName("Placemark")[0].insertBefore(styleNode, parsedKML.getElementsByTagName("Placemark")[0].children[0]);
-    return Serializer.serializeToString(parsedKML);
-  };
 
   createPlotKML = () => {
     const plotFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentPlot");
@@ -663,7 +646,7 @@ class Collection extends React.Component {
     ]);
 
     this.setState({
-      KMLFeatures: this.outlineKML(KMLFeatures)
+      KMLFeatures: outlineKML(KMLFeatures)
     });
   };
 

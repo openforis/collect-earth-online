@@ -839,7 +839,7 @@ mercator.getCircleStyle = (radius, fillColor, border) =>
 
 mercator.outlineStyle = new Style({
   fill: new Fill({
-    color: 'transparent'}),
+    color: 'rgba(255, 255, 255, 0)'}),
   stroke: new Stroke({
     color: 'white',
     width: 2})
@@ -857,7 +857,7 @@ mercator.getGeomStyle = (
 ) =>
   new Style({
     fill: new Fill({
-      color: fillColor || "transparent",
+      color: fillColor || "rgba(255, 255, 255, 0)",
     }),
     stroke: new Stroke({
       color: lineColor,
@@ -865,7 +865,7 @@ mercator.getGeomStyle = (
     }),
     image: new CircleStyle({
       radius: pointRadius,
-      fill: new Fill({ color: pointFillColor || "transparent" }),
+      fill: new Fill({ color: pointFillColor || "rgba(255, 255, 255, 0)" }),
       stroke: new Stroke({
         color: pointColor,
         width: lineWidth,
@@ -887,7 +887,7 @@ const ceoMapPresets = {
 const ceoMapStyleFunctions = {
   geom: (color) => mercator.getGeomStyle(color, 4, color, 6),
   answered: (color) => mercator.getGeomStyle(color, 6, color, 6, color),
-  draw: (color) => mercator.getGeomStyle(color, 4, color, 6, null, "transparent"),
+  draw: (color) => mercator.getGeomStyle(color, 4, color, 6, null, "rgba(255, 255, 255, 0)"),
   overview: ({ color, border }) => mercator.getCircleStyle(6, color, border),
   cluster: (numPlots) => mercator.getClusterStyle(10, "#3399cc", "#ffffff", 1, numPlots),
 };
@@ -1320,7 +1320,7 @@ mercator.enableDragBoxDraw = (mapConfig, callBack) => {
 // associated layer from mapConfig's map object.
 mercator.disableDragBoxDraw = (mapConfig) => {
   mercator.removeInteractionByTitle(mapConfig, "dragBoxDraw");
-  mercator.removnneLayerById(mapConfig, "dragBoxLayer");
+  mercator.removeLayerById(mapConfig, "dragBoxLayer");
   return mapConfig;
 };
 
