@@ -32,6 +32,7 @@ import {
 } from "./utils/sequence";
 import { getProjectPreferences, setProjectPreferences } from "./utils/preferences";
 import { mercator } from "./utils/mercator";
+import { outlineKML } from "./utils/kml";
 
 class Collection extends React.Component {
   constructor(props) {
@@ -635,14 +636,17 @@ class Collection extends React.Component {
     );
   };
 
+
   createPlotKML = () => {
     const plotFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentPlot");
     const sampleFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
+    let KMLFeatures = mercator.getKMLFromFeatures([
+      mercator.asPolygonFeature(plotFeatures[0]),
+      ...sampleFeatures,
+    ]);
+
     this.setState({
-      KMLFeatures: mercator.getKMLFromFeatures([
-        mercator.asPolygonFeature(plotFeatures[0]),
-        ...sampleFeatures,
-      ]),
+      KMLFeatures: outlineKML(KMLFeatures)
     });
   };
 
@@ -1504,7 +1508,7 @@ class ExternalTools extends React.Component {
       }
       href={
         "data:earth.kml+xml application/vnd.google-earth.kmz, " +
-        encodeURIComponent(this.props.KMLFeatures)
+          encodeURIComponent(this.props.KMLFeatures)
       }
     >
       Download Plot KML
@@ -1512,6 +1516,7 @@ class ExternalTools extends React.Component {
   );
 
   render() {
+
     return this.props.currentPlot.id ? (
       <>
         <CollapsibleTitle
