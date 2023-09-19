@@ -47,7 +47,7 @@ export default function TimeSeriesDesigner() {
 
   useEffect(() => {
     getBandsFromGateway(setBands, assetId, assetType).catch(console.error);
-  }, [])
+  }, []);
 
   return (
     <>
@@ -59,7 +59,7 @@ export default function TimeSeriesDesigner() {
       {getWidgetDesign("sourceName") === "Landsat" && (
         <GDSelect
           dataKey="indexName"
-          items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI"]}
+          items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI", "NBR"]}
           title="Band to graph"
         />
       )}
