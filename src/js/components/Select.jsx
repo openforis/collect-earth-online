@@ -24,6 +24,7 @@ export default function Select({
   options,
   valueKey,
   labelKey,
+  colSize,
 }) {
   return (
     <>
@@ -31,7 +32,7 @@ export default function Select({
         {label}
       </label>
       <select
-        className="form-control form-control-sm col-6"
+        className={`form-control form-control-sm ${colSize}`}
         disabled={disabled}
         id={id}
         onChange={onChange}

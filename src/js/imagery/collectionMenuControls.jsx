@@ -1,5 +1,6 @@
 import React from "react";
 
+import Select from "../components/Select";
 import { mercator } from "../utils/mercator";
 import { monthlyMapping } from "../utils/generalUtils";
 
@@ -676,6 +677,7 @@ export class GEEImageCollectionMenu extends React.Component {
       startDate: this.props.sourceConfig.startDate,
       endDate: this.props.sourceConfig.endDate,
       visParams: this.props.sourceConfig.visParams,
+      reducer: this.props.sourceConfig.reducer,
     };
   }
 
@@ -696,12 +698,13 @@ export class GEEImageCollectionMenu extends React.Component {
         geeImageCollectionAssetId: this.props.sourceConfig.assetId,
         geeImageCollectionStartDate: this.state.startDate,
         geeImageCollectionEndDate: this.state.endDate,
+        geeImageCollectionReducer: this.state.reducer
       });
     }
   };
 
   updateGEEImageCollection = () => {
-    const { startDate, endDate, visParams } = this.state;
+    const { startDate, endDate, visParams, reducer } = this.state;
     if (new Date(startDate) > new Date(endDate)) {
       alert("Start date must be smaller than the end date.");
     } else {
@@ -715,6 +718,7 @@ export class GEEImageCollectionMenu extends React.Component {
           visParams,
           startDate,
           endDate,
+          reducer,
         })
       );
     }
@@ -746,14 +750,16 @@ export class GEEImageCollectionMenu extends React.Component {
           />
         </div>
         <div className="slide-container">
-          <label>Reducer</label>
-          <input
-            className="form-control"
-            id="geeImageCollectionEndDate"
-            max={new Date().toJSON().split("T")[0]}
-            onChange={(e) => this.setState({ endDate: e.target.value })}
-            type="date"
-            value={this.state.endDate}
+          <Select
+            disabled={false}
+            id="reducerSelect"
+            label="Reducer"
+            labelKey="email"
+            onChange={(e) => this.setState({ reducer: e.target.value })}
+            options={["Min", "Max", "Mean", "Median", "Mode", "Mosaic"]}
+            value={this.state.reducer}
+            valueKey="id"
+            colSize="col-12"
           />
         </div>
         <div className="slide-container">

@@ -17,6 +17,7 @@ export default function UserSelect({ label, id, possibleUsers = [], addUser }) {
         options={possibleUsers.length === 1 ? ["No users to assign."] : possibleUsers}
         value={selectedUserId}
         valueKey="id"
+        colSize="col-6"
       />
       <div className="col-1">
         <button
