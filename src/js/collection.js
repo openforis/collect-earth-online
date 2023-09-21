@@ -813,7 +813,8 @@ class Collection extends React.Component {
           ([key, _val]) => !childQuestionIds.includes(Number(key))
         );
 
-        return answerText ?
+        return (answerText != null &&
+                answerText != undefined) ?
         {
           ...acc,
           [sampleId]: {
