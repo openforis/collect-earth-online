@@ -402,9 +402,11 @@ class Collection extends React.Component {
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
         .then((data) => {
           if (data === "not-found") {
+            const err = (direction === "id" ? "Plot not" : "No more plots") +
+                  " found for this navigation mode.";
+            const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
             alert(
-              (direction === "id" ? "Plot not" : "No more plots") +
-                " found for this navigation mode."
+              inReviewMode ? err + reviewModeWarning : err
             );
           } else {
             this.setState({
