@@ -214,7 +214,10 @@ class AnswerDropDown extends React.Component {
         <div
           key={ansId}
           className="d-inline-flex py-2 border-bottom"
-          onMouseDown={() => validateAndSetCurrentValue(surveyNodeId, ansId)}
+          onMouseDown={() => {
+            this.toggleDropDown();
+            return validateAndSetCurrentValue(surveyNodeId, ansId, ans.answer);
+          }}
           style={{
             backgroundColor: answered.some((a) => a.answerId === ansId) ? "#e8e8e8" : "#f1f1f1",
           }}
@@ -248,7 +251,8 @@ class AnswerDropDown extends React.Component {
             {mapObjectArray(answers, ([strId, ans]) => {
               const ansId = Number(strId);
               return (
-                answered.some((a) => a.answerId === ansId && a.sampleId === selectedSampleId) && (
+                answered.some((a) => a.answerId === ansId &&
+                              (a.sampleId === selectedSampleId || selectedSampleId === -1)) && (
                   <Fragment key={ansId}>
                     <div className="col-1 mt-2">
                       <span
