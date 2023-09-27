@@ -754,7 +754,7 @@ export class GEEImageCollectionMenu extends React.Component {
             disabled={false}
             id="reducerSelect"
             label="Reducer"
-            labelKey="email"
+            labelKey="reducer"
             onChange={(e) => this.setState({ reducer: e.target.value })}
             options={["Min", "Max", "Mean", "Median", "Mode", "Mosaic"]}
             value={this.state.reducer}
