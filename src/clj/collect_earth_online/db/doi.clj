@@ -118,6 +118,7 @@
     (http/put (str bucket-url "/" project-id)
               {:content-type :multipart/form-data
                :headers      headers
+               :as           :json
                :multipart    [{:name "Content/type" :content "application/octet-stream"}
                               {:name "file" :content (io/file zip-file)}]})))
 
@@ -148,8 +149,8 @@
        (create-zenodo-deposition! institution-name project-name creator contributors description)
        :body
        (insert-doi! project-id user-id)
-       (upload-doi-files! project-id)
-       data-response)
+       (upload-doi-files! project-id))
+      (data-response {:message "DOI created successfully"})
       (catch Exception _
         (data-response {:message "Failed to create DOI."}
                        {:status 500})))))
