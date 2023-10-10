@@ -245,6 +245,12 @@ export class PlanetNICFIMenu extends React.Component {
     );
   };
 
+  extractLastDate = (str) => {
+    const regex = /(\d{4}-\d{2})_mosaic/;
+    const match = str.match(regex);
+    return match ? match[1] : str;
+  }
+
   render() {
     const { nicfiLayers, selectedTime, selectedBand } = this.state;
     return (
@@ -261,7 +267,7 @@ export class PlanetNICFIMenu extends React.Component {
             >
               {nicfiLayers.map((time) => (
                 <option key={time} value={time}>
-                  {time.slice(34, time.length - 7)}
+                  {this.extractLastDate(time)}
                 </option>
               ))}
             </select>
