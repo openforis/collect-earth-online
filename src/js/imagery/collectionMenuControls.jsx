@@ -286,7 +286,9 @@ export class PlanetNICFIMenu extends React.Component {
             </label>
             <select
               id="time-selection"
-              onChange={(e) => this.setState({ selectedTime: e.target.value })}
+              onChange={(e) => {
+                this.setState({ selectedTime: e.target.value }, this.updatePlanetLayer);
+              }}
               value={selectedTime}
               className="mb-0 mr-1"
             >
@@ -299,7 +301,10 @@ export class PlanetNICFIMenu extends React.Component {
             <button
               className="btn btn-outline-lightgreen btn-sm mr-1"
               type="button"
-              onClick={() => this.switchImagery("backward")}
+              onClick={() => {
+                this.switchImagery("backward");
+                this.updatePlanetLayer();
+              }}
               disabled={this.state.isDisabledLeft}
             >
               <SvgIcon icon="leftArrow" size="0.9rem" />
@@ -307,7 +312,10 @@ export class PlanetNICFIMenu extends React.Component {
             <button
               className="btn btn-outline-lightgreen btn-sm"
               type="button"
-              onClick={() => this.switchImagery("forward")}
+              onClick={() => {
+                this.switchImagery("forward");
+                this.updatePlanetLayer();
+              }}
               disabled={this.state.isDisabledRight}
             >
               <SvgIcon icon="rightArrow" size="0.9rem" />
@@ -320,7 +328,9 @@ export class PlanetNICFIMenu extends React.Component {
                   checked={selectedBand === "rgb"}
                   className="form-check-input"
                   id="visible"
-                  onChange={() => this.setState({ selectedBand: "rgb" })}
+                  onChange={() => {
+                    this.setState({ selectedBand: "rgb" }, this.updatePlanetLayer);
+                  }}
                   type="radio"
                 />
                 <label className="form-check-label" htmlFor="visible">
@@ -332,7 +342,9 @@ export class PlanetNICFIMenu extends React.Component {
                   checked={selectedBand === "cir"}
                   className="form-check-input"
                   id="infrared"
-                  onChange={() => this.setState({ selectedBand: "cir" })}
+                  onChange={() => {
+                    this.setState({ selectedBand: "cir" }, this.updatePlanetLayer);
+                  }}
                   type="radio"
                 />
                 <label className="form-check-label" htmlFor="infrared">
@@ -340,15 +352,6 @@ export class PlanetNICFIMenu extends React.Component {
                 </label>
               </div>
             </div>
-          </div>
-          <div className="slide-container">
-            <button
-              className="btn btn-lightgreen btn-sm"
-              onClick={this.updatePlanetLayer}
-              type="button"
-            >
-              Update Map
-            </button>
           </div>
         </div>
       )
