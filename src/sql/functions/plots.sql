@@ -585,13 +585,13 @@ CREATE OR REPLACE FUNCTION get_sample_shapes(_project_id integer)
                 sample_geom geometry(Geometry, 4326)
  ) AS $$
 
-    (SELECT project_rid, plot_rid, sample_uid, sample_geom
+    (SELECT project_rid, plot_rid, sample_uid, ST_Buffer(sample_geom, 0.000001)
        FROM samples s
        INNER JOIN plots pl
        ON pl.plot_uid = s.plot_rid
        WHERE pl.project_rid = _project_id)
     UNION
-    (SELECT project_rid, plot_rid, sample_uid as sample_uid, sample_geom
+    (SELECT project_rid, plot_rid, sample_uid as sample_uid, ST_Buffer(sample_geom, 0.000001)
        FROM ext_samples s
        INNER JOIN plots pl
        ON pl.plot_uid = s.plot_rid
