@@ -11,7 +11,7 @@ export default function RequiredInput({
   required = true,
 }) {
   const [touched, setTouched] = useState(false);
-  const error = required && touched && (!value || value.length === 0);
+  const error = required && touched && value.length === 0;
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "start" }}>
       {label && (
