@@ -1,0 +1,53 @@
+* Plot and samples gaps
+
+There is no feature gap for plots and samples creation. In order to be able to import Collect and Collect Earth projects into Collect Earth Online, we need to parse the XML file holding the plots and samples information into GeoJSON, to then insert the plot and samples information in our database (Postgresql + PostGIS).
+
+
+* Survey feature gaps
+
+** Survey questions
+
+Our survey questions are fully compatible with Collect's survey questions. Though we need to correctly map the questions to our format, there are no features missing from CEO that would prevent the user from importing the survey questions.
+
+** Survey rules
+
+Collect's surveys are created in a different way than in CEO. While in CEO we have a set of options for rules, in Collect, the user can create custom survey rules based on a subset of [[https://www.w3schools.com/xml/xsl_functions.asp][XPath]], the functions available to users to create their rules are:
+
+*** Functions on Boolean Values
+boolean(arg)
+not(arg)
+true()
+false()
+
+*** Functions on Numeric Values
+number(arg)
+round(num)
+floor(num)
+ceiling(num)
+format-number(number, format, [decimalformat])
+
+*** Functions on Strings
+string(arg)
+concat(string, string)
+substring(string,start,len)
+string-length(string)
+normalize-space(string)
+contains(string1, string2)
+starts-with(string1, string2)
+ends-with(string1,string2)
+
+*** Aggregate Functions
+sum(arg,arg,...) or sum(nodeset)
+count((item,item,...))
+
+*** Context functions
+last()
+
+*** Conclusion
+
+In order to import the survey rules from Collect into CEO, the team will have to find a way to translate Collect's survey rules into CEO's survey rules structure.
+
+
+* Conclusion of the study
+
+With the exception of the survey rules, the implementation for importing Collect Earth's projects into CEO seems simple. What needs to be decided by the team is whether to implement partial project imports (without survey rules) at first, while the team works on the feature gaps for survey rules, or work on the gaps before implementing the rest of the import feature.
