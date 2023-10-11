@@ -46,6 +46,7 @@ export default function BasemapSelector() {
   };
   
   useEffect(()=> {
+    setWidgetDesign("basemapType", imageryType);
     (imageryType === "PlanetNICFI") ?
       getNICFILayers() 
       : setWidgetDesign("basemapNICFIDate", null);
