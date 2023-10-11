@@ -91,6 +91,22 @@ function TextMatchRuleBody({ questionId, regex, surveyQuestions }) {
   );
 }
 
+function MultipleIncompatibleAnswersBody({ answers, incompatQuestionId, incompatAnswerId, surveyQuestions }) {
+  const answersList = Object.entries(answers);
+  return(
+    <div className="card-text">
+      {answersList.map((a, idx, arr) =>
+        (<>
+           <p className="card-text">
+             If <b>&quot;{getSurveyAnswerText(surveyQuestions,a[0], a[1])}&quot;</b>
+             was answered for question <b>&quot;{getSurveyQuestionText(surveyQuestions, a[0])}&quot;</b>{idx === (arr.length -1) ? "" : ", and"} 
+           </p>
+         </>))}
+      <p>Then the answer <b>&quot;{getSurveyAnswerText(surveyQuestions, incompatQuestionId, incompatAnswerId)}&quot;</b> for the question <b>&quot;{getSurveyQuestionText(surveyQuestions, incompatQuestionId)}&quot;</b> is incompatible.</p>
+    </div>
+  );
+}
+
 export default function SurveyRule({
   inDesignMode,
   rule,
@@ -123,6 +139,11 @@ export default function SurveyRule({
       RuleBody: () => <IncompatibleAnswersRuleBody {...rule} surveyQuestions={surveyQuestions} />,
       title: "Incompatible Answers",
     },
+    "multiple-incompatible-answers": {
+      RuleBody: () => <MultipleIncompatibleAnswersBody {...rule} surveyQuestions={surveyQuestions} />,
+      title: "Multiple Incompatible Answers",
+    },
+
   }[rule.ruleType];
 
   return (

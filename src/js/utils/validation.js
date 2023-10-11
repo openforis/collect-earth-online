@@ -161,5 +161,8 @@ export default function getErrors (form) {
   case "questions":
     return questionsErrors.filter((e)=>e);
     break;
+  case "rules":
+    return [];
+    break;
   }
 }

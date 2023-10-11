@@ -829,13 +829,15 @@ class Collection extends React.Component {
           ([key, _val]) => !childQuestionIds.includes(Number(key))
         );
 
-        return {
-          ...acc,
-          [sampleId]: {
-            ...subQuestionsCleared,
-            [questionId]: newQuestion,
-          },
-        };
+        return (answerText != null &&
+                answerText != undefined) ?
+          {
+            ...acc,
+            [sampleId]: {
+              ...subQuestionsCleared,
+              [questionId]: newQuestion,
+            },
+          } : { ...acc };
       }, {});
 
       const newUserImages = sampleIds.reduce(

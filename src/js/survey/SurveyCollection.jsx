@@ -384,6 +384,32 @@ export default class SurveyCollection extends React.Component {
     }
   };
 
+  formatErrorText = (answerList) =>
+    answerList.map((ans, idx, arr) => `answer "${this.getSurveyAnswerText(ans[0], ans[1])}" for question "${this.getSurveyQuestionText(ans[0])}"`);
+
+  checkRuleMultipleIncompatibleAnswers = (surveyRule, questionIdToSet, answerId, _answerText) => {
+    const surveyQuestions = this.props.surveyQuestions;
+    const { answers, incompatQuestionId, incompatAnswerId } = surveyRule;
+    const ruleAnswerList = Object.entries(answers);
+
+    const answeredQuestionsList = ruleAnswerList.filter((answer) => {
+      const question = surveyQuestions[answer[0]];
+      return question.answered.some((a) => a.answerId == answer[1])
+    });
+    const incompatQuestion = surveyQuestions[incompatQuestionId];
+    const incompatAnswer = (incompatQuestion.answered.some((a) => a.answerId == incompatAnswerId) ||
+                            (incompatQuestionId == questionIdToSet && incompatAnswerId == answerId));
+
+    if (ruleAnswerList.length === answeredQuestionsList.length && incompatAnswer) {
+      const answerText = surveyQuestions[questionIdToSet].answers[answerId].answer;
+      const questionText = this.getSurveyQuestionText(questionIdToSet);
+      const answerTextList = this.formatErrorText(ruleAnswerList);
+      return `Answer "${answerText}" for question "${questionText}" is incompatible in case ${answerTextList} are selected.`
+    } else {
+      return null;
+    }
+  }
+
   rulesViolated = (questionIdToSet, answerId, answerText) => {
     const ruleFunctions = {
       "text-match": this.checkRuleTextMatch,
@@ -391,6 +417,7 @@ export default class SurveyCollection extends React.Component {
       "sum-of-answers": this.checkRuleSumOfAnswers,
       "matching-sums": this.checkRuleMatchingSums,
       "incompatible-answers": this.checkRuleIncompatibleAnswers,
+      "multiple-incompatible-answers": this.checkRuleMultipleIncompatibleAnswers,
     };
     return (
       this.props.surveyRules &&

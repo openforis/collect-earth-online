@@ -1,6 +1,7 @@
 import React from "react";
 
 import { isNumber } from "../utils/generalUtils";
+import SvgIcon from "../components/svg/SvgIcon";
 import {
   filterObject,
   getNextInSequence,
@@ -586,6 +587,206 @@ class IncompatibleAnswersForm extends React.Component {
 }
 IncompatibleAnswersForm.contextType = ProjectContext;
 
+class MultipleIncompatibleAnswersForm extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      tempQuestionId: -1,
+      tempAnswerId: -1,
+      answers: {},
+      incompatQuestionId: -1,
+      incompatAnswerId: -1,
+      availableQuestions: {}
+    };
+  }
+
+  componentDidMount = () => {
+    const { surveyQuestions } = this.context;
+    this.updateAvailableQuestions(surveyQuestions, null);
+  }
+
+  updateAvailableQuestions = (surveyQuestions, questionId) => {
+    this.setState({
+      availableQuestions: filterObject(
+        surveyQuestions,
+        ([id, sq]) => sq.componentType !== "input" && id !== questionId
+    ) });
+  }
+
+  removeRule = (questionId) => {
+    const rules = this.state.answers;
+    delete rules[questionId];
+    this.setState({ answers: rules });
+  }
+
+  addRule = (questionId, answerId) => {
+    this.setState({ answers: {...this.state.answers,
+                              [questionId]: answerId}});
+  }
+
+  resetTempVars = () => {
+    this.setState({ tempQuestionId: -1 });
+    this.setState({ tempAnswerId: -1 });
+  }
+
+  addSurveyRule = () => {
+    const { surveyRules, setProjectDetails } = this.context;
+    const { answers, incompatQuestionId, incompatAnswerId } = this.state;
+    setProjectDetails({
+        surveyRules: [
+          ...surveyRules,
+          {
+            id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+            ruleType: "multiple-incompatible-answers",
+            answers: answers,
+            incompatQuestionId: incompatQuestionId,
+            incompatAnswerId: incompatAnswerId
+          },
+        ],
+    });
+  };
+
+  safeFindAnswers = (questionId) => {
+    const { surveyQuestions } = this.context;
+    return questionId in surveyQuestions ? surveyQuestions[questionId].answers : {};
+  };
+
+  renderRuleRow = (surveyQuestions, questionId, answerId) => {
+    const questionText = surveyQuestions[questionId]?.question;
+    const answerText = surveyQuestions[questionId].answers[answerId].answer;
+    return (
+      <>
+        <div className="form-row mt-1">
+          <div className="font-italic small ml-2">
+            {`Answer ${answerText} from question ${questionText}`}
+          </div>
+          <div className="col-1">
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={() => this.removeRule(questionId)}
+              title="Remove question"
+              type="button"
+            >
+              <SvgIcon icon="minus" size="0.9rem" />
+            </button>
+          </div>
+        </div>
+      </>
+    )};
+
+  render() {
+    const { answers, incompatQuestionId, incompatAnswerId } = this.state;
+    const { surveyQuestions } = this.context;
+    return lengthObject(this.state.availableQuestions) > 2 ? (
+      <>
+        <strong className="mb-2" style={{ textAlign: "center" }}>
+          Select and add questions and answers to the rule
+        </strong>
+        <div className="form-row">
+          <label>Question </label>
+          <select
+            className="form-control form-control-sm"
+            onChange={(e) =>
+              this.setState({
+                tempQuestionId: e.target.value
+              })
+            }
+            value={this.state.tempQuestionId}
+          >
+            <option value="-1">- Select Question -</option>
+            {mapObjectArray(this.state.availableQuestions, ([aqId, aq]) => (
+              <option key={aqId} value={aqId}>
+                {aq.question}
+              </option>
+            ))}
+          </select>
+          <label>Answer </label>
+          <select
+            className="form-control form-control-sm"
+            onChange={(e) => this.setState({ tempAnswerId: e.target.value })}
+            value={this.state.tempAnswerId}
+          >
+            <option value="-1">- Select Answer -</option>
+            {mapObjectArray(this.safeFindAnswers(this.state.tempQuestionId), ([ansId, ans]) => (
+              <option key={ansId} value={ansId}>
+                {ans.answer}
+              </option>
+            ))}
+          </select>
+          <div className="col-1">
+            <button
+              className="btn btn-sm btn-success"
+              disabled={this.state.tempAnswerId === -1 || this.state.tempQuestionId === -1}
+              onClick={() => {
+                this.addRule(this.state.tempQuestionId, this.state.tempAnswerId);
+                this.updateAvailableQuestions(surveyQuestions, this.state.tempQuestionId);
+                this.resetTempVars();
+              }}
+              title="Add Rule"
+              type="button"
+            >
+              <SvgIcon icon="plus" size="0.9rem" />
+            </button>
+          </div>
+
+        </div>
+        {Object.entries(answers)?.map(([question, answer]) =>
+          this.renderRuleRow(surveyQuestions, question, answer))}
+        <strong className="mb-2" style={{ textAlign: "center" }}>
+          If the answers above are selected, then the following answer is incompatible
+        </strong>
+
+        <div className="form-inline">
+          <label>Question </label>
+          <select
+            className="form-control form-control-sm"
+            onChange={(e) =>
+              this.setState({
+                incompatQuestionId: e.target.value
+              })
+            }
+            value={incompatQuestionId}
+          >
+            <option value="-1">- Select Question -</option>
+            {mapObjectArray(this.state.availableQuestions, ([aqId, aq]) => (
+              <option key={aqId} value={aqId}>
+                {aq.question}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-inline">
+          <label>Answer </label>
+          <select
+            className="form-control form-control-sm"
+            onChange={(e) => this.setState({ incompatAnswerId: e.target.value })}
+            value={incompatAnswerId}
+          >
+            <option value="-1">- Select Answer -</option>
+            {mapObjectArray(this.safeFindAnswers(incompatQuestionId), ([ansId, ans]) => (
+              <option key={ansId} value={ansId}>
+                {ans.answer}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="d-flex justify-content-end">
+          <input
+            className="btn btn-lightgreen"
+            onClick={this.addSurveyRule}
+            type="button"
+            value="Add Survey Rule"
+          />
+        </div>
+      </>
+    ) : (
+      <label>There must be at least 3 questions where type is not input for this rule.</label>
+    );
+  }
+}
+MultipleIncompatibleAnswersForm.contextType = ProjectContext;
+
 export default class NewRuleDesigner extends React.Component {
   constructor(props) {
     super(props);
@@ -613,6 +814,7 @@ export default class NewRuleDesigner extends React.Component {
               <option value="sum-of-answers">Sum of Answers</option>
               <option value="matching-sums">Matching Sums</option>
               <option value="incompatible-answers">Incompatible Answers</option>
+              <option value="multiple-incompatible-answers">Multiple Incompatible Answers</option>
             </select>
           </div>
           {
@@ -622,6 +824,8 @@ export default class NewRuleDesigner extends React.Component {
               "sum-of-answers": <SumOfAnswersForm />,
               "matching-sums": <MatchingSumsForm />,
               "incompatible-answers": <IncompatibleAnswersForm />,
+              "multiple-incompatible-answers": <MultipleIncompatibleAnswersForm />,
+
             }[selectedRuleType]
           }
         </div>
