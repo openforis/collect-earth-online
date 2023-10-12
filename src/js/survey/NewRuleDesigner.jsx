@@ -664,7 +664,12 @@ class MultipleIncompatibleAnswersForm extends React.Component {
   render() {
     const { answers, incompatQuestionId, incompatAnswerId } = this.state;
     const { surveyQuestions } = this.context;
-    return lengthObject(this.state.availableQuestions) > 2 ? (
+    const availableQuestions = filterObject(
+      surveyQuestions,
+      ([_id, sq]) => sq.componentType !== "input"
+    );
+
+    return lengthObject(availableQuestions) > 2 ? (
       <>
         <strong className="mb-2" style={{ textAlign: "center" }}>
           Select and add questions and answers to the rule
