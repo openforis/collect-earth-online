@@ -255,10 +255,10 @@
 ;;; Saving Plots
 ;;;
 
-(defn add-user-samples [{:keys [params]}]
+(defn add-user-samples [{:keys [params session]}]
   (let [project-id       (tc/val->int (:projectId params))
         plot-id          (tc/val->int (:plotId params))
-        session-user-id  (:userId params -1)
+        session-user-id  (:userId session -1)
         current-user-id  (tc/val->int (:currentUserId params -1))
         review-mode?     (and (tc/val->bool (:inReviewMode params))
                               (pos? current-user-id)
@@ -295,10 +295,10 @@
     (unlock-plots user-id)
     (data-response "")))
 
-(defn flag-plot [{:keys [params]}]
+(defn flag-plot [{:keys [params session]}]
   (let [project-id       (tc/val->int (:projectId params))
         plot-id          (tc/val->int (:plotId params))
-        user-id          (:userId params -1)
+        user-id          (:userId session -1)
         current-user-id  (tc/val->int (:currentUserId params -1))
         review-mode?     (and (tc/val->bool (:inReviewMode params false))
                               (pos? current-user-id)
