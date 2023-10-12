@@ -312,9 +312,10 @@ class WidgetLayoutEditor extends React.PureComponent {
   };
 
   buildNewWidget = () => {
-    const { title, type, widgetDesign } = this.state;
+    const { title, type, widgetDesign, basemapNICFIDate } = this.state;
     return {
       name: title,
+      basemapNICFIDate,
       type,
       ...widgetDesign,
     };
@@ -346,7 +347,7 @@ class WidgetLayoutEditor extends React.PureComponent {
   saveWidgetEdits = () => {
     const {
       originalWidget: { id, layout },
-    } = this.state;
+    } = this.state;    
     const errors = this.getWidgetErrors();
     if (errors.length) {
       alert(errors.join("\n\n"));
@@ -502,6 +503,7 @@ class WidgetLayoutEditor extends React.PureComponent {
           setWidgetDesign: this.setWidgetDesign,
           widgetDesign: this.state.widgetDesign,
           imagery: this.state.imagery,
+          widget: this.state.widgets.filter((w)=>w.basemapId === this.state.widgetDesign.basemapId)[0],
           getInstitutionImagery: this.getInstitutionImagery,
         }}
       >

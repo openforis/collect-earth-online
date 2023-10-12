@@ -5,11 +5,12 @@ import SvgIcon from "../../components/svg/SvgIcon";
 
 
 export default function BasemapSelector() {
-  const { setWidgetDesign, getWidgetDesign, imagery, getInstitutionImagery, institutionId } =
+  const { widget, widgetDesign, setWidgetDesign, getWidgetDesign, imagery, getInstitutionImagery, institutionId } =
         useContext(EditorContext);
   const [nicfiLayers, setNICFILayers] = useState([]);
   const [imageryType, setImageryType] = useState("");
-  
+  const [basemap, setBasemap] = useState(imagery.filter((i)=>i.id === getWidgetDesign("basemapId")));
+
   function nicfiDateSelector(){
     const options = (
       nicfiLayers || []).map(
@@ -22,17 +23,22 @@ export default function BasemapSelector() {
             >
               {name}
             </option>);}
-      );
-    
+      );    
     return (
-      <select
-        className="form-control"
-        id="nicfi-layer"
-        onChange={(e)=>{setWidgetDesign("basemapNICFIDate", e.target.value);}}
-        value={getWidgetDesign("basemapNICFIDate") || ""}         
-      >
-        {options}
-      </select>);
+      <div>
+        <label htmlFor="nicfi-layer">Select Date:</label> 
+        <select
+          className="form-control"
+          id="nicfi-layer"
+          onChange={(e)=>{            
+            setWidgetDesign("basemapNICFIDate", e.target.value);
+          }}
+          value={
+            getWidgetDesign("basemapNICFIDate")}         
+        >          
+          {options}
+        </select>
+      </div>);
   }
   
   const getNICFILayers = () => {
@@ -40,7 +46,7 @@ export default function BasemapSelector() {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((layers) => {
         setNICFILayers(layers);
-        setWidgetDesign("basemapNICFIDate", layers[0]);        
+        setWidgetDesign("basemapNICFIDate", widget[0].basemapNICFIDate);        
       })
       .catch((error) => console.error(error));
   };
@@ -54,13 +60,13 @@ export default function BasemapSelector() {
   
   useEffect(()=>{
     setImageryType((imagery || []).filter((i)=> i.id === getWidgetDesign("basemapId"))[0].sourceConfig.type);
-    
+    setBasemap((imagery || []).filter((i)=> i.id === getWidgetDesign("basemapId"))[0]);
   }, [imagery]);
   
   return (
     <div className="form-group">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <label htmlFor="basemap-select">Basemap</label>
+        <label htmlFor="basemap-select">Basemap</label> 
         <button
           className="btn btn-sm btn-secondary mb-1"
           onClick={getInstitutionImagery}
@@ -75,6 +81,7 @@ export default function BasemapSelector() {
         id="basemap-select"
         onChange={(e) => {
           setWidgetDesign("basemapId", parseInt(e.target.value));
+          setBasemap(imagery.filter((i)=> i.id.toString() === e.target.value)[0]);
           setImageryType(imagery.filter((i)=> i.id.toString() === e.target.value)[0].sourceConfig.type);}}
         value={getWidgetDesign("basemapId")}
         required
