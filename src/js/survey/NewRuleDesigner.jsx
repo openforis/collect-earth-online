@@ -597,21 +597,7 @@ class MultipleIncompatibleAnswersForm extends React.Component {
       answers: {},
       incompatQuestionId: -1,
       incompatAnswerId: -1,
-      availableQuestions: {}
     };
-  }
-
-  componentDidMount = () => {
-    const { surveyQuestions } = this.context;
-    this.updateAvailableQuestions(surveyQuestions, null);
-  }
-
-  updateAvailableQuestions = (surveyQuestions, questionId) => {
-    this.setState({
-      availableQuestions: filterObject(
-        surveyQuestions,
-        ([id, sq]) => sq.componentType !== "input" && id !== questionId
-    ) });
   }
 
   removeRule = (questionId) => {
@@ -658,7 +644,7 @@ class MultipleIncompatibleAnswersForm extends React.Component {
     return (
       <>
         <div className="form-row mt-1">
-          <div className="font-italic small ml-2">
+          <div className="font-italic medium ml-2">
             {`Answer ${answerText} from question ${questionText}`}
           </div>
           <div className="col-1">
@@ -668,7 +654,7 @@ class MultipleIncompatibleAnswersForm extends React.Component {
               title="Remove question"
               type="button"
             >
-              <SvgIcon icon="minus" size="0.9rem" />
+              <SvgIcon icon="minus" size="0.5rem" />
             </button>
           </div>
         </div>
@@ -683,10 +669,11 @@ class MultipleIncompatibleAnswersForm extends React.Component {
         <strong className="mb-2" style={{ textAlign: "center" }}>
           Select and add questions and answers to the rule
         </strong>
-        <div className="form-row">
+        <div className="row" style={{ display: "flex", alignItems: "center"}}>
           <label>Question </label>
           <select
-            className="form-control form-control-sm"
+            style={{ display: "inline-block"}}
+            className="form-inline form-control-sm ml-2 mr-2"
             onChange={(e) =>
               this.setState({
                 tempQuestionId: e.target.value
@@ -695,15 +682,19 @@ class MultipleIncompatibleAnswersForm extends React.Component {
             value={this.state.tempQuestionId}
           >
             <option value="-1">- Select Question -</option>
-            {mapObjectArray(this.state.availableQuestions, ([aqId, aq]) => (
-              <option key={aqId} value={aqId}>
-                {aq.question}
-              </option>
-            ))}
+            {mapObjectArray(surveyQuestions, ([aqId, aq]) => {
+              if(this.state.answers[aqId] === undefined) {
+                return (
+                  <option key={aqId} value={aqId}>
+                    {aq.question}
+                  </option>
+                )
+              }})}
           </select>
           <label>Answer </label>
           <select
-            className="form-control form-control-sm"
+            style={{ display: "inline-block"}}
+            className="form-inline form-control-sm ml-2 mr-2"
             onChange={(e) => this.setState({ tempAnswerId: e.target.value })}
             value={this.state.tempAnswerId}
           >
@@ -716,11 +707,11 @@ class MultipleIncompatibleAnswersForm extends React.Component {
           </select>
           <div className="col-1">
             <button
+              style={{ display: "inline-block"}}
               className="btn btn-sm btn-success"
               disabled={this.state.tempAnswerId === -1 || this.state.tempQuestionId === -1}
               onClick={() => {
                 this.addRule(this.state.tempQuestionId, this.state.tempAnswerId);
-                this.updateAvailableQuestions(surveyQuestions, this.state.tempQuestionId);
                 this.resetTempVars();
               }}
               title="Add Rule"
@@ -733,14 +724,16 @@ class MultipleIncompatibleAnswersForm extends React.Component {
         </div>
         {Object.entries(answers)?.map(([question, answer]) =>
           this.renderRuleRow(surveyQuestions, question, answer))}
+        <br/>
         <strong className="mb-2" style={{ textAlign: "center" }}>
           If the answers above are selected, then the following answer is incompatible
         </strong>
 
-        <div className="form-inline">
+        <div className="form-row" style={{ display: "flex", alignItems: "center"}}>
           <label>Question </label>
           <select
-            className="form-control form-control-sm"
+            style={{ display: "inline-block"}}
+            className="form-inline form-control-sm ml-2 mr-2"
             onChange={(e) =>
               this.setState({
                 incompatQuestionId: e.target.value
@@ -749,17 +742,20 @@ class MultipleIncompatibleAnswersForm extends React.Component {
             value={incompatQuestionId}
           >
             <option value="-1">- Select Question -</option>
-            {mapObjectArray(this.state.availableQuestions, ([aqId, aq]) => (
-              <option key={aqId} value={aqId}>
-                {aq.question}
-              </option>
-            ))}
+            {mapObjectArray(surveyQuestions, ([aqId, aq]) => {
+              if(this.state.answers[aqId] === undefined) {
+               return (
+                  <option key={aqId} value={aqId}>
+                    {aq.question}
+                  </option>
+               );
+              }
+            })}
           </select>
-        </div>
-        <div className="form-inline">
           <label>Answer </label>
           <select
-            className="form-control form-control-sm"
+            style={{ display: "inline-block"}}
+            className="form-inline form-control-sm ml-2 mr-2"
             onChange={(e) => this.setState({ incompatAnswerId: e.target.value })}
             value={incompatAnswerId}
           >
@@ -800,7 +796,7 @@ export default class NewRuleDesigner extends React.Component {
     const { selectedRuleType } = this.state;
     return (
       <div className="mt-3 d-flex justify-content-center">
-        <div style={{ display: "flex", flexFlow: "column", width: "25rem" }}>
+        <div style={{ display: "flex", flexFlow: "column", width: "50rem" }}>
           <h2>New Rule</h2>
           <div className="form-group">
             <label>Rule Type</label>
