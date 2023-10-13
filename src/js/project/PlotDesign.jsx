@@ -430,6 +430,7 @@ export class PlotDesign extends React.Component {
       },
       shp: {
         display: "SHP File",
+        alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
         layout: this.renderFileInput("shp"),
@@ -456,6 +457,8 @@ export class PlotDesign extends React.Component {
               </select>
             </div>
             <p className="font-italic ml-2">{`- ${plotOptions[plotDistribution].description}`}</p>
+            {plotOptions[plotDistribution].alert &&
+              <p className="alert">- {plotOptions[plotDistribution].alert}</p>}
           </div>
           <div>{plotOptions[plotDistribution].layout}</div>
           <p
