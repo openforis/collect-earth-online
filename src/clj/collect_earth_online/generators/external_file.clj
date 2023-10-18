@@ -1,5 +1,6 @@
 (ns collect-earth-online.generators.external-file
-  (:require [clojure.string     :as str]
+  (:require [clojure.data.xml   :as xml]
+            [clojure.string     :as str]
             [clojure.set        :as set]
             [clojure.java.io    :as io]
             [clojure.java.shell :as sh]
@@ -7,7 +8,9 @@
             [triangulum.type-conversion :as tc]
             [triangulum.utils :refer [parse-as-sh-cmd]]
             [collect-earth-online.utils.part-utils :as pu]
-            [collect-earth-online.utils.geom    :refer [make-wkt-point]]))
+            [collect-earth-online.utils.geom    :refer [make-wkt-point]])
+  (:import [java.util.zip ZipInputStream]
+           (java.io File)))
 
 ;;;
 ;;; Constants
@@ -289,3 +292,35 @@
     (sh-wrapper tmp-dir {}
                 (str "7z a " folder-name "/files" ".zip " folder-name "/*"))
     (str folder-name "files.zip")))
+
+(defn read-xml-file
+  [dir-name]
+  (let [file (str tmp-dir "/" dir-name)]
+    (xml/parse (io/reader (str file "/placemark.idm.xml")))))
+
+(defn extract-code-lists
+  [file-name])
+
+(defn extract-survey-questions
+  [file-name]
+  (let [survey-content (-> file-name read-xml-file :content last :content first :content)]
+    survey-content))
+
+(defn parse-properties-file
+  [dir-name]
+  (let [file (str tmp-dir "/" dir-name)]
+    (with-open [f (clojure.java.io/reader (str file "/project_definition.properties"))]
+
+      (reduce (fn [acc line]
+                (let [[k v] (clojure.string/split line #"\=")]
+                  (if v
+                    (assoc acc (keyword k) v)
+                    acc)))
+              {}
+              (line-seq f)))))
+
+(defn unzip-project
+  [zip-file-name]
+  (let [output-dir (str tmp-dir "/"
+                        (first (clojure.string/split zip-file-name #"\.")))]
+    (sh-wrapper tmp-dir {} (str "unzip " zip-file-name " -d " output-dir))))

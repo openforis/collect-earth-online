@@ -6,7 +6,7 @@
             [clojure.set                                   :as set]
             [clojure.string                                :as str]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
-            [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples zip-shape-files]]
+            [collect-earth-online.generators.external-file :as external-file]
             [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
             [collect-earth-online.utils.part-utils         :as pu]
             [triangulum.response                           :refer [data-response]]
@@ -317,7 +317,7 @@
                                 plots]
   (let [plot-count (count plots)
         samples    (if (#{"csv" "shp"} sample-distribution)
-                     (generate-file-samples plots
+                     (external-file/generate-file-samples plots
                                             plot-count
                                             project-id
                                             sample-distribution
@@ -367,7 +367,7 @@
                               design-settings]
   ;; Create plots
   (let [plots (if (#{"csv" "shp"} plot-distribution)
-                (generate-file-plots project-id
+                (external-file/generate-file-plots project-id
                                      plot-distribution
                                      plot-file-name
                                      plot-file-base64)
@@ -939,7 +939,7 @@
 (defn create-shape-files!
   [{:keys [params]}]
   (let [project-id (:projectId params)
-        zip-file (zip-shape-files project-id)
+        zip-file (external-file/zip-shape-files project-id)
         file-name (last (str/split zip-file #"/"))]
     (if zip-file
       {:headers {"Content-Type" "application/zip"
@@ -948,3 +948,8 @@
        :status 200}
       {:status 500
        :body "Error generating shape files."})))
+
+(defn import-collect-projects
+  [file-name]
+  (let [proj-dir 
+        project-properties file-name]))
