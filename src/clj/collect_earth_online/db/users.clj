@@ -196,7 +196,7 @@
       (data-response {}))))
 
 (defn update-institution-role [{:keys [params]}]
-  (let [new-user-email   (str/lower-case (:newUserEmail params))
+  (let [new-user-email   (:newUserEmail params)
         account-id       (if-let [id (:accountId params)]
                            (tc/val->int id)
                            (-> (call-sql "get_user_by_email" new-user-email)
@@ -237,8 +237,8 @@
                                 institution-role
                                 ", but the email notification has failed."))))))))
 
-(defn request-institution-membership [{:keys [params]}]
-  (let [user-id        (:userId params -1)
+(defn request-institution-membership [{:keys [params session]}]
+  (let [user-id        (:userId session -1)
         institution-id (tc/val->int (:institutionId params))]
     (if (pos? user-id)
       (do
