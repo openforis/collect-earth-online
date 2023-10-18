@@ -831,13 +831,13 @@ class Collection extends React.Component {
 
         return (answerText != null &&
                 answerText != undefined) ?
-          {
-            ...acc,
-            [sampleId]: {
-              ...subQuestionsCleared,
-              [questionId]: newQuestion,
-            },
-          } : { ...acc };
+        {
+          ...acc,
+          [sampleId]: {
+            ...subQuestionsCleared,
+            [questionId]: newQuestion,
+          },
+        } : { ...acc };
       }, {});
 
       const newUserImages = sampleIds.reduce(
