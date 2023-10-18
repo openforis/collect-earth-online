@@ -1098,4 +1098,3 @@ CREATE OR REPLACE FUNCTION select_project_info_for_doi(_project_id integer)
     GROUP BY project_uid
 
 $$ LANGUAGE SQL;
-

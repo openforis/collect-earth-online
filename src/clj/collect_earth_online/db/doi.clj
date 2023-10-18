@@ -1,22 +1,20 @@
 (ns collect-earth-online.db.doi
-  (:require
-   [clj-http.client :as http]
-   [clojure.data.json :as json]
-   [clojure.java.io :as io]
-   [collect-earth-online.generators.external-file :refer [create-and-zip-files-for-doi]]
-   [collect-earth-online.views :refer [data-response]]
-   [triangulum.config  :refer [get-config]]
-   [triangulum.database :refer [call-sql]]
-   [triangulum.type-conversion :as tc])
-  (:import
-   java.time.LocalDateTime
-   java.time.format.DateTimeFormatter))
+  (:require [clj-http.client                               :as http]
+            [clojure.data.json                             :as json]
+            [clojure.java.io                               :as io]
+            [collect-earth-online.generators.external-file :refer [create-and-zip-files-for-doi]]
+            [triangulum.config                             :refer [get-config]]
+            [triangulum.database                           :refer [call-sql sql-primitive]]
+            [triangulum.response                           :refer [data-response]]
+            [triangulum.type-conversion                    :as tc])
+  (:import java.time.LocalDateTime
+           java.time.format.DateTimeFormatter))
 
-(def base-url (:url (get-config :zenodo)))
+(def base-url (get-config :zenodo :url))
 
 (defn req-headers
   []
-  (let [auth-token (:api-key (get-config :zenodo))]
+  (let [auth-token (get-config :zenodo :api-key)]
     {"Authorization" (str "Bearer " auth-token)}))
 
 (defn get-zenodo-deposition
@@ -63,8 +61,8 @@
   [{:keys [id metadata] :as doi-info}
    project-id user-id]
   (let [doi-path (-> metadata :prereserve_doi :doi)]
-    (first
-      (call-sql "insert_doi" id project-id user-id doi-path (tc/clj->jsonb doi-info)))))
+    (sql-primitive
+     (call-sql "insert_doi" id project-id user-id doi-path (tc/clj->jsonb doi-info)))))
 
 (defn build-survey-data
   [plot-data]
@@ -91,8 +89,8 @@
                                        :size_m
                                        :shape
                                        :common_securewatch_date])
-        (update :extra_plot_info #(tc/jsonb->clj %))
-        (assoc  :survey survey-data))))
+        (update :extra_plot_info tc/jsonb->clj)
+        (assoc :survey survey-data))))
 
 (defn group-plot-data
   [plot-data]
@@ -120,6 +118,7 @@
     (http/put (str bucket-url "/" project-id)
               {:content-type :multipart/form-data
                :headers      headers
+               :as           :json
                :multipart    [{:name "Content/type" :content "application/octet-stream"}
                               {:name "file" :content (io/file zip-file)}]})))
 
@@ -137,8 +136,8 @@
                         {:details "Error in file upload to zenodo"}))))))
 
 (defn create-doi!
-  [{:keys [params]}]
-  (let [user-id          (:userId params -1)
+  [{:keys [params session]}]
+  (let [user-id          (:userId session -1)
         project-id       (:projectId params)
         project-name     (:projectName params)
         institution-name (:name (first (call-sql "select_institution_by_id" (-> params :institution) user-id)))
@@ -150,9 +149,8 @@
        (create-zenodo-deposition! institution-name project-name creator contributors description)
        :body
        (insert-doi! project-id user-id)
-       (:insert_doi)
-       (upload-doi-files! project-id)
-       data-response)
+       (upload-doi-files! project-id))
+      (data-response {:message "DOI created successfully"})
       (catch Exception _
         (data-response {:message "Failed to create DOI."}
                        {:status 500})))))

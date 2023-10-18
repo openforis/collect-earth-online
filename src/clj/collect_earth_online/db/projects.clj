@@ -1,24 +1,22 @@
 (ns collect-earth-online.db.projects
-  (:import
-   java.text.SimpleDateFormat
-   java.util.Date
-   java.util.UUID)
-  (:require
-   [clojure.java.io :as io]
-   [clojure.set                                   :as    set]
-   [clojure.string                                :as    str]
-   [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
-   [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples zip-shape-files]]
-   [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
-   [collect-earth-online.utils.part-utils         :as    pu]
-   [collect-earth-online.views                    :refer [data-response]]
-   [triangulum.database                           :refer [call-sql
-                                                          insert-rows!
-                                                          p-insert-rows!
-                                                          sql-primitive]]
-   [triangulum.logging                            :refer [log]]
-   [triangulum.type-conversion                    :as    tc]
-   [triangulum.utils                              :as    u]))
+  (:import java.text.SimpleDateFormat
+           java.util.Date
+           java.util.UUID)
+  (:require [clojure.java.io                               :as io]
+            [clojure.set                                   :as set]
+            [clojure.string                                :as str]
+            [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
+            [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples zip-shape-files]]
+            [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
+            [collect-earth-online.utils.part-utils         :as pu]
+            [triangulum.response                           :refer [data-response]]
+            [triangulum.database                           :refer [call-sql
+                                                                   insert-rows!
+                                                                   p-insert-rows!
+                                                                   sql-primitive]]
+            [triangulum.logging                            :refer [log]]
+            [triangulum.type-conversion                    :as tc]
+            [triangulum.utils                              :as u]))
 
 ;;;
 ;;; Auth functions
@@ -55,7 +53,7 @@
                                           :smes          []
                                           :timesToReview 2}})
 
-(defn get-home-projects [{:keys [params]}]
+(defn get-home-projects [{:keys [session]}]
   (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable]}]
                          {:id            project_id
                           :institutionId institution_id
@@ -64,10 +62,10 @@
                           :numPlots      num_plots
                           :centroid      centroid
                           :editable      editable})
-                       (call-sql "select_user_home_projects" (:userId params -1)))))
+                       (call-sql "select_user_home_projects" (:userId session -1)))))
 
-(defn get-institution-projects [{:keys [params]}]
-  (let [user-id        (:userId params -1)
+(defn get-institution-projects [{:keys [params session]}]
+  (let [user-id        (:userId session -1)
         institution-id (tc/val->int (:institutionId params))]
     (data-response (mapv (fn [{:keys [project_id name privacy_level pct_complete num_plots]}]
                            {:id              project_id
@@ -77,8 +75,8 @@
                             :percentComplete pct_complete})
                          (call-sql "select_institution_projects" user-id institution-id)))))
 
-(defn get-institution-dash-projects [{:keys [params]}]
-  (let [user-id        (:userId params -1)
+(defn get-institution-dash-projects [{:keys [params session]}]
+  (let [user-id        (:userId session -1)
         institution-id (tc/val->int (:institutionId params))]
     (data-response (mapv (fn [{:keys [project_id name stats]}]
                            {:id    project_id
@@ -94,8 +92,8 @@
                                                          :users_assigned   :usersAssigned}))})
                          (call-sql "select_institution_dash_projects" user-id institution-id)))))
 
-(defn get-template-projects [{:keys [params]}]
-  (let [user-id (:userId params -1)]
+(defn get-template-projects [{:keys [params session]}]
+  (let [user-id (:userId session -1)]
     (data-response (mapv (fn [{:keys [project_id name institution_id]}]
                            {:id            project_id
                             :name          name
@@ -136,8 +134,8 @@
      :hasGeoDash         (:has_geo_dash project)
      :isProjectAdmin     (is-proj-admin? user-id project-id nil)}))
 
-(defn get-project-by-id [{:keys [params]}]
-  (let [user-id    (:userId params -1)
+(defn get-project-by-id [{:keys [params session]}]
+  (let [user-id    (:userId session -1)
         project-id (tc/val->int (:projectId params))]
     (data-response (build-project-by-id user-id project-id))))
 
@@ -685,16 +683,16 @@
                              "Unknown server error.")))))
       (data-response (str "Project " project-id " not found.")))))
 
-(defn publish-project! [{:keys [params]}]
-  (let [user-id      (:userId params -1)
+(defn publish-project! [{:keys [params session]}]
+  (let [user-id      (:userId session -1)
         project-id   (tc/val->int (:projectId params))
         clear-saved? (tc/val->bool (:clearSaved params))]
     (when clear-saved? (reset-collected-samples! project-id))
     (call-sql "publish_project" project-id)
     (data-response (build-project-by-id user-id project-id))))
 
-(defn close-project! [{:keys [params]}]
-  (let [user-id    (:userId params -1)
+(defn close-project! [{:keys [params session]}]
+  (let [user-id    (:userId session -1)
         project-id (tc/val->int (:projectId params))]
     (call-sql "close_project" project-id)
     (data-response (build-project-by-id user-id project-id))))

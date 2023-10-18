@@ -16,7 +16,7 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 
 ** Application Configuration
 
-On startup, the CEO application reads a file called ~config.edn~ in the top level directory of this repository, which contains various user-configurable system parameters. A sample file called ~config.default.edn~ is provided with this repository to get you started. To begin, simply copy it to ~config.edn~. Then edit it according to the following sections.
+On startup, the CEO application reads a file called ~config.edn~ in the top level directory of this repository, which contains various user-configurable system parameters. A sample file called ~config.example.edn~ is provided with this repository to get you started. To begin, simply copy it to ~config.edn~. Then edit it according to the following sections.
 
 Please note that you must replace all values surrounded with angle brackets (e.g., "<api-key>") with actual values for the application to work correctly. Most of the fields should be self-explanatory.
 
@@ -103,7 +103,7 @@ On a Windows machine:
 JAVA_HOME = C:\Program Files\Java\jdk-X.X.X
 #+end_example
 
-Replace *X.X.X* with the JDK version installed on your computer.
+Replace *X.X.X* with the JDK version installed on your computer. In order to run CEO, your JDK version has to be either 11 or 17.
 
 *** Step 2: Update PATH
 
@@ -176,7 +176,7 @@ To compile and run the web application, navigate to the top level project direct
 
 #+begin_src sh
 npm install
-npm run webpack-dev
+npm run vite-dev
 #+end_src
 
 Now, in a separate terminal window (because webpack needs to be running in the background), run the following commands:

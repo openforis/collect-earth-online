@@ -136,7 +136,7 @@ CREATE INDEX samples_plot_rid ON samples (plot_rid);
 
 -- A duplicate of external file samples for restoring samples
 CREATE TABLE ext_samples (
-    ext_sample_uid       SERIAL PRIMARY KEY,
+    sample_uid           SERIAL PRIMARY KEY,
     plot_rid             integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     sample_geom          geometry(geometry,4326),
     visible_id           integer,
@@ -200,3 +200,13 @@ CREATE TABLE project_widgets (
     widget         jsonb
 );
 CREATE INDEX project_widgets_project_rid       ON project_widgets (project_rid);
+
+-- Stores doi information for a project
+CREATE TABLE doi(
+       doi_uid INTEGER NOT NULL PRIMARY KEY,
+       project_rid INTEGER UNIQUE NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+       user_id INTEGER NOT NULL REFERENCES users (user_uid) ON DELETE CASCADE ON UPDATE CASCADE,
+       doi_path TEXT,
+       full_data jsonb NOT NULL,
+       created timestamp DEFAULT NOW()
+);

@@ -1,12 +1,12 @@
 (ns collect-earth-online.db.plots
   (:import java.sql.Timestamp)
-  (:require [clojure.set :as set]
-            [clojure.data.json :refer [read-str]]
-            [triangulum.type-conversion :as tc]
-            [triangulum.database :refer [call-sql sql-primitive]]
-            [triangulum.utils    :refer [filterm]]
+  (:require [clojure.set                      :as set]
+            [clojure.data.json                :refer [read-str]]
+            [triangulum.type-conversion       :as tc]
+            [triangulum.database              :refer [call-sql sql-primitive]]
+            [triangulum.utils                 :refer [filterm]]
             [collect-earth-online.db.projects :refer [is-proj-admin?]]
-            [collect-earth-online.views       :refer [data-response]]))
+            [triangulum.response              :refer [data-response]]))
 
 ;;;
 ;;; Helpers
@@ -37,7 +37,7 @@
                          (call-sql "select_limited_project_plots" project-id max-plots)))))
 
 (defn get-plotters
-  "Gets all users that have collected plots on a project.  If optional plotId
+  "Gets all users that have collected plots on a project. If optional plotId
    is passed, return results only for that plot."
   [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
@@ -148,14 +148,14 @@
 (defn- unlock-plots [user-id]
   (call-sql "unlock_plots" {:log? false} user-id))
 
-(defn reset-plot-lock [{:keys [params]}]
+(defn reset-plot-lock [{:keys [params session]}]
   (let [plot-id (tc/val->int (:plotId params))
-        user-id (:userId params -1)]
+        user-id (:userId session -1)]
     (call-sql "lock_plot_reset" {:log? false} plot-id user-id (time-plus-five-min))
     (data-response "")))
 
-(defn release-plot-locks [{:keys [params]}]
-  (unlock-plots (:userId params -1))
+(defn release-plot-locks [{:keys [params session]}]
+  (unlock-plots (:userId session -1))
   (data-response ""))
 
 (defn- prepare-samples-array [plot-id user-id]
@@ -194,13 +194,13 @@
    returned is based off of the navigation mode and direction.  Valid
    navigation modes are analyzed, unanalyzed, and all.  Valid directions
    are previous, next, and id."
-  [{:keys [params]}]
+  [{:keys [params session]}]
   (let [navigation-mode (:navigationMode params "unanalyzed")
         direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
         old-visible-id  (tc/val->int (:visibleId params))
         threshold       (tc/val->int (:threshold params))
-        user-id         (:userId params -1)
+        user-id         (:userId session -1)
         current-user-id (tc/val->int (:currentUserId params -1))
         review-mode?     (and (tc/val->bool (:inReviewMode params))
                               (is-proj-admin? user-id project-id nil))
@@ -255,10 +255,10 @@
 ;;; Saving Plots
 ;;;
 
-(defn add-user-samples [{:keys [params]}]
+(defn add-user-samples [{:keys [params session]}]
   (let [project-id       (tc/val->int (:projectId params))
         plot-id          (tc/val->int (:plotId params))
-        session-user-id  (:userId params -1)
+        session-user-id  (:userId session -1)
         current-user-id  (tc/val->int (:currentUserId params -1))
         review-mode?     (and (tc/val->bool (:inReviewMode params))
                               (pos? current-user-id)
@@ -295,10 +295,10 @@
     (unlock-plots user-id)
     (data-response "")))
 
-(defn flag-plot [{:keys [params]}]
+(defn flag-plot [{:keys [params session]}]
   (let [project-id       (tc/val->int (:projectId params))
         plot-id          (tc/val->int (:plotId params))
-        user-id          (:userId params -1)
+        user-id          (:userId session -1)
         current-user-id  (tc/val->int (:currentUserId params -1))
         review-mode?     (and (tc/val->bool (:inReviewMode params false))
                               (pos? current-user-id)

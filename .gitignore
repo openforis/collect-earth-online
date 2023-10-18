@@ -22,6 +22,7 @@ __pycache__
 classes
 ceo-gee-key.json
 *.pyc
+dist/
 
 # MacOS X Backups
 .DS_Store

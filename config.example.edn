@@ -1,0 +1,77 @@
+{;; server (server)
+ :triangulum.server/http-port         8080
+ :triangulum.server/nrepl             false
+ :triangulum.server/nrepl-port        5555
+ :triangulum.server/nrepl-bind        "127.0.0.1"
+ :triangulum.server/cider-nrepl       true
+ :triangulum.server/mode              "dev"
+ :triangulum.server/log-dir           "logs"
+
+ :triangulum.server/handler           collect-earth-online.routing/authenticated-routing-handler
+ :triangulum.server/keystore-file     "keystore.pkcs12"
+ :triangulum.server/keystore-type     "pkcs12"
+ :triangulum.server/keystore-password "foobar"
+
+ ;; handler (server)
+ :triangulum.handler/session-key           "changeme12345678" ; must be 16 characters
+ :triangulum.handler/bad-tokens            #{".php"}
+ :triangulum.handler/private-request-keys  #{:base64Image :plotFileBase64 :sampleFileBase64}
+ :triangulum.handler/private-response-keys #{}
+
+ ;;workers (server)
+ :triangulum.worker/workers [{:triangulum.worker/name  "clean-up-service"
+                              :triangulum.worker/start collect-earth-online.workers/start-clean-up-service!
+                              :triangulum.worker/stop  collect-earth-online.workers/stop-clean-up-service!}]
+
+ ;; response (server)
+ :triangulum.response/response-type   :json ; :edn or :transit
+
+ ;; views (app)
+ :triangulum.views/title              {:en "Collect Earth Online"}
+ :triangulum.views/description        {:en "Collect Earth Online is an Image Analysis Crowdsourcing Platform by OpenForis and Spatial Informatics Group"}
+ :triangulum.views/keywords           {:en "collect earth online image analysis crowdsourcing platform openforis SIG spatial informatics group"}
+ :triangulum.views/extra-head-tags    [[:meta {:name "viewport" :content "width=device-width, user-scalable=no"}]
+                                       [:link {:rel "manifest" :href "/favicon/site.webmanifest"}]
+                                       [:link {:rel "shortcut icon" :href "/favicon/favicon.ico"}]]
+ :triangulum.views/static-css-files   ["/css/bootstrap.min.css"]      ; in resources/public/
+ :triangulum.views/static-js-files    ["/js/jquery-3.5.1.slim.min.js"
+                                       "/js/bootstrap.min.js"] ; in resources/public/
+ :triangulum.views/client-keys        {:mapbox-token "token123"}
+
+ ;; git (app)
+ :triangulum.git/tags-url             "https://gitlab.sig-gis.com/api/v4/projects/<PROJECT_ID>/repository/tags"
+
+ ;; database (database)
+ :triangulum.database/host            "localhost"
+ :triangulum.database/port            5432
+ :triangulum.database/dbname          "ceo"
+ :triangulum.database/user            "ceo"
+ :triangulum.database/password        "ceo"
+
+ ;; build-db (database)
+ :triangulum.build-db/admin-pass      "postgres-password"
+ :triangulum.build-db/dev-data        false
+ :triangulum.build-db/file            "db-backup.custom"
+ :triangulum.build-db/verbose         true
+
+ ;; email (mail)
+ :triangulum.email/host               "smtp.gmail.com"
+ :triangulum.email/user               ""
+ :triangulum.email/pass               ""
+ :triangulum.email/tls                true
+ :triangulum.email/port               587
+ :triangulum.email/base-url           "https://my.domain/"
+
+ ;; https (https)
+ :triangulum.https/email              ""
+ :triangulum.https/domain             ""
+ :triangulum.https/path               "/etc/letsencrypt"
+ :triangulum.https/cert-only          false
+ :triangulum.https/webroot            "./resources/public"
+
+ ;; collect-earth-online (my-keys)
+ :collect-earth-online.py-interop/ee-account    ""
+ :collect-earth-online.py-interop/ee-key-path   ""
+ :collect-earth-online.proxy/nicfi-key          "e5..."
+ :collect-earth-online.zenodo/url               ""
+ :collect-earth-online.zenodo/api-key           ""}
