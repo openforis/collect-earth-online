@@ -20,6 +20,6 @@
                               :main-opts  ["-m" "rebel-readline.main"]}
            :production       {:jvm-opts  ["-XX:MaxRAMPercentage=90" "-XX:+PrintFlagsFinal"]}
            :check-reflection {:main-opts ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
-                                          "-e" "(require,'collect-earth-online.handler)"]}
+                                          "-e" "(require,'collect-earth-online.routing)"]}
            :check-deps       {:deps      {olical/depot {:mvn/version "1.8.4"}}
                               :main-opts ["-m" "depot.outdated.main"]}}}
