@@ -923,7 +923,15 @@ class Collection extends React.Component {
     const newSurveyQuestions = mapObject(
       this.state.currentProject.surveyQuestions,
       ([questionId, question]) => {
-        const visible = this.calcVisibleSamples(Number(questionId)) || [];
+        const visibleSamples = this.calcVisibleSamples(Number(questionId)) || [];
+        const visible = visibleSamples.filter((sample) => {
+          if (question.parentQuestionId !== -1) {
+            const parentAnswerId = _.get(userSamples, [sample.id, question.parentQuestionId, "answerId"]);
+            return question.parentAnswerIds.includes(parentAnswerId);
+          }
+          return true;
+        });
+  
         const answered = visible
           .filter((vs) => userSamples[vs.id][questionId])
           .map((vs) => ({
