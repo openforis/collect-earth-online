@@ -301,10 +301,38 @@
 (defn extract-code-lists
   [file-name])
 
+(defn- get-question
+  [tag-map]
+  (-> (filter (fn [content]
+                (= (:tag content) :label))
+              (:content tag-map))
+      first
+      :content
+      first))
+
+(defn- find-parent-question-id
+  [question-attr questions]
+  (if (:parent question-attr)
+    (tc/val->int (some (fn [q]
+                         (when (= (:parent question-attr)
+                                  (-> q :attrs :name))
+                           (-> q :attrs :id)))
+                       questions))
+    -1))
+
 (defn extract-survey-questions
   [file-name]
-  (let [survey-content (-> file-name read-xml-file :content last :content first :content)]
-    survey-content))
+  (let [survey-content (-> file-name read-xml-file :content last :content first :content)
+        filtered-questions (filter (fn [q] (contains? #{:text :code :number :boolean} (:tag q)))
+                                   survey-content)]
+    (map (fn [question]
+           (let [question-attrs (:attrs question)]
+             {:dataType         (:tag question)
+              :question         (get-question question)
+              :cardOrder        (-> question-attrs :id tc/val->int)
+              :componentType    nil
+              :parentQuestionId (find-parent-question-id question-attrs filtered-questions)}))
+         filtered-questions)))
 
 (defn parse-properties-file
   [dir-name]

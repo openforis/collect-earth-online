@@ -948,8 +948,3 @@
        :status 200}
       {:status 500
        :body "Error generating shape files."})))
-
-(defn import-collect-projects
-  [file-name]
-  (let [proj-dir 
-        project-properties file-name]))
