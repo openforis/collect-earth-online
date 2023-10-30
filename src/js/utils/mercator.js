@@ -497,7 +497,7 @@ mercator.addGridLayer = (mapConfig, showLayer) => {
     mapConfig.map.addLayer(grid);
   } else {
     const layerId = 9999;
-    const layer = mercator.getLayerById(layerId);
+    const layer = mercator.getLayerById(mapConfig, layerId);
     mapConfig.map.removeLayer(layer);
   }
   return mapConfig;
