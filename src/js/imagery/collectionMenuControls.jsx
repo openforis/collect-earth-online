@@ -3,6 +3,7 @@ import React from "react";
 import Select from "../components/Select";
 import { mercator } from "../utils/mercator";
 import { monthlyMapping } from "../utils/generalUtils";
+import SvgIcon from "../components/svg/SvgIcon";
 
 export class PlanetMenu extends React.Component {
   constructor(props) {
@@ -193,6 +194,8 @@ export class PlanetNICFIMenu extends React.Component {
       selectedTime: this.props.sourceConfig.time,
       selectedBand: this.props.sourceConfig.band,
       nicfiLayers: [],
+      isDisabledLeft: false,
+      isDisabledRight: true
     };
   }
 
@@ -201,9 +204,21 @@ export class PlanetNICFIMenu extends React.Component {
     this.getNICFILayers();
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     if (this.props.visible && prevProps.visible !== this.props.visible) {
       this.updateImageryInformation();
+    }
+   
+    if (prevState.selectedTime !== this.state.selectedTime) {
+      this.setState((state) => {
+        const { nicfiLayers, selectedTime } = state;
+        const index = nicfiLayers.indexOf(selectedTime);
+
+        return {
+          isDisabledLeft: index >= nicfiLayers.length - 1,
+          isDisabledRight: index <= 0
+        }
+      })
     }
   }
 
@@ -231,6 +246,21 @@ export class PlanetNICFIMenu extends React.Component {
     }
   };
 
+  switchImagery = (direction) => {
+    this.setState((prevState) => {
+      const { nicfiLayers, selectedTime } = prevState;
+      const currentIndex = nicfiLayers.indexOf(selectedTime);
+
+      const move = direction === "forward" ? -1 : 1;
+      const newIndex = currentIndex + move;
+
+      // Check boundary conditions
+      if (newIndex < 0 || newIndex >= nicfiLayers.length) return {};
+
+      return { selectedTime: nicfiLayers[newIndex] };
+    });
+  }
+
   updatePlanetLayer = () => {
     this.updateImageryInformation();
     mercator.updateLayerSource(
@@ -250,14 +280,17 @@ export class PlanetNICFIMenu extends React.Component {
     return (
       nicfiLayers.length > 0 && (
         <div className="my-2" style={{ display: this.props.visible ? "block" : "none" }}>
-          <div className="slide-container">
-            <label className="mb-0 mr-3" htmlFor="time-selection">
+          <div className="slide-container v-center justify-content-center">
+            <label className="mb-0 mr-2" htmlFor="time-selection">
               Select Time
             </label>
             <select
               id="time-selection"
-              onChange={(e) => this.setState({ selectedTime: e.target.value })}
+              onChange={(e) => {
+                this.setState({ selectedTime: e.target.value }, this.updatePlanetLayer);
+              }}
               value={selectedTime}
+              className="mb-0 mr-1"
             >
               {nicfiLayers.map((time) => (
                 <option key={time} value={time}>
@@ -265,6 +298,28 @@ export class PlanetNICFIMenu extends React.Component {
                 </option>
               ))}
             </select>
+            <button
+              className="btn btn-outline-lightgreen btn-sm mr-1"
+              type="button"
+              onClick={() => {
+                this.switchImagery("backward");
+                this.updatePlanetLayer();
+              }}
+              disabled={this.state.isDisabledLeft}
+            >
+              <SvgIcon icon="leftArrow" size="0.9rem" />
+            </button>
+            <button
+              className="btn btn-outline-lightgreen btn-sm"
+              type="button"
+              onClick={() => {
+                this.switchImagery("forward");
+                this.updatePlanetLayer();
+              }}
+              disabled={this.state.isDisabledRight}
+            >
+              <SvgIcon icon="rightArrow" size="0.9rem" />
+            </button>
           </div>
           <div className="slide-container">
             <div id="radio-group">
@@ -273,7 +328,9 @@ export class PlanetNICFIMenu extends React.Component {
                   checked={selectedBand === "rgb"}
                   className="form-check-input"
                   id="visible"
-                  onChange={() => this.setState({ selectedBand: "rgb" })}
+                  onChange={() => {
+                    this.setState({ selectedBand: "rgb" }, this.updatePlanetLayer);
+                  }}
                   type="radio"
                 />
                 <label className="form-check-label" htmlFor="visible">
@@ -285,7 +342,9 @@ export class PlanetNICFIMenu extends React.Component {
                   checked={selectedBand === "cir"}
                   className="form-check-input"
                   id="infrared"
-                  onChange={() => this.setState({ selectedBand: "cir" })}
+                  onChange={() => {
+                    this.setState({ selectedBand: "cir" }, this.updatePlanetLayer);
+                  }}
                   type="radio"
                 />
                 <label className="form-check-label" htmlFor="infrared">
@@ -293,15 +352,6 @@ export class PlanetNICFIMenu extends React.Component {
                 </label>
               </div>
             </div>
-          </div>
-          <div className="slide-container">
-            <button
-              className="btn btn-lightgreen btn-sm"
-              onClick={this.updatePlanetLayer}
-              type="button"
-            >
-              Update Map
-            </button>
           </div>
         </div>
       )
