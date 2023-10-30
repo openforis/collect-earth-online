@@ -23,7 +23,7 @@ import { platformModifierKeyOnly } from "ol/events/condition";
 import { Circle, LineString, Point, Polygon } from "ol/geom";
 import { DragBox, Select, Draw, Modify, Snap } from "ol/interaction";
 import { GeoJSON, KML } from "ol/format";
-import { Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup } from "ol/layer";
+import { Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup, Graticule } from "ol/layer";
 import { BingMaps, Cluster, OSM, TileWMS, Vector as VectorSource, XYZ } from "ol/source";
 import { Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText } from "ol/style";
 import { fromLonLat, transform, transformExtent, getPointResolution } from "ol/proj";
@@ -472,6 +472,34 @@ mercator.addVectorLayer = (mapConfig, layerId, vectorSource, style) => {
     zIndex: 1,
   });
   mapConfig.map.addLayer(vectorLayer);
+  return mapConfig;
+};
+
+mercator.addGridLayer = (mapConfig, showLayer) => {
+  const gridIntervals = [90, 45, 30, 20, 10, 5, 2, 1, 30/60, 20/60,
+                         10/60, 5/60, 2/60, 1/60, 30/3600, 20/3600,
+                         10/3600, 5/3600, 2/3600, 1/3600, 0.8/3600,
+                         0.5/3600, 0.3/3600, 0.2/3600, 0.1/3600];
+  const grid = new Graticule({
+    // the style to use for the lines, optional.
+    strokeStyle: new Stroke({
+      color: 'rgba(255,120,0,0.9)',
+      width: 2,
+      lineDash: [0.5, 4],
+    }),
+    id: 9999,
+    showLabels: false,
+    minResolution: 0.0001,
+    intervals: gridIntervals,
+    wrapX: false,
+  });
+  if(showLayer) {
+    mapConfig.map.addLayer(grid);
+  } else {
+    const layerId = 9999;
+    const layer = mercator.getLayerById(layerId);
+    mapConfig.map.removeLayer(layer);
+  }
   return mapConfig;
 };
 

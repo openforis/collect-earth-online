@@ -1585,7 +1585,13 @@ class ImageryOptions extends React.Component {
     super(props);
     this.state = {
       showImageryOptions: true,
+      enableGrid: false,
     };
+  }
+
+  enableGrid() {
+    this.setState({ enableGrid: !this.state.enableGrid });
+    return mercator.addGridLayer(this.props.mapConfig, !this.state.enableGrid);
   }
 
   render() {
@@ -1658,6 +1664,16 @@ class ImageryOptions extends React.Component {
                 }[imagery.sourceConfig.type]
               );
             })}
+          <input
+            checked={this.state.enableGrid}
+            className="form-check-input"
+            id="grid-check"
+            onChange={() => this.enableGrid()}
+            type="checkbox"
+          />
+          <label className="form-check-label" htmlFor="grid-check">
+            Enable Map Grid
+          </label>
         </div>
       </div>
     );
