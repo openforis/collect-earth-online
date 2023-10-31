@@ -17,7 +17,7 @@
   (map (fn [item]
          {(keyword (-> item :attrs :id))
           {:color  "#000000"
-           :answer (-> item :content last :content)}})
+           :answer (-> item :content last :content first)}})
        code-items))
 
 (defn- get-code-list
@@ -33,7 +33,10 @@
    into CEO's answers structure."
   [dir-name]
   (let [code-list (get-code-list dir-name)]
-    code-list))
+    (map (fn [list]
+           {(keyword (-> list :attrs :name))
+            {:answers (code-items->answers (-> list :content last :content))}})
+         code-list)))
 
 (defn- get-question
   "Retrieves question name from Collect's XML."
@@ -56,7 +59,7 @@
                        questions))
     -1))
 
-(defn define-type
+(defn- define-types
   "Define component type and data type for CEO's
    survey questions based on the XML's tag and layout type."
   [tag attributes]
@@ -71,23 +74,35 @@
     {:dataType "text" :componentType "button"}
     :else {:dataType nil :componentType nil}))
 
-(defn extract-survey-questions
+(defn- extract-survey-questions
   "Parses the XML file and creates a list of CEO's questions
    based on the schema tag from the XML."
   [dir-name]
   (let [survey-content     (-> dir-name read-xml-file :content last :content first :content)
         filtered-questions (filter (fn [q] (contains? #{:text :code :number :boolean} (:tag q)))
                                    survey-content)]
-    (map (fn [question]
-           (let [question-tag                     (:tag question)
-                 question-attrs                   (:attrs question)
-                 {:keys [dataType componentType]} (define-type question-tag question-attrs)]
-             {:dataType         dataType
-              :question         (get-question question)
-              :cardOrder        (-> question-attrs :id tc/val->int)
-              :componentType    componentType
-              :parentQuestionId (find-parent-question-id question-attrs filtered-questions)}))
-         filtered-questions)))
+    (into (sorted-map)
+          (map (fn [question]
+                 (let [question-tag   (:tag question)
+                       question-attrs (:attrs question)
+                       types          (define-types question-tag question-attrs)]
+                   {(-> question-attrs :id Integer/parseInt)
+                    {:dataType         (:dataType types)
+                     :question         (get-question question)
+                     :cardOrder        (-> question-attrs :id tc/val->int)
+                     :componentType    (:componentType types)
+                     :answerList       (:list question-attrs)
+                     :parentQuestionId (find-parent-question-id question-attrs filtered-questions)}}))
+               filtered-questions))))
+
+(defn create-project-survey
+  [dir-name]
+  (let [survey-questions (extract-survey-questions dir-name)
+        survey-answers   (extract-code-lists dir-name)]
+    (reduce (fn [acc question]
+               )
+            {}
+            survey-questions)))
 
 (defn parse-properties-file
   "Parses properties file into edn format. Used to
