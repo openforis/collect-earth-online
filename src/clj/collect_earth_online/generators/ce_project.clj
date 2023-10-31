@@ -14,11 +14,12 @@
 (defn- code-items->answers
   "Transforms list of items into CEO's answers"
   [code-items]
-  (map (fn [item]
-         {(keyword (-> item :attrs :id))
-          {:color  "#000000"
-           :answer (-> item :content last :content first)}})
-       code-items))
+  (reduce (fn [acc item]
+            (assoc acc (keyword (-> item :attrs :id))
+                   {:color  "#000000"
+                    :answer (-> item :content last :content first)}))
+          {}
+          code-items))
 
 (defn- get-code-list
   "Retrieves the list of options from the XML."
@@ -33,10 +34,11 @@
    into CEO's answers structure."
   [dir-name]
   (let [code-list (get-code-list dir-name)]
-    (map (fn [list]
-           {(keyword (-> list :attrs :name))
-            {:answers (code-items->answers (-> list :content last :content))}})
-         code-list)))
+    (reduce (fn [acc list]
+              (assoc acc (keyword (-> list :attrs :name))
+                     {:answers (code-items->answers (-> list :content last :content))}))
+            {}
+            code-list)))
 
 (defn- get-question
   "Retrieves question name from Collect's XML."
@@ -91,7 +93,7 @@
                      :question         (get-question question)
                      :cardOrder        (-> question-attrs :id tc/val->int)
                      :componentType    (:componentType types)
-                     :answerList       (:list question-attrs)
+                     :answerList       (keyword (:list question-attrs))
                      :parentQuestionId (find-parent-question-id question-attrs filtered-questions)}}))
                filtered-questions))))
 
@@ -99,8 +101,13 @@
   [dir-name]
   (let [survey-questions (extract-survey-questions dir-name)
         survey-answers   (extract-code-lists dir-name)]
-    (reduce (fn [acc question]
-               )
+    (reduce (fn [acc [id question]]
+              (let [answers (get survey-answers (:answerList question))]
+                (if (:answerList question)
+                  (assoc acc (-> id str keyword) (-> question
+                                                     (merge answers)
+                                                     (dissoc :answerList)))
+                  (assoc acc (-> id str keyword) (-> question (dissoc :answerList))))))
             {}
             survey-questions)))
 
