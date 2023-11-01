@@ -62,10 +62,19 @@ class Geodash extends React.Component {
 
   getFeatures = async () => {
     const { plotShape, radius, center, plotId } = this.props;
-    if (plotShape === "polygon") {
-      const plotJsonObject = await fetch(`/get-plot-sample-geom?plotId=${plotId}`).then(
+    const plotJsonObject = await fetch(`/get-plot-sample-geom?plotId=${plotId}`).then(
         (response) => (response.ok ? response.json() : Promise.reject(response))
-      );
+    );
+    const samples = (plotJsonObject.sampleGeoms || [])
+	  .filter ((e) => e)
+	  .map ((geom)=>
+	    new Feature (
+	      new Circle (
+		projTransform (JSON.parse(geom).coordinates, "EPSG:4326", "EPSG:3857"),
+		Number(1))))
+
+    if (plotShape === "polygon") {
+      
       return [plotJsonObject.plotGeom, ...(plotJsonObject.sampleGeoms || [])]
         .filter((e) => e)
         .map((geom) => new Feature({ geometry: mercator.parseGeoJson(geom, true) }));
@@ -94,6 +103,7 @@ class Geodash extends React.Component {
             Number(radius)
           )
         ),
+	...samples
       ];
     } else {
       return [];
