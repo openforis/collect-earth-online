@@ -116,7 +116,7 @@
   [bucket-url project-id zip-file]
   (let [headers    (req-headers)]
     (http/put (str bucket-url "/" project-id)
-              {:content-type :multipart/form-data
+              {:content-type "application/octet-stream"
                :headers      headers
                :as           :json
                :multipart    [{:name "Content/type" :content "application/octet-stream"}
