@@ -347,7 +347,7 @@ class WidgetLayoutEditor extends React.PureComponent {
   saveWidgetEdits = () => {
     const {
       originalWidget: { id, layout },
-    } = this.state;    
+    } = this.state;
     const errors = this.getWidgetErrors();
     if (errors.length) {
       alert(errors.join("\n\n"));

@@ -157,7 +157,7 @@ export default class MapWidget extends React.Component {
     const { sourceConfig, id, attribution, isProxied } =
       this.props.imageryList.find((imagery) => imagery.id === widget.basemapId) ||
       this.props.imageryList.find((imagery) => imagery.title === "Open Street Map") ||
-          this.props.imageryList[0];
+      this.props.imageryList[0];
     const basemapLayer = new TileLayer({
       source: mercator.createSource(
         (widget.basemapType === "PlanetNICFI") ? 

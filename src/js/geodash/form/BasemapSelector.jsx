@@ -66,7 +66,7 @@ export default function BasemapSelector() {
   return (
     <div className="form-group">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <label htmlFor="basemap-select">Basemap</label> 
+        <label htmlFor="basemap-select">Basemap</label>
         <button
           className="btn btn-sm btn-secondary mb-1"
           onClick={getInstitutionImagery}
