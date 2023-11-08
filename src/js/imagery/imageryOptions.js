@@ -308,19 +308,19 @@ export const imageryOptions = [
       },
       {
         key: "min",
-        display: "Min",
+        display: "Min (one or three bands, separated by commas)",
         type: "number",
         options: {
-          placeholder: "1-100",
+          placeholder: "[1-100]",
           step: "0.01",
         },
       },
       {
         key: "max",
-        display: "Max",
+        display: "Max (one or three bands, separated by commas)",
         type: "number",
         options: {
-          placeholder: "2800-3200",
+          placeholder: "[0-100]",
           step: "0.01",
         },
       },
