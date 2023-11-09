@@ -160,7 +160,9 @@ export default class MapWidget extends React.Component {
       this.props.imageryList[0];
     const basemapLayer = new TileLayer({
       source: mercator.createSource(
-        sourceConfig,
+        (widget.basemapType === "PlanetNICFI") ? 
+          {... sourceConfig, time: widget.basemapNICFIDate}
+        : sourceConfig,
         id,
         attribution,
         isProxied,

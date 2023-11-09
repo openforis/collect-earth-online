@@ -312,9 +312,10 @@ class WidgetLayoutEditor extends React.PureComponent {
   };
 
   buildNewWidget = () => {
-    const { title, type, widgetDesign } = this.state;
+    const { title, type, widgetDesign, basemapNICFIDate } = this.state;
     return {
       name: title,
+      basemapNICFIDate,
       type,
       ...widgetDesign,
     };
@@ -461,7 +462,12 @@ class WidgetLayoutEditor extends React.PureComponent {
             className="form-control"
             id="widgetTitle"
             onChange={(e) => this.updateTitle(e.target.value)}
-            placeholder="Enter title"
+            placeholder={
+              this.getWidgetDesign("basemapNICFIDate") ?
+                "Planet NICFI " +
+                this.getWidgetDesign("basemapNICFIDate").slice(
+                  34, this.getWidgetDesign("basemapNICFIDate").length - 7)
+                : "Enter Title"}
             type="text"
             value={this.state.title}
           />
@@ -497,6 +503,7 @@ class WidgetLayoutEditor extends React.PureComponent {
           setWidgetDesign: this.setWidgetDesign,
           widgetDesign: this.state.widgetDesign,
           imagery: this.state.imagery,
+          widget: this.state.widgets.filter((w)=>w.basemapId === this.state.widgetDesign.basemapId)[0],
           getInstitutionImagery: this.getInstitutionImagery,
         }}
       >

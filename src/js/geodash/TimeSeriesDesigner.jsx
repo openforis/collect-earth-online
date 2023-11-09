@@ -24,7 +24,6 @@ export async function getBandsFromGateway(setBands, assetId, assetType) {
       }
       );
       const data = await res.json();
-      console.log("data is: ", data);
       if (data.hasOwnProperty("bands")) {
         setBands(data.bands);
       } else if (data.hasOwnProperty("errMsg")) {
