@@ -3,6 +3,7 @@ import React from "react";
 import BasemapSelector from "./form/BasemapSelector";
 import GDDateRange from "./form/GDDateRange";
 import GDSelect from "./form/GDSelect";
+import TimeSeriesDesigner from "./TimeSeriesDesigner";
 
 export default function DegradationDesigner() {
   return (
@@ -14,6 +15,7 @@ export default function DegradationDesigner() {
         title="Band to graph"
       />
       <GDDateRange />
+      <TimeSeriesDesigner />
     </>
   );
 }
