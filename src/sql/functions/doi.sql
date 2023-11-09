@@ -45,3 +45,14 @@ CREATE OR REPLACE FUNCTION insert_doi(_id integer, _project_id integer,
     RETURNING doi_uid
 
 $$ LANGUAGE SQL;
+
+-- Update DOI
+CREATE OR REPLACE FUNCTION update_doi(_id integer, _full_data jsonb)
+ RETURNS integer AS $$
+
+    UPDATE doi
+        set full_data = _full_data
+    WHERE doi_uid = _id
+    RETURNING doi_uid
+
+$$ LANGUAGE SQL;

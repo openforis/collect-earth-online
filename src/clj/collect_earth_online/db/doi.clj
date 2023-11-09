@@ -25,7 +25,7 @@
 (defn get-doi-reference
   [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
-        doi-path   (:doi_path (first (call-sql "select_doi_by_project" project-id)))]
+        doi-path   (:doi_path (last (call-sql "select_doi_by_project" project-id)))]
     (data-response {:doiPath doi-path})))
 
 (defn create-contributors-list
@@ -113,56 +113,63 @@
         (update :published_date #(str %)))))
 
 (defn upload-deposition-files!
-  [bucket-url project-id zip-file]
+  [doi-id zip-file]
   (let [headers    (req-headers)]
-    (http/put (str bucket-url "/" project-id)
-              {:content-type "application/octet-stream"
-               :headers      headers
-               :as           :json
-               :multipart    [{:name "Content/type" :content "application/octet-stream"}
-                              {:name "file" :content (io/file zip-file)}]})))
+    (http/post (str base-url "/deposit/depositions/" doi-id "/files")
+               {:headers      headers
+                :multipart    [{:name "Content/type" :content "application/octet-stream"}
+                               {:name "file" :content (io/file zip-file)}]})))
 
 (defn upload-doi-files!
   [doi-id project-id]
   (let [project-id   project-id
         doi          (first (call-sql "select_doi_by_id" doi-id))
-        bucket       (-> doi :full_data tc/jsonb->clj :links :bucket)
         project-data (json/write-str (get-project-data project-id))
         zip-file     (create-and-zip-files-for-doi project-id project-data)]
     (try
-      (:body (upload-deposition-files! bucket project-id zip-file))
-      (catch Exception _
+      (:body (upload-deposition-files! (:doi_uid doi) zip-file))
+      (catch Exception e
         (throw (ex-info "Failed to upload files."
                         {:details "Error in file upload to zenodo"}))))))
 
 (defn create-doi!
   [{:keys [params session]}]
-  (let [user-id          (:userId session -1)
-        project-id       (:projectId params)
-        project-name     (:projectName params)
-        institution-name (:name (first (call-sql "select_institution_by_id" (-> params :institution) user-id)))
-        description      (:description params)
-        creator          (first (call-sql "get_user_by_id" user-id))
-        contributors     (call-sql "select_assigned_users_by_project" project-id)]
-    (try
-      (->
-       (create-zenodo-deposition! institution-name project-name creator contributors description)
-       :body
-       (insert-doi! project-id user-id)
-       (upload-doi-files! project-id))
-      (data-response {:message "DOI created successfully"})
-      (catch Exception _
-        (data-response {:message "Failed to create DOI."}
-                       {:status 500})))))
+  (let [user-id            (:userId session -1)
+        project-id         (:projectId params)
+        project-name       (:projectName params)
+        institution-name   (:name (first (call-sql "select_institution_by_id" (-> params :institution) user-id)))
+        description        (:description params)
+        creator            (first (call-sql "get_user_by_id" user-id))
+        contributors       (call-sql "select_assigned_users_by_project" project-id)
+        project-published? (:availability (first (call-sql "select_project_by_id" project-id)))
+        doi-published?     (:submitted (last (call-sql "select_doi_by_project" project-id)))]
+    (cond
+      (not= "published" project-published?) (data-response {:message "In order to create a DOI, the project must be published"
+                                                            :status 500})
+      doi-published? (data-response {:message "A DOI for this project has already been published."
+                                     :status 500})
+      :else
+      (try
+        (->
+         (create-zenodo-deposition! institution-name project-name creator contributors description)
+         :body
+         (insert-doi! project-id user-id)
+         (upload-doi-files! project-id))
+        (data-response {:message "DOI created successfully"})
+        (catch Exception _
+          (data-response {:message "Failed to create DOI."}
+                         {:status 500}))))))
 
 (defn publish-doi!
   "request zenodo to publish the DOI on DataCite"
   [{:keys [params]}]
   (let [project-id (:projectId params)
-        doi-id     (:doi_uid (first (call-sql "select_doi_by_project" project-id)))]
+        doi-id     (:doi_uid (last (call-sql "select_doi_by_project" project-id)))
+        req        (http/post (str base-url "/deposit/depositions/" doi-id "/actions/publish")
+                              {:as :json
+                               :headers (req-headers)})]
     (try
-      (http/post (str base-url "/deposition/depositions/" doi-id "/actions/publish")
-                 {:headers (req-headers)})
+      (call-sql "update_doi" doi-id (tc/clj->jsonb (:body req)))
       (data-response {})
       (catch Exception _
         (data-response {:message "Failed to publish DOI"}
