@@ -29,6 +29,7 @@ export default class DegradationWidget extends React.Component {
   render() {
     const { degDataType } = this.state;
     const { widget } = this.props;
+    console.log("degradation widget", this.props, degDataType);
     const sarBandOptions = [
       { label: "VV", value: "VV" },
       { label: "VH", value: "VH" },
@@ -40,7 +41,8 @@ export default class DegradationWidget extends React.Component {
         style={{ flex: 1, display: "flex", flexDirection: "column" }}
       >
         <MapWidget
-          degDataType={this.state.degDataType}
+      //          degDataType={this.state.degDataType}
+          degDataType={widget.sourceName}
           idx={this.props.idx}
           imageDate={this.state.imageDate}
           imageryList={this.props.imageryList}
@@ -57,7 +59,8 @@ export default class DegradationWidget extends React.Component {
         />
 
         <div className="settings-block">
-          {degDataType === "landsat" ? (
+          {//degDataType === "landsat" ? (
+            widget.sourceName === "Landsat" ? (
             <>
               <div className="settings-item">
                 <label className="font-weight-bold" htmlFor="map-select">

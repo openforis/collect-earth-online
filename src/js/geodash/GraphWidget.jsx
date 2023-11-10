@@ -34,8 +34,8 @@ export default class GraphWidget extends React.Component {
   componentDidUpdate(prevProps, _prevState) {
     if (
       this.props.degDataType &&
-      (prevProps.degDataType !== this.props.degDataType ||
-        prevProps.sarGraphBand !== this.props.sarGraphBand)
+        (prevProps.degDataType !== this.props.degDataType ||
+         prevProps.sarGraphBand !== this.props.sarGraphBand)
     ) {
       this.loadDegradation();
     }
@@ -57,10 +57,22 @@ export default class GraphWidget extends React.Component {
       return null;
     }
   };
-
+  
+  widgetPath = ({sourceName, sourceType}) => {
+    const sourceNameToPath = {
+      Landsat: "filteredLandsat",
+      Sentinel2: "filteredSentinel2",
+      NICFI: "filteredNicfi",
+    };
+    return sourceNameToPath[sourceName] ?
+      (sourceType === "Composite") ?  sourceNameToPath[sourceName]
+      : "imageCollectionByIndex"
+    : "degradationTimeSeries";
+  };
+  
   loadDegradation = () => {
     const { widget, degDataType, plotExtentPolygon } = this.props;
-
+    console.log("graphwidget loaddegradation", this.props);
     // Try to load existing data first.
     const chartData = this.getChartData(this.getChartKey());
 
@@ -72,7 +84,8 @@ export default class GraphWidget extends React.Component {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          path: "degradationTimeSeries",
+          //          path: "degradationTimeSeries",
+          path: this.widgetPath(widget),
           ...widget,
           dataType: degDataType,
           geometry: plotExtentPolygon,
@@ -191,7 +204,7 @@ export default class GraphWidget extends React.Component {
         },
         tooltip: {
           pointFormat:
-            '<span style="color:{series.color}">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>',
+          '<span style="color:{series.color}">{point.x:%Y-%m-%d}</span>: <b>{point.y:.6f}</b><br/>',
           valueDecimals: 20,
           split: false,
           xDateFormat: "%Y-%m-%d",
@@ -249,7 +262,7 @@ export default class GraphWidget extends React.Component {
       },
       tooltip: {
         pointFormat:
-          '<span style="color:{series.color}">{series.name}</span>: <b>{point.y:.6f}</b><br/>',
+        '<span style="color:{series.color}">{series.name}</span>: <b>{point.y:.6f}</b><br/>',
         valueDecimals: 20,
         split: false,
         xDateFormat: "%Y-%m-%d",

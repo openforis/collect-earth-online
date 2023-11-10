@@ -82,12 +82,23 @@ export default class MapWidget extends React.Component {
     this.state.mapRef.render();
   };
 
+  widgetPath = ({sourceName, sourceType}) => {
+      const sourceNameToPath = {
+        Landsat: "filteredLandsat",
+        Sentinel2: "filteredSentinel2",
+        NICFI: "filteredNicfi",
+      };
+    return (sourceType === "Composite" && sourceNameToPath[sourceName]) || "imageCollectionByIndex";
+  };
+
   /// Get widget URL
 
   getPostObject = (widget) => {
+    console.log("mapwidget getpostobject", widget);
     if (widget.type === "imageAsset") {
       return { path: "image", ...widget };
     } else if (widget.type === "degradationTool") {
+//      console.log("degradationTool", widget);
       const { stretch, imageDate, degDataType, plotExtentPolygon } = this.props;
       return {
         path: "degradationTileUrl",
@@ -102,15 +113,8 @@ export default class MapWidget extends React.Component {
       return { path: "featureCollection", matchID: visiblePlotId, ...widget };
     } else if (widget.type === "preImageCollection") {
       const { sourceName, sourceType } = widget;
-      const sourceNameToPath = {
-        Landsat: "filteredLandsat",
-        Sentinel2: "filteredSentinel2",
-        NICFI: "filteredNicfi",
-      };
-      const path =
-        (sourceType === "Composite" && sourceNameToPath[sourceName]) || "imageCollectionByIndex";
-
-      return { path, ...widget };
+      console.log("preImageCollection", widget);
+      return { path: this.widgetPath(widget), ...widget };
     } else if (widget.type === "imageCollectionAsset") {
       return { path: "imageCollection", ...widget };
     } else {
