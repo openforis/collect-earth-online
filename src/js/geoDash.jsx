@@ -190,6 +190,9 @@ class Geodash extends React.Component {
     return (
       <React.Fragment>
         <button
+          style={{
+            margin: "auto 1rem"
+          }}
           className={toggleSamples ? "btn btn-outline-red btn-sm" : "btn btn-outline-lightgreen btn-sm"} 
           onClick={this.togglePlotSamples}
           type="button"
