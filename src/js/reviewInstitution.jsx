@@ -1009,7 +1009,7 @@ class NewImagery extends React.Component {
         </div>
         <div className="row">
           <div className="col-6">
-            <buttonp
+            <button
               className="btn btn-sm btn-block btn-outline-lightgreen btn-group py-2 font-weight-bold"
               id="add-imagery-button"
               onClick={() => this.uploadCustomImagery(isNewImagery)}
