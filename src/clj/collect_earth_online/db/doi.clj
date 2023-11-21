@@ -110,6 +110,7 @@
         (update :survey_questions #(tc/jsonb->clj %))
         (update :aoi_features #(tc/jsonb->clj %))
         (update :created_date #(str %))
+        (update :closed_date (fn [x] (when x (str x))))
         (update :published_date #(str %)))))
 
 (defn upload-deposition-files!
@@ -144,10 +145,11 @@
         project-published? (:availability (first (call-sql "select_project_by_id" project-id)))
         doi-published?     (:submitted (last (call-sql "select_doi_by_project" project-id)))]
     (cond
-      (not= "published" project-published?) (data-response {:message "In order to create a DOI, the project must be published"
-                                                            :status 500})
-      doi-published? (data-response {:message "A DOI for this project has already been published."
-                                     :status 500})
+      (and (not= "published" project-published?)
+           (not= "closed"    project-published?)) (data-response {:message "In order to create a DOI, the project must be published"}
+                                                                {:status 500})
+      doi-published? (data-response {:message "A DOI for this project has already been published."}
+                                    {:status 500})
       :else
       (try
         (->
