@@ -253,18 +253,18 @@ export const imageryOptions = [
       {
         key: "min",
         display: "Min",
-        type: "number",
+        type: "text",
         options: {
-          placeholder: "1-100",
+          placeholder: "[1-100] | [0.1,0.2,0.1]",
           step: "0.01",
         },
       },
       {
         key: "max",
         display: "Max",
-        type: "number",
+        type: "text",
         options: {
-          placeholder: "2800-3200",
+          placeholder: "[2800-3200] | [0.3,0.5,0.3]",
           step: "0.01",
         },
       },
@@ -309,18 +309,18 @@ export const imageryOptions = [
       {
         key: "min",
         display: "Min",
-        type: "number",
+        type: "text",
         options: {
-          placeholder: "1-100",
+          placeholder: "[1-100] | [0.1,0.2,0.1]",
           step: "0.01",
         },
       },
       {
         key: "max",
         display: "Max",
-        type: "number",
+        type: "text",
         options: {
-          placeholder: "2800-3200",
+          placeholder: "[2800-3200] | [0.3,0.5,0.3]",
           step: "0.01",
         },
       },

@@ -111,11 +111,9 @@ export default function getErrors (form) {
         !sampleResolution &&
         "A sample spacing is required for gridded sample distribution.",
       sampleDistribution === "csv" &&
-        sampleFileNeeded &&
         !(sampleFileName || "").includes(".csv") &&
         "A sample CSV (.csv) file is required.",
       sampleDistribution === "shp" &&
-        sampleFileNeeded &&
         !(sampleFileName || "").includes(".zip") &&
         "A sample SHP (.zip) file is required.",
       sampleDistribution === "gridded" &&

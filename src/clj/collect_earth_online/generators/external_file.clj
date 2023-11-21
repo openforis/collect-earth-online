@@ -277,7 +277,7 @@
     (create-shape-files folder-name "sample" project-id)
     (create-data-file folder-name project-data)
     (sh-wrapper tmp-dir {}
-                (str "7z a " folder-name "/files" ".zip " folder-name "/*"))
+                (str "7z a " folder-name "files" ".zip " folder-name "*"))
     (str folder-name "files.zip")))
 
 (defn zip-shape-files

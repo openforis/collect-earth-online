@@ -1,17 +1,13 @@
 (ns collect-earth-online.routing
-  (:require [triangulum.views                     :refer [render-page not-found-page]]
-            [ring.util.response                   :refer [redirect]]
-            [ring.util.codec                      :refer [url-encode]]
-            [triangulum.type-conversion           :as tc]
-            [triangulum.response                  :refer [forbidden-response no-cross-traffic?]]
-            [collect-earth-online.db.doi          :as doi]
+  (:require [collect-earth-online.db.doi          :as doi]
             [collect-earth-online.db.geodash      :as geodash]
             [collect-earth-online.db.imagery      :as imagery]
             [collect-earth-online.db.institutions :as institutions]
             [collect-earth-online.db.plots        :as plots]
             [collect-earth-online.db.projects     :as projects]
             [collect-earth-online.db.users        :as users]
-            [collect-earth-online.proxy           :as proxy]))
+            [collect-earth-online.proxy           :as proxy]
+            [triangulum.views                     :refer [render-page]]))
 
 (def routes
   {;; Page Routes
@@ -194,41 +190,3 @@
    [:get  "/get-nicfi-tiles"]                {:handler     proxy/get-nicfi-tiles
                                               :auth-type   :no-cross
                                               :auth-action :block}})
-
-(defn- redirect-auth [user-id]
-  (fn [request]
-    (let [{:keys [query-string uri]} request
-          full-url (url-encode (str uri (when query-string (str "?" query-string))))]
-      (if (pos? user-id)
-        (redirect (str "/home?flash_message=You do not have permission to access "
-                       full-url))
-        (redirect (str "/login?returnurl="
-                       full-url
-                       "&flash_message=You must login to see "
-                       full-url))))))
-
-(defn authenticated-routing-handler [{:keys [uri request-method params headers session] :as request}]
-  (let [{:keys [auth-type auth-action handler] :as route} (get routes [request-method uri])
-        user-id        (:userId session -1)
-        institution-id (tc/val->int (:institutionId params))
-        project-id     (tc/val->int (:projectId params))
-        next-handler   (if route
-                         (if (condp = auth-type
-                               :user     (pos? user-id)
-                               :super    (= 1  user-id)
-                               :collect  (projects/can-collect? user-id project-id (:tokenKey params))
-                               :token    (projects/can-collect? -99 project-id (:tokenKey params))
-                               :admin    (cond
-                                           (pos? project-id)
-                                           (projects/is-proj-admin? user-id project-id (:tokenKey params))
-
-                                           (pos? institution-id)
-                                           (institutions/is-inst-admin? user-id institution-id))
-                               :no-cross (no-cross-traffic? headers)
-                               true)
-                           handler
-                           (if (= :redirect auth-action)
-                             (redirect-auth user-id)
-                             forbidden-response))
-                         not-found-page)]
-    (next-handler request)))
