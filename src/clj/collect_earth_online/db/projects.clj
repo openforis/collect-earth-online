@@ -6,7 +6,8 @@
             [clojure.set                                   :as set]
             [clojure.string                                :as str]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
-            [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples zip-shape-files]]
+            [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples zip-shape-files
+                                                                   load-external-data!]]
             [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
             [collect-earth-online.utils.part-utils         :as pu]
             [triangulum.response                           :refer [data-response]]
@@ -948,3 +949,34 @@
        :status 200}
       {:status 500
        :body "Error generating shape files."})))
+
+(defn- create-design-settings-from-file
+  [plot-data]
+  (let [user-plot-assignment (reduce (fn [acc p]
+                                       (update acc (:user p) #(conj % (:visible_id p)))) {} plot-data)
+        qaqc-assignments    (reduce (fn [acc {:keys [reviewers visible_id] :as p}]
+                                      (if (seq (first reviewers))
+                                        (reduce (fn [ac r]
+                                                  (update ac r #(conj % visible_id))) acc reviewers)
+                                        acc)) {} plot-data)]
+
+    {:plotAssignments {:userMethod     "file"
+                       :userAssignment user-plot-assignment}
+     :qaqcAssignments {:qaqcMethod     "file"
+                       :qaqcAssignment qaqc-assignments}}))
+
+(defn check-plot-csv
+  [{:keys [params]}]
+  (let [project-id           (tc/val->int (:projectId params))
+        plot-file-name       (:plotFileName params)
+        plot-file-base64     (:plotFileBase64 params)
+        plots                (map
+                              (fn [r]
+                                (update r :reviewers #(str/split (str/replace % #"\[|\]" "") #"\s+")))
+                              (load-external-data! project-id
+                                                   "csv"
+                                                   plot-file-name
+                                                   plot-file-base64
+                                                   "plot"
+                                                   [:visible_id]))]
+    (data-response (create-design-settings-from-file plots))))
