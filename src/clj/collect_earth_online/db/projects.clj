@@ -954,16 +954,16 @@
   [plot-data]
   (let [user-plot-assignment (reduce (fn [acc p]
                                        (update acc (:user p) #(conj % (:visible_id p)))) {} plot-data)
-        qaqc-assignments    (reduce (fn [acc {:keys [reviewers visible_id] :as p}]
+        qaqc-assignments     (reduce (fn [acc {:keys [reviewers visible_id] :as p}]
                                       (if (seq (first reviewers))
                                         (reduce (fn [ac r]
                                                   (update ac r #(conj % visible_id))) acc reviewers)
                                         acc)) {} plot-data)]
 
-    {:plotAssignments {:userMethod     "file"
-                       :userAssignment user-plot-assignment}
-     :qaqcAssignments {:qaqcMethod     "file"
-                       :qaqcAssignment qaqc-assignments}}))
+    {:plotAssignment {:userMethod     "file"
+                      :userAssignment user-plot-assignment}
+     :qaqcAssignment {:qaqcMethod     "file"
+                      :qaqcAssignment qaqc-assignments}}))
 
 (defn check-plot-csv
   [{:keys [params]}]
