@@ -72,11 +72,13 @@ export default class QualityControl extends React.Component {
               </div>
             )}
             {qaqcMethod === "file" && (
-              <div className="d-flex flex-column">
-                <div className="ml-2">
-                  {`will reinterpret ${fileAssignments[email].length} plots.`}
+              <>
+                <div className="d-flex flex-column">
+                  <div className="ml-2">
+                    {`will reinterpret ${fileAssignments[email].length} plots.`}
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         ))}
@@ -91,7 +93,7 @@ export default class QualityControl extends React.Component {
       ["overlap", "Overlap"],
       ["sme", "SME Verification"],
     ];
-    const { qaqcMethod, percent, smes, timesToReview, reviewers, fileAssignments} = this.getQaqcAssignment();
+    const { qaqcMethod, percent, smes, timesToReview, reviewers } = this.getQaqcAssignment();
     const { userMethod, users } = this.getUserAssignment();
     const { allowDrawnSamples } = this.context;
     const { institutionUserList, totalPlots } = this.props;
@@ -194,11 +196,6 @@ export default class QualityControl extends React.Component {
                   - Each SME will review ~{formatNumberWithCommas(plotsPerSME)} plots.
                 </p>
               )}
-            </>
-          )}
-          {qaqcMethod === "file" && (
-            <>
-              
             </>
           )}
         </div>

@@ -299,8 +299,7 @@ export class PlotDesign extends React.Component {
   };
 
   checkPlotFile = (plotFileName, plotFileBase64) => {
-    const { projectId, designSettings } = this.context.projectId;
-    console.log(this.context.projectId);
+    const { projectId, designSettings } = this.context;
     fetch("/check-plot-csv", {
       method: "POST",
       headers: {
@@ -434,7 +433,8 @@ export class PlotDesign extends React.Component {
   };
 
   render() {
-    const { plotDistribution } = this.context;
+    const { plotDistribution, designSettings } = this.context;
+    const projectDetails = this.context;
     const { totalPlots } = this.props;
     const plotOptions = {
       random: {
@@ -472,14 +472,15 @@ export class PlotDesign extends React.Component {
               <label>Spatial distribution</label>
               <select
                 className="form-control form-control-sm"
-                onChange={(e) => {
-                  this.context.setProjectDetails({
-                    designSettings: { ...designSettings,
-                                      userAssignment: {userMethod: "none"},
-                                      qaqcAssignment: {qaqcMethod: "none"}}
-                  });
-                  return this.setPlotDetails({ plotDistribution: e.target.value })
-                }}
+                onChange={(e) =>
+                  designSettings?.userAssignment?.userMethod === "file" ?
+                    this.setPlotDetails({
+                      plotDistribution: e.target.value,
+                      designSettings: { ...designSettings,
+                                        userAssignment: {userMethod: "none", users: [], percents: []},
+                                        qaqcAssignment: {qaqcMethod: "none", smes: [], overlap: 0}}})
+                    : this.setPlotDetails({ plotDistribution: e.target.value })
+                }
                 value={plotDistribution}
               >
                 {Object.entries(plotOptions).map(([key, options]) => (
