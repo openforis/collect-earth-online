@@ -67,7 +67,7 @@
           (do (call-sql "user_verified" user-id)
               (data-response "You have successfully created an account"))
           (try
-            (send-mail email nil nil "Welcome to CEO!" email-msg "text/plain")
+            (send-mail email nil nil "Welcome to CEO!" email-msg :text)
             (catch Exception _
               (data-response (str "A new user account was created but there was a server error.  Please contact support@sig-gis.com.")))))))))
 
@@ -123,7 +123,7 @@
                           email (get-base-url) email reset-key)]
     (if email
       (try
-        (send-mail email nil nil "Password reset on CEO" email-msg "text/plain")
+        (send-mail email nil nil "Password reset on CEO" email-msg :text)
         (data-response "")
         (catch Exception _
           (data-response (str "A user with the email "
@@ -229,7 +229,7 @@
                                      email institution-role institution-name timestamp)]
         (when-not inst-user-id (call-sql "add_institution_user" institution-id account-id institution-role))
         (try
-          (send-mail email nil nil "User Role Assignment" email-msg "text/plain")
+          (send-mail email nil nil "User Role Assignment" email-msg :text)
           (data-response (str email " has been assigned role " institution-role "."))
           (catch Exception _
             (data-response (str email
@@ -259,7 +259,7 @@
                                       (get-base-url)
                                       institution-id)]
           (try
-            (send-mail admin-emails nil nil "CEO Membership Request" email-msg "text/plain")
+            (send-mail admin-emails nil nil "CEO Membership Request" email-msg :text)
             (data-response (str "Membership has been requested for user " user-email "."))
             (catch Exception _
               (data-response (str user-email

@@ -197,7 +197,7 @@ class AccountForm extends React.Component {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <Account
         accountId={parseInt(params.accountId || session.userId)}
         userId={session.userId}
