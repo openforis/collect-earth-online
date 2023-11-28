@@ -150,7 +150,7 @@ class UserDisagreement extends React.Component {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <UserDisagreement
         plotId={params.plotId}
         projectId={params.projectId}

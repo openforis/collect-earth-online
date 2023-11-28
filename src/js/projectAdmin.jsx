@@ -187,7 +187,7 @@ class Project extends React.Component {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <Project
         institutionId={parseInt(params.institutionId) || -1}
         projectId={parseInt(params.projectId) || -1}
