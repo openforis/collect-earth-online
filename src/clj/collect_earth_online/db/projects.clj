@@ -952,18 +952,24 @@
 
 (defn- create-design-settings-from-file
   [plot-data]
-  (let [user-plot-assignment (reduce (fn [acc p]
-                                       (update acc (:user p) #(conj % (:visible_id p)))) {} plot-data)
-        qaqc-assignments     (reduce (fn [acc {:keys [reviewers visible_id] :as p}]
-                                      (if (seq (first reviewers))
-                                        (reduce (fn [ac r]
-                                                  (update ac r #(conj % visible_id))) acc reviewers)
-                                        acc)) {} plot-data)]
-
-    {:plotAssignment {:userMethod     "file"
-                      :userAssignment user-plot-assignment}
-     :qaqcAssignment {:qaqcMethod     "file"
-                      :qaqcAssignment qaqc-assignments}}))
+  (let [user-plot-assignment  (reduce (fn [acc p]
+                                        (update acc (:user p) #(conj % (:visible_id p)))) {} plot-data)
+        qaqc-assignments      (reduce (fn [acc {:keys [reviewers visible_id]}]
+                                       (if (seq (first reviewers))
+                                         (reduce (fn [ac r]
+                                                   (update ac r #(conj % visible_id))) acc reviewers)
+                                         acc)) {} plot-data)
+        plot-assignment-users (map :user_id (call-sql "get_users_by_emails" (into-array (keys user-plot-assignment))))
+        qaqc-users            (call-sql "get_users_by_emails" (into-array (keys qaqc-assignments)))]
+    {:userAssignment {:userMethod      "file"
+                      :users           plot-assignment-users
+                      :fileAssignments user-plot-assignment
+                      :percents        [0]}
+     :qaqcAssignment {:qaqcMethod      "file"
+                      :fileAssignments qaqc-assignments
+                      :reviewers       qaqc-users
+                      :smes            []
+                      :overlap         0}}))
 
 (defn check-plot-csv
   [{:keys [params]}]

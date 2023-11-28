@@ -298,6 +298,31 @@ export class PlotDesign extends React.Component {
     );
   };
 
+  checkPlotFile = (plotFileName, plotFileBase64) => {
+    const { projectId, designSettings } = this.context.projectId;
+    console.log(this.context.projectId);
+    fetch("/check-plot-csv", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        projectId,
+        plotFileName,
+        plotFileBase64
+      }),
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) =>
+        this.context.setProjectDetails({
+          designSettings: { ...designSettings,
+                            userAssignment: data.userAssignment,
+                            qaqcAssignment: data.qaqcAssignment}
+        })
+      );
+  }
+
   renderFileInput = (fileType) => (
     <div className="mb-3">
       <div style={{ display: "flex" }}>
@@ -314,12 +339,13 @@ export class PlotDesign extends React.Component {
             id="plot-distribution-file"
             onChange={(e) => {
               const file = e.target.files[0];
-              readFileAsBase64Url(file, (base64) =>
-                this.setPlotDetails({
+              readFileAsBase64Url(file, (base64) => {
+                this.checkPlotFile(file.name, base64);
+                return this.setPlotDetails({
                   plotFileName: file.name,
                   plotFileBase64: base64,
                 })
-              );
+              });
             }}
             style={{ display: "none" }}
             type="file"
@@ -446,7 +472,14 @@ export class PlotDesign extends React.Component {
               <label>Spatial distribution</label>
               <select
                 className="form-control form-control-sm"
-                onChange={(e) => this.setPlotDetails({ plotDistribution: e.target.value })}
+                onChange={(e) => {
+                  this.context.setProjectDetails({
+                    designSettings: { ...designSettings,
+                                      userAssignment: {userMethod: "none"},
+                                      qaqcAssignment: {qaqcMethod: "none"}}
+                  });
+                  return this.setPlotDetails({ plotDistribution: e.target.value })
+                }}
                 value={plotDistribution}
               >
                 {Object.entries(plotOptions).map(([key, options]) => (

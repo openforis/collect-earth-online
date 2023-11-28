@@ -439,3 +439,16 @@ RETURNS TABLE (
 
 $$ LANGUAGE SQL; 
   
+-- Returns users by email in bulk
+
+CREATE OR REPLACE FUNCTION get_users_by_emails(_emails text[])
+ RETURNS table (
+    user_id integer,
+    email   text
+ ) AS $$
+
+    SELECT user_uid, email
+    FROM users
+    WHERE email = any(_emails)
+
+$$ LANGUAGE SQL;
