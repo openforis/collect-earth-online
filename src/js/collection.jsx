@@ -1164,7 +1164,7 @@ class SideBar extends React.Component {
     } else if (!allAnswered) {
       alert("All questions must be answered to save the collection.");
       return false;
-    } else if (collectConfidence && !(confidence && confidenceComment)) {
+    } else if (collectConfidence && !confidence) {
       alert("You must input a confidence and write a comment about it before saving the interpretation.");
       return false;
     } else {
