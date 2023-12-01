@@ -10,7 +10,7 @@
 
 ;;; Cache options
 
-(def ^:private cache-max-age     (* 24 60 1000)) ; Once a day
+(def ^:private cache-max-age     (* 24 60 60 1000)) ; Once a day
 (def ^:private nicfi-layer-cache (atom nil))
 (def ^:private cached-time       (atom nil))
 
