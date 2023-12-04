@@ -179,7 +179,7 @@
     {:id            plot_id
      :flagged       flagged
      :flaggedReason (or flagged_reason "")
-     :confidence    (or confidence 100)
+     :confidence    confidence
      :visibleId     visible_id
      :plotGeom      plot_geom
      :extraPlotInfo (tc/jsonb->clj extra_plot_info {})
@@ -256,22 +256,23 @@
 ;;;
 
 (defn add-user-samples [{:keys [params session]}]
-  (let [project-id       (tc/val->int (:projectId params))
-        plot-id          (tc/val->int (:plotId params))
-        session-user-id  (:userId session -1)
-        current-user-id  (tc/val->int (:currentUserId params -1))
-        review-mode?     (and (tc/val->bool (:inReviewMode params))
+  (let [project-id         (tc/val->int (:projectId params))
+        plot-id            (tc/val->int (:plotId params))
+        session-user-id    (:userId session -1)
+        current-user-id    (tc/val->int (:currentUserId params -1))
+        review-mode?       (and (tc/val->bool (:inReviewMode params))
                               (pos? current-user-id)
                               (is-proj-admin? session-user-id project-id nil))
-        confidence       (tc/val->int (:confidence params))
-        collection-start (tc/val->long (:collectionStart params))
-        user-samples     (:userSamples params)
-        user-images      (:userImages params)
-        new-plot-samples (:newPlotSamples params)
-        user-id          (if review-mode? current-user-id session-user-id)
+        confidence         (tc/val->int (:confidence params))
+        confidence-comment (:confidenceComment params)
+        collection-start   (tc/val->long (:collectionStart params))
+        user-samples       (:userSamples params)
+        user-images        (:userImages params)
+        new-plot-samples   (:newPlotSamples params)
+        user-id            (if review-mode? current-user-id session-user-id)
         ;; Samples created in the UI have IDs starting with 1. When the new sample is created
         ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
-        id-translation   (when new-plot-samples
+        id-translation     (when new-plot-samples
                            (call-sql "delete_user_plot_by_plot" plot-id user-id)
                            (call-sql "delete_samples_by_plot" plot-id)
                            (reduce (fn [acc {:keys [id visibleId sampleGeom]}]
@@ -288,6 +289,7 @@
                 plot-id
                 user-id
                 (when (pos? confidence) confidence)
+                (when confidence-comment confidence-comment)
                 (when-not review-mode? (Timestamp. collection-start))
                 (tc/clj->jsonb (set/rename-keys user-samples id-translation))
                 (tc/clj->jsonb (set/rename-keys user-images id-translation)))

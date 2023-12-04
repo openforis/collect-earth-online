@@ -277,7 +277,7 @@
     (create-shape-files folder-name "sample" project-id)
     (create-data-file folder-name project-data)
     (sh-wrapper tmp-dir {}
-                (str "7z a " folder-name "/files" ".zip " folder-name "/*"))
+                (str "7z a " folder-name "files" ".zip " folder-name "*"))
     (str folder-name "files.zip")))
 
 (defn zip-shape-files
@@ -289,3 +289,10 @@
     (sh-wrapper tmp-dir {}
                 (str "7z a " folder-name "/files" ".zip " folder-name "/*"))
     (str folder-name "files.zip")))
+
+(defn unzip-project
+  "Unzips a zip file on /tmp folder."
+  [zip-file-name]
+  (let [output-dir (str tmp-dir "/"
+                        (first (clojure.string/split zip-file-name #"\.")))]
+    (sh-wrapper tmp-dir {} (str "unzip " zip-file-name " -d " output-dir))))

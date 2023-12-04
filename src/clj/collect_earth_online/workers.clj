@@ -19,7 +19,7 @@
             file (reverse (file-seq d))]
       (io/delete-file file))))
 
-(defn- start-clean-up-service! []
+(defn start-clean-up-service! []
   (log-str "Starting temp file removal service.")
   (future
     (while true

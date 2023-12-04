@@ -255,10 +255,15 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION lock_plot(_plot_id integer, _user_id integer, _lock_end timestamp)
  RETURNS VOID AS $$
 
-    INSERT INTO plot_locks
-        (user_rid, plot_rid, lock_end)
-    VALUES
-        (_user_id, _plot_id, _lock_end)
+ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM plot_rid where plot_rid = _plot_id) THEN
+ 
+       INSERT INTO plot_locks
+           (user_rid, plot_rid, lock_end)
+       VALUES
+           (_user_id, _plot_id, _lock_end)
+    END IF;
+ END
 
 $$ LANGUAGE SQL;
 
@@ -419,6 +424,7 @@ CREATE OR REPLACE FUNCTION upsert_user_samples(
     _plot_id             integer,
     _user_id             integer,
     _confidence          integer,
+    _confidence_comment  text,
     _collection_start    timestamp,
     _samples             jsonb,
     _images              jsonb
@@ -426,12 +432,13 @@ CREATE OR REPLACE FUNCTION upsert_user_samples(
 
     WITH user_plot_table AS (
         INSERT INTO user_plots AS up
-            (user_rid, plot_rid, confidence, collection_start, collection_time)
+            (user_rid, plot_rid, confidence, confidence_comment ,collection_start, collection_time)
         VALUES
-            (_user_id, _plot_id, _confidence, _collection_start, Now())
+            (_user_id, _plot_id, _confidence, _confidence_comment , _collection_start, Now())
         ON CONFLICT (user_rid, plot_rid) DO
             UPDATE
             SET confidence = coalesce(excluded.confidence, up.confidence),
+                confidence_comment = _confidence_comment,
                 collection_start = coalesce(excluded.collection_start, up.collection_start),
                 collection_time = CASE WHEN excluded.collection_start IS NOT NULL THEN localtimestamp ELSE up.collection_time END,
                 flagged = FALSE,

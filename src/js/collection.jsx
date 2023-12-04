@@ -734,6 +734,9 @@ class Collection extends React.Component {
           confidence: this.state.currentProject.projectOptions.collectConfidence
             ? this.state.currentPlot.confidence
             : -1,
+          confidenceComment: this.state.currentProject.projectOptions.collectConfidence
+            ? this.state.currentPlot.confidenceComment
+            : null,
           collectionStart: this.state.collectionStart,
           userSamples: this.state.userSamples,
           userImages: this.state.userImages,
@@ -970,6 +973,9 @@ class Collection extends React.Component {
   setFlaggedReason = (flaggedReason) =>
     this.setState({ currentPlot: { ...this.state.currentPlot, flaggedReason } });
 
+  setConfidenceComment = (confidenceComment) =>
+    this.setState({ currentPlot: { ...this.state.currentPlot, confidenceComment } });
+
   render() {
     return (
       <div className="row" style={{ height: "-webkit-fill-available" }}>
@@ -1014,6 +1020,7 @@ class Collection extends React.Component {
           surveyQuestions={this.state.currentProject.surveyQuestions}
           toggleQuitModal={this.toggleQuitModal}
           userName={this.props.userName}
+          collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
         >
           <PlotNavigation
             collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
@@ -1071,6 +1078,7 @@ class Collection extends React.Component {
               answerMode={this.state.answerMode}
               collectConfidence={this.state.currentProject.projectOptions.collectConfidence}
               confidence={this.state.currentPlot.confidence}
+              confidenceComment={this.state.currentPlot.confidenceComment}
               flagged={this.state.currentPlot.flagged}
               flaggedReason={this.state.currentPlot.flaggedReason}
               getSelectedSampleIds={this.getSelectedSampleIds}
@@ -1085,6 +1093,7 @@ class Collection extends React.Component {
               }
               setAnswerMode={this.setAnswerMode}
               setConfidence={this.setConfidence}
+              setConfidenceComment={this.setConfidenceComment}
               setCurrentValue={this.setCurrentValue}
               setFlaggedReason={this.setFlaggedReason}
               setSelectedQuestion={this.setSelectedQuestion}
@@ -1127,7 +1136,8 @@ function ImageAnalysisPane({ imageryAttribution }) {
 
 class SideBar extends React.Component {
   checkCanSave = () => {
-    const { answerMode, currentPlot, inReviewMode, surveyQuestions } = this.props;
+    const { answerMode, currentPlot, inReviewMode, surveyQuestions, collectConfidence } = this.props;
+    const { confidence, confidenceComment } = currentPlot;
     const visibleSurveyQuestions = filterObject(surveyQuestions, ([_id, val]) => val.hideQuestion != true);
     const noneAnswered = everyObject(visibleSurveyQuestions, ([_id, sq]) => safeLength(sq.answered) === 0);
     const hasSamples = safeLength(currentPlot.samples) > 0;
@@ -1153,6 +1163,9 @@ class SideBar extends React.Component {
       return false;
     } else if (!allAnswered) {
       alert("All questions must be answered to save the collection.");
+      return false;
+    } else if (collectConfidence && !confidence) {
+      alert("You must input the confidence before saving the interpretation.");
       return false;
     } else {
       return true;
@@ -1585,7 +1598,13 @@ class ImageryOptions extends React.Component {
     super(props);
     this.state = {
       showImageryOptions: true,
+      enableGrid: false,
     };
+  }
+
+  enableGrid() {
+    this.setState({ enableGrid: !this.state.enableGrid });
+    return mercator.addGridLayer(this.props.mapConfig, !this.state.enableGrid);
   }
 
   render() {
@@ -1658,6 +1677,16 @@ class ImageryOptions extends React.Component {
                 }[imagery.sourceConfig.type]
               );
             })}
+          <input
+            checked={this.state.enableGrid}
+            className="form-check-input"
+            id="grid-check"
+            onChange={() => this.enableGrid()}
+            type="checkbox"
+          />
+          <label className="form-check-label" htmlFor="grid-check">
+            Enable Map Grid
+          </label>
         </div>
       </div>
     );

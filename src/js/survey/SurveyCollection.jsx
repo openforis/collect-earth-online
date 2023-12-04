@@ -625,6 +625,7 @@ export default class SurveyCollection extends React.Component {
                 ? this.renderQuestions()
                 : this.renderDrawTools()}
               {this.props.collectConfidence && !this.props.flagged && (
+                <>
                 <div
                   className="row mb-3 mx-1 slide-container py-3"
                   style={{
@@ -642,6 +643,22 @@ export default class SurveyCollection extends React.Component {
                   />
                   <label>Plot Confidence: {this.props.confidence}</label>
                 </div>
+                <div
+                  className="row mb-3 mx-1 slide-container py-3"
+                  style={{
+                    borderRadius: "6px",
+                    boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.15)",
+                  }}
+                >
+                  <label>Comment on the confidence (optional):</label>
+                  <textarea
+                    className="form-control"
+                    id="confidenceComment"
+                    onChange={(e) => this.props.setConfidenceComment(e.target.value)}
+                    value={this.props.confidenceComment}
+                  />
+                </div>
+                </>
               )}
               {this.renderFlagClearButtons()}
             </>

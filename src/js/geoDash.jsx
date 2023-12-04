@@ -28,6 +28,8 @@ class Geodash extends React.Component {
       initCenter: null,
       initZoom: null,
       vectorSource: null,
+      toggleSamples: Boolean(props.plotSamples)
+
     };
   }
 
@@ -48,28 +50,44 @@ class Geodash extends React.Component {
       });
   }
 
+  
+
   /// API
 
   getInstitutionImagery = () =>
-    fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`).then((response) =>
-      response.ok ? response.json() : Promise.reject(response)
-    );
+  fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`).then((response) =>
+    response.ok ? response.json() : Promise.reject(response)
+  );
 
   getWidgetsByProjectId = () =>
-    fetch(`/geo-dash/get-project-widgets?projectId=${this.props.projectId}`).then((response) =>
-      response.ok ? response.json() : Promise.reject(response)
-    );
+  fetch(`/geo-dash/get-project-widgets?projectId=${this.props.projectId}`).then((response) =>
+    response.ok ? response.json() : Promise.reject(response)
+  );
 
   getFeatures = async () => {
     const { plotShape, radius, center, plotId } = this.props;
-    if (plotShape === "polygon") {
-      const plotJsonObject = await fetch(`/get-plot-sample-geom?plotId=${plotId}`).then(
-        (response) => (response.ok ? response.json() : Promise.reject(response))
-      );
+    const {toggleSamples} = this.state;
+    const plotJsonObject = await fetch(`/get-plot-sample-geom?plotId=${plotId}`).then(
+      (response) => (response.ok ? response.json() : Promise.reject(response))
+    );
+
+    const samples = toggleSamples ?
+          (plotJsonObject.sampleGeoms || [])
+	  .filter ((e) => e)
+	  .map ((geom)=>
+	    new Feature (
+	      new Circle (
+		projTransform (JSON.parse(geom).coordinates, "EPSG:4326", "EPSG:3857"),
+		Number(1))))
+          : [];
+    
+    const polygonFeatures = () => {
       return [plotJsonObject.plotGeom, ...(plotJsonObject.sampleGeoms || [])]
         .filter((e) => e)
         .map((geom) => new Feature({ geometry: mercator.parseGeoJson(geom, true) }));
-    } else if (plotShape === "square") {
+    };
+    
+    const squareFeatures = () => {
       const point = new Point(
         projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857")
       );
@@ -86,21 +104,30 @@ class Geodash extends React.Component {
           ])
         ),
       ];
-    } else if (plotShape === "circle") {
+    };
+    
+    const circleFeatures = () => {
       return [
         new Feature(
           new Circle(
             projTransform(JSON.parse(center).coordinates, "EPSG:4326", "EPSG:3857"),
             Number(radius)
           )
-        ),
+        )
       ];
-    } else {
-      return [];
-    }
+    };
+    
+    return [
+      ...((plotShape === "polygon") ? polygonFeatures() : []),
+      ...((plotShape === "square")  ? squareFeatures() : []),
+      ...((plotShape === "circle")  ? circleFeatures() : []),
+      ... (this.state.toggleSamples ? samples : [])
+    ];
   };
 
-  getVectorSource = async () => new Vector({ features: await this.getFeatures() });
+  getVectorSource = async () => 
+  new Vector({ features: await this.getFeatures() });
+
 
   /// State
 
@@ -139,48 +166,78 @@ class Geodash extends React.Component {
     ];
   };
 
+  
+  togglePlotSamples = () => {
+    window.open(
+      "/geo-dash?" +
+        `institutionId=${this.props.institution}` +
+        `&projectId=${this.props.projectId}` +
+        `&visiblePlotId=${this.props.visiblePlotId}` +
+        `&plotId=${this.props.plotId}` +
+        `&plotExtent=${this.props.plotExtent}` +
+        (this.props.plotSamples ? '' : '&plotSamples=${true}') +
+        `&plotShape=${this.props.plotShape}` +
+        `&center=${this.props.center}` +
+        `&radius=${this.props.radius}`,
+      `_geo-dash_${this.props.projectId}`);
+
+  } 
   /// Render
 
   render() {
-    const { widgets } = this.state;
+    const { widgets, toggleSamples} = this.state;
+
     return (
-      <div
-        style={{
-          margin: ".75rem 1rem 3rem",
-          textAlign: "center",
-          display: "grid",
-          gridTemplateColumns: "repeat(12, 1fr)",
-          gridAutoRows: `${gridRowHeight}px`,
-          gap: ".5rem",
-        }}
-      >
-        {widgets === null ? (
-          <div style={{ gridArea: "2 / 2 / span 2 / span 10" }}>
-            <h1>Retrieving Geo-Dash configuration for this project</h1>
-          </div>
-        ) : widgets.length > 0 ? (
-          widgets.map((widget, idx) => (
-            <WidgetGridItem
-              key={widget.id}
-              idx={idx}
-              imageryList={this.state.imageryList}
-              initCenter={this.mapCenter}
-              mapCenter={this.state.mapCenter}
-              mapZoom={this.state.mapZoom}
-              plotExtentPolygon={this.extentToPolygon(this.props.plotExtent)}
-              resetCenterAndZoom={this.resetCenterAndZoom}
-              setCenterAndZoom={this.setCenterAndZoom}
-              vectorSource={this.state.vectorSource}
-              visiblePlotId={this.props.visiblePlotId}
-              widget={widget}
-            />
-          ))
-        ) : (
-          <div style={{ gridArea: "2 / 2 / span 2 / span 10" }}>
-            <h1>There are no Geo-Dash widgets for this project</h1>
-          </div>
-        )}
-      </div>
+      <React.Fragment>
+        <button
+          style={{
+            margin: "auto 1rem"
+          }}
+          className={toggleSamples ? "btn btn-outline-red btn-sm" : "btn btn-outline-lightgreen btn-sm"} 
+          onClick={this.togglePlotSamples}
+          type="button"
+        >
+          {this.state.toggleSamples ? "Hide" : "Show"} Plot Samples
+        </button>
+        <div
+          style={{
+            margin: ".75rem 1rem 3rem",
+            textAlign: "center",
+            display: "grid",
+            gridTemplateColumns: "repeat(12, 1fr)",
+            gridAutoRows: `${gridRowHeight}px`,
+            gap: ".5rem",
+          }}
+        >
+
+          {widgets === null ? (
+            <div style={{ gridArea: "2 / 2 / span 2 / span 10" }}>
+              <h1>Retrieving Geo-Dash configuration for this project</h1>
+            </div>
+          ) : widgets.length > 0 ? (
+            widgets.map((widget, idx) => (
+              <WidgetGridItem
+                key={widget.id}
+                idx={idx}
+                imageryList={this.state.imageryList}
+                initCenter={this.mapCenter}
+                mapCenter={this.state.mapCenter}
+                mapZoom={this.state.mapZoom}
+                plotExtentPolygon={this.extentToPolygon(this.props.plotExtent)}
+                resetCenterAndZoom={this.resetCenterAndZoom}
+                setCenterAndZoom={this.setCenterAndZoom}
+                vectorSource={this.state.vectorSource}
+                visiblePlotId={this.props.visiblePlotId}
+                widget={widget}
+              />
+            ))
+          ) : (
+            <div style={{ gridArea: "2 / 2 / span 2 / span 10" }}>
+              <h1>There are no Geo-Dash widgets for this project</h1>
+            </div>
+          )}
+        </div>
+      </React.Fragment>
     );
   }
 }

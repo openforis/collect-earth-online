@@ -541,6 +541,7 @@ a:hover {
 }
 #lPanel ul {
   padding-left: 0;
+  margin-left: 5px;
   list-style: none;
   margin-bottom: 0;
 }
@@ -859,5 +860,7 @@ input:checked + .switch-slider:before {
 }
 
 body {
-    padding-top:60px;
+    margin-left: 10px;
+    margin-top: 60px;
+    overflow-x: hidden;
 }

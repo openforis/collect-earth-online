@@ -7,12 +7,16 @@
  :triangulum.server/mode              "dev"
  :triangulum.server/log-dir           "logs"
 
- :triangulum.server/handler           collect-earth-online.routing/authenticated-routing-handler
+ :triangulum.server/handler           triangulum.handler/authenticated-routing-handler
  :triangulum.server/keystore-file     "keystore.pkcs12"
  :triangulum.server/keystore-type     "pkcs12"
  :triangulum.server/keystore-password "foobar"
 
  ;; handler (server)
+ :triangulum.handler/not-found-handler   triangulum.views/not-found-page
+ :triangulum.handler/redirect-handler    collect-earth-online.handlers/redirect-handler
+ :triangulum.handler/route-authenticator collect-earth-online.handlers/route-authenticator
+ :triangulum.handler/routing-tables      [collect-earth-online.routing/routes]
  :triangulum.handler/session-key           "changeme12345678" ; must be 16 characters
  :triangulum.handler/bad-tokens            #{".php"}
  :triangulum.handler/private-request-keys  #{:base64Image :plotFileBase64 :sampleFileBase64}
