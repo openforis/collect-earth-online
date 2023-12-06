@@ -126,8 +126,7 @@ export default class AssignPlots extends React.Component {
       </div>
       )}
     </div>
-    )
-  }
+    )}
 
   render() {
     const methods = [
