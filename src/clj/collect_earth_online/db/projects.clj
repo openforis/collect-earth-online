@@ -987,11 +987,11 @@
         qaqc-users       (when (seq qaqc-assignments)
                            (call-sql "get_users_by_emails" (into-array (keys qaqc-assignments))))]
     (if file-assignment?
-      {:qaqcMethod "file"
+      {:qaqcMethod      "file"
        :fileAssignments qaqc-assignments
-       :reviewers qaqc-users
-       :smes []
-       :overlap 0}
+       :reviewers       qaqc-users
+       :smes            []
+       :overlap         0}
       {:qaqcMethod "none"
        :smes       []
        :overlap    0})))
@@ -1020,9 +1020,9 @@
                               plots)]
     (if file-assignment?
       (data-response (create-design-settings-from-file updated-plots))
-      (data-response {:userAssignment {:userMethod "none"
-                                       :users      []
-                                       :percents   [0]}
-                      :qaqcAssignment {:qaqcMethod "none"
-                                       :smes       []
-                                       :overlap    0}}))))
+      (data-response  {:userAssignment {:userMethod "none"
+                                        :users      []
+                                        :percents   [0]}
+                       :qaqcAssignment {:qaqcMethod "none"
+                                        :smes       []
+                                        :overlap    0}}))))
