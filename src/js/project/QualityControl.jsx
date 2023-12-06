@@ -41,7 +41,7 @@ export default class QualityControl extends React.Component {
     const { fileAssignments } = this.getQaqcAssignment();
     return (
       <div>
-        {users.map(({ id, email }) => (
+        {users?.map(({ id, email }) => (
           <div key={id} className="form-row mt-1">
             <div className="col-6">
               <div

@@ -600,3 +600,16 @@ CREATE OR REPLACE FUNCTION get_sample_shapes(_project_id integer)
        WHERE pl.project_rid = _project_id)
 
 $$ LANGUAGE SQL;
+
+-- Returns plots by a list of visible_ids
+
+CREATE OR REPLACE FUNCTION get_plots_by_visible_id(_project_id integer, _visible_ids bigint[])
+ RETURNS table (
+    plot_id integer
+ ) AS $$
+
+    SELECT plot_uid
+    FROM plots
+    WHERE visible_id = any(_visible_ids) and project_rid = _project_id
+
+$$ LANGUAGE SQL;
