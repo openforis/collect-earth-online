@@ -89,9 +89,9 @@ export default class QualityControl extends React.Component {
   render() {
     const qualityMethods = [
       ["none", "None"],
-      ["file", "File"],
       ["overlap", "Overlap"],
       ["sme", "SME Verification"],
+      ["file", "File", "disabled"],
     ];
     const { qaqcMethod, percent, smes, timesToReview, reviewers } = this.getQaqcAssignment();
     const { userMethod, users } = this.getUserAssignment();
@@ -104,7 +104,6 @@ export default class QualityControl extends React.Component {
     const assignedSMEs = institutionUserList.filter(({ id }) => smes.includes(id));
     const plotsToReview = Math.round(totalPlots * (percent / 100));
     const plotsPerSME = Math.round(plotsToReview / smes.length);
-    console.log(this.context);
 
     return (
       <div className="col-6">

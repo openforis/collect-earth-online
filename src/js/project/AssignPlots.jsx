@@ -132,9 +132,9 @@ export default class AssignPlots extends React.Component {
   render() {
     const methods = [
       ["none", "No assignments"],
-      ["file", "File"],
       ["equal", "Equal assignments"],
       ["percent", "Percentage of plots"],
+      ["file", "File", "disabled"],
     ];
     const { institutionUserList, totalPlots } = this.props;
     const { plotDistribution } = this.context;
