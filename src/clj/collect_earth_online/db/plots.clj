@@ -228,7 +228,7 @@
                                          (->> sorted-plots
                                               (first)
                                               (second)
-                                              (when-not (= navigation-mode "assigned"))))
+                                              (when-not (= navigation-mode "natural"))))
                           "previous" (or (->> sorted-plots
                                               (sort-by first #(compare %2 %1))
                                               (some (fn [[visible-id plots]]
