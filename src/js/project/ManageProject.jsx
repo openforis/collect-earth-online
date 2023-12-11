@@ -339,6 +339,12 @@ class ProjectManagement extends React.Component {
               type="button"
               value="Download Plot Data"
             />
+            <input
+              className="btn btn-outline-lightgreen btn-sm w-100"
+              onClick={() => js.alert("copying project...")}
+              type="button"
+              value="Copy the Entire Project"
+            />
             {qaqcMethod !== "none" && (
               <input
                 className="btn btn-outline-lightgreen btn-sm w-100"
