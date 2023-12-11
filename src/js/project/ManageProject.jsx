@@ -341,7 +341,7 @@ class ProjectManagement extends React.Component {
             />
             <input
               className="btn btn-outline-lightgreen btn-sm w-100"
-              onClick={() => js.alert("copying project...")}
+              onClick={() => window.alert("copying project...")}
               type="button"
               value="Copy the Entire Project"
             />
