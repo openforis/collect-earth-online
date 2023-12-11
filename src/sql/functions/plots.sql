@@ -256,13 +256,10 @@ CREATE OR REPLACE FUNCTION lock_plot(_plot_id integer, _user_id integer, _lock_e
  RETURNS VOID AS $$
 
  BEGIN
-    IF NOT EXISTS (SELECT 1 FROM plot_rid where plot_rid = _plot_id) THEN
- 
        INSERT INTO plot_locks
            (user_rid, plot_rid, lock_end)
        VALUES
            (_user_id, _plot_id, _lock_end)
-    END IF;
  END
 
 $$ LANGUAGE SQL;

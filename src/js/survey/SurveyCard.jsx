@@ -63,7 +63,7 @@ export default function SurveyCard({ cardNumber, editMode, surveyQuestionId, top
                 style={{ opacity: surveyQuestionId === topLevelNodeIds[0] ? "0.25" : "1.0" }}
                 type="button"
               >
-                <SvgIcon icon="upCaret" size="1rem" />
+                <SvgIcon icon="upCaret" size="1rem" transform="rotate(180deg)"/>
               </button>
               <button
                 className="btn btn-outline-lightgreen my-1 px-3 py-0"

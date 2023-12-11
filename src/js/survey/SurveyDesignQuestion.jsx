@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 
 import AnswerDesigner from "./AnswerDesigner";
 import BulkAddAnswers from "./BulkAddAnswers";
@@ -6,7 +6,14 @@ import SurveyRule from "./SurveyRule";
 import SvgIcon from "../components/svg/SvgIcon";
 
 import { removeEnumerator } from "../utils/generalUtils";
-import { mapObjectArray, filterObject, lengthObject, findObject } from "../utils/sequence";
+import {
+  mapObjectArray,
+  filterObject,
+  lengthObject,
+  findObject,
+  last,
+  mapObject
+} from "../utils/sequence";
 import { ProjectContext } from "../project/constants";
 
 export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQuestionId }) {
@@ -19,9 +26,12 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
     ([key, _val]) => Number(key)
   );
 
-  const [newQuestionText, setText] = useState(surveyQuestion.question);
   const [hideQuestion, setHideQuestion] = useState(surveyQuestion.hideQuestion);
   const [showBulkAdd, setBulkAdd] = useState(false);
+  const [newQuestionText, setText] = useState(surveyQuestion.question);
+
+  const getSameLevelQuestions = () => filterObject(surveyQuestions, ([_id, sq]) =>
+    sq.parentQuestionId === surveyQuestion.parentQuestionId);
 
   const getChildQuestionIds = (questionId) => {
     const childQuestionIds = mapObjectArray(
@@ -39,7 +49,104 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
       ? 1
       : (dataType || "").toLowerCase() === "boolean"
       ? 2
-      : 1000);
+     : 1000);
+
+  const isFirst = (questionId) => parseInt(Object.keys(getSameLevelQuestions())[0]) === questionId;
+  const isLast = (questionId) =>  parseInt(last(Object.keys(getSameLevelQuestions()))) === questionId;
+
+  const updateRuleSingleQuestion = (rule, questionId, swappedQuestionId) => {
+    const qId = (rule.questionId === questionId) ?
+          swappedQuestionId : (rule.questionId === swappedQuestionId) ?
+          questionId : rule.questionId
+    return {...rule,
+            questionId: qId}
+  }
+
+  const updateRuleEnumQuestions = (rule, questionId, swappedQuestionId) => {
+    const qId1 = (rule.questionId1 === questionId) ?
+          swappedQuestionId : (rule.questionId1 === swappedQuestionId) ?
+          questionId : rule.questionId1
+    const qId2 = (rule.questionId2 === questionId) ?
+          swappedQuestionId : (rule.questionId2 === swappedQuestionId) ?
+          questionId : rule.questionId2
+    return {...rule,
+            questionId1: qId1,
+            questionId2: qId2}
+  }
+
+  const updateRuleListQuestions = (rule, questionId, swappedQuestionId) => {
+    const updatedQuestionIds = rule.questionIds.map((qId) => qId === swappedQuestionId ?
+                                                    questionId : qId === questionId ?
+                                                    swappedQuestionId : qId);
+    return {...rule,
+            questionIds: updatedQuestionIds}
+  }
+
+  const updateRuleEnumListQuestions = (rule, questionId, swappedQuestionId) => {
+    const updatedQuestionIds1 = rule.questionIds1.map((qId) => qId === swappedQuestionId ?
+                                                      questionId : qId === questionId ?
+                                                      swappedQuestionId : qId);
+    const updatedQuestionIds2 = rule.questionIds2.map((qId) => qId === swappedQuestionId ?
+                                                      questionId : qId === questionId ?
+                                                      swappedQuestionId : qId);
+    return {...rule,
+            questionIds1: updatedQuestionIds1,
+            questionIds2: updatedQuestionIds2,}
+  }
+
+  const updateRuleMultipleQuestions = (rule, questionId, swappedQuestionId) => {
+    const updatedQuestionsMap = mapObject(rule.answers, ([k,v]) =>
+      [k === swappedQuestionId ? questionId : k === questionId ? swappedQuestionId : k,
+       v]);
+    const qId = (rule.incompatQuestionId === questionId) ?
+          swappedQuestionId : (rule.incompatQuestionId === swappedQuestionId) ?
+          questionId : rule.incompatQuestionId
+
+    return {...rule,
+            answers: updatedQuestionsMap,
+            incompatQuestionId: qId}
+  }
+
+  const updateRules = (questionId, swappedQuestionId) => {
+    const ruleUpdateFunctions = {
+      "text-match": updateRuleSingleQuestion,
+      "numeric-range": updateRuleSingleQuestion,
+      "sum-of-answers": updateRuleListQuestions,
+      "matching-sums": updateRuleEnumListQuestions,
+      "incompatible-answers": updateRuleEnumQuestions,
+      "multiple-incompatible-answers": updateRuleMultipleQuestions,
+    };
+    const newRules = surveyRules.map((rule) =>
+      ruleUpdateFunctions[rule.ruleType](rule, questionId, swappedQuestionId)
+    );
+    return newRules;
+  }
+
+  const reorderQuestions = (questionId, direction) => {
+    //
+    const qId = questionId.toString();
+    // get questions that are in the same level as this one as a map.
+    const questions = getSameLevelQuestions();
+    // create a list of questionIds and retrieve the idx of the one in hand
+    const questionsIds = Object.keys(questions);
+    const idx = questionsIds.indexOf(qId);
+    const questionToBeSwapped = questions[questionId];
+    // grab question that will be swapped with this one.
+    const swappedQuestionId = questionsIds[idx + direction];
+    const swappedQuestion = questions[swappedQuestionId];
+
+    const newRules = updateRules(parseInt(questionId), parseInt(swappedQuestionId));
+    const newQuestions = {...questions,
+                          [qId]: {...swappedQuestion, question: newQuestionText },
+                          [swappedQuestionId]: {...questionToBeSwapped, question: swappedQuestion.question},
+                         }
+    const updatedProjectDetails = {
+      surveyQuestions: {...surveyQuestions, ...newQuestions},
+      surveyRules: newRules,
+    }
+    setProjectDetails(updatedProjectDetails);
+    return null;
+  }
 
   const removeQuestion = () => {
     const childQuestionIds = getChildQuestionIds(surveyQuestionId);
@@ -72,7 +179,6 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
       ));
     return matchingRule;
   }
-
 
   const updateQuestion = () => {
     const questionHasRules = checkQuestionRules(surveyQuestionId);
@@ -146,11 +252,40 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
                   autoComplete="off"
                   maxLength="210"
                   onChange={(e) => setText(e.target.value)}
-                  value={newQuestionText}
+                  value={surveyQuestion.question}
                 />
               </>
             )}
-          </div>
+            {surveyQuestion.parentQuestionId > 0 && (
+              <>
+                <div className="col-2 d-flex pr-1 justify-content-end">
+                  <button
+                    className="btn btn-outline-lightgreen my-1 px-3 py-0"
+                    disabled={isFirst(surveyQuestionId)}
+                    onClick={() => {
+                      return reorderQuestions(surveyQuestionId, -1);
+                      }}
+                    style={{ opacity: isFirst(surveyQuestionId) ? "0.25" : "1.0" }}
+                    type="button"
+                  >
+                    <SvgIcon icon="upCaret" size="1rem" transform="rotate(180deg)"/>
+                  </button>
+                  <button
+                    className="btn btn-outline-lightgreen my-1 px-3 py-0"
+                    disabled={isLast(surveyQuestionId)}
+                    onClick={() => {
+                      return reorderQuestions(surveyQuestionId, +1);
+                    }}
+                    style={{ opacity: isLast(surveyQuestionId) ? "0.25" : "1.0" }}
+                    type="button"
+                  >
+                  <SvgIcon icon="downCaret" size="1rem" />
+                  </button>
+                </div>
+              </>
+            )}
+        </div>
+
           <div className="pb-1">
             <ul className="mb-1 pl-3">
               <li>
