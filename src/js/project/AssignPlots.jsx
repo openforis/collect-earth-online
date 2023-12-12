@@ -58,7 +58,9 @@ export default class AssignPlots extends React.Component {
     this.setUserAssignment({ percents });
   };
 
-  renderUserRow = (idx, id, email, userMethod, percent = 0, totalPlots = 0) => (
+  renderUserRow = (idx, id, email, userMethod, percent = 0, totalPlots = 0) => {
+    const { fileAssignments } = this.getUserAssignment();
+    return (
     <div key={id} className="form-row mt-1">
       <div className="col-5">
         {userMethod === "percent" && (
@@ -81,6 +83,19 @@ export default class AssignPlots extends React.Component {
             </div>
           </div>
         )}
+        {userMethod === "file" && (
+          <div className="d-flex flex-column">
+            <div className="ml-2">
+              <input
+                disabled={true}
+                className="form-control form-control-sm"
+                style={{ display: "inline-block", width: "3rem" }}
+                value={fileAssignments[email].length}
+                type="number"
+              /> plots assigned to
+            </div>
+          </div>
+        )}
       </div>
       <div className="col-6">
         <div
@@ -98,6 +113,7 @@ export default class AssignPlots extends React.Component {
           {email}
         </div>
       </div>
+      {userMethod !== "file" && (
       <div className="col-1">
         <button
           className="btn btn-sm btn-danger"
@@ -108,14 +124,16 @@ export default class AssignPlots extends React.Component {
           <SvgIcon icon="minus" size="0.9rem" />
         </button>
       </div>
+      )}
     </div>
-  );
+    )}
 
   render() {
     const methods = [
       ["none", "No assignments"],
       ["equal", "Equal assignments"],
       ["percent", "Percentage of plots"],
+      ["file", "File", "disabled"],
     ];
     const { institutionUserList, totalPlots } = this.props;
     const { plotDistribution } = this.context;
@@ -130,11 +148,12 @@ export default class AssignPlots extends React.Component {
     const runningTotalPercents = sumArray(percents);
 
     return (
-      <div className="col-6">
+      <div disabled className="col-6">
         <h3 className="mb-3">Assign Plots</h3>
         <div className="ml-3">
           <div className="form-row">
             <Select
+              disabled={userMethod === "file"}
               id="user-assignment"
               label="User Assignment"
               onChange={(e) => this.setMethod(e.target.value)}
@@ -144,12 +163,14 @@ export default class AssignPlots extends React.Component {
           </div>
           {userMethod !== "none" && (
             <div className="mt-3">
+              {(userMethod === "equal" || userMethod === "percent") && (
               <UserSelect
                 addUser={this.addUser}
                 id="assigned-users"
                 label="Assigned Users"
                 possibleUsers={possibleUsers}
               />
+              )}
               <div>
                 {users.map((userId, idx) => {
                   const { email } = institutionUserList.find(({ id }) => userId === id) || {};
