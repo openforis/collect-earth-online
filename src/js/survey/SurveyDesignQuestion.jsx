@@ -35,7 +35,6 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
     setHideQuestion(surveyQuestions[surveyQuestionId].hideQuestion);
   }, [surveyQuestionId, surveyQuestions]);
 
-
   const getSameLevelQuestions = () => filterObject(surveyQuestions, ([_id, sq]) =>
     sq.parentQuestionId === surveyQuestion.parentQuestionId);
 
