@@ -650,7 +650,7 @@ export default class SurveyCollection extends React.Component {
                     boxShadow: "0 0 2px 1px rgba(0, 0, 0, 0.15)",
                   }}
                 >
-                  <label>Comment on the confidence:</label>
+                  <label>Comment on the confidence (optional):</label>
                   <textarea
                     className="form-control"
                     id="confidenceComment"

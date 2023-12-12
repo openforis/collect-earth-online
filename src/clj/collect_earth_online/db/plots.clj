@@ -179,7 +179,7 @@
     {:id            plot_id
      :flagged       flagged
      :flaggedReason (or flagged_reason "")
-     :confidence    (or confidence 100)
+     :confidence    confidence
      :visibleId     visible_id
      :plotGeom      plot_geom
      :extraPlotInfo (tc/jsonb->clj extra_plot_info {})

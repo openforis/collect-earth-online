@@ -6,8 +6,7 @@
             [clojure.set                                   :as set]
             [clojure.string                                :as str]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
-            [collect-earth-online.generators.external-file :refer [generate-file-plots generate-file-samples zip-shape-files
-                                                                   load-external-data!]]
+            [collect-earth-online.generators.external-file :as external-file]
             [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
             [collect-earth-online.utils.part-utils         :as pu]
             [triangulum.response                           :refer [data-response]]
@@ -334,7 +333,7 @@
                                 plots]
   (let [plot-count (count plots)
         samples    (if (#{"csv" "shp"} sample-distribution)
-                     (generate-file-samples plots
+                     (external-file/generate-file-samples plots
                                             plot-count
                                             project-id
                                             sample-distribution
@@ -384,7 +383,7 @@
                               design-settings]
   ;; Create plots
   (let [plots (if (#{"csv" "shp"} plot-distribution)
-                (generate-file-plots project-id
+                (external-file/generate-file-plots project-id
                                      plot-distribution
                                      plot-file-name
                                      plot-file-base64)
@@ -956,7 +955,7 @@
 (defn create-shape-files!
   [{:keys [params]}]
   (let [project-id (:projectId params)
-        zip-file (zip-shape-files project-id)
+        zip-file (external-file/zip-shape-files project-id)
         file-name (last (str/split zip-file #"/"))]
     (if zip-file
       {:headers {"Content-Type" "application/zip"
@@ -1006,12 +1005,12 @@
   (let [project-id       (tc/val->int (:projectId params))
         plot-file-name   (:plotFileName params)
         plot-file-base64 (:plotFileBase64 params)
-        plots            (load-external-data! project-id
-                                              "csv"
-                                              plot-file-name
-                                              plot-file-base64
-                                              "plot"
-                                              [:visible_id])
+        plots            (external-file/load-external-data! project-id
+                                                            "csv"
+                                                            plot-file-name
+                                                            plot-file-base64
+                                                            "plot"
+                                                            [:visible_id])
         file-assignment? (some #(:user %) plots)
         updated-plots    (map (fn [row]
                                 (if (:reviewers row)
