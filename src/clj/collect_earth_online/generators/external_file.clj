@@ -198,12 +198,15 @@
                              body)
                           (str (str/capitalize design-type) " " distribution " file failed to load.")))))
 
+(defn- clj->pg-json
+  [clj]
+  (-> clj tc/clj->json (tc/str->pg "json")))
+
 (defn- split-ext [row ext-key main-keys]
-  (assoc (select-keys row main-keys)
-         ext-key
-         (tc/clj->jsonb (map (fn [[key val]]
-                               {(keyword key) val})
-                             (apply dissoc row main-keys)))))
+  (let [extra-info-map (into (ordered-map) (apply dissoc row main-keys))]
+    (assoc (select-keys row main-keys)
+           ext-key
+           (clj->pg-json (select-keys extra-info-map (keys (apply dissoc row main-keys)))))))
 
 (defn generate-file-samples [plots
                              plot-count
@@ -240,14 +243,12 @@
                                        plot-file-name
                                        plot-file-base64
                                        "plot"
-                                       [:visible_id])
-        teste (map (fn [p]
-                     (-> p
-                         (assoc :project_rid project-id)
-                         (split-ext :extra_plot_info [:project_rid :visible_id :plot_geom])))
-                   ext-plots)]
-    teste
-    ))
+                                       [:visible_id])]
+    (map (fn [p]
+           (-> p
+               (assoc :project_rid project-id)
+               (split-ext :extra_plot_info [:project_rid :visible_id :plot_geom])))
+         ext-plots)))
 
 (defn pgsql2shp-string
   [db-config file-name query]
