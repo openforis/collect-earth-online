@@ -3,6 +3,7 @@
             [clojure.set        :as set]
             [clojure.java.io    :as io]
             [clojure.java.shell :as sh]
+            [flatland.ordered.map :refer [ordered-map]]
             [triangulum.config  :refer [get-config]]
             [triangulum.type-conversion :as tc]
             [triangulum.utils :refer [parse-as-sh-cmd]]
@@ -122,7 +123,7 @@
           body        (map (fn [row]
                              (as-> row r
                                (split-row r)
-                               (zipmap header-keys r)
+                               (into (ordered-map) (map vector header-keys r))
                                (assoc r geom-key (tc/str->pg (make-wkt-point (:lon r) (:lat r)) "geometry"))
                                (update r :visible_id tc/val->int)
                                (dissoc r :lon :lat)))
@@ -132,8 +133,8 @@
         (if (apply distinct? header-keys)
           [(pu/remove-vector-items header-keys [:lon :lat]) body]
           (pu/init-throw (str "The provided "
-                               design-type
-                               " CSV file must not contain duplicate column titles.")))
+                              design-type
+                              " CSV file must not contain duplicate column titles.")))
         (pu/init-throw  (str "The provided "
                              design-type
                              " CSV file must contain a LAT and LON column."))))))
@@ -200,7 +201,9 @@
 (defn- split-ext [row ext-key main-keys]
   (assoc (select-keys row main-keys)
          ext-key
-         (tc/clj->jsonb (apply dissoc row main-keys))))
+         (tc/clj->jsonb (map (fn [[key val]]
+                               {(keyword key) val})
+                             (apply dissoc row main-keys)))))
 
 (defn generate-file-samples [plots
                              plot-count
@@ -237,12 +240,14 @@
                                        plot-file-name
                                        plot-file-base64
                                        "plot"
-                                       [:visible_id])]
-    (map (fn [p]
-           (-> p
-               (assoc :project_rid project-id)
-               (split-ext :extra_plot_info [:project_rid :visible_id :plot_geom])))
-         ext-plots)))
+                                       [:visible_id])
+        teste (map (fn [p]
+                     (-> p
+                         (assoc :project_rid project-id)
+                         (split-ext :extra_plot_info [:project_rid :visible_id :plot_geom])))
+                   ext-plots)]
+    teste
+    ))
 
 (defn pgsql2shp-string
   [db-config file-name query]
