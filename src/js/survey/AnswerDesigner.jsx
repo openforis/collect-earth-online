@@ -116,8 +116,7 @@ export default class AnswerDesigner extends React.Component {
   };
 
   renderNew = () => {
-    const { surveyQuestion, answerId, editMode } = this.props;
-    const { newAnswerText, selectedColor } = this.state;
+    const { surveyQuestion, answerId, editMode, surveyQuestionId } = this.props;
     return (
       <div className="d-flex flex-column">
         <div className="d-flex mb-1 align-items-center">
@@ -153,7 +152,7 @@ export default class AnswerDesigner extends React.Component {
             className="mr-1"
             onChange={(e) => this.setState({ selectedColor: e.target.value })}
             type="color"
-            value={selectedColor}
+            value={surveyQuestion.answers[answerId]?.color}
           />
           <input
             autoComplete="off"
@@ -163,7 +162,7 @@ export default class AnswerDesigner extends React.Component {
               if (e.key === "e" && surveyQuestion.dataType === "number") e.preventDefault();
             }}
             type={surveyQuestion.dataType === "number" ? "number" : "text"}
-            value={newAnswerText}
+            value={surveyQuestion.answers[answerId]?.answer}
           />
         </div>
         {surveyQuestion.componentType != "input" && (

@@ -30,7 +30,7 @@ export default function SurveyCard({ cardNumber, editMode, surveyQuestionId, top
     });
   };
 
-  const { question } = surveyQuestions[surveyQuestionId];
+  const surveyQuestion = surveyQuestions[surveyQuestionId];
 
   return (
     <div className="border rounded border-dark">
@@ -51,7 +51,7 @@ export default function SurveyCard({ cardNumber, editMode, surveyQuestionId, top
             <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
             <h3 className="m-3">
               {!showQuestions &&
-                `-- ${editMode === "review" ? removeEnumerator(question) : question}`}
+                `-- ${editMode === "review" ? removeEnumerator(surveyQuestion.question) : surveyQuestion.question}`}
             </h3>
           </div>
           {editMode !== "review" && (
@@ -84,6 +84,7 @@ export default function SurveyCard({ cardNumber, editMode, surveyQuestionId, top
               editMode={editMode}
               indentLevel={0}
               surveyQuestionId={surveyQuestionId}
+              question={surveyQuestion}
             />
           </div>
         )}

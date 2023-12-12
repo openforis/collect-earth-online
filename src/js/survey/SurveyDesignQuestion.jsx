@@ -16,19 +16,25 @@ import {
 } from "../utils/sequence";
 import { ProjectContext } from "../project/constants";
 
-export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQuestionId }) {
+export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQuestionId, question }) {
   const { setProjectDetails, surveyQuestions, surveyRules } = useContext(ProjectContext);
 
-  const surveyQuestion = surveyQuestions[surveyQuestionId];
+  const surveyQuestion = question;
   const parentQuestion = surveyQuestions[surveyQuestion.parentQuestionId];
   const childNodeIds = mapObjectArray(
     filterObject(surveyQuestions, ([_id, sq]) => sq.parentQuestionId === surveyQuestionId),
     ([key, _val]) => Number(key)
   );
 
-  const [hideQuestion, setHideQuestion] = useState(surveyQuestion.hideQuestion);
+  const [hideQuestion, setHideQuestion] = useState(surveyQuestions[surveyQuestionId].hideQuestion);
   const [showBulkAdd, setBulkAdd] = useState(false);
-  const [newQuestionText, setText] = useState(surveyQuestion.question);
+  const [newQuestionText, setText] = useState(surveyQuestions[surveyQuestionId].question);
+
+  useEffect(() => {
+    setText(surveyQuestions[surveyQuestionId].question);
+    setHideQuestion(surveyQuestions[surveyQuestionId].hideQuestion);
+  }, [surveyQuestionId, surveyQuestions]);
+
 
   const getSameLevelQuestions = () => filterObject(surveyQuestions, ([_id, sq]) =>
     sq.parentQuestionId === surveyQuestion.parentQuestionId);
@@ -122,6 +128,20 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
     return newRules;
   }
 
+  const updateParentQuestions = (questionId, swappedQuestionId, surveyQuestions) =>{
+    const teste = Object.entries(surveyQuestions).reduce((acc, cur) => {
+      const [key, val] = cur;
+      if(val.parentQuestionId === questionId) {
+        return {...acc, [key]: {...val, parentQuestionId: swappedQuestionId}};
+      } else if(val.parentQuestionId === swappedQuestionId) {
+        return {...acc, [key]: {...val, parentQuestionId: questionId}};
+      } else {
+        return acc;
+      }
+    }, {});
+    return teste;
+  }
+
   const reorderQuestions = (questionId, direction) => {
     //
     const qId = questionId.toString();
@@ -137,15 +157,15 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
 
     const newRules = updateRules(parseInt(questionId), parseInt(swappedQuestionId));
     const newQuestions = {...questions,
-                          [qId]: {...swappedQuestion, question: newQuestionText },
-                          [swappedQuestionId]: {...questionToBeSwapped, question: swappedQuestion.question},
-                         }
+                          [qId]: swappedQuestion,
+                          [swappedQuestionId]: questionToBeSwapped}
+    const updatedParents = updateParentQuestions(questionId, parseInt(swappedQuestionId), surveyQuestions);
     const updatedProjectDetails = {
-      surveyQuestions: {...surveyQuestions, ...newQuestions},
+      surveyQuestions: {...surveyQuestions, ...newQuestions, ...updatedParents},
       surveyRules: newRules,
     }
     setProjectDetails(updatedProjectDetails);
-    return null;
+    return qId;
   }
 
   const removeQuestion = () => {
@@ -252,7 +272,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
                   autoComplete="off"
                   maxLength="210"
                   onChange={(e) => setText(e.target.value)}
-                  value={surveyQuestion.question}
+                  value={newQuestionText}
                 />
               </>
             )}
@@ -350,7 +370,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
             </ul>
           </div>
           <div className="ml-3">
-            {mapObjectArray(surveyQuestion.answers, ([answerId, surveyAnswer]) => (
+            {mapObjectArray(question.answers, ([answerId, surveyAnswer]) => (
               <AnswerDesigner
                 key={`${surveyQuestionId}-${answerId}`}
                 answer={surveyAnswer.answer}
@@ -359,14 +379,14 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
                 editMode={editMode}
                 required={surveyAnswer.required}
                 hide={surveyAnswer.hide}
-                surveyQuestion={surveyQuestion}
+                surveyQuestion={question}
                 surveyQuestionId={surveyQuestionId}
               />
             ))}
             {editMode === "full" && !maxAnswers(surveyQuestion) && (
               <AnswerDesigner
                 editMode={editMode}
-                surveyQuestion={surveyQuestion}
+                surveyQuestion={question}
                 surveyQuestionId={surveyQuestionId}
               />
             )}
@@ -388,6 +408,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
           editMode={editMode}
           indentLevel={indentLevel + 1}
           surveyQuestionId={childId}
+          question={surveyQuestions[childId]}
         />
       ))}
     </>
