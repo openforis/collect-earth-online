@@ -318,11 +318,11 @@
   (let [plot-count (count plots)
         samples    (if (#{"csv" "shp"} sample-distribution)
                      (external-file/generate-file-samples plots
-                                            plot-count
-                                            project-id
-                                            sample-distribution
-                                            sample-file-name
-                                            sample-file-base64)
+                                                          plot-count
+                                                          project-id
+                                                          sample-distribution
+                                                          sample-file-name
+                                                          sample-file-base64)
                      (generate-point-samples plots
                                              plot-count
                                              plot-shape
@@ -368,9 +368,9 @@
   ;; Create plots
   (let [plots (if (#{"csv" "shp"} plot-distribution)
                 (external-file/generate-file-plots project-id
-                                     plot-distribution
-                                     plot-file-name
-                                     plot-file-base64)
+                                                   plot-distribution
+                                                   plot-file-name
+                                                   plot-file-base64)
                 (generate-point-plots project-id
                                       plot-distribution
                                       num-plots
@@ -510,6 +510,80 @@
           (data-response (if causes
                            (str "-" (str/join "\n-" causes))
                            "Unknown server error.")))))))
+
+(defn copy-project!
+  "currently, gets a project by id just as get-project-by-id.
+  TODO: get said project and create new project:
+  -append \"-COPY\" to the project name
+  -keep description as-is
+  -keep visibility and project options
+  -keep imagery basemap value and additional imagery values
+  -keep all plots and samples data
+  "
+  [{:keys [params session]}]
+  (let [user-id (:userId session -1)
+        project-id (tc/val->int (:projectId params))
+        {:keys [institution
+                description
+                shufflePlots
+                availability
+                aoiFileName
+                plotSize
+                aoiFeatures
+                designSettings
+                closedDate
+                name
+                plotSpacing
+                numPlots
+                isProjectAdmin
+                sampleFileName
+                publishedDate
+                privacyLevel
+                hasGeoDash
+                boundary
+                surveyRules
+                plotDistribution
+                imageryId                
+                plotFileName
+                plotShape
+                allowDrawnSamples
+                projectOptions
+                createdDate
+                surveyQuestions
+                sampleResolution
+                sampleDistribution
+                samplesPerPlot]
+         :as old-project} (build-project-by-id user-id project-id)
+        token-key            (str (UUID/randomUUID))        
+        #_(comment
+            project-id           (sql-primitive (call-sql "create_project"
+                                                          institution
+                                                          name
+                                                          description
+                                                          privacyLevel
+                                                          imageryId
+                                                          (tc/clj->jsonb aoiFeatures)
+                                                          aoiFileName
+                                                          plotDistribution
+                                                          numPlots
+                                                          plotSpacing
+                                                          Plotshape
+                                                          plotSize
+                                                          plotFileName
+                                                          shufflePlots
+                                                          sampleDistribution
+                                                          samplesPerPlot
+                                                          sampleResolution
+                                                          sampleFileName
+                                                          allowDrawnSamples
+                                                          surveyQuestions
+                                                          surveyRules
+                                                          token-key
+                                                          projectOptions
+                                                          (tc/clj->jsonb designSettings)
+                                                          )))
+        project-id 34378]
+    (data-response (build-project-by-id user-id project-id))))
 
 ;;;
 ;;; Update project

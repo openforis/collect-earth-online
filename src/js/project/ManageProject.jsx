@@ -58,7 +58,7 @@ export default class ManageProject extends React.Component {
     fetch(`/get-project-plots?projectId=${projectId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => this.context.setProjectDetails({ plots: data }));
-
+  
   render() {
     return (
       <div className="d-flex flex-column full-height align-items-center p-3" id="review-project">
@@ -169,6 +169,23 @@ class ProjectManagement extends React.Component {
       );
     }
   };
+
+  copyProject = () => {
+    const {setProjectDetails, setContextState, processModal, projectId} = this.context;
+    if (confirm ("Do you want to copy this project?")) {
+      processModal("Copying Project", () =>
+        fetch(`/copy-project?projectId=${projectId}`, {method: "POST"})
+	  .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+	  .then((data) => {
+	    window.location.assign(`/review-project?projectId=${data.id}&copy-redirect`);
+	   
+
+			  }
+	       )
+      );
+    }
+  };
+
 
   deleteProject = () => {
     console.log(this.context);
@@ -339,12 +356,6 @@ class ProjectManagement extends React.Component {
               type="button"
               value="Download Plot Data"
             />
-            <input
-              className="btn btn-outline-lightgreen btn-sm w-100"
-              onClick={() => window.alert("copying project...")}
-              type="button"
-              value="Copy the Entire Project"
-            />
             {qaqcMethod !== "none" && (
               <input
                 className="btn btn-outline-lightgreen btn-sm w-100"
@@ -369,6 +380,12 @@ class ProjectManagement extends React.Component {
               onClick={() => window.open(`/create-shape-files?projectId=${id}`, "_blank")}
               type="button"
               value="Download Shape Files"
+            />
+            <input
+              className="btn btn-outline-lightgreen btn-sm w-100"
+              onClick={() => this.copyProject()}
+              type="button"
+              value="Copy Entire Project"
             />
             <label className="my-2"> Digital Object Identifier </label>
             <input className="btn btn-outline-lightgreen btn-sm w-100"

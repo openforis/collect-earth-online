@@ -85,6 +85,7 @@ class Project extends React.Component {
   /// Lifecycle Methods
 
   componentDidMount() {
+    this.props.copied && this.setContextState({designMode: "wizard", wizardStep: "questions"});
     this.getDoiPath(this.props.projectId);
     if (this.props.institutionId > 0) {
       this.getInstitutionImagery(this.props.institutionId);
@@ -179,7 +180,7 @@ class Project extends React.Component {
         {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
         <div>
           <CurrentComponent />
-        </div>
+n        </div>
       </ProjectContext.Provider>
     );
   }
@@ -191,6 +192,7 @@ export function pageInit(params, session) {
       <Project
         institutionId={parseInt(params.institutionId) || -1}
         projectId={parseInt(params.projectId) || -1}
+        copied={params["copy-redirect"] === ""}
       />
     </NavigationBar>,
     document.getElementById("app")

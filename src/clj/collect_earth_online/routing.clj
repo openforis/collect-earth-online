@@ -99,6 +99,9 @@
    [:post "/create-project"]                 {:handler     projects/create-project!
                                               :auth-type   :admin
                                               :auth-action :block}
+   [:post "/copy-project"]                   {:handler     projects/copy-project!
+                                              :auth-type   :admin
+                                              :auth-action :block}
    [:post "/publish-project"]                {:handler     projects/publish-project!
                                               :auth-type   :admin
                                               :auth-action :block}
