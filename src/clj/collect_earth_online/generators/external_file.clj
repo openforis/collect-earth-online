@@ -3,6 +3,7 @@
             [clojure.set        :as set]
             [clojure.java.io    :as io]
             [clojure.java.shell :as sh]
+            [flatland.ordered.map :refer [ordered-map]]
             [triangulum.config  :refer [get-config]]
             [triangulum.type-conversion :as tc]
             [triangulum.utils :refer [parse-as-sh-cmd]]
@@ -122,7 +123,7 @@
           body        (map (fn [row]
                              (as-> row r
                                (split-row r)
-                               (zipmap header-keys r)
+                               (into (ordered-map) (map vector header-keys r))
                                (assoc r geom-key (tc/str->pg (make-wkt-point (:lon r) (:lat r)) "geometry"))
                                (update r :visible_id tc/val->int)
                                (dissoc r :lon :lat)))
@@ -132,8 +133,8 @@
         (if (apply distinct? header-keys)
           [(pu/remove-vector-items header-keys [:lon :lat]) body]
           (pu/init-throw (str "The provided "
-                               design-type
-                               " CSV file must not contain duplicate column titles.")))
+                              design-type
+                              " CSV file must not contain duplicate column titles.")))
         (pu/init-throw  (str "The provided "
                              design-type
                              " CSV file must contain a LAT and LON column."))))))
@@ -197,10 +198,15 @@
                              body)
                           (str (str/capitalize design-type) " " distribution " file failed to load.")))))
 
+(defn- clj->pg-json
+  [clj]
+  (-> clj tc/clj->json (tc/str->pg "json")))
+
 (defn- split-ext [row ext-key main-keys]
-  (assoc (select-keys row main-keys)
-         ext-key
-         (tc/clj->jsonb (apply dissoc row main-keys))))
+  (let [extra-info-map (into (ordered-map) (apply dissoc row main-keys))]
+    (assoc (select-keys row main-keys)
+           ext-key
+           (clj->pg-json (select-keys extra-info-map (keys (apply dissoc row main-keys)))))))
 
 (defn generate-file-samples [plots
                              plot-count

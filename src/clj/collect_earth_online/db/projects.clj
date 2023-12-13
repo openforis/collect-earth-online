@@ -384,9 +384,9 @@
   ;; Create plots
   (let [plots (if (#{"csv" "shp"} plot-distribution)
                 (external-file/generate-file-plots project-id
-                                     plot-distribution
-                                     plot-file-name
-                                     plot-file-base64)
+                                                   plot-distribution
+                                                   plot-file-name
+                                                   plot-file-base64)
                 (generate-point-plots project-id
                                       plot-distribution
                                       num-plots
