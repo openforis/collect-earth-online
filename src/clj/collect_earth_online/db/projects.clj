@@ -511,79 +511,26 @@
                            (str "-" (str/join "\n-" causes))
                            "Unknown server error.")))))))
 
-(defn copy-project!
-  "currently, gets a project by id just as get-project-by-id.
-  TODO: get said project and create new project:
-  -append \"-COPY\" to the project name
-  -keep description as-is
-  -keep visibility and project options
-  -keep imagery basemap value and additional imagery values
-  -keep all plots and samples data
-  "
-  [{:keys [params session]}]
+(defn copy-project!  [{:keys [params session]}]
   (let [user-id (:userId session -1)
-        project-id (tc/val->int (:projectId params))
-        {:keys [institution
-                description
-                shufflePlots
-                availability
-                aoiFileName
-                plotSize
-                aoiFeatures
-                designSettings
-                closedDate
-                name
-                plotSpacing
-                numPlots
-                isProjectAdmin
-                sampleFileName
-                publishedDate
-                privacyLevel
-                hasGeoDash
-                boundary
-                surveyRules
-                plotDistribution
-                imageryId                
-                plotFileName
-                plotShape
-                allowDrawnSamples
-                projectOptions
-                createdDate
-                surveyQuestions
-                sampleResolution
-                sampleDistribution
-                samplesPerPlot]
-         :as old-project} (build-project-by-id user-id project-id)
-        token-key            (str (UUID/randomUUID))        
-        #_(comment
-            project-id           (sql-primitive (call-sql "create_project"
-                                                          institution
-                                                          name
-                                                          description
-                                                          privacyLevel
-                                                          imageryId
-                                                          (tc/clj->jsonb aoiFeatures)
-                                                          aoiFileName
-                                                          plotDistribution
-                                                          numPlots
-                                                          plotSpacing
-                                                          Plotshape
-                                                          plotSize
-                                                          plotFileName
-                                                          shufflePlots
-                                                          sampleDistribution
-                                                          samplesPerPlot
-                                                          sampleResolution
-                                                          sampleFileName
-                                                          allowDrawnSamples
-                                                          surveyQuestions
-                                                          surveyRules
-                                                          token-key
-                                                          projectOptions
-                                                          (tc/clj->jsonb designSettings)
-                                                          )))
-        project-id 34378]
-    (data-response (build-project-by-id user-id project-id))))
+	project-id (tc/val->int (:projectId params))
+	{:keys [institution
+		plotSize
+		plotSpacing
+		name
+		id
+		sampleResolution]
+	 :as old-project} (build-project-by-id user-id project-id)
+        project (assoc old-project
+	               :name (str name " - COPY")
+	               :institutionId institution
+	               :plotSize (long plotSize)
+	               :plotSpacing (long plotSpacing)
+	               :projectTemplate id
+	               :sampleResolution (long sampleResolution)
+	               :useTemplatePlots true
+	               :useTemplateWidgets true)]
+    (create-project! {:params project})))
 
 ;;;
 ;;; Update project

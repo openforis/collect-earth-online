@@ -192,7 +192,7 @@ export function pageInit(params, session) {
       <Project
         institutionId={parseInt(params.institutionId) || -1}
         projectId={parseInt(params.projectId) || -1}
-        copied={params["copy-redirect"] === ""}
+        copied={(`copy-redirect` in params)}
       />
     </NavigationBar>,
     document.getElementById("app")

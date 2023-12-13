@@ -176,13 +176,7 @@ class ProjectManagement extends React.Component {
       processModal("Copying Project", () =>
         fetch(`/copy-project?projectId=${projectId}`, {method: "POST"})
 	  .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-	  .then((data) => {
-	    window.location.assign(`/review-project?projectId=${data.id}&copy-redirect`);
-	   
-
-			  }
-	       )
-      );
+	  .then((data) => window.location.assign(`/review-project?projectId=${data.projectId}&copy-redirect`)));
     }
   };
 
