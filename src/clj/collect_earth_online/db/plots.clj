@@ -220,13 +220,15 @@
                                grouped-plots)
                              (sort-by first))
         plots-info      (case direction
-                          "next"     (or (some (fn [[visible-id plots]]
-                                                 (and (> visible-id old-visible-id)
-                                                      plots))
-                                               sorted-plots)
+                          "next"     (or 
+                                         (->> sorted-plots
+                                              (some (fn [[visible-id plots]]
+                                                      (and (> visible-id old-visible-id)
+                                                           plots))))
                                          (->> sorted-plots
                                               (first)
-                                              (second)))
+                                              (second)
+                                              (when-not (= navigation-mode "natural"))))
                           "previous" (or (->> sorted-plots
                                               (sort-by first #(compare %2 %1))
                                               (some (fn [[visible-id plots]]
@@ -247,8 +249,8 @@
                   user-id
                   (time-plus-five-min))
         (data-response (map #(build-collection-plot % user-id review-mode?) plots-info))
-       (catch Exception _e
-         (data-response "Unable to get the requested plot.  Please try again.")))
+        (catch Exception _e
+          (data-response "Unable to get the requested plot.  Please try again.")))
       (data-response "not-found"))))
 
 ;;;
@@ -261,8 +263,8 @@
         session-user-id    (:userId session -1)
         current-user-id    (tc/val->int (:currentUserId params -1))
         review-mode?       (and (tc/val->bool (:inReviewMode params))
-                              (pos? current-user-id)
-                              (is-proj-admin? session-user-id project-id nil))
+                                (pos? current-user-id)
+                                (is-proj-admin? session-user-id project-id nil))
         confidence         (tc/val->int (:confidence params))
         confidence-comment (:confidenceComment params)
         collection-start   (tc/val->long (:collectionStart params))
@@ -273,17 +275,17 @@
         ;; Samples created in the UI have IDs starting with 1. When the new sample is created
         ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
         id-translation     (when new-plot-samples
-                           (call-sql "delete_user_plot_by_plot" plot-id user-id)
-                           (call-sql "delete_samples_by_plot" plot-id)
-                           (reduce (fn [acc {:keys [id visibleId sampleGeom]}]
-                                     (let [new-id (sql-primitive (call-sql "create_project_plot_sample"
-                                                                           {:log? false}
-                                                                           plot-id
-                                                                           visibleId
-                                                                           (tc/json->jsonb sampleGeom)))]
-                                       (assoc acc (str id) (str new-id))))
-                                   {}
-                                   new-plot-samples))]
+                             (call-sql "delete_user_plot_by_plot" plot-id user-id)
+                             (call-sql "delete_samples_by_plot" plot-id)
+                             (reduce (fn [acc {:keys [id visibleId sampleGeom]}]
+                                       (let [new-id (sql-primitive (call-sql "create_project_plot_sample"
+                                                                             {:log? false}
+                                                                             plot-id
+                                                                             visibleId
+                                                                             (tc/json->jsonb sampleGeom)))]
+                                         (assoc acc (str id) (str new-id))))
+                                     {}
+                                     new-plot-samples))]
     (if (some seq (vals user-samples))
       (call-sql "upsert_user_samples"
                 plot-id
