@@ -440,3 +440,79 @@ export function LoadingModal({ message }) {
     </div>
   );
 }
+
+
+
+export function PromptModal({title, inputs, callBack, closePrompt}) {
+  const [promptState, setPromptState] = React.useState([]);
+  React.useEffect(()=> setPromptState(inputs.reduce(
+    (acc, {index, value}) => {
+      return ({... acc,
+               [index]: value});
+    }, {} 
+  )), []);
+  let makeInput = ({label, type, index, value}) => {
+    return (
+      <div key={index}
+           className="input-group"
+           style={{flex: "1 100%"}}>
+        
+        <label>{label}</label>
+        <input type={type}
+               checked={promptState[index]}
+               value={promptState[index]}
+               onChange= {(e)=> setPromptState({... promptState,
+                                                [index]: (e.target.checked)})}
+        ></input>
+        <div className="break"></div>
+      </div>
+    );
+  };
+
+  let  mappedInputs = inputs.map(makeInput);
+  return (
+    <div
+      style={{
+        position: "fixed",
+        zIndex: "100",
+        left: "0",
+        top: "0",
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgba(0,0,0,0.4)",
+      }}
+    >
+      <div
+        style={{
+          alignItems: "center",
+          backgroundColor: "white",
+          border: "1.5px solid",
+          borderRadius: "5px",
+          display: "flex",
+          margin: "20% auto",
+          width: "fit-content",
+        }}
+      >
+        <div className="container">
+          <label>{title}</label>
+        </div>
+        <div className="break"></div>
+        {mappedInputs}
+        <div>
+          <input
+            className="btn btn-outline-red btn-sm w-100"
+            onClick={() => closePrompt()}
+            type="button"
+            value="Cancel"
+            />
+          <input
+            className="btn btn-outline-lightgreen btn-sm w-100"
+            onClick={() => callBack(promptState)}
+            type="button"
+            value="Confirm"
+            />
+        </div>
+      </div>
+    </div>
+  );
+}

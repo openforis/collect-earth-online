@@ -169,17 +169,25 @@ class ProjectManagement extends React.Component {
       );
     }
   };
-
+  
   copyProject = () => {
-    const {setProjectDetails, setContextState, processModal, projectId} = this.context;
-    if (confirm ("Do you want to copy this project?")) {
-      processModal("Copying Project", () =>
-        fetch(`/copy-project?projectId=${projectId}`, {method: "POST"})
-	  .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-	  .then((data) => window.location.assign(`/review-project?projectId=${data.projectId}&copy-redirect`)));
-    }
+    const {setProjectDetails, setContextState, processModal, promptModal, projectId} = this.context;
+    promptModal("Do you want to copy the entire project?",
+                [{label: "Use Existing Plots",
+                  index: "plots",
+                  type: "checkbox",
+                  value: true},
+                 {label: "Use Existing Widgets",
+                  index: "widgets",
+                  type: "checkbox",
+                  value:true}
+                ], (prompts) => {
+                  const url = `/copy-project?projectId=${projectId}${prompts.widgets && "&widgets"}${prompts.plots && "&plots"}`;
+                  fetch(url, {method: "POST"})
+	            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+	            .then((data) => window.location.assign(`/review-project?projectId=${data.projectId}&copy-redirect`));
+                });
   };
-
 
   deleteProject = () => {
     console.log(this.context);
