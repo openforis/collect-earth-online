@@ -182,7 +182,7 @@ class ProjectManagement extends React.Component {
                   type: "checkbox",
                   value:true}
                 ], (prompts) => {
-                  const url = `/copy-project?projectId=${projectId}${prompts.widgets && "&widgets"}${prompts.plots && "&plots"}`;
+                  const url = `/copy-project?projectId=${projectId}&widgets=${prompts.widgets}&plots=${prompts.plots}`;
                   fetch(url, {method: "POST"})
 	            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
 	            .then((data) => window.location.assign(`/review-project?projectId=${data.projectId}&copy-redirect`));

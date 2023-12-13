@@ -528,8 +528,8 @@
 	               :plotSpacing (long plotSpacing)
 	               :projectTemplate id
 	               :sampleResolution (long sampleResolution)
-	               :useTemplatePlots true
-	               :useTemplateWidgets true)]
+	               :useTemplatePlots (:plots params)
+	               :useTemplateWidgets (:widgets params))]
     (create-project! {:params project})))
 
 ;;;
