@@ -457,14 +457,16 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
            className="input-group"
            style={{flex: "1 100%"}}>
         
-        <label>{label}</label>
+        <label
+          style={{margin: "auto 1rem",
+                  width: "50%"}}
+        >{label}</label>
         <input type={type}
                checked={promptState[index]}
                value={promptState[index]}
                onChange= {(e)=> setPromptState({... promptState,
                                                 [index]: (e.target.checked)})}
         ></input>
-        <div className="break"></div>
       </div>
     );
   };
@@ -484,13 +486,14 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
     >
       <div
         style={{
-          alignItems: "center",
+          flexDirection: "column",
           backgroundColor: "white",
           border: "1.5px solid",
           borderRadius: "5px",
           display: "flex",
           margin: "20% auto",
           width: "fit-content",
+          padding: "1.25rem"
         }}
       >
         <div className="container">
@@ -498,7 +501,9 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
         </div>
         <div className="break"></div>
         {mappedInputs}
-        <div>
+        <div
+          style={{
+            display: "flex"}}>
           <input
             className="btn btn-outline-red btn-sm w-100"
             onClick={() => closePrompt()}
