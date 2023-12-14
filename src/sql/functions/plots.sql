@@ -104,7 +104,7 @@ CREATE TYPE collection_return AS (
     confidence         integer,
     visible_id         integer,
     plot_geom          text,
-    extra_plot_info    jsonb,
+    extra_plot_info    json,
     user_id            integer,
     email              text
 );

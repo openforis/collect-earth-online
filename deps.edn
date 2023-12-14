@@ -1,13 +1,15 @@
 {:paths ["src/clj" "resources" "dist"]
 
- :deps {clj-http/clj-http         {:mvn/version "3.10.3"}
-        clj-python/libpython-clj  {:git/url "https://github.com/clj-python/libpython-clj"
-                                   :git/sha "f39c78c281d68cc29ed819ad3763e0417ae1952c"}
-        org.clojure/clojure       {:mvn/version "1.11.1"}
-        org.clojure/data.json     {:mvn/version "1.0.0"}
-        ring/ring                 {:mvn/version "1.8.2"}
-        sig-gis/triangulum        {:git/url "https://github.com/sig-gis/triangulum"
-                                   :git/sha "3d41dab63e1bc8ebe046f64db44ae3df986f5bdf"}}
+ :deps {clj-http/clj-http        {:mvn/version "3.10.3"}
+        clj-python/libpython-clj {:git/url "https://github.com/clj-python/libpython-clj"
+                                  :git/sha "f39c78c281d68cc29ed819ad3763e0417ae1952c"}
+        org.clojure/clojure      {:mvn/version "1.11.1"}
+        org.flatland/ordered     {:mvn/version "1.15.11"}
+        org.clojure/data.json    {:mvn/version "1.0.0"}
+        org.clojure/data.xml     {:mvn/version "0.0.8"}
+        ring/ring                {:mvn/version "1.8.2"}
+        sig-gis/triangulum       {:git/url "https://github.com/sig-gis/triangulum"
+                                  :git/sha "3d41dab63e1bc8ebe046f64db44ae3df986f5bdf"}}
 
  :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
            :config           {:main-opts ["-m" "triangulum.config"]}
@@ -18,7 +20,7 @@
            :systemd          {:main-opts ["-m" "triangulum.systemd"]}
            :rebel            {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
                               :main-opts  ["-m" "rebel-readline.main"]}
-           :production       {:jvm-opts  ["-XX:MaxRAMPercentage=90" "-XX:+PrintFlagsFinal"]}
+           :production       {:jvm-opts ["-XX:MaxRAMPercentage=90" "-XX:+PrintFlagsFinal"]}
            :check-reflection {:main-opts ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
                                           "-e" "(require,'collect-earth-online.routing)"]}
            :check-deps       {:deps      {olical/depot {:mvn/version "1.8.4"}}
