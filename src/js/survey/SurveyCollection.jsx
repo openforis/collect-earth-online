@@ -11,12 +11,13 @@ import { filterObject, intersection, lengthObject, mapObjectArray } from "../uti
 
 export default class SurveyCollection extends React.Component {
   constructor(props) {
+    let {polygons, lines, points} = props.sampleGeometries;
     super(props);
     this.state = {
       currentNodeIndex: 0,
       topLevelNodeIds: [],
       showSurveyQuestions: true,
-      drawTool: "Point",
+      drawTool: polygons ? "Polygon" : lines? "LineString" : "Point"
     };
   }
 
