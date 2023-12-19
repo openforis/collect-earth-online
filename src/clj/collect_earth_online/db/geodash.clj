@@ -10,7 +10,7 @@
 
 ;;; Constants
 
-(def ^:private max-age (* 24 60 1000)) ; Once a day
+(def ^:private max-age (* 24 60 60 1000)) ; Once a day
 
 ;;; GEE Python interface
 
