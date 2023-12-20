@@ -1578,11 +1578,13 @@ class PlotInformation extends React.Component {
             <ul className="mb-3 mx-1">
               {Object.entries(this.props.extraPlotInfo)
                 .filter(([_key, value]) => value && !(value instanceof Object))
-                .map(([key, value]) => (
+               .map(([key, value]) => (
                   <li key={key}>
-                    {key} - {value}
+                    {key} - {Number.isInteger(Number.parseFloat(value)) ?
+                             Number.parseFloat(value).toFixed(4) : value}
                   </li>
-                ))}
+                 )
+               )}
             </ul>
           ) : (
             <div className="mb-3">There is no extra information for this plot.</div>
