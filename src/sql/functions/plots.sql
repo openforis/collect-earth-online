@@ -255,13 +255,11 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION lock_plot(_plot_id integer, _user_id integer, _lock_end timestamp)
  RETURNS VOID AS $$
     
- 
-       INSERT INTO plot_locks
-           (user_rid, plot_rid, lock_end)
-       SELECT
-           _user_id, _plot_id, _lock_end
-       WHERE NOT EXISTS (SELECT 1 FROM plot_locks WHERE plot_rid = _plot_id);
-
+    INSERT INTO plot_locks
+        (user_rid, plot_rid, lock_end)
+    SELECT
+        _user_id, _plot_id, _lock_end
+    WHERE NOT EXISTS (SELECT 1 FROM plot_locks WHERE plot_rid = _plot_id);
 
 $$ LANGUAGE SQL;
 
