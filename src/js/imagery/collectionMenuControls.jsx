@@ -258,7 +258,7 @@ export class PlanetNICFIMenu extends React.Component {
       if (newIndex < 0 || newIndex >= nicfiLayers.length) return {};
 
       return { selectedTime: nicfiLayers[newIndex] };
-    });
+    }, this.updatePlanetLayer);
   }
 
   updatePlanetLayer = () => {
@@ -302,8 +302,7 @@ export class PlanetNICFIMenu extends React.Component {
               className="btn btn-outline-lightgreen btn-sm mr-1"
               type="button"
               onClick={() => {
-                this.switchImagery("backward");
-                this.updatePlanetLayer();
+                this.switchImagery("backward")
               }}
               disabled={this.state.isDisabledLeft}
             >
@@ -313,8 +312,7 @@ export class PlanetNICFIMenu extends React.Component {
               className="btn btn-outline-lightgreen btn-sm"
               type="button"
               onClick={() => {
-                this.switchImagery("forward");
-                this.updatePlanetLayer();
+                this.switchImagery("forward")
               }}
               disabled={this.state.isDisabledRight}
             >

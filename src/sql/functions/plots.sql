@@ -104,7 +104,7 @@ CREATE TYPE collection_return AS (
     confidence         integer,
     visible_id         integer,
     plot_geom          text,
-    extra_plot_info    jsonb,
+    extra_plot_info    json,
     user_id            integer,
     email              text
 );
@@ -254,13 +254,12 @@ $$ LANGUAGE SQL;
 -- Lock plot to user
 CREATE OR REPLACE FUNCTION lock_plot(_plot_id integer, _user_id integer, _lock_end timestamp)
  RETURNS VOID AS $$
-
- BEGIN
-       INSERT INTO plot_locks
-           (user_rid, plot_rid, lock_end)
-       VALUES
-           (_user_id, _plot_id, _lock_end)
- END
+    
+    INSERT INTO plot_locks
+        (user_rid, plot_rid, lock_end)
+    SELECT
+        _user_id, _plot_id, _lock_end
+    WHERE NOT EXISTS (SELECT 1 FROM plot_locks WHERE plot_rid = _plot_id);
 
 $$ LANGUAGE SQL;
 
@@ -600,5 +599,18 @@ CREATE OR REPLACE FUNCTION get_sample_shapes(_project_id integer)
        INNER JOIN plots pl
        ON pl.plot_uid = s.plot_rid
        WHERE pl.project_rid = _project_id)
+
+$$ LANGUAGE SQL;
+
+-- Returns plots by a list of visible_ids
+
+CREATE OR REPLACE FUNCTION get_plots_by_visible_id(_project_id integer, _visible_ids bigint[])
+ RETURNS table (
+    plot_id integer
+ ) AS $$
+
+    SELECT plot_uid
+    FROM plots
+    WHERE visible_id = any(_visible_ids) and project_rid = _project_id
 
 $$ LANGUAGE SQL;
