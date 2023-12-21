@@ -910,6 +910,7 @@ const ceoMapPresets = {
   red: "#8b2323",
   white: "#ffffff",
   yellow: "yellow",
+  transparent: "transparent"
 };
 
 const ceoMapStyleFunctions = {
@@ -1066,7 +1067,7 @@ mercator.addPlotOverviewLayers = (mapConfig, plots) => {
       color: "lightBlue",
     },
     {
-      id: "unanalyzed",
+      id: "unanalyzedn",
       layerPlots: notFlagged.filter((plot) => plot.status === "unanalyzed"),
       color: "yellow",
     },
@@ -1298,6 +1299,11 @@ mercator.highlightSampleGeometry = (sample, color) => {
   sample.setStyle(mercator.ceoMapStyles("answered", color));
   return sample;
 };
+
+mercator.setFeatureStyle = (mapConfig,featureId, color) => {
+  const feature = mercator.getLayerById(mapConfig, featureId);
+  feature.setStyle(mercator.ceoMapStyles)
+}
 
 /*****************************************************************************
  ***
