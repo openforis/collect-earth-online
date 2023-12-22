@@ -441,8 +441,6 @@ export function LoadingModal({ message }) {
   );
 }
 
-
-
 export function PromptModal({title, inputs, callBack, closePrompt}) {
   const [promptState, setPromptState] = React.useState([]);
   React.useEffect(()=> setPromptState(inputs.reduce(
