@@ -655,7 +655,7 @@ export default class SurveyCollection extends React.Component {
                     className="form-control"
                     id="confidenceComment"
                     onChange={(e) => this.props.setConfidenceComment(e.target.value)}
-                    value={this.props.confidenceComment}
+                    value={this.props.confidenceComment || ""}
                   />
                 </div>
                 </>

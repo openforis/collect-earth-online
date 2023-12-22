@@ -170,24 +170,26 @@
   (let [{:keys [plot_id
                 flagged
                 confidence
+                confidence_comment
                 flagged_reason
                 plot_geom
                 extra_plot_info
                 visible_id
                 user_id
                 email]} plot-info]
-    {:id            plot_id
-     :flagged       flagged
-     :flaggedReason (or flagged_reason "")
-     :confidence    confidence
-     :visibleId     visible_id
-     :plotGeom      plot_geom
-     :extraPlotInfo (tc/jsonb->clj extra_plot_info {})
-     :samples       (prepare-samples-array plot_id (if (and review-mode? (pos? user_id))
+    {:id                plot_id
+     :flagged           flagged
+     :flaggedReason     (or flagged_reason "")
+     :confidence        confidence
+     :confidenceComment confidence_comment
+     :visibleId         visible_id
+     :plotGeom          plot_geom
+     :extraPlotInfo     (tc/jsonb->clj extra_plot_info {})
+     :samples           (prepare-samples-array plot_id (if (and review-mode? (pos? user_id))
                                                      user_id
                                                      user-id))
-     :userId        user_id
-     :email         email}))
+     :userId            user_id
+     :email             email}))
 
 (defn get-collection-plot
   "Gets plot information needed for the collections page.  The plot
