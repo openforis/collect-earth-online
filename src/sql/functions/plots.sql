@@ -82,14 +82,16 @@ $$ LANGUAGE SQL;
 -- Get user plots for a plot
 CREATE OR REPLACE FUNCTION select_user_plots_info( _plot_id integer)
  RETURNS table (
-    user_id       integer,
-    flagged       boolean,
-    confidence    integer
+    user_id            integer,
+    flagged            boolean,
+    confidence         integer,
+    confidence_comment text
  ) AS $$
 
     SELECT user_rid,
         flagged,
-        confidence
+        confidence,
+        confidence_comment
     FROM user_plots
     WHERE plot_rid = _plot_id
 
@@ -102,6 +104,7 @@ CREATE TYPE collection_return AS (
     flagged            boolean,
     flagged_reason     text,
     confidence         integer,
+    confidence_comment text,
     visible_id         integer,
     plot_geom          text,
     extra_plot_info    json,
@@ -116,6 +119,7 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
         flagged,
         flagged_reason,
         confidence,
+        confidence_comment,
         visible_id,
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
@@ -149,6 +153,7 @@ CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id i
         flagged,
         flagged_reason,
         confidence,
+        confidence_comment,
         visible_id,
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
@@ -172,6 +177,7 @@ CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id in
         flagged,
         flagged_reason,
         confidence,
+        confidence_comment,
         visible_id,
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
@@ -200,6 +206,7 @@ CREATE OR REPLACE FUNCTION select_confidence_plots(
         flagged,
         flagged_reason,
         confidence,
+        confidence_comment,
         visible_id,
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
@@ -232,6 +239,7 @@ CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
         up.flagged,
         up.flagged_reason,
         confidence,
+        confidence_comment,
         visible_id,
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
@@ -408,6 +416,7 @@ CREATE OR REPLACE FUNCTION flag_plot(
         SET flagged = excluded.flagged,
             user_rid = excluded.user_rid,
             confidence = NULL,
+            confidence_comment = NULL,
             collection_start = excluded.collection_start,
             collection_time = Now(),
             flagged_reason = excluded.flagged_reason
