@@ -136,7 +136,7 @@ class AnswerInput extends React.Component {
         newInput: this.props.surveyNode.answered[0] ? answerText : ""});
     } else {
       this.setState({
-        newInput: matchingNode.answerText ? matchingNode.answerText : ""
+        newInput: matchingNode?.answerText ? matchingNode.answerText : ""
       });
     }
   };
