@@ -493,7 +493,6 @@ class Collection extends React.Component {
 
   resetPlotValues = () => {
     this.setState(this.newPlotValues(this.state.currentPlot, false));
-    this.resetUnsavedWarning();
   };
 
   newPlotValues = (newPlot, copyValues = true) => ({
@@ -786,16 +785,25 @@ class Collection extends React.Component {
       : [currentQuestionId];
   };
 
+  keyDifference = (o1, features) => {
+    const objKeys = o1.map(i => i.sampleId);
+    const sampleIds = features.map(f => f.get("sampleId"));
+    const unansweredKeys = sampleIds.filter(k => !objKeys.includes(k));
+    return features.filter(f => unansweredKeys.includes(f.get("sampleId")));
+  };
+
   getSelectedSampleIds = (questionId) => {
     const { answered } = this.state.currentProject.surveyQuestions[questionId];
     const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
+    const unansweredFeatures = this.keyDifference(answered, allFeatures);
     const selectedSamples = mercator.getSelectedSamples(this.state.mapConfig);
     const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
     return (
-      (selectedFeatures.length === 0 && answered.length === 0) ||
-      lengthObject(this.state.userSamples) === 1
+      (selectedFeatures.length === 0 && answered.length === 0)
         ? allFeatures
-        : selectedFeatures
+        : selectedFeatures.length !== 0
+        ? selectedFeatures
+        : unansweredFeatures
     ).map((sf) => sf.get("sampleId"));
   };
 
