@@ -1067,7 +1067,7 @@ mercator.addPlotOverviewLayers = (mapConfig, plots) => {
       color: "lightBlue",
     },
     {
-      id: "unanalyzedn",
+      id: "unanalyzed",
       layerPlots: notFlagged.filter((plot) => plot.status === "unanalyzed"),
       color: "yellow",
     },
