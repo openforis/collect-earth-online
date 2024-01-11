@@ -100,9 +100,19 @@
                             :institutionId institution_id})
                          (call-sql "select_template_projects" user-id)))))
 
+(defn- validate-survey-questions [survey-questions] 
+  (let [raw (->> survey-questions vals (map :cardOrder))]
+    (if (-> raw distinct count (= raw count))
+      survey-questions
+      (reduce-kv
+       (fn [m k {:as survey-question}]
+         (assoc m k  (assoc survey-question :cardOrder (Integer. k))))
+       {}
+       survey-questions)))) 
+
 (defn- build-project-by-id [user-id project-id]
   (let [project (first (call-sql "select_project_by_id" project-id))]
-    {:id                 (:project_id project)     ; TODO dont return known values
+    {:id                 (:project_id project) ; TODO dont return known values
      :institution        (:institution_id project) ; TODO legacy variable name, update to institutionId
      :imageryId          (:imagery_id project)
      :availability       (:availability project)
@@ -124,7 +134,8 @@
      :sampleResolution   (:sample_resolution project)
      :sampleFileName     (:sample_file_name project)
      :allowDrawnSamples  (:allow_drawn_samples project)
-     :surveyQuestions    (tc/jsonb->clj (:survey_questions project) [])
+     :surveyQuestions    (-> project :survey_questions
+                             (tc/jsonb->clj []) validate-survey-questions)
      :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
      :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
      :designSettings     (merge default-settings (tc/jsonb->clj (:design_settings project)))
