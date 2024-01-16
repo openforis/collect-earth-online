@@ -519,10 +519,12 @@
 		plotSpacing
 		name
 		id
+                surveyQuestions
 		sampleResolution]
 	 :as old-project} (build-project-by-id user-id project-id)
         project (assoc old-project
 	               :name (str name " - COPY")
+                       :surveyQuestions (tc/clj->jsonb surveyQuestions)
 	               :institutionId institution
 	               :plotSize (long plotSize)
 	               :plotSpacing (long plotSpacing)
