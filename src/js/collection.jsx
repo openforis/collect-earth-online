@@ -63,6 +63,8 @@ class Collection extends React.Component {
       userImages: {},
       storedInterval: null,
       KMLFeatures: null,
+      showBoundary: true,
+      showSamples: true,
       showSidebar: false,
       showQuitModal: false,
       answerMode: "question",
@@ -121,7 +123,11 @@ class Collection extends React.Component {
     //
 
     // Initialize when new plot
-    if (this.state.currentPlot.id && this.state.currentPlot.id !== prevState.currentPlot.id) {
+    if (this.state.currentPlot.id && (
+      this.state.currentPlot.id !== prevState.currentPlot.id
+      || this.state.showBoundary !== prevState.showBoundary
+    )
+       ) {
       this.showProjectPlot();
       if (
         this.state.currentProject.hasGeoDash &&
@@ -147,7 +153,9 @@ class Collection extends React.Component {
         this.state.selectedQuestionId !== prevState.selectedQuestionId ||
         this.state.unansweredColor !== prevState.unansweredColor ||
         this.state.userSamples !== prevState.userSamples ||
-        selectedQuestion.visible !== prevSelectedQuestion.visible
+        selectedQuestion.visible !== prevSelectedQuestion.visible ||
+          this.state.showSamples !== prevState.showSamples ||
+          this.state.showBoundary !== prevState.showBoundary
       ) {
         this.showPlotSamples();
         this.highlightSamplesByQuestion();
@@ -314,7 +322,7 @@ class Collection extends React.Component {
     mercator.addVectorLayer(
       mapConfig,
       "currentAOI",
-      mercator.geomArrayToVectorSource(this.state.currentProject.aoiFeatures),
+      mercator.geomArrayToVectorSource(this.state.currentProject.aoiFeatures,),
       mercator.ceoMapStyles("geom", "yellow")
     );
     mercator.zoomMapToLayer(mapConfig, "currentAOI", 48);
@@ -527,7 +535,7 @@ class Collection extends React.Component {
   zoomToPlot = () => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot", 36);
 
   showProjectPlot = () => {
-    const { currentPlot, mapConfig, currentProject } = this.state;
+    const { currentPlot, mapConfig, currentProject, showBoundary} = this.state;
     mercator.disableSelection(mapConfig);
     mercator.removeLayerById(mapConfig, "currentPlots");
     mercator.removeLayerById(mapConfig, "currentPlot");
@@ -545,14 +553,14 @@ class Collection extends React.Component {
             )
           : mercator.parseGeoJson(currentPlot.plotGeom, true)
       ),
-      mercator.ceoMapStyles("geom", "yellow")
+      mercator.ceoMapStyles("geom", (showBoundary ? "yellow" : "transparent")
+                           )
     );
-
     this.zoomToPlot();
   };
 
   showPlotSamples = () => {
-    const { mapConfig, unansweredColor, currentProject, selectedQuestionId } = this.state;
+    const { mapConfig, unansweredColor, currentProject, selectedQuestionId, showSamples} = this.state;
     const { visible } = currentProject.surveyQuestions[selectedQuestionId];
     mercator.disableSelection(mapConfig);
     mercator.disableDrawing(mapConfig);
@@ -562,7 +570,7 @@ class Collection extends React.Component {
       mapConfig,
       "currentSamples",
       mercator.samplesToVectorSource(visible),
-      mercator.ceoMapStyles("geom", unansweredColor)
+      mercator.ceoMapStyles("geom", (showSamples ? unansweredColor : "transparent"))
     );
     mercator.enableSelection(
       mapConfig,
@@ -614,6 +622,18 @@ class Collection extends React.Component {
         {}
       ),
     });
+  };
+
+  toggleShowBoundary = () => {
+    this.setState ({...this.state,
+                    showBoundary: !this.state.showBoundary
+                   });
+  };
+
+  toggleShowSamples = () => {
+    this.setState ({...this.state,
+                    showSamples: !this.state.showSamples
+                   });
   };
 
   showGeoDash = () => {
@@ -1063,6 +1083,11 @@ class Collection extends React.Component {
             KMLFeatures={this.state.KMLFeatures}
             showGeoDash={this.showGeoDash}
             zoomMapToPlot={this.zoomToPlot}
+            toggleShowBoundary={this.toggleShowBoundary}
+            toggleShowSamples={this.toggleShowSamples}
+            state={{showBoundary: this.state.showBoundary,
+                    showSamples: this.state.showSamples}}
+            
           />
           {this.state.currentPlot.id &&
             this.state.currentProject.projectOptions.showPlotInformation && (
@@ -1462,7 +1487,7 @@ class ExternalTools extends React.Component {
     super(props);
     this.state = {
       showExternalTools: true,
-      auxWindow: null,
+      auxWindow: null
     };
   }
 
@@ -1479,6 +1504,23 @@ class ExternalTools extends React.Component {
         onClick={this.props.showGeoDash}
         type="button"
         value="GeoDash"
+      />
+    </div>
+  );
+
+  toggleViewButtons = () => (
+    <div className="ExternalTools__geo-buttons d-flex justify-content-between mb-2" id="plot-nav">
+      <input
+        className={`btn btn-outline-${this.props.state.showSamples ? "red" : "lightgreen"} btn-sm col-6 mr-1`}
+        onClick={this.props.toggleShowSamples}
+        type="button"
+        value={`${this.props.state.showSamples ? "Hide" : "Show"} Samples`}
+      />
+      <input
+        className={`btn btn-outline-${this.props.state.showBoundary ? "red" : "lightgreen"} btn-sm col-6`}
+        onClick={this.props.toggleShowBoundary}
+        type="button"
+        value={`${this.props.state.showBoundary ? "Hide" : "Show"} Boundary`}
       />
     </div>
   );
@@ -1552,6 +1594,7 @@ class ExternalTools extends React.Component {
         {this.state.showExternalTools && (
           <div className="mx-1">
             {this.geoButtons()}
+            {this.toggleViewButtons()}
             {this.props.KMLFeatures && this.kmlButton()}
             {this.props.currentProject.projectOptions.showGEEScript && this.geeButton()}
           </div>
