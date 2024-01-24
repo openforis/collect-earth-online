@@ -109,7 +109,7 @@
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/check-plot-csv"]                 {:handler     projects/check-plot-csv
-                                              :auth-type   :admin
+                                              :auth-type   :user
                                               :auth-action :block}
 
    ;; DOI API
