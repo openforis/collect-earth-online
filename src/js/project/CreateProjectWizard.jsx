@@ -225,6 +225,8 @@ export default class CreateProjectWizard extends React.Component {
         const ySteps = Math.floor(yRange / this.context.plotSpacing) + 1;
         return acc + xSteps * ySteps;
       }, 0);
+    } else if (this.context.numPlots) {
+      return this.context.numPlots;
     } else {
       return 0;
     }

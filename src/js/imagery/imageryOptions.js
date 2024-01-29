@@ -311,7 +311,7 @@ export const imageryOptions = [
         display: "Min",
         type: "text",
         options: {
-          placeholder: "[1-100] | [0.1,0.2,0.1]",
+          placeholder: "[1-100] | 0.1,0.2,0.1",
           step: "0.01",
         },
       },
@@ -320,7 +320,7 @@ export const imageryOptions = [
         display: "Max",
         type: "text",
         options: {
-          placeholder: "[2800-3200] | [0.3,0.5,0.3]",
+          placeholder: "[2800-3200] | 0.3,0.5,0.3",
           step: "0.01",
         },
       },
