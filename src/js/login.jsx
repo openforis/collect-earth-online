@@ -93,7 +93,7 @@ class Login extends React.Component {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <Login returnurl={params.returnurl || ""} />
     </NavigationBar>,
     document.getElementById("app")

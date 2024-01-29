@@ -711,7 +711,7 @@ class ProjectPopup extends React.Component {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <Home userId={session.userId || -1} userRole={session.userRole || ""} />
     </NavigationBar>,
     document.getElementById("app")

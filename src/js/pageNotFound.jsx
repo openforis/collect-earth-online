@@ -31,7 +31,7 @@ function NotFound() {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <NotFound />
     </NavigationBar>,
     document.getElementById("app")

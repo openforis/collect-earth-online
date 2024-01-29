@@ -186,8 +186,8 @@
      :plotGeom          plot_geom
      :extraPlotInfo     (tc/jsonb->clj extra_plot_info {})
      :samples           (prepare-samples-array plot_id (if (and review-mode? (pos? user_id))
-                                                     user_id
-                                                     user-id))
+                                                         user_id
+                                                         user-id))
      :userId            user_id
      :email             email}))
 

@@ -1960,7 +1960,7 @@ function QuitMenu({ projectId, toggleQuitModal }) {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.version}>
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <Collection projectId={params.projectId} userName={session.userName || "guest"} />
     </NavigationBar>,
     document.getElementById("app")
