@@ -505,13 +505,8 @@ def getDegradationPlotsByPoint(geometry, start, end, band):
         geometry = ee.Geometry.Polygon(geometry)
     else:
         geometry = ee.Geometry.Point(geometry)
-    landsatData = getLandsat({
-        "start": start,
-        "end": end,
-        "targetBands": [band],
-        "region": geometry,
-        "sensors": {"l4": True, "l5": True, "l7": True, "l8": True}
-    })
+
+    landsatData = getLandsatToa(start, end, geometry)
 
     def myImageMapper(img):
         theReducer = ee.Reducer.mean()
