@@ -12,10 +12,12 @@ export default function SurveyCardList({ editMode }) {
   const topLevelNodes = mapObjectArray(surveyQuestions, ([id, sq]) => ({
     nodeId: id,
     cardOrder: sq.cardOrder,
+    parentQuestionId: sq.parentQuestionId
   }))
-        .filter(({ cardOrder }) => isNumber(cardOrder))
-        .sort((a, b) => a.cardOrder - b.cardOrder)
-        .map(({ nodeId }) => Number(nodeId));
+    .filter(({ cardOrder }) => isNumber(cardOrder))
+    .filter(({parentQuestionId}) => parentQuestionId < 0)
+    .sort((a, b) => a.cardOrder - b.cardOrder)
+    .map(({ nodeId }) => Number(nodeId));
 
   return topLevelNodes.map((nodeId, idx) => {
     return (
