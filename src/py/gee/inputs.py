@@ -11,7 +11,9 @@ LANDSAT_BAND_DICT = {
     'L4': [0, 1, 2, 3, 4, 5, 6],
 }
 LANDSAT_BAND_NAMES = ['BLUE', 'GREEN',
-                        'RED', 'NIR', 'SWIR1', 'TEMP', 'SWIR2']
+                      'RED', 'NIR',
+                      'SWIR1', 'TEMP',
+                      'SWIR2']
 
 def getBitMask(image:ee.Image, bandName:str, bitMasks:dict):
     """ creates a binary mask from an images bitmask. Expects a dictionary where each item
