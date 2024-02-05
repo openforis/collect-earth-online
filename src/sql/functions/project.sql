@@ -884,12 +884,13 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     flagged                    boolean,
     flagged_reason             text,
     confidence                 integer,
+    confidence_comment         text,
     collection_time            timestamp,
     analysis_duration          numeric,
     samples                    text,
     common_securewatch_date    text,
     total_securewatch_dates    integer,
-    extra_plot_info            jsonb
+    extra_plot_info            json
  ) AS $$
 
     SELECT pl.visible_id,
@@ -901,6 +902,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
         flagged,
         flagged_reason,
         confidence,
+        confidence_comment,
         collection_time,
         ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
         FORMAT('[%s]', STRING_AGG(
@@ -926,7 +928,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     LEFT JOIN users u
         ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
-    GROUP BY project_uid, plot_uid, user_plot_uid, email, extra_plot_info
+    GROUP BY project_uid, plot_uid, user_plot_uid, email, extra_plot_info::text
     ORDER BY plot_uid
 
 $$ LANGUAGE SQL;
@@ -948,7 +950,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_qaqc_data(_project_id integer)
     samples                    text,
     common_securewatch_date    text,
     total_securewatch_dates    integer,
-    extra_plot_info            jsonb
+    extra_plot_info            json
  ) AS $$
 
     WITH assigned_count AS (
@@ -996,7 +998,7 @@ CREATE OR REPLACE FUNCTION dump_project_plot_qaqc_data(_project_id integer)
         ON u.user_uid = up.user_rid
     WHERE project_rid = _project_id
         AND ac.users > 1
-    GROUP BY project_uid, plot_uid, user_plot_uid, email, extra_plot_info
+    GROUP BY project_uid, plot_uid, user_plot_uid, email, extra_plot_info::text
     ORDER BY plot_uid
 
 $$ LANGUAGE SQL;
@@ -1012,12 +1014,14 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         flagged               boolean,
         collection_time       timestamp,
         analysis_duration     numeric,
+        confidence            integer,
+        confidence_comment    text,
         imagery_title         text,
         imagery_attributes    text,
         sample_geom           text,
         saved_answers         jsonb,
-        extra_plot_info       jsonb,
-        extra_sample_info     jsonb
+        extra_plot_info       json,
+        extra_sample_info     json
  ) AS $$
 
     SELECT pl.visible_id,
@@ -1028,6 +1032,8 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         flagged,
         collection_time,
         ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
+        up.confidence as confidence,
+        up.confidence_comment as confidence_comment,
         title AS imagery_title,
         imagery_attributes::text,
         ST_AsText(sample_geom),

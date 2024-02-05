@@ -100,9 +100,19 @@
                             :institutionId institution_id})
                          (call-sql "select_template_projects" user-id)))))
 
+(defn- validate-survey-questions [survey-questions] 
+  (let [raw (->> survey-questions vals (map :cardOrder))]
+    (if (-> raw distinct count (= raw count))
+      survey-questions
+      (reduce-kv
+       (fn [m k {:as survey-question}]
+         (assoc m k  (assoc survey-question :cardOrder (Integer. k))))
+       {}
+       survey-questions)))) 
+
 (defn- build-project-by-id [user-id project-id]
   (let [project (first (call-sql "select_project_by_id" project-id))]
-    {:id                 (:project_id project)     ; TODO dont return known values
+    {:id                 (:project_id project) ; TODO dont return known values
      :institution        (:institution_id project) ; TODO legacy variable name, update to institutionId
      :imageryId          (:imagery_id project)
      :availability       (:availability project)
@@ -124,7 +134,8 @@
      :sampleResolution   (:sample_resolution project)
      :sampleFileName     (:sample_file_name project)
      :allowDrawnSamples  (:allow_drawn_samples project)
-     :surveyQuestions    (tc/jsonb->clj (:survey_questions project) [])
+     :surveyQuestions    (-> project :survey_questions
+                             (tc/jsonb->clj []) validate-survey-questions)
      :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
      :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
      :designSettings     (merge default-settings (tc/jsonb->clj (:design_settings project)))
@@ -207,6 +218,15 @@
           :user_rid user-id})
        users-plots))
 
+(defn- assign-users-by-file
+  [file-assignments project-id]
+  (->> file-assignments
+       (map (fn [[user-email user-plots]]
+              (let [user-id (:user_id (first (call-sql "get_user_by_email" user-email)))
+                    plots   (call-sql "get_plots_by_visible_id" project-id (into-array user-plots))]
+                (add-users-to-plots user-id plots :plot_id))))
+       (flatten)))
+
 (defn- equally-assign-users [plots users plot-key]
   (->> (partition-all (Math/ceil (/ (count plots) (count users)))
                       plots)
@@ -223,11 +243,12 @@
    {:userMethod \"percent\"
     :users      [4581 5 11]
     :percents   [50.0 25.0 25.0]}"
-  [plots design-settings]
-  (let [{users       :users
-         percents    :percents
-         user-method :userMethod} (:userAssignment design-settings)
-        plot-count (count plots)]
+  [plots design-settings project-id]
+  (let [{users           :users
+         percents        :percents
+         file-assignment :fileAssignments
+         user-method     :userMethod} (:userAssignment design-settings)
+        plot-count                   (count plots)]
     (case user-method
       "equal"   (equally-assign-users plots users :plot_id)
       "percent" (loop [rem-users    users
@@ -244,6 +265,7 @@
                              (concat user-plots (add-users-to-plots (first rem-users)
                                                                     (take num-plots rem-plots)
                                                                     :plot_id))))))
+      "file"    (assign-users-by-file file-assignment project-id)
       nil)))
 
 (defn- start-list-at
@@ -272,15 +294,20 @@
    {:qaqcMethod \"sme\"
     :percent    100
     :smes       [2 5]}"
-  [assigned-plots design-settings]
+  [assigned-plots design-settings project-id]
   (when (seq assigned-plots)
     (let [{qaqc-method     :qaqcMethod
            percent         :percent
            times-to-review :timesToReview
+           file-assignment :fileAssignments
            smes            :smes} (:qaqcAssignment design-settings)
           {:keys [users]}         (:userAssignment design-settings)]
-      (if (= "none" qaqc-method)
-        assigned-plots
+      (cond
+        (= "none" qaqc-method) assigned-plots
+        (= "file" qaqc-method) (concat
+                                assigned-plots
+                                (assign-users-by-file file-assignment project-id))
+        (or (= "overlap" qaqc-method) (= "sme" qaqc-method))
         (concat assigned-plots
                 (->> assigned-plots
                      (group-by :user_rid)
@@ -341,13 +368,13 @@
                             (str/join ", " (take 10 bad-plots))
                             "]"))))))
 
-(defn- assign-plots [design-settings current-plots]
-  (when-let [assigned-plots (assign-user-plots current-plots design-settings)]
-    (p-insert-rows! "plot_assignments" (assign-qaqc assigned-plots design-settings))))
+(defn- assign-plots [design-settings current-plots project-id]
+  (when-let [assigned-plots (assign-user-plots current-plots design-settings project-id)]
+    (p-insert-rows! "plot_assignments" (assign-qaqc assigned-plots design-settings project-id))))
 
 (defn- copy-template-plots [project-id template-id design-settings]
   (call-sql "copy_template_plots" template-id project-id)
-  (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id)))
+  (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id) project-id))
 
 (defn- create-project-plots! [project-id
                               plot-distribution
@@ -368,9 +395,9 @@
   ;; Create plots
   (let [plots (if (#{"csv" "shp"} plot-distribution)
                 (external-file/generate-file-plots project-id
-                                     plot-distribution
-                                     plot-file-name
-                                     plot-file-base64)
+                                                   plot-distribution
+                                                   plot-file-name
+                                                   plot-file-base64)
                 (generate-point-plots project-id
                                       plot-distribution
                                       num-plots
@@ -392,7 +419,7 @@
                         "This can come from improper coordinates or projection when uploading shape or csv data.")))
 
   (let [saved-plots (call-sql "get_plot_centers_by_project" project-id)]
-    (assign-plots design-settings saved-plots)
+    (assign-plots design-settings saved-plots project-id)
     (create-project-samples! project-id
                              plot-shape
                              plot-size
@@ -667,7 +694,7 @@
             ;; Redo assignments if they changed
             (when (not= design-settings (tc/jsonb->clj (:design_settings original-project)))
               (call-sql "delete_plot_assignments_by_project" project-id)
-              (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id)))))
+              (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id) project-id))))
 
         ;; Final clean up
         (call-sql "update_project_counts" project-id)
@@ -948,3 +975,64 @@
        :status 200}
       {:status 500
        :body "Error generating shape files."})))
+
+(defn- file-user-assignment
+  [plot-data]
+  (let [user-plot-assignment  (reduce (fn [acc p]
+                                        (update acc (:user p) #(conj % (:visible_id p)))) {} plot-data)
+        plot-assignment-users (map :user_id (call-sql "get_users_by_emails" (into-array (keys user-plot-assignment))))]
+    {:userMethod      "file"
+     :users           plot-assignment-users
+     :fileAssignments user-plot-assignment
+     :percents        [0]}))
+
+(defn- file-qaqc-assignment
+  [plot-data]
+  (let [file-assignment? (some #(:reviewers %) plot-data)
+        qaqc-assignments (reduce (fn [acc {:keys [reviewers visible_id]}]
+                                   (if (seq (first reviewers))
+                                     (reduce (fn [ac r]
+                                               (update ac r #(conj % visible_id))) acc reviewers)
+                                     acc)) {} plot-data)
+        qaqc-users       (when (seq qaqc-assignments)
+                           (call-sql "get_users_by_emails" (into-array (keys qaqc-assignments))))]
+    (if file-assignment?
+      {:qaqcMethod      "file"
+       :fileAssignments qaqc-assignments
+       :reviewers       qaqc-users
+       :smes            []
+       :overlap         0}
+      {:qaqcMethod "none"
+       :smes       []
+       :overlap    0})))
+
+(defn- create-design-settings-from-file
+  [plot-data]
+  {:userAssignment (file-user-assignment plot-data)
+   :qaqcAssignment (file-qaqc-assignment plot-data)})
+
+(defn check-plot-csv
+  [{:keys [params]}]
+  (let [project-id       (tc/val->int (:projectId params))
+        plot-file-name   (:plotFileName params)
+        plot-file-base64 (:plotFileBase64 params)
+        plots            (external-file/load-external-data! project-id
+                                                            "csv"
+                                                            plot-file-name
+                                                            plot-file-base64
+                                                            "plot"
+                                                            [:visible_id])
+        file-assignment? (some #(:user %) plots)
+        updated-plots    (map (fn [row]
+                                (if (:reviewers row)
+                                  (update row :reviewers #(str/split (str/replace % #"\[|\]" "") #"\s+"))
+                                  row))
+                              plots)]
+    (if file-assignment?
+      (data-response (create-design-settings-from-file updated-plots))
+      (data-response  {:userAssignment {:userMethod "none"
+                                        :users      []
+                                        :percents   [0]}
+                       :qaqcAssignment {:qaqcMethod "none"
+                                        :smes       []
+                                        :overlap    0}}))))

@@ -37,48 +37,63 @@ export default class QualityControl extends React.Component {
     this.setQaqcAssignment({ smes: smes.filter((s) => s !== id) });
   };
 
-  renderAssignedSMEs = (assignedSMEs) => (
-    <div>
-      {assignedSMEs.map(({ id, email }) => (
-        <div key={id} className="form-row mt-1">
-          <div className="col-6 offset-5">
-            <div
-              style={{
-                background: "white",
-                border: "1px solid #ced4da",
-                borderRadius: ".25rem",
-                fontSize: ".875rem",
-                overflow: "hidden",
-                padding: ".25rem .5rem",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {email}
+  renderAssignedReviewers = (users, qaqcMethod) => {
+    const { fileAssignments } = this.getQaqcAssignment();
+    return (
+      <div>
+        {users?.map(({ id, email }) => (
+          <div key={id} className="form-row mt-1">
+            <div className="col-6">
+              <div
+                style={{
+                  background: "white",
+                  border: "1px solid #ced4da",
+                  borderRadius: ".25rem",
+                  fontSize: ".875rem",
+                  overflow: "hidden",
+                  padding: ".25rem .5rem",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {email}
+              </div>
             </div>
+            {qaqcMethod === "sme" && (
+              <div className="col-1">
+                <button
+                  className="btn btn-sm btn-danger"
+                  onClick={() => this.removeSME(id)}
+                  title={`Remove ${email}`}
+                  type="button"
+                >
+                  <SvgIcon icon="minus" size="0.9rem" />
+                </button>
+              </div>
+            )}
+            {qaqcMethod === "file" && (
+              <>
+                <div className="d-flex flex-column">
+                  <div className="ml-2">
+                    {`will reinterpret ${fileAssignments[email].length} plots.`}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-          <div className="col-1">
-            <button
-              className="btn btn-sm btn-danger"
-              onClick={() => this.removeSME(id)}
-              title={`Remove ${email}`}
-              type="button"
-            >
-              <SvgIcon icon="minus" size="0.9rem" />
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
+        ))}
+      </div>
+    )
+  }
+    
   render() {
     const qualityMethods = [
       ["none", "None"],
       ["overlap", "Overlap"],
       ["sme", "SME Verification"],
+      ["file", "File", "disabled"],
     ];
-    const { qaqcMethod, percent, smes, timesToReview } = this.getQaqcAssignment();
+    const { qaqcMethod, percent, smes, timesToReview, reviewers } = this.getQaqcAssignment();
     const { userMethod, users } = this.getUserAssignment();
     const { allowDrawnSamples } = this.context;
     const { institutionUserList, totalPlots } = this.props;
@@ -96,7 +111,7 @@ export default class QualityControl extends React.Component {
         <div className="ml-3">
           <div className="form-row">
             <Select
-              disabled={allowDrawnSamples || userMethod === "none"}
+              disabled={allowDrawnSamples || userMethod === "none" || qaqcMethod === "file"}
               id="quality-mode"
               label="Quality Mode"
               onChange={(e) => this.setMethod(e.target.value)}
@@ -115,7 +130,7 @@ export default class QualityControl extends React.Component {
               <p className="font-italic mt-2">Please assign users to enable Quality Control.</p>
             )
           )}
-          {qaqcMethod !== "none" && (
+          {(qaqcMethod === "overlap" || qaqcMethod == "sme" ) && (
             <>
               <div className="form-row mt-3">
                 <label className="col-5" htmlFor="percent">
@@ -160,6 +175,11 @@ export default class QualityControl extends React.Component {
               </p>
             </>
           )}
+          {qaqcMethod === "file" && (
+            <>
+              {this.renderAssignedReviewers(reviewers, qaqcMethod)}
+            </>
+          )}
 
           {qaqcMethod === "sme" && (
             <>
@@ -169,7 +189,7 @@ export default class QualityControl extends React.Component {
                 label="Assigned SMEs"
                 possibleUsers={possibleSMEs}
               />
-              {this.renderAssignedSMEs(assignedSMEs)}
+              {this.renderAssignedReviewers(assignedSMEs, qaqcMethod)}
               {smes.length > 0 && (
                 <p className="font-italic ml-2 mt-2">
                   - Each SME will review ~{formatNumberWithCommas(plotsPerSME)} plots.

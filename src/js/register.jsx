@@ -138,7 +138,7 @@ class Register extends React.Component {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={-1} userName="" version={session.version}>
+    <NavigationBar userId={-1} userName="" version={session.versionDeployed}>
       <Register />
     </NavigationBar>,
     document.getElementById("app")

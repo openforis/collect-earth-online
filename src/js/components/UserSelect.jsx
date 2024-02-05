@@ -3,13 +3,13 @@ import React, { useState } from "react";
 import SvgIcon from "./svg/SvgIcon";
 import Select from "./Select";
 
-export default function UserSelect({ label, id, possibleUsers = [], addUser }) {
+export default function UserSelect({ label, id, possibleUsers = [], disabled = false, addUser }) {
   const [selectedUserId, setSelectedUserId] = useState(-1);
 
   return (
     <div className="form-row">
       <Select
-        disabled={possibleUsers.length === 1}
+        disabled={possibleUsers.length === 1 || disabled}
         id={id}
         label={label}
         labelKey="email"

@@ -1,13 +1,14 @@
-import React, { useContext } from "react";
+import React, { useContext , useEffect} from "react";
 
 import SurveyCard from "./SurveyCard";
 
-import { mapObjectArray } from "../utils/sequence";
+import { mapObjectArray, mapVals } from "../utils/sequence";
 import { ProjectContext } from "../project/constants";
 import { isNumber } from "../utils/generalUtils";
 
 export default function SurveyCardList({ editMode }) {
-  const { surveyQuestions } = useContext(ProjectContext);
+  const {setProjectDetails, surveyQuestions, validateCardOrder } = useContext(ProjectContext);
+
   const topLevelNodes = mapObjectArray(surveyQuestions, ([id, sq]) => ({
     nodeId: id,
     cardOrder: sq.cardOrder,
@@ -18,7 +19,8 @@ export default function SurveyCardList({ editMode }) {
     .sort((a, b) => a.cardOrder - b.cardOrder)
     .map(({ nodeId }) => Number(nodeId));
 
-  return topLevelNodes.map((nodeId, idx) => (
+  return topLevelNodes.map((nodeId, idx) => {
+    return (
     <SurveyCard
       key={nodeId}
       cardNumber={idx + 1} // card order saved in the DB isn't necessarily sequential
@@ -26,5 +28,5 @@ export default function SurveyCardList({ editMode }) {
       surveyQuestionId={nodeId}
       topLevelNodeIds={topLevelNodes}
     />
-  ));
+  );});
 }

@@ -78,7 +78,7 @@ export const iconMap = {
   zoomIn: zoomInIcon,
 };
 
-function SvgIcon({ icon, color, cursor, size, verticalAlign }) {
+function SvgIcon({ icon, color, cursor, size, verticalAlign, transform }) {
   const Icon = iconMap[icon];
   return (
     <Icon
@@ -86,7 +86,7 @@ function SvgIcon({ icon, color, cursor, size, verticalAlign }) {
       cursor={cursor}
       fill={color}
       height={size}
-      style={{ verticalAlign }}
+      style={{ verticalAlign, transform }}
       width={size}
     />
   );
@@ -98,12 +98,14 @@ SvgIcon.propTypes = {
   icon: PropTypes.string.isRequired,
   size: PropTypes.string.isRequired,
   verticalAlign: PropTypes.string,
+  transform: PropTypes.string,
 };
 
 SvgIcon.defaultProps = {
   color: "currentColor",
   cursor: "unset",
   verticalAlign: "middle",
+  transform: "",
 };
 
 export default SvgIcon;

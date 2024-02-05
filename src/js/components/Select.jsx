@@ -3,13 +3,13 @@ import React from "react";
 import { isString } from "../utils/generalUtils";
 
 function Option({ option, valueKey = "value", labelKey = "label" }) {
-  const [value, label] = isString(option, "String")
+  const [value, label, disabled] = isString(option, "String")
     ? [option, option]
     : Array.isArray(option)
-    ? [option[0], option[1]]
+    ? [option[0], option[1], option[2]]
     : [option[valueKey], option[labelKey]];
   return (
-    <option key={value} value={value}>
+    <option key={value} value={value} disabled={disabled}>
       {label}
     </option>
   );
