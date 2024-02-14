@@ -17,95 +17,91 @@ function Account(props) {
   );
 }
 
-class UserStats extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      stats: {},
-    };
-  }
 
-  componentDidMount() {
-    this.getUserStats();
-  }
+function UserStats(props) {
 
-  getUserStats = () => {
-    fetch("/get-user-stats?accountId=" + this.props.accountId)
+  const [stats,setStats] = useState({});
+
+  useEffect(() => {
+    getUserStats()
+  }, []);
+
+  const getUserStats = () => {
+    fetch("/get-user-stats?accountId=" + props.accountId)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((stats) => this.setState({ stats }))
+      .then((stats) => setState(stats))
       .catch((response) => {
         console.log(response);
-        alert("No user found with ID " + this.props.accountId);
+        alert("No user found with ID " + props.accountId);
         window.location = "/home";
       });
   };
-
-  render() {
-    const { totalProjects, totalPlots, averageTime, perProject } = this.state.stats;
-    return (
-      <SectionBlock title="User Stats">
-        <div className="table table-sm" id="user-stats-table">
-          <div className="ProjectStats__plots-table mb-2">
-            <strong>Project Total Stats:</strong>
-            <div className="row pl-2">
-              <div className="col-6">
-                <StatsCell title="Projects Worked">{totalProjects} projects</StatsCell>
-                <StatsCell title="Plots Completed">{totalPlots} plots</StatsCell>
-              </div>
-              <div className="col-6">
-                <StatsCell title="Average Analysis Duration">
-                  {averageTime
-                    ? averageTime >= 60
-                      ? `${(averageTime / 60).toFixed(2)} mins/plot`
-                      : `${averageTime} secs/plot`
-                    : "loading..."}
-                </StatsCell>
-                <StatsCell title="Average Plots per Project">
-                  {Number((totalPlots / totalProjects).toFixed(1)) || 0} plots
-                </StatsCell>
-              </div>
+  
+  const { totalProjects, totalPlots, averageTime, perProject } = state.stats;
+  return (
+    <SectionBlock title="User Stats">
+      <div className="table table-sm" id="user-stats-table">
+        <div className="ProjectStats__plots-table mb-2">
+          <strong>Project Total Stats:</strong>
+          <div className="row pl-2">
+            <div className="col-6">
+              <StatsCell title="Projects Worked">{totalProjects} projects</StatsCell>
+              <StatsCell title="Plots Completed">{totalPlots} plots</StatsCell>
+            </div>
+            <div className="col-6">
+              <StatsCell title="Average Analysis Duration">
+                {averageTime
+                 ? averageTime >= 60
+                 ? `${(averageTime / 60).toFixed(2)} mins/plot`
+                 : `${averageTime} secs/plot`
+                 : "loading..."}
+              </StatsCell>
+              <StatsCell title="Average Plots per Project">
+                {Number((totalPlots / totalProjects).toFixed(1)) || 0} plots
+              </StatsCell>
             </div>
           </div>
-
-          {perProject && (
-            <div className="ProjectStats__user-table">
-              <strong>User Stats:</strong>
-              {perProject.map((project) => (
-                <StatsRow
-                  key={project.id}
-                  analysisTime={project.analysisAverage}
-                  plots={project.plotCount}
-                  title={`#${project.id} - ${project.name}`}
-                  titleHref={`/collection?projectId=${project.id}`}
-                />
-              ))}
-            </div>
-          )}
         </div>
-      </SectionBlock>
-    );
-  }
+        
+        {perProject && (
+          <div className="ProjectStats__user-table">
+            <strong>User Stats:</strong>
+            {perProject.map((project) => (
+              <StatsRow
+                key={project.id}
+                analysisTime={project.analysisAverage}
+                plots={project.plotCount}
+                title={`#${project.id} - ${project.name}`}
+                titleHref={`/collection?projectId=${project.id}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </SectionBlock>
+  );
 }
 
-class AccountForm extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      email: "",
-      password: "",
-      passwordConfirmation: "",
-      currentPassword: "",
-    };
-  }
+function AccountForm(props) {
+  
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
 
-  updateAccount = () => {
+  const updateAccount = () => {
     fetch("/account", {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(this.state),
+      body: JSON.stringify(
+        {email,
+         password,
+         passwordConfirmation,
+         currentPassword
+        }),
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
@@ -119,80 +115,77 @@ class AccountForm extends React.Component {
       })
       .catch((err) => console.log(err));
   };
-
-  render() {
-    return (
-      <SectionBlock title="Account Settings">
-        <>
-          <h1>{this.props.userName}</h1>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              this.updateAccount();
-            }}
-          >
-            <div className="form-group">
-              <label htmlFor="email">Reset email</label>
-              <input
-                autoComplete="off"
-                className="form-control"
-                id="email"
-                onChange={(e) => this.setState({ email: e.target.value })}
-                placeholder="New email"
-                type="email"
-                value={this.state.email}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="password">Reset password</label>
-              <div className="form-row">
-                <div className="col">
-                  <input
-                    autoComplete="off"
-                    className="form-control mb-1"
-                    id="password"
-                    onChange={(e) => this.setState({ password: e.target.value })}
-                    placeholder="New password"
-                    type="password"
-                    value={this.state.password}
-                  />
-                </div>
-                <div className="col">
-                  <input
-                    autoComplete="off"
-                    className="form-control"
-                    id="password-confirmation"
-                    onChange={(e) => this.setState({ passwordConfirmation: e.target.value })}
-                    placeholder="New password confirmation"
-                    type="password"
-                    value={this.state.passwordConfirmation}
-                  />
-                </div>
+  return (
+    <SectionBlock title="Account Settings">
+      <>
+        <h1>{props.userName}</h1>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            updateAccount();
+          }}
+        >
+          <div className="form-group">
+            <label htmlFor="email">Reset email</label>
+            <input
+              autoComplete="off"
+              className="form-control"
+              id="email"
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="New email"
+              type="email"
+              value={email}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="password">Reset password</label>
+            <div className="form-row">
+              <div className="col">
+                <input
+                  autoComplete="off"
+                  className="form-control mb-1"
+                  id="password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="New password"
+                  type="password"
+                  value={password}
+                />
+              </div>
+              <div className="col">
+                <input
+                  autoComplete="off"
+                  className="form-control"
+                  id="password-confirmation"
+                  onChange={(e) => setPasswordConfirmation(e.target.value)}
+                  placeholder="New password confirmation"
+                  type="password"
+                  value={passwordConfirmation}
+                />
               </div>
             </div>
-            <div className="form-group">
-              <label htmlFor="current-password">Verify your identity</label>
-              <input
-                autoComplete=" off"
-                className="form-control"
-                id="current-password"
-                onChange={(e) => this.setState({ currentPassword: e.target.value })}
-                placeholder="Current password"
-                type="password"
-                value={this.state.currentPassword}
-              />
-            </div>
+          </div>
+          <div className="form-group">
+            <label htmlFor="current-password">Verify your identity</label>
             <input
-              className="btn btn-outline-lightgreen btn-block"
-              defaultValue="Update account settings"
-              name="update-account"
-              type="submit"
+              autoComplete=" off"
+              className="form-control"
+              id="current-password"
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Current password"
+              type="password"
+              value={currentPassword}
             />
-          </form>
+          </div>
+          <input
+            className="btn btn-outline-lightgreen btn-block"
+              defaultValue="Update account settings"
+            name="update-account"
+            type="submit"
+          />
+        </form>
         </>
-      </SectionBlock>
-    );
-  }
+    </SectionBlock>
+  );
 }
 
 export function pageInit(params, session) {
