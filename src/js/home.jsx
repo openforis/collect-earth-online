@@ -1,148 +1,141 @@
-import React from "react";
+import React, { useEffect } from 'react';
 import ReactDOM from "react-dom";
 import { LoadingModal, NavigationBar } from "./components/PageComponents";
 import { mercator } from "./utils/mercator";
 import { sortAlphabetically } from "./utils/generalUtils";
 import SvgIcon from "./components/svg/SvgIcon";
 
-class Home extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      projects: [],
-      imagery: [],
-      institutions: [],
-      showSidePanel: true,
-      userInstitutions: [],
-      modalMessage: "Loading institutions",
-    };
-  }
+const Home = (props) => {
 
-  componentDidMount() {
-    Promise.all([this.getImagery(), this.getInstitutions(), this.getProjects()])
-      .catch((response) => {
-        console.log(response);
+  const [projects, setProjects] = useState([]);
+  const [imagery, setImagery] = useState([]);
+  const [institutions, setInstitutions] = useState([]);
+  const [showSidePanel, setShowSidePanel] = useState(true);
+  const [userInstitutions, setUserInstitutions] = useState([]);
+  const [modalMessage, setModalMessage] = useState("Loading institutions");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [imageryData, institutionsData, projectsData] = await Promise.all([
+          getImagery(),
+          getInstitutions(),
+          getProjects()
+        ]);
+        setImagery(imageryData);
+        setInstitutions(institutionsData);
+        setProjects(projectsData);
+        setModalMessage(null);
+      } catch (error) {
+        console.error('Error retrieving data:', error);
         alert("Error retrieving the collection data. See console for details.");
-      })
-      .finally(() => this.setState({ modalMessage: null }));
-  }
-
-  getProjects = () =>
-    fetch("/get-home-projects")
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (data.length > 0) {
-          this.setState({ projects: data });
-          return Promise.resolve();
-        } else {
-          return Promise.reject("No projects found");
-        }
-      });
-
-  getImagery = () =>
-    fetch("/get-public-imagery")
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (data.length > 0) {
-          this.setState({ imagery: data });
-          return Promise.resolve();
-        } else {
-          return Promise.reject("No imagery found");
-        }
-      });
-
-  getInstitutions = () =>
-    fetch("/get-all-institutions")
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (data.length > 0) {
-          const userInstitutions =
-            this.props.userRole !== "admin"
-              ? data.filter((institution) => institution.isMember)
-              : [];
-          const institutions =
-            userInstitutions.length > 0
-              ? data.filter((institution) => !userInstitutions.includes(institution))
-              : data;
-          this.setState({
-            institutions,
-            userInstitutions,
-          });
-          return Promise.resolve();
-        } else {
-          return Promise.reject("No institutions found");
-        }
-      });
-
-  toggleSidebar = (mapConfig) =>
-    this.setState({ showSidePanel: !this.state.showSidePanel }, () => mercator.resize(mapConfig));
-
-  render() {
-    return (
-      <div id="bcontainer">
-        <span id="mobilespan" />
-        <div className="Wrapper">
-          <div className="row tog-effect">
-            <SideBar
-              institutions={this.state.institutions}
-              projects={this.state.projects}
-              showSidePanel={this.state.showSidePanel}
-              userId={this.props.userId}
-              userInstitutions={this.state.userInstitutions}
-              userRole={this.props.userRole}
-            />
-            <MapPanel
-              imagery={this.state.imagery}
-              projects={this.state.projects}
-              showSidePanel={this.state.showSidePanel}
-              toggleSidebar={this.toggleSidebar}
-            />
-          </div>
-        </div>
-        {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
-      </div>
-    );
-  }
-}
-
-class MapPanel extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      mapConfig: null,
-      clusterExtent: [],
-      clickedFeatures: [],
+      }
     };
-  }
+    fetchData();
+  }, []);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      this.state.mapConfig === null &&
-      this.props.imagery.length > 0 &&
-      prevProps.imagery.length === 0
-    ) {
-      this.initializeMap();
+  const getProjects = async () => {
+    const response = await fetch("/get-home-projects");
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
     }
-
-    if (
-      this.state.mapConfig &&
-      this.props.projects.length > 0 &&
-      (!prevState.mapConfig || prevProps.projects.length === 0)
-    ) {
-      this.addProjectMarkers(this.state.mapConfig, this.props.projects, 40); // clusterDistance = 40, use null to disable clustering
+    const data = await response.json();
+    if (data.length > 0) {
+      return data;
+    } else {
+      throw new Error('No projects found');
     }
-  }
-
-  initializeMap = () => {
-    const homePageLayer =
-      this.props.imagery.find((imagery) => imagery.title === "Mapbox Satellite w/ Labels") ||
-      this.props.imagery[0];
-    const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
-    mercator.setVisibleLayer(mapConfig, homePageLayer.id);
-    this.setState({ mapConfig });
   };
 
-  addProjectMarkers(mapConfig, projects, clusterDistance) {
+  const getImagery = async () => {
+    const response = await fetch("/get-public-imagery");
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    if (data.length > 0) {
+      return data;
+    } else {
+      throw new Error('No imagery found');
+    }
+  };
+
+  const getInstitutions = async () => {
+    const response = await fetch("/get-all-institutions");
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    if (data.length > 0) {
+      const userInstitutions =
+        props.userRole !== "admin"
+          ? data.filter((institution) => institution.isMember)
+          : [];
+      setUserInstitutions(userInstitutions);
+      const institutions =
+        userInstitutions.length > 0
+          ? data.filter((institution) => !userInstitutions.includes(institution))
+          : data;
+      return institutions;
+    } else {
+      throw new Error('No institutions found');
+    }
+  };
+
+  const toggleSidebar = (mapConfig) =>
+    setShowSidePanel(!showSidePanel, () => mercator.resize(mapConfig));
+
+  return (
+    <div id="bcontainer">
+      <span id="mobilespan" />
+      <div className="Wrapper">
+        <div className="row tog-effect">
+          <SideBar
+            institutions={institutions}
+            projects={projects}
+            showSidePanel={showSidePanel}
+            userId={props.userId}
+            userInstitutions={userInstitutions}
+            userRole={props.userRole}
+          />
+          <MapPanel
+            imagery={imagery}
+            projects={projects}
+            showSidePanel={showSidePanel}
+            toggleSidebar={toggleSidebar}
+          />
+        </div>
+      </div>
+      {modalMessage && <LoadingModal message={modalMessage} />}
+    </div>
+  );
+};
+
+const MapPanel = (props) => {
+  const [mapConfig, setMapConfig] = useState(null);
+  const [clusterExtent, setClusterExtent] = useState([]);
+  const [clickedFeatures, setClickedFeatures] = useState([]);
+
+  useEffect(() => {
+    if (mapConfig === null && props.imagery.length > 0 && props.imagery.length === 0) {
+      initializeMap();
+    }
+
+    if (mapConfig && props.projects.length > 0) {
+      addProjectMarkers(mapConfig, props.projects, 40);
+    }
+  }, [mapConfig, props.imagery, props.projects]);
+
+  const initializeMap = () => {
+    const homePageLayer =
+      props.imagery.find((imagery) => imagery.title === "Mapbox Satellite w/ Labels") ||
+      props.imagery[0];
+    const newMapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
+    mercator.setVisibleLayer(newMapConfig, homePageLayer.id);
+    setMapConfig(newMapConfig);
+  };
+
+  const addProjectMarkers = (mapConfig, projects, clusterDistance) => {
     const projectSource = mercator.projectsToVectorSource(
       projects.filter((project) => project.centroid)
     );
@@ -169,166 +162,141 @@ class MapPanel extends React.Component {
         mapConfig.map.forEachFeatureAtPixel(event.pixel, (feature) =>
           clickedFeatures.push(feature)
         );
-        this.showProjectPopup(overlay, clickedFeatures[0]);
+        showProjectPopup(overlay, clickedFeatures[0]);
       } else {
         overlay.setPosition(undefined);
       }
     });
-  }
+  };
 
-  showProjectPopup(overlay, feature) {
+  const showProjectPopup = (overlay, feature) => {
     if (mercator.isCluster(feature)) {
       overlay.setPosition(feature.get("features")[0].getGeometry().getCoordinates());
-      this.setState({
-        clusterExtent: mercator.getClusterExtent(feature),
-        clickedFeatures: feature.get("features"),
-      });
+      setClusterExtent(mercator.getClusterExtent(feature));
+      setClickedFeatures(feature.get("features"));
     } else {
       overlay.setPosition(feature.getGeometry().getCoordinates());
-      this.setState({
-        clusterExtent: [],
-        clickedFeatures: feature.get("features"),
-      });
+      setClusterExtent([]);
+      setClickedFeatures(feature.get("features"));
     }
-  }
+  };
 
-  render() {
-    return (
+  return (
+    <div
+      className={
+        props.showSidePanel
+          ? "col-lg-9 col-md-12 pl-0 full-height"
+          : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9 full-height"
+      }
+      id="mapPanel"
+    >
       <div
-        className={
-          this.props.showSidePanel
-            ? "col-lg-9 col-md-12 pl-0 full-height"
-            : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9 full-height"
-        }
-        id="mapPanel"
+        className="bg-lightgray"
+        id="toggle-map-button"
+        onClick={() => props.toggleSidebar(mapConfig)}
       >
-        <div
-          className="bg-lightgray"
-          id="toggle-map-button"
-          onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
-        >
-          {this.props.showSidePanel ? (
-            <SvgIcon icon="leftDouble" size="1.25rem" />
-          ) : (
-            <SvgIcon icon="rightDouble" size="1.25rem" />
-          )}
-        </div>
-        <div className="full-height" id="home-map-pane" style={{ maxWidth: "inherit" }} />
-        <ProjectPopup
-          clusterExtent={this.state.clusterExtent}
-          features={this.state.clickedFeatures}
-          mapConfig={this.state.mapConfig}
-        />
+        {props.showSidePanel ? (
+          <SvgIcon icon="leftDouble" size="1.25rem" />
+        ) : (
+          <SvgIcon icon="rightDouble" size="1.25rem" />
+        )}
       </div>
-    );
-  }
-}
+      <div className="full-height" id="home-map-pane" style={{ maxWidth: "inherit" }} />
+      <ProjectPopup
+        clusterExtent={clusterExtent}
+        features={clickedFeatures}
+        mapConfig={mapConfig}
+      />
+    </div>
+  );
+};
 
-class SideBar extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      filterText: "",
-      filterInstitution: true,
-      useFirstLetter: false,
-      sortByNumber: true,
-      showEmptyInstitutions: false,
-      showFilters: false,
-    };
-  }
+const SideBar = (props) => {
+  const [filterText, setFilterText] = useState('');
+  const [filterInstitution, setFilterInstitution] = useState(true);
+  const [useFirstLetter, setUseFirstLetter] = useState(false);
+  const [sortByNumber, setSortByNumber] = useState(true);
+  const [showEmptyInstitutions, setShowEmptyInstitutions] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
-  toggleShowFilters = () => this.setState({ showFilters: !this.state.showFilters });
+  const toggleShowFilters = () => setShowFilters(!showFilters);
+  const toggleFilterInstitution = () => setFilterInstitution(!filterInstitution);
+  const toggleShowEmptyInstitutions = () => setShowEmptyInstitutions(!showEmptyInstitutions);
+  const toggleSortByNumber = () => setSortByNumber(!sortByNumber);
+  const toggleUseFirst = () => setUseFirstLetter(!useFirstLetter);
+  const updateFilterText = (newText) => setFilterText(newText);
 
-  toggleFilterInstitution = () =>
-    this.setState({ filterInstitution: !this.state.filterInstitution });
-
-  toggleShowEmptyInstitutions = () =>
-    this.setState({
-      showEmptyInstitutions: !this.state.showEmptyInstitutions,
-    });
-
-  toggleSortByNumber = () => this.setState({ sortByNumber: !this.state.sortByNumber });
-
-  toggleUseFirst = () => this.setState({ useFirstLetter: !this.state.useFirstLetter });
-
-  updateFilterText = (newText) => this.setState({ filterText: newText });
-
-  render() {
-    return (
-      this.props.showSidePanel && (
-        <div
-          className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column"
-          id="lPanel"
-        >
-          {(this.props.userRole === "admin" || this.props.userId === -1) && (
+  return (
+    props.showSidePanel && (
+      <div className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column" id="lPanel">
+        {(props.userRole === 'admin' || props.userId === -1) && (
+          <div className="bg-darkgreen">
+            <h1 className="tree_label" id="panelTitle">
+              Institutions
+            </h1>
+          </div>
+        )}
+        {props.userId > 0 && <CreateInstitutionButton />}
+        <InstitutionFilter
+          filterInstitution={filterInstitution}
+          filterText={filterText}
+          showEmptyInstitutions={showEmptyInstitutions}
+          showFilters={showFilters}
+          sortByNumber={sortByNumber}
+          toggleFilterInstitution={toggleFilterInstitution}
+          toggleShowEmptyInstitutions={toggleShowEmptyInstitutions}
+          toggleShowFilters={toggleShowFilters}
+          toggleSortByNumber={toggleSortByNumber}
+          toggleUseFirst={toggleUseFirst}
+          updateFilterText={updateFilterText}
+          useFirstLetter={useFirstLetter}
+        />
+        {props.userId > 0 && props.userRole !== 'admin' && (
+          <>
             <div className="bg-darkgreen">
-              <h1 className="tree_label" id="panelTitle">
-                Institutions
-              </h1>
+              <h2 className="tree_label" id="panelTitle">
+                Your Affiliations
+              </h2>
             </div>
-          )}
-          {this.props.userId > 0 && <CreateInstitutionButton />}
-          <InstitutionFilter
-            filterInstitution={this.state.filterInstitution}
-            filterText={this.state.filterText}
-            showEmptyInstitutions={this.state.showEmptyInstitutions}
-            showFilters={this.state.showFilters}
-            sortByNumber={this.state.sortByNumber}
-            toggleFilterInstitution={this.toggleFilterInstitution}
-            toggleShowEmptyInstitutions={this.toggleShowEmptyInstitutions}
-            toggleShowFilters={this.toggleShowFilters}
-            toggleSortByNumber={this.toggleSortByNumber}
-            toggleUseFirst={this.toggleUseFirst}
-            updateFilterText={this.updateFilterText}
-            useFirstLetter={this.state.useFirstLetter}
-          />
-          {this.props.userId > 0 && this.props.userRole !== "admin" && (
-            <>
-              <div className="bg-darkgreen">
-                <h2 className="tree_label" id="panelTitle">
-                  Your Affiliations
-                </h2>
-              </div>
-              <InstitutionList
-                filterInstitution={this.state.filterInstitution}
-                filterText={this.state.filterText}
-                institutionListType="user"
-                institutions={this.props.userInstitutions}
-                projects={this.props.projects}
-                showEmptyInstitutions={this.state.showEmptyInstitutions}
-                sortByNumber={this.state.sortByNumber}
-                useFirstLetter={this.state.useFirstLetter}
-                userId={this.props.userId}
-              />
-              <div className="bg-darkgreen">
-                <h2 className="tree_label" id="panelTitle">
-                  Other Institutions
-                </h2>
-              </div>
-            </>
-          )}
-          {this.props.institutions.length > 0 && this.props.projects.length > 0 ? (
             <InstitutionList
-              filterInstitution={this.state.filterInstitution}
-              filterText={this.state.filterText}
-              institutionListType="institutions"
-              institutions={this.props.institutions}
-              projects={this.props.projects}
-              showEmptyInstitutions={this.state.showEmptyInstitutions}
-              sortByNumber={this.state.sortByNumber}
-              useFirstLetter={this.state.useFirstLetter}
-              userId={this.props.userId}
+              filterInstitution={filterInstitution}
+              filterText={filterText}
+              institutionListType="user"
+              institutions={props.userInstitutions}
+              projects={props.projects}
+              showEmptyInstitutions={showEmptyInstitutions}
+              sortByNumber={sortByNumber}
+              useFirstLetter={useFirstLetter}
+              userId={props.userId}
             />
-          ) : this.props.userInstitutions.length > 0 ? (
-            <h3 className="p-3">No unaffiliated institutions found.</h3>
-          ) : (
-            <h3 className="p-3">Loading data...</h3>
-          )}
-        </div>
-      )
-    );
-  }
-}
+            <div className="bg-darkgreen">
+              <h2 className="tree_label" id="panelTitle">
+                Other Institutions
+              </h2>
+            </div>
+          </>
+        )}
+        {props.institutions.length > 0 && props.projects.length > 0 ? (
+          <InstitutionList
+            filterInstitution={filterInstitution}
+            filterText={filterText}
+            institutionListType="institutions"
+            institutions={props.institutions}
+            projects={props.projects}
+            showEmptyInstitutions={showEmptyInstitutions}
+            sortByNumber={sortByNumber}
+            useFirstLetter={useFirstLetter}
+            userId={props.userId}
+          />
+        ) : props.userInstitutions.length > 0 ? (
+          <h3 className="p-3">No unaffiliated institutions found.</h3>
+        ) : (
+          <h3 className="p-3">Loading data...</h3>
+        )}
+      </div>
+    )
+  );
+};
 
 function InstitutionList({
   institutions,
@@ -523,74 +491,63 @@ function CreateInstitutionButton() {
   );
 }
 
-class Institution extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      showProjectList: false,
-    };
-  }
+const Institution = (props) => {
+  const [showProjectList, setShowProjectList] = useState(false);
 
-  toggleShowProjectList = () => this.setState({ showProjectList: !this.state.showProjectList });
+  const toggleShowProjectList = () => setShowProjectList(!showProjectList);
 
-  render() {
-    const { props } = this;
-    return (
-      <li>
+  return (
+    <li>
+      <div
+        className="btn-lightgreen p-2"
+        onClick={toggleShowProjectList}
+        style={{
+          alignItems: 'center',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
+          margin: '2px',
+        }}
+      >
         <div
-          className="btn-lightgreen p-2"
-          onClick={this.toggleShowProjectList}
           style={{
-            alignItems: "center",
-            borderRadius: "6px",
-            cursor: "pointer",
-            display: "flex",
-            justifyContent: "space-between",
-            margin: "2px",
+            flex: 0,
+            display: 'inline-block',
+            margin: '0 .5rem 0 .25rem',
+            transition: 'transform 150ms linear 0s',
+            transform: (props.forceInstitutionExpand || showProjectList) && 'rotate(90deg)',
           }}
         >
-          <div
-            style={{
-              flex: 0,
-              display: "inline-block",
-              margin: "0 .5rem 0 .25rem",
-              transition: "transform 150ms linear 0s",
-              transform:
-                (props.forceInstitutionExpand || this.state.showProjectList) && "rotate(90deg)",
-            }}
-          >
-            {props.projects && props.projects.length > 0 && (
-              <SvgIcon color="white" icon="rightCaret" size="0.9rem" />
-            )}
-          </div>
-          <div
-            style={{
-              flex: 1,
-              fontSize: "1rem",
-              fontWeight: "bold",
-              margin: "0",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {props.name}
-          </div>
-          <a
-            className="btn btn-sm visit-btn"
-            href={`/review-institution?institutionId=${props.id}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            VISIT
-          </a>
+          {props.projects && props.projects.length > 0 && (
+            <SvgIcon color="white" icon="rightCaret" size="0.9rem" />
+          )}
         </div>
-        {(props.forceInstitutionExpand || this.state.showProjectList) && (
-          <ProjectList id={props.id} projects={props.projects} />
-        )}
-      </li>
-    );
-  }
-}
+        <div
+          style={{
+            flex: 1,
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            margin: '0',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {props.name}
+        </div>
+        <a
+          className="btn btn-sm visit-btn"
+          href={`/review-institution?institutionId=${props.id}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          VISIT
+        </a>
+      </div>
+      {(props.forceInstitutionExpand || showProjectList) && <ProjectList id={props.id} projects={props.projects} />}
+    </li>
+  );
+};
 
 function ProjectList(props) {
   return props.projects.map((project) => (
@@ -638,76 +595,76 @@ function Project(props) {
   );
 }
 
-class ProjectPopup extends React.Component {
-  componentDidMount() {
-    // There is some kind of bug in attaching this onClick handler directly to its button in render().
-    document.getElementById("zoomToCluster").onclick = () => {
-      mercator.zoomMapToExtent(this.props.mapConfig, this.props.clusterExtent, 128);
-      mercator.getOverlayByTitle(this.props.mapConfig, "projectPopup").setPosition(undefined);
-    };
-  }
+const ProjectPopup = (props) => {
+  useEffect(() => {
+    const zoomToClusterButton = document.getElementById('zoomToCluster');
+    if (zoomToClusterButton) {
+      zoomToClusterButton.onclick = () => {
+        zoomMapToExtent(props.mapConfig, props.clusterExtent, 128);
+        getOverlayByTitle(props.mapConfig, 'projectPopup').setPosition(undefined);
+      };
+    }
+  }, [props.mapConfig, props.clusterExtent]);
 
-  render() {
-    return (
-      <div className="d-flex flex-column" id="projectPopUp" style={{ maxHeight: "40vh" }}>
-        <div className="cTitle">
-          <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
-        </div>
-        <div className="cContent" style={{ padding: "10px", overflow: "auto" }}>
-          <table className="table table-sm" style={{ tableLayout: "fixed" }}>
-            <tbody>
-              {this.props.features.map((feature) => (
-                <React.Fragment key={feature.get("projectId")}>
-                  <tr className="d-flex" style={{ borderTop: "1px solid gray" }}>
-                    <td className="small col-6 px-0 my-auto">Name</td>
-                    <td className="small col-6 pr-0">
-                      <a
-                        className="btn btn-sm btn-block btn-outline-lightgreen"
-                        href={`/collection?projectId=${feature.get("projectId")}`}
-                        style={{
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {feature.get("name")}
-                      </a>
-                    </td>
-                  </tr>
-                  <tr className="d-flex">
-                    <td className="small col-6 px-0 my-auto">Description</td>
-                    <td className="small col-6 pr-0" style={{ wordBreak: "break-all" }}>
-                      {feature.get("description")}
-                    </td>
-                  </tr>
-                  <tr className="d-flex" style={{ borderBottom: "1px solid gray" }}>
-                    <td className="small col-6 px-0 my-auto">Number of plots</td>
-                    <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
-                  </tr>
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <button
-          className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
-          id="zoomToCluster"
-          style={{
-            alignItems: "center",
-            cursor: "pointer",
-            justifyContent: "center",
-            minWidth: "350px",
-            display: this.props.features.length > 1 ? "flex" : "none",
-          }}
-          type="button"
-        >
-          <SvgIcon icon="zoomIn" size="1rem" />
-          <span style={{ marginLeft: "0.4rem" }}>Zoom to cluster</span>
-        </button>
+  return (
+    <div className="d-flex flex-column" id="projectPopUp" style={{ maxHeight: '40vh' }}>
+      <div className="cTitle">
+        <h1>{props.features.length > 1 ? 'Cluster info' : 'Project info'}</h1>
       </div>
-    );
-  }
-}
+      <div className="cContent" style={{ padding: '10px', overflow: 'auto' }}>
+        <table className="table table-sm" style={{ tableLayout: 'fixed' }}>
+          <tbody>
+            {props.features.map((feature) => (
+              <React.Fragment key={feature.get('projectId')}>
+                <tr className="d-flex" style={{ borderTop: '1px solid gray' }}>
+                  <td className="small col-6 px-0 my-auto">Name</td>
+                  <td className="small col-6 pr-0">
+                    <a
+                      className="btn btn-sm btn-block btn-outline-lightgreen"
+                      href={`/collection?projectId=${feature.get('projectId')}`}
+                      style={{
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {feature.get('name')}
+                    </a>
+                  </td>
+                </tr>
+                <tr className="d-flex">
+                  <td className="small col-6 px-0 my-auto">Description</td>
+                  <td className="small col-6 pr-0" style={{ wordBreak: 'break-all' }}>
+                    {feature.get('description')}
+                  </td>
+                </tr>
+                <tr className="d-flex" style={{ borderBottom: '1px solid gray' }}>
+                  <td className="small col-6 px-0 my-auto">Number of plots</td>
+                  <td className="small col-6 pr-0">{feature.get('numPlots')}</td>
+                </tr>
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <button
+        className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
+        id="zoomToCluster"
+        style={{
+          alignItems: 'center',
+          cursor: 'pointer',
+          justifyContent: 'center',
+          minWidth: '350px',
+          display: props.features.length > 1 ? 'flex' : 'none',
+        }}
+        type="button"
+      >
+        <SvgIcon icon="zoomIn" size="1rem" />
+        <span style={{ marginLeft: '0.4rem' }}>Zoom to cluster</span>
+      </button>
+    </div>
+  );
+};
 
 export function pageInit(params, session) {
   ReactDOM.render(
