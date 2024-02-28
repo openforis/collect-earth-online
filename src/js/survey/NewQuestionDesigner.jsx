@@ -104,6 +104,7 @@ export default class NewQuestionDesigner extends React.Component {
       ...copyQuestion,
       question: `${copyQuestion.question} (${repeatedQuestions})`,
       parentQuestionId: parentId,
+      cardOrder: -1,
       ...(answerIds && { parentAnswerIds: answerIds }),
     };
     const newId = idOffset + copyQuestionId;
@@ -126,16 +127,33 @@ export default class NewQuestionDesigner extends React.Component {
     }
   };
 
+  newParentQuestion = (surveyQuestions, selectedCopyId, selectedParentId, selectedAnswerIds, setProjectDetails) => {
+    const idOffset = getNextInSequence(Object.keys(surveyQuestions)) - selectedCopyId;
+    const copies = this.getCopy(idOffset, selectedCopyId, selectedParentId, selectedAnswerIds);
+    setProjectDetails({ surveyQuestions: { ...surveyQuestions, ...copies } });
+  };
+
+  newChildQuestion = (surveyQuestions, selectedParentId, selectedCopyId, selectedAnswerIds, setProjectDetails) => {
+    const newId = getNextInSequence(Object.keys(surveyQuestions));
+    const newChild =  {
+      ...surveyQuestions[selectedCopyId],
+      parentQuestionId: selectedParentId,
+      parentAnswerIds: selectedAnswerIds
+    };
+    const newParent = surveyQuestions[selectedParentId];
+    setProjectDetails({surveyQuestions: {...surveyQuestions, [newId]: newChild}});
+  };
+
+  
   copySurveyQuestion = () => {
     const { selectedCopyId, selectedParentId, selectedAnswerIds } = this.state;
     const { surveyQuestions, setProjectDetails } = this.props;
-    if (selectedCopyId >= 0) {
-      const idOffset = getNextInSequence(Object.keys(surveyQuestions)) - selectedCopyId;
-      const copies = this.getCopy(idOffset, selectedCopyId, selectedParentId, selectedAnswerIds);
-      setProjectDetails({ surveyQuestions: { ...surveyQuestions, ...copies } });
-    } else {
-      alert("Please select a question to copy");
-    }
+    (selectedCopyId >= 0) ?
+      (selectedParentId >= 0) ?    
+      this.newChildQuestion(surveyQuestions, selectedParentId, selectedCopyId, selectedAnswerIds, setProjectDetails) :
+      this.newParentQuestion(surveyQuestions, selectedCopyId, selectedParentId, selectedAnswerIds, setProjectDetails) :
+    alert("Please select a question to copy") ;
+    
   };
 
   renderOptions = () => {
