@@ -174,14 +174,13 @@ export default class AssignPlots extends React.Component {
               <div>
                 {users.map((userId, idx) => {
                   const { email } = institutionUserList.find(({ id }) => userId === id) || {};
-                  return this.renderUserRow(
-                    idx,
-                    userId,
-                    email,
-                    userMethod,
-                    percents[idx],
-                    totalPlots
-                  );
+                  return email ?  this.renderUserRow(idx,
+                                                     userId,
+                                                     email,
+                                                     userMethod,
+                                                     percents[idx],
+                                                     totalPlots)
+                    : alert("A user in the CSV is not a valid user for this institution. Please fix this issue before proceeding.");
                 })}
               </div>
               {userMethod === "percent" && users.length > 0 && (
