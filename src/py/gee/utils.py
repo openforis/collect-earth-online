@@ -486,13 +486,16 @@ def getDegradationTileUrlByDate(geometry, date, visParams):
         geometry = ee.Geometry.Polygon(geometry)
     else:
         geometry = ee.Geometry.Point(geometry)
-    landsatData = getLandsat({
-        "start": startDate.strftime('%Y-%m-%d'),
-        "end": endDate.strftime('%Y-%m-%d'),
-        "targetBands": ['RED', 'GREEN', 'BLUE', 'SWIR1', 'NIR'],
-        "region": geometry,
-        "sensors": {"l4": False, "l5": False, "l7": False, "l8": True}
-    })
+    landsatData = getLandsatToa(startDate.strftime('%Y-%m-%d'),
+                                endDate.strftime('%Y-%m-%d'),
+                                geometry)
+    # landsatData = getLandsat({
+    #     "start": startDate.strftime('%Y-%m-%d'),
+    #     "end": endDate.strftime('%Y-%m-%d'),
+    #     "targetBands": ['RED', 'GREEN', 'BLUE', 'SWIR1', 'NIR'],
+    #     "region": geometry,
+    #     "sensors": {"l4": False, "l5": False, "l7": False, "l8": True}
+    # })
 
     selectedImage = landsatData.first()
     unmasked = ee.Image(selectedImage).multiply(10000).toInt16().unmask()
