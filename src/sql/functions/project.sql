@@ -792,7 +792,8 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
     unanalyzed_plots    integer,
     plot_assignments    integer,
     users_assigned      integer,
-    user_stats          jsonb
+    user_stats          jsonb,
+    average_confidence  integer
  ) AS $$
 
     WITH user_plot_times AS (
@@ -836,7 +837,8 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
             coalesce(sum(flagged::int), 0) > 0 AS flagged,
             coalesce(count(user_plot_uid), 0) AS analyzed,
             coalesce(count(pa.user_rid), 0) AS assigned,
-            greatest(coalesce(count(pa.user_rid), 0), 1) AS needed
+            greatest(coalesce(count(pa.user_rid), 0), 1) AS needed,
+            coalesce(sum(confidence::int), 0) AS confidence
         FROM users_count, plots pl
         LEFT JOIN plot_assignments AS pa
             ON pa.plot_rid = pl.plot_uid
@@ -851,10 +853,10 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
             sum((needed = analyzed)::int)::int AS analyzed_plots,
             sum((needed > analyzed and analyzed > 0)::int)::int AS partial_plots,
             sum((analyzed = 0)::int)::int AS unanalyzed_plots,
-            sum(assigned)::int AS plot_assignments
+            sum(assigned)::int AS plot_assignments,
+            sum(confidence)::int AS confidence_sum
         FROM plot_sum ps
     )
-
     SELECT total_plots,
         flagged_plots,
         analyzed_plots,
@@ -862,8 +864,12 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
         unanalyzed_plots,
         plot_assignments,
         users_assigned,
-        user_stats
-    FROM projects, project_sum, users_count, user_agg
+        user_stats,
+        CASE
+          WHEN analyzed_plots = 0 THEN 0
+          ELSE confidence_sum / analyzed_plots
+        END as average_confidence
+    FROM projects, project_sum, users_count, user_agg, plot_sum
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
@@ -1104,3 +1110,104 @@ CREATE OR REPLACE FUNCTION select_project_info_for_doi(_project_id integer)
     GROUP BY project_uid
 
 $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION select_project_stats(_project_id integer)
+ RETURNS table (
+    total_plots         integer,
+    flagged_plots       integer,
+    analyzed_plots      integer,
+    partial_plots       integer,
+    unanalyzed_plots    integer,
+    plot_assignments    integer,
+    users_assigned      integer,
+    average_confidence  integer,
+    user_stats          jsonb
+ ) AS $$
+
+    WITH user_plot_times AS (
+        SELECT pa.user_rid AS assigned,
+            up.user_rid AS collected,
+            coalesce(flagged::int, 0) as flagged,
+            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0
+                ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) AS seconds,
+            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0 ELSE 1 END) AS timed,
+            u.email AS email
+        FROM plots pl
+        LEFT JOIN plot_assignments AS pa
+            ON pa.plot_rid = pl.plot_uid
+        LEFT JOIN user_plots up
+            ON up.plot_rid = pl.plot_uid
+            AND (pa.user_rid = up.user_rid OR NOT (SELECT project_has_assigned(_project_id)))
+        INNER JOIN users u
+            ON (up.user_rid = user_uid OR pa.user_rid = user_uid)
+        WHERE project_rid = _project_id
+    ), users_grouped AS (
+        SELECT email,
+            COUNT(collected) - SUM(flagged::int) AS analyzed,
+            SUM(flagged::int) as flagged,
+            COUNT(assigned) as assigned,
+            SUM(seconds)::int AS seconds,
+            SUM(timed):: int AS timed_plots
+        FROM user_plot_times
+        GROUP BY email
+        ORDER BY email DESC
+    ), user_agg AS (
+        SELECT format('[%s]', string_agg(row_to_json(ug)::text, ','))::jsonb AS user_stats
+        FROM users_grouped ug
+    ), users_count AS (
+        SELECT count(DISTINCT pa.user_rid)::int AS users_assigned
+        FROM plots pl
+        LEFT JOIN plot_assignments pa
+            ON pa.plot_rid = plot_uid
+        WHERE project_rid = _project_id
+    ), plot_sum AS (
+        SELECT plot_uid,
+            coalesce(sum(flagged::int), 0) > 0 AS flagged,
+            coalesce(count(user_plot_uid), 0) AS analyzed,
+            coalesce(count(pa.user_rid), 0) AS assigned,
+            greatest(coalesce(count(pa.user_rid), 0), 1) AS needed,
+            coalesce(sum(confidence::int), 0) AS confidence
+        FROM users_count, plots pl
+        LEFT JOIN plot_assignments AS pa
+            ON pa.plot_rid = pl.plot_uid
+        LEFT JOIN user_plots up
+            ON up.plot_rid = pl.plot_uid
+            AND (pa.user_rid = up.user_rid OR (SELECT users_assigned FROM users_count) = 0)
+        GROUP BY plot_uid
+        HAVING project_rid = _project_id
+    ), project_sum AS (
+        SELECT count(*)::int AS total_plots,
+            sum(ps.flagged::int)::int AS flagged_plots,
+            sum((needed = analyzed)::int)::int AS analyzed_plots,
+            sum((needed > analyzed and analyzed > 0)::int)::int AS partial_plots,
+            sum((analyzed = 0)::int)::int AS unanalyzed_plots,
+            sum(assigned)::int AS plot_assignments,
+            sum(confidence)::int AS confidence_sum
+        FROM plot_sum ps
+    )
+    SELECT total_plots,
+        flagged_plots,
+        analyzed_plots,
+        partial_plots,
+        unanalyzed_plots,
+        plot_assignments,
+        users_assigned,
+        CASE
+          WHEN analyzed_plots = 0 THEN 0
+          ELSE confidence_sum / analyzed_plots
+        END as average_confidence,
+        user_stats
+    FROM projects, plot_sum, project_sum, users_count, user_agg
+    WHERE project_uid = _project_id
+
+$$ LANGUAGE SQL;
+
+-- Get plot_ids from a project
+CREATE OR REPLACE FUNCTION get_plot_ids(_project_id integer)
+ RETURNS table (
+    plot_id integer
+ ) AS $$
+
+  SELECT plot_uid from plots where project_rid = _project_id
+
+$$ LANGUAGE SQL

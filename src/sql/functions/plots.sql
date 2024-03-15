@@ -623,3 +623,29 @@ CREATE OR REPLACE FUNCTION get_plots_by_visible_id(_project_id integer, _visible
     WHERE visible_id = any(_visible_ids) and project_rid = _project_id
 
 $$ LANGUAGE SQL;
+
+-- Select all answers for a project
+CREATE OR REPLACE FUNCTION select_saved_answers(_project_id integer)
+  RETURNS table (
+    plot_id           integer,
+    plot_visible_id   integer,
+    sample_id         integer,
+    sample_visible_id integer,
+    user_id           integer,
+    saved_answers     jsonb
+  ) AS $$
+
+  SELECT p.plot_uid,
+         p.visible_id AS plot_visible_id,
+         s.sample_uid,
+         s.visible_id AS sample_visible_id,
+         up.user_rid AS user_id,
+         sv.saved_answers
+  FROM sample_values sv
+  INNER JOIN samples s ON s.sample_uid = sv.sample_rid
+  INNER JOIN user_plots up ON up.user_plot_uid = sv.user_plot_rid
+  INNER JOIN plots p ON p.plot_uid = s.plot_rid
+  WHERE p.project_rid = _project_id
+  
+$$ LANGUAGE SQL;
+  
