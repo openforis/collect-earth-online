@@ -3,6 +3,7 @@ import svgr from "vite-plugin-svgr";
 import react from "@vitejs/plugin-react";
 import resolve from "@rollup/plugin-node-resolve";
 import { babel } from "@rollup/plugin-babel";
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // import babel from "@rollup/plugin-babel";
 
@@ -13,6 +14,7 @@ export default defineConfig({
     origin: "http://127.0.0.1:8080",
     hmr: {
       overlay: false,
+      nodePolyfills,
     },
   },
   build: {
