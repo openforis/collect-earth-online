@@ -25,6 +25,7 @@ export default defineConfig({
     plugins: [resolve(),
               babel({ exclude: "node_modules/**" }),
               nodePolyfills(),
+
              ],
     rollupOptions: {
       external: ["react-dom/client"],
@@ -65,6 +66,7 @@ export default defineConfig({
   },
   plugins: [
     svgr(),
+    nodePolyfills(),
     react({
       fastRefresh: true,
       jsxImportSource: "@emotion/react",
