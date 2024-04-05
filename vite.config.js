@@ -22,7 +22,10 @@ export default defineConfig({
     minify: false,
     manifest: true,
     sourcemap: true,
-    plugins: [resolve(), babel({ exclude: "node_modules/**" })],
+    plugins: [resolve(),
+              babel({ exclude: "node_modules/**" }),
+              nodePolyfills(),
+             ],
     rollupOptions: {
       external: ["react-dom/client"],
       preserveEntrySignatures: "exports-only",
