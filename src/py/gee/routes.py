@@ -213,7 +213,7 @@ def degradationTileUrl(requestDict):
     if getDefault(requestDict, 'degDataType', 'landsat') == 'landsat':
         stretch = getDefault(requestDict, 'stretch', 321)
         if stretch == 321:
-            visParams = {'bands': 'RED,GREEN,BLUE', 'min': 0, 'max': 1400}
+            visParams = {'bands': 'RED,GREEN,BLUE', 'min': 0, 'max': 2000}
         elif stretch == 543:
             visParams = {'bands': 'SWIR1,NIR,RED', 'min': 0, 'max': 7000}
         elif stretch == 453:
