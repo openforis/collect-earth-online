@@ -1626,13 +1626,15 @@ class PlotInformation extends React.Component {
         />
         {this.state.showInfo ? (
           hasExtraInfo ? (
-            <ul className="mb-3 mx-1">
+            <ul className="plot-info__list mb-3 mx-1">
               {Object.entries(this.props.extraPlotInfo)
                 .filter(([_key, value]) => value && !(value instanceof Object))
+                .sort((a, b) => a[0].localeCompare(b[0])) // Sorting the array by keys alphabetically
                 .map(([key, value]) => (
-                  <li key={key}>
-                    {key} - {value}
-                  </li>
+                  <li key={key} className="plot-info__item">
+                  <span className="plot-info__key">{key}</span>
+                  <span className="plot-info__value">{value}</span>
+                </li>
                 ))}
             </ul>
           ) : (
@@ -1643,6 +1645,7 @@ class PlotInformation extends React.Component {
     );
   }
 }
+
 
 class ImageryOptions extends React.Component {
   constructor(props) {
