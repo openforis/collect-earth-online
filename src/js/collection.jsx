@@ -1646,7 +1646,6 @@ class PlotInformation extends React.Component {
   }
 }
 
-
 class ImageryOptions extends React.Component {
   constructor(props) {
     super(props);
