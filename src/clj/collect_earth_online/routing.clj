@@ -112,6 +112,17 @@
    [:post "/check-plot-csv"]                 {:handler     projects/check-plot-csv
                                               :auth-type   :user
                                               :auth-action :block}
+   [:get  "/get-project-draft-by-id"]        {:handler     projects/get-project-draft-by-id}
+   [:get  "/get-project-drafts-by-user"]     {:handler     projects/get-project-drafts-by-user}
+   [:post "/create-project-draft"]           {:handler     projects/create-project-draft!
+                                              :auth-type   :user
+                                              :auth-action :block}
+   [:post "/update-project-draft"]           {:handler     projects/update-project-draft!
+                                              :auth-type   :user
+                                              :auth-action :block}
+   [:get "/delete-project-draft"]            {:handler     projects/delete-project-draft!
+                                              :auth-type   :user
+                                              :auth-action :block}
    ;; QAQC API
    [:get "/project-stats"] {:handler     qaqc/get-project-stats
                             :auth-type   :admin

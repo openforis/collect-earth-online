@@ -1036,3 +1036,151 @@
                        :qaqcAssignment {:qaqcMethod "none"
                                         :smes       []
                                         :overlap    0}}))))
+
+;;;
+;;; Draft handlers
+;;;
+
+(defn get-project-drafts-by-user [{:keys [session]}]
+  (let [user-id (tc/val->int (:userId session))]
+    (try
+      (let [result (call-sql "get_project_drafts_by_user" user-id)]
+        (if (empty? result)
+          (data-response (format "No drafts were found for user id %s." user-id) {:status 404})
+          (data-response (mapv (fn [{:keys [project_draft_uid project_state]}]
+                                 {:id            project_draft_uid
+                                  :name          (get-in project_state ["name"])})
+                               result))))
+      (catch Exception e
+        (let [causes (:causes (ex-data e))]
+          (when-not causes (log (ex-message e)))
+          (data-response "Internal server error." {:status 500})))))) 
+
+(defn get-project-draft-by-id [{:keys [params]}]
+  (let [project-draft-id (tc/val->int (params :projectDraftId))]
+    (try
+      (let [result (call-sql "get_project_draft_by_id" project-draft-id)]
+        (if (empty? result)
+          (data-response (format "No draft was found for this draft id %s." project-draft-id) {:status 404})
+          (data-response (mapv (fn [{:keys [project_draft_uid project_state]}]
+                                 (let [state (tc/jsonb->clj project_state)]
+                                   (merge {:id project_draft_uid} state)))
+                               result))))
+      (catch Exception e
+        (let [causes (:causes (ex-data e))]
+          (when-not causes (log (ex-message e)))
+          (data-response "Internal server error." {:status 500}))))))
+
+(defn create-project-draft! [{:keys [params session]}]
+                       (let [user-id             (tc/val->int (:userId session))
+                             institution-id      (tc/val->int (:institutionId params))
+                             sample-distribution (:sample-distribution params)
+                             project-state       {:imageryId          (or (:imageryId params) (get-first-public-imagery))
+                                                  :name               (:name params)
+                                                  :description        (:description params)
+                                                  :privacyLevel       (:privacyLevel params)
+                                                  :aoiFeatures        (or (:aoiFeatures params)
+                                                                          [(make-geo-json-polygon (tc/val->double (:lonMin params))
+                                                                                                  (tc/val->double (:latMin params))
+                                                                                                  (tc/val->double (:lonMax params))
+                                                                                                  (tc/val->double (:latMax params)))])
+                                                  :aoiFileName        (:aoiFileName params "")
+                                                  :plotDistribution   (:plotDistribution params)
+                                                  :numPlots           (tc/val->int (:numPlots params))
+                                                  :plotSpacing        (tc/val->float (:plotSpacing params))
+                                                  :plotShape          (:plotShape params)
+                                                  :plotSize           (tc/val->float (:plotSize params))
+                                                  :shufflePlots       (tc/val->bool (:shufflePlots params))
+                                                  :sampleDistribution sample-distribution
+                                                  :samplesPerPlot     (tc/val->int (:samplesPerPlot params))
+                                                  :sampleResolution   (tc/val->float (:sampleResolution params))
+                                                  :allowDrawnSamples? (or (= sample-distribution "none")
+                                                                          (tc/val->bool (:allowDrawnSamples params)))
+                                                  :surveyQuestions    (:surveyQuestions params)
+                                                  :surveyRules        (:surveyRules params)
+                                                  :projectOptions     (:projectOptions params default-options)
+                                                  :designSettings     (:designSettings params default-settings)
+                                                  :projectTemplate    (tc/val->int (:projectTemplate params))
+                                                  :useTemplatePlots   (tc/val->bool (:useTemplatePlots params))
+                                                  :useTemplateWidgets (tc/val->bool (:useTemplateWidgets params))
+                                                  :plotFileName       (:plotFileName params)
+                                                  :plotFileBase64     (:plotFileBase64 params)
+
+                                                  :sample-file-name   (:sampleFileName params)
+                                                  :sampleFileBase64   (:sampleFileBase64 params)}]
+                         (try
+                           (let [project-draft-id (sql-primitive (call-sql "create_project_draft"
+                                                                           user-id
+                                                                           institution-id
+                                                                           (tc/clj->jsonb project-state)))]
+                             (if (or (nil? project-draft-id) (zero? project-draft-id))
+                               (throw (Exception. "There was an issue with the creation request."))
+                               (data-response {:projectDraftId project-draft-id}))
+                             )
+                           (catch Exception e
+                             (let [causes (:causes (ex-data e))]
+                               (when-not causes (log (ex-message e)))
+                               (data-response "Internal server error." {:status 500}))))))
+
+(create-project-draft! {:session {:userId "2"} :params {:institutionId "3" :name "naaaame"}})
+
+(defn update-project-draft! [{:keys [params]}]
+  (let [project-draft-id    (tc/val->int (:projectDraftId params)) 
+        sample-distribution (:sample-distribution params)
+        project-state       {:imageryId          (or (:imageryId params) (get-first-public-imagery))
+                             :name               (:name params)
+                             :description        (:description params)
+                             :privacyLevel       (:privacyLevel params)
+                             :aoiFeatures        (or (:aoiFeatures params)
+                                                     [(make-geo-json-polygon (tc/val->double (:lonMin params))
+                                                                             (tc/val->double (:latMin params))
+                                                                             (tc/val->double (:lonMax params))
+                                                                             (tc/val->double (:latMax params)))])
+                             :aoiFileName        (:aoiFileName params "")
+                             :plotDistribution   (:plotDistribution params)
+                             :numPlots           (tc/val->int (:numPlots params))
+                             :plotSpacing        (tc/val->float (:plotSpacing params))
+                             :plotShape          (:plotShape params)
+                             :plotSize           (tc/val->float (:plotSize params))
+                             :shufflePlots       (tc/val->bool (:shufflePlots params))
+                             :sampleDistribution sample-distribution
+                             :samplesPerPlot     (tc/val->int (:samplesPerPlot params))
+                             :sampleResolution   (tc/val->float (:sampleResolution params))
+                             :allowDrawnSamples? (or (= sample-distribution "none")
+                                                     (tc/val->bool (:allowDrawnSamples params)))
+                             :surveyQuestions    (:surveyQuestions params)
+                             :surveyRules        (:surveyRules params)
+                             :projectOptions     (:projectOptions params default-options)
+                             :designSettings     (:designSettings params default-settings)
+                             :projectTemplate    (tc/val->int (:projectTemplate params))
+                             :useTemplatePlots   (tc/val->bool (:useTemplatePlots params))
+                             :useTemplateWidgets (tc/val->bool (:useTemplateWidgets params))
+                             :plotFileName       (:plotFileName params)
+                             :plotFileBase64     (:plotFileBase64 params)
+                             :sample-file-name   (:sampleFileName params)
+                             :sampleFileBase64   (:sampleFileBase64 params)}] 
+    (try
+      (let [result (call-sql "update_project_draft"
+                             project-draft-id
+                             (tc/clj->jsonb project-state))]
+        (if (nil? (get (first result) :update_project_draft))
+          (data-response "Project draft not found." {:status 404})
+          (data-response {:message (str "Update project with id " project-draft-id)} {:status 200})))
+      (catch Exception e
+        (let [causes (:causes (ex-data e))]
+          (when-not causes (log (ex-message e)))
+          (data-response "Internal server error." {:status 500}))))))
+
+(defn delete-project-draft! [{:keys [params]}]
+  (let [project-draft-id (tc/val->int (:projectDraftId params))]
+    (try
+      (let [result (call-sql "delete_project_draft" project-draft-id)]
+        (if (nil? (get (first result) :delete_project_draft))
+          (data-response (str "No project draft exists with id " project-draft-id) {:status 404})
+          (data-response {:message (str "Deleted project with id " project-draft-id)} {:status 200})))
+      (catch Exception e
+        (let [causes (:causes (ex-data e))]
+          (when-not causes (log (ex-message e)))
+          (data-response "Internal server error." {:status 500}))))))
+
+(delete-project-draft! {:params {:projectDraftId "9"}})
