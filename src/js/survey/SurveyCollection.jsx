@@ -640,7 +640,7 @@ export default class SurveyCollection extends React.Component {
                     min="0"
                     onChange={(e) => this.props.setConfidence(parseInt(e.target.value))}
                     type="range"
-                    value={this.props.confidence}
+                    value={this.props.confidence || 0}
                   />
                   <label>Plot Confidence: {this.props.confidence}</label>
                 </div>
