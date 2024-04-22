@@ -1122,8 +1122,6 @@
                                (when-not causes (log (ex-message e)))
                                (data-response "Internal server error." {:status 500}))))))
 
-(create-project-draft! {:session {:userId "2"} :params {:institutionId "3" :name "naaaame"}})
-
 (defn update-project-draft! [{:keys [params]}]
   (let [project-draft-id    (tc/val->int (:projectDraftId params)) 
         sample-distribution (:sample-distribution params)
