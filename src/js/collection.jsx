@@ -1549,8 +1549,7 @@ class ExternalTools extends React.Component {
     if (this.state.auxWindow) this.state.auxWindow.close();
     this.setState({
       auxWindow: window.open(
-        "https://billyz313.users.earthengine.app/view/ceoplotancillary#" + urlParams,
-        "_ceo-plot-ancillary"
+        "https://collect-earth-online.projects.earthengine.app/view/ceo-plot-ancillary-hotfix#" + urlParams
       ),
     });
   };
