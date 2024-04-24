@@ -1213,11 +1213,11 @@ CREATE OR REPLACE FUNCTION get_plot_ids(_project_id integer)
 $$ LANGUAGE SQL
 
 -- Get Project Drafts by User ID
-CREATE OR REPLACE FUNCTION get_project_drafts_by_user(_user_id integer)
 RETURNS TABLE(project_draft_uid integer, institution_rid integer, project_state jsonb) AS $$
     SELECT project_draft_uid, institution_rid, project_state
     FROM project_draft
-    WHERE user_rid = _user_id;
+    WHERE user_rid = _user_id AND
+          institution_id = _institution_id;
 $$ LANGUAGE SQL;
 
 -- Get Project Draft by ID
