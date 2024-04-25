@@ -10,6 +10,7 @@
 CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _maximum integer)
  RETURNS table (
     plot_id    integer,
+    visible_id integer,
     center     text,
     flagged    boolean,
     status     text
@@ -17,6 +18,7 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _ma
 
     WITH plot_sums AS (
         SELECT plot_uid,
+            pl.visible_id AS visible_id,
             ST_AsGeoJSON(ST_Centroid(plot_geom)) AS center,
             sum(coalesce(flagged, false)::int) > 0 AS flagged,
             sum((pa.user_rid IS NOT NULL)::int) AS assigned,
@@ -33,6 +35,7 @@ CREATE OR REPLACE FUNCTION select_limited_project_plots(_project_id integer, _ma
     )
 
     SELECT plot_uid,
+        visible_id,
         center,
         flagged,
         CASE WHEN (assigned = 0 AND collected = 1) OR (assigned > 0 AND assigned = collected)
