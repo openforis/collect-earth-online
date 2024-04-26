@@ -5,6 +5,7 @@
             [collect-earth-online.db.institutions :as institutions]
             [collect-earth-online.db.plots        :as plots]
             [collect-earth-online.db.projects     :as projects]
+            [collect-earth-online.db.qaqc         :as qaqc]
             [collect-earth-online.db.users        :as users]
             [collect-earth-online.proxy           :as proxy]
             [triangulum.views                     :refer [render-page]]))
@@ -111,6 +112,16 @@
    [:post "/check-plot-csv"]                 {:handler     projects/check-plot-csv
                                               :auth-type   :user
                                               :auth-action :block}
+   ;; QAQC API
+   [:get "/project-stats"] {:handler     qaqc/get-project-stats
+                            :auth-type   :admin
+                            :auth-action :block}
+   [:get "/plot-stats"]    {:handler     qaqc/get-plot-stats
+                            :auth-type   :admin
+                            :auth-action :block}
+   [:get "/user-stats"]    {:handler     qaqc/get-user-stats
+                            :auth-type   :admin
+                            :auth-action :block}
 
    ;; DOI API
    [:post "/create-doi"]  {:handler     doi/create-doi!

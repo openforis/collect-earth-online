@@ -1434,7 +1434,7 @@ mercator.projectsToVectorSource = (projects) => {
 // on clusters with more than one plot zooms the map view to the
 // extent covered by these plots. If a cluster only contains one plot,
 // the callBack function will be called on the cluster feature.
-mercator.addPlotLayer = (mapConfig, plots, _callback) => {
+mercator.addPlotLayer = (mapConfig, plots, callback) => {
   mercator.addVectorLayer(
     mapConfig,
     "currentPlots",
@@ -1453,11 +1453,11 @@ mercator.addPlotLayer = (mapConfig, plots, _callback) => {
             mercator.zoomMapToExtent(mapConfig, mercator.getClusterExtent(feature));
           }
           // / Disable due to miss coordinated plot_id vs plotId
-          // else {
-          //     mercator.removeLayerById(mapConfig, "currentPlots");
-          //     mapConfig.map.un("click", clickHandler);
-          //     callBack.call(null, feature);
-          // }
+          else {
+              mercator.removeLayerById(mapConfig, "currentPlots");
+              mapConfig.map.un("click", clickHandler);
+              callback.call(null, feature);
+          }
         }
       },
       { hitTolerance: 10 }
