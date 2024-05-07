@@ -94,6 +94,10 @@ export default class NewQuestionDesigner extends React.Component {
     const { surveyQuestions } = this.props;
 
     const copyQuestion = surveyQuestions[copyQuestionId];
+    const surveyQuestionsList = Object.values(surveyQuestions);
+    const cardOrder = surveyQuestionsList.reduce((max, q) => q.cardOrder > max ?
+                                                 q.cardOrder :
+                                                 max, surveyQuestions[0].cardOrder)
     const repeatedQuestions = lengthObject(
       filterObject(
         surveyQuestions,
@@ -117,11 +121,13 @@ export default class NewQuestionDesigner extends React.Component {
     if (childQuestionIds.length) {
       return childQuestionIds.reduce(
         (acc, cur) => ({ ...acc, ...this.getCopy(idOffset, cur, newId) }),
-        { [newId]: parentId > 0 ? ({...newQuestion, cardOrder: null}) : newQuestion }
+        { [newId]: parentId > 0 ? {...newQuestion, cardOrder: null} :
+                                  {...newQuestion, cardOrder: cardOrder+1 }}
       );
     } else {
       return {
-        [newId]: parentId > 0 ? ({...newQuestion, cardOrder: null}) : newQuestion,
+        [newId]: parentId > 0 ? {...newQuestion, cardOrder: null} :
+                                {...newQuestion, cardOrder: cardOrder+1 }
       };
     }
   };
