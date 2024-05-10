@@ -864,3 +864,37 @@ body {
     margin-top: 60px;
     overflow-x: hidden;
 }
+
+/********************/
+/* Plot Information */
+/********************/
+.plot-info__list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.plot-info__item {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #eaeaea;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.plot-info__item:last-child {
+  border-bottom: none;
+}
+
+.plot-info__key {
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.plot-info__value {
+  color: #555;
+  font-style: italic;
+}
