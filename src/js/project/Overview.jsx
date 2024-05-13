@@ -342,7 +342,7 @@ export function OverviewReview() {
         <b>Learning Material: </b>
         <button onClick={toggleLearningMaterial}
                 className="btn btn-outline-lightgreen btn-sm w-5">
-          View Learning Material
+          View Interpretation Instructions
         </button>
       </label>
       <label>
