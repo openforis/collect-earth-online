@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
 
-import { LoadingModal, NavigationBar } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, LearningMaterialModal } from "./components/PageComponents";
 import SurveyCollection from "./survey/SurveyCollection";
 import {
   PlanetMenu,
@@ -1087,7 +1087,6 @@ class Collection extends React.Component {
             toggleShowSamples={this.toggleShowSamples}
             state={{showBoundary: this.state.showBoundary,
                     showSamples: this.state.showSamples}}
-            
           />
           {this.state.currentPlot.id &&
             this.state.currentProject.projectOptions.showPlotInformation && (
@@ -1170,7 +1169,7 @@ function ImageAnalysisPane({ imageryAttribution }) {
 class SideBar extends React.Component {
   checkCanSave = () => {
     const { answerMode, currentPlot, inReviewMode, surveyQuestions, collectConfidence } = this.props;
-    const { confidence, confidenceComment } = currentPlot;
+    const { confidence } = currentPlot;
     const visibleSurveyQuestions = filterObject(surveyQuestions, ([_id, val]) => val.hideQuestion != true);
     const noneAnswered = everyObject(visibleSurveyQuestions, ([_id, sq]) => safeLength(sq.answered) === 0);
     const hasSamples = safeLength(currentPlot.samples) > 0;
@@ -1487,7 +1486,8 @@ class ExternalTools extends React.Component {
     super(props);
     this.state = {
       showExternalTools: true,
-      auxWindow: null
+      auxWindow: null,
+      showLearningMaterial: false,
     };
   }
 
@@ -1582,8 +1582,22 @@ class ExternalTools extends React.Component {
     </a>
   );
 
-  render() {
+  learningMaterialButton = () => (
+    <input
+      className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+      onClick={this.toggleLearningMaterial}
+      type="button"
+      value="Interpretation Instructions"
+    />
+  );
 
+  toggleLearningMaterial = () => {
+    this.setState(prevState => ({
+      showLearningMaterial: !prevState.showLearningMaterial
+    }));
+  };
+
+  render() {
     return this.props.currentPlot.id ? (
       <>
         <CollapsibleTitle
@@ -1597,7 +1611,14 @@ class ExternalTools extends React.Component {
             {this.toggleViewButtons()}
             {this.props.KMLFeatures && this.kmlButton()}
             {this.props.currentProject.projectOptions.showGEEScript && this.geeButton()}
+            {this.learningMaterialButton()}
           </div>
+        )}
+        {this.state.showLearningMaterial && (
+          <LearningMaterialModal
+            learningMaterial={this.props.currentProject.learningMaterial}
+            onClose={this.toggleLearningMaterial}
+          />
         )}
       </>
     ) : null;

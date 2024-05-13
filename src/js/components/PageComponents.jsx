@@ -1,6 +1,8 @@
 import "../../css/custom.css";
 
 import React from "react";
+import ReactMarkdown from 'react-markdown';
+
 import SvgIcon from "./svg/SvgIcon";
 import { getLanguage, capitalizeFirst } from "../utils/generalUtils";
 import { getPreference, setPreference } from "../utils/preferences";
@@ -440,3 +442,34 @@ export function LoadingModal({ message }) {
     </div>
   );
 }
+
+export const LearningMaterialModal = ({ learningMaterial, onClose }) => {
+    return (
+    <div
+      className="modal fade show"
+      id="quitModal"
+      onClick={onClose}
+      style={{ display: "block", backgroundColor: "rgba(0, 0, 0, 0.4)" }}
+    >
+      <div
+        className="modal-dialog modal-dialog-centered"
+        onClick={(e) => e.stopPropagation()}
+        role="document"
+      >
+        <div className="modal-content" id="quitModalContent">
+          <div className="modal-header">
+            <h5 className="modal-title" id="quitModalTitle">
+              Learning Material
+            </h5>
+            <button aria-label="Close" className="close" onClick={onClose} type="button">
+              &times;
+            </button>
+          </div>
+          <div className="modal-body">
+            <ReactMarkdown>{learningMaterial}</ReactMarkdown>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
