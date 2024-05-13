@@ -118,6 +118,7 @@
      :availability       (:availability project)
      :name               (:name project)
      :description        (:description project)
+     :learningMaterial   (:learning_material project)
      :privacyLevel       (:privacy_level project)
      :boundary           (:boundary project) ;; Boundary is only used for Planet queries
      :aoiFeatures        (tc/jsonb->clj (:aoi_features project))
@@ -436,6 +437,7 @@
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
         description          (:description params)
+        learning-material    (:learningMaterial params)
         privacy-level        (:privacyLevel params)
         aoi-features         (or (:aoiFeatures params)
                                  [(make-geo-json-polygon (tc/val->double (:lonMin params))
@@ -470,6 +472,7 @@
                                                       institution-id
                                                       name
                                                       description
+                                                      learning-material
                                                       privacy-level
                                                       imagery-id
                                                       (tc/clj->jsonb aoi-features)
@@ -579,6 +582,7 @@
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
         description          (:description params)
+        learning-material    (:learningMaterial params)
         privacy-level        (:privacyLevel params)
         aoi-features         (or (:aoiFeatures params)
                                  [(make-geo-json-polygon (tc/val->double (:lonMin params))
@@ -612,6 +616,7 @@
                   project-id
                   name
                   description
+                  learning-material
                   privacy-level
                   imagery-id
                   (tc/clj->jsonb aoi-features)

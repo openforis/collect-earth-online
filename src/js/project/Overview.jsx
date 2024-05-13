@@ -1,5 +1,6 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 
+import { LearningMaterialModal } from "../components/PageComponents";
 import { capitalizeFirst } from "../utils/generalUtils";
 import { ProjectContext } from "./constants";
 
@@ -12,6 +13,7 @@ export function Overview(props) {
     projectOptions,
     projectOptions: { showGEEScript, showPlotInformation, collectConfidence, autoLaunchGeoDash },
     projectId,
+    learningMaterial
   } = useContext(ProjectContext);
   return (
     <div id="project-info">
@@ -37,6 +39,16 @@ export function Overview(props) {
             maxLength="2000"
             onChange={(e) => setProjectDetails({ description: e.target.value })}
             value={description}
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="learning-material">Learning Material</label>
+          <textarea
+            className="form-control form-control-sm"
+            id="learning-material"
+            maxLength="2000"
+            onChange={(e) => setProjectDetails({ learningMaterial: e.target.value })}
+            value={learningMaterial}
           />
         </div>
       </div>
@@ -312,7 +324,12 @@ class ProjectTemplateSelection extends React.Component {
 ProjectTemplateSelection.contextType = ProjectContext;
 
 export function OverviewReview() {
-  const { doiPath , name, description, privacyLevel, projectOptions } = useContext(ProjectContext);
+  const { doiPath , name, description, privacyLevel, projectOptions, learningMaterial } = useContext(ProjectContext);
+  const [learningMaterialOpen, setLearningMaterialOpen] = useState(false);
+  const toggleLearningMaterial = () => {
+    setLearningMaterialOpen(!learningMaterialOpen);
+  };
+
   return (
     <div className="d-flex flex-column">
       <label>
@@ -320,6 +337,13 @@ export function OverviewReview() {
       </label>
       <label>
         <b>Description:</b> {description}
+      </label>
+      <label>
+        <b>Learning Material: </b>
+        <button onClick={toggleLearningMaterial}
+                className="btn btn-outline-lightgreen btn-sm w-5">
+          View Interpretation Instructions
+        </button>
       </label>
       <label>
         <b>Visibility:</b> {capitalizeFirst(privacyLevel)}
@@ -348,6 +372,7 @@ export function OverviewReview() {
           Geo-Dash Window
         </li>
       </ul>
+      {learningMaterialOpen && <LearningMaterialModal learningMaterial={learningMaterial} onClose={toggleLearningMaterial} />}
     </div>
   );
 }
