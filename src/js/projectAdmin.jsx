@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import { LoadingModal, NavigationBar } from "./components/PageComponents";
+import { LoadingModal, PromptModal, NavigationBar } from "./components/PageComponents";
 import CreateProjectWizard from "./project/CreateProjectWizard";
 import ReviewChanges from "./project/ReviewChanges";
 import ManageProject from "./project/ManageProject";
@@ -85,6 +85,7 @@ class Project extends React.Component {
   /// Lifecycle Methods
 
   componentDidMount() {
+    this.props.copied && this.setContextState({designMode: "wizard", wizardStep: "questions"});
     this.getDoiPath(this.props.projectId);
     if (this.props.institutionId > 0) {
       this.getInstitutionImagery(this.props.institutionId);
@@ -156,6 +157,10 @@ class Project extends React.Component {
     );
   };
 
+  promptModal = (title, inputs, callBack) => {
+    this.setState({modalInputs: inputs, modalTitle: title, modalCallBack: callBack});
+  }
+
   render() {
     const CurrentComponent = this.modes[this.state.designMode];
     return (
@@ -172,10 +177,17 @@ class Project extends React.Component {
           setContextState: this.setContextState,
           resetProject: this.resetProject,
           processModal: this.processModal,
+          promptModal: this.promptModal,
           wizardStep: this.state.wizardStep,
           doiPath: this.state.doiPath,
         }}
       >
+        {this.state.modalInputs && <PromptModal inputs={this.state.modalInputs}
+                                                callBack={this.state.modalCallBack}
+                                                closePrompt={()=>{this.setState({modalInputs: null,
+                                                                                 modalTitle: null,
+                                                                                 modalCallBack:null});}}
+                                                title={this.state.modalTitle}/>}
         {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
         <div>
           <CurrentComponent />
@@ -191,6 +203,7 @@ export function pageInit(params, session) {
       <Project
         institutionId={parseInt(params.institutionId) || -1}
         projectId={parseInt(params.projectId) || -1}
+        copied={(`copy-redirect` in params)}
       />
     </NavigationBar>,
     document.getElementById("app")

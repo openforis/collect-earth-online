@@ -345,11 +345,11 @@
   (let [plot-count (count plots)
         samples    (if (#{"csv" "shp"} sample-distribution)
                      (external-file/generate-file-samples plots
-                                            plot-count
-                                            project-id
-                                            sample-distribution
-                                            sample-file-name
-                                            sample-file-base64)
+                                                          plot-count
+                                                          project-id
+                                                          sample-distribution
+                                                          sample-file-name
+                                                          sample-file-base64)
                      (generate-point-samples plots
                                              plot-count
                                              plot-shape
@@ -537,6 +537,29 @@
           (data-response (if causes
                            (str "-" (str/join "\n-" causes))
                            "Unknown server error.")))))))
+
+(defn copy-project!  [{:keys [params session]}]
+  (let [user-id (:userId session -1)
+	project-id (tc/val->int (:projectId params))
+	{:keys [institution
+		plotSize
+		plotSpacing
+		name
+		id
+                surveyQuestions
+		sampleResolution]
+	 :as old-project} (build-project-by-id user-id project-id)
+        project (assoc old-project
+	               :name (str name " - COPY")
+                       :surveyQuestions (tc/clj->jsonb surveyQuestions)
+	               :institutionId institution
+	               :plotSize (long plotSize)
+	               :plotSpacing (long plotSpacing)
+	               :projectTemplate id
+	               :sampleResolution (long sampleResolution)
+	               :useTemplatePlots (:plots params)
+	               :useTemplateWidgets (:widgets params))]
+    (create-project! {:params project})))
 
 ;;;
 ;;; Update project
