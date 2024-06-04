@@ -908,6 +908,7 @@
 
 (def sample-base-headers [:plotid
                           :sampleid
+                          :sample_internal_id
                           :lon
                           :lat
                           :email
