@@ -936,3 +936,8 @@ body {
 .fixed-width-content {
   width: 100%;
 }
+
+.source-input {
+    width: 100%;
+    padding-left: 45%;
+}

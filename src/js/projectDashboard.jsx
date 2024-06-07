@@ -295,6 +295,13 @@ const PlotStats = ({ projectId, plotId, setPlotInfo, showProjectMap }) => {
   const [plotStats, setPlotStats] = useState({});
   const [newPlotId, setNewPlotId] = useState(plotId);
 
+  const renderStat = (title, stat) => (
+    <span style={{ width: "50%" }}>
+      <StatsCell title={title}>{stat}</StatsCell>
+    </span>
+  );
+
+
   const  getPlotData = (visibleId, direction) => {
     fetch(
       `/qaqc-plot?visibleId=${visibleId}&direction=${direction}&projectId=${projectId}`
@@ -413,6 +420,18 @@ const Tabs = ({ children, activeTab, setActiveTab }) => {
     <>
       <div className="d-flex flex-column h-100 fixed-width">
         <h2 className="header px-0">QAQC Information</h2>
+        <div className="fixed-width source-input">
+          <h3>
+            Source of Truth
+          </h3>
+          <input
+            accept="application/zip"
+            defaultValue=""
+            id="project-boundary-file"
+            onChange={(e) => { null; }}
+            type="file"
+          />
+        </div>
         <div>
           <div className="tab-buttons">
             {React.Children.map(children, (child, index) => (
