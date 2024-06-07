@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
 import { StatsCell, StatsRow } from "./components/FormComponents";
@@ -16,6 +16,8 @@ class ProjectDashboard extends React.Component {
       mapConfig: null,
       plotList: [],
       modalMessage: null,
+      plotStats: {},
+      activeTab: 0,
     };
   }
 
@@ -78,9 +80,9 @@ class ProjectDashboard extends React.Component {
           this.showProjectMap
         );
       });
-
+  
   getProjectStats = (projectId) =>
-    fetch(`/get-project-stats?projectId=${projectId}`)
+    fetch(`/project-stats?projectId=${projectId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         this.setState({ stats: data });
@@ -116,6 +118,10 @@ class ProjectDashboard extends React.Component {
     this.setState({ mapConfig });
   }
 
+  setActiveTab = (index) => {
+    this.setState({ activeTab: index });
+  };
+
   render() {
     return (
       <div className="d-flex flex-column full-height p-3" id="project-dashboard">
@@ -124,18 +130,41 @@ class ProjectDashboard extends React.Component {
           <h1>Project Dashboard</h1>
         </div>
         <div className="d-flex justify-content-around mt-3 flex-grow-1">
-          <div className="bg-lightgray col-7">
+          <div className="bg-lightgray col-6">
             <ProjectAOI />
           </div>
-          <div className="bg-lightgray col-4">
-            <ProjectStats
-              availability={this.state.projectDetails.availability}
-              isProjectAdmin={this.state.projectDetails.isProjectAdmin}
-              projectDetails={this.state.projectDetails}
-              stats={this.state.stats}
-              userName={this.props.userName}
-            />
-          </div>
+          <Tabs className="col-6"
+                activeTab={this.state.activeTab}
+                setActiveTab={this.setActiveTab}>
+            <Tab label="Project Statistics">
+              <div className="bg-lightgray col-12">
+                <ProjectStats
+                  availability={this.state.projectDetails.availability}
+                  isProjectAdmin={this.state.projectDetails.isProjectAdmin}
+                  projectDetails={this.state.projectDetails}
+                  stats={this.state.stats}
+                  userName={this.props.userName}
+                />
+              </div>
+            </Tab>
+            <Tab label="Plot Statistics">
+              <div className="bg-lightgray col-12">
+                <PlotStats
+                  plotStats={this.state.stats}
+                />
+              </div>
+            </Tab>
+            <Tab label="User Statistics">
+              <div className="bg-lightgray col-12">
+                <UserStats
+                  userStats={this.state.stats.userStats}
+                  analyzedPlots={this.state.stats.analyzedPlots}
+                  isProjectAdmin={this.state.projectDetails.isProjectAdmin}
+                  userName={this.props.userName}
+                />
+              </div>
+            </Tab>
+          </Tabs>
         </div>
       </div>
     );
@@ -151,12 +180,12 @@ function ProjectStats(props) {
       analyzedPlots,
       partialPlots,
       unanalyzedPlots,
+      averageConfidence,
+      minConfidence,
+      maxConfidence,
       flaggedPlots,
-      userStats,
     },
     projectDetails: { closedDate, createdDate, publishedDate },
-    isProjectAdmin,
-    userName,
   } = props;
 
   const renderDate = (title, date) => (
@@ -173,7 +202,6 @@ function ProjectStats(props) {
 
   return (
     <div className="d-flex flex-column">
-      <h2 className="header px-0">Project Stats</h2>
       {totalPlots > 0 && (
         <div className="p-1" id="project-stats">
           <div className="mb-4">
@@ -185,7 +213,7 @@ function ProjectStats(props) {
             </div>
           </div>
           <div className="mb-2">
-            <h3>Plot Stats:</h3>
+            <h3>Project Stats:</h3>
             <div style={{ display: "flex", flexWrap: "wrap", padding: "0 .5rem" }}>
               {renderStat("Total Plots", totalPlots)}
               {plotAssignments > 0 && renderStat("Plot Assignments", plotAssignments)}
@@ -194,43 +222,107 @@ function ProjectStats(props) {
               {renderStat("Analyzed", analyzedPlots)}
               {plotAssignments > 0 && renderStat("Partial Plots", partialPlots)}
               {renderStat("Unanalyzed", unanalyzedPlots)}
+              {renderStat("Average Confidence", `${averageConfidence} %`)}
+              {renderStat("Max Confidence", `${maxConfidence} %`)}
+              {renderStat("Min Confidence", `${minConfidence} %`)}
+
             </div>
           </div>
-          {userStats && (
-            <div>
-              <h3>User Completed:</h3>
-              {userStats.map((user, idx) => (
-                <StatsRow
-                  key={user.email}
-                  analysisTime={
-                    user.timedPlots > 0 ? (user.seconds / user.timedPlots / 1.0).toFixed(2) : 0
-                  }
-                  plots={user.analyzed + user.flagged}
-                  title={
-                    isProjectAdmin || user.email === userName
-                      ? `${idx + 1}. ${user.email}`
-                      : `User ${idx + 1}`
-                  }
-                />
-              ))}
-              <StatsRow
-                analysisTime={
-                  userStats.reduce((p, c) => p + c.timedPlots, 0) > 0
-                    ? (
-                        userStats.reduce((p, c) => p + c.seconds, 0) /
-                        userStats.reduce((p, c) => p + c.timedPlots, 0) /
-                        1.0
-                      ).toFixed(2)
-                    : 0
-                }
-                plots={analyzedPlots}
-                title="Total"
-              />
-            </div>
-          )}
         </div>
       )}
     </div>
+  );
+}
+
+const PlotStats = ({  }) => {
+  
+  getPlotData = (visibleId, direction, forcedNavMode = null) => {
+    const { currentUserId, navigationMode, inReviewMode, threshold } = this.state;
+    const { projectId } = this.props;
+    this.processModal("Getting plot", () =>
+      fetch(
+        "/get-collection-plot?" +
+          getQueryString({
+            visibleId,
+            projectId,
+            navigationMode: forcedNavMode || navigationMode,
+            direction,
+            inReviewMode,
+            threshold,
+            currentUserId,
+          })
+      )
+        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+        .then((data) => {
+          if (data === "not-found") {
+            const err = (direction === "id" ? "Plot not" : "No more plots") +
+                  " found for this navigation mode.";
+            const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
+            alert(
+              inReviewMode ? err + reviewModeWarning : err
+            );
+          } else {
+            this.setState({
+              userPlotList: data,
+              remainingPlotters: data,
+              currentPlot: data[0],
+              currentUserId: data[0].userId,
+              ...this.newPlotValues(data[0]),
+              answerMode: "question",
+            });
+            // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
+            this.warnOnNoSamples(data[0]);
+          }
+        })
+        .catch((response) => {
+          console.error(response);
+          alert("Error retrieving plot data. See console for details.");
+        })
+    );
+  };
+  return (
+    <div className="d-flex flex-column">
+    </div>
+  );
+}
+
+
+const UserStats = ({ userStats, analyzedPlots, isProjectAdmin, userName }) => {
+  return (
+    <>
+      {userStats && (
+        <div>
+          <h3>User Completed:</h3>
+          {userStats.map((user, idx) => (
+            <StatsRow
+              key={user.email}
+              analysisTime={
+                user.timedPlots > 0 ? (user.seconds / user.timedPlots / 1.0).toFixed(2) : 0
+              }
+              plots={user.analyzed + user.flagged}
+              title={
+                isProjectAdmin || user.email === userName
+                  ? `${idx + 1}. ${user.email}`
+                  : `User ${idx + 1}`
+              }
+            />
+          ))}
+          <StatsRow
+            analysisTime={
+              userStats.reduce((p, c) => p + c.timedPlots, 0) > 0
+                ? (
+                  userStats.reduce((p, c) => p + c.seconds, 0) /
+                    userStats.reduce((p, c) => p + c.timedPlots, 0) /
+                    1.0
+                ).toFixed(2)
+                : 0
+            }
+            plots={analyzedPlots}
+            title="Total"
+          />
+        </div>
+      )}
+    </>
   );
 }
 
@@ -242,6 +334,43 @@ function ProjectAOI() {
     </div>
   );
 }
+
+const Tabs = ({ children, activeTab, setActiveTab }) => {
+  return (
+    <>
+      <div className="d-flex flex-column h-100 fixed-width">
+        <h2 className="header px-0">QAQC Information</h2>
+        <div>
+          <div className="tab-buttons">
+            {React.Children.map(children, (child, index) => (
+              <button
+                key={index}
+                className={activeTab === index ? 'active' : ''}
+                onClick={() => setActiveTab(index)}
+              >
+                {child.props.label}
+              </button>
+            ))}
+          </div>
+          <div className="tab-content fixed-width-content">
+            {React.Children.map(children, (child, index) => (
+              <div
+                key={index}
+                style={{ display: activeTab === index ? 'block' : 'none' }}
+              >
+                {child}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+const Tab = ({ label, children }) => {
+  return <div>{children}</div>;
+};
 
 export function pageInit(params, session) {
   ReactDOM.render(

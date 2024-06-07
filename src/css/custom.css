@@ -898,3 +898,41 @@ body {
   color: #555;
   font-style: italic;
 }
+
+/********/
+/* Tabs */
+/********/
+.tab-buttons {
+  display: flex;
+  cursor: pointer;
+}
+
+.tab-buttons button {
+  padding: 10px 20px;
+  border: 1px solid #ccc;
+  background: #f1f1f1;
+  margin-right: 5px;
+  outline: none;
+}
+
+.tab-buttons .active {
+  background: #31bab0;
+  border-bottom: none;
+  color: #fff;
+}
+
+.tab-content > div {
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+
+.fixed-width {
+  width: 100%;
+  padding-left: 2%;
+  padding-right: 1%;
+}
+
+.fixed-width-content {
+  width: 100%;
+}
