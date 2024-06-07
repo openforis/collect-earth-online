@@ -133,40 +133,40 @@
      :extraPlotInfo     (tc/jsonb->clj extra_plot_info {})
      :samples           (prepare-samples-array plot_id)}))
 
-(defn get-plot-info
+(defn get-qaqc-plot
   [{:keys [params session]}]
-  (let [direction       (:direction params "next")
-        project-id      (tc/val->int (:projectId params))
-        old-visible-id  (tc/val->int (:visibleId params))
-        user-id         (:userId session -1)
-        proj-plots      (call-sql "select_analyzed_plots"   project-id user-id true)
-        grouped-plots   (group-by :visible_id proj-plots)
-        sorted-plots    (->> grouped-plots
+  (let [direction      (:direction params "next")
+        project-id     (tc/val->int (:projectId params))
+        old-visible-id (tc/val->int (:visibleId params))
+        user-id        (:userId session -1)
+        proj-plots     (call-sql "select_analyzed_plots" project-id user-id true)
+        grouped-plots  (group-by :visible_id proj-plots)
+        sorted-plots   (->> grouped-plots
                              (sort-by first))
-        plots-info      (case direction
-                          "next"     (or 
-                                      (->> sorted-plots
-                                           (some (fn [[visible-id plots]]
-                                                   (and (> visible-id old-visible-id)
-                                                        plots))))
-                                      (->> sorted-plots
-                                           (first)
-                                           (second)))
-                          "previous" (or (->> sorted-plots
-                                              (sort-by first #(compare %2 %1))
-                                              (some (fn [[visible-id plots]]
-                                                      (and (< visible-id old-visible-id)
-                                                           plots))))
-                                         (->> sorted-plots
-                                              (last)
-                                              (second)))
-                          "id"       (some (fn [[visible-id plots]]
-                                             (and (= visible-id old-visible-id)
-                                                  plots))
-                                           sorted-plots))]
+        plots-info     (case direction
+                         "next"     (or 
+                                     (->> sorted-plots
+                                          (some (fn [[visible-id plots]]
+                                                  (and (> visible-id old-visible-id)
+                                                       plots))))
+                                     (->> sorted-plots
+                                          (first)
+                                          (second)))
+                         "previous" (or (->> sorted-plots
+                                             (sort-by first #(compare %2 %1))
+                                             (some (fn [[visible-id plots]]
+                                                     (and (< visible-id old-visible-id)
+                                                          plots))))
+                                        (->> sorted-plots
+                                             (last)
+                                             (second)))
+                         "id"       (some (fn [[visible-id plots]]
+                                            (and (= visible-id old-visible-id)
+                                                 plots))
+                                          sorted-plots))]
     (if plots-info
       (try
-        (data-response (map #(build-plot % user-id true) plots-info))
+        (data-response (first (map #(build-qaqc-plot %) plots-info)))
         (catch Exception _e
           (data-response "Unable to get the requested plot.  Please try again.")))
       (data-response "not-found"))))
@@ -176,7 +176,7 @@
   [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
         answers    (map (fn [ans] (-> ans :saved_answers tc/jsonb->clj))
-                        (call-sql "select_saved_answers" project-id))]
+                        (call-sql "" project-id))]
     ))
 
 (defn get-user-stats

@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 
 import { StatsCell, StatsRow } from "./components/FormComponents";
 import { LoadingModal, NavigationBar } from "./components/PageComponents";
+import { getQueryString } from "./utils/generalUtils";
+import SvgIcon from "./components/svg/SvgIcon";
 
 import { mercator } from "./utils/mercator";
 
@@ -16,9 +18,14 @@ class ProjectDashboard extends React.Component {
       mapConfig: null,
       plotList: [],
       modalMessage: null,
-      plotStats: {},
       activeTab: 0,
+      plotId: 1,
+      plotInfo: {},
     };
+      // Bind the methods to the class instance
+    this.showProjectMap = this.showProjectMap.bind(this);
+    this.setActiveTab = this.setActiveTab.bind(this);
+    this.setPlotInfo = this.setPlotInfo.bind(this);
   }
 
   /// Lifecycle
@@ -36,10 +43,35 @@ class ProjectDashboard extends React.Component {
     ) {
       mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList);
     }
+    // Initialize the map when both projectDetails and imageryList are available
+    if (
+      (!prevState.projectDetails || prevState.imageryList.length === 0) &&
+      this.state.projectDetails &&
+      this.state.imageryList.length > 0
+    ) {
+      this.initializeMap();
+    }
   }
 
-  /// API Calls
+  initializeMap() {
+    const { imageryId, aoiFeatures } = this.state.projectDetails;
+    const singleImagery = this.state.imageryList.find((i) => i.id === imageryId);
+    // Initialize the basemap
+    const mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, [singleImagery]);
+    mercator.setVisibleLayer(mapConfig, imageryId);
+    mercator.removeLayerById(mapConfig, "currentPlot");
+    mercator.addVectorLayer(
+      mapConfig,
+      "currentAOI",
+      mercator.geomArrayToVectorSource(aoiFeatures),
+      mercator.ceoMapStyles("geom", "yellow")
+    );
+    mercator.zoomMapToLayer(mapConfig, "currentAOI");
+    this.setState({ mapConfig });
+  }
 
+  
+  /// API Calls
   getProjectDetails = () => {
     const { projectId } = this.props;
     return Promise.all([
@@ -76,8 +108,7 @@ class ProjectDashboard extends React.Component {
               ...this.state.projectDetails,
               baseMapSource: this.state.projectDetails.baseMapSource || data[0].title,
             },
-          },
-          this.showProjectMap
+          }
         );
       });
   
@@ -100,28 +131,51 @@ class ProjectDashboard extends React.Component {
       promise.finally(() => this.setState({ modalMessage: null }))
     );
 
-  showProjectMap() {
+  showProjectMap(activeTab = 0) {
     const { imageryId, aoiFeatures } = this.state.projectDetails;
-    // TODO, CEO-286 have mercator only load imagery as selected. For now, only pass single imagery.
-    const singleImagery = this.state.imageryList.find((i) => i.id === imageryId);
-    // Initialize the basemap
-    const mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, [singleImagery]);
-    mercator.setVisibleLayer(mapConfig, imageryId);
+    const mapConfig = this.state.mapConfig;
     // Display a bounding box with the project's AOI on the map and zoom to it
-    mercator.addVectorLayer(
-      mapConfig,
-      "currentAOI",
-      mercator.geomArrayToVectorSource(aoiFeatures),
-      mercator.ceoMapStyles("geom", "yellow")
-    );
-    mercator.zoomMapToLayer(mapConfig, "currentAOI");
+    if(activeTab === 1) {
+      mercator.removeLayerById(mapConfig, "currentAOI");
+      mercator.removeLayerById(mapConfig, "currentPlot");
+      mercator.addVectorLayer(
+        mapConfig,
+        "currentPlot",
+        mercator.geometryToVectorSource(
+          this.state.plotInfo.plotGeom.includes("Point")
+            ? mercator.getPlotPolygon(
+              this.state.plotInfo.plotGeom,
+              projectDetails.plotSize,
+              projectDetails.plotShape
+            )
+            : mercator.parseGeoJson(this.state.plotInfo.plotGeom, true)
+        ),
+        mercator.ceoMapStyles("geom", "yellow")
+      );
+      mercator.zoomMapToLayer(mapConfig, "currentPlot", 36);
+
+    } else {
+      mercator.removeLayerById(mapConfig, "currentPlot");
+      mercator.addVectorLayer(
+        mapConfig,
+        "currentAOI",
+        mercator.geomArrayToVectorSource(aoiFeatures),
+        mercator.ceoMapStyles("geom", "yellow")
+      );
+      mercator.zoomMapToLayer(mapConfig, "currentAOI");
+      mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList);
+    }
     this.setState({ mapConfig });
   }
-
+  
   setActiveTab = (index) => {
     this.setState({ activeTab: index });
   };
-
+  
+  setPlotInfo = (stats) => {
+    this.setState({ plotInfo: stats });
+  }
+  
   render() {
     return (
       <div className="d-flex flex-column full-height p-3" id="project-dashboard">
@@ -150,7 +204,10 @@ class ProjectDashboard extends React.Component {
             <Tab label="Plot Statistics">
               <div className="bg-lightgray col-12">
                 <PlotStats
-                  plotStats={this.state.stats}
+                  projectId={this.props.projectId}
+                  plotId={this.state.plotId}
+                  setPlotInfo={this.setPlotInfo}
+                  showProjectMap={this.showProjectMap}
                 />
               </div>
             </Tab>
@@ -234,54 +291,70 @@ function ProjectStats(props) {
   );
 }
 
-const PlotStats = ({  }) => {
-  
-  getPlotData = (visibleId, direction, forcedNavMode = null) => {
-    const { currentUserId, navigationMode, inReviewMode, threshold } = this.state;
-    const { projectId } = this.props;
-    this.processModal("Getting plot", () =>
-      fetch(
-        "/get-collection-plot?" +
-          getQueryString({
-            visibleId,
-            projectId,
-            navigationMode: forcedNavMode || navigationMode,
-            direction,
-            inReviewMode,
-            threshold,
-            currentUserId,
-          })
-      )
-        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((data) => {
-          if (data === "not-found") {
-            const err = (direction === "id" ? "Plot not" : "No more plots") +
-                  " found for this navigation mode.";
-            const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
-            alert(
-              inReviewMode ? err + reviewModeWarning : err
-            );
-          } else {
-            this.setState({
-              userPlotList: data,
-              remainingPlotters: data,
-              currentPlot: data[0],
-              currentUserId: data[0].userId,
-              ...this.newPlotValues(data[0]),
-              answerMode: "question",
-            });
-            // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
-            this.warnOnNoSamples(data[0]);
-          }
-        })
-        .catch((response) => {
-          console.error(response);
-          alert("Error retrieving plot data. See console for details.");
-        })
-    );
+const PlotStats = ({ projectId, plotId, setPlotInfo, showProjectMap }) => {
+  const [plotStats, setPlotStats] = useState({});
+  const [newPlotId, setNewPlotId] = useState(plotId);
+
+  const  getPlotData = (visibleId, direction) => {
+    fetch(
+      `/qaqc-plot?visibleId=${visibleId}&direction=${direction}&projectId=${projectId}`
+    )
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        if (data === "not-found") {
+          const err = (direction === "id" ? "Plot not" : "No more plots") +
+                " found for this navigation mode.";
+          alert(err);
+        } else {
+          setPlotInfo(data);
+          setNewPlotId(data.visibleId);
+          showProjectMap(1);
+        }
+      })
+      .catch((response) => {
+        console.error(response);
+        alert("Error retrieving plot data. See console for details.");
+      })
   };
+  
+  const navButtons = () => (
+    <div className="row justify-content-center mb-2" id="plot-nav">
+      <button
+        className="btn btn-outline-lightgreen btn-sm"
+        onClick={() => getPlotData(newPlotId, "previous")}
+        type="button"
+      >
+        <SvgIcon icon="leftArrow" size="0.9rem" />
+      </button>
+      <button
+        className="btn btn-outline-lightgreen btn-sm mx-1"
+        onClick={() => getPlotData(newPlotId, "next")}
+        type="button"
+      >
+        <SvgIcon icon="rightArrow" size="0.9rem" />
+      </button>
+      <input
+        autoComplete="off"
+        className="col-4 px-0 ml-2 mr-1"
+        id="plotId"
+        onChange={(e) => setNewPlotId(e.target.value)}
+        type="number"
+        value={newPlotId}
+      />
+      <button
+        className="btn btn-outline-lightgreen btn-sm"
+        onClick={() => !isNaN(newPlotId) ? getPlotData(newPlotId, "id")
+                                         : alert("Please enter a number to go to plot.")}
+        type="button"
+      >
+        Go to plot
+      </button>
+    </div>
+  );
+  
   return (
     <div className="d-flex flex-column">
+      {navButtons()}
     </div>
   );
 }
