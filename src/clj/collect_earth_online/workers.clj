@@ -3,7 +3,7 @@
             [clojure.string     :as str]
             [triangulum.logging :refer [log-str]]))
 
-(def ^:private expires-in "1 hour in msecs" (* 1000 60 60))
+(def ^:private expires-in "30 minutes in msecs" (* 1000 60 30))
 
 (defn- expired? [last-mod-time]
   (> (- (System/currentTimeMillis) last-mod-time) expires-in))
