@@ -85,13 +85,14 @@
                              (str/split r #"\t")
                              (zipmap header-keys r)
                              (update r geom-key tc/str->pg "geometry")
-                             (update r :visible_id tc/val->int)))
+                             (update r :visible_id tc/val->float)
+                             (update r :visible_id int)))
                          (str/split body-text #"\r\n|\n|\r"))]
     (if (apply distinct? header-keys)
       [header-keys body]
       (pu/init-throw (str "The provided "
-                           design-type
-                           " SHP file must not contain duplicate column titles.")))))
+                          design-type
+                          " SHP file must not contain duplicate column titles.")))))
 
 (defmethod get-file-data :csv [_ design-type ext-file folder-name]
   (let [rows       (str/split (slurp (str folder-name ext-file)) #"\r\n|\n|\r")
@@ -125,7 +126,8 @@
                                (split-row r)
                                (into (ordered-map) (map vector header-keys r))
                                (assoc r geom-key (tc/str->pg (make-wkt-point (:lon r) (:lat r)) "geometry"))
-                               (update r :visible_id tc/val->int)
+                               (update r :visible_id tc/val->float)
+                               (update r :visible_id int)
                                (dissoc r :lon :lat)))
                            (rest rows))]
       (if (and (some #(= % :lon) header-keys)

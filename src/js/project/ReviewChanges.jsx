@@ -93,6 +93,7 @@ export default class ReviewChanges extends React.Component {
     aoiFeatures: this.context.aoiFeatures,
     aoiFileName: this.context.aoiFileName,
     description: this.context.description,
+    learningMaterial: this.context.learningMaterial,
     name: this.context.name,
     privacyLevel: this.context.privacyLevel,
     projectOptions: this.context.projectOptions,
