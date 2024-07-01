@@ -603,14 +603,22 @@ CREATE OR REPLACE FUNCTION get_sample_shapes(_project_id integer)
  ) AS $$
 
     (SELECT project_rid, pl.visible_id AS plot_visible_id, s.visible_id AS sample_visible_id,
-            sample_uid, ST_Buffer(sample_geom, 0)
+            sample_uid,
+            CASE
+                WHEN NOT ST_IsValid(sample_geom) THEN ST_Buffer(ST_MakeValid(sample_geom), 0)
+                ELSE ST_Buffer(sample_geom, 0)
+            END
        FROM samples s
        INNER JOIN plots pl
        ON pl.plot_uid = s.plot_rid
        WHERE pl.project_rid = _project_id)
     UNION
     (SELECT project_rid, pl.visible_id AS plot_visible_id, s.visible_id AS sample_visible_id,
-            sample_uid, ST_Buffer(sample_geom, 0)
+            sample_uid,
+            CASE
+                WHEN NOT ST_IsValid(sample_geom) THEN ST_Buffer(ST_MakeValid(sample_geom), 0)
+                ELSE ST_Buffer(sample_geom, 0)
+            END
        FROM ext_samples s
        INNER JOIN plots pl
        ON pl.plot_uid = s.plot_rid
