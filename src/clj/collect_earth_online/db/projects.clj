@@ -1116,5 +1116,3 @@
         (let [causes (:causes (ex-data e))]
           (when-not causes (log (ex-message e)))
           (data-response "Internal server error." {:status 500}))))))
-
-(delete-project-draft! {:params {:projectDraftId "9"}})

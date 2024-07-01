@@ -4,7 +4,7 @@ CREATE TABLE project_draft (
     institution_rid INT,
     project_state JSONB,
     created_date date, 
-    updated_date date
+    updated_date date,
     CONSTRAINT fk_project_draft_users
         FOREIGN KEY (user_rid) 
         REFERENCES users (user_uid),

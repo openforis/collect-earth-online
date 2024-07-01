@@ -1213,11 +1213,12 @@ CREATE OR REPLACE FUNCTION get_plot_ids(_project_id integer)
 $$ LANGUAGE SQL
 
 -- Get Project Drafts by User ID
+CREATE OR REPLACE FUNCTION get_project_draft_by_user(_user_id integer, _institution_id integer)
 RETURNS TABLE(project_draft_uid integer, institution_rid integer, project_state jsonb) AS $$
     SELECT project_draft_uid, institution_rid, project_state
     FROM project_draft
     WHERE user_rid = _user_id AND
-          institution_id = _institution_id;
+          institution_rid = _institution_id;
 $$ LANGUAGE SQL;
 
 -- Get Project Draft by ID
@@ -1230,8 +1231,8 @@ $$ LANGUAGE SQL;
 
 -- Create Project Draft 
 CREATE OR REPLACE FUNCTION create_project_draft(_user_id integer,
-                                      			_institution_id integer, 
-												_project_state jsonb)
+                                   		_institution_id integer, 
+						_project_state jsonb)
 RETURNS integer AS $$
 
     INSERT INTO project_draft
