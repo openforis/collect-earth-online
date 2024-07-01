@@ -86,7 +86,7 @@
   (let [plot-ids [153618642 153618643]
         avg-plot-disagreement (average-plot-disagreement project-id plot-ids)]
     (/ (reduce + avg-plot-disagreement)
-     (count plot-ids))))
+       (count plot-ids))))
 
 (defn get-project-stats
   [{:keys [params]}]
@@ -99,16 +99,85 @@
                     :partialPlots      (:partial_plots stats)
                     :analyzedPlots     (:analyzed_plots stats)
                     :averageConfidence (:average_confidence stats)
+                    :maxConfidence     (:max_confidence stats)
+                    :minConfidence     (:min_confidence stats)
                     :unanalyzedPlots   (:unanalyzed_plots stats)
                     :userStats         (->> (:user_stats stats)
                                             (tc/jsonb->clj)
                                             (map #(set/rename-keys % {:timed_plots :timedPlots})))})))
 
+(defn- prepare-samples-array [plot-id]
+  (mapv (fn [{:keys [sample_id sample_geom saved_answers visible_id]}]
+          {:id           sample_id
+           :sampleGeom   sample_geom
+           :savedAnswers (tc/jsonb->clj saved_answers)
+           :visibleId    visible_id})
+        (call-sql "select_all_plot_samples" {:log? false} plot-id)))
+
+(defn- build-qaqc-plot [plot-info]
+  (let [{:keys [plot_id
+                flagged
+                confidence
+                confidence_comment
+                flagged_reason
+                plot_geom
+                extra_plot_info
+                visible_id]} plot-info]
+    {:id                plot_id
+     :flagged           flagged
+     :flaggedReason     (or flagged_reason "")
+     :confidence        confidence
+     :confidenceComment confidence_comment
+     :visibleId         visible_id
+     :plotGeom          plot_geom
+     :extraPlotInfo     (tc/jsonb->clj extra_plot_info {})
+     :samples           (prepare-samples-array plot_id)}))
+
+(defn get-qaqc-plot
+  [{:keys [params session]}]
+  (let [direction      (:direction params "next")
+        project-id     (tc/val->int (:projectId params))
+        old-visible-id (tc/val->int (:visibleId params))
+        user-id        (:userId session -1)
+        proj-plots     (call-sql "select_analyzed_plots" project-id user-id true)
+        grouped-plots  (group-by :visible_id proj-plots)
+        sorted-plots   (->> grouped-plots
+                             (sort-by first))
+        plots-info     (case direction
+                         "next"     (or 
+                                     (->> sorted-plots
+                                          (some (fn [[visible-id plots]]
+                                                  (and (> visible-id old-visible-id)
+                                                       plots))))
+                                     (->> sorted-plots
+                                          (first)
+                                          (second)))
+                         "previous" (or (->> sorted-plots
+                                             (sort-by first #(compare %2 %1))
+                                             (some (fn [[visible-id plots]]
+                                                     (and (< visible-id old-visible-id)
+                                                          plots))))
+                                        (->> sorted-plots
+                                             (last)
+                                             (second)))
+                         "id"       (some (fn [[visible-id plots]]
+                                            (and (= visible-id old-visible-id)
+                                                 plots))
+                                          sorted-plots))]
+    (if plots-info
+      (try
+        (data-response (first (map #(build-qaqc-plot %) plots-info)))
+        (catch Exception _e
+          (data-response "Unable to get the requested plot.  Please try again.")))
+      (data-response "not-found"))))
+
+
 (defn get-plot-stats
   [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
         answers    (map (fn [ans] (-> ans :saved_answers tc/jsonb->clj))
-                        (call-sql "select_saved_answers" project-id))]))
+                        (call-sql "" project-id))]
+    ))
 
 (defn get-user-stats
   []
