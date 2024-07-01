@@ -85,8 +85,7 @@
                              (str/split r #"\t")
                              (zipmap header-keys r)
                              (update r geom-key tc/str->pg "geometry")
-                             (update r :visible_id tc/val->float)
-                             (update r :visible_id int)))
+                             (update r :visible_id tc/val->int)))
                          (str/split body-text #"\r\n|\n|\r"))]
     (if (apply distinct? header-keys)
       [header-keys body]
@@ -126,8 +125,7 @@
                                (split-row r)
                                (into (ordered-map) (map vector header-keys r))
                                (assoc r geom-key (tc/str->pg (make-wkt-point (:lon r) (:lat r)) "geometry"))
-                               (update r :visible_id tc/val->float)
-                               (update r :visible_id int)
+                               (update r :visible_id tc/val->int)
                                (dissoc r :lon :lat)))
                            (rest rows))]
       (if (and (some #(= % :lon) header-keys)
