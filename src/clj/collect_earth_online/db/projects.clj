@@ -1029,7 +1029,7 @@
       (data-response (create-design-settings-from-file updated-plots))
       (data-response  {:userAssignment {:userMethod "none"
                                         :users      []
-                                        :percents   [0]}
+                                        :percents   []}
                        :qaqcAssignment {:qaqcMethod "none"
                                         :smes       []
                                         :overlap    0}}))))
