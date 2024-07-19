@@ -140,7 +140,7 @@ CREATE TABLE ext_samples (
     plot_rid             integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     sample_geom          geometry(geometry,4326),
     visible_id           integer,
-    extra_sample_info    json,
+    extra_sample_info    json
 );
 CREATE INDEX ext_samples_plot_rid ON ext_samples (plot_rid);
 
