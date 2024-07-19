@@ -1217,15 +1217,21 @@ CREATE OR REPLACE FUNCTION get_plot_ids(_project_id integer)
 
   SELECT plot_uid from plots where project_rid = _project_id
 
-$$ LANGUAGE SQL
+$$ LANGUAGE SQL;
 
 -- Get Project Drafts by User ID
 CREATE OR REPLACE FUNCTION get_project_draft_by_user(_user_id integer, _institution_id integer)
-RETURNS TABLE(project_draft_uid integer, institution_rid integer, project_state jsonb) AS $$
+RETURNS TABLE(
+    project_draft_uid integer,
+    institution_rid integer,
+    project_state jsonb
+    ) AS $$
+
     SELECT project_draft_uid, institution_rid, project_state
     FROM project_draft
     WHERE user_rid = _user_id AND
-          institution_rid = _institution_id;
+          institution_rid = _institution_id
+
 $$ LANGUAGE SQL;
 
 -- Get Project Draft by ID
@@ -1233,7 +1239,7 @@ CREATE OR REPLACE FUNCTION get_project_draft_by_id(_project_draft_id integer)
 RETURNS TABLE(project_draft_uid integer, user_rid integer, institution_rid integer, project_state jsonb) AS $$
     SELECT project_draft_uid, user_rid, institution_rid, project_state
     FROM project_draft
-    WHERE project_draft_uid = _project_draft_id;
+    WHERE project_draft_uid = _project_draft_id
 $$ LANGUAGE SQL;
 
 -- Create Project Draft 
@@ -1258,7 +1264,7 @@ RETURNS integer AS $$
     SET project_state = _project_state,
         updated_date = now()
     WHERE project_draft_uid = _project_draft_id
-    RETURNING project_draft_uid;
+    RETURNING project_draft_uid
 $$ LANGUAGE SQL;
 
 -- Delete Project Draft
@@ -1266,5 +1272,5 @@ CREATE OR REPLACE FUNCTION delete_project_draft(_project_draft_id integer)
 RETURNS integer AS $$
     DELETE FROM project_draft
     WHERE project_draft_uid = _project_draft_id
-    RETURNING project_draft_uid;
+    RETURNING project_draft_uid
 $$ LANGUAGE SQL;
