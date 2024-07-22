@@ -1083,6 +1083,19 @@ mercator.addPlotOverviewLayers = (mapConfig, plots) => {
       color: "lightBlue",
       border: "red",
     },
+    {
+      id: "highDisagreement",
+      layerPlots: notFlagged.filter((plot) => plot.status === "highDisagreement"),
+      color: "red",
+      border: "blue",
+    },
+    {
+      id: "flaggedHighDisagreement",
+      layerPlots: flagged.filter((plot) => plot.status === "highDisagreement"),
+      color: "red",
+      border: "blue",
+    }
+
   ];
 
   layers.forEach(({ id, layerPlots, color, border }) =>
