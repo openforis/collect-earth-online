@@ -67,12 +67,13 @@
 (defn get-institution-projects [{:keys [params session]}]
   (let [user-id        (:userId session -1)
         institution-id (tc/val->int (:institutionId params))]
-    (data-response (mapv (fn [{:keys [project_id name privacy_level pct_complete num_plots]}]
+    (data-response (mapv (fn [{:keys [project_id name privacy_level pct_complete num_plots learning_material]}]
                            {:id              project_id
                             :name            name
                             :numPlots        num_plots
                             :privacyLevel    privacy_level
-                            :percentComplete pct_complete})
+                            :percentComplete pct_complete
+                            :learningMaterial learning_material})
                          (call-sql "select_institution_projects" user-id institution-id)))))
 
 (defn get-institution-dash-projects [{:keys [params session]}]

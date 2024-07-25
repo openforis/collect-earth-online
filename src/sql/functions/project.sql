@@ -664,18 +664,20 @@ $$ LANGUAGE SQL;
 -- Returns all rows in projects for a user_id and institution_rid with roles
 CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _institution_id integer)
  RETURNS table (
-    project_id       integer,
-    name             text,
-    num_plots        integer,
-    privacy_level    text,
-    pct_complete     real
+    project_id        integer,
+    name              text,
+    num_plots         integer,
+    privacy_level     text,
+    pct_complete      real,
+    learning_material text
  ) AS $$
 
     SELECT project_uid,
         name,
         num_plots,
         privacy_level,
-        (SELECT project_percent_complete(project_uid))
+        (SELECT project_percent_complete(project_uid)),
+        learning_material
     FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id

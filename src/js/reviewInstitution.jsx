@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
 import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
 import SvgIcon from "./components/svg/SvgIcon";
-import { LoadingModal, NavigationBar } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, LearningMaterialModal } from "./components/PageComponents";
 
 import { sortAlphabetically, capitalizeFirst, KBtoBase64Length } from "./utils/generalUtils";
 import { safeLength } from "./utils/sequence";
@@ -1180,6 +1180,11 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
 }
 
 function Project({ project, isAdmin, deleteProject }) {
+  const [learningMaterialOpen, setLearningMaterialOpen] = useState(false);
+  const toggleLearningMaterial = () => {
+    setLearningMaterialOpen(!learningMaterialOpen);
+  };
+
   return (
     <div className="row mb-1 d-flex">
       <div className="col-2 pr-0">
@@ -1261,6 +1266,17 @@ function Project({ project, isAdmin, deleteProject }) {
               S
             </button>
           </div>
+          <div className="col-1 pl-0">
+            <button
+              className="btn btn-sm btn-outline-lightgreen btn-block"
+              onClick={toggleLearningMaterial}
+              title="Display Learning Materal"
+              type="button"
+            >
+              M
+            </button>
+          </div>
+          {learningMaterialOpen && <LearningMaterialModal learningMaterial={project.learningMaterial} onClose={toggleLearningMaterial} />}
         </>
       )}
     </div>
