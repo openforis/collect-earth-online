@@ -102,7 +102,11 @@
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-node-resolve": "^15.1.0",
     "@svgr/cli": "^8.0.1",
+    "@testing-library/jest-dom": "^6.4.2",
+    "@testing-library/react": "^13.2.0",
+    "@testing-library/user-event": "^14.5.2",
     "@vitejs/plugin-react": "^2.0.1",
+    "@vitest/ui": "^2.0.3",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.2.3",
     "babel-plugin-lodash": "^3.3.4",
@@ -120,6 +124,7 @@
     "vite": "^3.0.4",
     "vite-plugin-html": "^3.2.0",
     "vite-plugin-svgr": "^3.2.0",
+    "vitest": "^2.0.3",
     "webpack": "^5.69.1",
     "webpack-cli": "^4.10.0"
   },
@@ -131,6 +136,9 @@
     "preview": "vite preview",
     "server-dev": "clojure -M:server start",
     "server-prod": "clojure -M:production:server start",
-    "lint-js": "find src/js -type f -exec ./node_modules/.bin/quick-lint-js --snarky {} +"
+    "lint-js": "find src/js -type f -exec ./node_modules/.bin/quick-lint-js --snarky {} +",
+    "test": "vites",
+    "test:coverage": "vitest run --coverage"
+    "test:ui": "vitest --ui"
   }
 }
