@@ -101,16 +101,6 @@
                             :institutionId institution_id})
                          (call-sql "select_template_projects" user-id)))))
 
-(defn- validate-survey-questions [survey-questions] 
-  (let [raw (->> survey-questions vals (map :cardOrder))]
-    (if (-> raw distinct count (= raw count))
-      survey-questions
-      (reduce-kv
-       (fn [m k {:as survey-question}]
-         (assoc m k  (assoc survey-question :cardOrder (Integer. k))))
-       {}
-       survey-questions)))) 
-
 (defn- build-project-by-id [user-id project-id]
   (let [project (first (call-sql "select_project_by_id" project-id))]
     {:id                 (:project_id project) ; TODO dont return known values
@@ -136,8 +126,9 @@
      :sampleResolution   (:sample_resolution project)
      :sampleFileName     (:sample_file_name project)
      :allowDrawnSamples  (:allow_drawn_samples project)
-     :surveyQuestions    (-> project :survey_questions
-                             (tc/jsonb->clj []) validate-survey-questions)
+     :surveyQuestions    (-> project
+                             :survey_questions
+                             (tc/jsonb->clj []))
      :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
      :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
      :designSettings     (merge default-settings (tc/jsonb->clj (:design_settings project)))
@@ -923,6 +914,7 @@
 
 (def sample-base-headers [:plotid
                           :sampleid
+                          :sample_internal_id
                           :lon
                           :lat
                           :email
@@ -1038,7 +1030,7 @@
       (data-response (create-design-settings-from-file updated-plots))
       (data-response  {:userAssignment {:userMethod "none"
                                         :users      []
-                                        :percents   [0]}
+                                        :percents   []}
                        :qaqcAssignment {:qaqcMethod "none"
                                         :smes       []
                                         :overlap    0}}))))

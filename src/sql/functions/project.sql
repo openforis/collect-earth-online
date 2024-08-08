@@ -1036,7 +1036,8 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         sample_geom           text,
         saved_answers         jsonb,
         extra_plot_info       json,
-        extra_sample_info     json
+        extra_sample_info     json,
+        sample_internal_id    integer
  ) AS $$
 
     SELECT pl.visible_id,
@@ -1054,7 +1055,8 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         ST_AsText(sample_geom),
         saved_answers,
         extra_plot_info,
-        extra_sample_info
+        extra_sample_info,
+        s.sample_uid
     FROM plots pl
     INNER JOIN samples s
         ON s.plot_rid = pl.plot_uid

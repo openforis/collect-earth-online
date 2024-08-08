@@ -234,8 +234,8 @@ export default class SurveyCollection extends React.Component {
     mapObjectArray(answeredQuestions, ([_sqId, aq]) => aq.answered.map((a) => a.sampleId));
 
   checkRuleSumOfAnswers = (surveyRule, questionIdToSet, answerId, answerText) => {
-    const answerVal =
-      Number(answerText) || Number(this.getSurveyAnswerText(questionIdToSet, answerId));
+    const answerVal = !isNaN(Number(answerText)) ?
+          Number(answerText) : Number(this.getSurveyAnswerText(questionIdToSet, answerId));
     if (surveyRule.questionIds.includes(questionIdToSet)) {
       const answeredQuestions = this.getAnsweredQuestions(surveyRule.questionIds, questionIdToSet);
       if (surveyRule.questionIds.length === lengthObject(answeredQuestions) + 1) {

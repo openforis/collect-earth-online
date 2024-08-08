@@ -20,13 +20,6 @@ const AnswerDesigner = ({
   const [req, setReq] = useState(surveyQuestion.answers[answerId]?.required || false);
   const [hideAnswer, setHideAnswer] = useState(surveyQuestion.answers[answerId]?.hide || false);
 
-  useEffect(() => {
-    setNewAnswerText(surveyQuestions[surveyQuestionId].answers[answerId]?.answer);
-    setReq(surveyQuestion.answers[answerId]?.required);
-    setSelectedColor(surveyQuestion.answers[answerId]?.color);
-    setHideAnswer(surveyQuestions[surveyQuestionId]?.hide);
-  }, [surveyQuestionId, surveyQuestion, answerId]);
-
   const removeAnswer = () => {
     const answerHasRule = answerRule(surveyQuestionId, parseInt(answerId));
     if (answerHasRule) {
