@@ -459,79 +459,83 @@
         plot-file-base64     (:plotFileBase64 params)
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
-        token-key            (str (UUID/randomUUID))
-        project-id           (sql-primitive (call-sql "create_project"
-                                                      institution-id
-                                                      name
-                                                      description
-                                                      learning-material
-                                                      privacy-level
-                                                      imagery-id
-                                                      (tc/clj->jsonb aoi-features)
-                                                      aoi-file-name
-                                                      plot-distribution
-                                                      num-plots
-                                                      plot-spacing
-                                                      plot-shape
-                                                      plot-size
-                                                      plot-file-name
-                                                      shuffle-plots?
-                                                      sample-distribution
-                                                      samples-per-plot
-                                                      sample-resolution
-                                                      sample-file-name
-                                                      allow-drawn-samples?
-                                                      survey-questions
-                                                      survey-rules
-                                                      token-key
-                                                      project-options
-                                                      (tc/clj->jsonb design-settings)))]
+        token-key            (str (UUID/randomUUID))]
     (try
-      ;; Create or copy plots
-      (if (and (pos? project-template) use-template-plots)
-        (copy-template-plots project-id project-template design-settings)
-        (create-project-plots! project-id
-                               plot-distribution
-                               num-plots
-                               plot-spacing
-                               plot-shape
-                               plot-size
-                               plot-file-name
-                               plot-file-base64
-                               sample-distribution
-                               samples-per-plot
-                               sample-resolution
-                               sample-file-name
-                               sample-file-base64
-                               allow-drawn-samples?
-                               shuffle-plots?
-                               design-settings))
-      ;; Final clean up
-      (call-sql "update_project_counts" project-id)
-
-      ;; Save project imagery
-      (if-let [imagery-list (:projectImageryList params)]
-        (insert-project-imagery! project-id imagery-list)
-        ;; API backwards compatibility
-        (call-sql "add_all_institution_imagery" project-id))
-      ;; Copy template widgets
-      (when (and (pos? project-template) use-template-widgets)
-        (call-sql "copy_project_widgets" project-template project-id))
-      ;; Return new ID and token
-      (data-response {:projectId project-id
-                      :tokenKey  token-key})
-      (catch Exception e
-        ;; Delete new project on error
+      (let [project-id (sql-primitive (call-sql "create_project"
+                                                institution-id
+                                                name
+                                                description
+                                                learning-material
+                                                privacy-level
+                                                imagery-id
+                                                (tc/clj->jsonb aoi-features)
+                                                aoi-file-name
+                                                plot-distribution
+                                                num-plots
+                                                plot-spacing
+                                                plot-shape
+                                                plot-size
+                                                plot-file-name
+                                                shuffle-plots?
+                                                sample-distribution
+                                                samples-per-plot
+                                                sample-resolution
+                                                sample-file-name
+                                                allow-drawn-samples?
+                                                survey-questions
+                                                survey-rules
+                                                token-key
+                                                project-options
+                                                (tc/clj->jsonb design-settings)))]
+        ;; Proceed with other operations only if the initial call is successful
         (try
-          (call-sql "delete_project" project-id)
-          (catch Exception _))
-        (let [causes (:causes (ex-data e))]
-          ;; Log unknown errors
+          ;; Create or copy plots
+          (if (and (pos? project-template) use-template-plots)
+            (copy-template-plots project-id project-template design-settings)
+            (create-project-plots! project-id
+                                   plot-distribution
+                                   num-plots
+                                   plot-spacing
+                                   plot-shape
+                                   plot-size
+                                   plot-file-name
+                                   plot-file-base64
+                                   sample-distribution
+                                   samples-per-plot
+                                   sample-resolution
+                                   sample-file-name
+                                   sample-file-base64
+                                   allow-drawn-samples?
+                                   shuffle-plots?
+                                   design-settings))
+          ;; Final clean up 
+          (call-sql "update_project_counts" project-id)
+
+          ;; Save project imagery
+          (if-let [imagery-list (:projectImageryList params)]
+            (insert-project-imagery! project-id imagery-list)
+                                ;; API backwards compatibility
+            (call-sql "add_all_institution_imagery" project-id))
+          ;; Copy template widgets
+          (when (and (pos? project-template) use-template-widgets)
+            (call-sql "copy_project_widgets" project-template project-id))
+          ;; Return new ID and token
+          (data-response {:projectId project-id
+                          :tokenKey  token-key})
+          (catch Exception e
+          ;; Delete new project on error
+            (try
+              (call-sql "delete_project" project-id)
+              (catch Exception _))
+            (let [causes (:causes (ex-data e))]
+              ;; Log unknown errors
+              (when-not causes (log (ex-message e)))
+              ;; Return error stack to user
+              (data-response "Internal server error during project creation request." {:status 500})))))
+      (catch Exception e
+        (let [causes (:cause (ex-data e))]
           (when-not causes (log (ex-message e)))
-          ;; Return error stack to user
-          (data-response (if causes
-                           (str "-" (str/join "\n-" causes))
-                           "Unknown server error.")))))))
+          (data-response "Internal server error during project creation request, there may be a problem with your input." {:status 500}))))))
 
 ;;;
 ;;; Update project
