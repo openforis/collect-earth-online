@@ -3,12 +3,13 @@
             [clojure.set        :as set]
             [clojure.java.io    :as io]
             [clojure.java.shell :as sh]
-            [flatland.ordered.map :refer [ordered-map]]
-            [triangulum.config  :refer [get-config]]
-            [triangulum.type-conversion :as tc]
-            [triangulum.utils :refer [parse-as-sh-cmd]]
+            [flatland.ordered.map                  :refer [ordered-map]]
+            [triangulum.config                     :refer [get-config]]
+            [triangulum.database                   :refer [call-sql]]
+            [triangulum.type-conversion            :as tc]
+            [triangulum.utils                      :refer [parse-as-sh-cmd]]
             [collect-earth-online.utils.part-utils :as pu]
-            [collect-earth-online.utils.geom    :refer [make-wkt-point]]))
+            [collect-earth-online.utils.geom       :refer [make-wkt-point]]))
 
 ;;;
 ;;; Constants
@@ -93,6 +94,14 @@
                           design-type
                           " SHP file must not contain duplicate column titles.")))))
 
+(defmethod get-file-data :geojson [_ design-type ext-file folder-name]
+  (let [geo-edn (tc/json->clj (slurp (str folder-name ext-file)))]
+    (map (fn [feature]
+           (let [{:keys [geometry properties]} geo-edn
+                 prop (tc/json->clj properties)
+                 visible-id (or (:plot_id prop) (:sample_id prop))]))
+         )))
+
 (defmethod get-file-data :csv [_ design-type ext-file folder-name]
   (let [rows       (str/split (slurp (str folder-name ext-file)) #"\r\n|\n|\r")
         header-row (first rows)]
@@ -165,38 +174,38 @@
                            "'")))))
 
 (defn load-external-data! [project-id distribution file-name file-base64 design-type primary-key]
-  (when (#{"csv" "shp"} distribution)
+  (when (#{"csv" "shp" "geojson"} distribution)
     (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")
           saved-file  (pu/write-file-part-base64 file-name
                                                  file-base64
                                                  folder-name
                                                  (str "project-" project-id "-" design-type))]
-      (pu/try-catch-throw #(let [[headers body] (get-file-data distribution design-type saved-file folder-name)]
-                             (when-not (seq body)
-                               (pu/init-throw  (str "The " design-type " file contains no rows of data.")))
-
-                             (check-headers headers primary-key design-type)
-
-                             (let [duplicates (->> body
-                                                   (group-by (apply juxt primary-key))
-                                                   (filter (fn [[_ v]] (> (count v) 1))))]
-                               (when (seq duplicates)
-                                 (pu/init-throw  (str "The " design-type " file contains duplicate primary keys. "
-                                                      (count duplicates)
-                                                      " duplicates exists. The first 10 are:\n"
-                                                      (->> duplicates
-                                                           (map (fn [[k _]]
-                                                                  (str "["
-                                                                       (str/join ", "
-                                                                                 (->> k
-                                                                                      (zipmap primary-key)
-                                                                                      (map (fn [[k2 v2]]
-                                                                                             (str (name k2) ": " v2)))))
-                                                                       "]")))
-                                                           (take 10)
-                                                           (str/join "\n"))))))
-                             body)
-                          (str (str/capitalize design-type) " " distribution " file failed to load.")))))
+      (let [[headers body] (get-file-data distribution design-type saved-file folder-name)]
+        (when-not (seq body)
+          (pu/init-throw  (str "The " design-type " file contains no rows of data.")))
+        
+        (check-headers headers primary-key design-type)
+        
+        (let [duplicates (->> body
+                              (group-by (apply juxt primary-key))
+                              (filter (fn [[_ v]] (> (count v) 1))))]
+          (when (seq duplicates)
+            (pu/init-throw  (str "The " design-type " file contains duplicate primary keys. "
+                                 (count duplicates)
+                                 " duplicates exists. The first 10 are:\n"
+                                 (->> duplicates
+                                      (map (fn [[k _]]
+                                             (str "["
+                                                  (str/join ", "
+                                                            (->> k
+                                                                 (zipmap primary-key)
+                                                                 (map (fn [[k2 v2]]
+                                                                        (str (name k2) ": " v2)))))
+                                                  "]")))
+                                      (take 10)
+                                      (str/join "\n"))))))
+        body)
+      )))
 
 (defn- clj->pg-json
   [clj]
