@@ -3,9 +3,8 @@
             [clojure.set        :as set]
             [clojure.java.io    :as io]
             [clojure.java.shell :as sh]
+            [clojure.data.json  :as json]
             [flatland.ordered.map                  :refer [ordered-map]]
-            [triangulum.config                     :refer [get-config]]
-            [triangulum.database                   :refer [call-sql]]
             [triangulum.type-conversion            :as tc]
             [triangulum.utils                      :refer [parse-as-sh-cmd]]
             [collect-earth-online.utils.part-utils :as pu]
@@ -98,12 +97,19 @@
   (let [features (:features (tc/json->clj (slurp (str folder-name ext-file))))
         geom-key (keyword (str design-type "_geom"))
         plots (reduce (fn [acc feature]
-                     (let [{:keys [geometry properties]} feature
-                           visible-id (or (:PLOTID properties) (:SAMPLEID properties))]
-                       (conj acc {geom-key (tc/clj->jsonb geometry)
-                                  :visible_id visible-id
-                                  :extra_plot_info properties})))
-                   [] features)]
+                        (let [{:keys [geometry properties]} feature
+                              visible-id (condp = design-type
+                                           "plot" (:PLOTID properties)
+                                           "sample" (:SAMPLEID properties))]
+                          (condp = design-type
+                            "plot" (conj acc {geom-key (tc/str->pg (json/write-str geometry) "geometry")
+                                              :visible_id (tc/val->int visible-id)
+                                              :extra_plot_info properties})
+                            "sample" (conj acc {geom-key (tc/str->pg (json/write-str geometry) "geometry")
+                                                :visible_id (tc/val->int visible-id)
+                                                :plotid (:PLOTID properties)
+                                                :extra_plot_info properties}))))
+                      [] features)]
     [(keys (first plots)) plots]))
 
 (defmethod get-file-data :csv [_ design-type ext-file folder-name]

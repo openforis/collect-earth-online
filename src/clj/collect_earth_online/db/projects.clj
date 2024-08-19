@@ -336,7 +336,7 @@
                                 allow-drawn-samples?
                                 plots]
   (let [plot-count (count plots)
-        samples    (if (#{"csv" "shp"} sample-distribution)
+        samples    (if (#{"csv" "shp" "geojson"} sample-distribution)
                      (external-file/generate-file-samples plots
                                             plot-count
                                             project-id
@@ -352,7 +352,7 @@
                                              sample-resolution))]
     (when (seq samples) (p-insert-rows! "samples" samples))
     (if allow-drawn-samples?
-      (when (#{"csv" "shp"} sample-distribution)
+      (when (#{"csv" "shp" "geojson"} sample-distribution)
         (p-insert-rows! "ext_samples" samples))
       (when-let [bad-plots (seq (map :visible_id (call-sql "plots_missing_samples" project-id)))]
         (pu/init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
@@ -386,7 +386,7 @@
                               shuffle-plots?
                               design-settings]
   ;; Create plots
-  (let [plots (if (#{"csv" "shp"} plot-distribution)
+  (let [plots (if (#{"csv" "shp" "geojson"} plot-distribution)
                 (external-file/generate-file-plots project-id
                                                    plot-distribution
                                                    plot-file-name
@@ -402,10 +402,10 @@
   ;; Boundary is only used for Planet at this point.
   (pu/try-catch-throw #(call-sql "set_boundary"
                                  project-id
-                                 (if (= plot-distribution "shp") 0 plot-size))
+                                 (if (#{"shp" "geojson"} plot-distribution) 0 plot-size))
                       "SQL Error: cannot create a project AOI.")
 
-  (when (#{"csv" "shp"} plot-distribution) (call-sql "boundary_to_aoi" project-id))
+  (when (#{"csv" "shp" "geojson"} plot-distribution) (call-sql "boundary_to_aoi" project-id))
 
   (when-not (sql-primitive (call-sql "valid_project_boundary" project-id))
     (pu/init-throw (str "The project boundary is invalid. "
@@ -674,7 +674,7 @@
           (do
             ;; Always recreate samples or reset them
             (if (or (not= sample-distribution (:sample_distribution original-project))
-                    (if (#{"csv" "shp"} sample-distribution)
+                    (if (#{"csv" "shp" "geojson"} sample-distribution)
                       sample-file-base64
                       (or (not= samples-per-plot (:samples_per_plot original-project))
                           (not= sample-resolution (:sample_resolution original-project)))))

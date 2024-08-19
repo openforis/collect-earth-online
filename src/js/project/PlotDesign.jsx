@@ -71,7 +71,7 @@ export class PlotDesign extends React.Component {
   };
 
   setPlotDetails = (newDetail) => {
-    const resetAOI = ["csv", "shp"].includes(newDetail.plotDistribution);
+    const resetAOI = ["csv", "shp", "geojson"].includes(newDetail.plotDistribution);
     if (resetAOI) {
       this.setState({
         lonMin: "",
@@ -325,9 +325,10 @@ export class PlotDesign extends React.Component {
   renderFileInput = (fileType) => {
     const acceptedTypes = {
       csv: "text/csv",
-      shape: "application/zip",
+      shp: "application/zip",
       geojson: "application/json",
     };
+    const exampleFileType = fileType === "shp" ? "shape" : fileType;
     return (
       <div className="mb-3">
         <div style={{ display: "flex" }}>
@@ -363,7 +364,7 @@ export class PlotDesign extends React.Component {
         </div>
         <a
           href={
-            `test_data/plot-${fileType}-example.${fileType === "shp" ? "zip" : fileType}`
+            `test_data/sample-${exampleFileType}-example.${fileType === "shp" ? "zip" : fileType}`
           }
         >
           Download example plot {fileType} file
@@ -461,12 +462,12 @@ export class PlotDesign extends React.Component {
           "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
         layout: this.renderCSV(),
       },
-      shape: {
+      shp: {
         display: "SHP File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
-        layout: this.renderFileInput("shape"),
+        layout: this.renderFileInput("shp"),
       },
       geojson: {
         display: "GeoJSON File",
