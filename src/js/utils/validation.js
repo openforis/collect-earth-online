@@ -62,7 +62,7 @@ export default function getErrors (form) {
       plotDistribution === "gridded" &&
         !plotSpacing &&
         "A plot spacing is required for gridded plot distribution.",
-      plotDistribution !== "shp" && (!plotSize || plotSize === 0) && "A plot size is required.",
+    !["shp", "geojson"].includes(plotDistribution) && (!plotSize || plotSize === 0) && "A plot size is required.",
       plotDistribution === "csv" &&
         plotFileNeeded &&
         !(plotFileName || "").includes(".csv") &&

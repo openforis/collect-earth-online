@@ -95,12 +95,16 @@
                           " SHP file must not contain duplicate column titles.")))))
 
 (defmethod get-file-data :geojson [_ design-type ext-file folder-name]
-  (let [geo-edn (tc/json->clj (slurp (str folder-name ext-file)))]
-    (map (fn [feature]
-           (let [{:keys [geometry properties]} geo-edn
-                 prop (tc/json->clj properties)
-                 visible-id (or (:plot_id prop) (:sample_id prop))]))
-         )))
+  (let [features (:features (tc/json->clj (slurp (str folder-name ext-file))))
+        geom-key (keyword (str design-type "_geom"))
+        plots (reduce (fn [acc feature]
+                     (let [{:keys [geometry properties]} feature
+                           visible-id (or (:PLOTID properties) (:SAMPLEID properties))]
+                       (conj acc {geom-key (tc/clj->jsonb geometry)
+                                  :visible_id visible-id
+                                  :extra_plot_info properties})))
+                   [] features)]
+    [(keys (first plots)) plots]))
 
 (defmethod get-file-data :csv [_ design-type ext-file folder-name]
   (let [rows       (str/split (slurp (str folder-name ext-file)) #"\r\n|\n|\r")

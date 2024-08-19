@@ -1278,6 +1278,3 @@ RETURNS integer AS $$
     WHERE project_draft_uid = _project_draft_id
     RETURNING project_draft_uid
 $$ LANGUAGE SQL;
-
-
-CREATE OR REPLACE FUNCTION insert_geojson_row(_design_type text, geom JSONB, properties JSONB)
