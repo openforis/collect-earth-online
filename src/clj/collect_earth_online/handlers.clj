@@ -5,8 +5,7 @@
             [ring.util.response                   :refer [redirect]]
             [triangulum.config                    :refer [get-config]]
             [triangulum.response                  :refer [no-cross-traffic?]]
-            [triangulum.type-conversion           :refer [val->int]]
-            [sentry-clj.core                      :as sentry]))
+            [triangulum.type-conversion           :refer [val->int]]))
 
 (defn route-authenticator [{:keys [session params headers] :as _request} auth-type]
   (let [user-id        (:userId session -1)
