@@ -663,4 +663,3 @@ CREATE OR REPLACE FUNCTION select_saved_answers(_project_id integer)
   WHERE p.project_rid = _project_id
   
 $$ LANGUAGE SQL;
-    

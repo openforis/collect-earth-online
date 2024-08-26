@@ -185,37 +185,37 @@
 
 (defn load-external-data! [project-id distribution file-name file-base64 design-type primary-key]
   (when (#{"csv" "shp" "geojson"} distribution)
-    (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")
-          saved-file  (pu/write-file-part-base64 file-name
-                                                 file-base64
-                                                 folder-name
-                                                 (str "project-" project-id "-" design-type))]
-      (let [[headers body] (get-file-data distribution design-type saved-file folder-name)]
-        (when-not (seq body)
-          (pu/init-throw  (str "The " design-type " file contains no rows of data.")))
-        
-        (check-headers headers primary-key design-type)
-        
-        (let [duplicates (->> body
-                              (group-by (apply juxt primary-key))
-                              (filter (fn [[_ v]] (> (count v) 1))))]
-          (when (seq duplicates)
-            (pu/init-throw  (str "The " design-type " file contains duplicate primary keys. "
-                                 (count duplicates)
-                                 " duplicates exists. The first 10 are:\n"
-                                 (->> duplicates
-                                      (map (fn [[k _]]
-                                             (str "["
-                                                  (str/join ", "
-                                                            (->> k
-                                                                 (zipmap primary-key)
-                                                                 (map (fn [[k2 v2]]
-                                                                        (str (name k2) ": " v2)))))
-                                                  "]")))
-                                      (take 10)
-                                      (str/join "\n"))))))
-        body)
-      )))
+    (pu/try-catch-throw #(let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")
+                               saved-file  (pu/write-file-part-base64 file-name
+                                                                      file-base64
+                                                                      folder-name
+                                                                      (str "project-" project-id "-" design-type))]
+                           (let [[headers body] (get-file-data distribution design-type saved-file folder-name)]
+                             (when-not (seq body)
+                               (pu/init-throw  (str "The " design-type " file contains no rows of data.")))
+
+                             (check-headers headers primary-key design-type)
+
+                             (let [duplicates (->> body
+                                                   (group-by (apply juxt primary-key))
+                                                   (filter (fn [[_ v]] (> (count v) 1))))]
+                               (when (seq duplicates)
+                                 (pu/init-throw  (str "The " design-type " file contains duplicate primary keys. "
+                                                      (count duplicates)
+                                                      " duplicates exists. The first 10 are:\n"
+                                                      (->> duplicates
+                                                           (map (fn [[k _]]
+                                                                  (str "["
+                                                                       (str/join ", "
+                                                                                 (->> k
+                                                                                      (zipmap primary-key)
+                                                                                      (map (fn [[k2 v2]]
+                                                                                             (str (name k2) ": " v2)))))
+                                                                       "]")))
+                                                           (take 10)
+                                                           (str/join "\n"))))))
+                             body)
+                           (str (str/capitalize design-type) " " distribution " file failed to load.")))))
 
 (defn- clj->pg-json
   [clj]
