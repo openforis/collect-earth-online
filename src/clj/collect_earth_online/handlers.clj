@@ -8,16 +8,12 @@
             [triangulum.type-conversion           :refer [val->int]]
             [sentry-clj.core                      :as sentry]))
 
-(sentry/init! (get-config :sentry :url)
-              {:environment (get-config :sentry :env)})
-
 (defn route-authenticator [{:keys [session params headers] :as _request} auth-type]
   (let [user-id        (:userId session -1)
         institution-id (val->int (:institutionId params))
         project-id     (val->int (:projectId params))
         token-key      (:tokenKey params)]
-    (sentry/send-event {:message {:message "Request in!"
-                                  :params ["route" "healthcheck"]}})
+
     (condp = auth-type
       :user    (pos? user-id)
       :super   (= 1 user-id)
