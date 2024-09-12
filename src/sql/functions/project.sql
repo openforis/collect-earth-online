@@ -1132,7 +1132,9 @@ CREATE OR REPLACE FUNCTION select_project_stats(_project_id integer)
     plot_assignments    integer,
     users_assigned      integer,
     average_confidence  integer,
-    user_stats          jsonb
+    user_stats          jsonb,
+    max_confidence      integer,
+    min_confidence      integer
  ) AS $$
 
     WITH user_plot_times AS (
@@ -1207,8 +1209,11 @@ CREATE OR REPLACE FUNCTION select_project_stats(_project_id integer)
           WHEN analyzed_plots = 0 THEN 0
           ELSE confidence_sum / analyzed_plots
         END as average_confidence,
-        user_stats
-    FROM projects, plot_sum, project_sum, users_count, user_agg
+        user_stats,
+        (SELECT MAX(confidence) FROM user_plots up) AS max_confidence,
+        (SELECT MIN(confidence) FROM user_plots up) AS min_confidence
+    FROM projects, plot_sum, project_sum, users_count,
+         user_agg
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;

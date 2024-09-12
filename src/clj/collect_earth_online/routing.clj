@@ -124,15 +124,18 @@
                                               :auth-type   :user
                                               :auth-action :block}
    ;; QAQC API
-   [:get "/project-stats"] {:handler     qaqc/get-project-stats
-                            :auth-type   :admin
-                            :auth-action :block}
-   [:get "/plot-stats"]    {:handler     qaqc/get-plot-stats
-                            :auth-type   :admin
-                            :auth-action :block}
-   [:get "/user-stats"]    {:handler     qaqc/get-user-stats
-                            :auth-type   :admin
-                            :auth-action :block}
+   [:get "/project-stats"]                   {:handler     qaqc/get-project-stats
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:get "/plot-stats"]                      {:handler     qaqc/get-plot-stats
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:get "/qaqc-plot"]                       {:handler     qaqc/get-qaqc-plot
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:get "/user-stats"]                      {:handler     qaqc/get-user-stats
+                                              :auth-type   :admin
+                                              :auth-action :block}
 
    ;; DOI API
    [:post "/create-doi"]  {:handler     doi/create-doi!

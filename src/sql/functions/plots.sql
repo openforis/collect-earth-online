@@ -663,3 +663,82 @@ CREATE OR REPLACE FUNCTION select_saved_answers(_project_id integer)
   WHERE p.project_rid = _project_id
   
 $$ LANGUAGE SQL;
+  
+CREATE OR REPLACE FUNCTION get_plot_stats(_project_id integer, _plot_id integer)
+  RETURNS table (
+    total_samples  integer,
+    num_flags      integer,
+    avg_col_time   integer,
+    min_col_time   integer,
+    max_col_time   integer,
+    avg_confidence integer
+  ) AS $$
+  
+  WITH total_samples AS (
+      SELECT count(sample_uid)
+      FROM samples s
+      INNER JOIN plots p ON p.plot_uid = s.plot_rid
+      WHERE p.visible_id = _plot_id
+      AND p.project_rid = _project_id
+  ), plot_flags AS (
+      SELECT count(*)
+      FROM user_plots up
+      INNER JOIN plots p ON p.plot_uid = up.plot_rid
+      WHERE flagged = true
+            AND p.visible_id = _plot_id
+            AND p.project_rid = _project_id
+  ), collection_times AS (
+      SELECT
+          AVG(EXTRACT(EPOCH FROM collection_time - collection_start) / 60) AS avg_col_time,
+          MIN(EXTRACT(EPOCH FROM collection_time - collection_start) / 60) AS min_col_time,
+          MAX(EXTRACT(EPOCH FROM collection_time - collection_start) / 60) AS max_col_time
+      FROM user_plots up
+      INNER JOIN plots p ON p.plot_uid = up.plot_rid
+      WHERE p.visible_id = _plot_id AND p.project_rid = _project_id
+  ), average_confidence AS (
+      SELECT 
+        AVG(COALESCE(confidence, 100)) AS average_confidence
+      FROM user_plots up
+      INNER JOIN plots p ON p.plot_uid = up.plot_rid
+      WHERE p.visible_id = _plot_id AND p.project_rid = _project_id
+  )
+  SELECT ts.* AS total_samples,
+         pf.* AS total_flags,
+         ct.avg_col_time AS avg_col_time,
+         ct.min_col_time AS min_col_time,
+         ct.max_col_time AS max_col_time,
+         ac.average_confidence AS avg_confidence
+  FROM total_samples ts, plot_flags pf, collection_times ct,
+       average_confidence ac
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION select_all_plot_samples(_plot_id integer)
+ RETURNS table (
+    sample_id        integer,
+    visible_id       integer,
+    sample_geom      text,
+    saved_answers    jsonb
+ ) AS $$
+
+    WITH assigned_count AS (
+        SELECT count(*) as user_count
+        FROM plot_assignments
+        WHERE plot_rid = _plot_id
+    )
+    SELECT sample_uid,
+        visible_id,
+        ST_AsGeoJSON(sample_geom) AS sample_geom,
+        (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END)
+    FROM samples s
+    LEFT JOIN plot_assignments pa
+        ON s.plot_rid = pa.plot_rid
+    LEFT JOIN user_plots up
+        ON s.plot_rid = up.plot_rid
+        AND (pa.user_rid = up.user_rid OR (SELECT user_count FROM assigned_count) = 0)
+    LEFT JOIN sample_values sv
+        ON sample_uid = sv.sample_rid
+        AND user_plot_uid = sv.user_plot_rid
+    WHERE s.plot_rid = _plot_id
+
+$$ LANGUAGE SQL;
