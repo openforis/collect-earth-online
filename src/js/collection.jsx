@@ -819,7 +819,8 @@ class Collection extends React.Component {
     const selectedSamples = mercator.getSelectedSamples(this.state.mapConfig);
     const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
     return (
-      (selectedFeatures.length === 0 && answered.length === 0)
+      (selectedFeatures.length === 0 && answered.length === 0) ||
+        lengthObject(this.state.userSamples) === 1
         ? allFeatures
         : selectedFeatures.length !== 0
         ? selectedFeatures
@@ -1548,8 +1549,7 @@ class ExternalTools extends React.Component {
     if (this.state.auxWindow) this.state.auxWindow.close();
     this.setState({
       auxWindow: window.open(
-        "https://billyz313.users.earthengine.app/view/ceoplotancillary#" + urlParams,
-        "_ceo-plot-ancillary"
+        "https://collect-earth-online.projects.earthengine.app/view/ceo-plot-ancillary-hotfix#" + urlParams
       ),
     });
   };

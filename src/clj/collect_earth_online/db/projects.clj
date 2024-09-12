@@ -67,12 +67,13 @@
 (defn get-institution-projects [{:keys [params session]}]
   (let [user-id        (:userId session -1)
         institution-id (tc/val->int (:institutionId params))]
-    (data-response (mapv (fn [{:keys [project_id name privacy_level pct_complete num_plots]}]
+    (data-response (mapv (fn [{:keys [project_id name privacy_level pct_complete num_plots learning_material]}]
                            {:id              project_id
                             :name            name
                             :numPlots        num_plots
                             :privacyLevel    privacy_level
-                            :percentComplete pct_complete})
+                            :percentComplete pct_complete
+                            :learningMaterial learning_material})
                          (call-sql "select_institution_projects" user-id institution-id)))))
 
 (defn get-institution-dash-projects [{:keys [params session]}]
@@ -100,16 +101,6 @@
                             :institutionId institution_id})
                          (call-sql "select_template_projects" user-id)))))
 
-(defn- validate-survey-questions [survey-questions] 
-  (let [raw (->> survey-questions vals (map :cardOrder))]
-    (if (-> raw distinct count (= raw count))
-      survey-questions
-      (reduce-kv
-       (fn [m k {:as survey-question}]
-         (assoc m k  (assoc survey-question :cardOrder (Integer. k))))
-       {}
-       survey-questions)))) 
-
 (defn- build-project-by-id [user-id project-id]
   (let [project (first (call-sql "select_project_by_id" project-id))]
     {:id                 (:project_id project) ; TODO dont return known values
@@ -135,8 +126,9 @@
      :sampleResolution   (:sample_resolution project)
      :sampleFileName     (:sample_file_name project)
      :allowDrawnSamples  (:allow_drawn_samples project)
-     :surveyQuestions    (-> project :survey_questions
-                             (tc/jsonb->clj []) validate-survey-questions)
+     :surveyQuestions    (-> project
+                             :survey_questions
+                             (tc/jsonb->clj []))
      :surveyRules        (tc/jsonb->clj (:survey_rules project) [])
      :projectOptions     (merge default-options (tc/jsonb->clj (:options project)))
      :designSettings     (merge default-settings (tc/jsonb->clj (:design_settings project)))
@@ -344,7 +336,7 @@
                                 allow-drawn-samples?
                                 plots]
   (let [plot-count (count plots)
-        samples    (if (#{"csv" "shp"} sample-distribution)
+        samples    (if (#{"csv" "shp" "geojson"} sample-distribution)
                      (external-file/generate-file-samples plots
                                             plot-count
                                             project-id
@@ -360,7 +352,7 @@
                                              sample-resolution))]
     (when (seq samples) (p-insert-rows! "samples" samples))
     (if allow-drawn-samples?
-      (when (#{"csv" "shp"} sample-distribution)
+      (when (#{"csv" "shp" "geojson"} sample-distribution)
         (p-insert-rows! "ext_samples" samples))
       (when-let [bad-plots (seq (map :visible_id (call-sql "plots_missing_samples" project-id)))]
         (pu/init-throw (str "The uploaded plot and sample files do not have correctly overlapping data. "
@@ -394,7 +386,7 @@
                               shuffle-plots?
                               design-settings]
   ;; Create plots
-  (let [plots (if (#{"csv" "shp"} plot-distribution)
+  (let [plots (if (#{"csv" "shp" "geojson"} plot-distribution)
                 (external-file/generate-file-plots project-id
                                                    plot-distribution
                                                    plot-file-name
@@ -410,10 +402,10 @@
   ;; Boundary is only used for Planet at this point.
   (pu/try-catch-throw #(call-sql "set_boundary"
                                  project-id
-                                 (if (= plot-distribution "shp") 0 plot-size))
+                                 (if (#{"shp" "geojson"} plot-distribution) 0 plot-size))
                       "SQL Error: cannot create a project AOI.")
 
-  (when (#{"csv" "shp"} plot-distribution) (call-sql "boundary_to_aoi" project-id))
+  (when (#{"csv" "shp" "geojson"} plot-distribution) (call-sql "boundary_to_aoi" project-id))
 
   (when-not (sql-primitive (call-sql "valid_project_boundary" project-id))
     (pu/init-throw (str "The project boundary is invalid. "
@@ -467,79 +459,83 @@
         plot-file-base64     (:plotFileBase64 params)
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
-        token-key            (str (UUID/randomUUID))
-        project-id           (sql-primitive (call-sql "create_project"
-                                                      institution-id
-                                                      name
-                                                      description
-                                                      learning-material
-                                                      privacy-level
-                                                      imagery-id
-                                                      (tc/clj->jsonb aoi-features)
-                                                      aoi-file-name
-                                                      plot-distribution
-                                                      num-plots
-                                                      plot-spacing
-                                                      plot-shape
-                                                      plot-size
-                                                      plot-file-name
-                                                      shuffle-plots?
-                                                      sample-distribution
-                                                      samples-per-plot
-                                                      sample-resolution
-                                                      sample-file-name
-                                                      allow-drawn-samples?
-                                                      survey-questions
-                                                      survey-rules
-                                                      token-key
-                                                      project-options
-                                                      (tc/clj->jsonb design-settings)))]
+        token-key            (str (UUID/randomUUID))]
     (try
-      ;; Create or copy plots
-      (if (and (pos? project-template) use-template-plots)
-        (copy-template-plots project-id project-template design-settings)
-        (create-project-plots! project-id
-                               plot-distribution
-                               num-plots
-                               plot-spacing
-                               plot-shape
-                               plot-size
-                               plot-file-name
-                               plot-file-base64
-                               sample-distribution
-                               samples-per-plot
-                               sample-resolution
-                               sample-file-name
-                               sample-file-base64
-                               allow-drawn-samples?
-                               shuffle-plots?
-                               design-settings))
-      ;; Final clean up
-      (call-sql "update_project_counts" project-id)
-
-      ;; Save project imagery
-      (if-let [imagery-list (:projectImageryList params)]
-        (insert-project-imagery! project-id imagery-list)
-        ;; API backwards compatibility
-        (call-sql "add_all_institution_imagery" project-id))
-      ;; Copy template widgets
-      (when (and (pos? project-template) use-template-widgets)
-        (call-sql "copy_project_widgets" project-template project-id))
-      ;; Return new ID and token
-      (data-response {:projectId project-id
-                      :tokenKey  token-key})
-      (catch Exception e
-        ;; Delete new project on error
+      (let [project-id (sql-primitive (call-sql "create_project"
+                                                institution-id
+                                                name
+                                                description
+                                                learning-material
+                                                privacy-level
+                                                imagery-id
+                                                (tc/clj->jsonb aoi-features)
+                                                aoi-file-name
+                                                plot-distribution
+                                                num-plots
+                                                plot-spacing
+                                                plot-shape
+                                                plot-size
+                                                plot-file-name
+                                                shuffle-plots?
+                                                sample-distribution
+                                                samples-per-plot
+                                                sample-resolution
+                                                sample-file-name
+                                                allow-drawn-samples?
+                                                survey-questions
+                                                survey-rules
+                                                token-key
+                                                project-options
+                                                (tc/clj->jsonb design-settings)))]
+        ;; Proceed with other operations only if the initial call is successful
         (try
-          (call-sql "delete_project" project-id)
-          (catch Exception _))
-        (let [causes (:causes (ex-data e))]
-          ;; Log unknown errors
+          ;; Create or copy plots
+          (if (and (pos? project-template) use-template-plots)
+            (copy-template-plots project-id project-template design-settings)
+            (create-project-plots! project-id
+                                   plot-distribution
+                                   num-plots
+                                   plot-spacing
+                                   plot-shape
+                                   plot-size
+                                   plot-file-name
+                                   plot-file-base64
+                                   sample-distribution
+                                   samples-per-plot
+                                   sample-resolution
+                                   sample-file-name
+                                   sample-file-base64
+                                   allow-drawn-samples?
+                                   shuffle-plots?
+                                   design-settings))
+          ;; Final clean up 
+          (call-sql "update_project_counts" project-id)
+
+          ;; Save project imagery
+          (if-let [imagery-list (:projectImageryList params)]
+            (insert-project-imagery! project-id imagery-list)
+                                ;; API backwards compatibility
+            (call-sql "add_all_institution_imagery" project-id))
+          ;; Copy template widgets
+          (when (and (pos? project-template) use-template-widgets)
+            (call-sql "copy_project_widgets" project-template project-id))
+          ;; Return new ID and token
+          (data-response {:projectId project-id
+                          :tokenKey  token-key})
+          (catch Exception e
+          ;; Delete new project on error
+            (try
+              (call-sql "delete_project" project-id)
+              (catch Exception _))
+            (let [causes (:causes (ex-data e))]
+              ;; Log unknown errors
+              (when-not causes (log (ex-message e)))
+              ;; Return error stack to user
+              (data-response "Internal server error during project creation request." {:status 500})))))
+      (catch Exception e
+        (let [causes (:cause (ex-data e))]
           (when-not causes (log (ex-message e)))
-          ;; Return error stack to user
-          (data-response (if causes
-                           (str "-" (str/join "\n-" causes))
-                           "Unknown server error.")))))))
+          (data-response "Internal server error during project creation request, there may be a problem with your input." {:status 500}))))))
 
 ;;;
 ;;; Update project
@@ -678,7 +674,7 @@
           (do
             ;; Always recreate samples or reset them
             (if (or (not= sample-distribution (:sample_distribution original-project))
-                    (if (#{"csv" "shp"} sample-distribution)
+                    (if (#{"csv" "shp" "geojson"} sample-distribution)
                       sample-file-base64
                       (or (not= samples-per-plot (:samples_per_plot original-project))
                           (not= sample-resolution (:sample_resolution original-project)))))
@@ -922,6 +918,7 @@
 
 (def sample-base-headers [:plotid
                           :sampleid
+                          :sample_internal_id
                           :lon
                           :lat
                           :email
@@ -1037,7 +1034,87 @@
       (data-response (create-design-settings-from-file updated-plots))
       (data-response  {:userAssignment {:userMethod "none"
                                         :users      []
-                                        :percents   [0]}
+                                        :percents   []}
                        :qaqcAssignment {:qaqcMethod "none"
                                         :smes       []
                                         :overlap    0}}))))
+
+;;;
+;;; Draft handlers
+;;;
+
+(defn get-project-drafts-by-user [{:keys [params session]}]
+  (let [user-id (tc/val->int (:userId session))
+        institution-id (tc/val->int (:institutionId params))]
+    (try
+      (let [result (call-sql "get_project_drafts_by_user" user-id institution-id)]
+        (if (empty? result)
+          (data-response (format "No drafts were found for user id %s." user-id) {:status 404})
+          (data-response (mapv (fn [{:keys [project_draft_uid project_state]}]
+                                 {:id            project_draft_uid
+                                  :name          (get (tc/jsonb->clj project_state) :name)})
+                               result))))
+      (catch Exception e
+        (let [causes (:causes (ex-data e))]
+          (when-not causes (log (ex-message e)))
+          (data-response "Internal server error." {:status 500})))))) 
+
+(defn get-project-draft-by-id [{:keys [params]}]
+  (let [project-draft-id (tc/val->int (params :projectDraftId))]
+    (try
+      (let [result (call-sql "get_project_draft_by_id" project-draft-id)]
+        (if (empty? result)
+          (data-response (format "No draft was found for this draft id %s." project-draft-id) {:status 404})
+          (data-response (mapv (fn [{:keys [project_draft_uid project_state]}]
+                                 (let [state (tc/jsonb->clj project_state)]
+                                   (merge {:id project_draft_uid} state)))
+                               result))))
+      (catch Exception e
+        (let [causes (:causes (ex-data e))]
+          (when-not causes (log (ex-message e)))
+          (data-response "Internal server error." {:status 500}))))))
+
+(defn create-project-draft! [{:keys [params session]}]
+                       (let [user-id             (tc/val->int (:userId session))
+                             institution-id      (tc/val->int (:institutionId params))
+                             project-state  (dissoc params :userId :institutionId)]
+                         (try
+                           (let [project-draft-id (sql-primitive (call-sql "create_project_draft"
+                                                                           user-id
+                                                                           institution-id
+                                                                           (tc/clj->jsonb project-state)))]
+                             (if (or (nil? project-draft-id) (zero? project-draft-id))
+                               (throw (Exception. "There was an issue with the creation request."))
+                               (data-response {:projectDraftId project-draft-id}))
+                             )
+                           (catch Exception e
+                             (let [causes (:causes (ex-data e))]
+                               (when-not causes (log (ex-message e)))
+                               (data-response "Internal server error." {:status 500}))))))
+
+(defn update-project-draft! [{:keys [params]}]
+  (let [project-draft-id    (tc/val->int (:projectDraftId params))
+        project-state  (dissoc params :userId :institutionId)]
+    (try
+      (let [result (call-sql "update_project_draft"
+                             project-draft-id
+                             (tc/clj->jsonb project-state))]
+        (if (nil? (get (first result) :update_project_draft))
+          (data-response "Project draft not found." {:status 404})
+          (data-response {:message (str "Updated project with id " project-draft-id)} {:status 200})))
+      (catch Exception e
+        (let [causes (:causes (ex-data e))]
+          (when-not causes (log (ex-message e)))
+          (data-response "Internal server error." {:status 500}))))))
+
+(defn delete-project-draft! [{:keys [params]}]
+  (let [project-draft-id (tc/val->int (:projectDraftId params))]
+    (try
+      (let [result (call-sql "delete_project_draft" project-draft-id)]
+        (if (nil? (get (first result) :delete_project_draft))
+          (data-response (str "No project draft exists with id " project-draft-id) {:status 404})
+          (data-response {:message (str "Deleted project with id " project-draft-id)} {:status 200})))
+      (catch Exception e
+        (let [causes (:causes (ex-data e))]
+          (when-not causes (log (ex-message e)))
+          (data-response "Internal server error." {:status 500}))))))

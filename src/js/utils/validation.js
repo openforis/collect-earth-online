@@ -62,7 +62,7 @@ export default function getErrors (form) {
       plotDistribution === "gridded" &&
         !plotSpacing &&
         "A plot spacing is required for gridded plot distribution.",
-      plotDistribution !== "shp" && (!plotSize || plotSize === 0) && "A plot size is required.",
+    !["shp", "geojson"].includes(plotDistribution) && (!plotSize || plotSize === 0) && "A plot size is required.",
       plotDistribution === "csv" &&
         plotFileNeeded &&
         !(plotFileName || "").includes(".csv") &&
@@ -86,9 +86,6 @@ export default function getErrors (form) {
         percent === 0 &&
         "The assigned Quality Control percentage must be greater than 0%.",
       ["random", "gridded"].includes(plotDistribution) &&
-        qaqcMethod === "overlap" &&
-        users.length > Math.round((totalPlots * (percent / 100)) / users.length) &&
-        `Too few plots per user for Quality Control Overlap. Each user must have at least ${users.length} plots.`,
       qaqcMethod === "sme" && smes.length === 0 && "At least one user must be added as an SME.",
       qaqcMethod === "overlap" &&
         users.length === 1 &&
