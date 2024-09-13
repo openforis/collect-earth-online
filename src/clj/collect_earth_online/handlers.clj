@@ -3,6 +3,7 @@
             [collect-earth-online.db.projects     :refer [can-collect? is-proj-admin?]]
             [ring.util.codec                      :refer [url-encode]]
             [ring.util.response                   :refer [redirect]]
+            [triangulum.config                    :refer [get-config]]
             [triangulum.response                  :refer [no-cross-traffic?]]
             [triangulum.type-conversion           :refer [val->int]]))
 
@@ -11,6 +12,7 @@
         institution-id (val->int (:institutionId params))
         project-id     (val->int (:projectId params))
         token-key      (:tokenKey params)]
+
     (condp = auth-type
       :user    (pos? user-id)
       :super   (= 1 user-id)

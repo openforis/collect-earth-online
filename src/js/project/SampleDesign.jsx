@@ -21,53 +21,59 @@ export class SampleDesign extends React.Component {
     </div>
   );
 
-  renderFileInput = (fileType) => (
-    <div>
-      <div style={{ display: "flex" }}>
-        <label
-          className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
-          htmlFor="sample-distribution-file"
-          id="custom-upload"
-          style={{ display: "flex", alignItems: "center", width: "fit-content" }}
-        >
-          Upload sample file
-          <input
-            accept={fileType === "csv" ? "text/csv" : "application/zip"}
-            defaultValue=""
-            id="sample-distribution-file"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              readFileAsBase64Url(file, (base64) =>
-                this.context.setProjectDetails({
-                  sampleFileName: file.name,
-                  sampleFileBase64: base64,
-                })
-              );
-            }}
-            style={{ display: "none" }}
-            type="file"
-          />
-        </label>
-        <label className="ml-3 text-nowrap">
-          File:{" "}
-          {this.context.sampleFileName ||
-            (this.context.projectId === -1 || this.context.plotFileName
+  renderFileInput = (fileType) => {
+    const acceptedTypes = {
+      csv: "text/csv",
+      shp: "application/zip",
+      geojson: "application/json",
+    };
+    const exampleFileType = fileType === "shp" ? "shape" : fileType;
+    return (
+      <div>
+        <div style={{ display: "flex" }}>
+          <label
+            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+            htmlFor="sample-distribution-file"
+            id="custom-upload"
+            style={{ display: "flex", alignItems: "center", width: "fit-content" }}
+          >
+            Upload sample file
+            <input
+              accept={acceptedTypes[fileType]}
+              defaultValue=""
+              id="sample-distribution-file"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                readFileAsBase64Url(file, (base64) =>
+                  this.context.setProjectDetails({
+                    sampleFileName: file.name,
+                    sampleFileBase64: base64,
+                  })
+                );
+              }}
+              style={{ display: "none" }}
+              type="file"
+            />
+          </label>
+          <label className="ml-3 text-nowrap">
+            File:{" "}
+            {this.context.sampleFileName ||
+             (this.context.projectId === -1 || this.context.plotFileName
               ? " None"
               : " Use existing data")}
-        </label>
+          </label>
+        </div>
+        <a
+          href={
+            `test_data/sample-${exampleFileType}-example.${fileType === "shp" ? "zip" : fileType}`
+          }
+        >
+          Download example sample {fileType} file
+        </a>
       </div>
-      <a
-        href={
-          fileType === "csv"
-            ? "test_data/sample-csv-example.csv"
-            : "test_data/sample-shape-example.zip"
-        }
-      >
-        Download example sample {fileType === "csv" ? "csv" : "shape"} file
-      </a>
-    </div>
-  );
-
+    );
+  }
+  
   toggleSampleGeometry = (geometry) => {
     const { sampleGeometries } = this.context.designSettings;
     this.context.setProjectDetails({
@@ -101,14 +107,14 @@ export class SampleDesign extends React.Component {
         display: "Random",
         description: "Sample points will be randomly distributed within the plot boundary.",
         layout: this.renderLabeledInput("Number of samples", "samplesPerPlot"),
-        disabled: plotDistribution === "shp",
+        disabled: ["shp", "geojson"].includes(plotDistribution),
       },
       gridded: {
         display: "Gridded",
         description:
           "Sample points will be arranged on a grid within the plot boundary using the sample spacing selected below.",
         layout: this.renderLabeledInput("Sample spacing (m)", "sampleResolution"),
-        disabled: plotDistribution === "shp",
+        disabled: ["shp", "geojson"].includes(plotDistribution),
       },
       center: {
         display: "Center",
@@ -120,14 +126,21 @@ export class SampleDesign extends React.Component {
         description:
           "Specify your own sample points by uploading a CSV with these fields: LON,LAT,PLOTID,SAMPLEID. Each feature must have PLOTID and SAMPLEID fields. Each sample within a unique plot must have a unique SAMPLEID.",
         layout: this.renderFileInput("csv"),
-        disabled: !["csv", "shp"].includes(plotDistribution),
+        disabled: !["csv", "shp", "geojson"].includes(plotDistribution),
       },
       shp: {
         display: "SHP File",
         description:
           "Specify your own sample shapes by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have PLOTID and SAMPLEID fields. Each sample within a unique plot must have a unique SAMPLEID.",
         layout: this.renderFileInput("shp"),
-        disabled: !["csv", "shp"].includes(plotDistribution),
+        disabled: !["csv", "shp", "geojson"].includes(plotDistribution),
+      },
+      geojson: {
+        display: "GeoJSON File",
+        description:
+        "Specify your own sample points by uploading a GeoJSON with SAMPLEID and PLOTID keys in properties. Each feature must have PLOTID and SAMPLEID fields. Each sample within a unique plot must have a unique SAMPLEID.",
+        layout: this.renderFileInput("geojson"),
+        disabled: !["csv", "shp", "geojson"].includes(plotDistribution),
       },
       none: {
         display: "None",

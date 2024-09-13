@@ -71,7 +71,7 @@ export class PlotDesign extends React.Component {
   };
 
   setPlotDetails = (newDetail) => {
-    const resetAOI = ["csv", "shp"].includes(newDetail.plotDistribution);
+    const resetAOI = ["csv", "shp", "geojson"].includes(newDetail.plotDistribution);
     if (resetAOI) {
       this.setState({
         lonMin: "",
@@ -322,49 +322,57 @@ export class PlotDesign extends React.Component {
       );
   }
 
-  renderFileInput = (fileType) => (
-    <div className="mb-3">
-      <div style={{ display: "flex" }}>
-        <label
-          className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
-          htmlFor="plot-distribution-file"
-          id="custom-upload"
-          style={{ display: "flex", alignItems: "center", width: "fit-content" }}
+  renderFileInput = (fileType) => {
+    const acceptedTypes = {
+      csv: "text/csv",
+      shp: "application/zip",
+      geojson: "application/json",
+    };
+    const exampleFileType = fileType === "shp" ? "shape" : fileType;
+    return (
+      <div className="mb-3">
+        <div style={{ display: "flex" }}>
+          <label
+            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+            htmlFor="plot-distribution-file"
+            id="custom-upload"
+            style={{ display: "flex", alignItems: "center", width: "fit-content" }}
+          >
+            Upload plot file
+            <input
+              accept={acceptedTypes[fileType]}
+              defaultValue=""
+              id="plot-distribution-file"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                readFileAsBase64Url(file, (base64) => {
+                  this.checkPlotFile(file.name, base64);
+                  return this.setPlotDetails({
+                    plotFileName: file.name,
+                    plotFileBase64: base64,
+                  })
+                });
+              }}
+              style={{ display: "none" }}
+              type="file"
+            />
+          </label>
+          <label className="ml-3 text-nowrap">
+            File:{" "}
+            {this.context.plotFileName || (this.context.projectId > 0 ? "Use existing data" : "None")}
+          </label>
+        </div>
+        <a
+          href={
+            `test_data/sample-${exampleFileType}-example.${fileType === "shp" ? "zip" : fileType}`
+          }
         >
-          Upload plot file
-          <input
-            accept={fileType === "csv" ? "text/csv" : "application/zip"}
-            defaultValue=""
-            id="plot-distribution-file"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              readFileAsBase64Url(file, (base64) => {
-                this.checkPlotFile(file.name, base64);
-                return this.setPlotDetails({
-                  plotFileName: file.name,
-                  plotFileBase64: base64,
-                })
-              });
-            }}
-            style={{ display: "none" }}
-            type="file"
-          />
-        </label>
-        <label className="ml-3 text-nowrap">
-          File:{" "}
-          {this.context.plotFileName || (this.context.projectId > 0 ? "Use existing data" : "None")}
-        </label>
+          Download example plot {fileType} file
+        </a>
       </div>
-      <a
-        href={
-          fileType === "csv" ? "test_data/plot-csv-example.csv" : "test_data/plot-shape-example.zip"
-        }
-      >
-        Download example plot {fileType === "csv" ? "csv" : "shape"} file
-      </a>
-    </div>
-  );
-
+    );
+  }
+  
   renderCSV = () => {
     const { plotShape } = this.context;
     const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
@@ -461,6 +469,14 @@ export class PlotDesign extends React.Component {
           "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
         layout: this.renderFileInput("shp"),
       },
+      geojson: {
+        display: "GeoJSON File",
+        alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
+        description:
+          "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
+        layout: this.renderFileInput("geojson"),
+      },
+
     };
 
     return (

@@ -563,6 +563,7 @@ CREATE OR REPLACE FUNCTION get_plot_shapes(_project_id integer)
  ) AS $$
 
     WITH plot_geoms AS (SELECT project_rid, plot_distribution, plot_shape, plot_size, plot_uid,
+                               visible_id AS plot_visible_id,
                                ST_Transform(plot_geom, 3857) AS plot_geom
                         FROM projects AS pr
                         INNER JOIN plots AS pl
@@ -585,7 +586,7 @@ CREATE OR REPLACE FUNCTION get_plot_shapes(_project_id integer)
                                     END AS plot_boundary
                              FROM plot_geoms)
 
-      SELECT project_rid, plot_uid, ST_Transform(plot_geom, 4326) AS plot_geom
+      SELECT project_rid, plot_visible_id, ST_Transform(plot_geom, 4326) AS plot_geom
       FROM plot_geoms
       INNER JOIN plot_boundaries
       USING (plot_uid)
@@ -594,19 +595,30 @@ $$ LANGUAGE SQL;
 
 -- Get sample shapes for DOI creation
 CREATE OR REPLACE FUNCTION get_sample_shapes(_project_id integer)
- RETURNS TABLE (project_id integer,
-                plot_id integer,
-                sample_id integer,
-                sample_geom geometry(Geometry, 4326)
+ RETURNS TABLE (project_id         integer,
+                plot_id            integer,
+                sample_id          integer,
+                sample_internal_id integer,
+                sample_geom        geometry(Geometry, 4326)
  ) AS $$
 
-    (SELECT project_rid, plot_rid, sample_uid, ST_Buffer(sample_geom, 0.000001)
+    (SELECT project_rid, pl.visible_id AS plot_visible_id, s.visible_id AS sample_visible_id,
+            sample_uid,
+            CASE
+                WHEN NOT ST_IsValid(sample_geom) THEN ST_Buffer(ST_MakeValid(sample_geom), 0)
+                ELSE ST_Buffer(sample_geom, 0)
+            END
        FROM samples s
        INNER JOIN plots pl
        ON pl.plot_uid = s.plot_rid
        WHERE pl.project_rid = _project_id)
     UNION
-    (SELECT project_rid, plot_rid, sample_uid as sample_uid, ST_Buffer(sample_geom, 0.000001)
+    (SELECT project_rid, pl.visible_id AS plot_visible_id, s.visible_id AS sample_visible_id,
+            sample_uid,
+            CASE
+                WHEN NOT ST_IsValid(sample_geom) THEN ST_Buffer(ST_MakeValid(sample_geom), 0)
+                ELSE ST_Buffer(sample_geom, 0)
+            END
        FROM ext_samples s
        INNER JOIN plots pl
        ON pl.plot_uid = s.plot_rid

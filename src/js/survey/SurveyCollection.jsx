@@ -234,8 +234,8 @@ export default class SurveyCollection extends React.Component {
     mapObjectArray(answeredQuestions, ([_sqId, aq]) => aq.answered.map((a) => a.sampleId));
 
   checkRuleSumOfAnswers = (surveyRule, questionIdToSet, answerId, answerText) => {
-    const answerVal =
-      Number(answerText) || Number(this.getSurveyAnswerText(questionIdToSet, answerId));
+    const answerVal = !isNaN(Number(answerText)) ?
+          Number(answerText) : Number(this.getSurveyAnswerText(questionIdToSet, answerId));
     if (surveyRule.questionIds.includes(questionIdToSet)) {
       const answeredQuestions = this.getAnsweredQuestions(surveyRule.questionIds, questionIdToSet);
       if (surveyRule.questionIds.length === lengthObject(answeredQuestions) + 1) {
@@ -576,11 +576,19 @@ export default class SurveyCollection extends React.Component {
     </div>
   );
 
+  toggleFlaggedPlot = () => {
+    if (!this.props.flagged && confirm("Are you sure you would like to flag this plot?")) {
+      this.props.toggleFlagged();
+      return
+    }
+    this.props.toggleFlagged();
+  }
+
   renderFlagClearButtons = () => (
     <div className="mb-2 d-flex justify-content-between">
       <input
         className="btn btn-outline-red btn-sm col mr-1"
-        onClick={this.props.toggleFlagged}
+        onClick={this.toggleFlaggedPlot}
         type="button"
         value={this.props.flagged ? "Un-flag Plot" : "Flag Plot"}
       />

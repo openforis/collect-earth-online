@@ -237,8 +237,8 @@
                                 institution-role
                                 ", but the email notification has failed."))))))))
 
-(defn request-institution-membership [{:keys [params]}]
-  (let [user-id        (:userId params -1)
+(defn request-institution-membership [{:keys [params session]}]
+  (let [user-id        (:userId session -1)
         institution-id (tc/val->int (:institutionId params))]
     (if (pos? user-id)
       (do
