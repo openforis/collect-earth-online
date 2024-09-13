@@ -705,8 +705,12 @@ CREATE OR REPLACE FUNCTION select_all_plot_samples(_plot_id integer)
  RETURNS table (
     sample_id        integer,
     visible_id       integer,
+    user_email       text,
+    user_id          integer,
     sample_geom      text,
-    saved_answers    jsonb
+    saved_answers    jsonb,
+    flagged          boolean,
+    confidence       integer
  ) AS $$
 
     WITH assigned_count AS (
@@ -716,8 +720,12 @@ CREATE OR REPLACE FUNCTION select_all_plot_samples(_plot_id integer)
     )
     SELECT sample_uid,
         visible_id,
+        u.email,
+        u.user_uid,
         ST_AsGeoJSON(sample_geom) AS sample_geom,
-        (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END)
+        (CASE WHEN sv.saved_answers IS NULL THEN '{}' ELSE sv.saved_answers END),
+        up.flagged,
+        up.confidence
     FROM samples s
     LEFT JOIN plot_assignments pa
         ON s.plot_rid = pa.plot_rid
@@ -727,6 +735,8 @@ CREATE OR REPLACE FUNCTION select_all_plot_samples(_plot_id integer)
     LEFT JOIN sample_values sv
         ON sample_uid = sv.sample_rid
         AND user_plot_uid = sv.user_plot_rid
+    LEFT JOIN users u
+        ON up.user_rid = u.user_uid
     WHERE s.plot_rid = _plot_id
 
 $$ LANGUAGE SQL;

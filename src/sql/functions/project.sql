@@ -1217,9 +1217,19 @@ $$ LANGUAGE SQL;
 -- Get plot_ids from a project
 CREATE OR REPLACE FUNCTION get_plot_ids(_project_id integer)
  RETURNS table (
-    plot_id integer
+    plot_id    integer,
+    visible_id integer
  ) AS $$
 
-  SELECT plot_uid from plots where project_rid = _project_id
+  SELECT plot_uid, visible_id from plots where project_rid = _project_id
 
-$$ LANGUAGE SQL
+$$ LANGUAGE SQL;
+
+-- Get survey questions from a project
+CREATE OR REPLACE FUNCTION get_survey_questions(_project_id integer)
+ RETURNS table (
+    survey_questions jsonb
+) AS $$
+  SELECT survey_questions from projects where project_uid = _project_id
+
+$$ LANGUAGE SQL;
