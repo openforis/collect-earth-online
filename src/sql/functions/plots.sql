@@ -670,7 +670,7 @@ CREATE OR REPLACE FUNCTION get_plot_stats(_project_id integer)
   RETURNS table (
     plot_id        integer,
     internal_id    integer,
-    total_samples  integer,
+    total_samples  bigint,
     num_flags      integer,
     avg_col_time   integer,
     min_col_time   integer,
