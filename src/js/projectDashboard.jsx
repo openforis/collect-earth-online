@@ -5,7 +5,8 @@ import { StatsCell, StatsRow } from "./components/FormComponents";
 import { LoadingModal, NavigationBar } from "./components/PageComponents";
 import DataTable from "react-data-table-component";
 import SvgIcon from "./components/svg/SvgIcon";
-import { conditionalRowStyles,
+import { projectConditionalRowStyles,
+         plotConditionalRowStyles,
          customStyles,
          projectStatsColumns,
          plotStatsColumns } from "./tableData";
@@ -139,7 +140,7 @@ class ProjectDashboard extends React.Component {
     const { aoiFeatures, plotSize, plotShape } = this.state.projectDetails;
     const mapConfig = this.state.mapConfig;
     const samples = this.state.plotInfo.samples;
-    if(activeTab === 1) {
+    if(activeTab === 1 && samples) {
       mercator.removeLayerById(mapConfig, "currentAOI");
       mercator.removeLayerById(mapConfig, "currentPlot");
       mercator.removeLayerById(mapConfig, "currentSamples");
@@ -147,7 +148,7 @@ class ProjectDashboard extends React.Component {
         mapConfig,
         "currentPlot",
         mercator.geometryToVectorSource(
-          this.state.plotInfo.plotGeom.includes("Point")
+          this.state.plotInfo?.plotGeom?.includes("Point")
             ? mercator.getPlotPolygon(
               this.state.plotInfo.plotGeom,
               plotSize,
@@ -257,7 +258,7 @@ function ProjectStats(props) {
       minConfidence,
       maxConfidence,
       flaggedPlots,
-      plots
+      plots,
     },
     projectDetails: { closedDate, createdDate, publishedDate },
   } = props;
@@ -315,7 +316,7 @@ function ProjectStats(props) {
 	  data={plots}
 	  fixedHeader={true}
 	  fixedHeaderScrollHeight={'200px'}
-          conditionalRowStyles={conditionalRowStyles}
+          conditionalRowStyles={projectConditionalRowStyles}
           customStyles={customStyles}
           pagination
         />
@@ -326,10 +327,14 @@ function ProjectStats(props) {
 
 const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, plots, plotInfo }) => {
   const [newPlotId, setNewPlotId] = useState(plotId);
+  const [inputPlotId, setInputPlotId] = useState(plotId);
 
   useEffect(() => {
-    getPlotData(-10000000, "next"); // Fetch data for the initial plot when plots are loaded
-  }, []);
+    console.log(activeTab);
+    if(activeTab === 1) {
+      getPlotData(-10000000, "next");
+    }
+  }, [activeTab]);
   
   const plotOverview = plots?.filter((plot) => plot.plot_id === newPlotId)[0];
   const samplesInfo = plotInfo?.samples?.map((sample) => ({ ...sample, id: `${sample.visibleId}_${sample.userId}`}));
@@ -340,25 +345,25 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
     </span>
   );
 
-
   const getPlotData = (visibleId, direction) => {
     fetch(
       `/qaqc-plot?visibleId=${visibleId}&direction=${direction}&projectId=${projectId}`
     )
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (data === "not-found") {
-          const err = (direction === "id" ? "Plot not" : "No more plots") +
-                " found for this navigation mode.";
-          alert(err);
-        } else {
-          setPlotInfo(data);
-          setNewPlotId(data.visibleId);
-          if (activeTab === 1) {
-            showProjectMap(activeTab);
-          }
+    .then((data) => {
+      if (data === "not-found") {
+        const err = (direction === "id" ? "Plot not" : "No more plots") +
+              " found for this navigation mode.";
+        alert(err);
+      } else {
+        setPlotInfo(data);
+        setInputPlotId(data.visibleId);
+        setNewPlotId(data.visibleId);
+        if (activeTab === 1) {
+          showProjectMap(activeTab);
         }
-      })
+      }
+    })
       .catch((response) => {
         console.error(response);
         alert("Error retrieving plot data. See console for details.");
@@ -385,20 +390,39 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
         autoComplete="off"
         className="col-4 px-0 ml-2 mr-1"
         id="plotId"
-        onChange={(e) => setNewPlotId(e.target.value)}
+        onChange={(e) => setInputPlotId(e.target.value)}
         type="number"
-        value={newPlotId}
+        value={inputPlotId}
       />
       <button
         className="btn btn-outline-lightgreen btn-sm"
-        onClick={() => !isNaN(newPlotId) ? getPlotData(newPlotId, "id")
-                                         : alert("Please enter a number to go to plot.")}
+        onClick={() => {
+          if (!isNaN(inputPlotId)) {
+            setNewPlotId(inputPlotId); // Update newPlotId when the button is clicked
+            getPlotData(inputPlotId, "id"); // Fetch data with the new value
+          } else {
+            alert("Please enter a number to go to plot.");
+          }
+        }}
         type="button"
       >
         Go to plot
       </button>
     </div>
   );
+
+  const disagreement = (sampleDisagreement) => {
+    if(sampleDisagreement) {
+      const allValues = Object.values(sampleDisagreement)
+            .map(Object.values)
+            .flat();
+      const total = allValues.reduce((sum, value) => sum + value, 0);
+      const count = allValues.length;
+      return (total / count).toFixed(2);
+    } else {
+      return 0;
+    }
+  }
 
   return (
     <>
@@ -413,7 +437,7 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
             {renderStat("Average Confidence", `${plotOverview?.avg_confidence} %`)}
             {renderStat("Max Confidence", `${plotOverview?.avg_confidence} %`)}
             {renderStat("Min Confidence", `${plotOverview?.avg_confidence} %`)}
-            {renderStat("Disagreement", plotOverview?.plot_disagreement)}
+            {renderStat("Disagreement", `${disagreement(plotOverview?.details?.samplesDisagreements)}`)}
           </div>
         </div>
       </div>
@@ -421,13 +445,19 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
       Project Plots:
       <br/>
       <div style={{ maxHeight: '800px', overflowY: 'auto', minHeight: '800px' }}>
-        {Object.keys(plotInfo).length !== 0 && (
+        {(Object.keys(plotInfo).length !== 0) && (
           <DataTable
 	    columns={plotStatsColumns}
-	    data={samplesInfo}
+	    data={samplesInfo.map(sample => {
+              const visibleId = sample.visibleId.toString();
+              const samplesDisagreements = plotOverview?.details.samplesDisagreements;
+              return samplesDisagreements[visibleId]
+                ? { ...sample, disagreement: Object.values(samplesDisagreements[visibleId]).some((i) => i !== 0)}
+              : sample;
+            })}
 	    fixedHeader={true}
 	    fixedHeaderScrollHeight={'200px'}
-            conditionalRowStyles={conditionalRowStyles}
+            conditionalRowStyles={plotConditionalRowStyles}
             customStyles={customStyles}
             pagination
           />
@@ -540,6 +570,7 @@ const RenderFileInput = () => {
               name="disagreement"
               value="option1"
               style={{ verticalAlign: "middle" }}
+              checked
             />{" "}
             Peer comparison
           </label>

@@ -40,9 +40,9 @@ export const customStyles = {
 };
 
 
-export const conditionalRowStyles = [
+export const projectConditionalRowStyles = [
   {
-    when: row => row.plot_disagreement > 50,
+    when: row => row.disagreement === true,
     style: {
       backgroundColor: "rgba(242, 38, 19, 0.9)",
       color: "white",
@@ -68,15 +68,28 @@ export const projectStatsColumns =  [
   },
   {
     name: "Flagged",
-    selector: row => row.num_flags,
+    selector: row => (row.num_flags ? row.numflags : "false"),
     sortable: true,
     reorder: true,
   },
   {
     name: "Disagreement",
-    selector: row => row.plot_disagreement,
+    selector: row => (row.disagreement ? "true" : "false"),
     sortable: true,
     reorder: true,
+  },
+];
+
+export const plotConditionalRowStyles = [
+  {
+    when: row => row.disagreement === true,
+    style: {
+      backgroundColor: "rgba(242, 38, 19, 0.9)",
+      color: "white",
+      "&:hover": {
+	cursor: "pointer",
+      },
+    },
   },
 ];
 
@@ -95,13 +108,13 @@ export const plotStatsColumns = [
   },
   {
     name: "Flaggged",
-    selector: row => row.flagged ? "true" : "false",
+    selector: row => row.flagged ? row.flagged : "false",
     sortable: true,
     reorder: true,
   },
   {
     name: "Confidence",
-    selector: row => row.confidence,
+    selector: row => row.confidence ? row.confidence : 100,
     sortable: true,
     reorder: true,
   },
