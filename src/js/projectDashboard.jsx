@@ -398,8 +398,7 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
         className="btn btn-outline-lightgreen btn-sm"
         onClick={() => {
           if (!isNaN(inputPlotId)) {
-            setNewPlotId(inputPlotId); // Update newPlotId when the button is clicked
-            getPlotData(inputPlotId, "id"); // Fetch data with the new value
+            getPlotData(inputPlotId, "id");
           } else {
             alert("Please enter a number to go to plot.");
           }
