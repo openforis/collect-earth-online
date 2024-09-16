@@ -664,20 +664,18 @@ $$ LANGUAGE SQL;
 -- Returns all rows in projects for a user_id and institution_rid with roles
 CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _institution_id integer)
  RETURNS table (
-    project_id        integer,
-    name              text,
-    num_plots         integer,
-    privacy_level     text,
-    pct_complete      real,
-    learning_material text
+    project_id       integer,
+    name             text,
+    num_plots        integer,
+    privacy_level    text,
+    pct_complete     real
  ) AS $$
 
     SELECT project_uid,
         name,
         num_plots,
         privacy_level,
-        (SELECT project_percent_complete(project_uid)),
-        learning_material
+        (SELECT project_percent_complete(project_uid))
     FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
@@ -1036,8 +1034,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         sample_geom           text,
         saved_answers         jsonb,
         extra_plot_info       json,
-        extra_sample_info     json,
-        sample_internal_id    integer
+        extra_sample_info     json
  ) AS $$
 
     SELECT pl.visible_id,
@@ -1055,8 +1052,7 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         ST_AsText(sample_geom),
         saved_answers,
         extra_plot_info,
-        extra_sample_info,
-        s.sample_uid
+        extra_sample_info
     FROM plots pl
     INNER JOIN samples s
         ON s.plot_rid = pl.plot_uid
@@ -1221,26 +1217,36 @@ $$ LANGUAGE SQL;
 -- Get plot_ids from a project
 CREATE OR REPLACE FUNCTION get_plot_ids(_project_id integer)
  RETURNS table (
-    plot_id integer
+    plot_id    integer,
+    visible_id integer
  ) AS $$
 
-  SELECT plot_uid from plots where project_rid = _project_id
+  SELECT plot_uid, visible_id from plots where project_rid = _project_id
 
 $$ LANGUAGE SQL;
+
+-- Get survey questions from a project
+CREATE OR REPLACE FUNCTION get_survey_questions(_project_id integer)
+ RETURNS table (
+    survey_questions jsonb
+) AS $$
+  SELECT survey_questions from projects where project_uid = _project_id
+
+$$ LANGUAGE SQL;
+
 
 -- Get Project Drafts by User ID
 CREATE OR REPLACE FUNCTION get_project_draft_by_user(_user_id integer, _institution_id integer)
 RETURNS TABLE(
-    project_draft_uid integer,
-    institution_rid integer,
-    project_state jsonb
-    ) AS $$
+   project_draft_uid integer,
+   institution_rid integer,
+   project_state jsonb
+) AS $$
 
-    SELECT project_draft_uid, institution_rid, project_state
-    FROM project_draft
-    WHERE user_rid = _user_id AND
-          institution_rid = _institution_id
-
+  SELECT project_draft_uid, institution_rid, project_state
+  FROM project_draft
+  WHERE user_rid = _user_id AND
+        institution_rid = _institution_id
 $$ LANGUAGE SQL;
 
 -- Get Project Draft by ID
@@ -1251,9 +1257,9 @@ RETURNS TABLE(project_draft_uid integer, user_rid integer, institution_rid integ
     WHERE project_draft_uid = _project_draft_id
 $$ LANGUAGE SQL;
 
--- Create Project Draft 
+-- Create Project Draft
 CREATE OR REPLACE FUNCTION create_project_draft(_user_id integer,
-                                   		_institution_id integer, 
+                                   		_institution_id integer,
 						_project_state jsonb)
 RETURNS integer AS $$
 

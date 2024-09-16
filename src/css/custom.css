@@ -941,3 +941,11 @@ body {
     width: 100%;
     padding-left: 45%;
 }
+
+.project-stats {
+    min-height: 1000px;
+}
+
+.cEJxif {
+    max-height: 600px !important;
+}
