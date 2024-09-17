@@ -1,8 +1,7 @@
 {:paths ["src/clj" "resources" "dist"]
 
  :deps {clj-http/clj-http        {:mvn/version "3.10.3"}
-        clj-python/libpython-clj {:git/url "https://github.com/clj-python/libpython-clj"
-                                  :git/sha "f39c78c281d68cc29ed819ad3763e0417ae1952c"}
+        clj-python/libpython-clj {:mvn/version "2.025"}
         io.sentry/sentry-clj     {:mvn/version "7.11.216"}
         org.clojure/clojure      {:mvn/version "1.11.1"}
         org.flatland/ordered     {:mvn/version "1.15.11"}
@@ -15,9 +14,7 @@
  :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
            :config           {:main-opts ["-m" "triangulum.config"]}
            :https            {:main-opts ["-m" "triangulum.https"]}
-           :server           {:main-opts ["-m" "triangulum.server"]
-                              :jvm-opts  ["--add-modules=jdk.incubator.foreign"
-                                          "--enable-native-access=ALL-UNNAMED"]}
+           :server           {:main-opts ["-m" "triangulum.server"]}
            :systemd          {:main-opts ["-m" "triangulum.systemd"]}
            :rebel            {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
                               :main-opts  ["-m" "rebel-readline.main"]}
