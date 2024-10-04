@@ -25,7 +25,6 @@ export default defineConfig({
     plugins: [resolve(),
               babel({ exclude: "node_modules/**" }),
               nodePolyfills(),
-
              ],
     rollupOptions: {
       external: ["react-dom/client"],

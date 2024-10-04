@@ -16,6 +16,7 @@ export async function getBandsFromGateway(setBands, assetId, assetType) {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
+        signal: AbortSignal.timeout(10000),
         body: JSON.stringify({
           path: "getAvailableBands",
           assetId,

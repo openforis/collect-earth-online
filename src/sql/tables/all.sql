@@ -120,7 +120,7 @@ CREATE TABLE plots (
     project_rid        integer NOT NULL REFERENCES projects (project_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     plot_geom          geometry(geometry,4326),
     visible_id         integer,
-    extra_plot_info    jsonb
+    extra_plot_info    json
 );
 CREATE INDEX plots_projects_rid ON plots (project_rid);
 
@@ -130,7 +130,7 @@ CREATE TABLE samples (
     plot_rid             integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     sample_geom          geometry(geometry,4326),
     visible_id           integer,
-    extra_sample_info    jsonb
+    extra_sample_info    json
 );
 CREATE INDEX samples_plot_rid ON samples (plot_rid);
 
@@ -140,7 +140,7 @@ CREATE TABLE ext_samples (
     plot_rid             integer NOT NULL REFERENCES plots (plot_uid) ON DELETE CASCADE ON UPDATE CASCADE,
     sample_geom          geometry(geometry,4326),
     visible_id           integer,
-    extra_sample_info    jsonb
+    extra_sample_info    json
 );
 CREATE INDEX ext_samples_plot_rid ON ext_samples (plot_rid);
 
@@ -154,6 +154,7 @@ CREATE TABLE user_plots (
     collection_start    timestamp,
     collection_time     timestamp,
     flagged_reason      text,
+    confidence_comment  text,
     CONSTRAINT per_user_per_plot UNIQUE(user_rid, plot_rid)
 );
 CREATE INDEX user_plots_plot_rid ON user_plots (plot_rid);

@@ -122,7 +122,7 @@ export default class NewQuestionDesigner extends React.Component {
       return childQuestionIds.reduce(
         (acc, cur) => ({ ...acc, ...this.getCopy(idOffset, cur, newId) }),
         { [newId]: parentId > 0 ? {...newQuestion, cardOrder: null} :
-                                  {...newQuestion, cardOrder: cardOrder+1 }}
+                                  {...newQuestion, cardOrder: cardOrder+1 } }
       );
     } else {
       return {

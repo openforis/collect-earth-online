@@ -78,50 +78,62 @@
    [:post "/verify-email"]                   {:handler users/verify-email}
    [:post "/register"]                       {:handler users/register}
    ;; Projects API
-   [:get  "/dump-project-aggregate-data"]    {:handler     projects/dump-project-aggregate-data!
+   [:get  "/dump-project-aggregate-data"]    {:handler     #'projects/dump-project-aggregate-data!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get  "/dump-project-raw-data"]          {:handler     projects/dump-project-raw-data!
+   [:get  "/dump-project-raw-data"]          {:handler     #'projects/dump-project-raw-data!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get  "/get-home-projects"]              {:handler projects/get-home-projects}
-   [:get  "/get-institution-projects"]       {:handler projects/get-institution-projects}
-   [:get  "/get-institution-dash-projects"]  {:handler projects/get-institution-dash-projects}
-   [:get  "/get-project-by-id"]              {:handler projects/get-project-by-id}
-   [:get  "/get-template-projects"]          {:handler projects/get-template-projects}
-   [:get  "/get-template-by-id"]             {:handler projects/get-template-by-id}
-   [:get  "/get-project-stats"]              {:handler projects/get-project-stats}
-   [:post "/archive-project"]                {:handler     projects/archive-project!
+   [:get  "/get-home-projects"]              {:handler #'projects/get-home-projects}
+   [:get  "/get-institution-projects"]       {:handler #'projects/get-institution-projects}
+   [:get  "/get-institution-dash-projects"]  {:handler #'projects/get-institution-dash-projects}
+   [:get  "/get-project-by-id"]              {:handler #'projects/get-project-by-id}
+   [:get  "/get-template-projects"]          {:handler #'projects/get-template-projects}
+   [:get  "/get-template-by-id"]             {:handler #'projects/get-template-by-id}
+   [:get  "/get-project-stats"]              {:handler #'projects/get-project-stats}
+   [:post "/archive-project"]                {:handler     #'projects/archive-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/close-project"]                  {:handler     projects/close-project!
+   [:post "/close-project"]                  {:handler     #'projects/close-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/create-project"]                 {:handler     projects/create-project!
+   [:post "/create-project"]                 {:handler     #'projects/create-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/publish-project"]                {:handler     projects/publish-project!
+   [:post "/publish-project"]                {:handler     #'projects/publish-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/update-project"]                 {:handler     projects/update-project!
+   [:post "/update-project"]                 {:handler     #'projects/update-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get "/create-shape-files"]              {:handler     projects/create-shape-files!
+   [:get "/create-shape-files"]              {:handler     #'projects/create-shape-files!
                                               :auth-type   :user
                                               :auth-action :block}
-   [:post "/check-plot-csv"]                 {:handler     projects/check-plot-csv
+   [:post "/check-plot-csv"]                 {:handler     #'projects/check-plot-csv
+                                              :auth-type   :user
+                                              :auth-action :block}
+   [:get  "/get-project-draft-by-id"]        {:handler     #'projects/get-project-draft-by-id}
+   [:get  "/get-project-drafts-by-user"]     {:handler     #'projects/get-project-drafts-by-user}
+   [:post "/create-project-draft"]           {:handler     #'projects/create-project-draft!
+                                              :auth-type   :user
+                                              :auth-action :block}
+   [:post "/update-project-draft"]           {:handler     #'projects/update-project-draft!
+                                              :auth-type   :user
+                                              :auth-action :block}
+   [:get "/delete-project-draft"]            {:handler     #'projects/delete-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
    ;; QAQC API
-   [:get "/project-stats"] {:handler     qaqc/get-project-stats
-                            :auth-type   :admin
-                            :auth-action :block}
-   [:get "/plot-stats"]    {:handler     qaqc/get-plot-stats
-                            :auth-type   :admin
-                            :auth-action :block}
-   [:get "/user-stats"]    {:handler     qaqc/get-user-stats
-                            :auth-type   :admin
-                            :auth-action :block}
+   [:get "/project-stats"]                   {:handler    #'qaqc/get-project-stats
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:get "/qaqc-plot"]                       {:handler     #'qaqc/get-qaqc-plot
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:get "/sot-example"]                     {:handler     #'qaqc/get-sot-example}
+   [:get "/user-stats"]                      {:handler     #'qaqc/get-user-stats
+                                              :auth-type   :admin
+                                              :auth-action :block}
 
    ;; DOI API
    [:post "/create-doi"]  {:handler     doi/create-doi!

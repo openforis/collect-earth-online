@@ -3,12 +3,13 @@
             [clojure.set        :as set]
             [clojure.java.io    :as io]
             [clojure.java.shell :as sh]
-            [flatland.ordered.map :refer [ordered-map]]
-            [triangulum.config  :refer [get-config]]
-            [triangulum.type-conversion :as tc]
-            [triangulum.utils :refer [parse-as-sh-cmd]]
+            [clojure.data.json  :as json]
+            [flatland.ordered.map                  :refer [ordered-map]]
+            [triangulum.config                     :refer [get-config]]
+            [triangulum.type-conversion            :as tc]
+            [triangulum.utils                      :refer [parse-as-sh-cmd]]
             [collect-earth-online.utils.part-utils :as pu]
-            [collect-earth-online.utils.geom    :refer [make-wkt-point]]))
+            [collect-earth-online.utils.geom       :refer [make-wkt-point]]))
 
 ;;;
 ;;; Constants
@@ -93,6 +94,25 @@
                           design-type
                           " SHP file must not contain duplicate column titles.")))))
 
+(defmethod get-file-data :geojson [_ design-type ext-file folder-name]
+  (let [features (:features (tc/json->clj (slurp (str folder-name ext-file))))
+        geom-key (keyword (str design-type "_geom"))
+        plots (reduce (fn [acc feature]
+                        (let [{:keys [geometry properties]} feature
+                              visible-id (condp = design-type
+                                           "plot" (:PLOTID properties)
+                                           "sample" (:SAMPLEID properties))]
+                          (condp = design-type
+                            "plot" (conj acc {geom-key (tc/str->pg (json/write-str geometry) "geometry")
+                                              :visible_id (tc/val->int visible-id)
+                                              :extra_plot_info properties})
+                            "sample" (conj acc {geom-key (tc/str->pg (json/write-str geometry) "geometry")
+                                                :visible_id (tc/val->int visible-id)
+                                                :plotid (:PLOTID properties)
+                                                :extra_plot_info properties}))))
+                      [] features)]
+    [(keys (first plots)) plots]))
+
 (defmethod get-file-data :csv [_ design-type ext-file folder-name]
   (let [rows       (str/split (slurp (str folder-name ext-file)) #"\r\n|\n|\r")
         header-row (first rows)]
@@ -165,13 +185,13 @@
                            "'")))))
 
 (defn load-external-data! [project-id distribution file-name file-base64 design-type primary-key]
-  (when (#{"csv" "shp"} distribution)
-    (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")
-          saved-file  (pu/write-file-part-base64 file-name
-                                                 file-base64
-                                                 folder-name
-                                                 (str "project-" project-id "-" design-type))]
-      (pu/try-catch-throw #(let [[headers body] (get-file-data distribution design-type saved-file folder-name)]
+  (when (#{"csv" "shp" "geojson"} distribution)
+    (pu/try-catch-throw #(let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")
+                               saved-file  (pu/write-file-part-base64 file-name
+                                                                      file-base64
+                                                                      folder-name
+                                                                      (str "project-" project-id "-" design-type))]
+                           (let [[headers body] (get-file-data distribution design-type saved-file folder-name)]
                              (when-not (seq body)
                                (pu/init-throw  (str "The " design-type " file contains no rows of data.")))
 
@@ -196,7 +216,7 @@
                                                            (take 10)
                                                            (str/join "\n"))))))
                              body)
-                          (str (str/capitalize design-type) " " distribution " file failed to load.")))))
+                           (str (str/capitalize design-type) " " distribution " file failed to load.")))))
 
 (defn- clj->pg-json
   [clj]

@@ -17,7 +17,21 @@ export function Overview(props) {
   } = useContext(ProjectContext);
   return (
     <div id="project-info">
-      {projectId < 0 && <ProjectTemplateSelection {...props} />}
+      {projectId < 0 &&
+       (<>
+          <ProjectTemplateSelection {...props} />
+          <h3> Import Collect Earth Project</h3>
+          <input
+            accept="application/zip"
+            defaultValue=""
+            id="collect-earth-project-input"
+            onChange={(e) => null}
+            style={{ display: "block" }}
+            type="file"
+          />
+        </>
+       )}
+      <br/>
       <h3>Project Information</h3>
       <div className="ml-3">
         <div className="form-group">

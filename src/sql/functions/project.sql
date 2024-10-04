@@ -1130,7 +1130,9 @@ CREATE OR REPLACE FUNCTION select_project_stats(_project_id integer)
     plot_assignments    integer,
     users_assigned      integer,
     average_confidence  integer,
-    user_stats          jsonb
+    user_stats          jsonb,
+    max_confidence      integer,
+    min_confidence      integer
  ) AS $$
 
     WITH user_plot_times AS (
@@ -1205,8 +1207,11 @@ CREATE OR REPLACE FUNCTION select_project_stats(_project_id integer)
           WHEN analyzed_plots = 0 THEN 0
           ELSE confidence_sum / analyzed_plots
         END as average_confidence,
-        user_stats
-    FROM projects, plot_sum, project_sum, users_count, user_agg
+        user_stats,
+        (SELECT MAX(confidence) FROM user_plots up) AS max_confidence,
+        (SELECT MIN(confidence) FROM user_plots up) AS min_confidence
+    FROM projects, plot_sum, project_sum, users_count,
+         user_agg
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
@@ -1214,9 +1219,75 @@ $$ LANGUAGE SQL;
 -- Get plot_ids from a project
 CREATE OR REPLACE FUNCTION get_plot_ids(_project_id integer)
  RETURNS table (
-    plot_id integer
+    plot_id    integer,
+    visible_id integer
  ) AS $$
 
-  SELECT plot_uid from plots where project_rid = _project_id
+  SELECT plot_uid, visible_id from plots where project_rid = _project_id
 
-$$ LANGUAGE SQL
+$$ LANGUAGE SQL;
+
+-- Get survey questions from a project
+CREATE OR REPLACE FUNCTION get_survey_questions(_project_id integer)
+ RETURNS table (
+    survey_questions jsonb
+) AS $$
+  SELECT survey_questions from projects where project_uid = _project_id
+
+$$ LANGUAGE SQL;
+
+
+-- Get Project Drafts by User ID
+CREATE OR REPLACE FUNCTION get_project_draft_by_user(_user_id integer, _institution_id integer)
+RETURNS TABLE(
+   project_draft_uid integer,
+   institution_rid integer,
+   project_state jsonb
+) AS $$
+
+  SELECT project_draft_uid, institution_rid, project_state
+  FROM project_draft
+  WHERE user_rid = _user_id AND
+        institution_rid = _institution_id
+$$ LANGUAGE SQL;
+
+-- Get Project Draft by ID
+CREATE OR REPLACE FUNCTION get_project_draft_by_id(_project_draft_id integer)
+RETURNS TABLE(project_draft_uid integer, user_rid integer, institution_rid integer, project_state jsonb) AS $$
+    SELECT project_draft_uid, user_rid, institution_rid, project_state
+    FROM project_draft
+    WHERE project_draft_uid = _project_draft_id
+$$ LANGUAGE SQL;
+
+-- Create Project Draft
+CREATE OR REPLACE FUNCTION create_project_draft(_user_id integer,
+                                   		_institution_id integer,
+						_project_state jsonb)
+RETURNS integer AS $$
+
+    INSERT INTO project_draft
+        (user_rid, institution_rid, project_state, created_date)
+    VALUES (
+        _user_id, _institution_id, _project_state, now()
+    )
+    RETURNING project_draft_uid
+$$ LANGUAGE SQL;
+
+-- Update Project Draft
+CREATE OR REPLACE FUNCTION update_project_draft(_project_draft_id integer,
+                                                _project_state jsonb)
+RETURNS integer AS $$
+    UPDATE project_draft
+    SET project_state = _project_state,
+        updated_date = now()
+    WHERE project_draft_uid = _project_draft_id
+    RETURNING project_draft_uid
+$$ LANGUAGE SQL;
+
+-- Delete Project Draft
+CREATE OR REPLACE FUNCTION delete_project_draft(_project_draft_id integer)
+RETURNS integer AS $$
+    DELETE FROM project_draft
+    WHERE project_draft_uid = _project_draft_id
+    RETURNING project_draft_uid
+$$ LANGUAGE SQL;
