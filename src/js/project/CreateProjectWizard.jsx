@@ -616,7 +616,7 @@ export default class CreateProjectWizard extends React.Component {
           >
             <div className="bg-lightgreen w-100 py-1" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 1rem" }}>
               <h2 style={{ margin: 0, flexGrow: 1 }}>{description}</h2>
-              {Object.keys(this.getSteps()).indexOf(this.context.wizardStep) > 1 && (
+              {this.context.projectDraftId > 0 && Object.keys(this.getSteps()).indexOf(this.context.wizardStep) > 1 && (
                 <button className="btn btn-secondary" onClick={this.saveDraft} style={{ marginLeft: "auto" }} title="Save Draft (Remains for 7 days)">
                   <div style={{ color: "white" }}>
                     <SvgIcon icon="save" size="1rem" />
