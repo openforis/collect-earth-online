@@ -1048,27 +1048,24 @@
         institution-id (tc/val->int (:institutionId params))]
     (try
       (let [result (call-sql "get_project_drafts_by_user" user-id institution-id)]
-        (if (empty? result)
-          (data-response (format "No drafts were found for user id %s." user-id) {:status 404})
-          (data-response (mapv (fn [{:keys [project_draft_uid project_state]}]
-                                 {:id            project_draft_uid
-                                  :name          (get (tc/jsonb->clj project_state) :name)})
-                               result))))
+        (data-response (mapv (fn [{:keys [project_draft_uid name]}]
+                               {:id            project_draft_uid
+                                :name          name})
+                             result)))
       (catch Exception e
         (let [causes (:causes (ex-data e))]
           (when-not causes (log (ex-message e)))
           (data-response "Internal server error." {:status 500})))))) 
 
 (defn get-project-draft-by-id [{:keys [params]}]
-  (let [project-draft-id (tc/val->int (params :projectDraftId))]
+  (let [project-draft-id (tc/val->int (:projectDraftId params))]
     (try
       (let [result (call-sql "get_project_draft_by_id" project-draft-id)]
         (if (empty? result)
           (data-response (format "No draft was found for this draft id %s." project-draft-id) {:status 404})
-          (data-response (mapv (fn [{:keys [project_draft_uid project_state]}]
-                                 (let [state (tc/jsonb->clj project_state)]
-                                   (merge {:id project_draft_uid} state)))
-                               result))))
+          (let [{:keys [project_draft_uid name project_state]} (first result)]
+            (let [state (tc/jsonb->clj project_state)]
+              (data-response (merge {:id project_draft_uid :name name} state))))))
       (catch Exception e
         (let [causes (:causes (ex-data e))]
           (when-not causes (log (ex-message e)))
@@ -1077,11 +1074,13 @@
 (defn create-project-draft! [{:keys [params session]}]
                        (let [user-id             (tc/val->int (:userId session))
                              institution-id      (tc/val->int (:institutionId params))
-                             project-state  (dissoc params :userId :institutionId)]
+                             name                (:name params)
+                             project-state  (dissoc params :userId :institutionId :name)]
                          (try
                            (let [project-draft-id (sql-primitive (call-sql "create_project_draft"
                                                                            user-id
                                                                            institution-id
+                                                                           name
                                                                            (tc/clj->jsonb project-state)))]
                              (if (or (nil? project-draft-id) (zero? project-draft-id))
                                (throw (Exception. "There was an issue with the creation request."))
@@ -1094,10 +1093,12 @@
 
 (defn update-project-draft! [{:keys [params]}]
   (let [project-draft-id    (tc/val->int (:projectDraftId params))
-        project-state  (dissoc params :userId :institutionId)]
+        name                (:name params)
+        project-state  (dissoc params :userId :institutionId :name)]
     (try
       (let [result (call-sql "update_project_draft"
                              project-draft-id
+                             name
                              (tc/clj->jsonb project-state))]
         (if (nil? (get (first result) :update_project_draft))
           (data-response "Project draft not found." {:status 404})
