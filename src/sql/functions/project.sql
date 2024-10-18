@@ -1238,47 +1238,50 @@ $$ LANGUAGE SQL;
 
 
 -- Get Project Drafts by User ID
-CREATE OR REPLACE FUNCTION get_project_draft_by_user(_user_id integer, _institution_id integer)
+CREATE OR REPLACE FUNCTION get_project_drafts_by_user(_user_id integer, _institution_id integer)
 RETURNS TABLE(
    project_draft_uid integer,
    institution_rid integer,
-   project_state jsonb
+   name text
 ) AS $$
 
-  SELECT project_draft_uid, institution_rid, project_state
-  FROM project_draft
+  SELECT project_draft_uid, institution_rid, name
+  FROM project_drafts
   WHERE user_rid = _user_id AND
         institution_rid = _institution_id
-$$ LANGUAGE SQL;
+$$ LANGUAGE SQL
 
 -- Get Project Draft by ID
 CREATE OR REPLACE FUNCTION get_project_draft_by_id(_project_draft_id integer)
-RETURNS TABLE(project_draft_uid integer, user_rid integer, institution_rid integer, project_state jsonb) AS $$
-    SELECT project_draft_uid, user_rid, institution_rid, project_state
-    FROM project_draft
+RETURNS TABLE(project_draft_uid integer, user_rid integer, institution_rid integer, name text, project_state jsonb) AS $$
+    SELECT project_draft_uid, user_rid, institution_rid, name, project_state
+    FROM project_drafts
     WHERE project_draft_uid = _project_draft_id
 $$ LANGUAGE SQL;
 
 -- Create Project Draft
 CREATE OR REPLACE FUNCTION create_project_draft(_user_id integer,
-                                   		_institution_id integer,
-						_project_state jsonb)
+                                   		        _institution_id integer,
+                                                _name text,
+						                        _project_state jsonb)
 RETURNS integer AS $$
 
-    INSERT INTO project_draft
-        (user_rid, institution_rid, project_state, created_date)
+    INSERT INTO project_drafts
+        (user_rid, institution_rid, name, project_state, created_date)
     VALUES (
-        _user_id, _institution_id, _project_state, now()
+        _user_id, _institution_id, _name, _project_state, now()
     )
     RETURNING project_draft_uid
 $$ LANGUAGE SQL;
 
 -- Update Project Draft
 CREATE OR REPLACE FUNCTION update_project_draft(_project_draft_id integer,
+                                                _name text,
                                                 _project_state jsonb)
 RETURNS integer AS $$
-    UPDATE project_draft
-    SET project_state = _project_state,
+    UPDATE project_drafts
+    SET name = _name,
+        project_state = _project_state,
         updated_date = now()
     WHERE project_draft_uid = _project_draft_id
     RETURNING project_draft_uid
@@ -1287,7 +1290,7 @@ $$ LANGUAGE SQL;
 -- Delete Project Draft
 CREATE OR REPLACE FUNCTION delete_project_draft(_project_draft_id integer)
 RETURNS integer AS $$
-    DELETE FROM project_draft
+    DELETE FROM project_drafts
     WHERE project_draft_uid = _project_draft_id
     RETURNING project_draft_uid
 $$ LANGUAGE SQL;
