@@ -47,6 +47,7 @@ class Collection extends React.Component {
       imageryAttribution: "",
       // attributes to record when sample is saved
       imageryAttributes: {},
+      imageryIdsArray: [],
       imageryList: [],
       inReviewMode: false,
       mapConfig: null,
@@ -178,6 +179,11 @@ class Collection extends React.Component {
       (this.state.currentImagery.id !== prevState.currentImagery.id ||
         this.state.mapConfig !== prevState.mapConfig)
     ) {
+      if (!prevState.imageryIdsArray.includes(this.state.currentImagery.id)) {
+        this.setState((prevState) => ({
+          imageryIdsArray: [...prevState.imageryIdsArray, this.state.currentImagery.id],
+        }));
+      }
       this.updateMapImagery();
     }
   }
@@ -763,6 +769,7 @@ class Collection extends React.Component {
             this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
           inReviewMode: this.state.inReviewMode,
           currentUserId: this.state.currentUserId,
+          imageryIdsArray: this.state.imageryIdsArray
         }),
       }).then((response) => {
         if (response.ok) {
