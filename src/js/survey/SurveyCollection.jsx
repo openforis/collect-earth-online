@@ -101,14 +101,14 @@ export default class SurveyCollection extends React.Component {
 
   getTopColor = (nodeId) => {
     if (this.checkAllSubAnswers(nodeId)) {
-      return "0px 0px 6px 4px #3bb9d6 inset";
+      return "btn-outline-info";
     } else {
       const { surveyQuestions } = this.props;
       const { answered } = surveyQuestions[nodeId];
       if (answered.length) {
-        return "0px 0px 6px 4px yellow inset";
+        return "btn-outline-warning";
       } else {
-        return "0px 0px 6px 4px red inset";
+        return "btn-outline-danger";
       }
     }
   };
@@ -440,6 +440,88 @@ export default class SurveyCollection extends React.Component {
     }
   };
 
+  getBoxShadowColor = (nodeId) => {
+    if (this.checkAllSubAnswers(nodeId)) {
+      return "rgba(23, 162, 184, 0.5)"; // Info color
+    } else {
+      const { surveyQuestions } = this.props;
+      const { answered } = surveyQuestions[nodeId];
+      if (answered.length) {
+        return "rgba(255, 193, 7, 0.5)"; // Warning color
+      } else {
+        return "rgba(220, 53, 69, 0.5)"; // Danger color
+      }
+    }
+  };
+
+  renderControls = () => {
+    const getBoxShadowColor = (nodeId) => {
+      if (this.checkAllSubAnswers(nodeId)) {
+        return "rgba(23, 162, 184, 0.5)"; // Info color
+      } else {
+        const { surveyQuestions } = this.props;
+        const { answered } = surveyQuestions[nodeId];
+        if (answered.length) {
+          return "rgba(255, 193, 7, 0.5)"; // Warning color
+        } else {
+          return "rgba(220, 53, 69, 0.5)"; // Danger color
+        }
+      }
+    };
+
+    return (
+      <div className="d-flex justify-content-center mb-2 align-items-center">
+        <button
+          className="btn btn-sm btn-outline-info mx-2 px-3"
+          disabled={this.state.currentNodeIndex === 0}
+          id="prev-survey-question"
+          onClick={this.prevSurveyQuestionTree}
+          style={{
+            opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0",
+            transition: "opacity 0.3s ease",
+          }}
+          type="button"
+        >
+          {"<"}
+        </button>
+        {this.state.topLevelNodeIds.map((nodeId, i) => (
+          <button
+            key={nodeId}
+            className={`btn btn-sm mx-2 px-3 ${this.getTopColor(nodeId)}`}
+            id="top-select"
+            onClick={() => this.setSurveyQuestionTree(i)}
+            style={{
+              boxShadow: `${i === this.state.currentNodeIndex
+                ? `0 0 6px 2px ${getBoxShadowColor(nodeId)}`
+                : 'none'}`,
+              transition: "box-shadow 0.3s ease",
+            }}
+            title={removeEnumerator(this.getNodeById(nodeId).question)}
+            type="button"
+          >
+            {i + 1}
+          </button>
+        ))}
+        <button
+          className="btn btn-sm btn-outline-info mx-2 px-3"
+          disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
+          id="next-survey-question"
+          onClick={this.nextSurveyQuestionTree}
+          style={{
+            opacity:
+              this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1
+                ? "0.25"
+                : "1.0",
+            transition: "opacity 0.3s ease",
+          }}
+          type="button"
+        >
+          {">"}
+        </button>
+      </div>
+    );
+  }
+
   renderQuestions = () => (
     <div className="mx-1">
       {this.unansweredColor()}
@@ -459,53 +541,7 @@ export default class SurveyCollection extends React.Component {
         </>
       ) : (
         <>
-          <div>
-            <button
-              className="btn btn-outline-lightgreen m-2"
-              disabled={this.state.currentNodeIndex === 0}
-              id="prev-survey-question"
-              onClick={this.prevSurveyQuestionTree}
-              style={{ opacity: this.state.currentNodeIndex === 0 ? "0.25" : "1.0" }}
-              type="button"
-            >
-              {"<"}
-            </button>
-            {this.state.topLevelNodeIds.map((nodeId, i) => (
-              <button
-                key={nodeId}
-                className="btn btn-outline-lightgreen m-2"
-                id="top-select"
-                onClick={() => this.setSurveyQuestionTree(i)}
-                style={{
-                  boxShadow: `${
-                    i === this.state.currentNodeIndex
-                      ? "0 0 4px 2px rgba(0, 0, 0, 1), "
-                      : "0 0 2px 1px rgba(0, 0, 0, 0.1), "
-                  }
-                                        ${this.getTopColor(nodeId)}`,
-                }}
-                title={removeEnumerator(this.getNodeById(nodeId).question)}
-                type="button"
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              className="btn btn-outline-lightgreen"
-              disabled={this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1}
-              id="next-survey-question"
-              onClick={this.nextSurveyQuestionTree}
-              style={{
-                opacity:
-                  this.state.currentNodeIndex === this.state.topLevelNodeIds.length - 1
-                    ? "0.25"
-                    : "1.0",
-              }}
-              type="button"
-            >
-              {">"}
-            </button>
-          </div>
+          {this.renderControls()}
           {this.state.topLevelNodeIds.length > 0 && (
             <SurveyCollectionQuestion
               key={this.state.topLevelNodeIds[this.state.currentNodeIndex]}
@@ -520,6 +556,7 @@ export default class SurveyCollection extends React.Component {
               hideQuestion={this.hideQuestion}
             />
           )}
+          {this.renderControls()}
         </>
       )}
     </div>
