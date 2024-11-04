@@ -14,7 +14,7 @@ import { SampleDesign, SampleReview, SamplePreview } from "./SampleDesign";
 
 import { mercator } from "../utils/mercator";
 import { last, lengthObject, removeFromSet, someObject, filterObject } from "../utils/sequence";
-import { ProjectContext, plotLimit, perPlotLimit, sampleLimit } from "./constants";
+import { ProjectContext, plotLimit, perPlotLimit, sampleLimit, blankProject } from "./constants";
 
 export default class CreateProjectWizard extends React.Component {
   constructor(props) {
@@ -46,7 +46,8 @@ export default class CreateProjectWizard extends React.Component {
             canDrag={false}
             context={this.context}
             imagery={this.context.institutionImagery.filter(
-              ({ title }) => title === "Mapbox Satellite"
+              ({ title }) => (title === "Mapbox Satellite") ||
+              (title === "Open Street Maps")
             )}
           />
         ),
@@ -66,7 +67,8 @@ export default class CreateProjectWizard extends React.Component {
             }
             context={this.context}
             imagery={this.context.institutionImagery.filter(
-              ({ title }) => title === "Mapbox Satellite"
+              ({ title }) => (title === "Mapbox Satellite") ||
+              (title === "Open Street Maps")
             )}
           />
         ),
@@ -114,13 +116,16 @@ export default class CreateProjectWizard extends React.Component {
       complete: new Set(),
       templateProject: {},
       templatePlots: [],
-      templateProjectList: [{ id: -1, name: "Loading..." }],
+      draftProject: { ...blankProject}
     };
   }
 
   /// Lifecycle Methods
 
   componentDidMount() {
+    if (this.context.projectDraftId > 0) {
+      this.getDraftById(this.context.projectDraftId);
+    }
     Promise.all([this.getTemplateProjects(), this.getInstitutionUserList()]).catch((error) => {
       console.error(error);
       alert("Error retrieving the project data. See console for details.");
@@ -129,6 +134,114 @@ export default class CreateProjectWizard extends React.Component {
   }
 
   /// API Calls
+
+  getDraftById = (projectDraftId) =>
+    fetch(`/get-project-draft-by-id?projectDraftId=${projectDraftId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        if (!data) {
+          alert("No draft found with ID " + projectDraftId + ".");
+          window.location = "/home";
+        } else {
+          this.context.setProjectDetails(data);
+          this.context.setContextState({ originalProject: data });
+          return data.institution;
+        }
+      }).catch(() => {
+        alert("No draft found with ID " + projectDraftId + ".");
+        window.location = "/home";
+      })
+      
+    buildDraftObject = () => ({
+      imageryId: this.context.imageryId,
+      projectImageryList: this.context.projectImageryList,
+      aoiFeatures: this.context.aoiFeatures,
+      aoiFileName: this.context.aoiFileName,
+      description: this.context.description,
+      name: this.context.name,
+      privacyLevel: this.context.privacyLevel,
+      projectOptions: this.context.projectOptions,
+      designSettings: this.context.designSettings,
+      numPlots: this.context.numPlots,
+      plotDistribution: this.context.plotDistribution,
+      plotShape: this.context.plotShape,
+      plotSize: this.context.plotSize,
+      plotSpacing: this.context.plotSpacing,
+      shufflePlots: this.context.shufflePlots,
+      sampleDistribution: this.context.sampleDistribution,
+      samplesPerPlot: this.context.samplesPerPlot,
+      sampleResolution: this.context.sampleResolution,
+      allowDrawnSamples: this.context.allowDrawnSamples,
+      surveyQuestions: this.context.surveyQuestions,
+      surveyRules: this.context.surveyRules,
+      plotFileName: this.context.plotFileName,
+      plotFileBase64: this.context.plotFileBase64,
+      sampleFileName: this.context.sampleFileName,
+      sampleFileBase64: this.context.sampleFileBase64,
+    });
+
+    saveDraft = () => {
+      if (this.context.projectDraftId > 0) {
+        this.context.processModal("Updating Draft", () =>
+        fetch("/update-project-draft", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json; charset=utf-8",
+          },
+          body: JSON.stringify({
+            projectDraftId: this.context.projectDraftId,
+            institutionId: this.context.institutionId,
+            projectTemplate: this.context.templateProjectId,
+            useTemplatePlots: this.context.useTemplatePlots,
+            useTemplateWidgets: this.context.useTemplateWidgets,
+            ...this.buildDraftObject(),
+          }),
+        })
+          .then((response) => Promise.all([response.ok, response.json()]))
+          .then((data) => {
+            if (data[0]) {
+              this.context.setContextState({ successMessage: "Draft saved." });
+              return Promise.resolve();
+            } else {
+              return Promise.reject(data[1]);
+            }
+          })
+          .catch((message) => {
+            alert("Error creating draft:\n" + message);
+          })
+        );
+      } else {
+        this.context.processModal("Creating Draft", () =>
+        fetch("/create-project-draft", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json; charset=utf-8",
+          },
+          body: JSON.stringify({
+            institutionId: this.context.institutionId,
+            projectTemplate: this.context.templateProjectId,
+            useTemplatePlots: this.context.useTemplatePlots,
+            useTemplateWidgets: this.context.useTemplateWidgets,
+            ...this.buildDraftObject(),
+          }),
+        })
+          .then((response) => Promise.all([response.ok, response.json()]))
+          .then((data) => {
+            if (data[0] && Number.isInteger(data[1].projectDraftId)) {
+              this.context.setContextState(({ successMessage: "Draft saved.", projectDraftId: data[1].projectDraftId}));
+              return Promise.resolve();
+            } else {
+              return Promise.reject(data[1]);
+            }
+          })
+          .catch((message) => {
+            alert("Error creating draft:\n" + message);
+          })
+        );
+      }
+    }
 
   getTemplateProjects = () =>
     fetch("/get-template-projects")
@@ -501,7 +614,16 @@ export default class CreateProjectWizard extends React.Component {
             className="col-7 px-0 mr-2 overflow-auto bg-lightgray"
             style={{ border: "1px solid black", borderRadius: "6px" }}
           >
-            <h2 className="bg-lightgreen w-100 py-1">{description}</h2>
+            <div className="bg-lightgreen w-100 py-1" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 1rem" }}>
+              <h2 style={{ margin: 0, flexGrow: 1 }}>{description}</h2>
+              {this.context.projectId < 0 && Object.keys(this.getSteps()).indexOf(this.context.wizardStep) > 1 && (
+                <button className="btn btn-secondary" onClick={this.saveDraft} style={{ marginLeft: "auto" }} title="Save Draft (Remains for 7 days)">
+                  <div style={{ color: "white" }}>
+                    <SvgIcon icon="save" size="1rem" />
+                  </div>
+                </button>
+              )}
+            </div>
             <div className="p-3">
               <StepComponent />
             </div>

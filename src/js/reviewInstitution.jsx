@@ -33,15 +33,21 @@ class ReviewInstitution extends React.Component {
   /// API Calls
 
   getProjectList = () => {
-    // TODO, move all API calls to this component to use Promise.all()
-    // This is usually the longest API call so the loading modal should stay up until all is loaded.
     this.processModal(
       "Loading institution data",
-      fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
-        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((data) => this.setState({ projectList: data }))
-        .catch((response) => {
-          console.log(response);
+      Promise.all([
+        fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
+          .then(response => response.ok ? response.json() : Promise.reject(response))
+          .then(projects => projects.map(project => ({ ...project, isDraft: false }))), // Add isDraft: false to each project
+        fetch(`/get-project-drafts-by-user?institutionId=${this.props.institutionId}`)
+          .then(response => response.ok ? response.json() : Promise.reject(response))
+          .then(projects => projects.map(project => ({ ...project, isDraft: true }))) // Add isDraft: true to each draft project
+      ])
+        .then(([institutionProjects, draftProjects]) => {
+          const combinedProjects = institutionProjects.concat(draftProjects);
+          this.setState({ projectList: combinedProjects });
+        })
+        .catch(error => {
           alert("Error retrieving the project info. See console for details.");
         })
     );
@@ -53,6 +59,20 @@ class ReviewInstitution extends React.Component {
         if (response.ok) {
           this.getProjectList();
           alert("Project " + projectId + " has been deleted.");
+        } else {
+          console.log(response);
+          alert("Error deleting project. See console for details.");
+        }
+      });
+    }
+  };
+
+  deleteProjectDraft = (projectDraftId) => {
+    if (confirm("Do you REALLY want to delete this project draft? This operation cannot be undone.")) {
+      fetch(`/delete-project-draft?projectDraftId=${projectDraftId}`, { method: "GET" }).then((response) => {
+        if (response.ok) {
+          this.getProjectList();
+          alert("Project " + projectDraftId + " has been deleted.");
         } else {
           console.log(response);
           alert("Error deleting project. See console for details.");
@@ -121,6 +141,7 @@ class ReviewInstitution extends React.Component {
             </div>
             <ProjectList
               deleteProject={this.archiveProject}
+              deleteProjectDraft={this.deleteProjectDraft}
               institutionId={this.props.institutionId}
               isAdmin={this.state.isAdmin}
               isVisible={this.state.selectedTab === 0}
@@ -1118,7 +1139,7 @@ function Imagery({
   );
 }
 
-function ProjectList({ isAdmin, institutionId, projectList, isVisible, deleteProject }) {
+function ProjectList({ isAdmin, institutionId, projectList, isVisible, deleteProject, deleteProjectDraft }) {
   const noProjects = (msg) => (
     <div style={{ display: "flex" }}>
       <SvgIcon icon="alert" size="1.2rem" />
@@ -1138,8 +1159,10 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
         <Project
           key={uid} // eslint-disable-line react/no-array-index-key
           deleteProject={deleteProject}
+          deleteProjectDraft={deleteProjectDraft}
           isAdmin={isAdmin}
           project={project}
+          institutionId={institutionId}
         />
       ));
     }
@@ -1179,7 +1202,7 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
   );
 }
 
-function Project({ project, isAdmin, deleteProject }) {
+function Project({ project, isAdmin, deleteProject, deleteProjectDraft, institutionId }) {
   const [learningMaterialOpen, setLearningMaterialOpen] = useState(false);
   const toggleLearningMaterial = () => {
     setLearningMaterialOpen(!learningMaterialOpen);
@@ -1189,31 +1212,42 @@ function Project({ project, isAdmin, deleteProject }) {
     <div className="row mb-1 d-flex">
       <div className="col-2 pr-0">
         <div className="btn btn-sm btn-outline-lightgreen btn-block">
-          {capitalizeFirst(project.privacyLevel)}
+          {project.isDraft ? "Draft" : capitalizeFirst(project.privacyLevel)}
         </div>
       </div>
       <div className="col overflow-hidden">
-        <a
-          className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-          href={`/collection?projectId=${project.id}`}
-          style={{
-            boxShadow:
-              project.percentComplete === 0.0
+        {project.isDraft ? (
+          <span
+            className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
+            style={{
+              boxShadow: "0px 0px 6px 1px grey inset",
+              cursor: "default",
+            }}
+          >
+            {project.name}
+          </span>
+        ) : (
+          <a
+            className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
+            href={`/collection?projectId=${project.id}`}
+            style={{
+              boxShadow: project.percentComplete === 0.0
                 ? "0px 0px 6px 1px red inset"
                 : project.percentComplete >= 100.0
-                ? "0px 0px 6px 2px #3bb9d6 inset"
-                : "0px 0px 6px 1px yellow inset",
-          }}
-        >
-          {project.name}
-        </a>
+                  ? "0px 0px 6px 2px #3bb9d6 inset"
+                  : "0px 0px 6px 1px yellow inset",
+            }}
+          >
+            {project.name}
+          </a>
+        )}
       </div>
       {isAdmin && (
         <>
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-yellow btn-block"
-              onClick={() => window.location.assign(`/review-project?projectId=${project.id}`)}
+              onClick={() => window.location.assign(project.isDraft ? `/create-project?projectDraftId=${project.id}&institutionId=${institutionId}` : `/review-project?projectId=${project.id}`)}
               style={{
                 alignItems: "center",
                 display: "flex",
@@ -1229,7 +1263,7 @@ function Project({ project, isAdmin, deleteProject }) {
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-red btn-block"
-              onClick={() => deleteProject(project.id)}
+              onClick={() => {project.isDraft ? deleteProjectDraft(project.id) : deleteProject(project.id)}}
               style={{
                 alignItems: "center",
                 display: "flex",
@@ -1257,9 +1291,8 @@ function Project({ project, isAdmin, deleteProject }) {
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-lightgreen btn-block"
-              onClick={() =>
-                window.open(`/dump-project-raw-data?projectId=${project.id}`, "_blank")
-              }
+              onClick={() => window.location.assign(project.draftId ? `/create-project?institutionId=${institutionId}&draftId=${project.draftId}` :
+                `/review-project?projectId=${project.id}`)}
               title="Download Sample Data"
               type="button"
             >

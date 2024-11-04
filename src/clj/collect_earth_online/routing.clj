@@ -112,8 +112,12 @@
    [:post "/check-plot-csv"]                 {:handler     #'projects/check-plot-csv
                                               :auth-type   :user
                                               :auth-action :block}
-   [:get  "/get-project-draft-by-id"]        {:handler     #'projects/get-project-draft-by-id}
-   [:get  "/get-project-drafts-by-user"]     {:handler     #'projects/get-project-drafts-by-user}
+   [:get  "/get-project-draft-by-id"]        {:handler     #'projects/get-project-draft-by-id
+                                              :auth-type   :user
+                                              :auth-action :block}
+   [:get  "/get-project-drafts-by-user"]     {:handler     #'projects/get-project-drafts-by-user
+                                              :auth-type   :user
+                                              :auth-action :block}
    [:post "/create-project-draft"]           {:handler     #'projects/create-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
