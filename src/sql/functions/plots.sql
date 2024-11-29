@@ -442,7 +442,7 @@ CREATE OR REPLACE FUNCTION upsert_user_samples(
 
     WITH user_plot_table AS (
         INSERT INTO user_plots AS up
-            (user_rid, plot_rid, confidence, confidence_comment ,collection_start, collection_time, imageryIds)
+            (user_rid, plot_rid, confidence, confidence_comment ,collection_start, collection_time, imagery_ids)
         VALUES
             (_user_id, _plot_id, _confidence, _confidence_comment , _collection_start, Now(), _imageryIds)
         ON CONFLICT (user_rid, plot_rid) DO
