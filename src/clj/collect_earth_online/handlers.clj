@@ -1,6 +1,7 @@
 (ns collect-earth-online.handlers
   (:require [collect-earth-online.db.institutions :refer [is-inst-admin?]]
             [collect-earth-online.db.projects     :refer [can-collect? is-proj-admin?]]
+            [collect-earth-online.db.metrics      :refer [show-metrics-user]]
             [ring.util.codec                      :refer [url-encode]]
             [ring.util.response                   :refer [redirect]]
             [triangulum.config                    :refer [get-config]]
@@ -22,6 +23,7 @@
                  (pos? project-id)     (is-proj-admin? user-id project-id token-key)
                  (pos? institution-id) (is-inst-admin? user-id institution-id))
       :no-cross (no-cross-traffic? headers)
+      :metrics (show-metrics-user user-id)
       true)))
 
 (defn redirect-handler [{:keys [session query-string uri] :as _request}]

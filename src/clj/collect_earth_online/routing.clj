@@ -3,6 +3,7 @@
             [collect-earth-online.db.geodash      :as geodash]
             [collect-earth-online.db.imagery      :as imagery]
             [collect-earth-online.db.institutions :as institutions]
+            [collect-earth-online.db.metrics      :as metrics]
             [collect-earth-online.db.plots        :as plots]
             [collect-earth-online.db.projects     :as projects]
             [collect-earth-online.db.qaqc         :as qaqc]
@@ -215,4 +216,18 @@
                                              :auth-action :block}
    [:get  "/get-nicfi-tiles"]               {:handler     proxy/get-nicfi-tiles
                                              :auth-type   :no-cross
-                                             :auth-action :block}})
+                                             :auth-action :block}
+
+   ;; Metrics
+   [:get  "/metrics/get-imagery-access"]      {:handler     metrics/get-imagery-counts
+                                               :auth-type   :metrics
+                                               :auth-action :block}
+   [:get  "/metrics/get-projects-with-gee"]   {:handler     metrics/get-projects-with-gee
+                                               :auth-type   :metrics
+                                               :auth-action :block}
+   [:get  "/metrics/get-sample-plot-counts"]  {:handler     metrics/get-sample-plot-counts
+                                               :auth-type   :metrics
+                                               :auth-action :block}
+   [:get  "/metrics/get-project-count"]       {:handler     metrics/get-project-count}
+                                               :auth-type   :metrics
+                                               :auth-action :block})
