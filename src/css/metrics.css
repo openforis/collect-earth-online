@@ -1,0 +1,82 @@
+.metrics-dashboard {
+  padding: 20px;
+}
+
+.dashboard-header {
+  background-color: #004d40;
+  padding: 20px;
+  color: white;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.filter-group {
+  display: flex;
+  gap: 15px;
+  flex: 1;
+}
+
+.filter {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.filter label {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.date-picker {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.download-csv-btn {
+  background-color: #004d40;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.download-csv-btn:hover {
+  background-color: #00332e;
+}
+
+.table-container {
+  margin-top: 20px;
+}
+
+.metrics-table {
+  width: 100%;
+  border-collapse: collapseg
+
+.metrics-table th,
+.metrics-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+.metrics-table th {
+  background-color: #004d40;
+  color: white;
+}
+
+.custom-dropdown {
+  background-color: #F0EBEB !important;
+  border-color: #F0EBEB !important;
+  color: black;
+  text-align: left; 
+}
