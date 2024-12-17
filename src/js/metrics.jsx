@@ -177,7 +177,11 @@ const MetricsDashboard = () => {
               dateFormat="yyyy-MM-dd"
             />
           </div>
-          <button className="btn btn-success filter col-md-2" onClick={fetchData}>
+          <button
+            className="btn btn-success filter col-md-1 d-flex justify-content-center align-items-center"
+            style={{ textAlign: "center" }}
+            onClick={fetchData}
+          >
             Go
           </button>
           <div className="filter col-md-2">
