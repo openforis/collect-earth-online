@@ -9,7 +9,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 
-import { LoadingModal, NavigationBar } from "./components/PageComponents";
+import { NavigationBar } from "./components/PageComponents";
 import "../css/metrics.css";
 
 const MetricsDashboard = () => {
@@ -19,6 +19,7 @@ const MetricsDashboard = () => {
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [handlerUrl, setHandlerUrl] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
 
   const metricsRoutes = {
     getImageryAccess: {
@@ -55,32 +56,43 @@ const MetricsDashboard = () => {
     return url.toString();
   };
 
-  useEffect(() => {
-    if (!handlerUrl) return;
+  const fetchData = async () => {
+    if (!handlerUrl || !startDate || !endDate) {
+      setAlertMessage("⚠️ Please select a metric, start date, and end date before proceeding.");
+      return;
+    }
 
-    const fetchData = async () => {
-      try {
+    setAlertMessage(''); // Clear previous alerts
 
-        const ceoUrl = buildUrl(handlerUrl, startDate, endDate); 
-        const response = await fetch(ceoUrl);
-        const result = await response.json();
+    try {
+      const ceoUrl = buildUrl(handlerUrl, startDate, endDate);
+      const response = await fetch(ceoUrl);
+      const result = await response.json();
 
-        if (result.length > 0) {
-          // Dynamically generate columns from data keys
-          const cols = Object.keys(result[0]).map((key) => ({
-            accessorKey: key,
-            header: key.charAt(0).toUpperCase() + key.slice(1),
-          }));
-          setColumns(cols);
-        }
-        setData(result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      if (result.length === 0) {
+        setAlertMessage("🚫 No data found for the selected filters.");
+        setData([]); // Clear previous data
+        setColumns([]); // Clear previous columns
+        return;
       }
-    };
 
-    fetchData();
-  }, [handlerUrl, startDate, endDate]);
+      const formatColumnName = (name) =>
+        name
+          .replace(/([a-z])([A-Z])/g, "$1 $2")
+          .replace(/^./, (char) => char.toUpperCase());
+
+      const cols = Object.keys(result[0]).map((key) => ({
+        accessorKey: key,
+        header: formatColumnName(key),
+      }));
+
+      setColumns(cols);
+      setData(result);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setAlertMessage(`❌ Error fetching data: ${error.message}`);
+    }
+  };
 
   // Table instance
   const table = useReactTable({
@@ -96,6 +108,29 @@ const MetricsDashboard = () => {
     setColumns([]); // Clear previous columns
   };
 
+  const handleDownloadCSV = () => {
+    if (data.length === 0) {
+      alert("No data available to download.");
+      return;
+    }
+
+    // Generate CSV content
+    const headers = columns.map((col) => col.header).join(",") + "\n";
+    const rows = data
+      .map((row) => columns.map((col) => row[col.accessorKey]).join(","))
+      .join("\n");
+
+    const csvContent = "data:text/csv;charset=utf-8," + headers + rows;
+
+    // Trigger download
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "metrics_data.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   return (
     <div className="container">
       <div className="bg-darkgreen mb-3 no-container-margin" style={{ margin: "0 10px" }}>
@@ -142,47 +177,57 @@ const MetricsDashboard = () => {
               dateFormat="yyyy-MM-dd"
             />
           </div>
-
-          <div className="filter col-md-2 d-flex align-items-center">
-            <button className="btn btn-dark w-100">Download CSV</button>
+          <button className="btn btn-success filter col-md-2" onClick={fetchData}>
+            Go
+          </button>
+          <div className="filter col-md-2">
+            <button className="btn btn-dark w-100" onClick={handleDownloadCSV}>
+              Download CSV
+            </button>
           </div>
         </div>
         <div className="table-container mt-4">
-          <div>
-            <table className="table-auto w-full border-collapse border border-gray-300">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="border border-gray-300 px-4 py-2"
-                      >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        className="border border-gray-300 px-4 py-2"
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {alertMessage ? (
+            <div className="alert alert-warning" role="alert">
+              {alertMessage}
+            </div>
+          ) : (
+            <div>
+              <table className="table-auto w-full border-collapse border border-gray-300">
+                <thead>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <th
+                          key={header.id}
+                          className="border border-gray-300 px-4 py-2"
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <tbody>
+                  {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          className="border border-gray-300 px-4 py-2"
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>
