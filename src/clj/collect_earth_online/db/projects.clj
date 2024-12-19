@@ -429,7 +429,7 @@
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
         description          (:description params)
-        learning-material    (:learningMaterial params)
+        learning-material    (:learningMaterial params "")
         privacy-level        (:privacyLevel params)
         aoi-features         (or (:aoiFeatures params)
                                  [(make-geo-json-polygon (tc/val->double (:lonMin params))

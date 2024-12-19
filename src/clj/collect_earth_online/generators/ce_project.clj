@@ -1,15 +1,18 @@
 (ns collect-earth-online.generators.ce-project
   (:require [clojure.data.xml :as xml]
             [clojure.java.io  :as io]
+            [clojure.data.csv :as csv]
             [clojure.string   :as str]
-            [collect-earth-online.generators.external-file :refer [tmp-dir]]
+            [collect-earth-online.generators.external-file :refer [unzip-project]]
+            [collect-earth-online.utils.part-utils :refer [read-file-base64]]
+            [triangulum.response :refer [data-response]]
+            [triangulum.logging :refer [log]]
             [triangulum.type-conversion :as tc]))
 
 (defn read-xml-file
   "Reads xml file containing survey information for Collect Earth."
-  [dir-name]
-  (let [dir (str tmp-dir "/" dir-name)]
-    (xml/parse (io/reader (str dir "/placemark.idm.xml")))))
+  [dir]
+  (xml/parse (io/reader (str dir "/placemark.idm.xml"))))
 
 (defn- code-items->answers
   "Transforms list of items into CEO's answers"
@@ -34,11 +37,15 @@
    into CEO's answers structure."
   [dir-name]
   (let [code-list (get-code-list dir-name)]
-    (reduce (fn [acc list]
-              (assoc acc (keyword (-> list :attrs :name))
-                     {:answers (code-items->answers (-> list :content last :content))}))
-            {}
-            code-list)))
+    (merge {:boolean {:answers {:0 {:color "#02D92D"
+                                    :answer "Yes"}
+                                :1 {:color "#D90202"
+                                    :answer "No"}}}}
+           (reduce (fn [acc list]
+                     (assoc acc (keyword (-> list :attrs :name))
+                            {:answers (code-items->answers (-> list :content last :content))}))
+                   {}
+                   code-list))))
 
 (defn- get-question
   "Retrieves question name from Collect's XML."
@@ -93,7 +100,9 @@
                      :question         (get-question question)
                      :cardOrder        (-> question-attrs :id tc/val->int)
                      :componentType    (:componentType types)
-                     :answerList       (keyword (:list question-attrs))
+                     :answerList       (if (= question-tag :boolean)
+                                         :boolean
+                                         (keyword (:list question-attrs)))
                      :parentQuestionId (find-parent-question-id question-attrs filtered-questions)}}))
                filtered-questions))))
 
@@ -107,16 +116,18 @@
                   (assoc acc (-> id str keyword) (-> question
                                                      (merge answers)
                                                      (dissoc :answerList)))
-                  (assoc acc (-> id str keyword) (-> question (dissoc :answerList))))))
+                  (assoc acc (-> id str keyword) (-> question
+                                                     (merge {:answers {:0 {:hide false
+                                                                           :color "#000000"
+                                                                           :answer ""
+                                                                           :required true}}})
+                                                     (dissoc :answerList))))))
             {}
             survey-questions)))
 
-(defn parse-properties-file
-  "Parses properties file into edn format. Used to
-   retireve general project information."
-  [dir-name]
-  (let [dir (str tmp-dir "/" dir-name)]
-    (with-open [f (clojure.java.io/reader (str dir "/project_definition.properties"))]
+(defn parse-project-properties
+  [file-path]
+  (with-open [f (clojure.java.io/reader (str file-path "/project_definition.properties"))]
 
       (reduce (fn [acc line]
                 (let [[k v] (clojure.string/split line #"\=")]
@@ -124,5 +135,66 @@
                     (assoc acc (keyword k) v)
                     acc)))
               {}
-              (line-seq f)))))
+              (line-seq f))))
 
+(defn list-files-in-folder
+  [dir-path]
+  (->> (io/file dir-path)
+       .listFiles
+       (map #(.getName %))
+       (filter #(.endsWith % ".csv"))))
+
+(defn rename-columns-and-write
+  [file-path]
+  (let [full-path (str file-path "grid/")
+        new-headers ["PLOTID" "LAT" "LON"]
+        file (first (list-files-in-folder full-path))]
+    (with-open [reader (io/reader (str full-path file))
+                writer (io/writer (str full-path "updated_plots.csv"))]
+      (let [data (csv/read-csv reader)
+            headers (first data)
+            updated-headers (vec (concat new-headers (drop 3 headers)))
+            updated-data (cons
+                          updated-headers
+                          (map-indexed (fn [idx row]
+                                         (assoc row 0 (str (inc idx))))
+                                       (rest data)))]
+        (csv/write-csv writer updated-data)))
+    (str full-path "updated_plots.csv")))
+
+(defn- encode-plot-file
+  [dir-path]
+  (let [dir  (rename-columns-and-write dir-path)
+        file (read-file-base64 dir)]
+    (str "data:text/csv;base64," file)))
+
+(defn format-project-properties
+  "Parses properties file into edn format. Used to
+   retireve general project information."
+  [dir]
+  (let [project-properties (parse-project-properties dir)
+        samples-per-plot   (:number_of_sampling_points_in_plot project-properties)]
+    {:name               (:survey_name project-properties)
+     :description        (:survey_name project-properties)
+     :plotDistribution   "csv"
+     :plotShape          (str/lower-case (:sample_shape project-properties))
+     :plotSize           (* 2 (tc/val->int (:distance_to_plot_boundaries project-properties)))
+     :plotFileName       (str (:survey_name project-properties) ".csv")
+     :plotFileBase64     (encode-plot-file dir)
+     :samplesPerPlot     samples-per-plot
+     :sampleDistribution "gridded"
+     :allowDrawnSamples  false
+     :sampleResolution   (:distance_between_sample_points project-properties)
+     :sampleFileName     ""
+     :aoiFeatures        [{:type "Polygon" :coordinates [[[-170,-75],[-170,75],[170,75],[170,-75],[-170,-75]]]}]
+     :aoiFileName        ""}))
+
+(defn import-ce-project
+  [{:keys [params]}]
+  (let [file-name (:fileName params)
+        file-b64  (:fileb64 params)
+        saved-file (unzip-project file-name file-b64)
+        project-properties (format-project-properties saved-file)]
+    (data-response (merge project-properties
+                          {:surveyQuestions (create-project-survey saved-file)}))))
+ 

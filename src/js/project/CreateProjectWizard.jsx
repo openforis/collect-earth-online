@@ -30,6 +30,7 @@ export default class CreateProjectWizard extends React.Component {
             setProjectTemplate={this.setProjectTemplate}
             templateProjectList={this.state.templateProjectList}
             toggleTemplatePlots={this.toggleTemplatePlots}
+            checkAllSteps={this.checkAllSteps}
           />
         ),
         helpDescription: "Introduction",

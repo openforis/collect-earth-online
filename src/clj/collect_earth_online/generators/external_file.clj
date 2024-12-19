@@ -318,7 +318,16 @@
 
 (defn unzip-project
   "Unzips a zip file on /tmp folder."
-  [zip-file-name]
-  (let [output-dir (str tmp-dir "/"
-                        (first (clojure.string/split zip-file-name #"\.")))]
-    (sh-wrapper tmp-dir {} (str "unzip " zip-file-name " -d " output-dir))))
+  [file-name file-base64]
+  (let [file-without-ext (first (clojure.string/split file-name #"\."))
+        _                (sh-wrapper tmp-dir {} (str "rm -rf ceo-tmp-" file-without-ext))
+        output-dir       (str tmp-dir
+                              "/ceo-tmp-"
+                              file-without-ext
+                              "/")
+        saved-file       (pu/write-file-part-base64 file-name
+                                                    file-base64
+                                                    output-dir
+                                                    file-without-ext)]
+    (sh-wrapper tmp-dir {} (str "unzip " (str output-dir file-name) " -d " output-dir))
+    output-dir))

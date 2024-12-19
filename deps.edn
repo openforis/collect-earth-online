@@ -6,6 +6,7 @@
         org.clojure/clojure      {:mvn/version "1.11.1"}
         org.flatland/ordered     {:mvn/version "1.15.11"}
         org.clojure/data.json    {:mvn/version "1.0.0"}
+        org.clojure/data.csv     {:mvn/version "1.0.1"}
         org.clojure/data.xml     {:mvn/version "0.0.8"}
         ring/ring                {:mvn/version "1.8.2"}
         sig-gis/triangulum       {:git/url "https://github.com/sig-gis/triangulum"

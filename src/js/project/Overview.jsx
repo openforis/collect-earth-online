@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 
 import { LearningMaterialModal } from "../components/PageComponents";
-import { capitalizeFirst } from "../utils/generalUtils";
+import { capitalizeFirst,  readFileAsBase64Url } from "../utils/generalUtils";
 import { ProjectContext } from "./constants";
 
 export function Overview(props) {
@@ -15,6 +15,25 @@ export function Overview(props) {
     projectId,
     learningMaterial
   } = useContext(ProjectContext);
+
+  const importCollectProject = (fileName, fileb64) => {
+    fetch(`/import-ce-project`, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fileName,
+        fileb64,
+      }),
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        setProjectDetails(data, props.checkAllSteps);
+      });
+  };
+
   return (
     <div id="project-info">
       {projectId < 0 &&
@@ -25,7 +44,12 @@ export function Overview(props) {
             accept="application/zip"
             defaultValue=""
             id="collect-earth-project-input"
-            onChange={(e) => null}
+            onChange={(e) => {
+              const file = e.target.files[0];
+              readFileAsBase64Url(file, (base64) => {
+                importCollectProject(file.name, base64);
+              });
+            }}
             style={{ display: "block" }}
             type="file"
           />
