@@ -949,3 +949,73 @@ body {
 .cEJxif {
     max-height: 600px !important;
 }
+
+
+.button-dropdown {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #65B7B0;
+  border: 2px solid #65B7B0;
+  border-radius: 5px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.button-dropdown:hover {
+  background-color: #65B7B0;
+  color: #fff;
+}
+
+.button-dropdown svg {
+  margin-left: 8px;
+  transition: transform 0.3s;
+}
+
+.button-dropdown:hover svg {
+  transform: rotate(180deg);
+}
+
+.delete-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #B53729; /* Red color for the text */
+  border: 2px solid #B53729; /* Red border */
+  border-radius: 5px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.delete-button:hover {
+  background-color: #B53729;
+  color: #fff;
+}
+
+.delete-button svg {
+  margin-right: 8px; /* Space between the icon and text */
+  fill: #B53729; /* Red icon */
+  transition: fill 0.3s;
+}
+
+.delete-button:hover svg {
+  fill: #fff; /* White icon on hover */
+}
+
+.row.mb-3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Distributes items across the row */
+}
+
+.col-2.right-align {
+  margin-left: auto; /* Push this column to the far right */
+}

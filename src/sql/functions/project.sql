@@ -1249,7 +1249,7 @@ RETURNS TABLE(
   FROM project_drafts
   WHERE user_rid = _user_id AND
         institution_rid = _institution_id
-$$ LANGUAGE SQL
+$$ LANGUAGE SQL;
 
 -- Get Project Draft by ID
 CREATE OR REPLACE FUNCTION get_project_draft_by_id(_project_draft_id integer)

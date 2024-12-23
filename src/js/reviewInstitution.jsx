@@ -1083,14 +1083,36 @@ function Imagery({
   selectEditImagery,
   deleteImagery,
 }) {
+  const [selectedImagery, setSelectedImagery] = useState([]); // State for selected imagery
+
+  const handleCheckboxChange = (event) => {
+    const { checked } = event.target;
+    setSelectedImagery((prev) =>
+      checked ? [...prev, title] : prev.filter((item) => item !== title)
+    );
+  };
+
   return (
     <div className="row mb-1 d-flex">
-      <div className="col-2 pr-0">
+      {/* Checkbox for selection */}
+      <div className="col-1"
+           style={{ paddingLeft: "4.5%" }}>
+        <input
+          type="checkbox"
+          onChange={handleCheckboxChange}
+          checked={selectedImagery.includes(title)}
+        />
+      </div>
+
+      {/* Visibility Button */}
+      <div className="col-2 pr-0 pl-3">
         <div className="btn btn-sm btn-outline-lightgreen btn-block" onClick={toggleVisibility}>
           {visibility === "private" ? "Institution" : "Public"}
         </div>
       </div>
-      <div className="col overflow-hidden">
+
+      {/* Title */}
+      <div className="col overflow-hidden pl-5">
         <button
           className="btn btn-outline-lightgreen btn-sm btn-block text-truncate"
           title={title}
@@ -1099,9 +1121,11 @@ function Imagery({
           {title}
         </button>
       </div>
+
       {canEdit && (
         <>
-          <div className="col-1 pl-0">
+          {/* Edit Button */}
+          <div className="col-1 pl-4">
             <button
               className="btn btn-outline-yellow btn-sm btn-block"
               id="edit-imagery"
@@ -1117,7 +1141,9 @@ function Imagery({
               <SvgIcon icon="edit" size="1rem" />
             </button>
           </div>
-          <div className="col-1 pl-0">
+
+          {/* Delete Button */}
+          <div className="col-1 pl-4">
             <button
               className="btn btn-outline-red btn-sm btn-block"
               id="delete-imagery"
@@ -1176,6 +1202,7 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
         collected, and green indicates that all plots have been selected.
       </div>
       {isAdmin && (
+        <>
         <div className="row mb-3">
           <div className="col">
             <button
@@ -1196,6 +1223,51 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
             </button>
           </div>
         </div>
+        <div className="row mb-3">
+          <div className="col-2">
+            <button className="button-dropdown">
+              Change Project Visibility
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="16"
+                width="16"
+                fill="#65B7B0"
+                viewBox="0 0 24 24"
+              >
+                <path d="M7 10l5 5 5-5H7z" />
+              </svg>
+            </button>
+          </div>
+          <div className="col-2">
+            <button className="delete-button">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="16"
+                width="16"
+                viewBox="0 0 24 24"
+              >
+                <path d="M3 6h18v2H3V6zm2 3h14v12H5V9zm6-7h2v2h-2V2zm-1 5h4v2h-4V7z" />
+              </svg>
+              Delete Selected
+            </button>
+          </div>
+          <div className="col-2 right-align">
+            <button className="button-dropdown">
+              Bulk Download
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="16"
+                width="16"
+                fill="#65B7B0"
+                viewBox="0 0 24 24"
+              >
+                <path d="M7 10l5 5 5-5H7z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+          <hr/>
+        </>
       )}
       {renderProjects()}
     </div>
@@ -1204,17 +1276,39 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
 
 function Project({ project, isAdmin, deleteProject, deleteProjectDraft, institutionId }) {
   const [learningMaterialOpen, setLearningMaterialOpen] = useState(false);
+  const [selectedProjects, setSelectedProjects] = useState([]); // State for selected projects
+
   const toggleLearningMaterial = () => {
     setLearningMaterialOpen(!learningMaterialOpen);
   };
 
+  const handleCheckboxChange = (event) => {
+    const { checked } = event.target;
+    setSelectedProjects((prev) =>
+      checked ? [...prev, project.id] : prev.filter((id) => id !== project.id)
+    );
+  };
+
   return (
     <div className="row mb-1 d-flex">
+      {/* Checkbox for project selection */}
+      <div className="col-1"
+           style={{ paddingLeft: "4.5%" }}>
+        <input
+          type="checkbox"
+          onChange={handleCheckboxChange}
+          checked={selectedProjects.includes(project.id)}
+        />
+      </div>
+
+      {/* Project Privacy Level / Draft Status */}
       <div className="col-2 pr-0">
         <div className="btn btn-sm btn-outline-lightgreen btn-block">
           {project.isDraft ? "Draft" : capitalizeFirst(project.privacyLevel)}
         </div>
       </div>
+
+      {/* Project Name with Status-based Styling */}
       <div className="col overflow-hidden">
         {project.isDraft ? (
           <span
@@ -1231,9 +1325,10 @@ function Project({ project, isAdmin, deleteProject, deleteProjectDraft, institut
             className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
             href={`/collection?projectId=${project.id}`}
             style={{
-              boxShadow: project.percentComplete === 0.0
-                ? "0px 0px 6px 1px red inset"
-                : project.percentComplete >= 100.0
+              boxShadow:
+                project.percentComplete === 0.0
+                  ? "0px 0px 6px 1px red inset"
+                  : project.percentComplete >= 100.0
                   ? "0px 0px 6px 2px #3bb9d6 inset"
                   : "0px 0px 6px 1px yellow inset",
             }}
@@ -1242,12 +1337,21 @@ function Project({ project, isAdmin, deleteProject, deleteProjectDraft, institut
           </a>
         )}
       </div>
+
+      {/* Admin Actions */}
       {isAdmin && (
         <>
+          {/* Edit Project */}
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-yellow btn-block"
-              onClick={() => window.location.assign(project.isDraft ? `/create-project?projectDraftId=${project.id}&institutionId=${institutionId}` : `/review-project?projectId=${project.id}`)}
+              onClick={() =>
+                window.location.assign(
+                  project.isDraft
+                    ? `/create-project?projectDraftId=${project.id}&institutionId=${institutionId}`
+                    : `/review-project?projectId=${project.id}`
+                )
+              }
               style={{
                 alignItems: "center",
                 display: "flex",
@@ -1260,10 +1364,16 @@ function Project({ project, isAdmin, deleteProject, deleteProjectDraft, institut
               <SvgIcon icon="edit" size="1rem" />
             </button>
           </div>
+
+          {/* Delete Project */}
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-red btn-block"
-              onClick={() => {project.isDraft ? deleteProjectDraft(project.id) : deleteProject(project.id)}}
+              onClick={() =>
+                project.isDraft
+                  ? deleteProjectDraft(project.id)
+                  : deleteProject(project.id)
+              }
               style={{
                 alignItems: "center",
                 display: "flex",
@@ -1276,6 +1386,8 @@ function Project({ project, isAdmin, deleteProject, deleteProjectDraft, institut
               <SvgIcon icon="trash" size="1rem" />
             </button>
           </div>
+
+          {/* Download Plot Data */}
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-lightgreen btn-block"
@@ -1288,33 +1400,163 @@ function Project({ project, isAdmin, deleteProject, deleteProjectDraft, institut
               P
             </button>
           </div>
+
+          {/* Download Sample Data */}
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-lightgreen btn-block"
-              onClick={() => window.location.assign(project.draftId ? `/create-project?institutionId=${institutionId}&draftId=${project.draftId}` :
-                `/review-project?projectId=${project.id}`)}
+              onClick={() =>
+                window.location.assign(
+                  project.draftId
+                    ? `/create-project?institutionId=${institutionId}&draftId=${project.draftId}`
+                    : `/review-project?projectId=${project.id}`
+                )
+              }
               title="Download Sample Data"
               type="button"
             >
               S
             </button>
           </div>
+
+          {/* Learning Material */}
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-lightgreen btn-block"
               onClick={toggleLearningMaterial}
-              title="Display Learning Materal"
+              title="Display Learning Material"
               type="button"
             >
               M
             </button>
           </div>
-          {learningMaterialOpen && <LearningMaterialModal learningMaterial={project.learningMaterial} onClose={toggleLearningMaterial} />}
+
+          {/* Learning Material Modal */}
+          {learningMaterialOpen && (
+            <LearningMaterialModal
+              learningMaterial={project.learningMaterial}
+              onClose={toggleLearningMaterial}
+            />
+          )}
         </>
       )}
     </div>
   );
 }
+
+// function Project({ project, isAdmin, deleteProject, deleteProjectDraft, institutionId }) {
+//   const [learningMaterialOpen, setLearningMaterialOpen] = useState(false);
+//   const toggleLearningMaterial = () => {
+//     setLearningMaterialOpen(!learningMaterialOpen);
+//   };
+
+//   return (
+//     <div className="row mb-1 d-flex">
+//       <div className="col-2 pr-0">
+//         <div className="btn btn-sm btn-outline-lightgreen btn-block">
+//           {project.isDraft ? "Draft" : capitalizeFirst(project.privacyLevel)}
+//         </div>
+//       </div>
+//       <div className="col overflow-hidden">
+//         {project.isDraft ? (
+//           <span
+//             className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
+//             style={{
+//               boxShadow: "0px 0px 6px 1px grey inset",
+//               cursor: "default",
+//             }}
+//           >
+//             {project.name}
+//           </span>
+//         ) : (
+//           <a
+//             className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
+//             href={`/collection?projectId=${project.id}`}
+//             style={{
+//               boxShadow: project.percentComplete === 0.0
+//                 ? "0px 0px 6px 1px red inset"
+//                 : project.percentComplete >= 100.0
+//                   ? "0px 0px 6px 2px #3bb9d6 inset"
+//                   : "0px 0px 6px 1px yellow inset",
+//             }}
+//           >
+//             {project.name}
+//           </a>
+//         )}
+//       </div>
+//       {isAdmin && (
+//         <>
+//           <div className="col-1 pl-0">
+//             <button
+//               className="btn btn-sm btn-outline-yellow btn-block"
+//               onClick={() => window.location.assign(project.isDraft ? `/create-project?projectDraftId=${project.id}&institutionId=${institutionId}` : `/review-project?projectId=${project.id}`)}
+//               style={{
+//                 alignItems: "center",
+//                 display: "flex",
+//                 height: "100%",
+//                 justifyContent: "center",
+//               }}
+//               title="Edit Project"
+//               type="button"
+//             >
+//               <SvgIcon icon="edit" size="1rem" />
+//             </button>
+//           </div>
+//           <div className="col-1 pl-0">
+//             <button
+//               className="btn btn-sm btn-outline-red btn-block"
+//               onClick={() => {project.isDraft ? deleteProjectDraft(project.id) : deleteProject(project.id)}}
+//               style={{
+//                 alignItems: "center",
+//                 display: "flex",
+//                 height: "100%",
+//                 justifyContent: "center",
+//               }}
+//               title="Delete Project"
+//               type="button"
+//             >
+//               <SvgIcon icon="trash" size="1rem" />
+//             </button>
+//           </div>
+//           <div className="col-1 pl-0">
+//             <button
+//               className="btn btn-sm btn-outline-lightgreen btn-block"
+//               onClick={() =>
+//                 window.open(`/dump-project-aggregate-data?projectId=${project.id}`, "_blank")
+//               }
+//               title="Download Plot Data"
+//               type="button"
+//             >
+//               P
+//             </button>
+//           </div>
+//           <div className="col-1 pl-0">
+//             <button
+//               className="btn btn-sm btn-outline-lightgreen btn-block"
+//               onClick={() => window.location.assign(project.draftId ? `/create-project?institutionId=${institutionId}&draftId=${project.draftId}` :
+//                 `/review-project?projectId=${project.id}`)}
+//               title="Download Sample Data"
+//               type="button"
+//             >
+//               S
+//             </button>
+//           </div>
+//           <div className="col-1 pl-0">
+//             <button
+//               className="btn btn-sm btn-outline-lightgreen btn-block"
+//               onClick={toggleLearningMaterial}
+//               title="Display Learning Materal"
+//               type="button"
+//             >
+//               M
+//             </button>
+//           </div>
+//           {learningMaterialOpen && <LearningMaterialModal learningMaterial={project.learningMaterial} onClose={toggleLearningMaterial} />}
+//         </>
+//       )}
+//     </div>
+//   );
+// }
 
 class UserList extends React.Component {
   constructor(props) {
@@ -1447,89 +1689,102 @@ class UserList extends React.Component {
   }
 }
 
-class User extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      userRole: props.user.institutionRole,
-    };
-  }
+function User({ isAdmin, updateUserInstitutionRole, user }) {
+  const [userRole, setUserRole] = useState(user.institutionRole);
+  const [selectedUsers, setSelectedUsers] = useState([]); // State for selected users
 
-  render() {
-    const { isAdmin, updateUserInstitutionRole, user } = this.props;
-
-    return (
-      <div className="row">
-        {!isAdmin && (
-          <div className="col-2 mb-1 pr-0">
-            <div className="btn btn-sm btn-outline-lightgreen btn-block">
-              {capitalizeFirst(user.institutionRole)}
-            </div>
-          </div>
-        )}
-        <div className="col mb-1 overflow-hidden">
-          <button
-            className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-            onClick={() => window.location.assign(`/account?accountId=${user.id}`)}
-            title={user.email}
-            type="button"
-          >
-            {user.email}
-          </button>
-        </div>
-        {isAdmin && (
-          <>
-            <div className="col-2 mb-1 pl-0">
-              <select
-                className="custom-select custom-select-sm"
-                onChange={(e) => this.setState({ userRole: e.target.value })}
-                size="1"
-                value={this.state.userRole}
-              >
-                {this.state.userRole === "pending" && <option value="pending">Pending</option>}
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div className="col-2 mb-1 pl-0">
-              <button
-                className="btn btn-sm btn-outline-yellow btn-block"
-                onClick={() => {
-                  const { userRole } = this.state;
-                  const { institutionRole } = this.props.user;
-                  if (userRole === institutionRole) {
-                    alert("You must change the role of a user in order to update it.");
-                  } else {
-                    const confirmBox = window.confirm(
-                      "Do you really want to update the role of this user?"
-                    );
-                    if (confirmBox) updateUserInstitutionRole(user.id, null, userRole);
-                  }
-                }}
-                type="button"
-              >
-                Update
-              </button>
-            </div>
-            <div className="col-2 mb-1 pl-0">
-              <button
-                className="btn btn-sm btn-outline-red btn-block"
-                onClick={() => {
-                  const confirmBox = window.confirm(
-                    "Do you really want to remove this user from the institution?"
-                  );
-                  if (confirmBox) updateUserInstitutionRole(user.id, null, "not-member");
-                }}
-                type="button"
-              >
-                Remove
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+  const handleCheckboxChange = (event) => {
+    const { checked } = event.target;
+    setSelectedUsers((prev) =>
+      checked ? [...prev, user.id] : prev.filter((id) => id !== user.id)
     );
-  }
+  };
+
+  const handleUpdateRole = () => {
+    if (userRole === user.institutionRole) {
+      alert("You must change the role of a user in order to update it.");
+    } else {
+      const confirmBox = window.confirm(
+        "Do you really want to update the role of this user?"
+      );
+      if (confirmBox) updateUserInstitutionRole(user.id, null, userRole);
+    }
+  };
+
+  const handleRemoveUser = () => {
+    const confirmBox = window.confirm(
+      "Do you really want to remove this user from the institution?"
+    );
+    if (confirmBox) updateUserInstitutionRole(user.id, null, "not-member");
+  };
+
+  return (
+    <div className="row">
+      {/* Checkbox for selection */}
+      <div className="col-1 mb-1"
+           style= {{ paddingLeft: "4.5%" }}>
+        <input
+          type="checkbox"
+          onChange={handleCheckboxChange}
+          checked={selectedUsers.includes(user.id)}
+        />
+      </div>
+
+      {!isAdmin && (
+        <div className="col-2 mb-1 pr-0">
+          <div className="btn btn-sm btn-outline-lightgreen btn-block">
+            {capitalizeFirst(user.institutionRole)}
+          </div>
+        </div>
+      )}
+
+      <div className="col mb-1 overflow-hidden pl-5">
+        <button
+          className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
+          onClick={() => window.location.assign(`/account?accountId=${user.id}`)}
+          title={user.email}
+          type="button"
+        >
+          {user.email}
+        </button>
+      </div>
+
+      {isAdmin && (
+        <>
+          <div className="col-2 mb-1 pl-4">
+            <select
+              className="custom-select custom-select-sm"
+              onChange={(e) => setUserRole(e.target.value)}
+              size="1"
+              value={userRole}
+            >
+              {userRole === "pending" && <option value="pending">Pending</option>}
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div className="col-2 mb-1 pl-4">
+            <button
+              className="btn btn-sm btn-outline-yellow btn-block"
+              onClick={handleUpdateRole}
+              type="button"
+            >
+              Update
+            </button>
+          </div>
+          <div className="col-2 mb-1 pl-4">
+            <button
+              className="btn btn-sm btn-outline-red btn-block"
+              onClick={handleRemoveUser}
+              type="button"
+            >
+              Remove
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 class NewUserButtons extends React.Component {
