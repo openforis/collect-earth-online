@@ -316,11 +316,19 @@
                 (str "7z a " folder-name "/files" ".zip " folder-name "/*"))
     (str folder-name "files.zip")))
 
+
+(defn remove-old-dir
+  [dir-name]
+  (try
+    (sh-wrapper tmp-dir {} (str "rm -rf ceo-tmp-" dir-name))
+    (catch Exception e
+      (println "Directory doesn't exist"))))
+
 (defn unzip-project
   "Unzips a zip file on /tmp folder."
   [file-name file-base64]
   (let [file-without-ext (first (clojure.string/split file-name #"\."))
-        _                (sh-wrapper tmp-dir {} (str "rm -rf ceo-tmp-" file-without-ext))
+        _                (remove-old-dir file-without-ext)
         output-dir       (str tmp-dir
                               "/ceo-tmp-"
                               file-without-ext
