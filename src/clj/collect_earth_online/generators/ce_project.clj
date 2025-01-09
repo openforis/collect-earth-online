@@ -1,5 +1,6 @@
 (ns collect-earth-online.generators.ce-project
   (:require [clojure.data.xml :as xml]
+            [clojure.zip :as zip]
             [clojure.java.io  :as io]
             [clojure.data.csv :as csv]
             [clojure.string   :as str]
@@ -37,9 +38,9 @@
    into CEO's answers structure."
   [dir-name]
   (let [code-list (get-code-list dir-name)]
-    (merge {:boolean {:answers {:0 {:color "#02D92D"
+    (merge {:boolean {:answers {:1 {:color "#02D92D"
                                     :answer "Yes"}
-                                :1 {:color "#D90202"
+                                :0 {:color "#D90202"
                                     :answer "No"}}}}
            (reduce (fn [acc list]
                      (assoc acc (keyword (-> list :attrs :name))
@@ -57,16 +58,57 @@
       :content
       first))
 
-(defn- find-parent-question-id
+(defn- find-parent-question
   "Looks for the id of the parent question."
   [question-attr questions]
-  (if (:parent question-attr)
-    (tc/val->int (some (fn [q]
-                         (when (= (:parent question-attr)
-                                  (-> q :attrs :name))
-                           (-> q :attrs :id)))
-                       questions))
-    -1))
+  (if (:relevant question-attr)
+    (or (some (fn [q]
+                (when (= (:relevant question-attr)
+                         (-> q :attrs :name))
+                  {:parent-id (tc/val->int (-> q :attrs :id))
+                   :type (-> q :tag)}))
+              questions)
+        {:parent-id -1})
+    {:parent-id -1}))
+
+(defn find-parent-question-and-answers
+  [question-attrs questions code-lists]
+  (if (and (:relevant question-attrs) (not= "false()" (str/lower-case (:relevant question-attrs))))
+    (let [parse-relevance (fn [relevance]
+                            (when relevance
+                              (if (re-find #"[=/!=]" relevance)
+                                (let [[_ parent-name operator value]
+                                      (re-matches #"(\S+)\s*(=|!=)\s*(\d+)" relevance)]
+                                  {:parent-name parent-name
+                                   :operator operator
+                                   :value value})
+                                {:parent-name relevance})))
+          find-question-by-name (fn [name]
+                                  (some #(when (= (:name (:attrs %)) name) %) questions))
+          find-id-in-codelist (fn [list-name answer]
+                                (->> (get-in code-lists [(keyword list-name) :answers])
+                                     (some #(when (= (str (key %)) answer) (key %)))))
+          relevance (:relevant question-attrs)
+          parsed-relevance (parse-relevance relevance)]
+      (when parsed-relevance
+        (let [{:keys [parent-name operator value]} parsed-relevance
+              parent-question (find-question-by-name parent-name)
+              parent-id (:id (:attrs parent-question))
+              parent-tag (:tag parent-question)
+              parent-answer-id
+              (cond
+                (= parent-tag :boolean)
+                (if (= operator "=")
+                  (if (= value "1") [1] [0])
+                  (if (= value "1") [0] [1]))
+                (= parent-tag :code)
+                (find-id-in-codelist (:list (:attrs parent-question)) value)
+                :else [])]
+          {:parent-question-id (tc/val->int parent-id)
+           :parent-answer-ids parent-answer-id})))
+    {:parent-question-id -1
+     :parent-answer-ids []}))
+
 
 (defn- define-types
   "Define component type and data type for CEO's
@@ -86,30 +128,35 @@
 (defn- extract-survey-questions
   "Parses the XML file and creates a list of CEO's questions
    based on the schema tag from the XML."
-  [dir-name]
+  [dir-name survey-answers]
   (let [survey-content     (-> dir-name read-xml-file :content last :content first :content)
         filtered-questions (filter (fn [q] (contains? #{:text :code :number :boolean} (:tag q)))
                                    survey-content)]
     (into (sorted-map)
           (map (fn [question]
-                 (let [question-tag   (:tag question)
-                       question-attrs (:attrs question)
-                       types          (define-types question-tag question-attrs)]
+                 (let [question-tag    (:tag question)
+                       question-attrs  (:attrs question)
+                       types           (define-types question-tag question-attrs)
+                       {:keys [parent-question-id
+                               parent-answer-ids]} (find-parent-question-and-answers question-attrs filtered-questions survey-answers)]
                    {(-> question-attrs :id Integer/parseInt)
-                    {:dataType         (:dataType types)
-                     :question         (get-question question)
-                     :cardOrder        (-> question-attrs :id tc/val->int)
-                     :componentType    (:componentType types)
-                     :answerList       (if (= question-tag :boolean)
-                                         :boolean
-                                         (keyword (:list question-attrs)))
-                     :parentQuestionId (find-parent-question-id question-attrs filtered-questions)}}))
+                    {:dataType      (:dataType types)
+                     :question      (get-question question)
+                     :cardOrder     (if (and (:relevant question-attrs) (not= "false()" (str/lower-case (:relevant question-attrs))))
+                                      nil
+                                      (-> question-attrs :id tc/val->int))
+                     :componentType (:componentType types)
+                     :answerList    (if (= question-tag :boolean)
+                                      :boolean
+                                      (keyword (:list question-attrs)))
+                     :parentAnswerIds  parent-answer-ids
+                     :parentQuestionId parent-question-id}}))
                filtered-questions))))
 
 (defn create-project-survey
   [dir-name]
-  (let [survey-questions (extract-survey-questions dir-name)
-        survey-answers   (extract-code-lists dir-name)]
+  (let [survey-answers   (extract-code-lists dir-name)
+        survey-questions (extract-survey-questions dir-name survey-answers)]
     (reduce (fn [acc [id question]]
               (let [answers (get survey-answers (:answerList question))]
                 (if (:answerList question)
@@ -197,4 +244,3 @@
         project-properties (format-project-properties saved-file)]
     (data-response (merge project-properties
                           {:surveyQuestions (create-project-survey saved-file)}))))
- 
