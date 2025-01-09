@@ -249,7 +249,7 @@
     ;; TODO check for samples with no plots - OR - ensure that PG errors pass through.
     (map (fn [s]
            (-> s
-               (assoc :plot_rid (get plot-keys (:plotid s)))
+               (assoc :plot_rid (get plot-keys (str (:plotid s))))
                (dissoc :plotid)
                (split-ext :extra_sample_info [:plot_rid :visible_id :sample_geom])))
          ext-samples)))

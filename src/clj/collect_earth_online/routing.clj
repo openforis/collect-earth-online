@@ -127,6 +127,12 @@
    [:get "/delete-project-draft"]            {:handler     #'projects/delete-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
+   [:post "/delete-projects-bulk"]           {:handler     #'projects/delete-projects-bulk!
+                                              :auth-type   :user
+                                              :auth-action :block}
+   [:post "/edit-projects-bulk"]             {:handler     #'projects/edit-projects-bulk!
+                                              :auth-type   :user
+                                              :auth-action :block}
    ;; QAQC API
    [:get "/project-stats"]                   {:handler    #'qaqc/get-project-stats
                                               :auth-type   :admin

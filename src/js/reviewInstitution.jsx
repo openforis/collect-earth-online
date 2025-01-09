@@ -5,6 +5,7 @@ import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
 import SvgIcon from "./components/svg/SvgIcon";
 import { LoadingModal, NavigationBar, LearningMaterialModal } from "./components/PageComponents";
+import { ProjectVisibilityPopup, DownloadPopup } from "./components/BulkPopups";
 
 import { sortAlphabetically, capitalizeFirst, KBtoBase64Length } from "./utils/generalUtils";
 import { safeLength } from "./utils/sequence";
@@ -20,6 +21,8 @@ class ReviewInstitution extends React.Component {
       isAdmin: false,
       selectedTab: 0,
       modalMessage: null,
+      selectedProject: [],
+      selectedImagery: [],
     };
   }
 
@@ -76,6 +79,52 @@ class ReviewInstitution extends React.Component {
         } else {
           console.log(response);
           alert("Error deleting project. See console for details.");
+        }
+      });
+    }
+  };
+
+  deleteProjectsBulk = (projectIds) => {
+    console.log(projectIds);
+    if (confirm("Do you REALLY want to delete ALL selected projects? This operation cannot be undone.")) {
+      fetch(`/delete-projects-bulk?institutionId=${this.props.institutionId}`,
+            { method: "POST",
+              body: JSON.stringify({"projectIds": projectIds}),
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            })
+        .then((response) => {
+        if (response.ok) {
+          this.getProjectList();
+          alert("Selected projects have been deleted.");
+        } else {
+          console.log(response);
+          alert("Error deleting projects. See console for details.");
+        }
+      });
+    }
+  };
+  
+  editProjectsBulk = (projectIds, selectedVisibility) => {
+    if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
+      fetch(`/edit-projects-bulk?institutionId=${this.props.institutionId}`,
+            { method: "POST",
+              body: JSON.stringify({"projectIds": projectIds,
+                                    "visibility": selectedVisibility}),
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            })
+        .then((response) => {
+        if (response.ok) {
+          this.getProjectList();
+          alert(`The visibility of the selected projects have been changed to ${selectedVisibility}`);
+        } else {
+          console.log(response);
+          alert("Error editing project visibility. See console for details.");
         }
       });
     }
@@ -146,6 +195,8 @@ class ReviewInstitution extends React.Component {
               isAdmin={this.state.isAdmin}
               isVisible={this.state.selectedTab === 0}
               projectList={this.state.projectList}
+              deleteProjectsBulk={this.deleteProjectsBulk}
+              editProjectsBulk={this.editProjectsBulk}
             />
             <ImageryList
               institutionId={this.props.institutionId}
@@ -464,6 +515,52 @@ class ImageryList extends React.Component {
           body: "Error retrieving the imagery list. See console for details.",
         });
       });
+  };
+
+    deleteImageryBulk = (imageryIds) => {
+    console.log(projectIds);
+    if (confirm("Do you REALLY want to delete ALL selected imagery? This operation cannot be undone.")) {
+      fetch(`/delete-projects-bulk?institutionId=${this.props.institutionId}`,
+            { method: "POST",
+              body: JSON.stringify({"projectIds": imageryIds}),
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            })
+        .then((response) => {
+        if (response.ok) {
+          this.getImageryList();
+          alert("Selected imagery have been deleted.");
+        } else {
+          console.log(response);
+          alert("Error deleting imagery. See console for details.");
+        }
+      });
+    }
+  };
+  
+  editImageryBulk = (projectIds, selectedVisibility) => {
+    if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
+      fetch(`/edit-projects-bulk?institutionId=${this.props.institutionId}`,
+            { method: "POST",
+              body: JSON.stringify({"projectIds": projectIds,
+                                    "visibility": selectedVisibility}),
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            })
+        .then((response) => {
+        if (response.ok) {
+          this.getImageryList();
+          alert(`The visibility of the selected imagery have been changed to ${selectedVisibility}`);
+        } else {
+          console.log(response);
+          alert("Error editing imagery. See console for details.");
+        }
+      });
+    }
   };
 
   getNICFILayers = () => {
@@ -1165,7 +1262,18 @@ function Imagery({
   );
 }
 
-function ProjectList({ isAdmin, institutionId, projectList, isVisible, deleteProject, deleteProjectDraft }) {
+function ProjectList({
+  isAdmin,
+  institutionId,
+  projectList,
+  isVisible,
+  deleteProject,
+  deleteProjectDraft,
+  deleteProjectsBulk,
+  editProjectsBulk,
+}) {
+  const [selectedProjects, setSelectedProjects] = useState([]);
+  
   const noProjects = (msg) => (
     <div style={{ display: "flex" }}>
       <SvgIcon icon="alert" size="1.2rem" />
@@ -1189,6 +1297,8 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
           isAdmin={isAdmin}
           project={project}
           institutionId={institutionId}
+          selectedProjects={selectedProjects}
+          setSelectedProjects={setSelectedProjects}
         />
       ));
     }
@@ -1223,49 +1333,36 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
             </button>
           </div>
         </div>
-        <div className="row mb-3">
-          <div className="col-2">
-            <button className="button-dropdown">
-              Change Project Visibility
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="16"
-                width="16"
-                fill="#65B7B0"
-                viewBox="0 0 24 24"
+        <div className="row mb-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          {/* Left-aligned buttons */}
+          <div style={{ display: "flex", gap: "10px" }}>
+            <ProjectVisibilityPopup
+              institutionId={institutionId}
+              selectedProjects={selectedProjects}
+              editProjectsBulk={editProjectsBulk}
+            />
+              <button
+                className="delete-button"
+                style={{ height: "38px" }}
+                onClick={() => deleteProjectsBulk(selectedProjects)}
               >
-                <path d="M7 10l5 5 5-5H7z" />
-              </svg>
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="16"
+                  width="16"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M3 6h18v2H3V6zm2 3h14v12H5V9zm6-7h2v2h-2V2zm-1 5h4v2h-4V7z" />
+                </svg>
+                Delete Selected
+              </button>
+            </div>
+            <div>
+              <DownloadPopup
+                selectedProjects={selectedProjects}
+              />
+            </div>
           </div>
-          <div className="col-2">
-            <button className="delete-button">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="16"
-                width="16"
-                viewBox="0 0 24 24"
-              >
-                <path d="M3 6h18v2H3V6zm2 3h14v12H5V9zm6-7h2v2h-2V2zm-1 5h4v2h-4V7z" />
-              </svg>
-              Delete Selected
-            </button>
-          </div>
-          <div className="col-2 right-align">
-            <button className="button-dropdown">
-              Bulk Download
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="16"
-                width="16"
-                fill="#65B7B0"
-                viewBox="0 0 24 24"
-              >
-                <path d="M7 10l5 5 5-5H7z" />
-              </svg>
-            </button>
-          </div>
-        </div>
           <hr/>
         </>
       )}
@@ -1274,9 +1371,16 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
   );
 }
 
-function Project({ project, isAdmin, deleteProject, deleteProjectDraft, institutionId }) {
+function Project({
+  project,
+  isAdmin,
+  deleteProject,
+  deleteProjectDraft,
+  institutionId,
+  selectedProjects,
+  setSelectedProjects
+}) {
   const [learningMaterialOpen, setLearningMaterialOpen] = useState(false);
-  const [selectedProjects, setSelectedProjects] = useState([]); // State for selected projects
 
   const toggleLearningMaterial = () => {
     setLearningMaterialOpen(!learningMaterialOpen);
@@ -1431,7 +1535,6 @@ function Project({ project, isAdmin, deleteProject, deleteProjectDraft, institut
             </button>
           </div>
 
-          {/* Learning Material Modal */}
           {learningMaterialOpen && (
             <LearningMaterialModal
               learningMaterial={project.learningMaterial}
