@@ -85,7 +85,6 @@ class ReviewInstitution extends React.Component {
   };
 
   deleteProjectsBulk = (projectIds) => {
-    console.log(projectIds);
     if (confirm("Do you REALLY want to delete ALL selected projects? This operation cannot be undone.")) {
       fetch(`/delete-projects-bulk?institutionId=${this.props.institutionId}`,
             { method: "POST",
@@ -518,7 +517,6 @@ class ImageryList extends React.Component {
   };
 
     deleteImageryBulk = (imageryIds) => {
-    console.log(projectIds);
     if (confirm("Do you REALLY want to delete ALL selected imagery? This operation cannot be undone.")) {
       fetch(`/delete-projects-bulk?institutionId=${this.props.institutionId}`,
             { method: "POST",
@@ -1546,120 +1544,6 @@ function Project({
     </div>
   );
 }
-
-// function Project({ project, isAdmin, deleteProject, deleteProjectDraft, institutionId }) {
-//   const [learningMaterialOpen, setLearningMaterialOpen] = useState(false);
-//   const toggleLearningMaterial = () => {
-//     setLearningMaterialOpen(!learningMaterialOpen);
-//   };
-
-//   return (
-//     <div className="row mb-1 d-flex">
-//       <div className="col-2 pr-0">
-//         <div className="btn btn-sm btn-outline-lightgreen btn-block">
-//           {project.isDraft ? "Draft" : capitalizeFirst(project.privacyLevel)}
-//         </div>
-//       </div>
-//       <div className="col overflow-hidden">
-//         {project.isDraft ? (
-//           <span
-//             className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-//             style={{
-//               boxShadow: "0px 0px 6px 1px grey inset",
-//               cursor: "default",
-//             }}
-//           >
-//             {project.name}
-//           </span>
-//         ) : (
-//           <a
-//             className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-//             href={`/collection?projectId=${project.id}`}
-//             style={{
-//               boxShadow: project.percentComplete === 0.0
-//                 ? "0px 0px 6px 1px red inset"
-//                 : project.percentComplete >= 100.0
-//                   ? "0px 0px 6px 2px #3bb9d6 inset"
-//                   : "0px 0px 6px 1px yellow inset",
-//             }}
-//           >
-//             {project.name}
-//           </a>
-//         )}
-//       </div>
-//       {isAdmin && (
-//         <>
-//           <div className="col-1 pl-0">
-//             <button
-//               className="btn btn-sm btn-outline-yellow btn-block"
-//               onClick={() => window.location.assign(project.isDraft ? `/create-project?projectDraftId=${project.id}&institutionId=${institutionId}` : `/review-project?projectId=${project.id}`)}
-//               style={{
-//                 alignItems: "center",
-//                 display: "flex",
-//                 height: "100%",
-//                 justifyContent: "center",
-//               }}
-//               title="Edit Project"
-//               type="button"
-//             >
-//               <SvgIcon icon="edit" size="1rem" />
-//             </button>
-//           </div>
-//           <div className="col-1 pl-0">
-//             <button
-//               className="btn btn-sm btn-outline-red btn-block"
-//               onClick={() => {project.isDraft ? deleteProjectDraft(project.id) : deleteProject(project.id)}}
-//               style={{
-//                 alignItems: "center",
-//                 display: "flex",
-//                 height: "100%",
-//                 justifyContent: "center",
-//               }}
-//               title="Delete Project"
-//               type="button"
-//             >
-//               <SvgIcon icon="trash" size="1rem" />
-//             </button>
-//           </div>
-//           <div className="col-1 pl-0">
-//             <button
-//               className="btn btn-sm btn-outline-lightgreen btn-block"
-//               onClick={() =>
-//                 window.open(`/dump-project-aggregate-data?projectId=${project.id}`, "_blank")
-//               }
-//               title="Download Plot Data"
-//               type="button"
-//             >
-//               P
-//             </button>
-//           </div>
-//           <div className="col-1 pl-0">
-//             <button
-//               className="btn btn-sm btn-outline-lightgreen btn-block"
-//               onClick={() => window.location.assign(project.draftId ? `/create-project?institutionId=${institutionId}&draftId=${project.draftId}` :
-//                 `/review-project?projectId=${project.id}`)}
-//               title="Download Sample Data"
-//               type="button"
-//             >
-//               S
-//             </button>
-//           </div>
-//           <div className="col-1 pl-0">
-//             <button
-//               className="btn btn-sm btn-outline-lightgreen btn-block"
-//               onClick={toggleLearningMaterial}
-//               title="Display Learning Materal"
-//               type="button"
-//             >
-//               M
-//             </button>
-//           </div>
-//           {learningMaterialOpen && <LearningMaterialModal learningMaterial={project.learningMaterial} onClose={toggleLearningMaterial} />}
-//         </>
-//       )}
-//     </div>
-//   );
-// }
 
 class UserList extends React.Component {
   constructor(props) {
