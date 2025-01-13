@@ -5,6 +5,7 @@ import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
 import SvgIcon from "./components/svg/SvgIcon";
 import { LoadingModal, NavigationBar, LearningMaterialModal } from "./components/PageComponents";
+import { ProjectVisibilityPopup, DownloadPopup } from "./components/BulkPopups";
 
 import { sortAlphabetically, capitalizeFirst, KBtoBase64Length } from "./utils/generalUtils";
 import { safeLength } from "./utils/sequence";
@@ -20,6 +21,8 @@ class ReviewInstitution extends React.Component {
       isAdmin: false,
       selectedTab: 0,
       modalMessage: null,
+      selectedProject: [],
+      selectedImagery: [],
     };
   }
 
@@ -33,15 +36,21 @@ class ReviewInstitution extends React.Component {
   /// API Calls
 
   getProjectList = () => {
-    // TODO, move all API calls to this component to use Promise.all()
-    // This is usually the longest API call so the loading modal should stay up until all is loaded.
     this.processModal(
       "Loading institution data",
-      fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
-        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((data) => this.setState({ projectList: data }))
-        .catch((response) => {
-          console.log(response);
+      Promise.all([
+        fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
+          .then(response => response.ok ? response.json() : Promise.reject(response))
+          .then(projects => projects.map(project => ({ ...project, isDraft: false }))), // Add isDraft: false to each project
+        fetch(`/get-project-drafts-by-user?institutionId=${this.props.institutionId}`)
+          .then(response => response.ok ? response.json() : Promise.reject(response))
+          .then(projects => projects.map(project => ({ ...project, isDraft: true }))) // Add isDraft: true to each draft project
+      ])
+        .then(([institutionProjects, draftProjects]) => {
+          const combinedProjects = institutionProjects.concat(draftProjects);
+          this.setState({ projectList: combinedProjects });
+        })
+        .catch(error => {
           alert("Error retrieving the project info. See console for details.");
         })
     );
@@ -56,6 +65,65 @@ class ReviewInstitution extends React.Component {
         } else {
           console.log(response);
           alert("Error deleting project. See console for details.");
+        }
+      });
+    }
+  };
+
+  deleteProjectDraft = (projectDraftId) => {
+    if (confirm("Do you REALLY want to delete this project draft? This operation cannot be undone.")) {
+      fetch(`/delete-project-draft?projectDraftId=${projectDraftId}`, { method: "GET" }).then((response) => {
+        if (response.ok) {
+          this.getProjectList();
+          alert("Project " + projectDraftId + " has been deleted.");
+        } else {
+          console.log(response);
+          alert("Error deleting project. See console for details.");
+        }
+      });
+    }
+  };
+
+  deleteProjectsBulk = (projectIds) => {
+    if (confirm("Do you REALLY want to delete ALL selected projects? This operation cannot be undone.")) {
+      fetch(`/delete-projects-bulk?institutionId=${this.props.institutionId}`,
+            { method: "POST",
+              body: JSON.stringify({"projectIds": projectIds}),
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            })
+        .then((response) => {
+        if (response.ok) {
+          this.getProjectList();
+          alert("Selected projects have been deleted.");
+        } else {
+          console.log(response);
+          alert("Error deleting projects. See console for details.");
+        }
+      });
+    }
+  };
+  
+  editProjectsBulk = (projectIds, selectedVisibility) => {
+    if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
+      fetch(`/edit-projects-bulk?institutionId=${this.props.institutionId}`,
+            { method: "POST",
+              body: JSON.stringify({"projectIds": projectIds,
+                                    "visibility": selectedVisibility}),
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            })
+        .then((response) => {
+        if (response.ok) {
+          this.getProjectList();
+          alert(`The visibility of the selected projects have been changed to ${selectedVisibility}`);
+        } else {
+          console.log(response);
+          alert("Error editing project visibility. See console for details.");
         }
       });
     }
@@ -121,10 +189,13 @@ class ReviewInstitution extends React.Component {
             </div>
             <ProjectList
               deleteProject={this.archiveProject}
+              deleteProjectDraft={this.deleteProjectDraft}
               institutionId={this.props.institutionId}
               isAdmin={this.state.isAdmin}
               isVisible={this.state.selectedTab === 0}
               projectList={this.state.projectList}
+              deleteProjectsBulk={this.deleteProjectsBulk}
+              editProjectsBulk={this.editProjectsBulk}
             />
             <ImageryList
               institutionId={this.props.institutionId}
@@ -443,6 +514,51 @@ class ImageryList extends React.Component {
           body: "Error retrieving the imagery list. See console for details.",
         });
       });
+  };
+
+    deleteImageryBulk = (imageryIds) => {
+    if (confirm("Do you REALLY want to delete ALL selected imagery? This operation cannot be undone.")) {
+      fetch(`/delete-projects-bulk?institutionId=${this.props.institutionId}`,
+            { method: "POST",
+              body: JSON.stringify({"projectIds": imageryIds}),
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            })
+        .then((response) => {
+        if (response.ok) {
+          this.getImageryList();
+          alert("Selected imagery have been deleted.");
+        } else {
+          console.log(response);
+          alert("Error deleting imagery. See console for details.");
+        }
+      });
+    }
+  };
+  
+  editImageryBulk = (projectIds, selectedVisibility) => {
+    if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
+      fetch(`/edit-projects-bulk?institutionId=${this.props.institutionId}`,
+            { method: "POST",
+              body: JSON.stringify({"projectIds": projectIds,
+                                    "visibility": selectedVisibility}),
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            })
+        .then((response) => {
+        if (response.ok) {
+          this.getImageryList();
+          alert(`The visibility of the selected imagery have been changed to ${selectedVisibility}`);
+        } else {
+          console.log(response);
+          alert("Error editing imagery. See console for details.");
+        }
+      });
+    }
   };
 
   getNICFILayers = () => {
@@ -1062,14 +1178,36 @@ function Imagery({
   selectEditImagery,
   deleteImagery,
 }) {
+  const [selectedImagery, setSelectedImagery] = useState([]); // State for selected imagery
+
+  const handleCheckboxChange = (event) => {
+    const { checked } = event.target;
+    setSelectedImagery((prev) =>
+      checked ? [...prev, title] : prev.filter((item) => item !== title)
+    );
+  };
+
   return (
     <div className="row mb-1 d-flex">
-      <div className="col-2 pr-0">
+      {/* Checkbox for selection */}
+      <div className="col-1"
+           style={{ paddingLeft: "4.5%" }}>
+        <input
+          type="checkbox"
+          onChange={handleCheckboxChange}
+          checked={selectedImagery.includes(title)}
+        />
+      </div>
+
+      {/* Visibility Button */}
+      <div className="col-2 pr-0 pl-3">
         <div className="btn btn-sm btn-outline-lightgreen btn-block" onClick={toggleVisibility}>
           {visibility === "private" ? "Institution" : "Public"}
         </div>
       </div>
-      <div className="col overflow-hidden">
+
+      {/* Title */}
+      <div className="col overflow-hidden pl-5">
         <button
           className="btn btn-outline-lightgreen btn-sm btn-block text-truncate"
           title={title}
@@ -1078,9 +1216,11 @@ function Imagery({
           {title}
         </button>
       </div>
+
       {canEdit && (
         <>
-          <div className="col-1 pl-0">
+          {/* Edit Button */}
+          <div className="col-1 pl-4">
             <button
               className="btn btn-outline-yellow btn-sm btn-block"
               id="edit-imagery"
@@ -1096,7 +1236,9 @@ function Imagery({
               <SvgIcon icon="edit" size="1rem" />
             </button>
           </div>
-          <div className="col-1 pl-0">
+
+          {/* Delete Button */}
+          <div className="col-1 pl-4">
             <button
               className="btn btn-outline-red btn-sm btn-block"
               id="delete-imagery"
@@ -1118,7 +1260,18 @@ function Imagery({
   );
 }
 
-function ProjectList({ isAdmin, institutionId, projectList, isVisible, deleteProject }) {
+function ProjectList({
+  isAdmin,
+  institutionId,
+  projectList,
+  isVisible,
+  deleteProject,
+  deleteProjectDraft,
+  deleteProjectsBulk,
+  editProjectsBulk,
+}) {
+  const [selectedProjects, setSelectedProjects] = useState([]);
+  
   const noProjects = (msg) => (
     <div style={{ display: "flex" }}>
       <SvgIcon icon="alert" size="1.2rem" />
@@ -1138,8 +1291,12 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
         <Project
           key={uid} // eslint-disable-line react/no-array-index-key
           deleteProject={deleteProject}
+          deleteProjectDraft={deleteProjectDraft}
           isAdmin={isAdmin}
           project={project}
+          institutionId={institutionId}
+          selectedProjects={selectedProjects}
+          setSelectedProjects={setSelectedProjects}
         />
       ));
     }
@@ -1153,6 +1310,7 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
         collected, and green indicates that all plots have been selected.
       </div>
       {isAdmin && (
+        <>
         <div className="row mb-3">
           <div className="col">
             <button
@@ -1173,47 +1331,129 @@ function ProjectList({ isAdmin, institutionId, projectList, isVisible, deletePro
             </button>
           </div>
         </div>
+        <div className="row mb-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          {/* Left-aligned buttons */}
+          <div style={{ display: "flex", gap: "10px" }}>
+            <ProjectVisibilityPopup
+              institutionId={institutionId}
+              selectedProjects={selectedProjects}
+              editProjectsBulk={editProjectsBulk}
+            />
+              <button
+                className="delete-button"
+                style={{ height: "38px" }}
+                onClick={() => deleteProjectsBulk(selectedProjects)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="16"
+                  width="16"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M3 6h18v2H3V6zm2 3h14v12H5V9zm6-7h2v2h-2V2zm-1 5h4v2h-4V7z" />
+                </svg>
+                Delete Selected
+              </button>
+            </div>
+            <div>
+              <DownloadPopup
+                selectedProjects={selectedProjects}
+              />
+            </div>
+          </div>
+          <hr/>
+        </>
       )}
       {renderProjects()}
     </div>
   );
 }
 
-function Project({ project, isAdmin, deleteProject }) {
+function Project({
+  project,
+  isAdmin,
+  deleteProject,
+  deleteProjectDraft,
+  institutionId,
+  selectedProjects,
+  setSelectedProjects
+}) {
   const [learningMaterialOpen, setLearningMaterialOpen] = useState(false);
+
   const toggleLearningMaterial = () => {
     setLearningMaterialOpen(!learningMaterialOpen);
   };
 
+  const handleCheckboxChange = (event) => {
+    const { checked } = event.target;
+    setSelectedProjects((prev) =>
+      checked ? [...prev, project.id] : prev.filter((id) => id !== project.id)
+    );
+  };
+
   return (
     <div className="row mb-1 d-flex">
+      {/* Checkbox for project selection */}
+      <div className="col-1"
+           style={{ paddingLeft: "4.5%" }}>
+        <input
+          type="checkbox"
+          onChange={handleCheckboxChange}
+          checked={selectedProjects.includes(project.id)}
+        />
+      </div>
+
+      {/* Project Privacy Level / Draft Status */}
       <div className="col-2 pr-0">
         <div className="btn btn-sm btn-outline-lightgreen btn-block">
-          {capitalizeFirst(project.privacyLevel)}
+          {project.isDraft ? "Draft" : capitalizeFirst(project.privacyLevel)}
         </div>
       </div>
+
+      {/* Project Name with Status-based Styling */}
       <div className="col overflow-hidden">
-        <a
-          className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-          href={`/collection?projectId=${project.id}`}
-          style={{
-            boxShadow:
-              project.percentComplete === 0.0
-                ? "0px 0px 6px 1px red inset"
-                : project.percentComplete >= 100.0
-                ? "0px 0px 6px 2px #3bb9d6 inset"
-                : "0px 0px 6px 1px yellow inset",
-          }}
-        >
-          {project.name}
-        </a>
+        {project.isDraft ? (
+          <span
+            className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
+            style={{
+              boxShadow: "0px 0px 6px 1px grey inset",
+              cursor: "default",
+            }}
+          >
+            {project.name}
+          </span>
+        ) : (
+          <a
+            className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
+            href={`/collection?projectId=${project.id}`}
+            style={{
+              boxShadow:
+                project.percentComplete === 0.0
+                  ? "0px 0px 6px 1px red inset"
+                  : project.percentComplete >= 100.0
+                  ? "0px 0px 6px 2px #3bb9d6 inset"
+                  : "0px 0px 6px 1px yellow inset",
+            }}
+          >
+            {project.name}
+          </a>
+        )}
       </div>
+
+      {/* Admin Actions */}
       {isAdmin && (
         <>
+          {/* Edit Project */}
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-yellow btn-block"
-              onClick={() => window.location.assign(`/review-project?projectId=${project.id}`)}
+              onClick={() =>
+                window.location.assign(
+                  project.isDraft
+                    ? `/create-project?projectDraftId=${project.id}&institutionId=${institutionId}`
+                    : `/review-project?projectId=${project.id}`
+                )
+              }
               style={{
                 alignItems: "center",
                 display: "flex",
@@ -1226,10 +1466,16 @@ function Project({ project, isAdmin, deleteProject }) {
               <SvgIcon icon="edit" size="1rem" />
             </button>
           </div>
+
+          {/* Delete Project */}
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-red btn-block"
-              onClick={() => deleteProject(project.id)}
+              onClick={() =>
+                project.isDraft
+                  ? deleteProjectDraft(project.id)
+                  : deleteProject(project.id)
+              }
               style={{
                 alignItems: "center",
                 display: "flex",
@@ -1242,6 +1488,8 @@ function Project({ project, isAdmin, deleteProject }) {
               <SvgIcon icon="trash" size="1rem" />
             </button>
           </div>
+
+          {/* Download Plot Data */}
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-lightgreen btn-block"
@@ -1254,11 +1502,17 @@ function Project({ project, isAdmin, deleteProject }) {
               P
             </button>
           </div>
+
+          {/* Download Sample Data */}
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-lightgreen btn-block"
               onClick={() =>
-                window.open(`/dump-project-raw-data?projectId=${project.id}`, "_blank")
+                window.location.assign(
+                  project.draftId
+                    ? `/create-project?institutionId=${institutionId}&draftId=${project.draftId}`
+                    : `/review-project?projectId=${project.id}`
+                )
               }
               title="Download Sample Data"
               type="button"
@@ -1266,17 +1520,25 @@ function Project({ project, isAdmin, deleteProject }) {
               S
             </button>
           </div>
+
+          {/* Learning Material */}
           <div className="col-1 pl-0">
             <button
               className="btn btn-sm btn-outline-lightgreen btn-block"
               onClick={toggleLearningMaterial}
-              title="Display Learning Materal"
+              title="Display Learning Material"
               type="button"
             >
               M
             </button>
           </div>
-          {learningMaterialOpen && <LearningMaterialModal learningMaterial={project.learningMaterial} onClose={toggleLearningMaterial} />}
+
+          {learningMaterialOpen && (
+            <LearningMaterialModal
+              learningMaterial={project.learningMaterial}
+              onClose={toggleLearningMaterial}
+            />
+          )}
         </>
       )}
     </div>
@@ -1414,89 +1676,102 @@ class UserList extends React.Component {
   }
 }
 
-class User extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      userRole: props.user.institutionRole,
-    };
-  }
+function User({ isAdmin, updateUserInstitutionRole, user }) {
+  const [userRole, setUserRole] = useState(user.institutionRole);
+  const [selectedUsers, setSelectedUsers] = useState([]); // State for selected users
 
-  render() {
-    const { isAdmin, updateUserInstitutionRole, user } = this.props;
-
-    return (
-      <div className="row">
-        {!isAdmin && (
-          <div className="col-2 mb-1 pr-0">
-            <div className="btn btn-sm btn-outline-lightgreen btn-block">
-              {capitalizeFirst(user.institutionRole)}
-            </div>
-          </div>
-        )}
-        <div className="col mb-1 overflow-hidden">
-          <button
-            className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-            onClick={() => window.location.assign(`/account?accountId=${user.id}`)}
-            title={user.email}
-            type="button"
-          >
-            {user.email}
-          </button>
-        </div>
-        {isAdmin && (
-          <>
-            <div className="col-2 mb-1 pl-0">
-              <select
-                className="custom-select custom-select-sm"
-                onChange={(e) => this.setState({ userRole: e.target.value })}
-                size="1"
-                value={this.state.userRole}
-              >
-                {this.state.userRole === "pending" && <option value="pending">Pending</option>}
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div className="col-2 mb-1 pl-0">
-              <button
-                className="btn btn-sm btn-outline-yellow btn-block"
-                onClick={() => {
-                  const { userRole } = this.state;
-                  const { institutionRole } = this.props.user;
-                  if (userRole === institutionRole) {
-                    alert("You must change the role of a user in order to update it.");
-                  } else {
-                    const confirmBox = window.confirm(
-                      "Do you really want to update the role of this user?"
-                    );
-                    if (confirmBox) updateUserInstitutionRole(user.id, null, userRole);
-                  }
-                }}
-                type="button"
-              >
-                Update
-              </button>
-            </div>
-            <div className="col-2 mb-1 pl-0">
-              <button
-                className="btn btn-sm btn-outline-red btn-block"
-                onClick={() => {
-                  const confirmBox = window.confirm(
-                    "Do you really want to remove this user from the institution?"
-                  );
-                  if (confirmBox) updateUserInstitutionRole(user.id, null, "not-member");
-                }}
-                type="button"
-              >
-                Remove
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+  const handleCheckboxChange = (event) => {
+    const { checked } = event.target;
+    setSelectedUsers((prev) =>
+      checked ? [...prev, user.id] : prev.filter((id) => id !== user.id)
     );
-  }
+  };
+
+  const handleUpdateRole = () => {
+    if (userRole === user.institutionRole) {
+      alert("You must change the role of a user in order to update it.");
+    } else {
+      const confirmBox = window.confirm(
+        "Do you really want to update the role of this user?"
+      );
+      if (confirmBox) updateUserInstitutionRole(user.id, null, userRole);
+    }
+  };
+
+  const handleRemoveUser = () => {
+    const confirmBox = window.confirm(
+      "Do you really want to remove this user from the institution?"
+    );
+    if (confirmBox) updateUserInstitutionRole(user.id, null, "not-member");
+  };
+
+  return (
+    <div className="row">
+      {/* Checkbox for selection */}
+      <div className="col-1 mb-1"
+           style= {{ paddingLeft: "4.5%" }}>
+        <input
+          type="checkbox"
+          onChange={handleCheckboxChange}
+          checked={selectedUsers.includes(user.id)}
+        />
+      </div>
+
+      {!isAdmin && (
+        <div className="col-2 mb-1 pr-0">
+          <div className="btn btn-sm btn-outline-lightgreen btn-block">
+            {capitalizeFirst(user.institutionRole)}
+          </div>
+        </div>
+      )}
+
+      <div className="col mb-1 overflow-hidden pl-5">
+        <button
+          className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
+          onClick={() => window.location.assign(`/account?accountId=${user.id}`)}
+          title={user.email}
+          type="button"
+        >
+          {user.email}
+        </button>
+      </div>
+
+      {isAdmin && (
+        <>
+          <div className="col-2 mb-1 pl-4">
+            <select
+              className="custom-select custom-select-sm"
+              onChange={(e) => setUserRole(e.target.value)}
+              size="1"
+              value={userRole}
+            >
+              {userRole === "pending" && <option value="pending">Pending</option>}
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div className="col-2 mb-1 pl-4">
+            <button
+              className="btn btn-sm btn-outline-yellow btn-block"
+              onClick={handleUpdateRole}
+              type="button"
+            >
+              Update
+            </button>
+          </div>
+          <div className="col-2 mb-1 pl-4">
+            <button
+              className="btn btn-sm btn-outline-red btn-block"
+              onClick={handleRemoveUser}
+              type="button"
+            >
+              Remove
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 class NewUserButtons extends React.Component {

@@ -1,7 +1,8 @@
-CREATE TABLE project_draft (
+CREATE TABLE project_drafts (
     project_draft_uid SERIAL PRIMARY KEY,
     user_rid INT,
     institution_rid INT,
+    name text NOT NULL,
     project_state JSONB,
     created_date date, 
     updated_date date,

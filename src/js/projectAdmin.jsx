@@ -1,67 +1,16 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import { LoadingModal, NavigationBar } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, SuccessModal } from "./components/PageComponents";
 import CreateProjectWizard from "./project/CreateProjectWizard";
 import ReviewChanges from "./project/ReviewChanges";
 import ManageProject from "./project/ManageProject";
 
-import { ProjectContext } from "./project/constants";
+import { ProjectContext, blankProject } from "./project/constants";
 
 class Project extends React.Component {
   constructor(props) {
     super(props);
-
-    this.blankProject = {
-      institution: -1,
-      name: "",
-      description: "",
-      designSettings: {
-        userAssignment: {
-          userMethod: "none",
-          users: [],
-          percents: [],
-        },
-        qaqcAssignment: {
-          qaqcMethod: "none",
-          percent: 0,
-          smes: [],
-          timesToReview: 2,
-        },
-        sampleGeometries: {
-          points: true,
-          lines: true,
-          polygons: true,
-        },
-      },
-      projectOptions: {
-        showGEEScript: false,
-        showPlotInformation: false,
-        collectConfidence: false,
-        autoLaunchGeoDash: true,
-      },
-      plotDistribution: "random",
-      imageryId: -1,
-      aoiFeatures: [],
-      aoiFileName: "",
-      boundaryType: "manual",
-      numPlots: "",
-      plotSpacing: "",
-      plotShape: "square",
-      plotSize: "",
-      shufflePlots: false,
-      sampleDistribution: "random",
-      sampleResolution: "",
-      samplesPerPlot: "",
-      allowDrawnSamples: false,
-      surveyQuestions: {},
-      surveyRules: [],
-      templateProjectId: -1,
-      useTemplateWidgets: false,
-      useTemplatePlots: false,
-      projectImageryList: [],
-      plots: [],
-    };
 
     this.modes = {
       wizard: CreateProjectWizard,
@@ -71,7 +20,7 @@ class Project extends React.Component {
     };
 
     this.state = {
-      projectDetails: { ...this.blankProject, privacyLevel: "institution" },
+      projectDetails: { ...blankProject, privacyLevel: "institution" },
       originalProject: {},
       institutionImagery: [],
       institutionUserList: [],
@@ -79,6 +28,8 @@ class Project extends React.Component {
       modalMessage: null,
       wizardStep: "overview",
       doiPath: "",
+      successMessage: "",
+      projectDraftId: this.props.projectDraftId
     };
   }
 
@@ -120,7 +71,7 @@ class Project extends React.Component {
   setProjectDetails = (newValue, callBack = () => null) =>
     this.setState({ projectDetails: { ...this.state.projectDetails, ...newValue } }, callBack);
 
-  resetProject = (defaults) => this.setState({ projectDetails: this.blankProject, ...defaults });
+  resetProject = (defaults) => this.setState({ projectDetails: blankProject, ...defaults });
 
   setContextState = (newState) => this.setState(newState);
 
@@ -163,6 +114,7 @@ class Project extends React.Component {
         value={{
           institutionId: this.props.institutionId,
           projectId: this.props.projectId,
+          projectDraftId: this.props.projectDraftId,
           ...this.state.projectDetails, // TODO: Do not spread projectDetails into context.
           originalProject: this.state.originalProject,
           designMode: this.state.designMode,
@@ -177,6 +129,7 @@ class Project extends React.Component {
         }}
       >
         {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
+        {this.state.successMessage && <SuccessModal message={this.state.successMessage} onClose={() => this.setState({ successMessage: ""})}/>}
         <div>
           <CurrentComponent />
         </div>
@@ -191,6 +144,7 @@ export function pageInit(params, session) {
       <Project
         institutionId={parseInt(params.institutionId) || -1}
         projectId={parseInt(params.projectId) || -1}
+        projectDraftId={parseInt(params.projectDraftId) || -1}
       />
     </NavigationBar>,
     document.getElementById("app")
