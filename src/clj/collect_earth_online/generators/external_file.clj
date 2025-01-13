@@ -108,7 +108,7 @@
                                               :extra_plot_info properties})
                             "sample" (conj acc {geom-key (tc/str->pg (json/write-str geometry) "geometry")
                                                 :visible_id (tc/val->int visible-id)
-                                                :plotid (:PLOTID properties)
+                                                :plotid     (:PLOTID properties)
                                                 :extra_plot_info properties}))))
                       [] features)]
     [(keys (first plots)) plots]))
@@ -249,7 +249,9 @@
     ;; TODO check for samples with no plots - OR - ensure that PG errors pass through.
     (map (fn [s]
            (-> s
-               (assoc :plot_rid (get plot-keys (str (:plotid s))))
+               (assoc :plot_rid (or
+                                 (get plot-keys (str (:plotid s)))
+                                 (get plot-keys (:plotid s))))
                (dissoc :plotid)
                (split-ext :extra_sample_info [:plot_rid :visible_id :sample_geom])))
          ext-samples)))
@@ -316,9 +318,26 @@
                 (str "7z a " folder-name "/files" ".zip " folder-name "/*"))
     (str folder-name "files.zip")))
 
+
+(defn remove-old-dir
+  [dir-name]
+  (try
+    (sh-wrapper tmp-dir {} (str "rm -rf ceo-tmp-" dir-name))
+    (catch Exception e
+      (println "Directory doesn't exist"))))
+
 (defn unzip-project
   "Unzips a zip file on /tmp folder."
-  [zip-file-name]
-  (let [output-dir (str tmp-dir "/"
-                        (first (clojure.string/split zip-file-name #"\.")))]
-    (sh-wrapper tmp-dir {} (str "unzip " zip-file-name " -d " output-dir))))
+  [file-name file-base64]
+  (let [file-without-ext (first (clojure.string/split file-name #"\."))
+        _                (remove-old-dir file-without-ext)
+        output-dir       (str tmp-dir
+                              "/ceo-tmp-"
+                              file-without-ext
+                              "/")
+        saved-file       (pu/write-file-part-base64 file-name
+                                                    file-base64
+                                                    output-dir
+                                                    file-without-ext)]
+    (sh-wrapper tmp-dir {} (str "unzip " (str output-dir file-name) " -d " output-dir))
+    output-dir))
