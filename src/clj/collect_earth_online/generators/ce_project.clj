@@ -3,7 +3,7 @@
             [clojure.zip :as zip]
             [clojure.java.io  :as io]
             [clojure.data.csv :as csv]
-            [clojure.string   :as str]
+            [clojure.string   :as cstr]
             [collect-earth-online.generators.external-file :refer [unzip-project]]
             [collect-earth-online.utils.part-utils :refer [read-file-base64]]
             [triangulum.response :refer [data-response]]
@@ -20,7 +20,7 @@
   [code-items]
   (reduce (fn [acc item]
             (assoc acc (keyword (-> item :attrs :id))
-                   {:color  "#000000"
+                   {:color  (format "#%06x" (rand-int 16777216))
                     :answer (-> item :content last :content first)}))
           {}
           code-items))
@@ -73,7 +73,7 @@
 
 (defn find-parent-question-and-answers
   [question-attrs questions code-lists]
-  (if (and (:relevant question-attrs) (not= "false()" (str/lower-case (:relevant question-attrs))))
+  (if (and (:relevant question-attrs) (not= "false()" (cstr/lower-case (:relevant question-attrs))))
     (let [parse-relevance (fn [relevance]
                             (when relevance
                               (if (re-find #"[=/!=]" relevance)
@@ -142,7 +142,7 @@
                    {(-> question-attrs :id Integer/parseInt)
                     {:dataType      (:dataType types)
                      :question      (get-question question)
-                     :cardOrder     (if (and (:relevant question-attrs) (not= "false()" (str/lower-case (:relevant question-attrs))))
+                     :cardOrder     (if (and (:relevant question-attrs) (not= "false()" (cstr/lower-case (:relevant question-attrs))))
                                       nil
                                       (-> question-attrs :id tc/val->int))
                      :componentType (:componentType types)
@@ -172,24 +172,41 @@
             {}
             survey-questions)))
 
-(defn parse-project-properties
-  [file-path]
-  (with-open [f (clojure.java.io/reader (str file-path "/project_definition.properties"))]
-
-      (reduce (fn [acc line]
-                (let [[k v] (clojure.string/split line #"\=")]
-                  (if v
-                    (assoc acc (keyword k) v)
-                    acc)))
-              {}
-              (line-seq f))))
-
 (defn list-files-in-folder
   [dir-path]
   (->> (io/file dir-path)
        .listFiles
        (map #(.getName %))
        (filter #(.endsWith % ".csv"))))
+
+(defn get-plot-csv-headers
+  [dir-path]
+  (let [full-path (str dir-path "grid/")
+        file (first (list-files-in-folder full-path))
+        rows (cstr/split (slurp (str full-path file)) #"\r\n|\n|\r")
+        header-row (first rows)]
+    (set (map cstr/lower-case (cstr/split header-row #",")))))
+
+(defn remove-metadata-questions
+  [survey-questions dir-path]
+  (let [csv-headers (get-plot-csv-headers dir-path)
+        metadata-questions (-> csv-headers
+                               (conj "actively saved by user")
+                               (conj "csv file that contains the plot")
+                               (conj "operator"))]
+    (into {} (remove #(contains? metadata-questions (cstr/lower-case (:question (val %)))) survey-questions))))
+
+(defn parse-project-properties
+  [file-path]
+  (with-open [f (clojure.java.io/reader (str file-path "/project_definition.properties"))]
+
+    (reduce (fn [acc line]
+              (let [[k v] (clojure.string/split line #"\=")]
+                (if v
+                  (assoc acc (keyword k) v)
+                  acc)))
+            {}
+            (line-seq f))))
 
 (defn rename-columns-and-write
   [file-path]
@@ -224,7 +241,7 @@
     {:name               (:survey_name project-properties)
      :description        (:survey_name project-properties)
      :plotDistribution   "csv"
-     :plotShape          (str/lower-case (:sample_shape project-properties))
+     :plotShape          (cstr/lower-case (:sample_shape project-properties))
      :plotSize           (* 2 (tc/val->int (:distance_to_plot_boundaries project-properties)))
      :plotFileName       (str (:survey_name project-properties) ".csv")
      :plotFileBase64     (encode-plot-file dir)
@@ -241,6 +258,9 @@
   (let [file-name (:fileName params)
         file-b64  (:fileb64 params)
         saved-file (unzip-project file-name file-b64)
-        project-properties (format-project-properties saved-file)]
+        project-properties (format-project-properties saved-file)
+        survey-questions (remove-metadata-questions
+                          (create-project-survey saved-file)
+                          saved-file)]
     (data-response (merge project-properties
-                          {:surveyQuestions (create-project-survey saved-file)}))))
+                          {:surveyQuestions survey-questions}))))
