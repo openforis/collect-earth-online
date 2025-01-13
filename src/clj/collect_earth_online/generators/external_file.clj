@@ -108,7 +108,7 @@
                                               :extra_plot_info properties})
                             "sample" (conj acc {geom-key (tc/str->pg (json/write-str geometry) "geometry")
                                                 :visible_id (tc/val->int visible-id)
-                                                :plotid (:PLOTID properties)
+                                                :plotid     (:PLOTID properties)
                                                 :extra_plot_info properties}))))
                       [] features)]
     [(keys (first plots)) plots]))
@@ -249,7 +249,9 @@
     ;; TODO check for samples with no plots - OR - ensure that PG errors pass through.
     (map (fn [s]
            (-> s
-               (assoc :plot_rid (get plot-keys (:plotid s)))
+               (assoc :plot_rid (or
+                                 (get plot-keys (str (:plotid s)))
+                                 (get plot-keys (:plotid s))))
                (dissoc :plotid)
                (split-ext :extra_sample_info [:plot_rid :visible_id :sample_geom])))
          ext-samples)))
