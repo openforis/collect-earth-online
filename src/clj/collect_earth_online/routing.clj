@@ -1,5 +1,6 @@
 (ns collect-earth-online.routing
-  (:require [collect-earth-online.db.doi          :as doi]
+  (:require [collect-earth-online.generators.ce-project :as ce-project]
+            [collect-earth-online.db.doi          :as doi]
             [collect-earth-online.db.geodash      :as geodash]
             [collect-earth-online.db.imagery      :as imagery]
             [collect-earth-online.db.institutions :as institutions]
@@ -124,6 +125,9 @@
    [:post "/update-project-draft"]           {:handler     #'projects/update-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
+   [:post "/import-ce-project"]              {:handler     #'ce-project/import-ce-project
+                                               :auth-type   :user
+                                               :auth-action :block}
    [:get "/delete-project-draft"]            {:handler     #'projects/delete-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
