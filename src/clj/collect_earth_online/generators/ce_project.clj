@@ -232,23 +232,31 @@
         file (read-file-base64 dir)]
     (str "data:text/csv;base64," file)))
 
+(defn calculate-sample-spacing
+  [target-samples plot-size]
+  (let [adjusted-plot-size (- plot-size (/ plot-size 12.5))
+        sample-resolution (/ adjusted-plot-size
+                             (dec (Math/sqrt target-samples)))]
+    (Math/floor sample-resolution)))
+
 (defn format-project-properties
   "Parses properties file into edn format. Used to
    retireve general project information."
   [dir]
   (let [project-properties (parse-project-properties dir)
-        samples-per-plot   (:number_of_sampling_points_in_plot project-properties)]
+        samples-per-plot   (:number_of_sampling_points_in_plot project-properties)
+        plot-size          (* 2 (tc/val->int (:distance_to_plot_boundaries project-properties)))]
     {:name               (:survey_name project-properties)
      :description        (:survey_name project-properties)
      :plotDistribution   "csv"
      :plotShape          (cstr/lower-case (:sample_shape project-properties))
-     :plotSize           (* 2 (tc/val->int (:distance_to_plot_boundaries project-properties)))
+     :plotSize           plot-size
      :plotFileName       (str (:survey_name project-properties) ".csv")
      :plotFileBase64     (encode-plot-file dir)
      :samplesPerPlot     samples-per-plot
      :sampleDistribution "gridded"
      :allowDrawnSamples  false
-     :sampleResolution   (:distance_between_sample_points project-properties)
+     :sampleResolution   (calculate-sample-spacing (tc/val->int samples-per-plot) plot-size)
      :sampleFileName     ""
      :aoiFeatures        [{:type "Polygon" :coordinates [[[-170,-75],[-170,75],[170,75],[170,-75],[-170,-75]]]}]
      :aoiFileName        ""}))
