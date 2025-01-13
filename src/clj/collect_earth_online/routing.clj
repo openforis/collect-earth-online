@@ -56,7 +56,9 @@
    [:get  "/widget-layout-editor"]           {:handler     (render-page "/widget-layout-editor")
                                               :auth-type   :admin
                                               :auth-action :redirect}
-   [:get  "/metrics"]                        {:handler     (render-page "/metrics")}
+   [:get  "/metrics"]                        {:handler     (render-page "/metrics")
+                                              :auth-type   :metrics
+                                              :auth-action :block}
 
    ;; Users API
    [:get  "/get-institution-users"]          {:handler     users/get-institution-users
