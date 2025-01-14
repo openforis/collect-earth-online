@@ -15,13 +15,24 @@
   [dir]
   (xml/parse (io/reader (str dir "/placemark.idm.xml"))))
 
+(defn- get-default-lang-answer
+  [code-item]
+  (let [code-content   (:content code-item)
+        filtered-label (first (filter
+                               (fn [c]
+                                 (and (= :label (:tag c))
+                                      (empty? (:attrs c))))
+                               code-content))]
+    (-> filtered-label :content first)))
+
 (defn- code-items->answers
   "Transforms list of items into CEO's answers"
   [code-items]
   (reduce (fn [acc item]
-            (assoc acc (keyword (-> item :attrs :id))
-                   {:color  (format "#%06x" (rand-int 16777216))
-                    :answer (-> item :content last :content first)}))
+            (let [answer (get-default-lang-answer item)]
+              (assoc acc (keyword (-> item :attrs :id))
+                     {:color  (format "#%06x" (rand-int 16777216))
+                      :answer answer})))
           {}
           code-items))
 
@@ -57,19 +68,6 @@
       first
       :content
       first))
-
-(defn- find-parent-question
-  "Looks for the id of the parent question."
-  [question-attr questions]
-  (if (:relevant question-attr)
-    (or (some (fn [q]
-                (when (= (:relevant question-attr)
-                         (-> q :attrs :name))
-                  {:parent-id (tc/val->int (-> q :attrs :id))
-                   :type (-> q :tag)}))
-              questions)
-        {:parent-id -1})
-    {:parent-id -1}))
 
 (defn find-parent-question-and-answers
   [question-attrs questions code-lists]
@@ -232,31 +230,29 @@
         file (read-file-base64 dir)]
     (str "data:text/csv;base64," file)))
 
-(defn calculate-sample-spacing
-  [target-samples plot-size]
-  (let [adjusted-plot-size (- plot-size (/ plot-size 12.5))
-        sample-resolution (/ adjusted-plot-size
-                             (dec (Math/sqrt target-samples)))]
-    (Math/floor sample-resolution)))
+(defn calculate-plot-size
+  [number-of-samples distance-between-samples distance-to-plot-boundaries]
+  (+ (* distance-between-samples (Math/sqrt number-of-samples)) distance-to-plot-boundaries))
 
 (defn format-project-properties
   "Parses properties file into edn format. Used to
    retireve general project information."
   [dir]
   (let [project-properties (parse-project-properties dir)
-        samples-per-plot   (:number_of_sampling_points_in_plot project-properties)
-        plot-size          (* 2 (tc/val->int (:distance_to_plot_boundaries project-properties)))]
+        samples-per-plot   (tc/val->int (:number_of_sampling_points_in_plot project-properties))
+        distance-boundary  (tc/val->int (:distance_to_plot_boundaries project-properties))
+        distance-between-samples (tc/val->int (:distance_between_sample_points project-properties))]
     {:name               (:survey_name project-properties)
      :description        (:survey_name project-properties)
      :plotDistribution   "csv"
      :plotShape          (cstr/lower-case (:sample_shape project-properties))
-     :plotSize           plot-size
+     :plotSize           (calculate-plot-size samples-per-plot distance-between-samples distance-boundary)
      :plotFileName       (str (:survey_name project-properties) ".csv")
      :plotFileBase64     (encode-plot-file dir)
      :samplesPerPlot     samples-per-plot
      :sampleDistribution "gridded"
      :allowDrawnSamples  false
-     :sampleResolution   (calculate-sample-spacing (tc/val->int samples-per-plot) plot-size)
+     :sampleResolution   distance-between-samples
      :sampleFileName     ""
      :aoiFeatures        [{:type "Polygon" :coordinates [[[-170,-75],[-170,75],[170,75],[170,-75],[-170,-75]]]}]
      :aoiFileName        ""}))
