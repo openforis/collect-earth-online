@@ -7,7 +7,6 @@
             [collect-earth-online.generators.external-file :refer [unzip-project]]
             [collect-earth-online.utils.part-utils :refer [read-file-base64]]
             [triangulum.response :refer [data-response]]
-            [triangulum.logging :refer [log]]
             [triangulum.type-conversion :as tc]))
 
 (defn read-xml-file
@@ -231,8 +230,8 @@
     (str "data:text/csv;base64," file)))
 
 (defn calculate-plot-size
-  [number-of-samples distance-between-samples distance-to-plot-boundaries]
-  (+ (* distance-between-samples (Math/sqrt number-of-samples)) distance-to-plot-boundaries))
+  [number-of-samples distance-between-samples]
+  (* distance-between-samples (Math/sqrt number-of-samples)) )
 
 (defn format-project-properties
   "Parses properties file into edn format. Used to
@@ -240,13 +239,12 @@
   [dir]
   (let [project-properties (parse-project-properties dir)
         samples-per-plot   (tc/val->int (:number_of_sampling_points_in_plot project-properties))
-        distance-boundary  (tc/val->int (:distance_to_plot_boundaries project-properties))
         distance-between-samples (tc/val->int (:distance_between_sample_points project-properties))]
     {:name               (:survey_name project-properties)
      :description        (:survey_name project-properties)
      :plotDistribution   "csv"
      :plotShape          (cstr/lower-case (:sample_shape project-properties))
-     :plotSize           (calculate-plot-size samples-per-plot distance-between-samples distance-boundary)
+     :plotSize           (calculate-plot-size samples-per-plot distance-between-samples)
      :plotFileName       (str (:survey_name project-properties) ".csv")
      :plotFileBase64     (encode-plot-file dir)
      :samplesPerPlot     samples-per-plot

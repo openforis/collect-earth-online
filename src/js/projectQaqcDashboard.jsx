@@ -333,6 +333,8 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
     console.log(activeTab);
     if(activeTab === 1) {
       getPlotData(-10000000, "next");
+      setNewPlotId(plotId);
+      setInputPlotId(plotId);
     }
   }, [activeTab]);
   

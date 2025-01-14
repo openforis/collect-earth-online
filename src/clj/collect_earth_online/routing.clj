@@ -56,6 +56,10 @@
    [:get  "/widget-layout-editor"]           {:handler     (render-page "/widget-layout-editor")
                                               :auth-type   :admin
                                               :auth-action :redirect}
+   [:get  "/project-qaqc-dashboard"]         {:handler     (render-page "/project-qaqc-dashboard")
+                                              :auth-type   :admin
+                                              :auth-action :redirect}
+
    ;; Users API
    [:get  "/get-institution-users"]          {:handler     users/get-institution-users
                                               :auth-type   :user

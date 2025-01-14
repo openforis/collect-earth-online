@@ -16,7 +16,7 @@
                 {(keyword (str (:user_id sample)))
                  {(keyword (str (:visible_id sample)))
                   (jsonb->clj-str (:saved_answers sample))}})
-              (call-sql "select_plot_samples" {:log? false} plot-id))))
+              (call-sql "select_plot_samples_qaqc" {:log? false} plot-id))))
 
 (defn merge-sample-data
   "Merge answers from multiple users for each sample and question"
