@@ -283,3 +283,52 @@ CREATE OR REPLACE FUNCTION add_imagery_to_all_institution_projects(_imagery_id i
     ON CONFLICT DO NOTHING
 
 $$ LANGUAGE SQL;
+
+-- Delete imagery by id in bulk
+CREATE OR REPLACE FUNCTION archive_imagery_bulk(_imagery_ids_text TEXT)
+RETURNS VOID AS $$
+DECLARE
+    imagery_ids INTEGER[];
+BEGIN
+    SELECT string_to_array(_imagery_ids_text, ',')::INTEGER[]
+    INTO imagery_ids;
+
+    UPDATE imagery
+    SET archived = true
+    WHERE imagery_uid = ANY(imagery_ids);
+
+    UPDATE projects
+    SET imagery_rid = (SELECT select_first_public_imagery())
+    WHERE imagery_rid = ANY(imagery_ids);
+
+    UPDATE project_widgets
+    SET widget = jsonb_set(widget, '{"basemapId"}', to_jsonb((SELECT select_public_osm())))
+    WHERE (widget->>'basemapId')::integer = ANY(imagery_ids);
+
+    DELETE FROM project_imagery
+    WHERE imagery_rid = ANY(imagery_ids);
+
+END;
+$$ LANGUAGE plpgsql;
+
+-- Updates institution imagery visibility (this is only for the super user)
+CREATE OR REPLACE FUNCTION update_imagery_visibility_bulk(
+    _imagery_id        integer,
+    _visibility        text,
+    _institution_id    integer
+ ) RETURNS void AS $$
+
+    UPDATE imagery
+    SET visibility = _visibility
+    WHERE imagery_uid = _imagery_id;
+
+    UPDATE projects
+    SET imagery_rid = (SELECT select_first_public_imagery())
+    WHERE imagery_rid = _imagery_id
+        AND institution_rid <> _institution_id;
+
+    DELETE FROM project_imagery
+    WHERE imagery_rid = _imagery_id
+        AND project_rid IN (SELECT project_uid FROM projects WHERE institution_rid <> _institution_id);
+
+$$ LANGUAGE SQL;

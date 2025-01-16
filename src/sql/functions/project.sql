@@ -1304,13 +1304,14 @@ DECLARE
 BEGIN
     SELECT string_to_array(_project_ids_text, ',')::INTEGER[]
     INTO project_ids;
-    DELETE FROM projects
+    update projects
+    set availability = 'archived'
     WHERE project_uid = ANY(project_ids) AND institution_rid = _institution_id;
     
 END;
 $$ LANGUAGE plpgsql;
 
--- Delete projects in bulk
+-- Edit projects privacy_level in bulk
 CREATE OR REPLACE FUNCTION edit_projects_bulk(_institution_id integer, _project_ids_text TEXT, _privacy_level TEXT)
 RETURNS VOID AS $$
 DECLARE

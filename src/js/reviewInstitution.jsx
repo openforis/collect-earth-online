@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
 import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
 import SvgIcon from "./components/svg/SvgIcon";
 import { LoadingModal, NavigationBar, LearningMaterialModal } from "./components/PageComponents";
-import { ProjectVisibilityPopup, DownloadPopup } from "./components/BulkPopups";
+import { ProjectVisibilityPopup, DownloadPopup, ImageryVisibilityPopup } from "./components/BulkPopups";
 
 import { sortAlphabetically, capitalizeFirst, KBtoBase64Length } from "./utils/generalUtils";
 import { safeLength } from "./utils/sequence";
@@ -129,6 +129,57 @@ class ReviewInstitution extends React.Component {
     }
   };
 
+  deleteImageryBulk = (imageryIds, getImageryList) => {
+    fetch("/bulk-archive-institution-imagery", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        institutionId: this.props.institutionId,
+        imageryIds,
+      }),
+    }).then((response) => {
+      if (response.ok) {
+        getImageryList();
+        showAlert({
+          title: "Imagery Deleted",
+          body: "Imagery has been successfully deleted.",
+        });
+      } else {
+        console.error(response);
+        showAlert({
+          title: "Error",
+          body: "Error deleting imagery. See console for details.",
+        });
+      }
+    });
+  };
+
+  editImageryBulk = (projectIds, selectedVisibility) => {
+    if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
+      fetch(`/edit-projects-bulk?institutionId=${this.props.institutionId}`,
+            { method: "POST",
+              body: JSON.stringify({"projectIds": projectIds,
+                                    "visibility": selectedVisibility}),
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            })
+        .then((response) => {
+        if (response.ok) {
+          this.getProjectList();
+          alert(`The visibility of the selected projects have been changed to ${selectedVisibility}`);
+        } else {
+          console.log(response);
+          alert("Error editing project visibility. See console for details.");
+        }
+      });
+    }
+  };
+
   /// Set State
 
   setImageryCount = (newCount) => this.setState({ imageryCount: newCount });
@@ -203,6 +254,8 @@ class ReviewInstitution extends React.Component {
               isVisible={this.state.selectedTab === 1}
               setImageryCount={this.setImageryCount}
               userId={this.props.userId}
+              deleteImageryBulk={this.deleteImageryBulk}
+              editImageryBulk={this.editImageryBulk}
             />
             {this.props.userId > 0 && (
               <UserList
@@ -477,113 +530,81 @@ class InstitutionDescription extends React.Component {
   }
 }
 
-class ImageryList extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      imageryToEdit: null,
-      imageryList: [],
-      nicfiLayers: [],
-    };
-  }
+const ImageryList = (
+  { isVisible,
+    institutionId,
+    isAdmin,
+    setImageryCount,
+    userId,
+    deleteImageryBulk,
+    editImageryBulk,
+  }) => {
+  const [imageryToEdit, setImageryToEdit] = useState(null);
+  const [imageryList, setImageryList] = useState([]);
+  const [nicfiLayers, setNicfiLayers] = useState([]);
+  const [messageBox, setMessageBox] = useState(null);
+  const [selectedImagery, setSelectedImagery] = useState([]);
 
-  //    Life Cycle Methods    //
-
-  componentDidMount() {
-    this.getNICFILayers();
-    this.getImageryList();
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.imageryList.length !== prevState.imageryList.length) {
-      this.props.setImageryCount(this.state.imageryList.length);
-    }
-  }
-
-  //    Remote Calls    //
-
-  getImageryList = () => {
-    fetch(`/get-institution-imagery?institutionId=${this.props.institutionId}`)
+  // Fetch NICFI layers
+  useEffect(() => {
+    fetch("/get-nicfi-dates")
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => this.setState({ imageryList: data }))
-      .catch((response) => {
-        this.setState({ imageryList: [] });
-        console.log(response);
-        this.showAlert({
+      .then((layers) => setNicfiLayers(layers))
+      .catch((error) => console.error(error));
+  }, []);
+
+  // Fetch imagery list
+  useEffect(() => {
+    fetch(`/get-institution-imagery?institutionId=${institutionId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => setImageryList(data))
+      .catch(() => {
+        setImageryList([]);
+        showAlert({
+          title: "Error",
+          body: "Error retrieving the imagery list. See console for details.",
+        });
+      });
+  }, [institutionId]);
+
+  // Update imagery count
+  useEffect(() => {
+    setImageryCount(imageryList.length);
+  }, [imageryList, setImageryCount]);
+
+  const showAlert = ({ title, body, closeText }) => {
+    setMessageBox({ body, closeText, title, type: "alert" });
+  };
+
+  const getImageryList = () => {
+    fetch(`/get-institution-imagery?institutionId=${institutionId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => setImageryList(data))
+      .catch(() => {
+        setImageryList([]);
+        showAlert({
           title: "Error",
           body: "Error retrieving the imagery list. See console for details.",
         });
       });
   };
 
-    deleteImageryBulk = (imageryIds) => {
-    if (confirm("Do you REALLY want to delete ALL selected imagery? This operation cannot be undone.")) {
-      fetch(`/delete-projects-bulk?institutionId=${this.props.institutionId}`,
-            { method: "POST",
-              body: JSON.stringify({"projectIds": imageryIds}),
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-            })
-        .then((response) => {
-        if (response.ok) {
-          this.getImageryList();
-          alert("Selected imagery have been deleted.");
-        } else {
-          console.log(response);
-          alert("Error deleting imagery. See console for details.");
-        }
-      });
-    }
-  };
-  
-  editImageryBulk = (projectIds, selectedVisibility) => {
-    if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
-      fetch(`/edit-projects-bulk?institutionId=${this.props.institutionId}`,
-            { method: "POST",
-              body: JSON.stringify({"projectIds": projectIds,
-                                    "visibility": selectedVisibility}),
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-            })
-        .then((response) => {
-        if (response.ok) {
-          this.getImageryList();
-          alert(`The visibility of the selected imagery have been changed to ${selectedVisibility}`);
-        } else {
-          console.log(response);
-          alert("Error editing imagery. See console for details.");
-        }
-      });
-    }
-  };
+  const selectAddImagery = () => setImageryToEdit({ id: -1 });
 
-  getNICFILayers = () => {
-    fetch("/get-nicfi-dates")
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((layers) => this.setState({ nicfiLayers: layers }))
-      .catch((error) => console.error(error));
-  };
-
-  selectAddImagery = () => this.setState({ imageryToEdit: { id: -1 } });
-
-  selectEditImagery = (imageryId) => {
-    const imagery = this.state.imageryList.find((i) => i.id === imageryId);
-    if (imageryOptions.find((io) => io.type === imagery.sourceConfig.type)) {
-      this.setState({ imageryToEdit: imagery });
+  const selectEditImagery = (imageryId) => {
+    const imagery = imageryList.find((i) => i.id === imageryId);
+    if (imagery && imageryOptions.find((io) => io.type === imagery.sourceConfig.type)) {
+      setImageryToEdit(imagery);
     } else {
-      this.showAlert({
+      showAlert({
         title: "Imagery Not Supported",
         body: "This imagery type is no longer supported and cannot be edited.",
       });
     }
   };
 
-  deleteImagery = (imageryId) => {
-    this.setState({ messageBox: null });
+  const deleteImagery = (imageryId) => {
+    setMessageBox(null);
     fetch("/archive-institution-imagery", {
       method: "POST",
       headers: {
@@ -591,19 +612,19 @@ class ImageryList extends React.Component {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        institutionId: this.props.institutionId,
+        institutionId,
         imageryId,
       }),
     }).then((response) => {
       if (response.ok) {
-        this.getImageryList();
-        this.showAlert({
+        getImageryList();
+        showAlert({
           title: "Imagery Deleted",
           body: "Imagery has been successfully deleted.",
         });
       } else {
-        console.log(response);
-        this.showAlert({
+        console.error(response);
+        showAlert({
           title: "Error",
           body: "Error deleting imagery. See console for details.",
         });
@@ -611,11 +632,11 @@ class ImageryList extends React.Component {
     });
   };
 
-  toggleVisibility = (imageryId, currentVisibility) => {
+  const toggleVisibility = (imageryId, currentVisibility) => {
     const toVisibility = currentVisibility === "private" ? "public" : "private";
     if (
-      this.props.userId === 1 &&
-      confirm(
+      userId === 1 &&
+      window.confirm(
         `Do you want to change the visibility from ${currentVisibility} to ${toVisibility}?` +
           `${
             toVisibility === "private" &&
@@ -630,20 +651,20 @@ class ImageryList extends React.Component {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          institutionId: this.props.institutionId,
+          institutionId,
           visibility: toVisibility,
           imageryId,
         }),
       }).then((response) => {
         if (response.ok) {
-          this.getImageryList();
-          this.showAlert({
+          getImageryList();
+          showAlert({
             title: "Imagery Updated",
             body: "Imagery visibility has been successfully updated.",
           });
         } else {
-          console.log(response);
-          this.showAlert({
+          console.error(response);
+          showAlert({
             title: "Error",
             body: "Error updating imagery visibility. See console for details.",
           });
@@ -652,101 +673,97 @@ class ImageryList extends React.Component {
     }
   };
 
-  //    State Modifications    //
+  const titleIsTaken = (newTitle, idToExclude) =>
+    imageryList.some((i) => i.title === newTitle && i.id !== idToExclude);
 
-  hideEditMode = () => this.setState({ imageryToEdit: null });
+  const hideEditMode = () => setImageryToEdit(null);
 
-  //    Helper Functions    //
+  if (!isVisible) return null;
 
-  titleIsTaken = (newTitle, idToExclude) =>
-    this.state.imageryList.some((i) => i.title === newTitle && i.id !== idToExclude);
-
-  showDeleteImageryWarning = (id) =>
-    this.setState({
-      messageBox: {
-        body: "Are you sure you want to delete this imagery? This is irreversible.",
-        closeText: "Cancel",
-        confirmText: "Yes, I'm sure",
-        danger: true,
-        onConfirm: () => this.deleteImagery(id),
-        title: "Warning: Removing Imagery",
-        type: "confirm",
-      },
-    });
-
-  showAlert = ({ title, body, closeText }) =>
-    this.setState({
-      messageBox: {
-        body,
-        closeText,
-        title,
-        type: "alert",
-      },
-    });
-
-  render() {
-    return (
-      this.props.isVisible &&
-      (this.state.imageryToEdit ? (
-        <NewImagery
-          getImageryList={this.getImageryList}
-          hideEditMode={this.hideEditMode}
-          imageryToEdit={this.state.imageryToEdit}
-          institutionId={this.props.institutionId}
-          nicfiLayers={this.state.nicfiLayers}
-          titleIsTaken={this.titleIsTaken}
-        />
-      ) : (
+  return imageryToEdit ? (
+    <NewImagery
+      getImageryList={getImageryList}
+      hideEditMode={hideEditMode}
+      imageryToEdit={imageryToEdit}
+      institutionId={institutionId}
+      nicfiLayers={nicfiLayers}
+      titleIsTaken={titleIsTaken}
+    />
+  ) : (
+    <>
+      <div className="mb-3">
+        This is a list of available imagery for this institution. For each project you can select
+        to use some or all of these imagery.
+      </div>
+      {isAdmin && (
         <>
-          <div className="mb-3">
-            This is a list of available imagery for this institution. For each project you can
-            select to use some or all of these imagery.
-          </div>
-          {this.props.isAdmin && (
-            <div className="row">
-              <div className="col-lg-12 mb-3">
-                <button
-                  className="btn btn-sm btn-block btn-lightgreen py-2 font-weight-bold"
-                  id="add-imagery-button"
-                  onClick={this.selectAddImagery}
-                  style={{
-                    alignItems: "center",
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                  type="button"
-                >
-                  <SvgIcon icon="plus" size="1rem" />
-                  <span style={{ marginLeft: "0.4rem" }}>Add New Imagery</span>
-                </button>
-              </div>
+          <div className="row">
+            <div className="col-lg-12 mb-3">
+              <button
+                className="btn btn-sm btn-block btn-lightgreen py-2 font-weight-bold"
+                id="add-imagery-button"
+                onClick={selectAddImagery}
+                style={{
+                  alignItems: "center",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+                type="button"
+              >
+                <SvgIcon icon="plus" size="1rem" />
+                <span style={{ marginLeft: "0.4rem" }}>Add New Imagery</span>
+              </button>
             </div>
-          )}
-          {this.state.imageryList.length === 0 ? (
-            <h3>Loading imagery...</h3>
-          ) : (
-            this.state.imageryList.map(({ id, title, institution, visibility }) => (
-              <Imagery
-                key={id}
-                canEdit={this.props.isAdmin && this.props.institutionId === institution}
-                deleteImagery={() => this.showDeleteImageryWarning(id)}
-                selectEditImagery={() => this.selectEditImagery(id)}
-                title={title}
-                toggleVisibility={() => this.toggleVisibility(id, visibility)}
-                visibility={visibility}
-              />
-            ))
-          )}
-          {this.state.messageBox && (
-            <Modal {...this.state.messageBox} onClose={() => this.setState({ messageBox: null })}>
-              <p>{this.state.messageBox.body}</p>
-            </Modal>
-          )}
+          </div>
+          <div className="row mb-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <ImageryVisibilityPopup selectedImagery={null} editImageryBulk={editImageryBulk} />
+              <button
+                className="delete-button"
+                style={{ height: "38px" }}
+                onClick={() => deleteImageryBulk(selectedImagery, getImageryList)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="16"
+                  width="16"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M3 6h18v2H3V6zm2 3h14v12H5V9zm6-7h2v2h-2V2zm-1 5h4v2h-4V7z" />
+                </svg>
+                Delete Selected
+              </button>
+            </div>
+          </div>
+          <hr/>
         </>
-      ))
-    );
-  }
-}
+      )}
+      {imageryList.length === 0 ? (
+        <h3>Loading imagery...</h3>
+      ) : (
+        imageryList.map(({ id, title, institution, visibility }) => (
+          <Imagery
+            key={id}
+            imageryId={id}
+            canEdit={isAdmin && institutionId === institution}
+            deleteImagery={() => deleteImagery(id)}
+            selectEditImagery={() => selectEditImagery(id)}
+            title={title}
+            toggleVisibility={() => toggleVisibility(id, visibility)}
+            visibility={visibility}
+            selectedImagery={selectedImagery}
+            setSelectedImagery={setSelectedImagery}
+          />
+        ))
+      )}
+      {messageBox && (
+        <Modal {...messageBox} onClose={() => setMessageBox(null)}>
+          <p>{messageBox.body}</p>
+        </Modal>
+      )}
+    </>
+  );
+};
 
 class NewImagery extends React.Component {
   constructor(props) {
@@ -1171,19 +1188,21 @@ class NewImagery extends React.Component {
 }
 
 function Imagery({
+  imageryId,
   title,
   canEdit,
   visibility,
   toggleVisibility,
   selectEditImagery,
   deleteImagery,
+  selectedImagery,
+  setSelectedImagery
 }) {
-  const [selectedImagery, setSelectedImagery] = useState([]); // State for selected imagery
 
   const handleCheckboxChange = (event) => {
     const { checked } = event.target;
     setSelectedImagery((prev) =>
-      checked ? [...prev, title] : prev.filter((item) => item !== title)
+      checked ? [...prev, imageryId] : prev.filter((item) => item !== imageryId)
     );
   };
 
@@ -1195,7 +1214,7 @@ function Imagery({
         <input
           type="checkbox"
           onChange={handleCheckboxChange}
-          checked={selectedImagery.includes(title)}
+          checked={selectedImagery.includes(imageryId)}
         />
       </div>
 
@@ -1331,14 +1350,12 @@ function ProjectList({
             </button>
           </div>
         </div>
-        <div className="row mb-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          {/* Left-aligned buttons */}
-          <div style={{ display: "flex", gap: "10px" }}>
-            <ProjectVisibilityPopup
-              institutionId={institutionId}
-              selectedProjects={selectedProjects}
-              editProjectsBulk={editProjectsBulk}
-            />
+          <div className="row mb-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <ProjectVisibilityPopup
+                selectedProjects={selectedProjects}
+                editProjectsBulk={editProjectsBulk}
+              />
               <button
                 className="delete-button"
                 style={{ height: "38px" }}
@@ -1774,67 +1791,51 @@ function User({ isAdmin, updateUserInstitutionRole, user }) {
   );
 }
 
-class NewUserButtons extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      newUserEmail: "",
-    };
-  }
+const NewUserButtons = ({
+  isAdmin,
+  isInstitutionMember,
+  updateUserInstitutionRole,
+  userId,
+  currentIsInstitutionMember,
+  requestMembership,
+}) => {
+  const [newUserEmail, setNewUserEmail] = useState([]);
 
-  checkUserEmail = () => {
-    if (this.state.newUserEmail === "") {
-      alert("Please enter an existing user's email address.");
+  const checkUserEmail = () => {
+    if (newUserEmails.length === 0) {
+      alert("Please enter at least one existing user's email address.");
       return false;
-    } else if (this.props.isInstitutionMember(this.state.newUserEmail)) {
-      alert(this.state.newUserEmail + " is already a member of this institution.");
+    } else if (isInstitutionMember(newUserEmail)) {
+      alert(newUserEmail + " is already a member of this institution.");
       return false;
     } else {
       return true;
     }
   };
 
-  addUser = () => this.props.updateUserInstitutionRole(null, this.state.newUserEmail, "member");
+  const addUser = () => {
+    updateUserInstitutionRole(null, newUserEmail, "member");
+  };
 
-  render() {
-    return (
-      <>
-        {this.props.isAdmin && (
-          <div className="row mb-3">
-            <div className="col-8">
-              <input
-                autoComplete="off"
-                className="form-control form-control-sm py-2"
-                onChange={(e) => this.setState({ newUserEmail: e.target.value })}
-                placeholder="Email"
-                style={{ height: "100%" }}
-                type="email"
-                value={this.state.newUserEmail}
-              />
-            </div>
-            <div className="col-4 pl-0">
-              <button
-                className="btn btn-sm btn-lightgreen btn-block py-2 font-weight-bold"
-                onClick={() => this.checkUserEmail() && this.addUser()}
-                style={{
-                  alignItems: "center",
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-                type="button"
-              >
-                <SvgIcon icon="plus" size="1rem" />
-                <span style={{ marginLeft: "0.4rem" }}>Add User</span>
-              </button>
-            </div>
+  return (
+    <>
+      {isAdmin && (
+        <div className="row mb-3">
+          <div className="col-8">
+            <input
+              autoComplete="off"
+              className="form-control form-control-sm py-2"
+              onChange={(e) => setNewUserEmail(e.target.value)}
+              placeholder="Email"
+              style={{ height: "100%" }}
+              type="email"
+              value={newUserEmail}
+            />
           </div>
-        )}
-        {this.props.userId > 0 && !this.props.currentIsInstitutionMember && (
-          <div>
+          <div className="col-4 pl-0">
             <button
-              className="btn btn-sm btn-lightgreen btn-block mb-3"
-              id="request-membership-button"
-              onClick={this.props.requestMembership}
+              className="btn btn-sm btn-lightgreen btn-block py-2 font-weight-bold"
+              onClick={() => checkUserEmail() && addUser()}
               style={{
                 alignItems: "center",
                 display: "flex",
@@ -1843,14 +1844,111 @@ class NewUserButtons extends React.Component {
               type="button"
             >
               <SvgIcon icon="plus" size="1rem" />
-              <span style={{ marginLeft: "0.4rem" }}>Request Membership</span>
+              <span style={{ marginLeft: "0.4rem" }}>Add User</span>
             </button>
           </div>
-        )}
-      </>
-    );
-  }
-}
+        </div>
+      )}
+      {userId > 0 && !currentIsInstitutionMember && (
+        <div>
+          <button
+            className="btn btn-sm btn-lightgreen btn-block mb-3"
+            id="request-membership-button"
+            onClick={requestMembership}
+            style={{
+              alignItems: "center",
+              display: "flex",
+              justifyContent: "center",
+            }}
+            type="button"
+          >
+            <SvgIcon icon="plus" size="1rem" />
+            <span style={{ marginLeft: "0.4rem" }}>Request Membership</span>
+          </button>
+        </div>
+      )}
+    </>
+  );
+};
+
+// class NewUserButtons extends React.Component {
+//   constructor(props) {
+//     super(props);
+//     this.state = {
+//       newUserEmails: [],
+//     };
+//   }
+
+//   checkUserEmail = () => {
+//     if (this.state.newUserEmail === "") {
+//       alert("Please enter an existing user's email address.");
+//       return false;
+//     } else if (this.props.isInstitutionMember(this.state.newUserEmail)) {
+//       alert(this.state.newUserEmail + " is already a member of this institution.");
+//       return false;
+//     } else {
+//       return true;
+//     }
+//   };
+
+
+//   addUser = () => this.props.updateUserInstitutionRole(null, this.state.newUserEmail, "member");
+
+//   render() {
+//     return (
+//       <>
+//         {this.props.isAdmin && (
+//           <div className="row mb-3">
+//             <div className="col-8">
+//               <input
+//                 autoComplete="off"
+//                 className="form-control form-control-sm py-2"
+//                 onChange={(e) => this.setState({ newUserEmail: e.target.value })}
+//                 placeholder="Email"
+//                 style={{ height: "100%" }}
+//                 type="email"
+//                 value={this.state.newUserEmail}
+//               />
+//             </div>
+//             <div className="col-4 pl-0">
+//               <button
+//                 className="btn btn-sm btn-lightgreen btn-block py-2 font-weight-bold"
+//                 onClick={() => this.checkUserEmail() && this.addUser()}
+//                 style={{
+//                   alignItems: "center",
+//                   display: "flex",
+//                   justifyContent: "center",
+//                 }}
+//                 type="button"
+//               >
+//                 <SvgIcon icon="plus" size="1rem" />
+//                 <span style={{ marginLeft: "0.4rem" }}>Add User</span>
+//               </button>
+//             </div>
+//           </div>
+//         )}
+//         {this.props.userId > 0 && !this.props.currentIsInstitutionMember && (
+//           <div>
+//             <button
+//               className="btn btn-sm btn-lightgreen btn-block mb-3"
+//               id="request-membership-button"
+//               onClick={this.props.requestMembership}
+//               style={{
+//                 alignItems: "center",
+//                 display: "flex",
+//                 justifyContent: "center",
+//               }}
+//               type="button"
+//             >
+//               <SvgIcon icon="plus" size="1rem" />
+//               <span style={{ marginLeft: "0.4rem" }}>Request Membership</span>
+//             </button>
+//           </div>
+//         )}
+//       </>
+//     );
+//   }
+// }
 
 export function pageInit(params, session) {
   ReactDOM.render(
