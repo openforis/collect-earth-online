@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 
 import { LearningMaterialModal } from "../components/PageComponents";
 import { capitalizeFirst,  readFileAsBase64Url } from "../utils/generalUtils";
+import { filterObject } from "../utils/sequence";
 import { ProjectContext } from "./constants";
 
 export function Overview(props) {
@@ -16,6 +17,8 @@ export function Overview(props) {
     learningMaterial
   } = useContext(ProjectContext);
 
+  const [selectedType, setSelectedType] = useState(props.projectType);
+  
   const importCollectProject = (fileName, fileb64) => {
     fetch(`/import-ce-project`, {
       method: "POST",
@@ -33,6 +36,17 @@ export function Overview(props) {
         setProjectDetails(data, props.checkAllSteps);
       });
   };
+
+  const changeProjectType = (event) => {
+    const selectedValue = event.target.value;
+    const steps = props.steps;
+    const updatedSteps = (selectedValue === "full") ?
+          props.fullProjectSteps :
+          filterObject(steps, ([key, _val]) =>
+            ["overview", "imagery", "plots", "questions"].includes(key));
+    props.updateProjectType(selectedValue);
+    props.updateSteps(updatedSteps);
+  }
 
   return (
     <div id="project-info">
@@ -58,6 +72,23 @@ export function Overview(props) {
       <br/>
       <h3>Project Information</h3>
       <div className="ml-3">
+        <div className="form-group">
+          <label htmlFor="project-name">Project Type</label>
+          <select
+            id="projectType"
+            value={selectedType}
+            onChange={changeProjectType}
+            style={{
+              padding: "0.5rem",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              width: "100%",
+            }}
+          >
+        <option value="full">Full Project</option>
+        <option value="simplified">Simplified Project</option>
+      </select>
+        </div>
         <div className="form-group">
           <label htmlFor="project-name">Name</label>
           <input
