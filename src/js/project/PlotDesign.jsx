@@ -87,7 +87,7 @@ export class PlotDesign extends React.Component {
 
   /// Render Functions
 
-  renderLabeledInput = (label, property) => (
+  renderLabeledInput = (label, property, disabled = false) => (
     <div className="form-group" style={{ width: "fit-content" }}>
       <label htmlFor={property}>{label}</label>
       <input
@@ -98,6 +98,7 @@ export class PlotDesign extends React.Component {
         step="1"
         type="number"
         value={this.context[property] || ""}
+        disabled = {disabled}
       />
     </div>
   );
@@ -273,6 +274,8 @@ export class PlotDesign extends React.Component {
 
   renderAOISelector = () => {
     const { boundaryType } = this.context;
+    const { projectType } = this.props;
+    const disableSelector = (projectType === "simplified") ? true : false;
     const boundaryOptions = [
       { value: "manual", label: "Input coordinates" },
       { value: "file", label: "Upload shp file" },
@@ -285,6 +288,7 @@ export class PlotDesign extends React.Component {
             className="form-control form-control-sm"
             onChange={(e) => this.setPlotDetails({ boundaryType: e.target.value })}
             value={boundaryType}
+            disabled={disableSelector}
           >
             {boundaryOptions.map(({ value, label }) => (
               <option key={value} value={value}>
@@ -408,6 +412,7 @@ export class PlotDesign extends React.Component {
 
   renderRandom = () => {
     const { aoiFeatures, plotShape } = this.context;
+    const projectType = this.props.projectType;
     const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
     return (
       <div>
@@ -498,6 +503,7 @@ export class PlotDesign extends React.Component {
                     : this.setPlotDetails({ plotDistribution: e.target.value })
                 }
                 value={plotDistribution}
+                disabled={this.props.projectType === "simplified"}
               >
                 {Object.entries(plotOptions).map(([key, options]) => (
                   <option key={key} value={key}>
