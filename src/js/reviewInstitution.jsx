@@ -38,7 +38,7 @@ class ReviewInstitution extends React.Component {
   getProjectList = () => {
     this.processModal(
       "Loading institution data",
-      Promise.all([
+      Promise.allSettled([
         fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
           .then(response => response.ok ? response.json() : Promise.reject(response))
           .then(projects => projects.map(project => ({ ...project, isDraft: false }))), // Add isDraft: false to each project
@@ -46,16 +46,21 @@ class ReviewInstitution extends React.Component {
           .then(response => response.ok ? response.json() : Promise.reject(response))
           .then(projects => projects.map(project => ({ ...project, isDraft: true }))) // Add isDraft: true to each draft project
       ])
-        .then(([institutionProjects, draftProjects]) => {
+        .then(results => {
+          const institutionProjects =
+            results[0].status === "fulfilled" ? results[0].value : [];
+          const draftProjects =
+            results[1].status === "fulfilled" ? results[1].value : [];
+
           const combinedProjects = institutionProjects.concat(draftProjects);
           this.setState({ projectList: combinedProjects });
         })
-        .catch(error => {
+        .catch(() => {
           alert("Error retrieving the project info. See console for details.");
+          console.error("Both requests failed.");
         })
     );
   };
-
   archiveProject = (projectId) => {
     if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
       fetch(`/archive-project?projectId=${projectId}`, { method: "POST" }).then((response) => {
@@ -87,45 +92,49 @@ class ReviewInstitution extends React.Component {
   deleteProjectsBulk = (projectIds) => {
     if (confirm("Do you REALLY want to delete ALL selected projects? This operation cannot be undone.")) {
       fetch(`/delete-projects-bulk?institutionId=${this.props.institutionId}`,
-            { method: "POST",
-              body: JSON.stringify({"projectIds": projectIds}),
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-            })
+        {
+          method: "POST",
+          body: JSON.stringify({ "projectIds": projectIds }),
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        })
         .then((response) => {
-        if (response.ok) {
-          this.getProjectList();
-          alert("Selected projects have been deleted.");
-        } else {
-          console.log(response);
-          alert("Error deleting projects. See console for details.");
-        }
-      });
+          if (response.ok) {
+            this.getProjectList();
+            alert("Selected projects have been deleted.");
+          } else {
+            console.log(response);
+            alert("Error deleting projects. See console for details.");
+          }
+        });
     }
   };
-  
+
   editProjectsBulk = (projectIds, selectedVisibility) => {
     if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
       fetch(`/edit-projects-bulk?institutionId=${this.props.institutionId}`,
-            { method: "POST",
-              body: JSON.stringify({"projectIds": projectIds,
-                                    "visibility": selectedVisibility}),
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-            })
+        {
+          method: "POST",
+          body: JSON.stringify({
+            "projectIds": projectIds,
+            "visibility": selectedVisibility
+          }),
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        })
         .then((response) => {
-        if (response.ok) {
-          this.getProjectList();
-          alert(`The visibility of the selected projects have been changed to ${selectedVisibility}`);
-        } else {
-          console.log(response);
-          alert("Error editing project visibility. See console for details.");
-        }
-      });
+          if (response.ok) {
+            this.getProjectList();
+            alert(`The visibility of the selected projects have been changed to ${selectedVisibility}`);
+          } else {
+            console.log(response);
+            alert("Error editing project visibility. See console for details.");
+          }
+        });
     }
   };
 
@@ -160,23 +169,26 @@ class ReviewInstitution extends React.Component {
   editImageryBulk = (projectIds, selectedVisibility) => {
     if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
       fetch(`/edit-projects-bulk?institutionId=${this.props.institutionId}`,
-            { method: "POST",
-              body: JSON.stringify({"projectIds": projectIds,
-                                    "visibility": selectedVisibility}),
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-            })
+        {
+          method: "POST",
+          body: JSON.stringify({
+            "projectIds": projectIds,
+            "visibility": selectedVisibility
+          }),
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        })
         .then((response) => {
-        if (response.ok) {
-          this.getProjectList();
-          alert(`The visibility of the selected projects have been changed to ${selectedVisibility}`);
-        } else {
-          console.log(response);
-          alert("Error editing project visibility. See console for details.");
-        }
-      });
+          if (response.ok) {
+            this.getProjectList();
+            alert(`The visibility of the selected projects have been changed to ${selectedVisibility}`);
+          } else {
+            console.log(response);
+            alert("Error editing project visibility. See console for details.");
+          }
+        });
     }
   };
 
@@ -373,8 +385,8 @@ class InstitutionDescription extends React.Component {
     if (
       confirm(
         "This action will also delete all of the projects associated with this institution.\n\n" +
-          "This action is irreversible.\n\n" +
-          "Do you REALLY want to delete this institution?"
+        "This action is irreversible.\n\n" +
+        "Do you REALLY want to delete this institution?"
       )
     ) {
       fetch(`/archive-institution?institutionId=${this.props.institutionId}`, {
@@ -638,10 +650,9 @@ const ImageryList = (
       userId === 1 &&
       window.confirm(
         `Do you want to change the visibility from ${currentVisibility} to ${toVisibility}?` +
-          `${
-            toVisibility === "private" &&
-            "  This will remove the imagery from other institutions' projects."
-          }`
+        `${toVisibility === "private" &&
+        "  This will remove the imagery from other institutions' projects."
+        }`
       )
     ) {
       fetch("/update-imagery-visibility", {
@@ -735,7 +746,7 @@ const ImageryList = (
               </button>
             </div>
           </div>
-          <hr/>
+          <hr />
         </>
       )}
       {imageryList.length === 0 ? (
@@ -985,28 +996,28 @@ class NewImagery extends React.Component {
   formTemplate = (o) =>
     o.type === "select"
       ? this.formSelect(
-          o.display,
-          this.state.imageryParams[o.key],
-          (e) =>
-            this.setState({
-              imageryParams: {
-                ...this.state.imageryParams,
-                [o.key]: e.target.value,
-              },
-              imageryAttribution:
-                imageryOptions[this.state.selectedType].type === "BingMaps"
-                  ? "Bing Maps API: " + e.target.value + " | © Microsoft Corporation"
-                  : this.state.imageryAttribution,
-            }),
-          o.options.map((el) => (
-            <option key={el.value} value={el.value}>
-              {el.label}
-            </option>
-          )),
-          this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key)
-        )
+        o.display,
+        this.state.imageryParams[o.key],
+        (e) =>
+          this.setState({
+            imageryParams: {
+              ...this.state.imageryParams,
+              [o.key]: e.target.value,
+            },
+            imageryAttribution:
+              imageryOptions[this.state.selectedType].type === "BingMaps"
+                ? "Bing Maps API: " + e.target.value + " | © Microsoft Corporation"
+                : this.state.imageryAttribution,
+          }),
+        o.options.map((el) => (
+          <option key={el.value} value={el.value}>
+            {el.label}
+          </option>
+        )),
+        this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key)
+      )
       : ["textarea", "JSON"].includes(o.type)
-      ? this.formTextArea(
+        ? this.formTextArea(
           o.display,
           this.state.imageryParams[o.key],
           (e) =>
@@ -1016,7 +1027,7 @@ class NewImagery extends React.Component {
           this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
           o.options ? o.options : {}
         )
-      : this.formInput(
+        : this.formInput(
           o.display,
           o.type || "text",
           this.state.imageryParams[o.key],
@@ -1035,16 +1046,16 @@ class NewImagery extends React.Component {
     type === "BingMaps"
       ? "Bing Maps API: Aerial | © Microsoft Corporation"
       : type.includes("Planet")
-      ? "Planet Labs Global Mosaic | © Planet Labs, Inc"
-      : type === "SecureWatch"
-      ? "SecureWatch Imagery | © Maxar Technologies Inc."
-      : ["Sentinel1", "Sentinel2"].includes(type) || type.includes("GEE")
-      ? "Google Earth Engine | © Google LLC"
-      : type.includes("MapBox")
-      ? "© Mapbox"
-      : type === "OSM"
-      ? "Open Street Map"
-      : "";
+        ? "Planet Labs Global Mosaic | © Planet Labs, Inc"
+        : type === "SecureWatch"
+          ? "SecureWatch Imagery | © Maxar Technologies Inc."
+          : ["Sentinel1", "Sentinel2"].includes(type) || type.includes("GEE")
+            ? "Google Earth Engine | © Google LLC"
+            : type.includes("MapBox")
+              ? "© Mapbox"
+              : type === "OSM"
+                ? "Open Street Map"
+                : "";
 
   setImageryToEdit = () => {
     const { title, attribution, isProxied, sourceConfig } = this.props.imageryToEdit;
@@ -1084,16 +1095,16 @@ class NewImagery extends React.Component {
     const displayParams =
       type === "PlanetNICFI"
         ? [
-            params[0],
-            {
-              ...params[1],
-              options: [
-                ...params[1].options,
-                ...nicfiLayers.map((l) => ({ label: l.slice(34, l.length - 7), value: l })),
-              ],
-            },
-            params[2],
-          ]
+          params[0],
+          {
+            ...params[1],
+            options: [
+              ...params[1].options,
+              ...nicfiLayers.map((l) => ({ label: l.slice(34, l.length - 7), value: l })),
+            ],
+          },
+          params[2],
+        ]
         : params;
 
     return (
@@ -1210,7 +1221,7 @@ function Imagery({
     <div className="row mb-1 d-flex">
       {/* Checkbox for selection */}
       <div className="col-1"
-           style={{ paddingLeft: "4.5%" }}>
+        style={{ paddingLeft: "4.5%" }}>
         <input
           type="checkbox"
           onChange={handleCheckboxChange}
@@ -1290,7 +1301,7 @@ function ProjectList({
   editProjectsBulk,
 }) {
   const [selectedProjects, setSelectedProjects] = useState([]);
-  
+
   const noProjects = (msg) => (
     <div style={{ display: "flex" }}>
       <SvgIcon icon="alert" size="1.2rem" />
@@ -1330,26 +1341,26 @@ function ProjectList({
       </div>
       {isAdmin && (
         <>
-        <div className="row mb-3">
-          <div className="col">
-            <button
-              className="btn btn-sm btn-block btn-lightgreen py-2 font-weight-bold"
-              id="create-project"
-              onClick={() =>
-                window.location.assign(`/create-project?institutionId=${institutionId}`)
-              }
-              style={{
-                alignItems: "center",
-                display: "flex",
-                justifyContent: "center",
-              }}
-              type="button"
-            >
-              <SvgIcon icon="plus" size="1rem" />
-              <span style={{ marginLeft: "0.4rem" }}>Create New Project</span>
-            </button>
+          <div className="row mb-3">
+            <div className="col">
+              <button
+                className="btn btn-sm btn-block btn-lightgreen py-2 font-weight-bold"
+                id="create-project"
+                onClick={() =>
+                  window.location.assign(`/create-project?institutionId=${institutionId}`)
+                }
+                style={{
+                  alignItems: "center",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+                type="button"
+              >
+                <SvgIcon icon="plus" size="1rem" />
+                <span style={{ marginLeft: "0.4rem" }}>Create New Project</span>
+              </button>
+            </div>
           </div>
-        </div>
           <div className="row mb-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ display: "flex", gap: "10px" }}>
               <ProjectVisibilityPopup
@@ -1378,7 +1389,7 @@ function ProjectList({
               />
             </div>
           </div>
-          <hr/>
+          <hr />
         </>
       )}
       {renderProjects()}
@@ -1412,7 +1423,7 @@ function Project({
     <div className="row mb-1 d-flex">
       {/* Checkbox for project selection */}
       <div className="col-1"
-           style={{ paddingLeft: "4.5%" }}>
+        style={{ paddingLeft: "4.5%" }}>
         <input
           type="checkbox"
           onChange={handleCheckboxChange}
@@ -1448,8 +1459,8 @@ function Project({
                 project.percentComplete === 0.0
                   ? "0px 0px 6px 1px red inset"
                   : project.percentComplete >= 100.0
-                  ? "0px 0px 6px 2px #3bb9d6 inset"
-                  : "0px 0px 6px 1px yellow inset",
+                    ? "0px 0px 6px 2px #3bb9d6 inset"
+                    : "0px 0px 6px 1px yellow inset",
             }}
           >
             {project.name}
@@ -1726,7 +1737,7 @@ function User({ isAdmin, updateUserInstitutionRole, user }) {
     <div className="row">
       {/* Checkbox for selection */}
       <div className="col-1 mb-1"
-           style= {{ paddingLeft: "4.5%" }}>
+        style={{ paddingLeft: "4.5%" }}>
         <input
           type="checkbox"
           onChange={handleCheckboxChange}
