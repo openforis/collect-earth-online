@@ -4,6 +4,7 @@
             [collect-earth-online.db.geodash      :as geodash]
             [collect-earth-online.db.imagery      :as imagery]
             [collect-earth-online.db.institutions :as institutions]
+            [collect-earth-online.db.metrics      :as metrics]
             [collect-earth-online.db.plots        :as plots]
             [collect-earth-online.db.projects     :as projects]
             [collect-earth-online.db.qaqc         :as qaqc]
@@ -13,49 +14,52 @@
 
 (def routes
   {;; Page Routes
-   [:get  "/"]                       {:handler (render-page "/home")}
-   [:get  "/about"]                  {:handler (render-page "/about")}
-   [:get  "/account"]                {:handler     (render-page "/account")
-                                      :auth-type   :user
-                                      :auth-action :redirect}
-   [:get  "/collection"]             {:handler     (render-page "/collection")
-                                      :auth-type   :collect
-                                      :auth-action :redirect}
-   [:get  "/simple-collection"]      {:handler     (render-page "/simple-collection")
-                                      :auth-type   :token
-                                      :auth-action :block}
-   [:get  "/create-institution"]     {:handler     (render-page "/create-institution")
-                                      :auth-type   :user
-                                      :auth-action :redirect}
-   [:get  "/create-project"]         {:handler     (render-page "/project-admin")
-                                      :auth-type   :admin
-                                      :auth-action :redirect}
-   [:get  "/geo-dash"]               {:handler     (render-page "/geo-dash")
-                                      :auth-type   :collect
-                                      :auth-action :redirect}
-   [:get  "/geo-dash-help"]          {:handler (render-page "/geo-dash-help")}
-   [:get  "/home"]                   {:handler (render-page "/home")}
-   [:get  "/institution-dashboard"]  {:handler     (render-page "/institution-dashboard")
-                                      :auth-type   :admin
-                                      :auth-action :redirect}
-   [:get  "/login"]                  {:handler (render-page "/login")}
-   [:get  "/password-request"]       {:handler (render-page "/password-request")}
-   [:get  "/password-reset"]         {:handler (render-page "/password-reset")}
-   [:get  "/verify-email"]           {:handler (render-page "/verify-email")}
-   [:get  "/project-dashboard"]      {:handler     (render-page "/project-dashboard")
-                                      :auth-type   :admin
-                                      :auth-action :redirect}
-   [:get  "/register"]               {:handler (render-page "/register")}
-   [:get  "/review-institution"]     {:handler (render-page "/review-institution")}
-   [:get  "/review-project"]         {:handler     (render-page "/project-admin")
-                                      :auth-type   :admin
-                                      :auth-action :redirect}
-   [:get  "/support"]                {:handler (render-page "/support")}
-   [:get  "/user-disagreement"]      {:handler (render-page "/user-disagreement")}
-   [:get  "/terms-of-service"]       {:handler (render-page "/terms-of-service")}
-   [:get  "/widget-layout-editor"]   {:handler     (render-page "/widget-layout-editor")
-                                      :auth-type   :admin
-                                      :auth-action :redirect}
+   [:get  "/"]                               {:handler (render-page "/home")}
+   [:get  "/about"]                          {:handler (render-page "/about")}
+   [:get  "/account"]                        {:handler     (render-page "/account")
+                                              :auth-type   :user
+                                              :auth-action :redirect}
+   [:get  "/collection"]                     {:handler     (render-page "/collection")
+                                              :auth-type   :collect
+                                              :auth-action :redirect}
+   [:get  "/simple-collection"]              {:handler     (render-page "/simple-collection")
+                                              :auth-type   :token
+                                              :auth-action :block}
+   [:get  "/create-institution"]             {:handler     (render-page "/create-institution")
+                                              :auth-type   :user
+                                              :auth-action :redirect}
+   [:get  "/create-project"]                 {:handler     (render-page "/project-admin")
+                                              :auth-type   :admin
+                                              :auth-action :redirect}
+   [:get  "/geo-dash"]                       {:handler     (render-page "/geo-dash")
+                                              :auth-type   :collect
+                                              :auth-action :redirect}
+   [:get  "/geo-dash-help"]                  {:handler (render-page "/geo-dash-help")}
+   [:get  "/home"]                           {:handler (render-page "/home")}
+   [:get  "/institution-dashboard"]          {:handler     (render-page "/institution-dashboard")
+                                              :auth-type   :admin
+                                              :auth-action :redirect}
+   [:get  "/login"]                          {:handler (render-page "/login")}
+   [:get  "/password-request"]               {:handler (render-page "/password-request")}
+   [:get  "/password-reset"]                 {:handler (render-page "/password-reset")}
+   [:get  "/verify-email"]                   {:handler (render-page "/verify-email")}
+   [:get  "/project-dashboard"]              {:handler     (render-page "/project-dashboard")
+                                              :auth-type   :admin
+                                              :auth-action :redirect}
+   [:get  "/register"]                       {:handler (render-page "/register")}
+   [:get  "/review-institution"]             {:handler (render-page "/review-institution")}
+   [:get  "/review-project"]                 {:handler     (render-page "/project-admin")
+                                              :auth-type   :admin
+                                              :auth-action :redirect}
+   [:get  "/support"]                        {:handler (render-page "/support")}
+   [:get  "/user-disagreement"]              {:handler (render-page "/user-disagreement")}
+   [:get  "/terms-of-service"]               {:handler (render-page "/terms-of-service")}
+   [:get  "/widget-layout-editor"]           {:handler     (render-page "/widget-layout-editor")
+                                              :auth-type   :admin
+                                              :auth-action :redirect}
+   [:get  "/metrics"]                        {:handler     (render-page "/metrics")
+                                              :auth-type   :metrics
+                                              :auth-action :block}
    [:get  "/project-qaqc-dashboard"] {:handler     (render-page "/project-qaqc-dashboard")
                                       :auth-type   :admin
                                       :auth-action :redirect}
@@ -241,4 +245,18 @@
                                              :auth-action :block}
    [:get  "/get-nicfi-tiles"]               {:handler     proxy/get-nicfi-tiles
                                              :auth-type   :no-cross
-                                             :auth-action :block}})
+                                             :auth-action :block}
+
+   ;; Metrics
+   [:get  "/metrics/get-imagery-access"]      {:handler     metrics/get-imagery-counts
+                                               :auth-type   :metrics
+                                               :auth-action :block}
+   [:get  "/metrics/get-projects-with-gee"]   {:handler     metrics/get-projects-with-gee
+                                               :auth-type   :metrics
+                                               :auth-action :block}
+   [:get  "/metrics/get-sample-plot-counts"]  {:handler     metrics/get-sample-plot-counts
+                                               :auth-type   :metrics
+                                               :auth-action :block}
+   [:get  "/metrics/get-project-count"]       {:handler     metrics/get-project-count}
+                                               :auth-type   :metrics
+                                               :auth-action :block})

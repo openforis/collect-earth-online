@@ -275,6 +275,7 @@
         user-images        (:userImages params)
         new-plot-samples   (:newPlotSamples params)
         user-id            (if review-mode? current-user-id session-user-id)
+        imagery-ids        (tc/clj->jsonb (:imageryIds params))
         ;; Samples created in the UI have IDs starting with 1. When the new sample is created
         ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
         id-translation     (when new-plot-samples
@@ -297,7 +298,9 @@
                 (when confidence-comment confidence-comment)
                 (when-not review-mode? (Timestamp. collection-start))
                 (tc/clj->jsonb (set/rename-keys user-samples id-translation))
-                (tc/clj->jsonb (set/rename-keys user-images id-translation)))
+                (tc/clj->jsonb (set/rename-keys user-images id-translation))
+                imagery-ids)
+
       (call-sql "delete_user_plot_by_plot" plot-id user-id))
     (unlock-plots user-id)
     (data-response "")))
