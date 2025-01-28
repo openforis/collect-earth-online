@@ -470,7 +470,7 @@ export default class SurveyCollection extends React.Component {
     };
 
     return (
-      <div className="d-flex justify-content-center mb-2 align-items-center">
+      <div className="justify-content-center mb-2 align-items-center">
         <button
           className="btn btn-sm btn-outline-info mx-2 px-3"
           disabled={this.state.currentNodeIndex === 0}

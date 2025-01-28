@@ -1,5 +1,6 @@
 (ns collect-earth-online.routing
-  (:require [collect-earth-online.db.doi          :as doi]
+  (:require [collect-earth-online.generators.ce-project :as ce-project]
+            [collect-earth-online.db.doi          :as doi]
             [collect-earth-online.db.geodash      :as geodash]
             [collect-earth-online.db.imagery      :as imagery]
             [collect-earth-online.db.institutions :as institutions]
@@ -59,6 +60,9 @@
    [:get  "/metrics"]                        {:handler     (render-page "/metrics")
                                               :auth-type   :metrics
                                               :auth-action :block}
+   [:get  "/project-qaqc-dashboard"] {:handler     (render-page "/project-qaqc-dashboard")
+                                      :auth-type   :admin
+                                      :auth-action :redirect}
 
    ;; Users API
    [:get  "/get-institution-users"]          {:handler     users/get-institution-users
@@ -129,17 +133,26 @@
    [:post "/update-project-draft"]           {:handler     #'projects/update-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
+   [:post "/import-ce-project"]              {:handler     #'ce-project/import-ce-project
+                                              :auth-type   :user
+                                              :auth-action :block}
    [:get "/delete-project-draft"]            {:handler     #'projects/delete-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
+   [:post "/delete-projects-bulk"]           {:handler     #'projects/delete-projects-bulk!
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:post "/edit-projects-bulk"]             {:handler     #'projects/edit-projects-bulk!
+                                              :auth-type   :admin
+                                              :auth-action :block}
    ;; QAQC API
-   [:get "/project-stats"]                   {:handler    #'qaqc/get-project-stats
+   [:get "/project-stats"]                   {:handler     #'qaqc/get-project-stats
                                               :auth-type   :admin
                                               :auth-action :block}
    [:get "/qaqc-plot"]                       {:handler     #'qaqc/get-qaqc-plot
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get "/sot-example"]                     {:handler     #'qaqc/get-sot-example}
+   [:get "/sot-example"]                     {:handler #'qaqc/get-sot-example}
    [:get "/user-stats"]                      {:handler     #'qaqc/get-user-stats
                                               :auth-type   :admin
                                               :auth-action :block}
@@ -154,57 +167,65 @@
    [:get "/doi"]          {:handler doi/get-doi-reference}
 
    ;; Plots API
-   [:get  "/get-collection-plot"]           {:handler     plots/get-collection-plot
-                                             :auth-type   :collect
-                                             :auth-action :block}
-   [:get  "/get-plot-disagreement"]         {:handler plots/get-plot-disagreement}
-   [:get  "/get-plot-sample-geom"]          {:handler plots/get-plot-sample-geom}
-   [:get  "/get-plotters"]                  {:handler     plots/get-plotters
-                                             :auth-type   :collect
-                                             :auth-action :block}
-   [:get  "/get-project-plots"]             {:handler plots/get-project-plots}
-   [:post "/add-user-samples"]              {:handler     plots/add-user-samples
-                                             :auth-type   :collect
-                                             :auth-action :block}
-   [:post "/flag-plot"]                     {:handler     plots/flag-plot
-                                             :auth-type   :collect
-                                             :auth-action :block}
-   [:post "/release-plot-locks"]            {:handler     plots/release-plot-locks
-                                             :auth-type   :collect
-                                             :auth-action :block}
-   [:post "/reset-plot-lock"]               {:handler     plots/reset-plot-lock
-                                             :auth-type   :collect
-                                             :auth-action :block}
+   [:get  "/get-collection-plot"]              {:handler     plots/get-collection-plot
+                                                :auth-type   :collect
+                                                :auth-action :block}
+   [:get  "/get-plot-disagreement"]            {:handler plots/get-plot-disagreement}
+   [:get  "/get-plot-sample-geom"]             {:handler plots/get-plot-sample-geom}
+   [:get  "/get-plotters"]                     {:handler     plots/get-plotters
+                                                :auth-type   :collect
+                                                :auth-action :block}
+   [:get  "/get-project-plots"]                {:handler plots/get-project-plots}
+   [:post "/add-user-samples"]                 {:handler     plots/add-user-samples
+                                                :auth-type   :collect
+                                                :auth-action :block}
+   [:post "/flag-plot"]                        {:handler     plots/flag-plot
+                                                :auth-type   :collect
+                                                :auth-action :block}
+   [:post "/release-plot-locks"]               {:handler     plots/release-plot-locks
+                                                :auth-type   :collect
+                                                :auth-action :block}
+   [:post "/reset-plot-lock"]                  {:handler     plots/reset-plot-lock
+                                                :auth-type   :collect
+                                                :auth-action :block}
    ;; Institutions API
-   [:get  "/get-all-institutions"]          {:handler institutions/get-all-institutions}
-   [:get  "/get-institution-by-id"]         {:handler institutions/get-institution-by-id}
-   [:post "/archive-institution"]           {:handler     institutions/archive-institution
-                                             :auth-type   :admin
-                                             :auth-action :block}
-   [:post "/create-institution"]            {:handler     institutions/create-institution
-                                             :auth-type   :user
-                                             :auth-action :block}
-   [:post "/update-institution"]            {:handler     institutions/update-institution
-                                             :auth-type   :admin
-                                             :auth-action :block}
+   [:get  "/get-all-institutions"]             {:handler institutions/get-all-institutions}
+   [:get  "/get-institution-by-id"]            {:handler institutions/get-institution-by-id}
+   [:post "/archive-institution"]              {:handler     institutions/archive-institution
+                                                :auth-type   :admin
+                                                :auth-action :block}
+   [:post "/create-institution"]               {:handler     institutions/create-institution
+                                                :auth-type   :user
+                                                :auth-action :block}
+   [:post "/update-institution"]               {:handler     institutions/update-institution
+                                                :auth-type   :admin
+                                                :auth-action :block}
    ;; Imagery API
-   [:get  "/get-institution-imagery"]       {:handler imagery/get-institution-imagery}
-   [:get  "/get-project-imagery"]           {:handler     imagery/get-project-imagery
-                                             :auth-type   :collect
-                                             :auth-action :block}
-   [:get  "/get-public-imagery"]            {:handler imagery/get-public-imagery}
-   [:post "/add-institution-imagery"]       {:handler     imagery/add-institution-imagery
-                                             :auth-type   :admin
-                                             :auth-action :block}
-   [:post "/update-institution-imagery"]    {:handler     imagery/update-institution-imagery
-                                             :auth-type   :admin
-                                             :auth-action :block}
-   [:post "/update-imagery-visibility"]     {:handler     imagery/update-imagery-visibility
-                                             :auth-type   :admin
-                                             :auth-action :block}
-   [:post "/archive-institution-imagery"]   {:handler     imagery/archive-institution-imagery
-                                             :auth-type   :admin
-                                             :auth-action :block}
+   [:get  "/get-institution-imagery"]          {:handler imagery/get-institution-imagery}
+   [:get  "/get-project-imagery"]              {:handler     imagery/get-project-imagery
+                                                :auth-type   :collect
+                                                :auth-action :block}
+   [:get  "/get-public-imagery"]               {:handler imagery/get-public-imagery}
+   [:post "/add-institution-imagery"]          {:handler     imagery/add-institution-imagery
+                                                :auth-type   :admin
+                                                :auth-action :block}
+   [:post "/update-institution-imagery"]       {:handler     imagery/update-institution-imagery
+                                                :auth-type   :admin
+                                                :auth-action :block}
+   [:post "/update-imagery-visibility"]        {:handler     imagery/update-imagery-visibility
+                                                :auth-type   :admin
+                                                :auth-action :block}
+   [:post "/bulk-update-imagery-visibility"]   {:handler     imagery/bulk-update-imagery-visibility
+                                                :auth-type   :admin
+                                                :auth-action :block}
+
+   [:post "/archive-institution-imagery"]      {:handler     imagery/archive-institution-imagery
+                                                :auth-type   :admin
+                                                :auth-action :block}
+   [:post "/bulk-archive-institution-imagery"] {:handler     imagery/bulk-archive-institution-imagery
+                                                :auth-type   :admin
+                                                :auth-action :block}
+
    ;; GeoDash API
    [:get  "/geo-dash/get-project-widgets"]  {:handler geodash/get-project-widgets}
    [:post "/geo-dash/copy-project-widgets"] {:handler geodash/copy-project-widgets}

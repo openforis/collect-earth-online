@@ -671,11 +671,11 @@ CREATE OR REPLACE FUNCTION get_plot_stats(_project_id integer)
     plot_id        integer,
     internal_id    integer,
     total_samples  bigint,
-    num_flags      integer,
-    avg_col_time   integer,
-    min_col_time   integer,
-    max_col_time   integer,
-    avg_confidence integer
+    num_flags      bigint,
+    avg_col_time   double precision,
+    min_col_time   double precision,
+    max_col_time   double precision,
+    avg_confidence double precision
   ) AS $$
 
     WITH total_samples AS (
@@ -726,7 +726,7 @@ CREATE OR REPLACE FUNCTION get_plot_stats(_project_id integer)
         ct.avg_col_time,
         ct.min_col_time,
         ct.max_col_time,
-        ac.average_confidence
+        CAST(ac.average_confidence AS double precision) AS avg_confidence
     FROM total_samples ts
     LEFT JOIN plot_flags pf ON ts.plot_id = pf.plot_id
     LEFT JOIN collection_times ct ON ts.plot_id = ct.plot_id

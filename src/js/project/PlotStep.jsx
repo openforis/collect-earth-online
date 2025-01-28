@@ -5,7 +5,7 @@ import AssignPlots from "./AssignPlots";
 import QualityControl from "./QualityControl";
 import { PlotDesign, PlotDesignReview } from "./PlotDesign";
 
-export default function PlotStep({ getTotalPlots }) {
+export default function PlotStep({ getTotalPlots, projectType }) {
   const { institutionUserList, aoiFeatures, useTemplatePlots } = useContext(ProjectContext);
   const totalPlots = getTotalPlots();
   return (
@@ -17,12 +17,14 @@ export default function PlotStep({ getTotalPlots }) {
           aoiFeatures={aoiFeatures}
           institutionUserList={institutionUserList}
           totalPlots={totalPlots}
+          projectType={projectType}
         />
       )}
-      <div className="row mr-1">
-        <AssignPlots institutionUserList={institutionUserList} totalPlots={totalPlots} />
-        <QualityControl institutionUserList={institutionUserList} totalPlots={totalPlots} />
-      </div>
+      {(projectType === "full") ? (
+       <div className="row mr-1">
+         <AssignPlots institutionUserList={institutionUserList} totalPlots={totalPlots} />
+         <QualityControl institutionUserList={institutionUserList} totalPlots={totalPlots} />
+       </div>) : null }
     </>
   );
 }

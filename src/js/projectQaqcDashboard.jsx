@@ -13,7 +13,7 @@ import { projectConditionalRowStyles,
 
 import { mercator } from "./utils/mercator";
 
-class ProjectDashboard extends React.Component {
+class ProjectDashboardQaqc extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -333,6 +333,8 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
     console.log(activeTab);
     if(activeTab === 1) {
       getPlotData(-10000000, "next");
+      setNewPlotId(plotId);
+      setInputPlotId(plotId);
     }
   }, [activeTab]);
   
@@ -635,7 +637,7 @@ const Tab = ({ label, children }) => {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-      <ProjectDashboard projectId={params.projectId || "0"} userName={session.userName} />
+      <ProjectDashboardQaqc projectId={params.projectId || "0"} userName={session.userName} />
     </NavigationBar>,
     document.getElementById("app")
   );

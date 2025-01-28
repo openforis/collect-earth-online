@@ -949,3 +949,119 @@ body {
 .cEJxif {
     max-height: 600px !important;
 }
+
+.button-dropdown {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #65B7B0;
+  border: 2px solid #65B7B0;
+  border-radius: 5px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.button-dropdown:hover {
+  background-color: #65B7B0;
+  color: #fff;
+}
+
+.button-dropdown svg {
+  margin-left: 8px;
+  transition: transform 0.3s;
+}
+
+.button-dropdown:hover svg {
+  transform: rotate(180deg);
+}
+
+.delete-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #B53729;
+  border: 2px solid #B53729;
+  border-radius: 5px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.delete-button:hover {
+  background-color: #B53729;
+  color: #fff;
+}
+
+.delete-button svg {
+  margin-right: 8px;
+  fill: #B53729;
+  transition: fill 0.3s;
+}
+
+.delete-button:hover svg {
+  fill: #fff;
+}
+
+.row.mb-3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.col-2.right-align {
+  margin-left: auto;
+}
+
+.popup-container {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  width: 300px;
+  z-index: 1000;
+}
+
+.popup-header {
+  font-size: 14px;
+  font-style: italic;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.popup-option {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.popup-option input {
+  margin-right: 10px;
+}
+
+.popup-button {
+  display: block;
+  width: 100%;
+  padding: 10px 0;
+  background-color: #65B7B0;
+  color: white;
+  text-align: center;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.popup-button:hover {
+  background-color: #54a09b;
+}

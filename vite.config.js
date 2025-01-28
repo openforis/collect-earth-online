@@ -53,6 +53,7 @@ export default defineConfig({
         "src/js/verifyEmail.jsx",
         "src/js/widgetLayoutEditor.jsx",
         "src/js/metrics.jsx"
+        "src/js/projectQaqcDashboard.jsx"
       ],
       output: {
         // compact: false,

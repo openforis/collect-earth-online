@@ -1249,7 +1249,7 @@ RETURNS TABLE(
   FROM project_drafts
   WHERE user_rid = _user_id AND
         institution_rid = _institution_id
-$$ LANGUAGE SQL
+$$ LANGUAGE SQL;
 
 -- Get Project Draft by ID
 CREATE OR REPLACE FUNCTION get_project_draft_by_id(_project_draft_id integer)
@@ -1294,3 +1294,34 @@ RETURNS integer AS $$
     WHERE project_draft_uid = _project_draft_id
     RETURNING project_draft_uid
 $$ LANGUAGE SQL;
+
+-- Delete projects in bulk
+CREATE OR REPLACE FUNCTION delete_projects_bulk(_institution_id integer, _project_ids_text TEXT)
+RETURNS VOID AS $$
+DECLARE
+    project_ids INTEGER[];
+    deleted_ids INTEGER[];
+BEGIN
+    SELECT string_to_array(_project_ids_text, ',')::INTEGER[]
+    INTO project_ids;
+    update projects
+    set availability = 'archived'
+    WHERE project_uid = ANY(project_ids) AND institution_rid = _institution_id;
+    
+END;
+$$ LANGUAGE plpgsql;
+
+-- Edit projects privacy_level in bulk
+CREATE OR REPLACE FUNCTION edit_projects_bulk(_institution_id integer, _project_ids_text TEXT, _privacy_level TEXT)
+RETURNS VOID AS $$
+DECLARE
+    project_ids INTEGER[];
+BEGIN
+    SELECT string_to_array(_project_ids_text, ',')::INTEGER[]
+    INTO project_ids;
+
+    UPDATE projects
+    SET privacy_level = _privacy_level
+    WHERE project_uid = ANY(project_ids) AND institution_rid = _institution_id;
+END;
+$$ LANGUAGE plpgsql;

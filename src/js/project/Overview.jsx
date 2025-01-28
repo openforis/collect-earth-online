@@ -1,7 +1,8 @@
 import React, { useContext, useState } from "react";
 
 import { LearningMaterialModal } from "../components/PageComponents";
-import { capitalizeFirst } from "../utils/generalUtils";
+import { capitalizeFirst,  readFileAsBase64Url } from "../utils/generalUtils";
+import { filterObject } from "../utils/sequence";
 import { ProjectContext } from "./constants";
 
 export function Overview(props) {
@@ -15,6 +16,38 @@ export function Overview(props) {
     projectId,
     learningMaterial
   } = useContext(ProjectContext);
+
+  const [selectedType, setSelectedType] = useState(props.projectType);
+  
+  const importCollectProject = (fileName, fileb64) => {
+    fetch(`/import-ce-project`, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fileName,
+        fileb64,
+      }),
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        setProjectDetails(data, props.checkAllSteps);
+      });
+  };
+
+  const changeProjectType = (event) => {
+    const selectedValue = event.target.value;
+    const steps = props.steps;
+    const updatedSteps = (selectedValue === "full") ?
+          props.fullProjectSteps :
+          filterObject(steps, ([key, _val]) =>
+            ["overview", "imagery", "plots", "questions"].includes(key));
+    props.updateProjectType(selectedValue);
+    props.updateSteps(updatedSteps);
+  }
+
   return (
     <div id="project-info">
       {projectId < 0 &&
@@ -25,7 +58,12 @@ export function Overview(props) {
             accept="application/zip"
             defaultValue=""
             id="collect-earth-project-input"
-            onChange={(e) => null}
+            onChange={(e) => {
+              const file = e.target.files[0];
+              readFileAsBase64Url(file, (base64) => {
+                importCollectProject(file.name, base64);
+              });
+            }}
             style={{ display: "block" }}
             type="file"
           />
@@ -34,6 +72,23 @@ export function Overview(props) {
       <br/>
       <h3>Project Information</h3>
       <div className="ml-3">
+        <div className="form-group">
+          <label htmlFor="project-name">Project Type</label>
+          <select
+            id="projectType"
+            value={selectedType}
+            onChange={changeProjectType}
+            style={{
+              padding: "0.5rem",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              width: "100%",
+            }}
+          >
+        <option value="full">Full Project</option>
+        <option value="simplified">Simplified Project</option>
+      </select>
+        </div>
         <div className="form-group">
           <label htmlFor="project-name">Name</label>
           <input
