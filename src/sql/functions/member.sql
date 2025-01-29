@@ -136,10 +136,11 @@ CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
  RETURNS table (
     user_id          integer,
     administrator    boolean,
-    verified         boolean
+    verified         boolean,
+    accepted_terms   boolean
  ) AS $$
 
-    SELECT user_uid, administrator, verified
+    SELECT user_uid, administrator, verified, accepted_terms
     FROM users
     WHERE email = _email
         AND password = crypt(_password, password)
