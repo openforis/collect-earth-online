@@ -1155,6 +1155,10 @@ class Collection extends React.Component {
             <p>{this.state.messageBox.body}</p>
           </Modal>
         )}
+        {!this.props.acceptedTerms && (
+          <Modal title="Accept data sharing" >
+          </Modal>
+        )}
         {this.state.showQuitModal && (
           <QuitMenu projectId={this.props.projectId} toggleQuitModal={this.toggleQuitModal} />
         )}
@@ -1991,7 +1995,7 @@ function QuitMenu({ projectId, toggleQuitModal }) {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-      <Collection projectId={params.projectId} userName={session.userName || "guest"} />
+      <Collection projectId={params.projectId} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
     </NavigationBar>,
     document.getElementById("app")
   );
