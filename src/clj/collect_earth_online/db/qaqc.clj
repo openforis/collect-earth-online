@@ -1,7 +1,7 @@
 (ns collect-earth-online.db.qaqc
   (:require [clojure.set                :as set]
             [clojure.data.json :refer [read-str]]
-            [triangulum.database        :refer [call-sql]]
+            [triangulum.database        :refer [call-sql sql-primitive]]
             [triangulum.response        :refer [data-response]]
             [triangulum.type-conversion :as tc]))
 
@@ -10,87 +10,124 @@
   [jsonb]
   (-> jsonb str (read-str)))
 
-(defn- get-samples-answer [plot-id]
-  (apply merge-with merge
-         (map (fn [sample]
-                {(keyword (str (:user_id sample)))
-                 {(keyword (str (:visible_id sample)))
-                  (jsonb->clj-str (:saved_answers sample))}})
-              (call-sql "select_plot_samples_qaqc" {:log? false} plot-id))))
+(defn- get-samples-answers [plot-id]
+  (map (fn [{:keys [user_id sample_id visible_id saved_answers]}]
+         {:user_id user_id
+          :sample_id sample_id
+          :visible_id visible_id
+          :saved_answers (jsonb->clj-str saved_answers)})
+       (call-sql "select_plot_samples_qaqc" {:log? false} plot-id)))
 
-(defn merge-sample-data
-  "Merge answers from multiple users for each sample and question"
+(defn get-correct-sot-answer
+  [question-id sot-sample-answers]
+  (get-in sot-sample-answers ["answers" question-id "correct_answer"]))
+
+(defn calculate-avg-plot-disagreement
+  [samples-disagreement]
+  (let [disagreements-list (flatten (map :disagreements samples-disagreement))
+        number-of-answers  (count disagreements-list)]
+    (/ (reduce (fn [acc d] (+ acc (first (vals d)))) 0 disagreements-list)
+       number-of-answers)))
+
+(defn calculate-question-disagreement
+  [users-answers correct-answers ignore-questions]
+  (let [ca-keys         (keys (get correct-answers "answers"))
+        filtered-ca     (seq (set/difference (set ca-keys) (set ignore-questions)))
+        correct-answers (map (fn [q]
+                               [q (get-correct-sot-answer q correct-answers)])
+                             filtered-ca)]
+    (reduce (fn [acc user-answers]
+              (conj acc (assoc user-answers
+                               :disagreements
+                               (map (fn [ca]
+                                      (if (= (last ca)
+                                             (get-in user-answers [:saved_answers (first ca) "answer"]))
+                                        {(first ca) 0}
+                                        {(first ca) 100}))
+                                    correct-answers))))
+            []
+            users-answers)))
+
+(defn calc-sample-disagreement
+  [sample-id users-answers correct-answers ignore-questions]
+  (let [correct-sample-answers (some #(when (= sample-id (get % "sample_id")) %) correct-answers)
+        s-id                   sample-id
+        sample-answers         (filter #(= s-id (:visible_id %)) users-answers)]
+    (calculate-question-disagreement sample-answers correct-sample-answers ignore-questions)))
+
+;;;;
+;; Calculate disagreements by peer comparison
+;;;;
+
+(defn most-frequent-answers-per-sample
   [users-samples]
-  (apply merge-with
-         (fn [acc new]
-           (merge-with into acc new))
-         (map (fn [user-answers]
-                (into {}
-                      (map (fn [[sample-id answers]]
-                             [sample-id
-                              (into {}
-                                    (map (fn [[q-id q-ans]]
-                                           [q-id [(get q-ans "answer")]])
-                                         answers))]))
-                      user-answers))
-              users-samples)))
+  (let [grouped-by-visible (group-by :visible_id users-samples)
+        freq-count (fn [answers] (first (apply max-key val (frequencies answers))))
+        process-answers (fn [answers]
+                          (apply merge-with into
+                                 (map #(into {} (map (fn [[k v]] [k [(get v "answer")]])) (:saved_answers %)) answers)))
+        format-answer (fn [answers] 
+                        (into {} (map (fn [[k v]] [k {"correct_answer" (freq-count v)}]) answers)))]
+    (map (fn [[visible-id answers]]
+           {"sample_id" visible-id
+            "answers" (format-answer (process-answers answers))})
+         grouped-by-visible)))
 
-(defn calculate-disagreement
-  "Calculate disagreement percentage for each sample and question."
-  [users-samples]
-  (let [grouped (merge-sample-data users-samples)]
-    (into {}
-          (map (fn [[sample-id questions]]
-                 [sample-id
-                  (into {}
-                        (map (fn [[question-id answers]]
-                               (let [answer-freqs (frequencies answers)
-                                     total-answers (count answers)
-                                     max-freq (apply max (vals answer-freqs))]
-                                 (cond
-                                   (= total-answers 1)
-                                   ;; if only one user answered, disagreement is 0%
-                                   [question-id 0.0]
-                                   (= (count answer-freqs) total-answers)
-                                   ;; If all answers are different, disagreement is 100%
-                                   [question-id 100.0]
-                                   ;; Otherwise, calculate based on the most common answer
-                                   :else [question-id (* 100 (- 1 (/ max-freq total-answers)))])))
-                             questions))])
-               grouped))))
+(defn- calculate-peers-disagreement
+  [users-answers ignore-questions]
+  (let [correct-answers (most-frequent-answers-per-sample users-answers)
+        samples         (set (map :visible_id users-answers))]
+    (flatten
+     (map (fn [sample-id]
+            (calc-sample-disagreement sample-id users-answers correct-answers ignore-questions))
+          samples))))
 
-(defn- disagreements-per-users-plot
-  [plot-id]
-  (let [plot-interpreters     (call-sql "select_user_plots_info" plot-id)
-        users-samples         (get-samples-answer plot-id)
-        samples-disagreements (calculate-disagreement (map (fn [[_ answers]] answers) users-samples))]
-    {(keyword (str plot-id))
-     {:samplesDisagreements samples-disagreements
-      :usersPlotInfo         (mapv
-                              (fn [user]
-                                (let [user-id (:user_id user)
-                                      answers (get users-samples (keyword (str user-id)))]
-                                  (assoc user :answers answers)))
-                              plot-interpreters)}}))
-
-(defn- disagreement-in-plot?
-  [samples-disagreements]
-  (some #(> % 0)
-        (mapcat vals (vals samples-disagreements))))
-
-(defn get-plot-data
-  [plot-stats]
-  (let [plot-disagreement (first (vals (disagreements-per-users-plot (:internal_id plot-stats))))
-        disagreement?     (disagreement-in-plot? (:samplesDisagreements plot-disagreement))]
+(defn plot-disagreement-by-peer
+  [plot-stats ignore-questions]
+  (let [plot-id           (:internal_id plot-stats)
+        users-answers     (get-samples-answers plot-id)
+        plot-disagreement (calculate-peers-disagreement users-answers ignore-questions)]
     (-> plot-stats
-        (assoc :disagreement disagreement?)
-        (assoc :details plot-disagreement))))
+        (assoc :disagreement (calculate-avg-plot-disagreement plot-disagreement))
+        (assoc-in [:details :usersPlotInfo] plot-disagreement))))
 
-(defn get-project-stats
+;;;;
+;; Calculate disagreements using a souce of truth
+;;;;
+
+(defn calculate-sot-disagreement
+  [users-answers sot ignore-questions]
+  (let [samples (set (map :visible_id users-answers))]
+    (flatten
+     (map (fn [sample-id]
+            (calc-sample-disagreement sample-id users-answers sot ignore-questions))
+          samples))))
+
+(defn plot-disagreement-by-sot
+  [plot-stats sot ignore-questions]
+  (let [plot-id           (:internal_id plot-stats)
+        users-answers     (get-samples-answers plot-id)
+        plot-disagreement (calculate-sot-disagreement users-answers sot ignore-questions)]
+    (-> plot-stats
+        (assoc :disagreement (calculate-avg-plot-disagreement plot-disagreement))
+        (assoc-in [:details :usersPlotInfo] plot-disagreement))))
+
+;;;;
+;; Route handlers
+;;;;
+
+(defn disagreement-by-sot
   [{:keys [params]}]
-  (let [project-id (tc/val->int (:projectId params))
-        proj-stats (first (call-sql "select_project_stats" project-id))
-        plot-stats (call-sql "get_plot_stats" project-id)]
+  (let [project-id       (tc/val->int (:projectId params))
+        sot-file-name    (:sotFileName params)
+        sot-file-json    (map (fn [m]
+                                (reduce-kv (fn [acc k v]
+                                             (assoc acc (if (instance? clojure.lang.Named k) (name k) k) v))
+                                           {} m))
+                              (:sotFileJson params))
+        plot-stats       (call-sql "get_plot_stats" project-id)
+        proj-stats       (first (call-sql "select_project_stats" project-id))
+        ignore-questions (map str (tc/jsonb->clj (sql-primitive (call-sql "get_input_question_ids" project-id))))]
     (data-response {:totalPlots        (:total_plots proj-stats)
                     :plotAssignments   (:plot_assignments proj-stats)
                     :usersAssigned     (:users_assigned proj-stats)
@@ -101,7 +138,28 @@
                     :maxConfidence     (:max_confidence proj-stats)
                     :minConfidence     (:min_confidence proj-stats)
                     :unanalyzedPlots   (:unanalyzed_plots proj-stats)
-                    :plots             (map #(get-plot-data %) plot-stats)
+                    :plots             (map #(plot-disagreement-by-sot % sot-file-json ignore-questions) plot-stats)
+                    :userStats         (->> (:user_stats proj-stats)
+                                            (tc/jsonb->clj)
+                                            (map #(set/rename-keys % {:timed_plots :timedPlots})))})))
+
+(defn get-project-stats
+  [{:keys [params]}]
+  (let [project-id       (tc/val->int (:projectId params))
+        proj-stats       (first (call-sql "select_project_stats" project-id))
+        plot-stats       (call-sql "get_plot_stats" project-id)
+        ignore-questions (map str (tc/jsonb->clj (sql-primitive (call-sql "get_input_question_ids" project-id))))]
+    (data-response {:totalPlots        (:total_plots proj-stats)
+                    :plotAssignments   (:plot_assignments proj-stats)
+                    :usersAssigned     (:users_assigned proj-stats)
+                    :flaggedPlots      (:flagged_plots proj-stats)
+                    :partialPlots      (:partial_plots proj-stats)
+                    :analyzedPlots     (:analyzed_plots proj-stats)
+                    :averageConfidence (:average_confidence proj-stats)
+                    :maxConfidence     (:max_confidence proj-stats)
+                    :minConfidence     (:min_confidence proj-stats)
+                    :unanalyzedPlots   (:unanalyzed_plots proj-stats)
+                    :plots             (map #(plot-disagreement-by-peer % ignore-questions) plot-stats)
                     :userStats         (->> (:user_stats proj-stats)
                                             (tc/jsonb->clj)
                                             (map #(set/rename-keys % {:timed_plots :timedPlots})))})))
@@ -184,16 +242,44 @@
 
 (defn get-sot-example
   [{:keys [params]}]
-  (let [project-id       (:projectId params)
+  (let [project-id       (tc/val->int (:projectId params))
         survey-questions (-> (call-sql "get_survey_questions" project-id)
                              (first)
                              (:survey_questions)
-                             (tc/jsonb->clj))]
-    (reduce-kv (fn [acc k v]
-                 )
-               {}
-               survey-questions)))
+                             (tc/jsonb->clj))
+        project-samples (call-sql "get_samples" project-id)
+        source-of-truth (reduce-kv (fn [acc k v]
+                                     (let [correct-answer (-> v vals first vals first :answer)]
+                                       (if (= "notes" (clojure.string/lower-case (:question v)))
+                                         acc
+                                         (assoc acc
+                                                (keyword k)
+                                                {:question_text  (:question v)
+                                                 :correct_answer correct-answer}))))
+                                   {}
+                                   survey-questions)]
+    (data-response
+     (map #(assoc % :answers source-of-truth)
+          project-samples))))
 
-(defn get-user-stats
-  []
-  (data-response "ok"))
+(defn disable-users
+  [{:keys [params]}]
+  (let [project-id (tc/val->int (:projectId params))
+        user-ids   (map tc/val->int (:userIds params))]
+    (try
+      (doall
+       (map #(call-sql "disable_user_answers" % project-id) user-ids)
+       (data-response {:message "successfull"}))
+      (catch Exception e
+        (data-response {:message "error" :status 500})))))
+
+(defn enable-users
+  [{:keys [params]}]
+  (let [project-id (tc/val->int (:projectId params))
+        user-ids   (map tc/val->int (:userIds params))]
+    (try
+      (doall
+       (map #(call-sql "enable_user_answers" % project-id) user-ids)
+       (data-response {:message "successfull"}))
+      (catch Exception e
+        (data-response {:message "error" :status 500})))))

@@ -149,13 +149,20 @@
    [:get "/project-stats"]                   {:handler     #'qaqc/get-project-stats
                                               :auth-type   :admin
                                               :auth-action :block}
+   [:post "/sot-disagreement"]               {:handler    #'qaqc/disagreement-by-sot
+                                              :auth-type   :admin
+                                              :auth-action :block}
    [:get "/qaqc-plot"]                       {:handler     #'qaqc/get-qaqc-plot
                                               :auth-type   :admin
                                               :auth-action :block}
    [:get "/sot-example"]                     {:handler #'qaqc/get-sot-example}
-   [:get "/user-stats"]                      {:handler     #'qaqc/get-user-stats
+   [:post "/disable-users"]                  {:handler #'qaqc/disable-users
                                               :auth-type   :admin
                                               :auth-action :block}
+   [:post "/enable-users"]                   {:handler #'qaqc/enable-users
+                                              :auth-type   :admin
+                                              :auth-action :block}
+
 
    ;; DOI API
    [:post "/create-doi"]  {:handler     doi/create-doi!
@@ -164,7 +171,7 @@
    [:post "/publish-doi"] {:handler     doi/publish-doi!
                            :auth-type   :admin
                            :auth-action :block}
-   [:get "/doi"]          {:handler doi/get-doi-reference}
+   [:get "/doi"]          {:handler     doi/get-doi-reference}
 
    ;; Plots API
    [:get  "/get-collection-plot"]              {:handler     plots/get-collection-plot

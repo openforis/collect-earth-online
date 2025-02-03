@@ -1065,3 +1065,43 @@ body {
 .popup-button:hover {
   background-color: #54a09b;
 }
+
+.disable-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #B53729;
+  border: 2px solid #B53729;
+  border-radius: 5px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.disable-button:hover {
+  background-color: #B53729;
+  color: #fff;
+}
+
+.enable-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #65B7B0;
+  border: 2px solid #65B7B0;
+  border-radius: 5px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.disable-button:hover {
+  background-color: #65B7B0;
+  color: #fff;
+}

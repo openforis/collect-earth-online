@@ -252,6 +252,8 @@ class ProjectManagement extends React.Component {
       setContextState,
     } = this.context;
 
+    console.log(qaqcMethod);
+
     return (
       <div className="d-flex flex-column" id="project-management">
         <div className="d-flex">
@@ -337,6 +339,7 @@ class ProjectManagement extends React.Component {
               onClick={() => window.open(`/project-qaqc-dashboard?projectId=${id}`)}
               type="button"
               value="Project QAQC Dashboard"
+              disabled={qaqcMethod === "none"}
             />
             <label className="my-2">Export Data</label>
             <input
