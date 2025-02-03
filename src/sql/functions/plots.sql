@@ -675,9 +675,9 @@ RETURNS table (
     avg_col_time   double precision,
     min_col_time   double precision,
     max_col_time   double precision,
-    avg_confidence double precision,
-    max_confidence double precision,
-    min_confidence double precision
+    avg_confidence numeric,
+    max_confidence numeric,
+    min_confidence numeric
 ) AS $$
 WITH total_samples AS (
     SELECT count(sample_uid) AS total_samples,

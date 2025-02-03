@@ -252,8 +252,6 @@ class ProjectManagement extends React.Component {
       setContextState,
     } = this.context;
 
-    console.log(qaqcMethod);
-
     return (
       <div className="d-flex flex-column" id="project-management">
         <div className="d-flex">
