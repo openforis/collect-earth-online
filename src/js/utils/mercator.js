@@ -28,7 +28,7 @@ import { BingMaps, Cluster, OSM, TileWMS, Vector as VectorSource, XYZ } from "ol
 import { Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText } from "ol/style";
 import { fromLonLat, transform, transformExtent, getPointResolution } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
-import { getArea } from "ol/sphere";
+import { getArea, getDistance } from "ol/sphere";
 import { formatDateISO, isNumber } from "./generalUtils";
 import { mapboxAttributionText } from "../imagery/mapbox-attribution";
 

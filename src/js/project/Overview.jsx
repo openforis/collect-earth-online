@@ -14,10 +14,11 @@ export function Overview(props) {
     projectOptions,
     projectOptions: { showGEEScript, showPlotInformation, collectConfidence, autoLaunchGeoDash },
     projectId,
+    type,
     learningMaterial
   } = useContext(ProjectContext);
 
-  const [selectedType, setSelectedType] = useState(props.projectType);
+  const [selectedType, setSelectedType] = useState(type || "regular");
   
   const importCollectProject = (fileName, fileb64) => {
     fetch(`/import-ce-project`, {
@@ -46,6 +47,7 @@ export function Overview(props) {
             ["overview", "imagery", "plots", "questions"].includes(key));
     setSelectedType(selectedValue);
     props.updateProjectType(selectedValue);
+    console.log(selectedType);
     props.updateSteps(updatedSteps);
   }
 
