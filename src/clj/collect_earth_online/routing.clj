@@ -86,6 +86,7 @@
    [:post "/password-reset"]                 {:handler users/password-reset}
    [:post "/verify-email"]                   {:handler users/verify-email}
    [:post "/register"]                       {:handler users/register}
+   [:post "/confirm-data-sharing"]           {:handler #'users/confirm-data-sharing!}
    ;; Projects API
    [:get  "/dump-project-aggregate-data"]    {:handler     #'projects/dump-project-aggregate-data!
                                               :auth-type   :admin

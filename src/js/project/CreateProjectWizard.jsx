@@ -127,7 +127,7 @@ export default class CreateProjectWizard extends React.Component {
       complete: new Set(),
       templateProject: {},
       templatePlots: [],
-      projectType: "full",
+      projectType: "regular",
       draftProject: { ...blankProject}
     };
   }

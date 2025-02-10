@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
 
-import { LoadingModal, NavigationBar, LearningMaterialModal } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, LearningMaterialModal, AcceptTermsModal } from "./components/PageComponents";
 import SurveyCollection from "./survey/SurveyCollection";
 import {
   PlanetMenu,
@@ -72,6 +72,7 @@ class Collection extends React.Component {
       modalMessage: null,
       navigationMode: "natural",
       threshold: 90,
+      showAcceptTermsModal: false,
     };
   }
 
@@ -179,7 +180,7 @@ class Collection extends React.Component {
       (this.state.currentImagery.id !== prevState.currentImagery.id ||
         this.state.mapConfig !== prevState.mapConfig)
     ) {
-      if (!prevState.imageryIdsArray.includes(this.state.currentImagery.id)) {
+      if (!prevState.imageryIdsArray?.includes(this.state.currentImagery.id)) {
         this.setState((prevState) => ({
           imageryIds: [...prevState.imageryIds, this.state.currentImagery.id],
         }));
@@ -218,6 +219,14 @@ class Collection extends React.Component {
         type: "alert",
       },
     });
+
+  onDataSharingClose = () => {
+    return null;
+  }
+
+  onDataSharingConfirmed = () => {
+    return null;
+  }
 
   getProjectData = () =>
     this.processModal("Loading project details", () =>
@@ -983,7 +992,8 @@ class Collection extends React.Component {
   };
 
   toggleQuitModal = () => this.setState({ showQuitModal: !this.state.showQuitModal });
-
+  toggleAcceptTermsModal = () => this.setState({ showAcceptTermsModal: !this.state.showAcceptTermsModal });
+  
   toggleFlagged = () =>
     this.setState({
       currentPlot: { ...this.state.currentPlot, flagged: !this.state.currentPlot.flagged },
@@ -1156,8 +1166,7 @@ class Collection extends React.Component {
           </Modal>
         )}
         {!this.props.acceptedTerms && (
-          <Modal title="Accept data sharing" >
-          </Modal>
+          <AcceptTermsModal projectId={this.props.projectId} toggleAcceptTermsModal={this.toggleAcceptTermsModal} />
         )}
         {this.state.showQuitModal && (
           <QuitMenu projectId={this.props.projectId} toggleQuitModal={this.toggleQuitModal} />

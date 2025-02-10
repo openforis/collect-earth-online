@@ -29,6 +29,18 @@ export class PlotDesign extends React.Component {
     if (this.props.aoiFeatures && prevProps.aoiFeatures !== this.props.aoiFeatures) {
       this.setCoordsFromBoundary();
     }
+
+    const { lonMin, latMin, lonMax, latMax } = this.state;
+    
+    if (
+      this.context.type === "simplified" &&
+        (lonMin !== prevState.lonMin ||
+         latMin !== prevState.latMin ||
+         lonMax !== prevState.lonMax ||
+         latMax !== prevState.latMax)
+    ) {
+      this.setSimplifiedProjectDetails();
+    }
   }
 
   setCoordsFromBoundary = () => {
@@ -84,6 +96,22 @@ export class PlotDesign extends React.Component {
       Object.assign(newDetail, { plots: [] }, resetAOI ? { aoiFeatures: [], aoiFileName: "" } : {})
     );
   };
+
+  setSimplifiedProjectDetails = () => {
+    const { lonMin, lonMax, latMin } = this.state;
+    const plotWidth = mercator.calculatePlotWidth(latMin, lonMin, lonMax);
+    const designSettings = this.context.designSettings;
+
+    this.setPlotDetails({"numPlots": 1});
+    this.setPlotDetails({"plotWidth": plotWidth});
+    this.context.setProjectDetails({
+      designSettings: {
+        ...designSettings,
+        sampleGeometries: {"lines": true, "points": true, "polygons": true}} })
+    this.context.setProjectDetails({
+      sampleDistribution: "center"
+    })
+  }
 
   /// Render Functions
 
@@ -413,6 +441,7 @@ export class PlotDesign extends React.Component {
   renderRandom = () => {
     const { aoiFeatures, plotShape } = this.context;
     const projectType = this.props.projectType;
+    const disabled = projectType === "simplified";
     const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
     return (
       <div>
@@ -420,9 +449,9 @@ export class PlotDesign extends React.Component {
         <label>Plot properties</label>
         {aoiFeatures.map(this.renderStrataRow)}
         <div className="d-flex">
-          {this.renderLabeledInput("Number of plots", "numPlots")}
+          {this.renderLabeledInput("Number of plots", "numPlots", disabled)}
           <span className="mx-3">{this.renderPlotShape()}</span>
-          {this.renderLabeledInput(plotUnits, "plotSize")}
+          {this.renderLabeledInput(plotUnits, "plotSize", disabled)}
         </div>
       </div>
     );

@@ -557,7 +557,8 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     published_date         date,
     closed_date            date,
     has_geo_dash           boolean,
-    token_key              text
+    token_key              text,
+    type                   text
  ) AS $$
 
     SELECT project_uid,
@@ -591,7 +592,8 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         published_date,
         closed_date,
         count(widget_uid) > 0,
-        token_key
+        token_key,
+        type
     FROM projects
     LEFT JOIN project_widgets
         ON project_rid = project_uid

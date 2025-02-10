@@ -1497,6 +1497,9 @@ mercator.calculateArea = (obj) => {
   }
 };
 
+mercator.calculatePlotWidth = (latMin, lonMin, lonMax) => 
+  getDistance([lonMin, latMin], [lonMax, latMin]).toFixed(2);
+
 /*****************************************************************************
  ***
  *** Functions to export plot and sample features as KML

@@ -18,6 +18,8 @@ export default class ReviewChanges extends React.Component {
     if (!this.state.acceptTOS) {
       alert("You must accept the terms of service to continue.");
     } else if (confirm("Do you really want to create this project?")) {
+      const test = this.buildProjectObject();
+      console.log(test);
       this.context.processModal("Creating Project", () =>
         fetch("/create-project", {
           method: "POST",

@@ -136,7 +136,8 @@
      :publishedDate      (str (:published_date project))
      :closedDate         (str (:closed_date project))
      :hasGeoDash         (:has_geo_dash project)
-     :isProjectAdmin     (is-proj-admin? user-id project-id nil)}))
+     :isProjectAdmin     (is-proj-admin? user-id project-id nil)
+     :type               (:type project)}))
 
 (defn get-project-by-id [{:keys [params session]}]
   (let [user-id    (:userId session -1)
