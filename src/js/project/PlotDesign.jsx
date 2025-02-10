@@ -25,7 +25,7 @@ export class PlotDesign extends React.Component {
     this.setCoordsFromBoundary();
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     if (this.props.aoiFeatures && prevProps.aoiFeatures !== this.props.aoiFeatures) {
       this.setCoordsFromBoundary();
     }
@@ -102,15 +102,14 @@ export class PlotDesign extends React.Component {
     const plotWidth = mercator.calculatePlotWidth(latMin, lonMin, lonMax);
     const designSettings = this.context.designSettings;
 
-    this.setPlotDetails({"numPlots": 1});
-    this.setPlotDetails({"plotWidth": plotWidth});
     this.context.setProjectDetails({
+      ...this.context,
+      sampleDistribution: "center",
+      numPlots: 1,
+      plotSize: plotWidth / 2,
       designSettings: {
         ...designSettings,
         sampleGeometries: {"lines": true, "points": true, "polygons": true}} })
-    this.context.setProjectDetails({
-      sampleDistribution: "center"
-    })
   }
 
   /// Render Functions
@@ -301,9 +300,8 @@ export class PlotDesign extends React.Component {
   };
 
   renderAOISelector = () => {
-    const { boundaryType } = this.context;
-    const { projectType } = this.props;
-    const disableSelector = (projectType === "simplified") ? true : false;
+    const { boundaryType, type } = this.context;
+    const disableSelector = (type === "simplified") ? true : false;
     const boundaryOptions = [
       { value: "manual", label: "Input coordinates" },
       { value: "file", label: "Upload shp file" },
@@ -439,9 +437,8 @@ export class PlotDesign extends React.Component {
   );
 
   renderRandom = () => {
-    const { aoiFeatures, plotShape } = this.context;
-    const projectType = this.props.projectType;
-    const disabled = projectType === "simplified";
+    const { aoiFeatures, plotShape, type } = this.context;
+    const disabled = type === "simplified";
     const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
     return (
       <div>
@@ -532,7 +529,7 @@ export class PlotDesign extends React.Component {
                     : this.setPlotDetails({ plotDistribution: e.target.value })
                 }
                 value={plotDistribution}
-                disabled={this.props.projectType === "simplified"}
+                disabled={this.context.type === "simplified"}
               >
                 {Object.entries(plotOptions).map(([key, options]) => (
                   <option key={key} value={key}>

@@ -1497,8 +1497,13 @@ mercator.calculateArea = (obj) => {
   }
 };
 
-mercator.calculatePlotWidth = (latMin, lonMin, lonMax) => 
-  getDistance([lonMin, latMin], [lonMax, latMin]).toFixed(2);
+
+mercator.calculatePlotWidth = (latMin, lonMin, lonMax) => {
+  const point1 = transform([lonMin, latMin], 'EPSG:4326', 'EPSG:3857');
+  const point2 = transform([lonMax, latMin], 'EPSG:4326', 'EPSG:3857');
+
+  return getDistance(point1, point2).toFixed(2);
+};
 
 /*****************************************************************************
  ***

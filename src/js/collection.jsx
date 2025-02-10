@@ -1165,9 +1165,6 @@ class Collection extends React.Component {
             <p>{this.state.messageBox.body}</p>
           </Modal>
         )}
-        {!this.props.acceptedTerms && (
-          <AcceptTermsModal projectId={this.props.projectId} toggleAcceptTermsModal={this.toggleAcceptTermsModal} />
-        )}
         {this.state.showQuitModal && (
           <QuitMenu projectId={this.props.projectId} toggleQuitModal={this.toggleQuitModal} />
         )}

@@ -811,3 +811,8 @@ CREATE OR REPLACE FUNCTION select_all_plot_samples(_plot_id integer)
     WHERE s.plot_rid = _plot_id
 
 $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION convert_geojson_to_geom(_geojson TEXT)
+RETURNS GEOMETRY AS $$
+    SELECT ST_GeomFromGeoJSON(_geojson);
+$$ LANGUAGE SQL;
