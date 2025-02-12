@@ -107,6 +107,7 @@ export class PlotDesign extends React.Component {
       sampleDistribution: "center",
       numPlots: 1,
       plotSize: plotWidth / 2,
+      allowDrawnSamples: true,
       designSettings: {
         ...designSettings,
         sampleGeometries: {"lines": true, "points": true, "polygons": true}} })

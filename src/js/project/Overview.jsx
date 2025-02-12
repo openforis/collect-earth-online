@@ -47,7 +47,6 @@ export function Overview(props) {
             ["overview", "imagery", "plots", "questions"].includes(key));
     setSelectedType(selectedValue);
     props.updateProjectType(selectedValue);
-    console.log(selectedType);
     props.updateSteps(updatedSteps);
   }
 

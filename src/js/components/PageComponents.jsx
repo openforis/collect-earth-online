@@ -507,6 +507,25 @@ export function SuccessModal({ message, onClose }) {
 
 export function AcceptTermsModal ({ projectId, toggleAcceptTermsModal }) {
   const [interpreterName, setInterpreterName] = useState("");
+
+  const acceptTerms = () => {
+    fetch(`/confirm-data-sharing?projectId=${projectId}`,
+          {
+            method: "POST",
+            body: JSON.stringify({interpreterName}),
+            headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/json",
+            },
+          }).then((response) => {
+            if (response.ok) {
+              window.location.assign(`/collection?projectId=${projectId}`)
+            } else {
+              console.log(response);
+              console.log("Error")
+            }
+          });
+  }
   
   return (
     <div
@@ -555,7 +574,7 @@ export function AcceptTermsModal ({ projectId, toggleAcceptTermsModal }) {
             />
           </div>
           <div className="modal-footer">
-            <button className="btn btn-secondary btn-sm" onClick={toggleAcceptTermsModal} type="button">
+            <button className="btn btn-secondary btn-sm" onClick={acceptTerms} type="button">
               I Agree
             </button>
             <button

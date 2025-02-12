@@ -83,6 +83,8 @@ class Collection extends React.Component {
     fetch(`/release-plot-locks?projectId=${this.props.projectId}`, { method: "POST" });
 
     this.getProjectData();
+    console.log(this.props.acceptedTerms);
+    this.setState({ showAcceptedTermsModal: this.props.acceptedTerrms });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -1068,33 +1070,34 @@ class Collection extends React.Component {
           userName={this.props.userName}
           collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
         >
-          <PlotNavigation
-            collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
-            currentPlot={this.state.currentPlot}
-            currentUserId={this.state.currentUserId}
-            hasAssignedPlots={
-              this.state.currentProject.designSettings?.userAssignment?.userMethod !== "none"
-            }
-            inReviewMode={this.state.inReviewMode}
-            isProjectAdmin={this.state.currentProject.isProjectAdmin}
-            isQAQCEnabled={
-              this.state.currentProject.designSettings?.qaqcAssignment?.qaqcMethod !== "none"
-            }
-            loadingPlots={this.state.plotList.length === 0}
-            navigationMode={this.state.navigationMode}
-            navToFirstPlot={this.navToFirstPlot}
-            navToNextPlot={this.navToNextPlot}
-            navToPlot={this.navToPlot}
-            navToPrevPlot={this.navToPrevPlot}
-            plotters={this.state.plotters}
-            plotUsers={(this.state.userPlotList || []).filter((p) => p.userId)}
-            projectId={this.props.projectId}
-            setCurrentUserId={this.setCurrentUserId}
-            setNavigationMode={this.setNavigationMode}
-            setReviewMode={this.setReviewMode}
-            setThreshold={this.setThreshold}
-            threshold={this.state.threshold}
-          />
+           <PlotNavigation
+             collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
+             currentPlot={this.state.currentPlot}
+             currentUserId={this.state.currentUserId}
+             hasAssignedPlots={
+               this.state.currentProject.designSettings?.userAssignment?.userMethod !== "none"
+             }
+             inReviewMode={this.state.inReviewMode}
+             isProjectAdmin={this.state.currentProject.isProjectAdmin}
+             isQAQCEnabled={
+               this.state.currentProject.designSettings?.qaqcAssignment?.qaqcMethod !== "none"
+             }
+             loadingPlots={this.state.plotList.length === 0}
+             navigationMode={this.state.navigationMode}
+             navToFirstPlot={this.navToFirstPlot}
+             navToNextPlot={this.navToNextPlot}
+             navToPlot={this.navToPlot}
+             navToPrevPlot={this.navToPrevPlot}
+             plotters={this.state.plotters}
+             plotUsers={(this.state.userPlotList || []).filter((p) => p.userId)}
+             projectId={this.props.projectId}
+             setCurrentUserId={this.setCurrentUserId}
+             setNavigationMode={this.setNavigationMode}
+             setReviewMode={this.setReviewMode}
+             setThreshold={this.setThreshold}
+             threshold={this.state.threshold}
+             projectType={this.state.currentProject?.type}
+           />
           <ExternalTools
             currentPlot={this.state.currentPlot}
             currentProject={this.state.currentProject}
@@ -1164,6 +1167,9 @@ class Collection extends React.Component {
           <Modal {...this.state.messageBox} onClose={() => this.setState({ messageBox: null })}>
             <p>{this.state.messageBox.body}</p>
           </Modal>
+        )}
+        {(!this.props.acceptedTerms && (this.state.currentProject?.type === 'simplified')) && (
+          <AcceptTermsModal projectId={this.props.projectId} toggleAcceptTermsModal={this.toggleAcceptTermsModal} />
         )}
         {this.state.showQuitModal && (
           <QuitMenu projectId={this.props.projectId} toggleQuitModal={this.toggleQuitModal} />
@@ -1488,7 +1494,7 @@ class PlotNavigation extends React.Component {
         <div className="mt-2">
           {loadingPlots ? (
             <h3>Loading plot data...</h3>
-          ) : currentPlot?.id ? (
+          ) : (currentPlot?.id && this.props.projectType === "regular") ? (
             this.navButtons()
           ) : (
             this.gotoButton()
