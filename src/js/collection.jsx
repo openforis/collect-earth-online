@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
 
-import { LoadingModal, NavigationBar, LearningMaterialModal } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, LearningMaterialModal, AcceptTermsModal } from "./components/PageComponents";
 import SurveyCollection from "./survey/SurveyCollection";
 import {
   PlanetMenu,
@@ -72,6 +72,7 @@ class Collection extends React.Component {
       modalMessage: null,
       navigationMode: "natural",
       threshold: 90,
+      showAcceptTermsModal: false,
     };
   }
 
@@ -82,6 +83,7 @@ class Collection extends React.Component {
     fetch(`/release-plot-locks?projectId=${this.props.projectId}`, { method: "POST" });
 
     this.getProjectData();
+    this.setState({ showAcceptedTermsModal: this.props.acceptedTerrms });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -179,7 +181,7 @@ class Collection extends React.Component {
       (this.state.currentImagery.id !== prevState.currentImagery.id ||
         this.state.mapConfig !== prevState.mapConfig)
     ) {
-      if (!prevState.imageryIdsArray.includes(this.state.currentImagery.id)) {
+      if (!prevState.imageryIdsArray?.includes(this.state.currentImagery.id)) {
         this.setState((prevState) => ({
           imageryIds: [...prevState.imageryIds, this.state.currentImagery.id],
         }));
@@ -990,6 +992,7 @@ class Collection extends React.Component {
     });
 
   setUnansweredColor = (newColor) => this.setState({ unansweredColor: newColor });
+  toggleAcceptTermsModal = () => this.setState({ showAcceptTermsModal: !this.state.showAcceptTermsModal });
 
   setAnswerMode = (newMode, drawTool) => {
     if (this.state.answerMode !== newMode) {
@@ -1155,9 +1158,8 @@ class Collection extends React.Component {
             <p>{this.state.messageBox.body}</p>
           </Modal>
         )}
-        {!this.props.acceptedTerms && (
-          <Modal title="Accept data sharing" >
-          </Modal>
+        {(!this.props.acceptedTerms && (this.state.currentProject?.type === 'simplified')) && (
+          <AcceptTermsModal projectId={this.props.projectId} toggleAcceptTermsModal={this.toggleAcceptTermsModal} />
         )}
         {this.state.showQuitModal && (
           <QuitMenu projectId={this.props.projectId} toggleQuitModal={this.toggleQuitModal} />

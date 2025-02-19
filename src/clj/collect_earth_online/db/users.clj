@@ -268,3 +268,20 @@
                                   institution-name
                                   ", but the email notification has failed."))))))
       (data-response "You must be logged into request membership."))))
+
+(defn confirm-data-sharing!
+  [req]
+  (let [{:keys [params session]} req
+        user-id (:userId session)
+        interpreter-name (:interpreterName params)]
+    (println req)
+    (try
+      (if (= -1 user-id)
+        (do
+          (call-sql "guest_user_data_sharing" interpreter-name)
+          (data-response {:message "success"} {:session {:acceptedTerms true}}))
+        (do
+          (call-sql "user_data_sharing" user-id interpreter-name (or (:remote-addr req) ""))
+          (data-response {:message "success"} {:session {:acceptedTerms true}})))
+      (catch Exception e
+        (data-response {:message "error when accepting data sharing terms."} {:status 500})))))
