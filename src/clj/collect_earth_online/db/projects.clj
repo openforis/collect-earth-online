@@ -136,7 +136,8 @@
      :publishedDate      (str (:published_date project))
      :closedDate         (str (:closed_date project))
      :hasGeoDash         (:has_geo_dash project)
-     :isProjectAdmin     (is-proj-admin? user-id project-id nil)}))
+     :isProjectAdmin     (is-proj-admin? user-id project-id nil)
+     :type               (:project_type project)}))
 
 (defn get-project-by-id [{:keys [params session]}]
   (let [user-id    (:userId session -1)
@@ -460,6 +461,7 @@
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
         token-key            (str (UUID/randomUUID))]
+    (println "creating project")
     (try
       (let [project-id (sql-primitive (call-sql "create_project"
                                                 institution-id
@@ -514,7 +516,7 @@
           ;; Save project imagery
           (if-let [imagery-list (:projectImageryList params)]
             (insert-project-imagery! project-id imagery-list)
-                                ;; API backwards compatibility
+            ;; API backwards compatibility
             (call-sql "add_all_institution_imagery" project-id))
           ;; Copy template widgets
           (when (and (pos? project-template) use-template-widgets)
@@ -523,18 +525,19 @@
           (data-response {:projectId project-id
                           :tokenKey  token-key})
           (catch Exception e
-          ;; Delete new project on error
+            ;; Delete new project on error
             (try
               (call-sql "delete_project" project-id)
               (catch Exception _))
             (let [causes (:causes (ex-data e))]
+              (println "oops! cannot create project:" e)
               ;; Log unknown errors
               (when-not causes (log (ex-message e)))
               ;; Return error stack to user
               (data-response "Internal server error during project creation request." {:status 500})))))
       (catch Exception e
         (let [causes (:cause (ex-data e))]
-          (when-not causes (log (ex-message e)))
+          (when-not causes (log (ex-message e)))          
           (data-response "Internal server error during project creation request, there may be a problem with your input." {:status 500}))))))
 
 ;;;

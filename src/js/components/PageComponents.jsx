@@ -505,14 +505,15 @@ export function SuccessModal({ message, onClose }) {
   );
 }
 
-export function AcceptTermsModal ({ projectId, toggleAcceptTermsModal }) {
+export function AcceptTermsModal ({ projectId, toggleAcceptTermsModal, currentUser}) {
   const [interpreterName, setInterpreterName] = useState("");
-
+  
   const acceptTerms = () => {
+    console.log("current User!", currentUser);
     fetch(`/confirm-data-sharing?projectId=${projectId}`,
           {
             method: "POST",
-            body: JSON.stringify({interpreterName}),
+            body: JSON.stringify({interpreterName, currentUser}),
             headers: {
               "Accept": "application/json",
               "Content-Type": "application/json",

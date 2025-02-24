@@ -272,13 +272,13 @@
 (defn confirm-data-sharing!
   [req]
   (let [{:keys [params session]} req
-        user-id (:userId session)
+        user-id (:userId session (:currentUser params))
         interpreter-name (:interpreterName params)]
-    (println req)
     (try
       (if (= -1 user-id)
         (do
-          (call-sql "guest_user_data_sharing" interpreter-name)
+          (println "calling sql: guest_user_data_sharing(" interpreter-name ")")
+          (call-sql "guest_user_data_sharing" interpreter-name "")
           (data-response {:message "success"} {:session {:acceptedTerms true}}))
         (do
           (call-sql "user_data_sharing" user-id interpreter-name (or (:remote-addr req) ""))
