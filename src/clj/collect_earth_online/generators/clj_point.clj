@@ -1,6 +1,6 @@
 (ns collect-earth-online.generators.clj-point
   (:require [triangulum.type-conversion :as tc]
-            [triangulum.database        :refer [call-sql]]
+            [triangulum.database        :refer [call-sql sql-primitive]]
             [collect-earth-online.utils.geom       :refer [make-wkt-point
                                                            EPSG:3857->4326
                                                            EPSG:4326->3857
@@ -168,12 +168,18 @@
                             num-plots
                             plot-spacing
                             plot-size
-                            shuffle-plots?]
-  (let [plots (if (= "gridded" plot-distribution)
-                (create-gridded-plots-in-bounds project-id plot-size plot-spacing)
-                (create-random-plots-in-bounds  project-id plot-size num-plots))]
-    (->> (if shuffle-plots? (shuffle plots) plots)
-         (map-indexed (fn [idx [lon lat]]
-                        {:project_rid project-id
-                         :visible_id  (inc idx)
-                         :plot_geom   (tc/str->pg (make-wkt-point lon lat) "geometry")})))))
+                            shuffle-plots?
+                            aoi-features
+                            type]
+  (if (= type "simplified")
+    [{:project_rid project-id
+      :visible_id  1
+      :plot_geom   (sql-primitive (call-sql "convert_geojson_to_geom" (tc/clj->json (first aoi-features))))}]
+    (let [plots (if (= "gridded" plot-distribution)
+                  (create-gridded-plots-in-bounds project-id plot-size plot-spacing)
+                  (create-random-plots-in-bounds  project-id plot-size num-plots))]
+      (->> (if shuffle-plots? (shuffle plots) plots)
+           (map-indexed (fn [idx [lon lat]]
+                          {:project_rid project-id
+                           :visible_id  (inc idx)
+                           :plot_geom   (tc/str->pg (make-wkt-point lon lat) "geometry")}))))))

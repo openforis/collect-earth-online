@@ -181,7 +181,7 @@ class Collection extends React.Component {
       (this.state.currentImagery.id !== prevState.currentImagery.id ||
         this.state.mapConfig !== prevState.mapConfig)
     ) {
-      if (!prevState.imageryIdsArray?.includes(this.state.currentImagery.id)) {
+      if (!prevState?.imageryIdsArray?.includes(this.state.currentImagery.id)) {
         this.setState((prevState) => ({
           imageryIds: [...prevState.imageryIds, this.state.currentImagery.id],
         }));

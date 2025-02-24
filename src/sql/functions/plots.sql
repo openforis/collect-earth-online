@@ -665,9 +665,9 @@ CREATE OR REPLACE FUNCTION select_saved_answers(_project_id integer)
   WHERE p.project_rid = _project_id
   
 $$ LANGUAGE SQL;
-  
+
 CREATE OR REPLACE FUNCTION get_plot_stats(_project_id integer)
-  RETURNS table (
+RETURNS table (
     plot_id        integer,
     internal_id    integer,
     total_samples  bigint,
@@ -675,65 +675,68 @@ CREATE OR REPLACE FUNCTION get_plot_stats(_project_id integer)
     avg_col_time   double precision,
     min_col_time   double precision,
     max_col_time   double precision,
-    avg_confidence double precision
-  ) AS $$
+    avg_confidence numeric,
+    max_confidence integer,
+    min_confidence integer
+) AS $$
+WITH total_samples AS (
+    SELECT count(sample_uid) AS total_samples,
+           p.visible_id as plot_id,
+           p.plot_uid   as internal_id
+    FROM samples s
+    INNER JOIN plots p ON p.plot_uid = s.plot_rid
+    WHERE p.project_rid = _project_id
+    GROUP BY p.visible_id, p.plot_uid
+), plot_flags AS (
+    SELECT count(*) AS flag_count,
+           p.visible_id as plot_id
+    FROM user_plots up
+    INNER JOIN plots p ON p.plot_uid = up.plot_rid
+    INNER JOIN total_samples ts ON ts.plot_id = p.visible_id
+    WHERE flagged = true
+      AND p.project_rid = _project_id
+    GROUP BY p.visible_id
+), collection_times AS (
+    SELECT
+        p.visible_id as plot_id,
+        AVG(EXTRACT(EPOCH FROM collection_time - collection_start) / 60) AS avg_col_time,
+        MIN(EXTRACT(EPOCH FROM collection_time - collection_start) / 60) AS min_col_time,
+        MAX(EXTRACT(EPOCH FROM collection_time - collection_start) / 60) AS max_col_time
+    FROM user_plots up
+    INNER JOIN plots p ON p.plot_uid = up.plot_rid
+    INNER JOIN total_samples ts ON ts.plot_id = p.visible_id
+    WHERE p.project_rid = _project_id
+    GROUP BY p.visible_id
+), confidence_stats AS (
+    SELECT
+        p.visible_id as plot_id,
+        AVG(COALESCE(confidence, 100)) AS average_confidence,
+        MAX(COALESCE(confidence, 100)) AS max_confidence,
+        MIN(COALESCE(confidence, 100)) AS min_confidence
+    FROM user_plots up
+    INNER JOIN plots p ON p.plot_uid = up.plot_rid
+    INNER JOIN total_samples ts ON ts.plot_id = p.visible_id
+    WHERE p.project_rid = _project_id
+    GROUP BY p.visible_id
+)
 
-    WITH total_samples AS (
-        SELECT count(sample_uid) AS total_samples,
-               p.visible_id as plot_id,
-               p.plot_uid   as internal_id
-        FROM samples s
-        INNER JOIN plots p ON p.plot_uid = s.plot_rid
-        WHERE p.project_rid = _project_id
-        GROUP BY p.visible_id, p.plot_uid
-    ), plot_flags AS (
-        SELECT count(*) AS flag_count,
-               p.visible_id as plot_id
-        FROM user_plots up
-        INNER JOIN plots p ON p.plot_uid = up.plot_rid
-        INNER JOIN total_samples ts ON ts.plot_id = p.visible_id
-        WHERE flagged = true
-          AND p.project_rid = _project_id
-        GROUP BY p.visible_id
-    ), collection_times AS (
-        SELECT
-            p.visible_id as plot_id,
-            AVG(EXTRACT(EPOCH FROM collection_time - collection_start) / 60) AS avg_col_time,
-            MIN(EXTRACT(EPOCH FROM collection_time - collection_start) / 60) AS min_col_time,
-            MAX(EXTRACT(EPOCH FROM collection_time - collection_start) / 60) AS max_col_time
-        FROM user_plots up
-        INNER JOIN plots p ON p.plot_uid = up.plot_rid
-        INNER JOIN total_samples ts ON ts.plot_id = p.visible_id
-        WHERE p.project_rid = _project_id
-        GROUP BY p.visible_id
-    ), average_confidence AS (
-        SELECT
-            p.visible_id as plot_id,
-            AVG(COALESCE(confidence, 100)) AS average_confidence
-        FROM user_plots up
-        INNER JOIN plots p ON p.plot_uid = up.plot_rid
-        INNER JOIN total_samples ts ON ts.plot_id = p.visible_id
-        WHERE p.project_rid = _project_id
-        GROUP BY p.visible_id
-    )
-    
-    -- Final SELECT to bring it all together
-    SELECT 
-        ts.plot_id,
-        ts.internal_id,
-        ts.total_samples,
-        pf.flag_count,
-        ct.avg_col_time,
-        ct.min_col_time,
-        ct.max_col_time,
-        CAST(ac.average_confidence AS double precision) AS avg_confidence
-    FROM total_samples ts
-    LEFT JOIN plot_flags pf ON ts.plot_id = pf.plot_id
-    LEFT JOIN collection_times ct ON ts.plot_id = ct.plot_id
-    LEFT JOIN average_confidence ac ON ts.plot_id = ac.plot_id;
-    
+-- Final SELECT to bring it all together
+SELECT 
+    ts.plot_id,
+    ts.internal_id,
+    ts.total_samples,
+    pf.flag_count,
+    ct.avg_col_time,
+    ct.min_col_time,
+    ct.max_col_time,
+    cs.average_confidence,
+    cs.max_confidence,
+    cs.min_confidence
+FROM total_samples ts
+LEFT JOIN plot_flags pf ON ts.plot_id = pf.plot_id
+LEFT JOIN collection_times ct ON ts.plot_id = ct.plot_id
+LEFT JOIN confidence_stats cs ON ts.plot_id = cs.plot_id;
 $$ LANGUAGE SQL;
-
 
 -- Get samples for qaqc
 
@@ -767,7 +770,7 @@ CREATE OR REPLACE FUNCTION select_plot_samples_qaqc(_plot_id integer)
     LEFT JOIN sample_values sv
         ON sample_uid = sv.sample_rid
         AND user_plot_uid = sv.user_plot_rid
-    WHERE s.plot_rid = _plot_id
+    WHERE s.plot_rid = _plot_id and up.disabled IS NOT TRUE
 
 $$ LANGUAGE SQL;
 
@@ -810,4 +813,53 @@ CREATE OR REPLACE FUNCTION select_all_plot_samples(_plot_id integer)
         ON up.user_rid = u.user_uid
     WHERE s.plot_rid = _plot_id
 
+$$ LANGUAGE SQL;
+
+
+-- Gets all samples from a project
+CREATE OR REPLACE FUNCTION get_samples(_project_id integer)
+RETURNS table (
+   sample_id integer,
+   plot_id   integer
+) AS $$
+
+   SELECT s.visible_id as sample_id,
+          p.visible_id as plot_id
+   FROM samples s
+   LEFT JOIN plots p ON p.plot_uid = s.plot_rid
+   WHERE p.project_rid = _project_id
+
+$$ LANGUAGE SQL;
+
+-- Disable user answers
+CREATE OR REPLACE FUNCTION disable_user_answers(_user_id integer, _project_id integer)
+RETURNS VOID
+AS $$
+      UPDATE user_plots
+    SET disabled = TRUE
+    WHERE user_rid = _user_id
+      AND plot_rid IN (
+          SELECT plot_uid
+          FROM plots
+          WHERE project_rid = _project_id
+      );
+$$ LANGUAGE SQL;
+
+-- Enable user answers
+CREATE OR REPLACE FUNCTION enable_user_answers(_user_id integer, _project_id integer)
+RETURNS VOID
+AS $$
+      UPDATE user_plots
+    SET disabled = FALSE
+    WHERE user_rid = _user_id
+      AND plot_rid IN (
+          SELECT plot_uid
+          FROM plots
+          WHERE project_rid = _project_id
+      );
+$$ LANGUAGE SQL;
+  
+CREATE OR REPLACE FUNCTION convert_geojson_to_geom(_geojson TEXT)
+RETURNS GEOMETRY AS $$
+    SELECT ST_GeomFromGeoJSON(_geojson);
 $$ LANGUAGE SQL;
