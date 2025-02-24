@@ -274,7 +274,6 @@
   (let [{:keys [params session]} req
         user-id (:userId session)
         interpreter-name (:interpreterName params)]
-    (println req)
     (try
       (if (= -1 user-id)
         (do
