@@ -26,8 +26,10 @@
   [samples-disagreement]
   (let [disagreements-list (flatten (map :disagreements samples-disagreement))
         number-of-answers  (count disagreements-list)]
-    (/ (reduce (fn [acc d] (+ acc (first (vals d)))) 0 disagreements-list)
-       number-of-answers)))
+    (if (> number-of-answers 0)
+      (/ (reduce (fn [acc d] (+ acc (first (vals d)))) 0 disagreements-list)
+         number-of-answers)
+      0)))
 
 (defn calculate-question-disagreement
   [users-answers correct-answers ignore-questions]
