@@ -42,7 +42,7 @@ CREATE OR REPLACE FUNCTION create_project(
     _token_key              text,
     _options                jsonb,
     _design_settings        jsonb,
-    _type                   text,
+    _type                   text
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
