@@ -136,7 +136,8 @@
      :publishedDate      (str (:published_date project))
      :closedDate         (str (:closed_date project))
      :hasGeoDash         (:has_geo_dash project)
-     :isProjectAdmin     (is-proj-admin? user-id project-id nil)}))
+     :isProjectAdmin     (is-proj-admin? user-id project-id nil)
+     :type               (:type project)}))
 
 (defn get-project-by-id [{:keys [params session]}]
   (let [user-id    (:userId session -1)
@@ -384,7 +385,9 @@
                               sample-file-base64
                               allow-drawn-samples?
                               shuffle-plots?
-                              design-settings]
+                              design-settings
+                              aoi-features
+                              type]
   ;; Create plots
   (let [plots (if (#{"csv" "shp" "geojson"} plot-distribution)
                 (external-file/generate-file-plots project-id
@@ -396,7 +399,9 @@
                                       num-plots
                                       plot-spacing
                                       plot-size
-                                      shuffle-plots?))]
+                                      shuffle-plots?
+                                      aoi-features
+                                      type))]
     (insert-rows! "plots" plots))
 
   ;; Boundary is only used for Planet at this point.
@@ -459,6 +464,7 @@
         plot-file-base64     (:plotFileBase64 params)
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
+        type                 (:type params)
         token-key            (str (UUID/randomUUID))]
     (try
       (let [project-id (sql-primitive (call-sql "create_project"
@@ -486,7 +492,8 @@
                                                 survey-rules
                                                 token-key
                                                 project-options
-                                                (tc/clj->jsonb design-settings)))]
+                                                (tc/clj->jsonb design-settings)
+                                                type))]
         ;; Proceed with other operations only if the initial call is successful
         (try
           ;; Create or copy plots
@@ -507,7 +514,9 @@
                                    sample-file-base64
                                    allow-drawn-samples?
                                    shuffle-plots?
-                                   design-settings))
+                                   design-settings
+                                   aoi-features
+                                   type))
           ;; Final clean up 
           (call-sql "update_project_counts" project-id)
 
@@ -605,6 +614,7 @@
         plot-file-base64     (:plotFileBase64 params)
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
+        type                 (:type params)
         original-project     (first (call-sql "select_project_by_id" project-id))]
     (if original-project
       (try
@@ -632,7 +642,8 @@
                   survey-questions
                   survey-rules
                   project-options
-                  (tc/clj->jsonb design-settings))
+                  (tc/clj->jsonb design-settings)
+                  type)
 
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
@@ -651,7 +662,7 @@
                     (not= plot-size      (:plot_size original-project))
                     (not= plot-spacing   (:plot_spacing original-project))
                     (not= shuffle-plots? (:shuffle_plots original-project)))))
-          (do
+          (doall
             (call-sql "delete_plots_by_project" project-id)
             (create-project-plots! project-id
                                    plot-distribution
@@ -668,7 +679,9 @@
                                    sample-file-base64
                                    allow-drawn-samples?
                                    shuffle-plots?
-                                   design-settings))
+                                   design-settings
+                                   aoi-features
+                                   type))
 
           :else
           (do

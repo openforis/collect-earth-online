@@ -41,7 +41,8 @@ CREATE OR REPLACE FUNCTION create_project(
     _survey_rules           jsonb,
     _token_key              text,
     _options                jsonb,
-    _design_settings        jsonb
+    _design_settings        jsonb,
+    _type                   text,
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
@@ -71,7 +72,8 @@ CREATE OR REPLACE FUNCTION create_project(
         created_date,
         token_key,
         options,
-        design_settings
+        design_settings,
+        type
     ) VALUES (
         _institution_id,
         'unpublished',
@@ -99,7 +101,8 @@ CREATE OR REPLACE FUNCTION create_project(
         now(),
         _token_key,
         _options,
-        _design_settings
+        _design_settings,
+        _type::project_type
     )
     RETURNING project_uid
 
@@ -206,7 +209,8 @@ CREATE OR REPLACE FUNCTION update_project(
     _survey_questions       jsonb,
     _survey_rules           jsonb,
     _options                jsonb,
-    _design_settings        jsonb
+    _design_settings        jsonb,
+    _type                   text
  ) RETURNS void AS $$
 
     UPDATE projects
@@ -232,7 +236,8 @@ CREATE OR REPLACE FUNCTION update_project(
         survey_questions = _survey_questions,
         survey_rules = _survey_rules,
         options = _options,
-        design_settings = _design_settings
+        design_settings = _design_settings,
+        type = _type::project_type
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
@@ -557,7 +562,8 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     published_date         date,
     closed_date            date,
     has_geo_dash           boolean,
-    token_key              text
+    token_key              text,
+    type                   text
  ) AS $$
 
     SELECT project_uid,
@@ -591,7 +597,8 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         published_date,
         closed_date,
         count(widget_uid) > 0,
-        token_key
+        token_key,
+        type
     FROM projects
     LEFT JOIN project_widgets
         ON project_rid = project_uid

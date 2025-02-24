@@ -60,14 +60,6 @@ CREATE OR REPLACE FUNCTION can_user_edit_project(_user_id integer, _project_id i
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION show_metrics_user(_user_id integer)
- RETURNS boolean AS $$
-
-    SELECT count(1) > 0
-    FROM metrics_users
-
-$$ LANGUAGE SQL; 
-
 --  USER FUNCTIONS
 --
 
@@ -136,10 +128,11 @@ CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
  RETURNS table (
     user_id          integer,
     administrator    boolean,
-    verified         boolean
+    verified         boolean,
+    accepted_terms   boolean
  ) AS $$
 
-    SELECT user_uid, administrator, verified
+    SELECT user_uid, administrator, verified, accepted_terms
     FROM users
     WHERE email = _email
         AND password = crypt(_password, password)

@@ -127,7 +127,7 @@ export default class CreateProjectWizard extends React.Component {
       complete: new Set(),
       templateProject: {},
       templatePlots: [],
-      projectType: "full",
+      projectType: "regular",
       draftProject: { ...blankProject}
     };
   }
@@ -256,7 +256,9 @@ export default class CreateProjectWizard extends React.Component {
     }
 
   updateSteps = (steps) => this.setState({ steps: steps });
-  updateProjectType = (projectType) => this.setState({ projectType: projectType });
+  updateProjectType = (projectType) => {
+    this.setState({type: projectType});
+    this.context.setProjectDetails({ type: projectType })};
 
   getTemplateProjects = () =>
     fetch("/get-template-projects")

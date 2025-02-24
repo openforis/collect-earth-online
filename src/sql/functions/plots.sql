@@ -859,3 +859,7 @@ AS $$
       );
 $$ LANGUAGE SQL;
   
+CREATE OR REPLACE FUNCTION convert_geojson_to_geom(_geojson TEXT)
+RETURNS GEOMETRY AS $$
+    SELECT ST_GeomFromGeoJSON(_geojson);
+$$ LANGUAGE SQL;

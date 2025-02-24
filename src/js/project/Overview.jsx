@@ -17,7 +17,7 @@ export function Overview(props) {
     learningMaterial
   } = useContext(ProjectContext);
 
-  const [selectedType, setSelectedType] = useState(props.projectType);
+  const [selectedType, setSelectedType] = useState(type || "regular");
   
   const importCollectProject = (fileName, fileb64) => {
     fetch(`/import-ce-project`, {
@@ -40,10 +40,11 @@ export function Overview(props) {
   const changeProjectType = (event) => {
     const selectedValue = event.target.value;
     const steps = props.steps;
-    const updatedSteps = (selectedValue === "full") ?
+    const updatedSteps = (selectedValue === "regular") ?
           props.fullProjectSteps :
           filterObject(steps, ([key, _val]) =>
             ["overview", "imagery", "plots", "questions"].includes(key));
+    setSelectedType(selectedValue);
     props.updateProjectType(selectedValue);
     props.updateSteps(updatedSteps);
   }
@@ -85,7 +86,7 @@ export function Overview(props) {
               width: "100%",
             }}
           >
-        <option value="full">Full Project</option>
+        <option value="regular">Regular Project</option>
         <option value="simplified">Simplified Project</option>
       </select>
         </div>
