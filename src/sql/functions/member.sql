@@ -452,3 +452,31 @@ CREATE OR REPLACE FUNCTION get_users_by_emails(_emails text[])
     WHERE email = any(_emails)
 
 $$ LANGUAGE SQL;
+
+-- Accepts data sharing terms for guest users
+CREATE OR REPLACE FUNCTION guest_user_data_sharing(_name TEXT, _ip TEXT)
+ RETURNS table (
+    user_name TEXT
+ ) AS $$
+    INSERT INTO data_sharing (interpreter_name, ip)
+    VALUES (_name, _ip);
+    SELECT _name;
+$$ LANGUAGE SQL;
+
+
+-- Accepts data sharing terms for regular user
+CREATE OR REPLACE FUNCTION user_data_sharing(_user_id INTEGER, _name TEXT, _ip TEXT)
+RETURNS TABLE (
+    user_id INTEGER,
+    user_name TEXT
+) AS $$
+
+    INSERT INTO data_sharing (interpreter_name, ip)
+    VALUES (_name, _ip);
+
+    UPDATE users
+    SET accepted_terms = TRUE
+    WHERE user_uid = _user_id;
+
+    SELECT _user_id, _name;
+$$ LANGUAGE SQL;

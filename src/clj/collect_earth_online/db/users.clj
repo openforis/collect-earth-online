@@ -20,12 +20,13 @@
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params
         user      (first (call-sql "check_login" {:log? false} email password))
-        user-info {:userId   (:user_id user)
-                   :userName email
-                   :userRole (if (:administrator user) "admin" "user")}]
+        user-info {:userId        (:user_id user)
+                   :userName      email
+                   :acceptedTerms (:accepted_terms user)
+                   :userRole      (if (:administrator user) "admin" "user")}]
     (if-let [error-msg (get-login-errors user)]
       (data-response error-msg)
-      (data-response "" {:session user-info})))) ; TODO user 1 is the only superuser
+      (data-response "" {:session user-info}))))
 
 (defn- get-register-errors [email password password-confirmation]
   (cond (sql-primitive (call-sql "email_taken" email -1))
@@ -267,3 +268,19 @@
                                   institution-name
                                   ", but the email notification has failed."))))))
       (data-response "You must be logged into request membership."))))
+
+(defn confirm-data-sharing!
+  [req]
+  (let [{:keys [params session]} req
+        user-id (:userId session)
+        interpreter-name (:interpreterName params)]
+    (try
+      (if (= -1 user-id)
+        (do
+          (call-sql "guest_user_data_sharing" interpreter-name)
+          (data-response {:message "success"} {:session {:acceptedTerms true}}))
+        (do
+          (call-sql "user_data_sharing" user-id interpreter-name (or (:remote-addr req) ""))
+          (data-response {:message "success"} {:session {:acceptedTerms true}})))
+      (catch Exception e
+        (data-response {:message "error when accepting data sharing terms."} {:status 500})))))

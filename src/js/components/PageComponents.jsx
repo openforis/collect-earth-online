@@ -1,6 +1,6 @@
 import "../../css/custom.css";
 
-import React from "react";
+import React, { useState } from "react";
 import ReactMarkdown from 'react-markdown';
 
 import SvgIcon from "./svg/SvgIcon";
@@ -500,6 +500,93 @@ export function SuccessModal({ message, onClose }) {
           <SvgIcon color="var(--lightgreen)" icon="check" size="1.25rem" verticalAlign="initial" />
         </div>
         <label className="m-0 mr-3">{message}</label>
+      </div>
+    </div>
+  );
+}
+
+export function AcceptTermsModal ({ projectId, toggleAcceptTermsModal }) {
+  const [interpreterName, setInterpreterName] = useState("");
+
+  const acceptTerms = () => {
+    fetch(`/confirm-data-sharing?projectId=${projectId}`,
+          {
+            method: "POST",
+            body: JSON.stringify({interpreterName}),
+            headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/json",
+            },
+          }).then((response) => {
+            if (response.ok) {
+              window.location.assign(`/collection?projectId=${projectId}`)
+            } else {
+              console.log(response);
+            }
+          });
+  }
+  return (
+    <div
+      className="modal fade show"
+      id="acceptTermsModal"
+      onClick={toggleAcceptTermsModal}
+      style={{ display: "block", backgroundColor: "rgba(0, 0, 0, 0.4)" }}
+    >
+      <div
+        className="modal-dialog modal-dialog-centered"
+        onClick={(e) => e.stopPropagation()}
+        role="document"
+      >
+        <div className="modal-content" id="quitModalContent">
+          <div className="modal-header">
+            <h5 className="modal-title" id="quitModalTitle">
+              Accept Data Sharing Terms
+            </h5>
+            <button aria-label="Close"
+                    className="close"
+                    onClick={() =>
+                      window.location.assign(`/home`)
+                    }
+                    type="button">
+              &times;
+            </button>
+          </div>
+          <div className="modal-body">
+            <p>
+              I agree that all data collected will be openly licensed via 
+              <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer"> CC BY 4.0</a>. 
+              This license enables reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. 
+              The license allows for commercial use. If I wish to receive attribution for my work, I have provided my name in the text field below. 
+              If I have not provided my name, I wish to remain anonymous.
+            </p>
+
+            <label htmlFor="interpreter-name">Interpreter name</label>
+            <input
+              className="form-control mb-1 mr-sm-2"
+              style={{ width: "300px" }}
+              id="interpreter-name"
+              maxLength="50"
+              onChange={(e) => setInterpreterName(e.target.value)}
+              type="text"
+              value={interpreterName}
+            />
+          </div>
+          <div className="modal-footer">
+            <button className="btn btn-secondary btn-sm" onClick={acceptTerms} type="button">
+              I Agree
+            </button>
+            <button
+              className="btn btn-danger btn-sm"
+              id="quit-button"
+              onClick={() =>
+                window.location.assign(`/home`)
+              }
+              type="button"
+            >
+              I Decline
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ export function Overview(props) {
     projectOptions,
     projectOptions: { showGEEScript, showPlotInformation, collectConfidence, autoLaunchGeoDash },
     projectId,
+    type,
     learningMaterial
   } = useContext(ProjectContext);
 

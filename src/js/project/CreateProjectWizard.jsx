@@ -34,7 +34,7 @@ export default class CreateProjectWizard extends React.Component {
             steps={this.state.steps}
             updateSteps={this.updateSteps}
             updateProjectType={this.updateProjectType}
-            projectType={this.projectType}
+            type={this.projectType}
             fullProjectSteps={this.fullProjectSteps}
           />
         ),
@@ -127,7 +127,7 @@ export default class CreateProjectWizard extends React.Component {
       complete: new Set(),
       templateProject: {},
       templatePlots: [],
-      projectType: "regular",
+      type: "regular",
       draftProject: { ...blankProject}
     };
   }
