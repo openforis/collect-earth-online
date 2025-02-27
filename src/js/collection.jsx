@@ -1159,10 +1159,14 @@ class Collection extends React.Component {
           </Modal>
         )}
         {(!this.props.acceptedTerms && (this.state.currentProject?.type === 'simplified')) && (
-          <AcceptTermsModal projectId={this.props.projectId} toggleAcceptTermsModal={this.toggleAcceptTermsModal} />
+          <AcceptTermsModal institutionId={this.state.currentProject.institution}
+                            projectId={this.props.projectId}
+                            toggleAcceptTermsModal={this.toggleAcceptTermsModal} />
         )}
         {this.state.showQuitModal && (
-          <QuitMenu projectId={this.props.projectId} toggleQuitModal={this.toggleQuitModal} />
+          <QuitMenu institutionId={this.state.currentProject.institution}
+                    projectId={this.props.projectId}
+                    toggleQuitModal={this.toggleQuitModal} />
         )}
       </div>
     );
@@ -1944,7 +1948,8 @@ class ProjectStats extends React.Component {
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked
-function QuitMenu({ projectId, toggleQuitModal }) {
+function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
+  console.log(institutionId);
   return (
     <div
       className="modal fade show"
@@ -1980,7 +1985,7 @@ function QuitMenu({ projectId, toggleQuitModal }) {
               id="quit-button"
               onClick={() =>
                 fetch(`/release-plot-locks?projectId=${projectId}`, { method: "POST" }).then(() =>
-                  window.location.assign("/home")
+                  window.location.assign(`/review-institution?institutionId=${institutionId}`)
                 )
               }
               type="button"
