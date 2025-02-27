@@ -505,7 +505,7 @@ export function SuccessModal({ message, onClose }) {
   );
 }
 
-export function AcceptTermsModal ({ projectId, toggleAcceptTermsModal }) {
+export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsModal }) {
   const [interpreterName, setInterpreterName] = useState("");
 
   const acceptTerms = () => {
@@ -545,7 +545,7 @@ export function AcceptTermsModal ({ projectId, toggleAcceptTermsModal }) {
             <button aria-label="Close"
                     className="close"
                     onClick={() =>
-                      window.location.assign(`/home`)
+                      window.location.assign(`/review-institution?institutionId=${institutionId}`)
                     }
                     type="button">
               &times;
@@ -579,7 +579,7 @@ export function AcceptTermsModal ({ projectId, toggleAcceptTermsModal }) {
               className="btn btn-danger btn-sm"
               id="quit-button"
               onClick={() =>
-                window.location.assign(`/home`)
+                window.location.assign(`/review-institution?institutionId=${institutionId}`)
               }
               type="button"
             >
