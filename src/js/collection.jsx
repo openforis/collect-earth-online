@@ -1063,28 +1063,30 @@ class Collection extends React.Component {
         <div className="row no-gutters">
 
           {/* Left Sidebar (ImageryLayerOptions) */}
-          <div
+          {this.state.currentProject?.type === "simplified" && (
+            <div
             className={`d-flex flex-column position-relative full-height ${this.state.isImageryLayersExpanded ? "col-lg-2 col-md-3" : "d-none w-0"}`}
             >
-            <ImageryLayerOptions
-              imageryList={this.state.imageryList}
-              onToggleLayer={this.toggleLayer}
-              onChangeOpacity={this.changeOpacity}
-              onReset={this.resetLayers}
-              isImageryLayersExpanded={this.state.isImageryLayersExpanded}
-            />
-            <button className={`toggle-sidebar position-absolute`}
-                    onClick={this.toggleImageryLayers}
-                    style={{
-                      right: "-30px",
-                      top: "80px",
-                      transform: "translateY(-50%)",
-                      transition: "right 0.3s ease"
-                    }}
-            >
-              {this.state.isImageryLayersExpanded ? <FaChevronLeft /> : <FaChevronRight />}
-            </button>
-          </div>
+              <ImageryLayerOptions
+                imageryList={this.state.imageryList}
+                onToggleLayer={this.toggleLayer}
+                onChangeOpacity={this.changeOpacity}
+                onReset={this.resetLayers}
+                isImageryLayersExpanded={this.state.isImageryLayersExpanded}
+              />
+              <button className={`toggle-sidebar position-absolute`}
+                      onClick={this.toggleImageryLayers}
+                      style={{
+                        right: "-30px",
+                        top: "80px",
+                        transform: "translateY(-50%)",
+                        transition: "right 0.3s ease"
+                      }}
+              >
+                {this.state.isImageryLayersExpanded ? <FaChevronLeft /> : <FaChevronRight />}
+              </button>
+            </div>
+          )}
 
           {/* Main Content (Image Analysis Pane) */}
           <div className={`d-flex flex-column flex-grow-1`}>
@@ -1146,18 +1148,20 @@ class Collection extends React.Component {
                this.state.currentProject.projectOptions.showPlotInformation && (
                  <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo} />
                )}
-              <ImageryOptions
-                currentImageryId={this.state.currentImagery.id}
-                currentPlot={this.state.currentPlot}
-                currentProject={this.state.currentProject}
-                currentProjectBoundary={this.state.currentProject.boundary}
-                imageryList={this.state.imageryList}
-                loadingImages={this.state.imageryList.length === 0}
-                mapConfig={this.state.mapConfig}
-                setBaseMapSource={this.setBaseMapSource}
-                setImageryAttributes={this.setImageryAttributes}
-                setImageryAttribution={this.setImageryAttribution}
-              />
+              {this.state.currentProject.type === "regular" && (
+                <ImageryOptions
+                  currentImageryId={this.state.currentImagery.id}
+                  currentPlot={this.state.currentPlot}
+                  currentProject={this.state.currentProject}
+                  currentProjectBoundary={this.state.currentProject.boundary}
+                  imageryList={this.state.imageryList}
+                  loadingImages={this.state.imageryList.length === 0}
+                  mapConfig={this.state.mapConfig}
+                  setBaseMapSource={this.setBaseMapSource}
+                  setImageryAttributes={this.setImageryAttributes}
+                  setImageryAttribution={this.setImageryAttribution}
+                />
+              )}
               {this.state.currentPlot.id ? (
                 <SurveyCollection
                   allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
