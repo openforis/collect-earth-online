@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import ReactMarkdown from 'react-markdown';
 
 import SvgIcon from "./svg/SvgIcon";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { getLanguage, capitalizeFirst } from "../utils/generalUtils";
 import { getPreference, setPreference } from "../utils/preferences";
 
@@ -591,3 +592,105 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
     </div>
   );
 }
+
+export const ImageryLayerOptions = ({
+  imageryList,
+  onToggleLayer,
+  onChangeOpacity,
+  onReset,
+  isImageryLayersExpanded,
+}) => {
+  const [expandedSections, setExpandedSections] = useState({
+    imagery: true,
+    polygon: true,
+  });
+
+  const polygonLayers = imageryList.filter((image) => image.type === "GEEFeatureCollection");
+  const imageryLayers = imageryList.filter((image) => image.type !== "GEEFeatureCollection");
+  const toggleSection = (section) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
+  return (
+    <div
+      className="sidebar-wrapper"
+      style={{ overflowX: "hidden",
+               overflowY: "auto"}}
+    >
+      <div className={`sidebar-container ${isImageryLayersExpanded ? "" : "collapsed"}`}>
+        {isImageryLayersExpanded && (
+          <div className="sidebar-content">
+            <div className="sidebar-header">
+              <h3>Imagery Layer Options</h3>
+            </div>
+            <hr/>
+            <div className="sidebar-section">
+              <div className="section-header" onClick={() => toggleSection("imagery")}>
+                <strong>Imagery Layers</strong>
+                {expandedSections.imagery ? <FaChevronUp /> : <FaChevronDown />}
+              </div>
+              {expandedSections.imagery && (
+                <div className="layers-list">
+                  {imageryLayers.map((layer) => (
+                    <div className="layer-item" key={layer.id}>
+                      <input
+                        type="checkbox"
+                        checked={layer.visible}
+                        onChange={() => onToggleLayer(layer.id)}
+                      />
+                      <span className="layer-title">{layer.title}</span>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          className="layer-range"
+                          value={layer.opacity || 1}
+                          onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
+                        />
+                      </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="sidebar-section">
+              <div className="section-header" onClick={() => toggleSection("polygon")}>
+                <strong>Polygon Layers</strong>
+                {expandedSections.polygon ? <FaChevronUp /> : <FaChevronDown />}
+              </div>
+              {expandedSections.poolygon && (
+                <div className="layers-list">
+                  {polygonLayers.map((layer) => (
+                    <div className="layer-item" key={layer.id}>
+                      <input
+                        type="checkbox"
+                        checked={layer.visible}
+                        onChange={() => onToggleLayer(layer.id)}
+                      />
+                      <span className="layer-title">{layer.title}</span>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          className="layer-range"
+                          value={layer.opacity || 1}
+                          onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
+                        />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button className="reset-button" onClick={onReset}>
+              Reset All Layers
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

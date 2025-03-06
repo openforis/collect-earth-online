@@ -52,6 +52,23 @@ export function Overview(props) {
 
   return (
     <div id="project-info">
+      <div className="form-group">
+        <label htmlFor="project-name">Project Type</label>
+        <select
+          id="projectType"
+          value={selectedType}
+          onChange={changeProjectType}
+          style={{
+            padding: "0.5rem",
+            borderRadius: "4px",
+            border: "1px solid #ccc",
+            width: "100%",
+          }}
+        >
+          <option value="regular">Regular Project</option>
+          <option value="simplified">Simplified Project</option>
+        </select>
+      </div>
       {projectId < 0 &&
        (<>
           <ProjectTemplateSelection {...props} />
@@ -68,29 +85,13 @@ export function Overview(props) {
             }}
             style={{ display: "block" }}
             type="file"
+            disabled={selectedType === "simplified"}
           />
         </>
        )}
       <br/>
       <h3>Project Information</h3>
       <div className="ml-3">
-        <div className="form-group">
-          <label htmlFor="project-name">Project Type</label>
-          <select
-            id="projectType"
-            value={selectedType}
-            onChange={changeProjectType}
-            style={{
-              padding: "0.5rem",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              width: "100%",
-            }}
-          >
-        <option value="regular">Regular Project</option>
-        <option value="simplified">Simplified Project</option>
-      </select>
-        </div>
         <div className="form-group">
           <label htmlFor="project-name">Name</label>
           <input

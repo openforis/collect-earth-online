@@ -121,7 +121,6 @@ export default class CreateProjectWizard extends React.Component {
         validate: () => [],
       },
     };
-    
     this.state = {
       steps: this.fullProjectSteps,
       complete: new Set(),
@@ -142,6 +141,12 @@ export default class CreateProjectWizard extends React.Component {
       console.error(error);
       alert("Error retrieving the project data. See console for details.");
     });
+    this.setState({type: this.context?.projectDetails?.type,
+                   steps: this.context?.type === "regular" ?
+                   this.fullProjectSteps :
+                   filterObject(this.fullProjectSteps, ([key, _val]) =>
+                     ["overview", "imagery", "plots", "questions"].includes(key))
+                  });
     if (this.context.name !== "" || this.context.description !== "") this.checkAllSteps();
   }
 
@@ -171,6 +176,7 @@ export default class CreateProjectWizard extends React.Component {
       aoiFileName: this.context.aoiFileName,
       description: this.context.description,
       name: this.context.name,
+      type: this.context.type,
       privacyLevel: this.context.privacyLevel,
       projectOptions: this.context.projectOptions,
       designSettings: this.context.designSettings,
@@ -257,16 +263,19 @@ export default class CreateProjectWizard extends React.Component {
 
   updateSteps = (steps) => this.setState({ steps: steps });
   updateProjectType = (projectType) => {
-    this.setState({type: projectType});
-    this.context.setProjectDetails({ type: projectType })};
+    this.setState({type: projectType},  () => {
+      this.context.setProjectDetails({ type: projectType, sampleDistribution: "center" });
+      this.getTemplateProjects();
+    });
+  };
 
   getTemplateProjects = () =>
-    fetch("/get-template-projects")
+    fetch(`/get-template-projects?projectType=${this.state.type}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) =>
         this.setState({
           templateProjectList:
-            data && data.length > 0 ? data : [{ id: -1, name: "No template projects found" }],
+          data && data.length > 0 ? data : [{ id: -1, name: "No template projects found" }],
         })
       )
       .catch((error) => {

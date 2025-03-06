@@ -771,7 +771,7 @@ CREATE OR REPLACE FUNCTION select_institution_dash_projects(_user_id integer, _i
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
+CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer, _type text)
  RETURNS table (
      project_id        integer,
      name              text,
@@ -783,7 +783,7 @@ CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
-    WHERE (role_rid = 1 AND p.availability <> 'archived')
+    WHERE ((role_rid = 1 AND p.availability <> 'archived')
         OR (role_rid = 2
             AND p.privacy_level IN ('public', 'institution', 'users')
             AND p.availability = 'published')
@@ -791,7 +791,8 @@ CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
             AND p.privacy_level IN ('public', 'users')
             AND p.availability = 'published')
         OR (p.privacy_level IN ('public')
-            AND p.availability = 'published')
+            AND p.availability = 'published'))
+        AND p.type = _type::project_type
     ORDER BY project_uid
 
 $$ LANGUAGE SQL;

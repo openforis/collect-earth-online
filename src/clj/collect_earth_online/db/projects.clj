@@ -94,12 +94,13 @@
                          (call-sql "select_institution_dash_projects" user-id institution-id)))))
 
 (defn get-template-projects [{:keys [params session]}]
-  (let [user-id (:userId session -1)]
+  (let [user-id (:userId session -1)
+        type    (or (:projectType params) "regular")]
     (data-response (mapv (fn [{:keys [project_id name institution_id]}]
                            {:id            project_id
                             :name          name
                             :institutionId institution_id})
-                         (call-sql "select_template_projects" user-id)))))
+                         (call-sql "select_template_projects" user-id type)))))
 
 (defn- build-project-by-id [user-id project-id]
   (let [project (first (call-sql "select_project_by_id" project-id))]
