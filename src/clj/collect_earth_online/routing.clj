@@ -164,7 +164,6 @@
                                               :auth-type   :admin
                                               :auth-action :block}
 
-
    ;; DOI API
    [:post "/create-doi"]  {:handler     doi/create-doi!
                            :auth-type   :admin
