@@ -1075,13 +1075,23 @@ class Collection extends React.Component {
 
   render() {
     return (
-      <div className={`container-fluid collection-page ${this.state.isImageryLayersExpanded ? 'expanded' : ''}`}>
+      <div className={`container-fluid collection-page`}>
         <div className="row no-gutters">
 
-          {/* Left Sidebar (ImageryLayerOptions) */}
+          {/* Left Sidebar (ImageryLayerOptions) - Now Absolutely Positioned */}
           {this.state.currentProject?.type === "simplified" && (
             <div
-            className={`d-flex flex-column position-relative full-height ${this.state.isImageryLayersExpanded ? "col-lg-2 col-md-3" : "d-none w-0"}`}
+              className="d-flex flex-column position-absolute full-height"
+              style={{
+                top: 0,
+                left: this.state.isImageryLayersExpanded ? "0px" : "-550px",
+                width: "550px",
+                height: "100%",
+                backgroundColor: "#fff",
+                boxShadow: "2px 0 5px rgba(0, 0, 0, 0.2)",
+                transition: "left 0.3s ease",
+                zIndex: 10,
+              }}
             >
               <ImageryLayerOptions
                 imageryList={this.state.imageryList}
@@ -1092,26 +1102,26 @@ class Collection extends React.Component {
                 onReset={this.resetLayers}
                 isImageryLayersExpanded={this.state.isImageryLayersExpanded}
               />
-              <button className={`toggle-sidebar position-absolute`}
-                      onClick={this.toggleImageryLayers}
-                      style={{
-                        right: "-30px",
-                        top: "80px",
-                        transform: "translateY(-50%)",
-                        transition: "right 0.3s ease"
-                      }}
+
+              {/* Sidebar Toggle Button - Stays Visible */}
+              <button
+                className="toggle-sidebar position-absolute"
+                onClick={this.toggleImageryLayers}
+                style={{
+
+                }}
               >
                 {this.state.isImageryLayersExpanded ? <FaChevronLeft /> : <FaChevronRight />}
               </button>
             </div>
           )}
 
-          {/* Main Content (Image Analysis Pane) */}
-          <div className={`d-flex flex-column flex-grow-1`}>
+          {/* Main Content (Image Analysis Pane) - Now Always Full Width */}
+          <div className="d-flex flex-column flex-grow-1">
             <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} />
           </div>
 
-          {/* Right Sidebar (SideBar) - Fixed width, always anchored */}
+          {/* Right Sidebar (SideBar) - Fixed Width, Always Anchored */}
           <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
             <SideBar
               answerMode={this.state.answerMode}
@@ -1153,72 +1163,6 @@ class Collection extends React.Component {
                 threshold={this.state.threshold}
                 projectType={this.state.currentProject?.type}
               />
-              <ExternalTools
-                currentPlot={this.state.currentPlot}
-                currentProject={this.state.currentProject}
-                KMLFeatures={this.state.KMLFeatures}
-                showGeoDash={this.showGeoDash}
-                zoomMapToPlot={this.zoomToPlot}
-                toggleShowBoundary={this.toggleShowBoundary}
-                toggleShowSamples={this.toggleShowSamples}
-                state={{ showBoundary: this.state.showBoundary, showSamples: this.state.showSamples }}
-              />
-              {this.state.currentPlot.id &&
-               this.state.currentProject.projectOptions.showPlotInformation && (
-                 <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo} />
-               )}
-              {this.state.currentProject.type === "regular" && (
-                <ImageryOptions
-                  currentImageryId={this.state.currentImagery.id}
-                  currentPlot={this.state.currentPlot}
-                  currentProject={this.state.currentProject}
-                  currentProjectBoundary={this.state.currentProject.boundary}
-                  imageryList={this.state.imageryList}
-                  loadingImages={this.state.imageryList.length === 0}
-                  mapConfig={this.state.mapConfig}
-                  setBaseMapSource={this.setBaseMapSource}
-                  setImageryAttributes={this.setImageryAttributes}
-                  setImageryAttribution={this.setImageryAttribution}
-                />
-              )}
-              {this.state.currentPlot.id ? (
-                <SurveyCollection
-                  allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
-                  answerMode={this.state.answerMode}
-                  collectConfidence={this.state.currentProject.projectOptions.collectConfidence}
-                  confidence={this.state.currentPlot.confidence}
-                  confidenceComment={this.state.currentPlot.confidenceComment}
-                  flagged={this.state.currentPlot.flagged}
-                  flaggedReason={this.state.currentPlot.flaggedReason}
-                  getSelectedSampleIds={this.getSelectedSampleIds}
-                  mapConfig={this.state.mapConfig}
-                  resetPlotValues={this.resetPlotValues}
-                  sampleGeometries={this.state.currentProject.designSettings.sampleGeometries}
-                  selectedQuestionId={this.state.selectedQuestionId}
-                  selectedSampleId={
-                    Object.keys(this.state.userSamples).length === 1
-                      ? parseInt(Object.keys(this.state.userSamples)[0])
-                      : this.state.selectedSampleId
-                  }
-                  setAnswerMode={this.setAnswerMode}
-                  setConfidence={this.setConfidence}
-                  setConfidenceComment={this.setConfidenceComment}
-                  setCurrentValue={this.setCurrentValue}
-                  setFlaggedReason={this.setFlaggedReason}
-                  setSelectedQuestion={this.setSelectedQuestion}
-                  setUnansweredColor={this.setUnansweredColor}
-                  surveyQuestions={this.state.currentProject.surveyQuestions}
-                  surveyRules={this.state.currentProject.surveyRules}
-                  toggleFlagged={this.toggleFlagged}
-                  unansweredColor={this.state.unansweredColor}
-                  projectType={this.state.currentProject?.type}
-                />
-              ) : (
-                <fieldset className="mb-3 justify-content-center text-center">
-                  <CollapsibleTitle showGroup title="Survey Questions" />
-                  <p>Please go to a plot to see survey questions</p>
-                </fieldset>
-              )}
             </SideBar>
           </div>
 
@@ -1240,6 +1184,7 @@ class Collection extends React.Component {
           )}
         </div>
       </div>
+
     );
   }
 }
