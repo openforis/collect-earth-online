@@ -443,6 +443,7 @@ class Collection extends React.Component {
               ...this.newPlotValues(data[0]),
               answerMode: "question",
             });
+            this.setDrawTool();
             // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
             this.warnOnNoSamples(data[0]);
           }
@@ -470,6 +471,15 @@ class Collection extends React.Component {
     confirm(
       "You have unsaved changes. Any unsaved responses will be lost. Are you sure you want to continue?"
     );
+
+  setDrawTool = () => {
+    const projectType = this.state.currentProject?.type;
+    const answerMode = projectType === "simplified" ? "draw" : "question";
+    const { polygons, lines, points } = this.state.currentProject.designSettings.sampleGeometries;
+    const drawTool = polygons ? "Polygon" : lines? "LineString" : "Point";
+    this.setAnswerMode(answerMode, drawTool);
+    if (this.state.mapConfig) mercator.changeDrawTool(this.state.mapConfig, "drawLayer", drawTool);
+  }
 
   navToFirstPlot = () =>
     this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed");
