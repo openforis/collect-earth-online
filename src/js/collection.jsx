@@ -1163,6 +1163,73 @@ class Collection extends React.Component {
                 threshold={this.state.threshold}
                 projectType={this.state.currentProject?.type}
               />
+              <ExternalTools
+                currentPlot={this.state.currentPlot}
+                currentProject={this.state.currentProject}
+                KMLFeatures={this.state.KMLFeatures}
+                showGeoDash={this.showGeoDash}
+                zoomMapToPlot={this.zoomToPlot}
+                toggleShowBoundary={this.toggleShowBoundary}
+                toggleShowSamples={this.toggleShowSamples}
+                projectType={this.state.currentProject?.type}
+                state={{ showBoundary: this.state.showBoundary, showSamples: this.state.showSamples }}
+              />
+              {this.state.currentPlot.id &&
+               this.state.currentProject.projectOptions.showPlotInformation && (
+                 <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo} />
+               )}
+              {this.state.currentProject.type === "regular" && (
+                <ImageryOptions
+                  currentImageryId={this.state.currentImagery.id}
+                  currentPlot={this.state.currentPlot}
+                  currentProject={this.state.currentProject}
+                  currentProjectBoundary={this.state.currentProject.boundary}
+                  imageryList={this.state.imageryList}
+                  loadingImages={this.state.imageryList.length === 0}
+                  mapConfig={this.state.mapConfig}
+                  setBaseMapSource={this.setBaseMapSource}
+                  setImageryAttributes={this.setImageryAttributes}
+                  setImageryAttribution={this.setImageryAttribution}
+                />
+              )}
+              {this.state.currentPlot.id ? (
+                <SurveyCollection
+                  allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
+                  answerMode={this.state.answerMode}
+                  collectConfidence={this.state.currentProject.projectOptions.collectConfidence}
+                  confidence={this.state.currentPlot.confidence}
+                  confidenceComment={this.state.currentPlot.confidenceComment}
+                  flagged={this.state.currentPlot.flagged}
+                  flaggedReason={this.state.currentPlot.flaggedReason}
+                  getSelectedSampleIds={this.getSelectedSampleIds}
+                  mapConfig={this.state.mapConfig}
+                  resetPlotValues={this.resetPlotValues}
+                  sampleGeometries={this.state.currentProject.designSettings.sampleGeometries}
+                  selectedQuestionId={this.state.selectedQuestionId}
+                  selectedSampleId={
+                    Object.keys(this.state.userSamples).length === 1
+                      ? parseInt(Object.keys(this.state.userSamples)[0])
+                      : this.state.selectedSampleId
+                  }
+                  setAnswerMode={this.setAnswerMode}
+                  setConfidence={this.setConfidence}
+                  setConfidenceComment={this.setConfidenceComment}
+                  setCurrentValue={this.setCurrentValue}
+                  setFlaggedReason={this.setFlaggedReason}
+                  setSelectedQuestion={this.setSelectedQuestion}
+                  setUnansweredColor={this.setUnansweredColor}
+                  surveyQuestions={this.state.currentProject.surveyQuestions}
+                  surveyRules={this.state.currentProject.surveyRules}
+                  toggleFlagged={this.toggleFlagged}
+                  unansweredColor={this.state.unansweredColor}
+                  projectType={this.state.currentProject?.type}
+                />
+              ) : (
+                <fieldset className="mb-3 justify-content-center text-center">
+                  <CollapsibleTitle showGroup title="Survey Questions" />
+                  <p>Please go to a plot to see survey questions</p>
+                </fieldset>
+              )}
             </SideBar>
           </div>
 
@@ -1643,7 +1710,7 @@ class ExternalTools extends React.Component {
         {this.state.showExternalTools && (
           <div className="mx-1">
             {this.geoButtons()}
-            {this.toggleViewButtons()}
+            {this.props.projectType !== "simplified" ? this.toggleViewButtons() : null}
             {this.props.KMLFeatures && this.kmlButton()}
             {this.props.currentProject.projectOptions.showGEEScript && this.geeButton()}
             {this.learningMaterialButton()}
