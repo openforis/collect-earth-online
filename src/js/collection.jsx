@@ -340,7 +340,8 @@ class Collection extends React.Component {
       mapConfig,
       "currentAOI",
       mercator.geomArrayToVectorSource(this.state.currentProject.aoiFeatures),
-      mercator.ceoMapStyles("geom", "yellow")
+      mercator.ceoMapStyles("geom", "yellow"),
+      9999
     );
     mercator.zoomMapToLayer(mapConfig, "currentAOI", 48);
     this.setState({ mapConfig });
@@ -791,7 +792,7 @@ class Collection extends React.Component {
               return null;
             }
           }
-          return this.navToNextPlot(true);
+          // return this.navToNextPlot(true);
         } else {
           console.log(response);
           alert("Error saving your assignments to the database. See console for details.");
@@ -1032,7 +1033,22 @@ class Collection extends React.Component {
       }));
     }
   };
-  
+
+  onDragEnd = (result, imageryList, setImageryList) => {
+    if (!result.destination) return;
+    const { mapConfig } = this.state;
+    const reorderedList = [...imageryList];
+    const [movedItem] = reorderedList.splice(result.source.index, 1);
+    reorderedList.splice(result.destination.index, 0, movedItem);
+    const maxZIndex = reorderedList.length - 1;
+    reorderedList.forEach((layer, index) => {
+      const olLayer = mercator.getLayerById(mapConfig, layer.id);
+      if (olLayer) olLayer.setZIndex(maxZIndex - index);
+    });
+    setImageryList(reorderedList);
+  };
+
+  setImageryList = (newList) => this.setState({ imageryList: newList });
   setUnansweredColor = (newColor) => this.setState({ unansweredColor: newColor });
   toggleAcceptTermsModal = () => this.setState({ showAcceptTermsModal: !this.state.showAcceptTermsModal });
 
@@ -1069,6 +1085,8 @@ class Collection extends React.Component {
             >
               <ImageryLayerOptions
                 imageryList={this.state.imageryList}
+                onDragEnd={this.onDragEnd}
+                setImageryList={this.setImageryList}
                 onToggleLayer={this.toggleLayer}
                 onChangeOpacity={this.changeOpacity}
                 onReset={this.resetLayers}
@@ -1133,6 +1151,7 @@ class Collection extends React.Component {
                 setReviewMode={this.setReviewMode}
                 setThreshold={this.setThreshold}
                 threshold={this.state.threshold}
+                projectType={this.state.currentProject?.type}
               />
               <ExternalTools
                 currentPlot={this.state.currentPlot}
@@ -1192,6 +1211,7 @@ class Collection extends React.Component {
                   surveyRules={this.state.currentProject.surveyRules}
                   toggleFlagged={this.toggleFlagged}
                   unansweredColor={this.state.unansweredColor}
+                  projectType={this.state.currentProject?.type}
                 />
               ) : (
                 <fieldset className="mb-3 justify-content-center text-center">
@@ -1338,6 +1358,7 @@ class PlotNavigation extends React.Component {
   }
 
   updateNewPlotId = (value) => this.setState({ newPlotInput: value });
+  projectType = this.props.projectType;
 
   gotoButton = () => (
     <div className="row mb-2" id="go-to-first-plot">
@@ -1348,7 +1369,7 @@ class PlotNavigation extends React.Component {
           name="new-plot"
           onClick={this.props.navToFirstPlot}
           type="button"
-          value="Go to first plot"
+          value={this.projectType === "simplified" ? "Start collecting" : "Go to first plot"}
         />
       </div>
     </div>
@@ -1468,6 +1489,7 @@ class PlotNavigation extends React.Component {
       setNavigationMode,
       setThreshold,
       threshold,
+      projectType,
     } = this.props;
     return (
       <div className="mt-2">
@@ -1536,15 +1558,15 @@ class PlotNavigation extends React.Component {
               setCurrentUserId
             )}
         </div>
-        <div className="mt-2">
-          {loadingPlots ? (
-            <h3>Loading plot data...</h3>
-          ) : currentPlot?.id ? (
-            this.navButtons()
-          ) : (
-            this.gotoButton()
-          )}
-        </div>
+           <div className="mt-2">
+             {loadingPlots ? (
+               <h3>Loading plot data...</h3>
+             ) : currentPlot?.id ? (
+               projectType !== "simplified" && this.navButtons()
+             ) : (
+               this.gotoButton()
+             )}
+           </div>
       </div>
     );
   }

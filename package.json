@@ -88,6 +88,7 @@
     "prop-types": "^15.7.2",
     "quick-lint-js": "^3.2.0",
     "react": "^16.8.0",
+    "react-beautiful-dnd": "^13.1.1",
     "react-bootstrap": "^2.10.6",
     "react-data-table-component": "^7.6.2",
     "react-data-table-component-extensions": "^1.6.0",

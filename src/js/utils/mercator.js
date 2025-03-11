@@ -464,12 +464,12 @@ mercator.createLayer = (layerConfig, projectAOI, show = false) => {
 };
 
 // [Side Effects] Adds a new vector layer to the mapConfig's map object.
-mercator.addVectorLayer = (mapConfig, layerId, vectorSource, style) => {
+mercator.addVectorLayer = (mapConfig, layerId, vectorSource, style, zIndex = 1) => {
   const vectorLayer = new VectorLayer({
     id: layerId,
     source: vectorSource || new VectorSource(),
     style,
-    zIndex: 1,
+    zIndex: zIndex,
   });
   mapConfig.map.addLayer(vectorLayer);
   return mapConfig;
@@ -1455,7 +1455,8 @@ mercator.addPlotLayer = (mapConfig, plots, callback) => {
       source: mercator.plotsToVectorSource(plots),
       distance: 40,
     }),
-    (feature) => mercator.ceoMapStyles("cluster", feature.get("features").length)
+    (feature) => mercator.ceoMapStyles("cluster", feature.get("features").length),
+    9999
   );
   const clickHandler = (event) => {
     mapConfig.map.forEachFeatureAtPixel(

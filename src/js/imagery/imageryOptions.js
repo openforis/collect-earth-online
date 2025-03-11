@@ -424,4 +424,25 @@ export const imageryOptions = [
     defaultProxy: false,
     params: [],
   },
+  {
+    type: "FeatureCollection",
+    label: "GEE Feature Collection",
+    optionalProxy: false,
+    defaultProxy: false,
+    params: [
+      {
+        key: "assetId",
+        display: "Asset ID",
+        options: { placeholder: "USDA/NAIP/DOQQ/n_4207309_se_18_1_20090525" },
+      },
+      {
+        key: "visParams",
+        display: "Visualization Parameters (JSON format)",
+        type: "JSON",
+        options: { placeholder: '{"max": 1, "palette": ["red"]}' },
+        validator: (value) =>
+          !isValidJSON(value) ? 'Invalid JSON in the "Visualization Parameters" field.' : "",
+      },
+    ],
+  },
 ];
