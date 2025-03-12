@@ -601,7 +601,8 @@ class Collection extends React.Component {
       mapConfig,
       "currentSamples",
       mercator.samplesToVectorSource(visible),
-      mercator.ceoMapStyles("geom", (showSamples ? unansweredColor : "transparent"))
+      mercator.ceoMapStyles("geom", (showSamples ? unansweredColor : "transparent")),
+      9999
     );
     mercator.enableSelection(
       mapConfig,
@@ -619,7 +620,8 @@ class Collection extends React.Component {
       mapConfig,
       "drawLayer",
       mercator.samplesToVectorSource(currentPlot.samples),
-      mercator.ceoMapStyles("draw", "orange")
+      mercator.ceoMapStyles("draw", "orange"),
+      9999
     );
     mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
   };

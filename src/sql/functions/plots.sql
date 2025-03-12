@@ -547,6 +547,13 @@ CREATE OR REPLACE FUNCTION delete_samples_by_plot(_plot_id integer)
 
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION delete_samples_by_visible_id(_plot_id integer, _visible_id integer)
+ RETURNS VOID AS $$
+    DELETE FROM samples
+    WHERE plot_rid=_plot_id
+      AND visible_id=_visible_id
+$$ LANGUAGE SQL;
+
 -- For clearing all plots in a project
 CREATE OR REPLACE FUNCTION delete_plots_by_project(_project_id integer)
  RETURNS void AS $$

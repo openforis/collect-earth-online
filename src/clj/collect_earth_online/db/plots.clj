@@ -159,7 +159,7 @@
   (unlock-plots (:userId session -1))
   (data-response ""))
 
-(defn- prepare-samples-array [plot-id user-id project-type]
+(defn- prepare-samples-array [plot-id user-id]
   (mapv (fn [{:keys [sample_id sample_geom saved_answers visible_id]}]
           {:id           sample_id
            :sampleGeom   sample_geom
@@ -177,7 +177,10 @@
                 extra_plot_info
                 visible_id
                 user_id
-                email]} plot-info]
+                email]} plot-info
+        samples (prepare-samples-array plot_id (if (and review-mode? (pos? user_id))
+                                                 user_id
+                                                 user-id))]
     {:id                plot_id
      :flagged           flagged
      :flaggedReason     (or flagged_reason "")
@@ -186,10 +189,9 @@
      :visibleId         visible_id
      :plotGeom          plot_geom
      :extraPlotInfo     (tc/jsonb->clj extra_plot_info {})
-     :samples           (prepare-samples-array plot_id (if (and review-mode? (pos? user_id))
-                                                         user_id
-                                                         user-id)
-                                               project-type)
+     :samples           (if (= project-type "simplified")
+                          (take 1 (filter (fn [s] (= 1 (:visibleId s))) samples))
+                          samples)
      :userId            user_id
      :email             email}))
 
@@ -322,6 +324,7 @@
         ;; Samples created in the UI have IDs starting with 1. When the new sample is created
         ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
         id-translation     (when new-plot-samples
+                             (call-sql "delete_samples_by_visible_id" plot-id 1)
                              (when (= project-type "regular")
                                (call-sql "delete_user_plot_by_plot" plot-id user-id)
                                (call-sql "delete_samples_by_plot" plot-id))
@@ -350,7 +353,7 @@
                                              project-type))]
         (call-sql "upsert_user_samples"
                   user-plot-id
-                  user-id
+                  plot-id
                   (tc/clj->jsonb (set/rename-keys user-samples id-translation))
                   (tc/clj->jsonb (set/rename-keys user-images id-translation))))
 
