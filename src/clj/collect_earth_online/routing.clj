@@ -174,7 +174,7 @@
    [:get "/doi"]          {:handler     doi/get-doi-reference}
 
    ;; Plots API
-   [:get  "/get-collection-plot"]              {:handler     plots/get-collection-plot
+   [:get  "/get-collection-plot"]              {:handler     #'plots/get-collection-plot
                                                 :auth-type   :collect
                                                 :auth-action :block}
    [:get  "/get-plot-disagreement"]            {:handler plots/get-plot-disagreement}
@@ -183,7 +183,7 @@
                                                 :auth-type   :collect
                                                 :auth-action :block}
    [:get  "/get-project-plots"]                {:handler plots/get-project-plots}
-   [:post "/add-user-samples"]                 {:handler     plots/add-user-samples
+   [:post "/add-user-samples"]                 {:handler     #'plots/add-user-samples
                                                 :auth-type   :collect
                                                 :auth-action :block}
    [:post "/flag-plot"]                        {:handler     plots/flag-plot

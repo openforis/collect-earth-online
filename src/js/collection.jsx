@@ -148,7 +148,8 @@ class Collection extends React.Component {
         this.showGeoDash();
       }
       clearInterval(this.state.storedInterval);
-      this.setState({ storedInterval: setInterval(this.resetPlotLock, 1 * 60 * 1000) });
+      if(this.state.currentProject?.type === "regular")
+        this.setState({ storedInterval: setInterval(this.resetPlotLock, 1 * 60 * 1000) });
       //  updateMapImagery is poorly named, this function is detecting if we need to show the "zoom to" overlay
       this.updateMapImagery();
     }
@@ -411,6 +412,7 @@ class Collection extends React.Component {
 
   getPlotData = (visibleId, direction, forcedNavMode = null) => {
     const { currentUserId, navigationMode, inReviewMode, threshold } = this.state;
+    const { type } = this.state.currentProject;
     const { projectId } = this.props;
     this.processModal("Getting plot", () =>
       fetch(
@@ -423,6 +425,7 @@ class Collection extends React.Component {
             inReviewMode,
             threshold,
             currentUserId,
+            projectType: type,
           })
       )
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
@@ -791,7 +794,8 @@ class Collection extends React.Component {
             this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
           inReviewMode: this.state.inReviewMode,
           currentUserId: this.state.currentUserId,
-          imageryIds: this.state.imageryIds
+          imageryIds: this.state.imageryIds,
+          projectType: this.state.currentProject.type,
         }),
       }).then((response) => {
         if (response.ok) {
@@ -1031,6 +1035,20 @@ class Collection extends React.Component {
     });
   };
 
+  resetLayers = (layerName) => {
+    this.setState((prevState) => {
+      const updatedImageryList = prevState.imageryList.map((layer) => 
+        layer.title === "Mapbox Satellite" ? { ...layer, visible: true } : { ...layer, visible: false }
+      );
+      
+      updatedImageryList.forEach((layer) => {
+        mercator.setLayerVisibilityByLayerId(this.state.mapConfig, layer.id, layer.visible);
+      });
+      
+      return { imageryList: updatedImageryList };
+    });
+  };
+  
   changeOpacity = (layerId, opacity) => {
     const { mapConfig } = this.state;
     const layer = mercator.getLayerById(mapConfig, layerId);

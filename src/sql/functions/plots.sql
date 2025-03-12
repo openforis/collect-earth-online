@@ -115,6 +115,27 @@ CREATE TYPE collection_return AS (
     email              text
 );
 
+-- This return type is so the collection functions match return types.
+DROP TYPE IF EXISTS simplified_collection_return CASCADE;
+CREATE TYPE simplified_collection_return AS (
+    plot_id            integer,
+    visible_id         integer,
+    plot_geom          text,
+    extra_plot_info    json
+);
+
+CREATE OR REPLACE FUNCTION select_simplified_project_plot(_project_id integer)
+RETURNS setOf simplified_collection_return AS $$
+    SELECT plot_uid,
+           visible_id,
+           ST_AsGeoJSON(plot_geom) as plot_geom,
+           extra_plot_info
+    FROM plots
+    WHERE project_rid = _project_id
+    ORDER BY visible_id ASC
+
+$$ LANGUAGE SQL;
+
 CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS setOf collection_return AS $$
 
@@ -430,31 +451,13 @@ CREATE OR REPLACE FUNCTION flag_plot(
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION upsert_user_samples(
+    _user_plot_id        integer,
     _plot_id             integer,
-    _user_id             integer,
-    _confidence          integer,
-    _confidence_comment  text,
-    _collection_start    timestamp,
     _samples             jsonb,
-    _images              jsonb,
-    _imageryIds          jsonb
+    _images              jsonb
  ) RETURNS integer AS $$
 
-    WITH user_plot_table AS (
-        INSERT INTO user_plots AS up
-            (user_rid, plot_rid, confidence, confidence_comment ,collection_start, collection_time, imagery_ids)
-        VALUES
-            (_user_id, _plot_id, _confidence, _confidence_comment , _collection_start, Now(), _imageryIds)
-        ON CONFLICT (user_rid, plot_rid) DO
-            UPDATE
-            SET confidence = coalesce(excluded.confidence, up.confidence),
-                confidence_comment = _confidence_comment,
-                collection_start = coalesce(excluded.collection_start, up.collection_start),
-                collection_time = CASE WHEN excluded.collection_start IS NOT NULL THEN localtimestamp ELSE up.collection_time END,
-                flagged = FALSE,
-                flagged_reason = null
-        RETURNING user_plot_uid
-    ), new_sample_values AS (
+    WITH new_sample_values AS (
         SELECT CAST(key as integer) as sample_id, value FROM jsonb_each(_samples)
     ), image_values AS (
         SELECT sample_id, id as imagery_id, attributes as imagery_attributes
@@ -462,8 +465,8 @@ CREATE OR REPLACE FUNCTION upsert_user_samples(
         CROSS JOIN LATERAL
         jsonb_to_record(a.value) as (id int, attributes text)
     ), plot_samples AS (
-        SELECT user_plot_uid, nsv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, nsv.value
-        FROM user_plot_table AS upt, samples AS s
+        SELECT _user_plot_id AS user_plot_uid, nsv.sample_id, iv.imagery_id, iv.imagery_attributes::jsonb, nsv.value
+        FROM samples AS s
         INNER JOIN new_sample_values as nsv ON sample_uid = nsv.sample_id
         INNER JOIN image_values as iv ON sample_uid = iv.sample_id
         WHERE s.plot_rid = _plot_id
@@ -479,6 +482,46 @@ CREATE OR REPLACE FUNCTION upsert_user_samples(
             saved_answers = excluded.saved_answers
 
     RETURNING sample_values.sample_rid
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION insert_user_plot(
+    _plot_id             integer,
+    _user_id             integer,
+    _confidence          integer,
+    _confidence_comment  text,
+    _collection_start    timestamp,
+   _imageryIds           jsonb
+ ) RETURNS integer AS $$
+    INSERT INTO user_plots AS up
+        (user_rid, plot_rid, confidence, confidence_comment ,collection_start, collection_time, imagery_ids)
+    VALUES
+        (_user_id, _plot_id, _confidence, _confidence_comment , _collection_start, Now(), _imageryIds)
+    RETURNING user_plot_uid
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION update_user_plot(
+    _user_plot_id        integer,
+    _confidence          integer,
+    _confidence_comment  text,
+    _collection_start    timestamp,
+   _imageryIds           jsonb
+ ) RETURNS integer AS $$
+    UPDATE user_plots up
+      SET confidence = up.confidence,
+          confidence_comment = _confidence_comment,
+          collection_start = up.collection_start,
+          flagged = FALSE,
+          flagged_reason = null
+    WHERE user_plot_uid = _user_plot_id
+    
+   RETURNING user_plot_uid
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_user_plot(_plot_id integer, _user_id integer)
+RETURNS integer AS $$
+  SELECT user_plot_uid FROM user_plots
+  WHERE plot_rid = _plot_id AND user_rid = _user_id
 
 $$ LANGUAGE SQL;
 
