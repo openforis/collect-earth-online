@@ -446,7 +446,8 @@ class Collection extends React.Component {
               ...this.newPlotValues(data[0]),
               answerMode: "question",
             });
-            this.setDrawTool();
+            if(type === "simplified")
+              this.setDrawTool();
             // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
             this.warnOnNoSamples(data[0]);
           }
@@ -808,7 +809,8 @@ class Collection extends React.Component {
               return null;
             }
           }
-          // return this.navToNextPlot(true);
+          if(this.state.currentProject.type !== "simplified")
+            return this.navToNextPlot(true);
         } else {
           console.log(response);
           alert("Error saving your assignments to the database. See console for details.");

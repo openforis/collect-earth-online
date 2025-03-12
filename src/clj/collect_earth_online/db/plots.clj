@@ -290,8 +290,7 @@
                 (when-not review-mode? (Timestamp. collection-start))
                 imagery-ids)
       (call-sql "update_user_plot"
-                plot-id
-                user-id
+                user-plot
                 confidence
                 confidence-comment
                 (when-not review-mode? (Timestamp. collection-start))
