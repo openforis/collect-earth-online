@@ -41,7 +41,8 @@ CREATE OR REPLACE FUNCTION create_project(
     _survey_rules           jsonb,
     _token_key              text,
     _options                jsonb,
-    _design_settings        jsonb
+    _design_settings        jsonb,
+    _type                   text
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
@@ -71,7 +72,8 @@ CREATE OR REPLACE FUNCTION create_project(
         created_date,
         token_key,
         options,
-        design_settings
+        design_settings,
+        type
     ) VALUES (
         _institution_id,
         'unpublished',
@@ -99,7 +101,8 @@ CREATE OR REPLACE FUNCTION create_project(
         now(),
         _token_key,
         _options,
-        _design_settings
+        _design_settings,
+        _type::project_type
     )
     RETURNING project_uid
 
@@ -206,7 +209,8 @@ CREATE OR REPLACE FUNCTION update_project(
     _survey_questions       jsonb,
     _survey_rules           jsonb,
     _options                jsonb,
-    _design_settings        jsonb
+    _design_settings        jsonb,
+    _type                   text
  ) RETURNS void AS $$
 
     UPDATE projects
@@ -232,7 +236,8 @@ CREATE OR REPLACE FUNCTION update_project(
         survey_questions = _survey_questions,
         survey_rules = _survey_rules,
         options = _options,
-        design_settings = _design_settings
+        design_settings = _design_settings,
+        type = _type::project_type
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
@@ -557,7 +562,8 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     published_date         date,
     closed_date            date,
     has_geo_dash           boolean,
-    token_key              text
+    token_key              text,
+    type                   text
  ) AS $$
 
     SELECT project_uid,
@@ -591,7 +597,8 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         published_date,
         closed_date,
         count(widget_uid) > 0,
-        token_key
+        token_key,
+        type
     FROM projects
     LEFT JOIN project_widgets
         ON project_rid = project_uid
@@ -764,7 +771,7 @@ CREATE OR REPLACE FUNCTION select_institution_dash_projects(_user_id integer, _i
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
+CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer, _type text)
  RETURNS table (
      project_id        integer,
      name              text,
@@ -776,7 +783,7 @@ CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
-    WHERE (role_rid = 1 AND p.availability <> 'archived')
+    WHERE ((role_rid = 1 AND p.availability <> 'archived')
         OR (role_rid = 2
             AND p.privacy_level IN ('public', 'institution', 'users')
             AND p.availability = 'published')
@@ -784,7 +791,8 @@ CREATE OR REPLACE FUNCTION select_template_projects(_user_id integer)
             AND p.privacy_level IN ('public', 'users')
             AND p.availability = 'published')
         OR (p.privacy_level IN ('public')
-            AND p.availability = 'published')
+            AND p.availability = 'published'))
+        AND p.type = _type::project_type
     ORDER BY project_uid
 
 $$ LANGUAGE SQL;
@@ -1058,14 +1066,14 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
     FROM plots pl
     INNER JOIN samples s
         ON s.plot_rid = pl.plot_uid
-    LEFT JOIN user_plots up
+    INNER JOIN user_plots up
         ON up.plot_rid = pl.plot_uid
-    LEFT JOIN sample_values sv
+    INNER JOIN sample_values sv
         ON sample_uid = sv.sample_rid
         AND user_plot_uid = sv.user_plot_rid
-    LEFT JOIN imagery
+    INNER JOIN imagery
         ON imagery_uid = sv.imagery_rid
-    LEFT JOIN users u
+    INNER JOIN users u
         ON u.user_uid = up.user_rid
     WHERE pl.project_rid = _project_id
     ORDER BY plot_uid, sample_uid
@@ -1142,7 +1150,8 @@ CREATE OR REPLACE FUNCTION select_project_stats(_project_id integer)
             (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0
                 ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) AS seconds,
             (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0 ELSE 1 END) AS timed,
-            u.email AS email
+            u.email AS email,
+            u.user_uid AS user_id
         FROM plots pl
         LEFT JOIN plot_assignments AS pa
             ON pa.plot_rid = pl.plot_uid
@@ -1151,16 +1160,17 @@ CREATE OR REPLACE FUNCTION select_project_stats(_project_id integer)
             AND (pa.user_rid = up.user_rid OR NOT (SELECT project_has_assigned(_project_id)))
         INNER JOIN users u
             ON (up.user_rid = user_uid OR pa.user_rid = user_uid)
-        WHERE project_rid = _project_id
+        WHERE project_rid = _project_id AND up.disabled IS NOT TRUE
     ), users_grouped AS (
         SELECT email,
+            user_id,
             COUNT(collected) - SUM(flagged::int) AS analyzed,
             SUM(flagged::int) as flagged,
             COUNT(assigned) as assigned,
             SUM(seconds)::int AS seconds,
             SUM(timed):: int AS timed_plots
         FROM user_plot_times
-        GROUP BY email
+        GROUP BY email, user_id
         ORDER BY email DESC
     ), user_agg AS (
         SELECT format('[%s]', string_agg(row_to_json(ug)::text, ','))::jsonb AS user_stats
@@ -1204,12 +1214,12 @@ CREATE OR REPLACE FUNCTION select_project_stats(_project_id integer)
         plot_assignments,
         users_assigned,
         CASE
-          WHEN analyzed_plots = 0 THEN 0
-          ELSE confidence_sum / analyzed_plots
+          WHEN plot_assignments = 0 THEN 0
+          ELSE confidence_sum / plot_assignments
         END as average_confidence,
         user_stats,
-        (SELECT MAX(confidence) FROM user_plots up) AS max_confidence,
-        (SELECT MIN(confidence) FROM user_plots up) AS min_confidence
+        (SELECT MAX(confidence) FROM user_plots up inner join plots p on p.plot_uid = up.plot_rid where p.project_rid=_project_id) AS max_confidence,
+        (SELECT MIN(confidence) FROM user_plots up inner join plots p on p.plot_uid = up.plot_rid where p.project_rid=_project_id) AS min_confidence
     FROM projects, plot_sum, project_sum, users_count,
          user_agg
     WHERE project_uid = _project_id
@@ -1304,13 +1314,14 @@ DECLARE
 BEGIN
     SELECT string_to_array(_project_ids_text, ',')::INTEGER[]
     INTO project_ids;
-    DELETE FROM projects
+    update projects
+    set availability = 'archived'
     WHERE project_uid = ANY(project_ids) AND institution_rid = _institution_id;
     
 END;
 $$ LANGUAGE plpgsql;
 
--- Delete projects in bulk
+-- Edit projects privacy_level in bulk
 CREATE OR REPLACE FUNCTION edit_projects_bulk(_institution_id integer, _project_ids_text TEXT, _privacy_level TEXT)
 RETURNS VOID AS $$
 DECLARE
@@ -1324,3 +1335,15 @@ BEGIN
     WHERE project_uid = ANY(project_ids) AND institution_rid = _institution_id;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Questions to be ignored
+CREATE OR REPLACE FUNCTION get_input_question_ids(_project_uid INTEGER)
+RETURNS JSONB AS $$
+    SELECT to_jsonb(ARRAY_AGG((key)::INTEGER))
+    FROM (
+        SELECT key, value->>'componentType' AS component_type
+        FROM projects, jsonb_each(survey_questions)
+        WHERE project_uid = _project_uid
+    ) AS questions
+    WHERE component_type = 'input';
+$$ LANGUAGE SQL;

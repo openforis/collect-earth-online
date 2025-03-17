@@ -34,7 +34,8 @@ export const customStyles = {
   table: {
     style: {
       maxHeight: "600px",
-      overflowY: "auto"
+      overflowY: "auto",
+      height: "600px",
     },
   },
 };
@@ -42,7 +43,7 @@ export const customStyles = {
 
 export const projectConditionalRowStyles = [
   {
-    when: row => row.disagreement === true,
+    when: row => row.disagreement > 20.0,
     style: {
       backgroundColor: "rgba(242, 38, 19, 0.9)",
       color: "white",
@@ -74,15 +75,37 @@ export const projectStatsColumns =  [
   },
   {
     name: "Disagreement",
-    selector: row => (row.disagreement ? "true" : "false"),
+    selector: row => parseFloat(row.disagreement.toFixed(2)),
     sortable: true,
     reorder: true,
   },
 ];
 
+const handleCopyToClipboard = (text) => {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("Copied to clipboard!");
+    }).catch((err) => {
+      console.error("Failed to copy to clipboard");
+    });
+  } else {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand("copy");
+    } catch (err) {
+      console.error("Fallback failed: ", err);
+    }
+    document.body.removeChild(textArea);
+  }
+};
+
+
 export const plotConditionalRowStyles = [
   {
-    when: row => row.disagreement === true,
+    when: row => row.disagreement,
     style: {
       backgroundColor: "rgba(242, 38, 19, 0.9)",
       color: "white",
@@ -92,6 +115,28 @@ export const plotConditionalRowStyles = [
     },
   },
 ];
+
+const JsonCell = ({ row }) => {
+  return (
+    <div
+      onClick={() => handleCopyToClipboard(row.answers)}
+      style={{
+        maxWidth: "250px",
+        maxHeight: "50px",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        cursor: "pointer",
+        color: "blue",
+      }}
+      title="Click to copy answers JSON"
+    >
+      <pre style={{ display: "inline", margin: 0, whiteSpace: "pre-wrap" }}>
+        {row.answers}
+      </pre>
+    </div>
+  );
+};
 
 export const plotStatsColumns = [
   {
@@ -115,6 +160,48 @@ export const plotStatsColumns = [
   {
     name: "Confidence",
     selector: row => row.confidence ? row.confidence : 100,
+    sortable: true,
+    reorder: true,
+  },
+  {
+    name: "Answers",
+    cell: row => <JsonCell row={row} />,
+    sortable: false,
+    reorder: false,
+  }
+]
+
+
+export const userStatsColumns = [
+  {
+    name: "Interpreter",
+    selector: row => row.email,
+    sortable: true,
+    reorder: true,
+  },
+  {
+    name: "Analyzed",
+    selector: row => row.analyzed,
+    sortable: true,
+    reorder: true,
+  },
+
+  {
+    name: "Flaggged",
+    selector: row => row.flagged ? row.flagged : 0,
+    sortable: true,
+    reorder: true,
+  },
+
+  {
+    name: "Analysis Time",
+    selector: row => row.analysisTime,
+    sortable: true,
+    reorder: true,
+  },
+  {
+    name: "Total Disagreement",
+    selector: row => row.disagreement ? row.disagreement : 0,
     sortable: true,
     reorder: true,
   },

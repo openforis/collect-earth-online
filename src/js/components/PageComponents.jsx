@@ -1,7 +1,9 @@
 import "../../css/custom.css";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import ReactMarkdown from 'react-markdown';
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 import SvgIcon from "./svg/SvgIcon";
 import { getLanguage, capitalizeFirst } from "../utils/generalUtils";
@@ -68,7 +70,7 @@ class HelpSlideDialog extends React.Component {
               backgroundColor: "white",
               border: "1.5px solid",
               borderRadius: "5px",
-              height: "600px",
+              height: "900px",
               margin: "90px auto",
               width: "fit-content",
             }}
@@ -504,3 +506,233 @@ export function SuccessModal({ message, onClose }) {
     </div>
   );
 }
+
+export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsModal }) {
+  const [interpreterName, setInterpreterName] = useState("");
+
+  const acceptTerms = () => {
+    fetch(`/confirm-data-sharing?projectId=${projectId}`,
+          {
+            method: "POST",
+            body: JSON.stringify({interpreterName}),
+            headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/json",
+            },
+          }).then((response) => {
+            if (response.ok) {
+              window.location.assign(`/collection?projectId=${projectId}`)
+            } else {
+              console.log(response);
+            }
+          });
+  }
+  return (
+    <div
+      className="modal fade show"
+      id="acceptTermsModal"
+      onClick={toggleAcceptTermsModal}
+      style={{ display: "block", backgroundColor: "rgba(0, 0, 0, 0.4)" }}
+    >
+      <div
+        className="modal-dialog modal-dialog-centered"
+        onClick={(e) => e.stopPropagation()}
+        role="document"
+      >
+        <div className="modal-content" id="quitModalContent">
+          <div className="modal-header">
+            <h5 className="modal-title" id="quitModalTitle">
+              Accept Data Sharing Terms
+            </h5>
+            <button aria-label="Close"
+                    className="close"
+                    onClick={() =>
+                      window.location.assign(`/review-institution?institutionId=${institutionId}`)
+                    }
+                    type="button">
+              &times;
+            </button>
+          </div>
+          <div className="modal-body">
+            <p>
+              I agree that all data collected will be openly licensed via 
+              <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer"> CC BY 4.0</a>. 
+              This license enables reusers to distribute, remix, adapt, and build upon the material in any medium or format, so long as attribution is given to the creator. 
+              The license allows for commercial use. If I wish to receive attribution for my work, I have provided my name in the text field below. 
+              If I have not provided my name, I wish to remain anonymous.
+            </p>
+
+            <label htmlFor="interpreter-name">Interpreter name</label>
+            <input
+              className="form-control mb-1 mr-sm-2"
+              style={{ width: "300px" }}
+              id="interpreter-name"
+              maxLength="50"
+              onChange={(e) => setInterpreterName(e.target.value)}
+              type="text"
+              value={interpreterName}
+            />
+          </div>
+          <div className="modal-footer">
+            <button className="btn btn-secondary btn-sm" onClick={acceptTerms} type="button">
+              I Agree
+            </button>
+            <button
+              className="btn btn-danger btn-sm"
+              id="quit-button"
+              onClick={() =>
+                window.location.assign(`/review-institution?institutionId=${institutionId}`)
+              }
+              type="button"
+            >
+              I Decline
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ export const ImageryLayerOptions = ({
+   imageryList,
+   setImageryList,
+   onDragEnd,
+   onToggleLayer,
+   onChangeOpacity,
+   onReset,
+   isImageryLayersExpanded,
+ }) => {
+   const [expandedSections, setExpandedSections] = useState({
+     imagery: true,
+     polygon: true,
+   });
+   
+   const imageryLayers = imageryList.filter((image) => image.type !== "GEEFeatureCollection");
+   const polygonLayers = imageryList.filter((image) => image.type === "GEEFeatureCollection");
+
+   const toggleSection = (section) => {
+     setExpandedSections((prev) => ({
+       ...prev,
+       [section]: !prev[section],
+     }));
+   };
+
+   return (
+     <div className="sidebar-wrapper" style={{ overflowX: "hidden", overflowY: "auto" }}>
+       <div className={`sidebar-container ${isImageryLayersExpanded ? "" : "collapsed"}`}>
+         {isImageryLayersExpanded && (
+           <div className="sidebar-content">
+             <div className="sidebar-header">
+               <h3>Imagery Layer Options</h3>
+             </div>
+             <hr />
+
+             <DragDropContext onDragEnd={(result) => onDragEnd(result, imageryList, setImageryList)}>
+               {/* Imagery Layers */}
+               <div className="sidebar-section">
+                 <div className="section-header" onClick={() => toggleSection("imagery")}>
+                   <strong>Imagery Layers</strong>
+                   {expandedSections.imagery ? <FaChevronUp /> : <FaChevronDown />}
+                 </div>
+                 {expandedSections.imagery && (
+                   <Droppable droppableId="imageryLayers">
+                     {(provided, snapshot) => (
+                       <div
+                         className={`layers-list ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
+                         ref={provided.innerRef}
+                         {...provided.droppableProps}
+                       >
+                         {imageryLayers.map((layer, index) => (
+                           <Draggable key={layer.id} draggableId={layer.id.toString()} index={index}>
+                             {(provided, snapshot) => (
+                               <div
+                                 className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
+                                 ref={provided.innerRef}
+                                 {...provided.draggableProps}
+                                 {...provided.dragHandleProps}
+                               >
+                                 <input
+                                   type="checkbox"
+                                   checked={layer.visible}
+                                   onChange={() => onToggleLayer(layer.id, imageryList)}
+                                 />
+                                 <span className="layer-title">  {layer.title}</span>
+                                 <input
+                                   type="range"
+                                   min="0"
+                                   max="1"
+                                   step="0.01"
+                                   className="layer-range"
+                                   value={layer.opacity || 1}
+                                   onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
+                                 />
+                               </div>
+                             )}
+                           </Draggable>
+                         ))}
+                         {provided.placeholder && <div className="placeholder"></div>}
+                       </div>
+                     )}
+                   </Droppable>
+                 )}
+               </div>
+
+               {/* Polygon Layers */}
+               <div className="sidebar-section">
+                 <div className="section-header" onClick={() => toggleSection("polygon")}>
+                   <strong>Polygon Layers</strong>
+                   {expandedSections.polygon ? <FaChevronUp /> : <FaChevronDown />}
+                 </div>
+                 {expandedSections.polygon && (
+                   <Droppable droppableId="polygonLayers">
+                     {(provided, snapshot) => (
+                       <div
+                         className={`layers-list ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
+                         ref={provided.innerRef}
+                         {...provided.droppableProps}
+                       >
+                         {polygonLayers.map((layer, index) => (
+                           <Draggable key={layer.id} draggableId={layer.id.toString()} index={index}>
+                             {(provided, snapshot) => (
+                               <div
+                                 className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
+                                 ref={provided.innerRef}
+                                 {...provided.draggableProps}
+                                 {...provided.dragHandleProps}
+                               >
+                                 <input
+                                   type="checkbox"
+                                   checked={layer.visible}
+                                   onChange={() => onToggleLayer(layer.id, imageryList)}
+                                 />
+                                 <span className="layer-title">  {layer.title}</span>
+                                 <input
+                                   type="range"
+                                   min="0"
+                                   max="1"
+                                   step="0.01"
+                                   className="layer-range"
+                                   value={layer.opacity || 1}
+                                   onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
+                                 />
+                               </div>
+                             )}
+                           </Draggable>
+                         ))}
+                         {provided.placeholder && <div className="placeholder"></div>}
+                       </div>
+                     )}
+                   </Droppable>
+                 )}
+               </div>
+             </DragDropContext>
+             <button className="reset-button" onClick={onReset}>
+               Reset All Layers
+             </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

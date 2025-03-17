@@ -706,7 +706,8 @@ export default class SurveyCollection extends React.Component {
                 </div>
                 </>
               )}
-              {this.renderFlagClearButtons()}
+              {this.props.projectType !== "simplified" &&
+               this.renderFlagClearButtons()}
             </>
           ) : (
             <h3>This project is missing survey questions!</h3>

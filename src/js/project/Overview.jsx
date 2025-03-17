@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 
 import { LearningMaterialModal } from "../components/PageComponents";
 import { capitalizeFirst,  readFileAsBase64Url } from "../utils/generalUtils";
+import { filterObject } from "../utils/sequence";
 import { ProjectContext } from "./constants";
 
 export function Overview(props) {
@@ -13,9 +14,12 @@ export function Overview(props) {
     projectOptions,
     projectOptions: { showGEEScript, showPlotInformation, collectConfidence, autoLaunchGeoDash },
     projectId,
+    type,
     learningMaterial
   } = useContext(ProjectContext);
 
+  const [selectedType, setSelectedType] = useState(type || "regular");
+  
   const importCollectProject = (fileName, fileb64) => {
     fetch(`/import-ce-project`, {
       method: "POST",
@@ -34,8 +38,37 @@ export function Overview(props) {
       });
   };
 
+  const changeProjectType = (event) => {
+    const selectedValue = event.target.value;
+    const steps = props.steps;
+    const updatedSteps = (selectedValue === "regular") ?
+          props.fullProjectSteps :
+          filterObject(steps, ([key, _val]) =>
+            ["overview", "imagery", "plots", "questions"].includes(key));
+    setSelectedType(selectedValue);
+    props.updateProjectType(selectedValue);
+    props.updateSteps(updatedSteps);
+  }
+
   return (
     <div id="project-info">
+      <div className="form-group">
+        <label htmlFor="project-name">Project Type</label>
+        <select
+          id="projectType"
+          value={selectedType}
+          onChange={changeProjectType}
+          style={{
+            padding: "0.5rem",
+            borderRadius: "4px",
+            border: "1px solid #ccc",
+            width: "100%",
+          }}
+        >
+          <option value="regular">Regular Project</option>
+          <option value="simplified">Simplified Project</option>
+        </select>
+      </div>
       {projectId < 0 &&
        (<>
           <ProjectTemplateSelection {...props} />
@@ -52,6 +85,7 @@ export function Overview(props) {
             }}
             style={{ display: "block" }}
             type="file"
+            disabled={selectedType === "simplified"}
           />
         </>
        )}

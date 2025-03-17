@@ -332,6 +332,13 @@ class ProjectManagement extends React.Component {
               type="button"
               value="Project Dashboard"
             />
+            <input
+              className="btn btn-outline-lightgreen btn-sm w-100"
+              onClick={() => window.open(`/project-qaqc-dashboard?projectId=${id}`)}
+              type="button"
+              value="Project QAQC Dashboard"
+              disabled={qaqcMethod === "none"}
+            />
             <label className="my-2">Export Data</label>
             <input
               className="btn btn-outline-lightgreen btn-sm w-100"

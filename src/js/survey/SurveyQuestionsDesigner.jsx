@@ -6,8 +6,8 @@ import NewQuestionDesigner from "./NewQuestionDesigner";
 import { ProjectContext } from "../project/constants";
 
 export default function SurveyQuestionsDesigner() {
-  const { setProjectDetails, surveyQuestions, surveyRules, projectId, originalProject } =
-    useContext(ProjectContext);
+  const { setProjectDetails, surveyQuestions, surveyRules, projectId, originalProject, type } =
+        useContext(ProjectContext);
   const editMode =
     projectId === -1 || originalProject.availability === "unpublished" ? "full" : "partial";
   return (
@@ -18,6 +18,7 @@ export default function SurveyQuestionsDesigner() {
           setProjectDetails={setProjectDetails}
           surveyQuestions={surveyQuestions}
           surveyRules={surveyRules}
+          projectType={type}
         />
       )}
     </div>

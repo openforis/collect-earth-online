@@ -25,9 +25,19 @@ export class PlotDesign extends React.Component {
     this.setCoordsFromBoundary();
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     if (this.props.aoiFeatures && prevProps.aoiFeatures !== this.props.aoiFeatures) {
       this.setCoordsFromBoundary();
+    }
+    const { lonMin, latMin, lonMax, latMax } = this.state;
+    if (
+      this.context.type === "simplified" &&
+        (lonMin !== prevState.lonMin ||
+         latMin !== prevState.latMin ||
+         lonMax !== prevState.lonMax ||
+         latMax !== prevState.latMax)
+    ) {
+      this.setSimplifiedProjectDetails();
     }
   }
 
@@ -85,9 +95,25 @@ export class PlotDesign extends React.Component {
     );
   };
 
+  setSimplifiedProjectDetails = () => {
+    const { lonMin, lonMax, latMin } = this.state;
+    const plotWidth = mercator.calculatePlotWidth(latMin, lonMin, lonMax);
+    const designSettings = this.context.designSettings;
+
+    this.context.setProjectDetails({
+      ...this.context,
+      sampleDistribution: "center",
+      numPlots: 1,
+      plotSize: plotWidth / 2,
+      allowDrawnSamples: true,
+      designSettings: {
+        ...designSettings,
+        sampleGeometries: {"lines": true, "points": true, "polygons": true}} })
+  }
+
   /// Render Functions
 
-  renderLabeledInput = (label, property) => (
+  renderLabeledInput = (label, property, disabled = false) => (
     <div className="form-group" style={{ width: "fit-content" }}>
       <label htmlFor={property}>{label}</label>
       <input
@@ -98,6 +124,7 @@ export class PlotDesign extends React.Component {
         step="1"
         type="number"
         value={this.context[property] || ""}
+        disabled = {disabled}
       />
     </div>
   );
@@ -272,7 +299,8 @@ export class PlotDesign extends React.Component {
   };
 
   renderAOISelector = () => {
-    const { boundaryType } = this.context;
+    const { boundaryType, type } = this.context;
+    const disableSelector = (type === "simplified") ? true : false;
     const boundaryOptions = [
       { value: "manual", label: "Input coordinates" },
       { value: "file", label: "Upload shp file" },
@@ -285,6 +313,7 @@ export class PlotDesign extends React.Component {
             className="form-control form-control-sm"
             onChange={(e) => this.setPlotDetails({ boundaryType: e.target.value })}
             value={boundaryType}
+            disabled={disableSelector}
           >
             {boundaryOptions.map(({ value, label }) => (
               <option key={value} value={value}>
@@ -407,7 +436,8 @@ export class PlotDesign extends React.Component {
   );
 
   renderRandom = () => {
-    const { aoiFeatures, plotShape } = this.context;
+    const { aoiFeatures, plotShape, type } = this.context;
+    const disabled = type === "simplified";
     const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
     return (
       <div>
@@ -415,9 +445,9 @@ export class PlotDesign extends React.Component {
         <label>Plot properties</label>
         {aoiFeatures.map(this.renderStrataRow)}
         <div className="d-flex">
-          {this.renderLabeledInput("Number of plots", "numPlots")}
+          {this.renderLabeledInput("Number of plots", "numPlots", disabled)}
           <span className="mx-3">{this.renderPlotShape()}</span>
-          {this.renderLabeledInput(plotUnits, "plotSize")}
+          {this.renderLabeledInput(plotUnits, "plotSize", disabled)}
         </div>
       </div>
     );
@@ -498,6 +528,7 @@ export class PlotDesign extends React.Component {
                     : this.setPlotDetails({ plotDistribution: e.target.value })
                 }
                 value={plotDistribution}
+                disabled={this.context.type === "simplified"}
               >
                 {Object.entries(plotOptions).map(([key, options]) => (
                   <option key={key} value={key}>

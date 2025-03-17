@@ -29,6 +29,7 @@ const ReactGridLayout = WidthProvider(RGL);
 class WidgetLayoutEditor extends React.PureComponent {
   constructor(props) {
     super(props);
+    const today = new Date().toISOString().split("T")[0];
     this.state = {
       // Page state
       widgets: [],
@@ -46,7 +47,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     this.widgetTypes = {
       degradationTool: {
         title: "Degradation Tool",
-        blankWidget: { basemapId: "-1", band: "NDFI", endDate: "", startDate: "" },
+        blankWidget: { basemapId: "-1", band: "NDFI", endDate: today, startDate: "2013-01-01" },
         WidgetDesigner: DegradationDesigner,
       },
       dualImagery: {

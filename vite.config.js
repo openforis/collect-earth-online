@@ -51,7 +51,9 @@ export default defineConfig({
         "src/js/termsOfService.jsx",
         "src/js/userDisagreement.jsx",
         "src/js/verifyEmail.jsx",
-        "src/js/widgetLayoutEditor.jsx"
+        "src/js/widgetLayoutEditor.jsx",
+        "src/js/metrics.jsx",
+        "src/js/projectQaqcDashboard.jsx"
       ],
       output: {
         // compact: false,

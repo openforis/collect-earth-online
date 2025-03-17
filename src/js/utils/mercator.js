@@ -28,7 +28,7 @@ import { BingMaps, Cluster, OSM, TileWMS, Vector as VectorSource, XYZ } from "ol
 import { Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText } from "ol/style";
 import { fromLonLat, transform, transformExtent, getPointResolution } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
-import { getArea } from "ol/sphere";
+import { getArea, getDistance } from "ol/sphere";
 import { formatDateISO, isNumber } from "./generalUtils";
 import { mapboxAttributionText } from "../imagery/mapbox-attribution";
 
@@ -464,12 +464,12 @@ mercator.createLayer = (layerConfig, projectAOI, show = false) => {
 };
 
 // [Side Effects] Adds a new vector layer to the mapConfig's map object.
-mercator.addVectorLayer = (mapConfig, layerId, vectorSource, style) => {
+mercator.addVectorLayer = (mapConfig, layerId, vectorSource, style, zIndex = 1) => {
   const vectorLayer = new VectorLayer({
     id: layerId,
     source: vectorSource || new VectorSource(),
     style,
-    zIndex: 1,
+    zIndex: zIndex,
   });
   mapConfig.map.addLayer(vectorLayer);
   return mapConfig;
@@ -943,10 +943,13 @@ mercator.removeLayerById = (mapConfig, layerId) => {
 };
 
 // [Side Effects] Hides/Shows the layer with id === layerId from mapConfig's map object.
-mercator.setLayerVisibilityByLayerId = (mapConfig, layerId, visibility) => {
+mercator.setLayerVisibilityByLayerId = (mapConfig, layerId, visibility, zindex = null) => {
   const layer = mercator.getLayerById(mapConfig, layerId);
   if (layer) {
     layer.setVisible(visibility);
+    if(zindex) {
+      layer.setZIndex(zindex);
+    }
   }
   return mapConfig;
 };
@@ -1455,9 +1458,11 @@ mercator.addPlotLayer = (mapConfig, plots, callback) => {
       source: mercator.plotsToVectorSource(plots),
       distance: 40,
     }),
-    (feature) => mercator.ceoMapStyles("cluster", feature.get("features").length)
+    (feature) => mercator.ceoMapStyles("cluster", feature.get("features").length),
+    9999
   );
   const clickHandler = (event) => {
+    try {
     mapConfig.map.forEachFeatureAtPixel(
       event.pixel,
       (feature) => {
@@ -1475,6 +1480,10 @@ mercator.addPlotLayer = (mapConfig, plots, callback) => {
       },
       { hitTolerance: 10 }
     );
+    }
+    catch (error) {
+      console.err(error);
+    }
   };
   // TODO: It looks like the clickHandler is only removed when the user clicks
   //       a cluster of size 1. It is not removed if the user clicks "Go to first plot"
@@ -1495,6 +1504,13 @@ mercator.calculateArea = (obj) => {
   } catch (e) {
     return "N/A";
   }
+};
+
+mercator.calculatePlotWidth = (latMin, lonMin, lonMax) => {
+  const point1 = transform([lonMin, latMin], 'EPSG:4326', 'EPSG:3857');
+  const point2 = transform([lonMax, latMin], 'EPSG:4326', 'EPSG:3857');
+
+  return getDistance(point1, point2).toFixed(2);
 };
 
 /*****************************************************************************
