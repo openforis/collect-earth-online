@@ -313,22 +313,23 @@ $$ LANGUAGE plpgsql;
 
 -- Updates institution imagery visibility (this is only for the super user)
 CREATE OR REPLACE FUNCTION update_imagery_visibility_bulk(
-    _imagery_id        integer,
-    _visibility        text,
-    _institution_id    integer
+    _imagery_ids_text  TEXT,
+    _visibility        TEXT,
+    _institution_id    INTEGER
  ) RETURNS void AS $$
-
+DECLARE
+   imagery_ids INTEGER[];
+BEGIN
+    SELECT string_to_array(_imagery_ids_text, ',')::INTEGER[]
+    INTO imagery_ids;
+    
     UPDATE imagery
     SET visibility = _visibility
-    WHERE imagery_uid = _imagery_id;
+    WHERE imagery_uid = ANY(imagery_ids);
 
     UPDATE projects
     SET imagery_rid = (SELECT select_first_public_imagery())
-    WHERE imagery_rid = _imagery_id
+    WHERE imagery_rid = ANY(imagery_ids)
         AND institution_rid <> _institution_id;
-
-    DELETE FROM project_imagery
-    WHERE imagery_rid = _imagery_id
-        AND project_rid IN (SELECT project_uid FROM projects WHERE institution_rid <> _institution_id);
-
-$$ LANGUAGE SQL;
+END;
+$$ LANGUAGE plpgsql;

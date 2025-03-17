@@ -943,10 +943,13 @@ mercator.removeLayerById = (mapConfig, layerId) => {
 };
 
 // [Side Effects] Hides/Shows the layer with id === layerId from mapConfig's map object.
-mercator.setLayerVisibilityByLayerId = (mapConfig, layerId, visibility) => {
+mercator.setLayerVisibilityByLayerId = (mapConfig, layerId, visibility, zindex = null) => {
   const layer = mercator.getLayerById(mapConfig, layerId);
   if (layer) {
     layer.setVisible(visibility);
+    if(zindex) {
+      layer.setZIndex(zindex);
+    }
   }
   return mapConfig;
 };
@@ -1459,6 +1462,7 @@ mercator.addPlotLayer = (mapConfig, plots, callback) => {
     9999
   );
   const clickHandler = (event) => {
+    try {
     mapConfig.map.forEachFeatureAtPixel(
       event.pixel,
       (feature) => {
@@ -1476,6 +1480,10 @@ mercator.addPlotLayer = (mapConfig, plots, callback) => {
       },
       { hitTolerance: 10 }
     );
+    }
+    catch (error) {
+      console.err(error);
+    }
   };
   // TODO: It looks like the clickHandler is only removed when the user clicks
   //       a cluster of size 1. It is not removed if the user clicks "Go to first plot"

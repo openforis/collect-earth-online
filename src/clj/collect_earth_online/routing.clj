@@ -222,7 +222,7 @@
    [:post "/update-imagery-visibility"]        {:handler     imagery/update-imagery-visibility
                                                 :auth-type   :admin
                                                 :auth-action :block}
-   [:post "/bulk-update-imagery-visibility"]   {:handler     imagery/bulk-update-imagery-visibility
+   [:post "/edit-imagery-bulk"]                {:handler     #'imagery/bulk-update-imagery-visibility
                                                 :auth-type   :admin
                                                 :auth-action :block}
 

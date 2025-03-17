@@ -155,7 +155,9 @@ export default class NewQuestionDesigner extends React.Component {
 
   renderNew = (parentAnswers) => {
     const componentTypes = this.props.projectType === "simplified" ?
-          this.componentTypes.filter((c) => (c.componentType === "button")) :
+          this.componentTypes.filter((c) =>
+            (c.componentType === "button") ||
+              (c.componentType === "input")) :
           this.componentTypes;
     return (
     <>

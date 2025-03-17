@@ -166,14 +166,15 @@ class ReviewInstitution extends React.Component {
     });
   };
 
-  editImageryBulk = (projectIds, selectedVisibility) => {
+  editImageryBulk = (imageryIds, selectedVisibility) => {
     if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
-      fetch(`/edit-projects-bulk?institutionId=${this.props.institutionId}`,
+      fetch("/edit-imagery-bulk",
         {
           method: "POST",
           body: JSON.stringify({
-            "projectIds": projectIds,
-            "visibility": selectedVisibility
+            imageryIds: imageryIds,
+            visibility: selectedVisibility,
+            institutionId: this.props.institutionId
           }),
           headers: {
             Accept: "application/json",
@@ -728,7 +729,7 @@ const ImageryList = (
           </div>
           <div className="row mb-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ display: "flex", gap: "10px" }}>
-              <ImageryVisibilityPopup selectedImagery={null} editImageryBulk={editImageryBulk} />
+              <ImageryVisibilityPopup selectedImagery={selectedImagery} editImageryBulk={editImageryBulk} />
               <button
                 className="delete-button"
                 style={{ height: "38px" }}
@@ -1813,7 +1814,7 @@ const NewUserButtons = ({
   const [newUserEmail, setNewUserEmail] = useState([]);
 
   const checkUserEmail = () => {
-    if (newUserEmails.length === 0) {
+    if (newUserEmail.length === 0) {
       alert("Please enter at least one existing user's email address.");
       return false;
     } else if (isInstitutionMember(newUserEmail)) {
@@ -1881,85 +1882,6 @@ const NewUserButtons = ({
     </>
   );
 };
-
-// class NewUserButtons extends React.Component {
-//   constructor(props) {
-//     super(props);
-//     this.state = {
-//       newUserEmails: [],
-//     };
-//   }
-
-//   checkUserEmail = () => {
-//     if (this.state.newUserEmail === "") {
-//       alert("Please enter an existing user's email address.");
-//       return false;
-//     } else if (this.props.isInstitutionMember(this.state.newUserEmail)) {
-//       alert(this.state.newUserEmail + " is already a member of this institution.");
-//       return false;
-//     } else {
-//       return true;
-//     }
-//   };
-
-
-//   addUser = () => this.props.updateUserInstitutionRole(null, this.state.newUserEmail, "member");
-
-//   render() {
-//     return (
-//       <>
-//         {this.props.isAdmin && (
-//           <div className="row mb-3">
-//             <div className="col-8">
-//               <input
-//                 autoComplete="off"
-//                 className="form-control form-control-sm py-2"
-//                 onChange={(e) => this.setState({ newUserEmail: e.target.value })}
-//                 placeholder="Email"
-//                 style={{ height: "100%" }}
-//                 type="email"
-//                 value={this.state.newUserEmail}
-//               />
-//             </div>
-//             <div className="col-4 pl-0">
-//               <button
-//                 className="btn btn-sm btn-lightgreen btn-block py-2 font-weight-bold"
-//                 onClick={() => this.checkUserEmail() && this.addUser()}
-//                 style={{
-//                   alignItems: "center",
-//                   display: "flex",
-//                   justifyContent: "center",
-//                 }}
-//                 type="button"
-//               >
-//                 <SvgIcon icon="plus" size="1rem" />
-//                 <span style={{ marginLeft: "0.4rem" }}>Add User</span>
-//               </button>
-//             </div>
-//           </div>
-//         )}
-//         {this.props.userId > 0 && !this.props.currentIsInstitutionMember && (
-//           <div>
-//             <button
-//               className="btn btn-sm btn-lightgreen btn-block mb-3"
-//               id="request-membership-button"
-//               onClick={this.props.requestMembership}
-//               style={{
-//                 alignItems: "center",
-//                 display: "flex",
-//                 justifyContent: "center",
-//               }}
-//               type="button"
-//             >
-//               <SvgIcon icon="plus" size="1rem" />
-//               <span style={{ marginLeft: "0.4rem" }}>Request Membership</span>
-//             </button>
-//           </div>
-//         )}
-//       </>
-//     );
-//   }
-// }
 
 export function pageInit(params, session) {
   ReactDOM.render(

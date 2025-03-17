@@ -1066,14 +1066,14 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
     FROM plots pl
     INNER JOIN samples s
         ON s.plot_rid = pl.plot_uid
-    LEFT JOIN user_plots up
+    INNER JOIN user_plots up
         ON up.plot_rid = pl.plot_uid
-    LEFT JOIN sample_values sv
+    INNER JOIN sample_values sv
         ON sample_uid = sv.sample_rid
         AND user_plot_uid = sv.user_plot_rid
-    LEFT JOIN imagery
+    INNER JOIN imagery
         ON imagery_uid = sv.imagery_rid
-    LEFT JOIN users u
+    INNER JOIN users u
         ON u.user_uid = up.user_rid
     WHERE pl.project_rid = _project_id
     ORDER BY plot_uid, sample_uid

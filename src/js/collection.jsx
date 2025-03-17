@@ -311,7 +311,14 @@ class Collection extends React.Component {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
-          this.setState({ imageryList: data });
+          const updatedImagery = data.map((imagery) => {
+            if(imagery.title === "Mapbox Satellite") {
+              return { ...imagery, visible: true};
+            } else {
+              return imagery;
+            }
+          });
+          this.setState({ imageryList: updatedImagery });
           return Promise.resolve("resolved");
         } else {
           return Promise.reject("No project imagery found");
@@ -809,8 +816,11 @@ class Collection extends React.Component {
               return null;
             }
           }
-          if(this.state.currentProject.type !== "simplified")
+          if(this.state.currentProject.type !== "simplified") {
             return this.navToNextPlot(true);
+          } else {
+            alert("Answers saved successfully!");
+          }
         } else {
           console.log(response);
           alert("Error saving your assignments to the database. See console for details.");
@@ -1025,27 +1035,29 @@ class Collection extends React.Component {
     }));
   };
   
-  toggleLayer = (layerId) => {
+  toggleLayer = (layerId, imageryList) => {
+    const maxZIndex = imageryList.length - 1;
     this.setState((prevState) => {
       const updatedImageryList = prevState.imageryList.map((layer) => 
         layer.id === layerId ? { ...layer, visible: !layer.visible } : layer
       );
       
-      updatedImageryList.forEach((layer) => {
-        mercator.setLayerVisibilityByLayerId(this.state.mapConfig, layer.id, layer.visible);
+      updatedImageryList.forEach((layer, index) => {
+        const zindex = maxZIndex - index
+        mercator.setLayerVisibilityByLayerId(this.state.mapConfig, layer.id, layer.visible, zindex);
       });
       
       return { imageryList: updatedImageryList };
     });
   };
 
-  resetLayers = (layerName) => {
+  resetLayers = () => {
     this.setState((prevState) => {
       const updatedImageryList = prevState.imageryList.map((layer) => 
         layer.title === "Mapbox Satellite" ? { ...layer, visible: true } : { ...layer, visible: false }
       );
       
-      updatedImageryList.forEach((layer) => {
+      updatedImageryList.forEach((layer, index) => {
         mercator.setLayerVisibilityByLayerId(this.state.mapConfig, layer.id, layer.visible);
       });
       
