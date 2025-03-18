@@ -598,7 +598,7 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         closed_date,
         count(widget_uid) > 0,
         token_key,
-        type
+        type::TEXT
     FROM projects
     LEFT JOIN project_widgets
         ON project_rid = project_uid
