@@ -20,7 +20,7 @@ export default function PlotStep({ getTotalPlots, projectType }) {
           projectType={projectType}
         />
       )}
-      {(projectType === "regular") ? (
+      {(projectType !== "simplified") ? (
        <div className="row mr-1">
          <AssignPlots institutionUserList={institutionUserList} totalPlots={totalPlots} />
          <QualityControl institutionUserList={institutionUserList} totalPlots={totalPlots} />

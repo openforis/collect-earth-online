@@ -574,7 +574,7 @@ export function PlotDesignReview() {
       </div>
       <div className="col-6">
         <AOIReview
-          imagery={institutionImagery.filter(({ title }) => title === "Mapbox Satellite")}
+          imagery={institutionImagery.filter(({ title }) => title === "CEO: Mapbox Satellite")}
         />
       </div>
     </div>
