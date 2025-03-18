@@ -862,7 +862,8 @@ class NewImagery extends React.Component {
       alert(messages.join(", "));
     } else {
       const sourceConfig = this.buildSecureWatch(this.stackParams(sanitizedParams)); // TODO define SecureWatch so stack params works correctly.
-      if (this.state.imageryTitle.length === 0 || this.state.imageryAttribution.length === 0) {
+      if (this.state.imageryTitle.length === 0 ||
+          (this.state.imageryAttribution.length === 0 && this.state.selectedType !== "14")) {
         alert("You must include a title and attribution.");
       } else if (this.props.titleIsTaken(this.state.imageryTitle, this.props.imageryToEdit.id)) {
         alert("The title '" + this.state.imageryTitle + "' is already taken.");

@@ -53,7 +53,7 @@ export default class AOIMap extends React.Component {
   initProjectMap = () => {
     const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.props.imagery);
     this.setState({ mapConfig: newMapConfig }, () => {
-      mercator.setVisibleLayer(this.state.mapConfig, this.props.imagery[0].id);
+      mercator.setVisibleLayer(this.state.mapConfig, this.props.imagery[0]?.id);
       if (this.props.context.aoiFeatures) this.updateAOIAreas();
       if (this.props.canDrag) this.showDragBoxDraw();
       if (this.props.context.plots.length > 0) this.showPlots();

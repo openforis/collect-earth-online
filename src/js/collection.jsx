@@ -312,7 +312,7 @@ class Collection extends React.Component {
       .then((data) => {
         if (data.length > 0) {
           const updatedImagery = data.map((imagery) => {
-            if(imagery.title === "Mapbox Satellite") {
+            if(imagery.title === "CEO: Mapbox Satellite") {
               return { ...imagery, visible: true};
             } else {
               return imagery;
@@ -1054,7 +1054,7 @@ class Collection extends React.Component {
   resetLayers = () => {
     this.setState((prevState) => {
       const updatedImageryList = prevState.imageryList.map((layer) => 
-        layer.title === "Mapbox Satellite" ? { ...layer, visible: true } : { ...layer, visible: false }
+        layer.title === "CEO: Mapbox Satellite" ? { ...layer, visible: true } : { ...layer, visible: false }
       );
       
       updatedImageryList.forEach((layer, index) => {

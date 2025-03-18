@@ -52,8 +52,8 @@ export default class CreateProjectWizard extends React.Component {
             canDrag={false}
             context={this.context}
             imagery={this.context.institutionImagery.filter(
-              ({ title }) => (title === "Mapbox Satellite") ||
-                (title === "Open Street Maps")
+              ({ title }) => (title === "CEO: Mapbox Satellite") ||
+                (title === "CEO: Open Street Maps")
             )}
           />
         ),
@@ -65,7 +65,7 @@ export default class CreateProjectWizard extends React.Component {
         StepComponent: () => <PlotStep
                                getTotalPlots={this.getTotalPlots}
                                steps={this.state.steps}
-                               projectType={this.state.projectType}
+                               projectType={this.state.type}
                              />,
         helpDescription: "Collection Map Preview",
         StepHelpComponent: () => (
@@ -77,8 +77,8 @@ export default class CreateProjectWizard extends React.Component {
             }
             context={this.context}
             imagery={this.context.institutionImagery.filter(
-              ({ title }) => (title === "Mapbox Satellite") ||
-                (title === "Open Street Maps")
+              ({ title }) => (title === "CEO: Mapbox Satellite") ||
+                (title === "CEO: Open Street Maps")
             )}
           />
         ),

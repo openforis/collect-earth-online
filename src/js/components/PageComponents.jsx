@@ -608,8 +608,8 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
      polygon: true,
    });
    
-   const imageryLayers = imageryList.filter((image) => image.type !== "GEEFeatureCollection");
-   const polygonLayers = imageryList.filter((image) => image.type === "GEEFeatureCollection");
+   const imageryLayers = imageryList.filter((image) => image.type !== "FeatureCollection");
+   const polygonLayers = imageryList.filter((image) => image.type === "FeatureCollection");
 
    const toggleSection = (section) => {
      setExpandedSections((prev) => ({
