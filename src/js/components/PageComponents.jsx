@@ -649,9 +649,14 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
                                const visParams = layer.sourceConfig?.visParams
                                      ? JSON.parse(layer.sourceConfig.visParams)
                                      : null;
-                               const sliderColor = visParams?.palette
-                                     ? `#${visParams.palette.split(',').pop().trim().replace(/^#/, '')}`
-                                     : '#3b82f6';
+
+                               const paletteArray = visParams?.palette
+                                     ? visParams.palette.split(',').map(c => c.trim())
+                                     : [];
+
+                               const sliderColor = paletteArray.length === 0
+                                     ? '#3b82f6'
+                                     : `#${paletteArray.length === 1 ? paletteArray[0] : paletteArray.pop()}`;
                                return (
                                  <div
                                    className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
