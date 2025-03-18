@@ -608,8 +608,8 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
      polygon: true,
    });
    
-   const imageryLayers = imageryList.filter((image) => image.type !== "FeatureCollection");
-   const polygonLayers = imageryList.filter((image) => image.type === "FeatureCollection");
+   const imageryLayers = imageryList.filter((image) => image.sourceConfig.type !== "FeatureCollection");
+   const polygonLayers = imageryList.filter((image) => image.sourceConfig.type === "FeatureCollection");
 
    const toggleSection = (section) => {
      setExpandedSections((prev) => ({
@@ -645,32 +645,41 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
                        >
                          {imageryLayers.map((layer, index) => (
                            <Draggable key={layer.id} draggableId={layer.id.toString()} index={index}>
-                             {(provided, snapshot) => (
-                               <div
-                                 className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
-                                 ref={provided.innerRef}
-                                 {...provided.draggableProps}
-                                 {...provided.dragHandleProps}
-                               >
-                                 <input
-                                   type="checkbox"
-                                   checked={layer.visible}
-                                   onChange={() => onToggleLayer(layer.id, imageryList)}
-                                 />
-                                 <span className="layer-title">  {layer.title}</span>
-                                 <input
-                                   type="range"
-                                   min="0"
-                                   max="1"
-                                   step="0.01"
-                                   className="layer-range"
-                                   value={layer.opacity || 1}
-                                   onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
-                                 />
-                               </div>
-                             )}
-                           </Draggable>
-                         ))}
+                             {(provided, snapshot) => {
+                               const visParams = layer.sourceConfig?.visParams
+                                     ? JSON.parse(layer.sourceConfig.visParams)
+                                     : null;
+                               const sliderColor = visParams?.palette
+                                     ? `#${visParams.palette.split(',').pop().trim().replace(/^#/, '')}`
+                                     : '#3b82f6';
+                               return (
+                                 <div
+                                   className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
+                                   ref={provided.innerRef}
+                                   {...provided.draggableProps}
+                                   {...provided.dragHandleProps}
+                                 >
+                                   <input
+                                     type="checkbox"
+                                     checked={layer.visible}
+                                     onChange={() => onToggleLayer(layer.id, imageryList)}
+                                   />
+                                   <span className="layer-title">  {layer.title}</span>
+                                   <input
+                                     type="range"
+                                     min="0"
+                                     max="1"
+                                     step="0.01"
+                                     className="layer-range"
+                                     value={layer.opacity || 1}
+                                     onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
+                                     style={{
+                                       '--slider-color': sliderColor }}
+                                   />
+                                 </div>
+                               )}}
+                              </Draggable>
+                             ))}
                          {provided.placeholder && <div className="placeholder"></div>}
                        </div>
                      )}
