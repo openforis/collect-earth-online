@@ -323,7 +323,11 @@
         ;; Samples created in the UI have IDs starting with 1. When the new sample is created
         ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
         id-translation     (when new-plot-samples
-                             (call-sql "delete_samples_by_visible_id" plot-id 1)
+                             (when (= project-type "simplified")
+                               (doall
+                                (map (fn [{:keys [sampleGeom]}]
+                                       (call-sql "delete_samples_by_geom" plot-id (tc/json->jsonb sampleGeom)))
+                                     new-plot-samples)))
                              (when (= project-type "regular")
                                (call-sql "delete_user_plot_by_plot" plot-id user-id)
                                (call-sql "delete_samples_by_plot" plot-id))

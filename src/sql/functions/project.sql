@@ -1025,8 +1025,11 @@ CREATE OR REPLACE FUNCTION dump_project_plot_qaqc_data(_project_id integer)
 $$ LANGUAGE SQL;
 
 -- Returns project raw data
-CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
- RETURNS table (
+CREATE OR REPLACE FUNCTION dump_project_sample_data(
+    _project_id integer,
+    _type TEXT
+)
+RETURNS TABLE (
         plotid                integer,
         sampleid              integer,
         lon                   double precision,
@@ -1044,8 +1047,9 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         extra_plot_info       json,
         extra_sample_info     json,
         sample_internal_id    integer
- ) AS $$
+) AS $$
 
+WITH simplified_query AS (
     SELECT pl.visible_id,
         s.visible_id,
         ST_X(ST_Centroid(sample_geom)) AS lon,
@@ -1064,21 +1068,49 @@ CREATE OR REPLACE FUNCTION dump_project_sample_data(_project_id integer)
         extra_sample_info,
         s.sample_uid
     FROM plots pl
-    INNER JOIN samples s
-        ON s.plot_rid = pl.plot_uid
-    INNER JOIN user_plots up
-        ON up.plot_rid = pl.plot_uid
-    INNER JOIN sample_values sv
-        ON sample_uid = sv.sample_rid
-        AND user_plot_uid = sv.user_plot_rid
-    INNER JOIN imagery
-        ON imagery_uid = sv.imagery_rid
-    INNER JOIN users u
-        ON u.user_uid = up.user_rid
+    INNER JOIN samples s ON s.plot_rid = pl.plot_uid
+    INNER JOIN user_plots up ON up.plot_rid = pl.plot_uid
+    INNER JOIN sample_values sv ON sample_uid = sv.sample_rid AND user_plot_uid = sv.user_plot_rid
+    INNER JOIN imagery ON imagery_uid = sv.imagery_rid
+    INNER JOIN users u ON u.user_uid = up.user_rid
     WHERE pl.project_rid = _project_id
-    ORDER BY plot_uid, sample_uid
+),
+
+regular_query AS (
+    SELECT pl.visible_id,
+        s.visible_id,
+        ST_X(ST_Centroid(sample_geom)) AS lon,
+        ST_Y(ST_Centroid(sample_geom)) AS lat,
+        email,
+        flagged,
+        collection_time,
+        ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
+        up.confidence as confidence,
+        up.confidence_comment as confidence_comment,
+        title AS imagery_title,
+        imagery_attributes::text,
+        ST_AsText(sample_geom),
+        saved_answers,
+        extra_plot_info,
+        extra_sample_info,
+        s.sample_uid
+    FROM plots pl
+    LEFT JOIN samples s ON s.plot_rid = pl.plot_uid
+    LEFT JOIN user_plots up ON up.plot_rid = pl.plot_uid
+    LEFT JOIN sample_values sv ON sample_uid = sv.sample_rid AND user_plot_uid = sv.user_plot_rid
+    LEFT JOIN imagery ON imagery_uid = sv.imagery_rid
+    LEFT JOIN users u ON u.user_uid = up.user_rid
+    WHERE pl.project_rid = _project_id
+)
+
+SELECT * FROM (
+    SELECT * FROM simplified_query WHERE _type = 'simplified'
+    UNION ALL
+    SELECT * FROM regular_query WHERE _type = 'regular'
+) AS final_result
 
 $$ LANGUAGE SQL;
+
 
 -- Returns relevant information for DOI creation by ID.
 CREATE OR REPLACE FUNCTION select_project_info_for_doi(_project_id integer)

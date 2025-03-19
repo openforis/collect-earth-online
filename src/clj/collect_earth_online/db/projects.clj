@@ -946,7 +946,7 @@
 (defn dump-project-raw-data! [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
-      (let [samples          (call-sql "dump_project_sample_data" project-id)
+      (let [samples          (call-sql "dump_project_sample_data" project-id (:type project-info))
             survey-questions (tc/jsonb->clj (:survey_questions project-info))
             text-headers     (concat sample-base-headers
                                      (get-ext-headers samples :extra_plot_info "pl_")

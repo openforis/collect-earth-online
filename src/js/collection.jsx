@@ -82,6 +82,8 @@ class Collection extends React.Component {
       threshold: 90,
       showAcceptTermsModal: false,
       isImageryLayersExpanded: false,
+      // only used for simplified projects
+      centerSampleId: 0,
     };
   }
 
@@ -601,6 +603,8 @@ class Collection extends React.Component {
   showPlotSamples = () => {
     const { mapConfig, unansweredColor, currentProject, selectedQuestionId, showSamples} = this.state;
     const { visible } = currentProject.surveyQuestions[selectedQuestionId];
+    const type = currentProject.type;
+    const visibleSamples = type === "simplified" ? visible.filter((s) => s.visibleId !== 1) : visible;
     mercator.disableSelection(mapConfig);
     mercator.disableDrawing(mapConfig);
     mercator.removeLayerById(mapConfig, "currentSamples");
@@ -608,7 +612,7 @@ class Collection extends React.Component {
     mercator.addVectorLayer(
       mapConfig,
       "currentSamples",
-      mercator.samplesToVectorSource(visible),
+      mercator.samplesToVectorSource(visibleSamples),
       mercator.ceoMapStyles("geom", (showSamples ? unansweredColor : "transparent")),
       9999
     );
@@ -620,14 +624,17 @@ class Collection extends React.Component {
   };
 
   featuresToDrawLayer = (drawTool) => {
-    const { mapConfig, currentPlot } = this.state;
+    const { mapConfig, currentPlot, currentProject } = this.state;
+    const type = currentProject.type;
+    const samples = currentPlot.samples;
+    const visibleSamples = type === "simplified" ? samples.filter((s) => s.visibleId !== 1) : samples;
     mercator.disableDrawing(mapConfig);
     mercator.removeLayerById(mapConfig, "currentSamples");
     mercator.removeLayerById(mapConfig, "drawLayer");
     mercator.addVectorLayer(
       mapConfig,
       "drawLayer",
-      mercator.samplesToVectorSource(currentPlot.samples),
+      mercator.samplesToVectorSource(visibleSamples),
       mercator.ceoMapStyles("draw", "orange"),
       9999
     );

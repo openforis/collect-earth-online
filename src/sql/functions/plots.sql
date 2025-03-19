@@ -554,6 +554,13 @@ CREATE OR REPLACE FUNCTION delete_samples_by_visible_id(_plot_id integer, _visib
       AND visible_id=_visible_id
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION delete_samples_by_geom(_plot_id integer, _geom jsonb)
+ RETURNS VOID AS $$
+    DELETE FROM samples
+    WHERE sample_geom = ST_GeomFromGeoJSON(_geom)
+      AND plot_rid = _plot_id
+$$ LANGUAGE SQL;
+
 -- For clearing all plots in a project
 CREATE OR REPLACE FUNCTION delete_plots_by_project(_project_id integer)
  RETURNS void AS $$
