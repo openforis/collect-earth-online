@@ -421,34 +421,31 @@ CREATE OR REPLACE FUNCTION flag_plot(
     _user_id integer,
     _collection_start timestamp,
     _flagged_reason text
- ) RETURNS integer AS $$
+) RETURNS integer AS $$
 
-    DELETE
-    FROM sample_values
+    DELETE FROM sample_values
     WHERE user_plot_rid = (
         SELECT user_plot_uid
         FROM user_plots
         WHERE user_rid = _user_id
-            AND plot_rid = _plot_id
+          AND plot_rid = _plot_id
+        LIMIT 1
     );
 
-    INSERT INTO user_plots
-        (user_rid, plot_rid, flagged, collection_start, collection_time, flagged_reason)
-    VALUES
-        (_user_id, _plot_id, true, _collection_start, Now(), _flagged_reason)
-    ON CONFLICT (user_rid, plot_rid) DO
-        UPDATE
-        SET flagged = excluded.flagged,
-            user_rid = excluded.user_rid,
-            confidence = NULL,
-            confidence_comment = NULL,
-            collection_start = excluded.collection_start,
-            collection_time = Now(),
-            flagged_reason = excluded.flagged_reason
+    DELETE FROM user_plots
+    WHERE user_rid = _user_id
+      AND plot_rid = _plot_id;
 
-    RETURNING _plot_id
+    INSERT INTO user_plots (
+        user_rid, plot_rid, flagged, collection_start, collection_time, flagged_reason
+    ) VALUES (
+        _user_id, _plot_id, true, _collection_start, NOW(), _flagged_reason
+    );
+
+    SELECT _plot_id;
 
 $$ LANGUAGE SQL;
+
 
 CREATE OR REPLACE FUNCTION upsert_user_samples(
     _user_plot_id        integer,
