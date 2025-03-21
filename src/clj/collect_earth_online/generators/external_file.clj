@@ -326,7 +326,7 @@
             file-type file-types
             :let [action (get file-types-actions file-type)]
             :when action]
-      (action project-id folder-name))
+      (action (tc/val->int project-id) folder-name))
     (sh-wrapper tmp-dir {}
                 (str "7z a "  folder-name "/files" ".zip " folder-name "/*"))
     (str folder-name "files.zip")))
