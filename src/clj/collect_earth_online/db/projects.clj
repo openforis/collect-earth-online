@@ -1159,3 +1159,35 @@
         (println e)
         (data-response "Internal server error." {:status 500})))))
 
+(def file-types-actions
+  {"plots"   (fn [project-id folder]
+               (let [project-info (first (call-sql "select_project_by_id" project-id))
+                     plots-data (plots->csv-response project-info
+                                                     (call-sql "dump_project_plot_qaqc_data" project-id)
+                                                     (prepare-file-name (:name project-info) "plots"))]
+                 (spit (str folder project-id "-plots.csv")
+                       (:body plots-data))))
+   "samples" (fn [project-id folder]
+               (let [sample-csv (dump-project-raw-data! {:params {:projectId project-id}})]
+                 (spit (str folder project-id "-samples.csv")
+                       (:body sample-csv))))
+   "shape"   (fn [project-id folder]
+               (external-file/create-shape-files folder "plot" project-id)
+               (external-file/create-shape-files folder "sample" project-id))})
+
+(defn download-projects-bulk
+  [{:keys [params]}]
+  (let [project-ids    (clojure.string/split (:projectIds params) #",")
+        institution-id (tc/val->int (:institutionId params))
+        file-types     (clojure.string/split (:fileTypes params) #",")
+        zip-file       (external-file/bulk-download-zip institution-id
+                                                        project-ids
+                                                        file-types
+                                                        file-types-actions)]
+    (if zip-file
+      {:headers {"Content-Type"        "application/zip"
+                 "Content-Disposition" (str "attachment; filename=files.zip")}
+       :body    (io/file zip-file)
+       :status  200}
+      {:status 500
+       :body   "Error generating shape files."})))

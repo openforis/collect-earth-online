@@ -94,6 +94,9 @@
    [:get  "/dump-project-raw-data"]          {:handler     #'projects/dump-project-raw-data!
                                               :auth-type   :admin
                                               :auth-action :block}
+   [:get  "/download-projects-bulk"]         {:handler     #'projects/download-projects-bulk
+                                              :auth-type   :admin
+                                              :auth-action :block}
    [:get  "/get-home-projects"]              {:handler #'projects/get-home-projects}
    [:get  "/get-institution-projects"]       {:handler #'projects/get-institution-projects}
    [:get  "/get-institution-dash-projects"]  {:handler #'projects/get-institution-dash-projects}

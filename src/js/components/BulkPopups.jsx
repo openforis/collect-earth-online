@@ -91,9 +91,9 @@ export function ProjectVisibilityPopup({ selectedProjects, editProjectsBulk }) {
 export function DownloadPopup({ downloadProjectsBulk, selectedProjects }) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({
-    plotData: false,
-    sampleData: false,
-    shapeFile: false,
+    "plots": false,
+    "samples": false,
+    "shape": false,
   });
 
   const togglePopup = () => {
@@ -113,7 +113,7 @@ export function DownloadPopup({ downloadProjectsBulk, selectedProjects }) {
       alert("Please select at least one project to download.");
       return;
     }
-    alert(`Downloading: ${selectedItems.join(", ")}`);
+    downloadProjectsBulk(selectedProjects, selectedOptions);
     setIsPopupOpen(false);
   };
 
@@ -141,32 +141,32 @@ export function DownloadPopup({ downloadProjectsBulk, selectedProjects }) {
           <div className="popup-option">
             <input
               type="checkbox"
-              id="plotData"
-              name="plotData"
+              id="plots"
+              name="plots"
               onChange={handleCheckboxChange}
               checked={selectedOptions.plotData}
             />
-            <label htmlFor="plotData">Plot Data: <i>.CSV</i></label>
+            <label htmlFor="plots">Plot Data: <i>.CSV</i></label>
           </div>
           <div className="popup-option">
             <input
               type="checkbox"
-              id="sampleData"
-              name="sampleData"
+              id="samples"
+              name="samples"
               onChange={handleCheckboxChange}
               checked={selectedOptions.sampleData}
             />
-            <label htmlFor="sampleData">Sample Data: <i>.CSV</i></label>
+            <label htmlFor="samples">Sample Data: <i>.CSV</i></label>
           </div>
           <div className="popup-option">
             <input
               type="checkbox"
-              id="shapeFile"
-              name="shapeFile"
+              id="shape"
+              name="shape"
               onChange={handleCheckboxChange}
               checked={selectedOptions.shapeFile}
             />
-            <label htmlFor="shapeFile">Shape File: <i>.SHP</i></label>
+            <label htmlFor="shape">Shape File: <i>.SHP</i></label>
           </div>
           <button className="popup-button" onClick={handleDownload}>
             <svg

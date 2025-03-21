@@ -166,6 +166,17 @@ class ReviewInstitution extends React.Component {
     });
   };
 
+  downloadProjectsBulk = (selectedProjects, selectedOptions) => {
+    const fileTypes = Object.entries(selectedOptions)
+          .filter(([_, value]) => value)
+          .map(([key]) => key);
+    const fileTypesStr = fileTypes.join(',');
+    const projectIds = selectedProjects.join(',');
+    window.open(
+      `/download-projects-bulk?projectIds=${projectIds}&institutionId=${this.props.institutionId}&fileTypes=${fileTypesStr}`
+    );
+  }
+
   editImageryBulk = (imageryIds, selectedVisibility) => {
     if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
       fetch("/edit-imagery-bulk",
@@ -260,6 +271,7 @@ class ReviewInstitution extends React.Component {
               projectList={this.state.projectList}
               deleteProjectsBulk={this.deleteProjectsBulk}
               editProjectsBulk={this.editProjectsBulk}
+              downloadProjectsBulk={this.downloadProjectsBulk}
             />
             <ImageryList
               institutionId={this.props.institutionId}
@@ -1301,6 +1313,7 @@ function ProjectList({
   deleteProjectDraft,
   deleteProjectsBulk,
   editProjectsBulk,
+  downloadProjectsBulk
 }) {
   const [selectedProjects, setSelectedProjects] = useState([]);
 
@@ -1387,6 +1400,7 @@ function ProjectList({
             </div>
             <div>
               <DownloadPopup
+                downloadProjectsBulk={downloadProjectsBulk}
                 selectedProjects={selectedProjects}
               />
             </div>
@@ -1538,11 +1552,7 @@ function Project({
             <button
               className="btn btn-sm btn-outline-lightgreen btn-block"
               onClick={() =>
-                window.location.assign(
-                  project.draftId
-                    ? `/create-project?institutionId=${institutionId}&draftId=${project.draftId}`
-                    : `/review-project?projectId=${project.id}`
-                )
+                window.location.assign(`/dump-project-raw-data?projectId=${project.id}`, "_blank")
               }
               title="Download Sample Data"
               type="button"
