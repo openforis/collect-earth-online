@@ -140,14 +140,15 @@
                                                %))
                                        flatten)
                                   (str/split row #",")))
-          body        (map (fn [row]
-                             (as-> row r
-                               (split-row r)
-                               (into (ordered-map) (map vector header-keys r))
-                               (assoc r geom-key (tc/str->pg (make-wkt-point (:lon r) (:lat r)) "geometry"))
-                               (update r :visible_id tc/val->int)
-                               (dissoc r :lon :lat)))
-                           (rest rows))]
+          body        (remove #(= (:visible_id %) -1)
+                              (map (fn [row]
+                                     (as-> row r
+                                       (split-row r)
+                                       (into (ordered-map) (map vector header-keys r))
+                                       (assoc r geom-key (tc/str->pg (make-wkt-point (:lon r) (:lat r)) "geometry"))
+                                       (update r :visible_id tc/val->int)
+                                       (dissoc r :lon :lat)))
+                                   (rest rows)))]
       (if (and (some #(= % :lon) header-keys)
                (some #(= % :lat) header-keys))
         (if (apply distinct? header-keys)
