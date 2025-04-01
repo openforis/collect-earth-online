@@ -273,14 +273,15 @@
   [req]
   (let [{:keys [params session]} req
         user-id          (:userId session)
+        project-id       (:projectId params)
         interpreter-name (:interpreterName params)]
     (try
       (if (= -1 user-id)
         (do
-          (call-sql "guest_user_data_sharing" interpreter-name)
+          (call-sql "guest_user_data_sharing" project-id interpreter-name)
           (data-response {:message "success"} {:session {:acceptedTerms true}}))
         (do
-          (call-sql "user_data_sharing" user-id interpreter-name (or (:remote-addr req) ""))
+          (call-sql "user_data_sharing" project-id user-id interpreter-name (or (:remote-addr req) ""))
           (data-response {:message "success"} {:session (assoc session :acceptedTerms true)})))
       (catch Exception e
         (data-response {:message "error when accepting data sharing terms."} {:status 500})))))

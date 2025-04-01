@@ -1046,7 +1046,8 @@ RETURNS TABLE (
         saved_answers         jsonb,
         extra_plot_info       json,
         extra_sample_info     json,
-        sample_internal_id    integer
+        sample_internal_id    integer,
+        guest_interpreters    json
 ) AS $$
 
 WITH simplified_query AS (
