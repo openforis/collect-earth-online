@@ -23,6 +23,7 @@ class ReviewInstitution extends React.Component {
       modalMessage: null,
       selectedProject: [],
       selectedImagery: [],
+      modal: null,
     };
   }
 
@@ -51,7 +52,7 @@ class ReviewInstitution extends React.Component {
           this.setState({ projectList: combinedProjects });
         })
         .catch(error => {
-          alert("Error retrieving the project info. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error retrieving the project info. See console for details."}}});
         })
     );
   };
@@ -61,10 +62,10 @@ class ReviewInstitution extends React.Component {
       fetch(`/archive-project?projectId=${projectId}`, { method: "POST" }).then((response) => {
         if (response.ok) {
           this.getProjectList();
-          alert("Project " + projectId + " has been deleted.");
+          this.setState ({modal: {alert: {alertType: "Project Info", alertMessage: "Project " + projectId + " has been deleted."}}});
         } else {
           console.log(response);
-          alert("Error deleting project. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error deleting project. See console for details."}}});
         }
       });
     }
@@ -75,10 +76,10 @@ class ReviewInstitution extends React.Component {
       fetch(`/delete-project-draft?projectDraftId=${projectDraftId}`, { method: "GET" }).then((response) => {
         if (response.ok) {
           this.getProjectList();
-          alert("Project " + projectDraftId + " has been deleted.");
+          this.setState ({modal: {alert: {alertType: "Project Info", alertMessage: "Project " + projectDraftId + " has been deleted."}}});
         } else {
           console.log(response);
-          alert("Error deleting project. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error deleting project. See console for details."}}});
         }
       });
     }
@@ -97,10 +98,10 @@ class ReviewInstitution extends React.Component {
         .then((response) => {
         if (response.ok) {
           this.getProjectList();
-          alert("Selected projects have been deleted.");
+          this.setState ({modal: {alert: {alertType: "Project Info", alertMessage: "Selected projects have been deleted."}}});
         } else {
           console.log(response);
-          alert("Error deleting projects. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error deleting project. See console for details."}}});
         }
       });
     }
@@ -120,10 +121,10 @@ class ReviewInstitution extends React.Component {
         .then((response) => {
         if (response.ok) {
           this.getProjectList();
-          alert(`The visibility of the selected projects have been changed to ${selectedVisibility}`);
+          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: `The visibility of the selected projects have been changed to ${selectedVisibility}`}}});
         } else {
           console.log(response);
-          alert("Error editing project visibility. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error editing project visibility. See console for details."}}});
         }
       });
     }
@@ -169,6 +170,11 @@ class ReviewInstitution extends React.Component {
   render() {
     return (
       <div id="review-institution">
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
         <InstitutionDescription
           institutionId={this.props.institutionId}
@@ -266,17 +272,17 @@ class InstitutionDescription extends React.Component {
       })
       .catch((response) => {
         console.log(response);
-        alert("Error retrieving the institution details. See console for details.");
+        this.setState ({modal: {alert: {alertType: "Institution Info Error", alertMessage: "Error retrieving the institution details. See console for details."}}});
       });
   };
 
   updateInstitution = () => {
     if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
-      alert("Institution logos must be smaller than 500kb");
+      this.setState ({modal: {alert: {alertType: "Institution Info Error", alertMessage: "Institution logos must be smaller than 500kb"}}});
     } else if (this.state.newInstitutionDetails.name.length === 0) {
-      alert("Institution must have a name.");
+      this.setState ({modal: {alert: {alertType: "Institution Info Error", alertMessage: "Institution must have a name."}}});
     } else if (this.state.newInstitutionDetails.description.length === 0) {
-      alert("Institution must have a description.");
+      this.setState ({modal: {alert: {alertType: "Institution Info Error", alertMessage: "Institution must have a description."}}});
     } else {
       fetch(`/update-institution?institutionId=${this.props.institutionId}`, {
         method: "POST",
@@ -299,10 +305,10 @@ class InstitutionDescription extends React.Component {
             this.getInstitutionDetails();
             this.setState({ editMode: false });
           } else {
-            alert(data[1]);
+            this.setState ({modal: {alert: {alertType: "Institution Info", alertMessage: data[1]}}});
           }
         })
-        .catch(() => alert("Error updating institution details."));
+        .catch(() =>this.setState ({modal: {alert: {alertType: "Institution Info Error", alertMessage: Error updating institution details.}}}););
     }
   };
 
@@ -328,11 +334,11 @@ class InstitutionDescription extends React.Component {
         method: "POST",
       }).then((response) => {
         if (response.ok) {
-          alert("Institution " + this.state.institutionDetails.name + " has been deleted.");
+          this.setState ({modal: {alert: {alertType: "Institution Update", alertMessage: "Institution " + this.state.institutionDetails.name + " has been deleted."}}});
           window.location = "/home";
         } else {
           console.log(response);
-          alert("Error deleting institution. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Institution Update Error", alertMessage: "Error deleting institution. See console for details."}}});
         }
       });
     }
@@ -529,10 +535,10 @@ class ImageryList extends React.Component {
         .then((response) => {
         if (response.ok) {
           this.getImageryList();
-          alert("Selected imagery have been deleted.");
+          this.setState ({modal: {alert: {alertType: "Institution Imageru", alertMessage: "Selected imagery have been deleted."}}});
         } else {
           console.log(response);
-          alert("Error deleting imagery. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Institution Imagery Error", alertMessage: "Error deleting imagery. See console for details."}}});
         }
       });
     }
@@ -552,10 +558,10 @@ class ImageryList extends React.Component {
         .then((response) => {
         if (response.ok) {
           this.getImageryList();
-          alert(`The visibility of the selected imagery have been changed to ${selectedVisibility}`);
+          this.setState ({modal: {alert: {alertType: "Institution Imagery Updated", alertMessage: `The visibility of the selected imagery have been changed to ${selectedVisibility}`}}});
         } else {
           console.log(response);
-          alert("Error editing imagery. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Institution Imagery Error", alertMessage: "Error editing imagery. See console for details."}}});
         }
       });
     }
@@ -830,13 +836,13 @@ class NewImagery extends React.Component {
     const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.imageryParams);
     const messages = this.validateParams(this.state.selectedType, sanitizedParams);
     if (messages.length > 0) {
-      alert(messages.join(", "));
+      this.setState ({modal: {alert: {alertType: "Imagery Upload", alertMessage: messages.join(", ")}}});
     } else {
       const sourceConfig = this.buildSecureWatch(this.stackParams(sanitizedParams)); // TODO define SecureWatch so stack params works correctly.
       if (this.state.imageryTitle.length === 0 || this.state.imageryAttribution.length === 0) {
-        alert("You must include a title and attribution.");
+        this.setState ({modal: {alert: {alertType: "Imagery Upload Error", alertMessage: "You must include a title and attribution."}}});
       } else if (this.props.titleIsTaken(this.state.imageryTitle, this.props.imageryToEdit.id)) {
-        alert("The title '" + this.state.imageryTitle + "' is already taken.");
+        this.setState ({modal: {alert: {alertType: "Imagery Upload Error", alertMessage: "The title '" + this.state.imageryTitle + "' is already taken."}}});
       } else {
         fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery", {
           method: "POST",
@@ -859,7 +865,7 @@ class NewImagery extends React.Component {
             this.props.hideEditMode();
           } else {
             console.log(response);
-            alert("Error uploading imagery data. See console for details.");
+            this.setState ({modal: {alert: {alertType: "Imagery Upload Error", alertMessage: "Error uploading imagery data. See console for details."}}});
           }
         });
       }
@@ -1567,7 +1573,7 @@ class UserList extends React.Component {
       .catch((response) => {
         this.setState({ institutionUserList: [] });
         console.log(response);
-        alert("Error retrieving the user list. See console for details.");
+        this.setState ({modal: {alert: {alertType: "User List Error", alertMessage: "Error retrieving the user list. See console for details."}}});
       });
   };
 
@@ -1579,7 +1585,7 @@ class UserList extends React.Component {
       (user) => user.institutionRole === "admin"
     ).length;
     if (existingRole === "admin" && adminCount === 1) {
-      alert("You cannot modify the last admin of an institution.");
+      this.setState ({modal: {alert: {alertType: "Update User Institution Role Error", alertMessage: "You cannot modify the last admin of an institution."}}});
     } else {
       this.props.processModal(
         "Updating user",
@@ -1598,12 +1604,12 @@ class UserList extends React.Component {
         })
           .then((response) => (response.ok ? response.json() : Promise.reject(response)))
           .then((message) => {
-            alert(message);
+            this.setState ({modal: {alert: {alertType: "Institution Users Error", alertMessage: message}}});
             this.getInstitutionUserList();
           })
           .catch((response) => {
             console.log(response);
-            alert("Error updating institution details. See console for details.");
+            this.setState ({modal: {alert: {alertType: "Institution Users Error", alertMessage: "Error updating institution details. See console for details."}}});
           })
       );
     }
@@ -1622,12 +1628,12 @@ class UserList extends React.Component {
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((message) => {
-        alert(message);
+        this.setState ({modal: {alert: {alertType: "Membership Request Error", alertMessage: message}}});
         this.getInstitutionUserList();
       })
       .catch((response) => {
         console.log(response);
-        alert("Error requesting institution membership. See console for details.");
+        this.setState ({modal: {alert: {alertType: "Membership Request Error", alertMessage: "Error requesting institution membership. See console for details."}}});
       });
   };
 
@@ -1679,7 +1685,7 @@ class UserList extends React.Component {
 function User({ isAdmin, updateUserInstitutionRole, user }) {
   const [userRole, setUserRole] = useState(user.institutionRole);
   const [selectedUsers, setSelectedUsers] = useState([]); // State for selected users
-
+  const [state, setState] = useState({modal: null});
   const handleCheckboxChange = (event) => {
     const { checked } = event.target;
     setSelectedUsers((prev) =>
@@ -1689,7 +1695,7 @@ function User({ isAdmin, updateUserInstitutionRole, user }) {
 
   const handleUpdateRole = () => {
     if (userRole === user.institutionRole) {
-      alert("You must change the role of a user in order to update it.");
+      setState ({modal: {alert: {alertType: "Update User Error", alertMessage: "You must change the role of a user in order to update it."}}});
     } else {
       const confirmBox = window.confirm(
         "Do you really want to update the role of this user?"
@@ -1708,6 +1714,11 @@ function User({ isAdmin, updateUserInstitutionRole, user }) {
   return (
     <div className="row">
       {/* Checkbox for selection */}
+      {state.modal?.alert &&
+         <Modal title={state.modal.alert.alertType}
+                onClose={()=>{setState({modal: null});}}>
+           {state.modal.alert.alertMessage}
+         </Modal>}
       <div className="col-1 mb-1"
            style= {{ paddingLeft: "4.5%" }}>
         <input
@@ -1784,10 +1795,10 @@ class NewUserButtons extends React.Component {
 
   checkUserEmail = () => {
     if (this.state.newUserEmail === "") {
-      alert("Please enter an existing user's email address.");
+      this.setState ({modal: {alert: {alertType: "Update User Error", alertMessage: "Please enter an existing user's email address."}}});
       return false;
     } else if (this.props.isInstitutionMember(this.state.newUserEmail)) {
-      alert(this.state.newUserEmail + " is already a member of this institution.");
+      this.setState ({modal: {alert: {alertType: "Update User Error", alertMessage: this.state.newUserEmail + " is already a member of this institution."}}});
       return false;
     } else {
       return true;

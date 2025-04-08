@@ -15,6 +15,7 @@ import {
   mapObject
 } from "../utils/sequence";
 import { ProjectContext } from "../project/constants";
+import Modal from "../components/Modal";
 
 export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQuestionId, question }) {
   const { setProjectDetails, surveyQuestions, surveyRules } = useContext(ProjectContext);
@@ -29,7 +30,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
   const [hideQuestion, setHideQuestion] = useState(surveyQuestions[surveyQuestionId].hideQuestion);
   const [showBulkAdd, setBulkAdd] = useState(false);
   const [newQuestionText, setText] = useState(surveyQuestions[surveyQuestionId].question);
-
+  const [state, setState] = useState({modal: null});
   useEffect(() => {
     setText(surveyQuestions[surveyQuestionId].question);
     setHideQuestion(surveyQuestions[surveyQuestionId].hideQuestion);
@@ -62,30 +63,30 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
   const updateRuleSingleQuestion = (rule, questionId, swappedQuestionId) => {
     const qId = (rule.questionId === questionId) ?
           swappedQuestionId : (rule.questionId === swappedQuestionId) ?
-          questionId : rule.questionId
+          questionId : rule.questionId;
     return {...rule,
-            questionId: qId}
-  }
+            questionId: qId};
+  };
 
   const updateRuleEnumQuestions = (rule, questionId, swappedQuestionId) => {
     const qId1 = (rule.questionId1 === questionId) ?
           swappedQuestionId : (rule.questionId1 === swappedQuestionId) ?
-          questionId : rule.questionId1
+          questionId : rule.questionId1;
     const qId2 = (rule.questionId2 === questionId) ?
           swappedQuestionId : (rule.questionId2 === swappedQuestionId) ?
-          questionId : rule.questionId2
+          questionId : rule.questionId2;
     return {...rule,
             questionId1: qId1,
-            questionId2: qId2}
-  }
+            questionId2: qId2};
+  };
 
   const updateRuleListQuestions = (rule, questionId, swappedQuestionId) => {
     const updatedQuestionIds = rule.questionIds.map((qId) => qId === swappedQuestionId ?
                                                     questionId : qId === questionId ?
                                                     swappedQuestionId : qId);
     return {...rule,
-            questionIds: updatedQuestionIds}
-  }
+            questionIds: updatedQuestionIds};
+  };
 
   const updateRuleEnumListQuestions = (rule, questionId, swappedQuestionId) => {
     const updatedQuestionIds1 = rule.questionIds1.map((qId) => qId === swappedQuestionId ?
@@ -96,8 +97,8 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
                                                       swappedQuestionId : qId);
     return {...rule,
             questionIds1: updatedQuestionIds1,
-            questionIds2: updatedQuestionIds2,}
-  }
+            questionIds2: updatedQuestionIds2,};
+  };
 
   const updateRuleMultipleQuestions = (rule, questionId, swappedQuestionId) => {
     const updatedQuestionsMap = mapObject(rule.answers, ([k,v]) =>
@@ -105,12 +106,12 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
        v]);
     const qId = (rule.incompatQuestionId === questionId) ?
           swappedQuestionId : (rule.incompatQuestionId === swappedQuestionId) ?
-          questionId : rule.incompatQuestionId
+          questionId : rule.incompatQuestionId;
 
     return {...rule,
             answers: updatedQuestionsMap,
-            incompatQuestionId: qId}
-  }
+            incompatQuestionId: qId};
+  };
 
   const updateRules = (questionId, swappedQuestionId) => {
     const ruleUpdateFunctions = {
@@ -125,7 +126,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
       ruleUpdateFunctions[rule.ruleType](rule, questionId, swappedQuestionId)
     );
     return newRules;
-  }
+  };
 
   const updateParentQuestions = (questionId, swappedQuestionId, surveyQuestions) =>{
     const teste = Object.entries(surveyQuestions).reduce((acc, cur) => {
@@ -139,7 +140,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
       }
     }, {});
     return teste;
-  }
+  };
 
   const reorderQuestions = (questionId, direction) => {
     //
@@ -157,21 +158,21 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
     const newRules = updateRules(parseInt(questionId), parseInt(swappedQuestionId));
     const newQuestions = {...questions,
                           [qId]: swappedQuestion,
-                          [swappedQuestionId]: questionToBeSwapped}
+                          [swappedQuestionId]: questionToBeSwapped};
     const updatedParents = updateParentQuestions(questionId, parseInt(swappedQuestionId), surveyQuestions);
     const updatedProjectDetails = {
       surveyQuestions: {...surveyQuestions, ...newQuestions, ...updatedParents},
       surveyRules: newRules,
-    }
+    };
     setProjectDetails(updatedProjectDetails);
     return qId;
-  }
+  };
 
   const removeQuestion = () => {
     const childQuestionIds = getChildQuestionIds(surveyQuestionId);
     const questionHasRules = checkQuestionRules(surveyQuestionId);
     if(questionHasRules) {
-      alert("This question is being used in a rule. Please either delete or update the rule before removing the question");
+      setState ({modal: {alert: {alertType: "Question Designer Error", alertMessage: "This question is being used in a rule. Please either delete or update the rule before removing the question"}}});
       return null;
     }
     const newSurveyQuestions = filterObject(
@@ -202,7 +203,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
   const updateQuestion = () => {
     const questionHasRules = checkQuestionRules(surveyQuestionId);
     if (hideQuestion && questionHasRules) {
-      alert("This question is being used in a rule. Please either delete or update the rule before hiding the question");
+      setState ({modal: {alert: {alertType: "Question Designer Error", alertMessage: "This question is being used in a rule. Please either delete or update the rule before hiding the question"}}});
       return null;
     }
     if (newQuestionText !== "") {
@@ -215,7 +216,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
         surveyQuestions: { ...surveyQuestions, [surveyQuestionId]: newQuestion },
       });
     } else {
-      alert("Please enter a text for survey question.");
+      setState ({modal: {alert: {alertType: "Question Designer Error", alertMessage: "Please enter a text for survey question."}}});
     }
   };
 
@@ -238,6 +239,11 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
           surveyQuestionId={surveyQuestionId}
         />
       )}
+      {state.modal?.alert &&
+         <Modal title={state.modal.alert.alertType}
+                onClose={()=>{setState({modal: null});}}>
+           {state.modal.alert.alertMessage}
+         </Modal>}
       <div className="d-flex border-top pt-3 pb-1">
         {[...Array(indentLevel)].map((l, idx) => (
           // eslint-disable-next-line react/no-array-index-key

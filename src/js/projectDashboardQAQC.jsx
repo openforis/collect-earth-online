@@ -13,6 +13,8 @@ import { projectConditionalRowStyles,
 
 import { mercator } from "./utils/mercator";
 
+import Modal from "./components/Modal";
+
 class ProjectDashboard extends React.Component {
   constructor(props) {
     super(props);
@@ -26,6 +28,7 @@ class ProjectDashboard extends React.Component {
       activeTab: 0,
       plotId: 1,
       plotInfo: {},
+      modal: null,
     };
       // Bind the methods to the class instance
     this.showProjectMap = this.showProjectMap.bind(this);
@@ -85,7 +88,7 @@ class ProjectDashboard extends React.Component {
       this.getPlotList(projectId),
     ]).catch((error) => {
       console.error(error);
-      alert("Error retrieving the project info. See console for details.");
+      this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error retrieving the project info. See console for details."}}});
     });
   };
 
@@ -94,7 +97,7 @@ class ProjectDashboard extends React.Component {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data === "") {
-          alert("No project found with ID " + projectId + ".");
+          this.setState ({modal: {alert: {alertType: "Project Error", alertMessage: "No project found with ID " + projectId + "."}}});
           window.location = "/home";
         } else {
           this.setState({ projectDetails: data });
@@ -193,7 +196,12 @@ class ProjectDashboard extends React.Component {
   render() {
     return (
       <div className="d-flex flex-column full-height p-3" id="project-dashboard">
-        {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
+        {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}       
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <div className="bg-darkgreen">
           <h1>Project Dashboard</h1>
         </div>
@@ -354,7 +362,7 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
       if (data === "not-found") {
         const err = (direction === "id" ? "Plot not" : "No more plots") +
               " found for this navigation mode.";
-        alert(err);
+        this.setState ({modal: {alert: {alertType: "Plot Data Error", alertMessage: err}}});
       } else {
         setPlotInfo(data);
         setInputPlotId(data.visibleId);
@@ -366,8 +374,8 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
     })
       .catch((response) => {
         console.error(response);
-        alert("Error retrieving plot data. See console for details.");
-      })
+        this.setState ({modal: {alert: {alertType: "Plot Data Error", alertMessage: "Error retrieving plot data. See console for details."}}});
+      });
   };
   
   const navButtons = () => (
@@ -400,7 +408,7 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
           if (!isNaN(inputPlotId)) {
             getPlotData(inputPlotId, "id");
           } else {
-            alert("Please enter a number to go to plot.");
+            this.setState ({modal: {alert: {alertType: "Plot Alert", alertMessage: "Please enter a number to go to plot."}}});
           }
         }}
         type="button"

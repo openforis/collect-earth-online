@@ -1,8 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
+import Modal from "./components/Modal";
 
 class VerifyEmail extends React.Component {
+  this.state = {
+    modal: null
+  }
   componentDidMount() {
     fetch("/verify-email", {
       method: "POST",
@@ -18,10 +22,10 @@ class VerifyEmail extends React.Component {
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && data[1] === "") {
-          alert("You have successfully verified your email.");
+          this.setState ({modal: {alert: {alertType: "Verify Email", alertMessage: "You have successfully verified your email."}}});
           window.location = "/login";
         } else {
-          alert(data[1]);
+          this.setState ({modal: {alert: {alertType: "Verify Email", alertMessage: data[1]}}});       
           window.location = "/password-request";
         }
       })
@@ -31,6 +35,11 @@ class VerifyEmail extends React.Component {
   render() {
     return (
       <div className="d-flex justify-content-center">
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <div className="card card-lightgreen" id="reset-form">
           <div className="card-header card-header-lightgreen">Email Verification</div>
           <div className="card-body">

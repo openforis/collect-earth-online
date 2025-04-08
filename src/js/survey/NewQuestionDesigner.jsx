@@ -4,6 +4,7 @@ import _ from "lodash";
 import { lengthObject, mapObjectArray, filterObject, getNextInSequence } from "../utils/sequence";
 import { removeEnumerator } from "../utils/generalUtils";
 import SvgIcon from "../components/svg/SvgIcon";
+import Modal from "../components/Modal";
 
 export default class NewQuestionDesigner extends React.Component {
   constructor(props) {
@@ -30,6 +31,7 @@ export default class NewQuestionDesigner extends React.Component {
       selectedCopyId: -1,
       copyChildren: true,
       hideQuestion: false,
+      modal: null,
     };
   }
 
@@ -85,7 +87,7 @@ export default class NewQuestionDesigner extends React.Component {
         this.setState({ selectedAnswerIds: [], newQuestionText: "" });
       }
     } else {
-      alert("Please enter a survey question text.");
+      this.setState ({modal: {alert: {alertType: "Question Designer Error", alertMessage: "Please enter a survey question text."}}});
     }
   };
 
@@ -140,7 +142,7 @@ export default class NewQuestionDesigner extends React.Component {
       const copies = this.getCopy(idOffset, selectedCopyId, selectedParentId, selectedAnswerIds);
       setProjectDetails({ surveyQuestions: { ...surveyQuestions, ...copies } });
     } else {
-      alert("Please select a question to copy");
+      this.setState ({modal: {alert: {alertType: "Question Designer Error", alertMessage: "Please select a question to copy"}}});
     }
   };
 
@@ -364,6 +366,11 @@ export default class NewQuestionDesigner extends React.Component {
     );
     return (
       <table className="mt-4">
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <tbody>
           <tr>
             <td>

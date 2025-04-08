@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
+import Modal from "./components/Modal";
 
 class Register extends React.Component {
   constructor(props) {
@@ -11,12 +12,14 @@ class Register extends React.Component {
       passwordConfirmation: "",
       acceptTOS: false,
       acceptDataTOS: false,
+      modal: null
     };
   }
 
   register = () => {
     if (!this.state.acceptTOS || !this.state.acceptDataTOS) {
-      alert("You must accept both terms of service to continue.");
+      this.setState({modal: {alert: {alertType: "Registration Alert",
+                                     alertMessage: "You must accept both terms of service to continue."}}});
     } else {
       fetch("/register", {
         method: "POST",
@@ -29,12 +32,12 @@ class Register extends React.Component {
         .then((response) => Promise.all([response.ok, response.json()]))
         .then((data) => {
           if (data[0] && data[1] === "") {
-            alert(
-              "You have successfully created an account.  Please check your email for a link to verify your account."
-            );
+            this.setState({modal: {alert: {alertType: "Registration Alert",
+                                           alertMessage: "You have successfully created an account.  Please check your email for a link to verify your account."}}});           
             window.location = "/home";
           } else {
-            alert(data[1]);
+            this.setState({modal: {alert: {alertType: "Registration Alert",
+                                           alertMessage: data[1]}}});
           }
         })
         .catch((err) => console.log(err));
@@ -44,6 +47,11 @@ class Register extends React.Component {
   render() {
     return (
       <div className="d-flex justify-content-center">
+        {this.state.modal?.alert
+         && (<Modal title={this.state.modal?.alert?.alertType}
+                    onClose={()=>{this.setState({modal: null});}}>
+               {this.state.modal?.alert?.alertMessage}
+             </Modal>)}
         <div className="card card-lightgreen" id="register-form">
           <div className="card-header card-header-lightgreen">Register a new account</div>
           <div className="card-body">

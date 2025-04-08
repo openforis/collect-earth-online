@@ -18,7 +18,7 @@ export default function Modal({
   closeText,
   confirmText,
   onClose,
-  onConfirm,
+  onConfirm,  
 }) {
   return (
     <div
@@ -33,7 +33,7 @@ export default function Modal({
         role="document"
       >
         <div className="modal-content" id="confirmModalContent">
-          <div className="modal-header">
+          <div className={danger ? "alert-header" : "modal-header"}>
             <h5 className="modal-title" id="confirmModalTitle">
               {title}
             </h5>

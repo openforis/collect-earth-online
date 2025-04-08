@@ -636,6 +636,12 @@ h2.header {
   padding: 1rem;
   min-height: 57px;
 }
+.alert-header {
+  color: white;
+  background: #ff8383;
+  padding: 1rem;
+  min-height: 57px;
+}
 .modal-title {
   font-size: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,

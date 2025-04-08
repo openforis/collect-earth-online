@@ -9,6 +9,8 @@ import { mercator } from "../utils/mercator";
 import { removeEnumerator, isNumber } from "../utils/generalUtils";
 import { filterObject, intersection, lengthObject, mapObjectArray } from "../utils/sequence";
 
+import Modal from "../components/Modal";
+
 export default class SurveyCollection extends React.Component {
   constructor(props) {
     let {polygons, lines, points} = props.sampleGeometries;
@@ -17,7 +19,8 @@ export default class SurveyCollection extends React.Component {
       currentNodeIndex: 0,
       topLevelNodeIds: [],
       showSurveyQuestions: true,
-      drawTool: polygons ? "Polygon" : lines? "LineString" : "Point"
+      drawTool: polygons ? "Polygon" : lines? "LineString" : "Point",
+      modal: null,
     };
   }
 
@@ -67,7 +70,7 @@ export default class SurveyCollection extends React.Component {
     if (this.state.currentNodeIndex > 0) {
       this.setState({ currentNodeIndex: this.state.currentNodeIndex - 1 });
     } else {
-      alert("There are no previous questions.");
+      this.setState ({modal: {alert: {alertType: "Survey Collection Alert", alertMessage: "There are no previous questions."}}});
     }
   };
 
@@ -75,7 +78,7 @@ export default class SurveyCollection extends React.Component {
     if (this.state.currentNodeIndex < this.state.topLevelNodeIds.length - 1) {
       this.setState({ currentNodeIndex: this.state.currentNodeIndex + 1 });
     } else {
-      alert("There are no more questions.");
+      this.setState ({modal: {alert: {alertType: "Survey Collection Alert", alertMessage: "There are no more questions."}}});
     }
   };
 
@@ -434,7 +437,7 @@ export default class SurveyCollection extends React.Component {
     const ruleError = this.rulesViolated(questionIdToSet, answerId, answerText);
     if (ruleError) {
       this.props.setCurrentValue(questionIdToSet, answerId, previousAnswer);
-      alert(ruleError);
+      this.setState ({modal: {alert: {alertType: "Collection Error", alertMessage: ruleError}}});
     } else {
       this.props.setCurrentValue(questionIdToSet, answerId, answerText);
     }
@@ -616,7 +619,7 @@ export default class SurveyCollection extends React.Component {
   toggleFlaggedPlot = () => {
     if (!this.props.flagged && confirm("Are you sure you would like to flag this plot?")) {
       this.props.toggleFlagged();
-      return
+      return;
     }
     this.props.toggleFlagged();
   }
@@ -664,6 +667,11 @@ export default class SurveyCollection extends React.Component {
             </span>
           </div>
         )}
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         {this.state.showSurveyQuestions ? (
           lengthObject(this.props.surveyQuestions) ? (
             <>

@@ -7,8 +7,6 @@ import SvgIcon from "./svg/SvgIcon";
 import { getLanguage, capitalizeFirst } from "../utils/generalUtils";
 import { getPreference, setPreference } from "../utils/preferences";
 
-import Modal from "./Modal";
-
 export function LogOutButton({ userName, uri }) {
   const fullUri = uri + window.location.search;
   const loggedOut = !userName || userName === "guest";
@@ -149,7 +147,6 @@ export class NavigationBar extends React.Component {
       helpSlides: [],
       showHelpMenu: false,
       page: "",
-      modal: null,
     };
   }
 
@@ -252,12 +249,6 @@ export class NavigationBar extends React.Component {
                   </a>
                 </li>
              ))}
-              <li
-                onClick={() => this.setState({modal:
-                                              {alert: {alertType: "Alert Type",
-                                                       alertMessage:"Alert Message"}}})}>
-                Alert!
-              </li>
               {!loggedOut && (
                 <li className={"nav-item" + (uri === "/account" && " active")}>
                   <a className="nav-link" href={"/account?accountId=" + userId}>
@@ -287,11 +278,6 @@ export class NavigationBar extends React.Component {
           </div>
           
         </nav>
-	{this.state.modal &&
-	 (<Modal title={this.state.modal.alert?.alertType}
-		 onClose={()=>{this.setState({modal: null})}}>
-	    {this.state.modal.alert?.alertMessage}
-	  </Modal>)}
         {children}
       </>
     );
