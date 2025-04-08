@@ -149,7 +149,7 @@ export class NavigationBar extends React.Component {
       helpSlides: [],
       showHelpMenu: false,
       page: "",
-      modal: {},
+      modal: null,
     };
   }
 
@@ -287,11 +287,11 @@ export class NavigationBar extends React.Component {
           </div>
           
         </nav>
-        {this.state.modal && (
-          <Modal {...this.state.modal.alert.alertType} onClose={() => this.setState({ modal: null })}>
-            <p>{this.state.modal.alert.alertMessage}</p>
-          </Modal>
-        )}
+	{this.state.modal &&
+	 (<Modal title={this.state.modal.alert?.alertType}
+		 onClose={()=>{this.setState({modal: null})}}>
+	    {this.state.modal.alert?.alertMessage}
+	  </Modal>)}
         {children}
       </>
     );
