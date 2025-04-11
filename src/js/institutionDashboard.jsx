@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { LoadingModal, NavigationBar } from "./components/PageComponents";
 import SvgIcon from "./components/svg/SvgIcon";
+import Modal from "./components/Modal";
 
 class InstitutionDashboard extends React.Component {
   constructor(props) {
@@ -9,6 +10,7 @@ class InstitutionDashboard extends React.Component {
     this.state = {
       projectList: [],
       modalMessage: null,
+      modal: null,
     };
   }
 
@@ -19,7 +21,7 @@ class InstitutionDashboard extends React.Component {
       "Loading project list",
       this.getProjectList().catch((response) => {
         console.error(response);
-        alert("Error retrieving the project list. See console for details.");
+        this.setState ({modal: {alert: {alertType: "Project Lst Retrieval Error", alertMessage: "Error retrieving the project list. See console for details."}}});
       })
     );
   }
@@ -43,6 +45,12 @@ class InstitutionDashboard extends React.Component {
     return (
       <div className="row justify-content-center" id="institution-dashboard">
         {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         <div
           className="bg-darkgreen mb-3 no-container-margin"
           style={{ width: "100%", margin: "0 10px 0 10px" }}

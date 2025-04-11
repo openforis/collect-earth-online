@@ -23,6 +23,7 @@ import { EditorContext, graphWidgetList, gridRowHeight, mapWidgetList } from "./
 import { isValidJSON } from "./utils/generalUtils";
 import { getNextInSequence, last } from "./utils/sequence";
 import BasemapSelector from "./geodash/form/BasemapSelector";
+import Modal from "./components/Modal";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -35,6 +36,7 @@ class WidgetLayoutEditor extends React.PureComponent {
       imagery: [],
       projectTemplateList: [],
       editDialog: false,
+      modal: null,
 
       // Widget specific state
       title: "",
@@ -123,7 +125,7 @@ class WidgetLayoutEditor extends React.PureComponent {
       .then(([widgets, projectTemplateList]) => this.setState({ widgets, projectTemplateList }))
       .catch((error) => {
         console.error(error);
-        alert("Error loading widget designer.  See console for details.");
+        this.setState ({modal: {alert: {alertType: "Widget Designer Error", alertMessage: "Error loading widget designer.  See console for details."}}});
       });
   }
 
@@ -140,7 +142,7 @@ class WidgetLayoutEditor extends React.PureComponent {
       .then((data) => this.setState({ imagery: data }))
       .catch((error) => {
         console.log(error);
-        alert("Error loading imagery.  See console for details.");
+        this.setState ({modal: {alert: {alertType: "Institution Imagery Error", alertMessage: "Error loading imagery.  See console for details."}}});
       });
 
   getProjectTemplateList = () =>
@@ -164,7 +166,7 @@ class WidgetLayoutEditor extends React.PureComponent {
       .then((data) => this.setState({ widgets: data }))
       .catch((error) => {
         console.error(error);
-        alert("Error loading updated widgets. See console for details.");
+        this.setState ({modal: {alert: {alertType: "Widget Loading Error", alertMessage: "Error loading updated widgets. See console for details."}}});
       });
   };
 
@@ -184,7 +186,7 @@ class WidgetLayoutEditor extends React.PureComponent {
       .then((data) => this.setState({ widgets: data }))
       .catch((error) => {
         console.error(error);
-        alert("Error copying template widgets. See console for details.");
+        this.setState ({modal: {alert: {alertType: "Copy Widget Error", alertMessage: "Error copying template widgets. See console for details."}}});
       });
   };
 
@@ -324,7 +326,7 @@ class WidgetLayoutEditor extends React.PureComponent {
   createNewWidget = () => {
     const errors = this.getWidgetErrors();
     if (errors.length) {
-      alert(errors.join("\n\n"));
+      this.setState ({modal: {alert: {alertType: "Widget Creation Error", alertMessage: errors.join("\n\n")}}});
     } else {
       this.widgetAPIWrapper("create-widget", {
         layout: this.getNextLayout(),
@@ -350,7 +352,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     } = this.state;
     const errors = this.getWidgetErrors();
     if (errors.length) {
-      alert(errors.join("\n\n"));
+      this.setState ({modal: {alert: {alertType: "Save Widget Error", alertMessage: errors.join("\n\n")}}});
     } else {
       this.widgetAPIWrapper("update-widget", {
         id,
@@ -507,6 +509,12 @@ class WidgetLayoutEditor extends React.PureComponent {
           getInstitutionImagery: this.getInstitutionImagery,
         }}
       >
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         {addDialog && (
           <GeoDashModal
             body={this.dialogBody()}

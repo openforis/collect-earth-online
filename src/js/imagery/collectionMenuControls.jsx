@@ -4,6 +4,7 @@ import Select from "../components/Select";
 import { mercator } from "../utils/mercator";
 import { monthlyMapping } from "../utils/generalUtils";
 import SvgIcon from "../components/svg/SvgIcon";
+import Modal from "../components/Modal";
 
 export class PlanetMenu extends React.Component {
   constructor(props) {
@@ -97,6 +98,7 @@ export class PlanetDailyMenu extends React.Component {
     this.state = {
       startDate: this.props.sourceConfig.startDate,
       endDate: this.props.sourceConfig.endDate,
+      modal: null,
     };
   }
 
@@ -126,7 +128,7 @@ export class PlanetDailyMenu extends React.Component {
     if (this.props.visible) {
       const { startDate, endDate } = this.state;
       if (new Date(startDate) > new Date(endDate)) {
-        alert("Start date must be smaller than the end date.");
+        this.setState ({modal: {alert: {alertType: "Planet Daily Layer Update Error", alertMessage: "Start date must be smaller than the end date."}}});
       } else {
         this.updateImageryInformation();
         mercator.currentMap
@@ -151,6 +153,11 @@ export class PlanetDailyMenu extends React.Component {
   render() {
     return (
       <div className="my-2" style={{ display: this.props.visible ? "block" : "none" }}>
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <div className="slide-container">
           <label>Start Date</label>
           <input
@@ -365,6 +372,7 @@ export class SecureWatchMenu extends React.Component {
       featureId: null,
       imageryDate: "",
       imageryCloudCover: "",
+      modal: null,
     };
   }
 
@@ -447,7 +455,7 @@ export class SecureWatchMenu extends React.Component {
           if (response.ok) {
             return response.json(); // if no layers are found, the response is XML. This will fail.
           } else {
-            alert("Error retrieving SecureWatch dates. See console for details.");
+            this.setState ({modal: {alert: {alertType: "SecureWatch Date Retrieval Error", alertMessage: "Error retrieving SecureWatch dates. See console for details."}}});
             return { features: [] };
           }
         })
@@ -490,7 +498,7 @@ export class SecureWatchMenu extends React.Component {
         })
         .catch((response) => {
           console.log(response);
-          alert("Error processing SecureWatch dates. See console for details.");
+          this.setState ({modal: {alert: {alertType: "SecureWatch Date Error", alertMessage: "Error processing SecureWatch dates. See console for details."}}});
         });
     });
   };
@@ -498,6 +506,12 @@ export class SecureWatchMenu extends React.Component {
   render() {
     return (
       <div className="my-2 mb-3" style={{ display: this.props.visible ? "block" : "none" }}>
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         <div className="slide-container">
           <label>Available Layers</label>
           {this.state.availableDates && this.state.availableDates.length > 0 ? (
@@ -726,6 +740,7 @@ export class GEEImageCollectionMenu extends React.Component {
       endDate: this.props.sourceConfig.endDate,
       visParams: this.props.sourceConfig.visParams,
       reducer: this.props.sourceConfig.reducer,
+      modal: null,
     };
   }
 
@@ -754,7 +769,7 @@ export class GEEImageCollectionMenu extends React.Component {
   updateGEEImageCollection = () => {
     const { startDate, endDate, visParams, reducer } = this.state;
     if (new Date(startDate) > new Date(endDate)) {
-      alert("Start date must be smaller than the end date.");
+      this.setState ({modal: {alert: {alertType: "GEE Image Collection Update Error", alertMessage: "Start date must be smaller than the end date."}}});
     } else {
       this.updateImageryInformation();
       mercator.updateLayerSource(
@@ -775,6 +790,12 @@ export class GEEImageCollectionMenu extends React.Component {
   render() {
     return (
       <div className="my-2" style={{ display: this.props.visible ? "block" : "none" }}>
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         <div className="slide-container">
           <label>Start Date</label>
           <input

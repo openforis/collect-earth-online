@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import _ from "lodash";
 
 import { LoadingModal } from "./components/PageComponents";
+import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 
 import { nicfiLayers } from "./imagery/imageryOptions";
@@ -91,6 +92,7 @@ class SimpleCollection extends React.Component {
       imageryAttributes: {},
       imageryList: [],
       mapConfig: null,
+      modal: null,
       unansweredColor: "black",
       selectedQuestionId: -1,
       selectedSampleId: -1,
@@ -226,7 +228,7 @@ class SimpleCollection extends React.Component {
       Promise.all([this.getProjectById(), this.getImageryList(), this.getProjectPlots()]).catch(
         (response) => {
           console.log(response);
-          alert("Error retrieving the project info. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error retrieving the project info. See console for details."}}});
         }
       )
     );
@@ -332,13 +334,12 @@ class SimpleCollection extends React.Component {
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
         .then((data) => {
           if (data === "not-found") {
-            alert(
-              direction === "id"
+            let alertText = direction === "id"
                 ? this.localeText.plotNotFound
                 : direction === "next"
                 ? this.localeText.navNextEnd
-                : this.localeText.navPrevEnd
-            );
+                : this.localeText.navPrevEnd;
+            this.setState ({modal: {alert: {alertType: "Plot Data Alert", alertMessage: alertText}}});
           } else {
             this.setState({
               currentPlot: data[0],
@@ -348,7 +349,7 @@ class SimpleCollection extends React.Component {
         })
         .catch((response) => {
           console.error(response);
-          alert("Error retrieving plot data. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Plot Data Error", alertMessage: "Error retrieving plot data. See console for details."}}});
         })
     );
   };
@@ -363,7 +364,7 @@ class SimpleCollection extends React.Component {
     if (!isNaN(newPlot)) {
       this.getPlotData(newPlot, "id");
     } else {
-      alert(this.state.localeText.errorNavNum);
+      this.setState ({modal: {alert: {alertType: "Plot Navigation Error", alertMessage: this.state.localeText.errorNavNum}}});
     }
   };
 
@@ -473,7 +474,7 @@ class SimpleCollection extends React.Component {
           return this.navToNextPlot();
         } else {
           console.log(response);
-          alert("Error saving your assignments to the database. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Save Assignment Error", alertMessage: "Error saving your assignments to the database. See console for details."}}});
         }
       })
     );
@@ -513,10 +514,10 @@ class SimpleCollection extends React.Component {
     if (!this.warnOnNoSamples(this.state.currentPlot)) {
       return false;
     } else if (sampleIds.some((s) => !visibleIds.includes(s))) {
-      alert("Invalid Selection. Try selecting the question before answering.");
+      this.setState ({modal: {alert: {alertType: "Selection Error", alertMessage: "Invalid Selection. Try selecting the question before answering."}}});
       return false;
     } else if (sampleIds.length === 0) {
-      alert("Please select at least one sample before choosing an answer.");
+      this.setState ({modal: {alert: {alertType: "Selection Error", alertMessage: "Please select at least one sample before choosing an answer."}}});
       return false;
     } else {
       return true;
@@ -670,6 +671,11 @@ class SimpleCollection extends React.Component {
 
     return (
       <div className="row" style={{ height: this.state.myHeight }}>
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
         <div className="w-100 position-relative overflow-hidden" id="mobile-analysis-pane">
           <div style={infoStyle}>
@@ -828,6 +834,12 @@ function AnswerButtons({ surveyNodeId, surveyNode, selectedSampleId, setCurrentV
 }
 
 class MiniQuestions extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      modal: null,
+    };}
+  
   checkCanSave = () => {
     const { surveyQuestions, localeText } = this.props;
     const allAnswered = everyObject(
@@ -835,7 +847,7 @@ class MiniQuestions extends React.Component {
       ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered)
     );
     if (!allAnswered) {
-      alert(localeText.errorSave);
+      this.setState ({modal: {alert: {alertType: "Save Error", alertMessage: localeText.errorSave}}});
       return false;
     } else {
       return true;
@@ -866,6 +878,11 @@ class MiniQuestions extends React.Component {
     };
     return (
       <div id="MiniQuestions" style={questionStyle}>
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <div className="d-flex justify-content-between">
           {showQuestions ? (
             <>

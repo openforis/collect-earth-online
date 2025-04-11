@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
+import Modal from "./components/Modal";
 
 class Login extends React.Component {
   constructor(props) {
@@ -8,6 +9,7 @@ class Login extends React.Component {
     this.state = {
       email: "",
       password: "",
+      modal: null,
     };
   }
 
@@ -25,7 +27,7 @@ class Login extends React.Component {
         if (data[0] && data[1] === "") {
           window.location = this.props.returnurl === "" ? "/home" : this.props.returnurl;
         } else {
-          alert(data[1]);
+          this.setState ({modal: {alert: {alertType: "Login Error", alertMessage: data[1]}}});
         }
       })
       .catch((err) => console.log(err));
@@ -34,6 +36,12 @@ class Login extends React.Component {
   render() {
     return (
       <div className="d-flex justify-content-center">
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         <div className="card card-lightgreen">
           <div className="card-header card-header-lightgreen">Sign into your account</div>
           <div className="card-body">

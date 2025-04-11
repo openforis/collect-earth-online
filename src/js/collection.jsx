@@ -51,6 +51,7 @@ class Collection extends React.Component {
       inReviewMode: false,
       mapConfig: null,
       messageBox: null,
+      modal: null,
       plotList: [],
       plotters: [],
       userPlotList: [],
@@ -249,7 +250,7 @@ class Collection extends React.Component {
         })
         .catch((response) => {
           console.log(response);
-          alert("Error retrieving the project info. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Project Info Alert", alertMessage: "Error retrieving the project info. See console for details."}}});
         })
     );
 
@@ -384,7 +385,7 @@ class Collection extends React.Component {
 
   warnOnNoSamples = (plotData) => {
     if (plotData.samples.length === 0 && !this.state.currentProject.allowDrawnSamples) {
-      alert("This plot has no samples. Please flag the plot.");
+      this.setState ({modal: {alert: {alertType: "Plot Collection Alert", alertMessage: "This plot has no samples. Please flag the plot."}}});
       return false;
     } else {
       return true;
@@ -413,9 +414,7 @@ class Collection extends React.Component {
             const err = (direction === "id" ? "Plot not" : "No more plots") +
                   " found for this navigation mode.";
             const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
-            alert(
-              inReviewMode ? err + reviewModeWarning : err
-            );
+            this.setState ({modal: {alert: {alertType: "Plot Data Error", alertMessage: inReviewMode ? err + reviewModeWarning : err}}});
           } else {
             this.setState({
               userPlotList: data,
@@ -431,7 +430,7 @@ class Collection extends React.Component {
         })
         .catch((response) => {
           console.error(response);
-          alert("Error retrieving plot data. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Plot Data Retrieval Error", alertMessage: "Error retrieving plot data. See console for details."}}});
         })
     );
   };
@@ -474,7 +473,7 @@ class Collection extends React.Component {
         this.getPlotData(newPlot, "id");
       }
     } else {
-      alert("Please enter a number to go to plot.");
+      this.setState ({modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}});
     }
   };
 
@@ -492,9 +491,7 @@ class Collection extends React.Component {
     }).then((response) => {
       if (!response.ok) {
         console.log(response);
-        alert(
-          "Error maintaining plot lock. Your work may get overwritten. See console for details."
-        );
+        this.setState ({modal: {alert: {alertType: "Plot Lock Error", alertMessage: "Error maintaining plot lock. Your work may get overwritten. See console for details."}}});
       }
     });
   };
@@ -732,7 +729,7 @@ class Collection extends React.Component {
             return this.navToNextPlot(true);
           } else {
             console.log(response);
-            alert("Error flagging plot as bad. See console for details.");
+            this.setState ({modal: {alert: {alertType: "Plot Flagging Error", alertMessage: "Error flagging plot as bad. See console for details."}}});
           }
         })
       );
@@ -769,14 +766,14 @@ class Collection extends React.Component {
           if (this.state.inReviewMode) {
             this.setState({ remainingPlotters: this.state.remainingPlotters.filter((plotter) => plotter.userId != this.state.currentUserId) });
             if(this.state.remainingPlotters.length > 0) {
-              alert("There are more interpretations for this plot.\nPlease select the user from the user dropdown to review another interpretation.")
+              this.setState ({modal: {alert: {alertType: "Plot Interpretation Alert", alertMessage: "There are more interpretations for this plot.\nPlease select the user from the user dropdown to review another interpretation."}}});
               return null;
             }
           }
           return this.navToNextPlot(true);
         } else {
           console.log(response);
-          alert("Error saving your assignments to the database. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Assignment Error", alertMessage: "Error saving your assignments to the database. See console for details."}}});
         }
       })
     );
@@ -834,10 +831,10 @@ class Collection extends React.Component {
     if (!this.warnOnNoSamples(this.state.currentPlot)) {
       return false;
     } else if (sampleIds.some((s) => !visibleIds.includes(s))) {
-      alert("Invalid Selection. Try selecting the question before answering.");
+      this.setState ({modal: {alert: {alertType: "Selection Error", alertMessage: "Invalid Selection. Try selecting the question before answering."}}});
       return false;
     } else if (sampleIds.length === 0) {
-      alert("Please select at least one sample before choosing an answer.");
+      this.setState ({modal: {alert: {alertType: "Selection Error", alertMessage: "Please select at least one sample before choosing an answer."}}});
       return false;
     } else {
       return true;
@@ -1009,6 +1006,12 @@ class Collection extends React.Component {
     return (
       <div className="row" style={{ height: "-webkit-fill-available" }}>
         {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} />
         <div
           className="d-lg-none btn btn-lightgreen"
@@ -1178,27 +1181,25 @@ class SideBar extends React.Component {
       visibleSurveyQuestions,
       ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered));
     if (answerMode !== "question") {
-      alert("You must be in question mode to save the collection.");
+      this.setState ({modal: {alert: {alertType: "Collection Alert", alertMessage: "You must be in question mode to save the collection."}}});
       return false;
     } else if (currentPlot.flagged) {
       return true;
     } else if (inReviewMode) {
       if (!(noneAnswered || allAnswered)) {
-        alert(
-          "In review mode, plots can only be saved if all questions are answered or the answers are cleared."
-        );
+        this.setState ({modal: {alert: {alertType: "Review Mode Alert", alertMessage: "In review mode, plots can only be saved if all questions are answered or the answers are cleared."}}});
         return false;
       } else {
         return true;
       }
     } else if (!hasSamples) {
-      alert("The collection must have samples to be saved. Enter draw mode to add more samples.");
+      this.setState ({modal: {alert: {alertType: "Review Mode Alert", alertMessage: "The collection must have samples to be saved. Enter draw mode to add more samples."}}});
       return false;
     } else if (!allAnswered) {
-      alert("All questions must be answered to save the collection.");
+      this.setState ({modal: {alert: {alertType: "Review Mode Alert", alertMessage: "All questions must be answered to save the collection."}}});
       return false;
     } else if (collectConfidence && !confidence) {
-      alert("You must input the confidence before saving the interpretation.");
+      this.setState ({modal: {alert: {alertType: "Review Mode Alert", alertMessage: "You must input the confidence before saving the interpretation."}}});
       return false;
     } else {
       return true;
@@ -1234,6 +1235,12 @@ class SideBar extends React.Component {
         id="sidebar"
         style={{ overflowY: "auto", overflowX: "hidden" }}
       >
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         <ProjectTitle
           inReviewMode={this.props.inReviewMode}
           projectId={this.props.projectId}
@@ -1833,7 +1840,7 @@ class ProjectStats extends React.Component {
       .then((data) => this.setState({ stats: data }))
       .catch((response) => {
         console.error(response);
-        alert("Error getting project stats. See console for details.");
+        this.setState ({modal: {alert: {alertType: "Project Stats Error", alertMessage: "Error getting project stats. See console for details."}}});
       });
   }
 
@@ -1924,6 +1931,12 @@ class ProjectStats extends React.Component {
           zIndex: "10",
         }}
       >
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         {stats ? this.renderStats() : <label className="p-3">Loading...</label>}
       </div>
     );
