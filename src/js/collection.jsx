@@ -95,6 +95,10 @@ class Collection extends React.Component {
 
     this.getProjectData();
     this.setState({ showAcceptedTermsModal: this.props.acceptedTerrms });
+    console.log(this.props.plotId);
+    if(this.props.plotId) {
+      this.navToFirstPlot();
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -2137,7 +2141,7 @@ function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-      <Collection projectId={params.projectId} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
+      <Collection projectId={params.projectId} plotId={params.plotId || null} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
     </NavigationBar>,
     document.getElementById("app")
   );
