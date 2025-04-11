@@ -222,14 +222,6 @@ export default class SurveyCollection extends React.Component {
       );
     });
 
-  getAnsweredQuestions = (ruleQuestions, questionIdToSet) =>
-    filterObject(this.props.surveyQuestions, ([sqId, sq]) => {
-      const numSqId = Number(sqId);
-      return (
-        ruleQuestions.includes(numSqId) && sq.answered.length > 0 && numSqId !== questionIdToSet
-      );
-    });
-
   getAnsweredSampleIds = (answeredQuestions) =>
     mapObjectArray(answeredQuestions, ([_sqId, aq]) => aq.answered.map((a) => a.sampleId));
 

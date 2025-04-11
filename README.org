@@ -6,12 +6,12 @@ Crowd-sourced visual interpretation of on-demand satellite imagery
 
 *** Required
 
-- [[https://jdk.java.net][Java Development Kit (version 8, 11, or 17)]]
+- [[https://jdk.java.net][Java Development Kit (version 11, or 17)]]
 - [[https://clojure.org/guides/install_clojure][Clojure CLI tools 1.10+]]
 - [[https://www.postgresql.org/download][Postgresql (version 12)]]
 - [[https://postgis.net/install/][PostGIS (version 3.2+)]]
 - [[https://www.7-zip.org/][p7zip]]
-- [[https://nodejs.org/en/][node 10]]
+- [[https://nodejs.org/en/][node 18]]
 - [[https://www.python.org/downloads/][Python 3]]
 
 ** Application Configuration
