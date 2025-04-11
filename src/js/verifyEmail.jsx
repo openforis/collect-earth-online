@@ -4,9 +4,13 @@ import { NavigationBar } from "./components/PageComponents";
 import Modal from "./components/Modal";
 
 class VerifyEmail extends React.Component {
-  this.state = {
-    modal: null
+  constructor(props){
+    super(props);
+    this.state = {
+      modal: null
+    };
   }
+  
   componentDidMount() {
     fetch("/verify-email", {
       method: "POST",

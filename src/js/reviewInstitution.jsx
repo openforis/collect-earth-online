@@ -308,7 +308,7 @@ class InstitutionDescription extends React.Component {
             this.setState ({modal: {alert: {alertType: "Institution Info", alertMessage: data[1]}}});
           }
         })
-        .catch(() =>this.setState ({modal: {alert: {alertType: "Institution Info Error", alertMessage: Error updating institution details.}}}););
+        .catch(() =>this.setState ({modal: {alert: {alertType: "Institution Info Error", alertMessage: "Error updating institution details."}}}));
     }
   };
 
