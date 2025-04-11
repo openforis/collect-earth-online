@@ -190,10 +190,10 @@ const AnswerDesigner = ({
 
     return (
       <div id="new-answer-designer">
-        {this.state.modal?.alert &&
-         <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
-           {this.state.modal.alert.alertMessage}
+        {state.modal?.alert &&
+         <Modal title={state.modal.alert.alertType}
+                onClose={()=>{setState({modal: null});}}>
+           {state.modal.alert.alertMessage}
          </Modal>}
         {editMode === "review" ? renderExisting() : renderNew()}
       </div>

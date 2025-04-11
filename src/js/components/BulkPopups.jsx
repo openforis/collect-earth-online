@@ -122,10 +122,10 @@ export function DownloadPopup({ downloadProjectsBulk, selectedProjects }) {
 
   return (
     <div style={{ position: "relative" }}>
-      {this.state.modal?.alert &&
-         <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
-           {this.state.modal.alert.alertMessage}
+      {state.modal?.alert &&
+         <Modal title={state.modal.alert.alertType}
+                onClose={()=>{setState({modal: null});}}>
+           {state.modal.alert.alertMessage}
          </Modal>}
       <button
         className="button-dropdown"
