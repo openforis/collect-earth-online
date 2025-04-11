@@ -1,8 +1,16 @@
 import React, { useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+
 import _ from "lodash";
 
-import { LoadingModal, NavigationBar, LearningMaterialModal } from "./components/PageComponents";
+import {
+  LoadingModal,
+  NavigationBar,
+  LearningMaterialModal,
+  AcceptTermsModal,
+  ImageryLayerOptions
+} from "./components/PageComponents";
 import SurveyCollection from "./survey/SurveyCollection";
 import {
   PlanetMenu,
@@ -47,6 +55,7 @@ class Collection extends React.Component {
       imageryAttribution: "",
       // attributes to record when sample is saved
       imageryAttributes: {},
+      imageryIds: [],
       imageryList: [],
       inReviewMode: false,
       mapConfig: null,
@@ -72,6 +81,10 @@ class Collection extends React.Component {
       modalMessage: null,
       navigationMode: "natural",
       threshold: 90,
+      showAcceptTermsModal: false,
+      isImageryLayersExpanded: false,
+      // only used for simplified projects
+      centerSampleId: 0,
     };
   }
 
@@ -82,6 +95,7 @@ class Collection extends React.Component {
     fetch(`/release-plot-locks?projectId=${this.props.projectId}`, { method: "POST" });
 
     this.getProjectData();
+    this.setState({ showAcceptedTermsModal: this.props.acceptedTerrms });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -137,7 +151,8 @@ class Collection extends React.Component {
         this.showGeoDash();
       }
       clearInterval(this.state.storedInterval);
-      this.setState({ storedInterval: setInterval(this.resetPlotLock, 1 * 60 * 1000) });
+      if(this.state.currentProject?.type === "regular")
+        this.setState({ storedInterval: setInterval(this.resetPlotLock, 1 * 60 * 1000) });
       //  updateMapImagery is poorly named, this function is detecting if we need to show the "zoom to" overlay
       this.updateMapImagery();
     }
@@ -179,6 +194,11 @@ class Collection extends React.Component {
       (this.state.currentImagery.id !== prevState.currentImagery.id ||
         this.state.mapConfig !== prevState.mapConfig)
     ) {
+      if (!prevState?.imageryIdsArray?.includes(this.state.currentImagery.id)) {
+        this.setState((prevState) => ({
+          imageryIds: [...prevState.imageryIds, this.state.currentImagery.id],
+        }));
+      }
       this.updateMapImagery();
     }
   }
@@ -294,7 +314,14 @@ class Collection extends React.Component {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
-          this.setState({ imageryList: data });
+          const updatedImagery = data.map((imagery) => {
+            if(imagery.title === "CEO: Mapbox Satellite") {
+              return { ...imagery, visible: true};
+            } else {
+              return imagery;
+            }
+          });
+          this.setState({ imageryList: updatedImagery });
           return Promise.resolve("resolved");
         } else {
           return Promise.reject("No project imagery found");
@@ -323,8 +350,9 @@ class Collection extends React.Component {
     mercator.addVectorLayer(
       mapConfig,
       "currentAOI",
-      mercator.geomArrayToVectorSource(this.state.currentProject.aoiFeatures,),
-      mercator.ceoMapStyles("geom", "yellow")
+      mercator.geomArrayToVectorSource(this.state.currentProject.aoiFeatures),
+      mercator.ceoMapStyles("geom", "yellow"),
+      9999
     );
     mercator.zoomMapToLayer(mapConfig, "currentAOI", 48);
     this.setState({ mapConfig });
@@ -394,6 +422,7 @@ class Collection extends React.Component {
 
   getPlotData = (visibleId, direction, forcedNavMode = null) => {
     const { currentUserId, navigationMode, inReviewMode, threshold } = this.state;
+    const { type } = this.state.currentProject;
     const { projectId } = this.props;
     this.processModal("Getting plot", () =>
       fetch(
@@ -406,6 +435,7 @@ class Collection extends React.Component {
             inReviewMode,
             threshold,
             currentUserId,
+            projectType: type,
           })
       )
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
@@ -424,6 +454,8 @@ class Collection extends React.Component {
               ...this.newPlotValues(data[0]),
               answerMode: "question",
             });
+            if(type === "simplified")
+              this.setDrawTool();
             // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
             this.warnOnNoSamples(data[0]);
           }
@@ -451,6 +483,15 @@ class Collection extends React.Component {
     confirm(
       "You have unsaved changes. Any unsaved responses will be lost. Are you sure you want to continue?"
     );
+
+  setDrawTool = () => {
+    const projectType = this.state.currentProject?.type;
+    const answerMode = projectType === "simplified" ? "draw" : "question";
+    const { polygons, lines, points } = this.state.currentProject.designSettings.sampleGeometries;
+    const drawTool = polygons ? "Polygon" : lines? "LineString" : "Point";
+    this.setAnswerMode(answerMode, drawTool);
+    if (this.state.mapConfig) mercator.changeDrawTool(this.state.mapConfig, "drawLayer", drawTool);
+  }
 
   navToFirstPlot = () =>
     this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed");
@@ -559,6 +600,8 @@ class Collection extends React.Component {
   showPlotSamples = () => {
     const { mapConfig, unansweredColor, currentProject, selectedQuestionId, showSamples} = this.state;
     const { visible } = currentProject.surveyQuestions[selectedQuestionId];
+    const type = currentProject.type;
+    const visibleSamples = type === "simplified" ? visible.filter((s) => s.visibleId !== 1) : visible;
     mercator.disableSelection(mapConfig);
     mercator.disableDrawing(mapConfig);
     mercator.removeLayerById(mapConfig, "currentSamples");
@@ -566,8 +609,9 @@ class Collection extends React.Component {
     mercator.addVectorLayer(
       mapConfig,
       "currentSamples",
-      mercator.samplesToVectorSource(visible),
-      mercator.ceoMapStyles("geom", (showSamples ? unansweredColor : "transparent"))
+      mercator.samplesToVectorSource(visibleSamples),
+      mercator.ceoMapStyles("geom", (showSamples ? unansweredColor : "transparent")),
+      9999
     );
     mercator.enableSelection(
       mapConfig,
@@ -577,15 +621,19 @@ class Collection extends React.Component {
   };
 
   featuresToDrawLayer = (drawTool) => {
-    const { mapConfig, currentPlot } = this.state;
+    const { mapConfig, currentPlot, currentProject } = this.state;
+    const type = currentProject.type;
+    const samples = currentPlot.samples;
+    const visibleSamples = type === "simplified" ? samples.filter((s) => s.visibleId !== 1) : samples;
     mercator.disableDrawing(mapConfig);
     mercator.removeLayerById(mapConfig, "currentSamples");
     mercator.removeLayerById(mapConfig, "drawLayer");
     mercator.addVectorLayer(
       mapConfig,
       "drawLayer",
-      mercator.samplesToVectorSource(currentPlot.samples),
-      mercator.ceoMapStyles("draw", "orange")
+      mercator.samplesToVectorSource(visibleSamples),
+      mercator.ceoMapStyles("draw", "orange"),
+      9999
     );
     mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
   };
@@ -760,6 +808,8 @@ class Collection extends React.Component {
             this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
           inReviewMode: this.state.inReviewMode,
           currentUserId: this.state.currentUserId,
+          imageryIds: this.state.imageryIds,
+          projectType: this.state.currentProject.type,
         }),
       }).then((response) => {
         if (response.ok) {
@@ -770,7 +820,11 @@ class Collection extends React.Component {
               return null;
             }
           }
-          return this.navToNextPlot(true);
+          if(this.state.currentProject.type !== "simplified") {
+            return this.navToNextPlot(true);
+          } else {
+            alert("Answers saved successfully!");
+          }
         } else {
           console.log(response);
           this.setState ({modal: {alert: {alertType: "Assignment Error", alertMessage: "Error saving your assignments to the database. See console for details."}}});
@@ -978,8 +1032,73 @@ class Collection extends React.Component {
     this.setState({
       currentPlot: { ...this.state.currentPlot, flagged: !this.state.currentPlot.flagged },
     });
+  
+  toggleImageryLayers = () => {
+    this.setState((prevState) => ({
+      isImageryLayersExpanded: !prevState.isImageryLayersExpanded,
+    }));
+  };
+  
+  toggleLayer = (layerId, imageryList) => {
+    const maxZIndex = imageryList.length - 1;
+    this.setState((prevState) => {
+      const updatedImageryList = prevState.imageryList.map((layer) => 
+        layer.id === layerId ? { ...layer, visible: !layer.visible } : layer
+      );
+      
+      updatedImageryList.forEach((layer, index) => {
+        const zindex = maxZIndex - index
+        mercator.setLayerVisibilityByLayerId(this.state.mapConfig, layer.id, layer.visible, zindex);
+      });
+      
+      return { imageryList: updatedImageryList };
+    });
+  };
 
+  resetLayers = () => {
+    this.setState((prevState) => {
+      const updatedImageryList = prevState.imageryList.map((layer) => 
+        layer.title === "CEO: Mapbox Satellite" ? { ...layer, visible: true } : { ...layer, visible: false }
+      );
+      
+      updatedImageryList.forEach((layer, index) => {
+        mercator.setLayerVisibilityByLayerId(this.state.mapConfig, layer.id, layer.visible);
+      });
+      
+      return { imageryList: updatedImageryList };
+    });
+  };
+  
+  changeOpacity = (layerId, opacity) => {
+    const { mapConfig } = this.state;
+    const layer = mercator.getLayerById(mapConfig, layerId);
+    if (layer) {
+      layer.setOpacity(opacity);
+      this.setState((prevState) => ({
+        imageryList: prevState.imageryList.map((layer) =>
+          layer.id === layerId ? { ...layer, opacity } : layer
+        ),
+      }));
+    }
+  };
+
+  onDragEnd = (result, imageryList, setImageryList) => {
+    if (!result.destination) return;
+    const { mapConfig } = this.state;
+    const reorderedList = [...imageryList];
+    const [movedItem] = reorderedList.splice(result.source.index, 1);
+    reorderedList.splice(result.destination.index, 0, movedItem);
+    const maxZIndex = reorderedList.length - 1;
+    reorderedList.forEach((layer, index) => {
+      const olLayer = mercator.getLayerById(mapConfig, layer.id);
+      if (olLayer) olLayer.setZIndex(maxZIndex - index);
+    });
+    setImageryList(reorderedList);
+  };
+
+  setImageryList = (newList) => this.setState({ imageryList: newList });
   setUnansweredColor = (newColor) => this.setState({ unansweredColor: newColor });
+  toggleAcceptTermsModal = () => this.setState({ showAcceptTermsModal: !this.state.showAcceptTermsModal });
 
   setAnswerMode = (newMode, drawTool) => {
     if (this.state.answerMode !== newMode) {
@@ -1004,165 +1123,195 @@ class Collection extends React.Component {
 
   render() {
     return (
-      <div className="row" style={{ height: "-webkit-fill-available" }}>
-        {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
-        {this.state.modal?.alert &&
+      <div className={`container-fluid collection-page`}>
+        <div className="row no-gutters">
+
+          {/* Left Sidebar (ImageryLayerOptions) - Now Absolutely Positioned */}
+          {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
                 onClose={()=>{this.setState({modal: null});}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
+          {this.state.currentProject?.type === "simplified" && (
+            <div
+              className="d-flex flex-column position-absolute full-height"
+              style={{
+                top: 0,
+                left: this.state.isImageryLayersExpanded ? "0px" : "-550px",
+                width: "550px",
+                height: "100%",
+                backgroundColor: "#fff",
+                boxShadow: "2px 0 5px rgba(0, 0, 0, 0.2)",
+                transition: "left 0.3s ease",
+                zIndex: 10,
+              }}
+            >
+              <ImageryLayerOptions
+                imageryList={this.state.imageryList}
+                onDragEnd={this.onDragEnd}
+                setImageryList={this.setImageryList}
+                onToggleLayer={this.toggleLayer}
+                onChangeOpacity={this.changeOpacity}
+                onReset={this.resetLayers}
+                isImageryLayersExpanded={this.state.isImageryLayersExpanded}
+              />
 
-        <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} />
-        <div
-          className="d-lg-none btn btn-lightgreen"
-          onClick={() =>
-            this.setState({ showSidebar: !this.state.showSidebar }, () => {
-              if (this.state.showSidebar) {
-                window.location = "#sidebar";
-              } else {
-                document.body.scrollTop = 0;
-                document.documentElement.scrollTop = 0;
-              }
-            })
-          }
-          style={{
-            position: "fixed",
-            boxShadow: "1px 1px 5px rgba(0, 0, 0, 0.3)",
-            zIndex: 99999,
-            right: "1rem",
-            top: "calc(60px + 1rem)",
-            lineHeight: "1rem",
-          }}
-        >
-          <div style={{ padding: ".5rem", color: "white" }}>
-            {this.state.showSidebar ? (
-              <SvgIcon icon="upCaret" size="1rem" />
-            ) : (
-              <SvgIcon icon="downCaret" size="1rem" />
-            )}
-          </div>
-        </div>
-        <SideBar
-          answerMode={this.state.answerMode}
-          currentPlot={this.state.currentPlot}
-          inReviewMode={this.state.inReviewMode}
-          postValuesToDB={this.postValuesToDB}
-          projectId={this.props.projectId}
-          projectName={this.state.currentProject.name}
-          surveyQuestions={this.state.currentProject.surveyQuestions}
-          toggleQuitModal={this.toggleQuitModal}
-          userName={this.props.userName}
-          collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
-        >
-          <PlotNavigation
-            collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
-            currentPlot={this.state.currentPlot}
-            currentUserId={this.state.currentUserId}
-            hasAssignedPlots={
-              this.state.currentProject.designSettings?.userAssignment?.userMethod !== "none"
-            }
-            inReviewMode={this.state.inReviewMode}
-            isProjectAdmin={this.state.currentProject.isProjectAdmin}
-            isQAQCEnabled={
-              this.state.currentProject.designSettings?.qaqcAssignment?.qaqcMethod !== "none"
-            }
-            loadingPlots={this.state.plotList.length === 0}
-            navigationMode={this.state.navigationMode}
-            navToFirstPlot={this.navToFirstPlot}
-            navToNextPlot={this.navToNextPlot}
-            navToPlot={this.navToPlot}
-            navToPrevPlot={this.navToPrevPlot}
-            plotters={this.state.plotters}
-            plotUsers={(this.state.userPlotList || []).filter((p) => p.userId)}
-            projectId={this.props.projectId}
-            setCurrentUserId={this.setCurrentUserId}
-            setNavigationMode={this.setNavigationMode}
-            setReviewMode={this.setReviewMode}
-            setThreshold={this.setThreshold}
-            threshold={this.state.threshold}
-          />
-          <ExternalTools
-            currentPlot={this.state.currentPlot}
-            currentProject={this.state.currentProject}
-            KMLFeatures={this.state.KMLFeatures}
-            showGeoDash={this.showGeoDash}
-            zoomMapToPlot={this.zoomToPlot}
-            toggleShowBoundary={this.toggleShowBoundary}
-            toggleShowSamples={this.toggleShowSamples}
-            state={{showBoundary: this.state.showBoundary,
-                    showSamples: this.state.showSamples}}
-          />
-          {this.state.currentPlot.id &&
-            this.state.currentProject.projectOptions.showPlotInformation && (
-              <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo} />
-            )}
-          <ImageryOptions
-            currentImageryId={this.state.currentImagery.id}
-            currentPlot={this.state.currentPlot}
-            currentProject={this.state.currentProject}
-            currentProjectBoundary={this.state.currentProject.boundary}
-            imageryList={this.state.imageryList}
-            loadingImages={this.state.imageryList.length === 0}
-            mapConfig={this.state.mapConfig}
-            setBaseMapSource={this.setBaseMapSource}
-            setImageryAttributes={this.setImageryAttributes}
-            setImageryAttribution={this.setImageryAttribution}
-          />
-          {this.state.currentPlot.id ? (
-            <SurveyCollection
-              allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
-              answerMode={this.state.answerMode}
-              collectConfidence={this.state.currentProject.projectOptions.collectConfidence}
-              confidence={this.state.currentPlot.confidence}
-              confidenceComment={this.state.currentPlot.confidenceComment}
-              flagged={this.state.currentPlot.flagged}
-              flaggedReason={this.state.currentPlot.flaggedReason}
-              getSelectedSampleIds={this.getSelectedSampleIds}
-              mapConfig={this.state.mapConfig}
-              resetPlotValues={this.resetPlotValues}
-              sampleGeometries={this.state.currentProject.designSettings.sampleGeometries}
-              selectedQuestionId={this.state.selectedQuestionId}
-              selectedSampleId={
-                Object.keys(this.state.userSamples).length === 1
-                  ? parseInt(Object.keys(this.state.userSamples)[0])
-                  : this.state.selectedSampleId
-              }
-              setAnswerMode={this.setAnswerMode}
-              setConfidence={this.setConfidence}
-              setConfidenceComment={this.setConfidenceComment}
-              setCurrentValue={this.setCurrentValue}
-              setFlaggedReason={this.setFlaggedReason}
-              setSelectedQuestion={this.setSelectedQuestion}
-              setUnansweredColor={this.setUnansweredColor}
-              surveyQuestions={this.state.currentProject.surveyQuestions}
-              surveyRules={this.state.currentProject.surveyRules}
-              toggleFlagged={this.toggleFlagged}
-              unansweredColor={this.state.unansweredColor}
-            />
-          ) : (
-            <fieldset className="mb-3 justify-content-center text-center">
-              <CollapsibleTitle showGroup title="Survey Questions" />
-              <p>Please go to a plot to see survey questions</p>
-            </fieldset>
+              {/* Sidebar Toggle Button - Stays Visible */}
+              <button
+                className="toggle-sidebar position-absolute"
+                onClick={this.toggleImageryLayers}
+                style={{
+
+                }}
+              >
+                {this.state.isImageryLayersExpanded ? <FaChevronLeft /> : <FaChevronRight />}
+              </button>
+            </div>
           )}
-        </SideBar>
-        {this.state.messageBox && (
-          <Modal {...this.state.messageBox} onClose={() => this.setState({ messageBox: null })}>
-            <p>{this.state.messageBox.body}</p>
-          </Modal>
-        )}
-        {this.state.showQuitModal && (
-          <QuitMenu projectId={this.props.projectId} toggleQuitModal={this.toggleQuitModal} />
-        )}
+
+          {/* Main Content (Image Analysis Pane) - Now Always Full Width */}
+          <div className="d-flex flex-column flex-grow-1">
+            <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} />
+          </div>
+
+          {/* Right Sidebar (SideBar) - Fixed Width, Always Anchored */}
+          <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
+            <SideBar
+              answerMode={this.state.answerMode}
+              currentPlot={this.state.currentPlot}
+              inReviewMode={this.state.inReviewMode}
+              postValuesToDB={this.postValuesToDB}
+              projectId={this.props.projectId}
+              projectName={this.state.currentProject.name}
+              surveyQuestions={this.state.currentProject.surveyQuestions}
+              toggleQuitModal={this.toggleQuitModal}
+              userName={this.props.userName}
+              collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
+            >
+              <PlotNavigation
+                collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
+                currentPlot={this.state.currentPlot}
+                currentUserId={this.state.currentUserId}
+                hasAssignedPlots={
+                  this.state.currentProject.designSettings?.userAssignment?.userMethod !== "none"
+                }
+                inReviewMode={this.state.inReviewMode}
+                isProjectAdmin={this.state.currentProject.isProjectAdmin}
+                isQAQCEnabled={
+                  this.state.currentProject.designSettings?.qaqcAssignment?.qaqcMethod !== "none"
+                }
+                loadingPlots={this.state.plotList.length === 0}
+                navigationMode={this.state.navigationMode}
+                navToFirstPlot={this.navToFirstPlot}
+                navToNextPlot={this.navToNextPlot}
+                navToPlot={this.navToPlot}
+                navToPrevPlot={this.navToPrevPlot}
+                plotters={this.state.plotters}
+                plotUsers={(this.state.userPlotList || []).filter((p) => p.userId)}
+                projectId={this.props.projectId}
+                setCurrentUserId={this.setCurrentUserId}
+                setNavigationMode={this.setNavigationMode}
+                setReviewMode={this.setReviewMode}
+                setThreshold={this.setThreshold}
+                threshold={this.state.threshold}
+                projectType={this.state.currentProject?.type}
+              />
+              <ExternalTools
+                currentPlot={this.state.currentPlot}
+                currentProject={this.state.currentProject}
+                KMLFeatures={this.state.KMLFeatures}
+                showGeoDash={this.showGeoDash}
+                zoomMapToPlot={this.zoomToPlot}
+                toggleShowBoundary={this.toggleShowBoundary}
+                toggleShowSamples={this.toggleShowSamples}
+                projectType={this.state.currentProject?.type}
+                state={{ showBoundary: this.state.showBoundary, showSamples: this.state.showSamples }}
+              />
+              {this.state.currentPlot.id &&
+               this.state.currentProject.projectOptions.showPlotInformation && (
+                 <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo} />
+               )}
+              {this.state.currentProject.type === "regular" && (
+                <ImageryOptions
+                  currentImageryId={this.state.currentImagery.id}
+                  currentPlot={this.state.currentPlot}
+                  currentProject={this.state.currentProject}
+                  currentProjectBoundary={this.state.currentProject.boundary}
+                  imageryList={this.state.imageryList}
+                  loadingImages={this.state.imageryList.length === 0}
+                  mapConfig={this.state.mapConfig}
+                  setBaseMapSource={this.setBaseMapSource}
+                  setImageryAttributes={this.setImageryAttributes}
+                  setImageryAttribution={this.setImageryAttribution}
+                />
+              )}
+              {this.state.currentPlot.id ? (
+                <SurveyCollection
+                  allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
+                  answerMode={this.state.answerMode}
+                  collectConfidence={this.state.currentProject.projectOptions.collectConfidence}
+                  confidence={this.state.currentPlot.confidence}
+                  confidenceComment={this.state.currentPlot.confidenceComment}
+                  flagged={this.state.currentPlot.flagged}
+                  flaggedReason={this.state.currentPlot.flaggedReason}
+                  getSelectedSampleIds={this.getSelectedSampleIds}
+                  mapConfig={this.state.mapConfig}
+                  resetPlotValues={this.resetPlotValues}
+                  sampleGeometries={this.state.currentProject.designSettings.sampleGeometries}
+                  selectedQuestionId={this.state.selectedQuestionId}
+                  selectedSampleId={
+                    Object.keys(this.state.userSamples).length === 1
+                      ? parseInt(Object.keys(this.state.userSamples)[0])
+                      : this.state.selectedSampleId
+                  }
+                  setAnswerMode={this.setAnswerMode}
+                  setConfidence={this.setConfidence}
+                  setConfidenceComment={this.setConfidenceComment}
+                  setCurrentValue={this.setCurrentValue}
+                  setFlaggedReason={this.setFlaggedReason}
+                  setSelectedQuestion={this.setSelectedQuestion}
+                  setUnansweredColor={this.setUnansweredColor}
+                  surveyQuestions={this.state.currentProject.surveyQuestions}
+                  surveyRules={this.state.currentProject.surveyRules}
+                  toggleFlagged={this.toggleFlagged}
+                  unansweredColor={this.state.unansweredColor}
+                  projectType={this.state.currentProject?.type}
+                />
+              ) : (
+                <fieldset className="mb-3 justify-content-center text-center">
+                  <CollapsibleTitle showGroup title="Survey Questions" />
+                  <p>Please go to a plot to see survey questions</p>
+                </fieldset>
+              )}
+            </SideBar>
+          </div>
+
+          {/* Modals and Popups */}
+          {this.state.messageBox && (
+            <Modal {...this.state.messageBox} onClose={() => this.setState({ messageBox: null })}>
+              <p>{this.state.messageBox.body}</p>
+            </Modal>
+          )}
+          {(!this.props.acceptedTerms && this.state.currentProject?.type === "simplified") && (
+            <AcceptTermsModal institutionId={this.state.currentProject.institution}
+                              projectId={this.props.projectId}
+                              toggleAcceptTermsModal={this.toggleAcceptTermsModal} />
+          )}
+          {this.state.showQuitModal && (
+            <QuitMenu institutionId={this.state.currentProject.institution}
+                      projectId={this.props.projectId}
+                      toggleQuitModal={this.toggleQuitModal} />
+          )}
+        </div>
       </div>
+
     );
   }
 }
 
 function ImageAnalysisPane({ imageryAttribution }) {
   return (
-    // Mercator hooks into image-analysis-pane
-    <div className="col-lg-9 col-md-12 pl-0 pr-0 full-height" id="image-analysis-pane">
+    <div className="pl-0 pr-0 full-height" id="image-analysis-pane">
       <div className="row" id="imagery-info" style={{ justifyContent: "center" }}>
         <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{imageryAttribution}</p>
       </div>
@@ -1231,9 +1380,9 @@ class SideBar extends React.Component {
   render() {
     return (
       <div
-        className="col-lg-3 border-left full-height"
+        className="d-flex flex-column border-left"
         id="sidebar"
-        style={{ overflowY: "auto", overflowX: "hidden" }}
+        style={{ overflowY: "auto", overflowX: "hidden"}}
       >
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
@@ -1249,14 +1398,15 @@ class SideBar extends React.Component {
           visibleId={this.props.currentPlot.visibleId}
         />
         {this.props.children}
-
+        
         <div className="row">
           <div className="col-sm-12 btn-block">
             {isNumber(this.props.currentPlot.id)
-              ? this.renderSaveButtonGroup()
-              : this.renderQuitButton()}
+             ? this.renderSaveButtonGroup()
+             : this.renderQuitButton()}
           </div>
         </div>
+
       </div>
     );
   }
@@ -1277,6 +1427,7 @@ class PlotNavigation extends React.Component {
   }
 
   updateNewPlotId = (value) => this.setState({ newPlotInput: value });
+  projectType = this.props.projectType;
 
   gotoButton = () => (
     <div className="row mb-2" id="go-to-first-plot">
@@ -1287,7 +1438,7 @@ class PlotNavigation extends React.Component {
           name="new-plot"
           onClick={this.props.navToFirstPlot}
           type="button"
-          value="Go to first plot"
+          value={this.projectType === "simplified" ? "Start collecting" : "Go to first plot"}
         />
       </div>
     </div>
@@ -1407,6 +1558,7 @@ class PlotNavigation extends React.Component {
       setNavigationMode,
       setThreshold,
       threshold,
+      projectType,
     } = this.props;
     return (
       <div className="mt-2">
@@ -1475,15 +1627,15 @@ class PlotNavigation extends React.Component {
               setCurrentUserId
             )}
         </div>
-        <div className="mt-2">
-          {loadingPlots ? (
-            <h3>Loading plot data...</h3>
-          ) : currentPlot?.id ? (
-            this.navButtons()
-          ) : (
-            this.gotoButton()
-          )}
-        </div>
+           <div className="mt-2">
+             {loadingPlots ? (
+               <h3>Loading plot data...</h3>
+             ) : currentPlot?.id ? (
+               projectType !== "simplified" && this.navButtons()
+             ) : (
+               this.gotoButton()
+             )}
+           </div>
       </div>
     );
   }
@@ -1615,7 +1767,7 @@ class ExternalTools extends React.Component {
         {this.state.showExternalTools && (
           <div className="mx-1">
             {this.geoButtons()}
-            {this.toggleViewButtons()}
+            {this.props.projectType !== "simplified" ? this.toggleViewButtons() : null}
             {this.props.KMLFeatures && this.kmlButton()}
             {this.props.currentProject.projectOptions.showGEEScript && this.geeButton()}
             {this.learningMaterialButton()}
@@ -1796,7 +1948,6 @@ class ProjectTitle extends React.Component {
           alignItems: "center",
           background: "var(--lightgreen)",
           display: "flex",
-          marginLeft: "-15px",
           marginRight: "-15px",
         }}
       >
@@ -1944,7 +2095,8 @@ class ProjectStats extends React.Component {
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked
-function QuitMenu({ projectId, toggleQuitModal }) {
+function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
+  console.log(institutionId);
   return (
     <div
       className="modal fade show"
@@ -1980,7 +2132,7 @@ function QuitMenu({ projectId, toggleQuitModal }) {
               id="quit-button"
               onClick={() =>
                 fetch(`/release-plot-locks?projectId=${projectId}`, { method: "POST" }).then(() =>
-                  window.location.assign("/home")
+                  window.location.assign(`/review-institution?institutionId=${institutionId}`)
                 )
               }
               type="button"
@@ -1997,7 +2149,7 @@ function QuitMenu({ projectId, toggleQuitModal }) {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-      <Collection projectId={params.projectId} userName={session.userName || "guest"} />
+v      <Collection projectId={params.projectId} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
     </NavigationBar>,
     document.getElementById("app")
   );

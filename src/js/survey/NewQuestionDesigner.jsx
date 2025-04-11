@@ -155,7 +155,13 @@ export default class NewQuestionDesigner extends React.Component {
     ));
   };
 
-  renderNew = (parentAnswers) => (
+  renderNew = (parentAnswers) => {
+    const componentTypes = this.props.projectType === "simplified" ?
+          this.componentTypes.filter((c) =>
+            (c.componentType === "button") ||
+              (c.componentType === "input")) :
+          this.componentTypes;
+    return (
     <>
       <tr>
         <td>
@@ -169,7 +175,7 @@ export default class NewQuestionDesigner extends React.Component {
             size="1"
             value={this.state.selectedType}
           >
-            {this.componentTypes.map((type, idx) => (
+            {componentTypes.map((type, idx) => (
               // eslint-disable-next-line react/no-array-index-key
               <option key={idx} value={idx}>
                 {`${type.componentType} - ${type.dataType}`}
@@ -256,7 +262,8 @@ export default class NewQuestionDesigner extends React.Component {
         <td />
       </tr>
     </>
-  );
+    );
+  }
 
   renderCopy = (parentAnswers) => (
     <>

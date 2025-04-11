@@ -94,12 +94,13 @@
                          (call-sql "select_institution_dash_projects" user-id institution-id)))))
 
 (defn get-template-projects [{:keys [params session]}]
-  (let [user-id (:userId session -1)]
+  (let [user-id (:userId session -1)
+        type    (or (:projectType params) "regular")]
     (data-response (mapv (fn [{:keys [project_id name institution_id]}]
                            {:id            project_id
                             :name          name
                             :institutionId institution_id})
-                         (call-sql "select_template_projects" user-id)))))
+                         (call-sql "select_template_projects" user-id type)))))
 
 (defn- build-project-by-id [user-id project-id]
   (let [project (first (call-sql "select_project_by_id" project-id))]
@@ -136,7 +137,8 @@
      :publishedDate      (str (:published_date project))
      :closedDate         (str (:closed_date project))
      :hasGeoDash         (:has_geo_dash project)
-     :isProjectAdmin     (is-proj-admin? user-id project-id nil)}))
+     :isProjectAdmin     (is-proj-admin? user-id project-id nil)
+     :type               (:type project)}))
 
 (defn get-project-by-id [{:keys [params session]}]
   (let [user-id    (:userId session -1)
@@ -384,7 +386,9 @@
                               sample-file-base64
                               allow-drawn-samples?
                               shuffle-plots?
-                              design-settings]
+                              design-settings
+                              aoi-features
+                              type]
   ;; Create plots
   (let [plots (if (#{"csv" "shp" "geojson"} plot-distribution)
                 (external-file/generate-file-plots project-id
@@ -396,7 +400,9 @@
                                       num-plots
                                       plot-spacing
                                       plot-size
-                                      shuffle-plots?))]
+                                      shuffle-plots?
+                                      aoi-features
+                                      type))]
     (insert-rows! "plots" plots))
 
   ;; Boundary is only used for Planet at this point.
@@ -459,6 +465,7 @@
         plot-file-base64     (:plotFileBase64 params)
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
+        type                 (:type params)
         token-key            (str (UUID/randomUUID))]
     (try
       (let [project-id (sql-primitive (call-sql "create_project"
@@ -486,7 +493,8 @@
                                                 survey-rules
                                                 token-key
                                                 project-options
-                                                (tc/clj->jsonb design-settings)))]
+                                                (tc/clj->jsonb design-settings)
+                                                type))]
         ;; Proceed with other operations only if the initial call is successful
         (try
           ;; Create or copy plots
@@ -507,7 +515,9 @@
                                    sample-file-base64
                                    allow-drawn-samples?
                                    shuffle-plots?
-                                   design-settings))
+                                   design-settings
+                                   aoi-features
+                                   type))
           ;; Final clean up 
           (call-sql "update_project_counts" project-id)
 
@@ -605,6 +615,7 @@
         plot-file-base64     (:plotFileBase64 params)
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
+        type                 (:type params)
         original-project     (first (call-sql "select_project_by_id" project-id))]
     (if original-project
       (try
@@ -632,7 +643,8 @@
                   survey-questions
                   survey-rules
                   project-options
-                  (tc/clj->jsonb design-settings))
+                  (tc/clj->jsonb design-settings)
+                  type)
 
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
@@ -651,7 +663,7 @@
                     (not= plot-size      (:plot_size original-project))
                     (not= plot-spacing   (:plot_spacing original-project))
                     (not= shuffle-plots? (:shuffle_plots original-project)))))
-          (do
+          (doall
             (call-sql "delete_plots_by_project" project-id)
             (create-project-plots! project-id
                                    plot-distribution
@@ -668,7 +680,9 @@
                                    sample-file-base64
                                    allow-drawn-samples?
                                    shuffle-plots?
-                                   design-settings))
+                                   design-settings
+                                   aoi-features
+                                   type))
 
           :else
           (do
@@ -932,7 +946,7 @@
 (defn dump-project-raw-data! [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
-      (let [samples          (call-sql "dump_project_sample_data" project-id)
+      (let [samples          (call-sql "dump_project_sample_data" project-id (:type project-info))
             survey-questions (tc/jsonb->clj (:survey_questions project-info))
             text-headers     (concat sample-base-headers
                                      (get-ext-headers samples :extra_plot_info "pl_")
@@ -1145,3 +1159,35 @@
         (println e)
         (data-response "Internal server error." {:status 500})))))
 
+(def file-types-actions
+  {"plots"   (fn [project-id folder]
+               (let [project-info (first (call-sql "select_project_by_id" project-id))
+                     plots-data (plots->csv-response project-info
+                                                     (call-sql "dump_project_plot_qaqc_data" project-id)
+                                                     (prepare-file-name (:name project-info) "plots"))]
+                 (spit (str folder project-id "-plots.csv")
+                       (:body plots-data))))
+   "samples" (fn [project-id folder]
+               (let [sample-csv (dump-project-raw-data! {:params {:projectId project-id}})]
+                 (spit (str folder project-id "-samples.csv")
+                       (:body sample-csv))))
+   "shape"   (fn [project-id folder]
+               (external-file/create-shape-files folder "plot" project-id)
+               (external-file/create-shape-files folder "sample" project-id))})
+
+(defn download-projects-bulk
+  [{:keys [params]}]
+  (let [project-ids    (clojure.string/split (:projectIds params) #",")
+        institution-id (tc/val->int (:institutionId params))
+        file-types     (clojure.string/split (:fileTypes params) #",")
+        zip-file       (external-file/bulk-download-zip institution-id
+                                                        project-ids
+                                                        file-types
+                                                        file-types-actions)]
+    (if zip-file
+      {:headers {"Content-Type"        "application/zip"
+                 "Content-Disposition" (str "attachment; filename=files.zip")}
+       :body    (io/file zip-file)
+       :status  200}
+      {:status 500
+       :body   "Error generating shape files."})))

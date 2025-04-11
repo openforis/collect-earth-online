@@ -318,6 +318,18 @@
                 (str "7z a " folder-name "/files" ".zip " folder-name "/*"))
     (str folder-name "files.zip")))
 
+(defn bulk-download-zip
+  [institution-id project-ids file-types file-types-actions]
+  (let [folder-name (str tmp-dir "/ceo-tmp-institution" institution-id "-files/")]
+    (sh-wrapper tmp-dir {} (str "rm -rf " folder-name) (str "mkdir " folder-name))
+    (doseq [project-id project-ids
+            file-type file-types
+            :let [action (get file-types-actions file-type)]
+            :when action]
+      (action (tc/val->int project-id) folder-name))
+    (sh-wrapper tmp-dir {}
+                (str "7z a "  folder-name "/files" ".zip " folder-name "/*"))
+    (str folder-name "files.zip")))
 
 (defn remove-old-dir
   [dir-name]

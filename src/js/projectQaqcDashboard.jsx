@@ -9,13 +9,14 @@ import { projectConditionalRowStyles,
          plotConditionalRowStyles,
          customStyles,
          projectStatsColumns,
+         userStatsColumns,
          plotStatsColumns } from "./tableData";
 
 import { mercator } from "./utils/mercator";
 
 import Modal from "./components/Modal";
 
-class ProjectDashboard extends React.Component {
+class ProjectDashboardQaqc extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -30,10 +31,11 @@ class ProjectDashboard extends React.Component {
       plotInfo: {},
       modal: null,
     };
-      // Bind the methods to the class instance
+    // Bind the methods to the class instance
     this.showProjectMap = this.showProjectMap.bind(this);
     this.setActiveTab = this.setActiveTab.bind(this);
     this.setPlotInfo = this.setPlotInfo.bind(this);
+    this.setProjectStats = this.setProjectStats.bind(this);
   }
 
   /// Lifecycle
@@ -46,16 +48,16 @@ class ProjectDashboard extends React.Component {
     // Show plots after both the map and plot list are loaded.
     if (
       (!prevState.mapConfig || prevState.plotList.length === 0) &&
-      this.state.mapConfig &&
-      this.state.plotList.length > 0
+        this.state.mapConfig &&
+        this.state.plotList.length > 0
     ) {
       mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList);
     }
     // Initialize the map when both projectDetails and imageryList are available
     if (
       (!prevState.projectDetails || prevState.imageryList.length === 0) &&
-      this.state.projectDetails &&
-      this.state.imageryList.length > 0
+        this.state.projectDetails &&
+        this.state.imageryList.length > 0
     ) {
       this.initializeMap();
     }
@@ -93,51 +95,51 @@ class ProjectDashboard extends React.Component {
   };
 
   getProjectById = (projectId) =>
-    fetch(`/get-project-by-id?projectId=${projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (data === "") {
-          this.setState ({modal: {alert: {alertType: "Project Error", alertMessage: "No project found with ID " + projectId + "."}}});
-          window.location = "/home";
-        } else {
-          this.setState({ projectDetails: data });
-          return this.getImageryList(data.institution);
-        }
-      });
+  fetch(`/get-project-by-id?projectId=${projectId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      if (data === "") {
+        this.setState ({modal: {alert: {alertType: "Project Error", alertMessage: "No project found with ID " + projectId + "."}}});
+        window.location = "/home";
+      } else {
+        this.setState({ projectDetails: data });
+        return this.getImageryList(data.institution);
+      }
+    });
 
   getImageryList = (institutionId) =>
-    fetch(`/get-institution-imagery?institutionId=${institutionId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.setState(
-          {
-            imageryList: data,
-            projectDetails: {
-              ...this.state.projectDetails,
-              baseMapSource: this.state.projectDetails.baseMapSource || data[0].title,
-            },
-          }
-        );
-      });
+  fetch(`/get-institution-imagery?institutionId=${institutionId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      this.setState(
+        {
+          imageryList: data,
+          projectDetails: {
+            ...this.state.projectDetails,
+            baseMapSource: this.state.projectDetails.baseMapSource || data[0].title,
+          },
+        }
+      );
+    });
   
   getProjectStats = (projectId) =>
-    fetch(`/project-stats?projectId=${projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.setState({ projectStats: data, plotId: data.plots[0].plot_id });
-      });
+  fetch(`/project-stats?projectId=${projectId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      this.setState({ projectStats: data, plotId: data.plots[0].plot_id });
+    });
 
   getPlotList = (projectId) =>
-    fetch(`/get-project-plots?projectId=${projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => this.setState({ plotList: data }));
+  fetch(`/get-project-plots?projectId=${projectId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => this.setState({ plotList: data }));
 
   /// Helpers
 
   processModal = (message, promise) =>
-    this.setState({ modalMessage: message }, () =>
-      promise.finally(() => this.setState({ modalMessage: null }))
-    );
+  this.setState({ modalMessage: message }, () =>
+    promise.finally(() => this.setState({ modalMessage: null }))
+  );
 
   showProjectMap(activeTab = 0) {
     const { aoiFeatures, plotSize, plotShape } = this.state.projectDetails;
@@ -192,6 +194,10 @@ class ProjectDashboard extends React.Component {
   setPlotInfo = (stats) => {
     this.setState({ plotInfo: stats });
   }
+
+  setProjectStats = (stats) =>  {
+    this.setState({ projectStats: stats, plotId: stats.plots[0].plot_id });
+  }
   
   render() {
     return (
@@ -210,8 +216,10 @@ class ProjectDashboard extends React.Component {
             <ProjectAOI />
           </div>
           <QaqcInformation className="col-6"
-                activeTab={this.state.activeTab}
-                setActiveTab={this.setActiveTab}>
+                           setProjectStats={this.setProjectStats}
+                           projectId={this.props.projectId}
+                           activeTab={this.state.activeTab}
+                           setActiveTab={this.setActiveTab}>
             <Tab label="Project Statistics">
               <div className="bg-lightgray col-12 project-stats">
                 <ProjectStats
@@ -230,7 +238,7 @@ class ProjectDashboard extends React.Component {
                   plotId={this.state.plotId || this.state.projectStats.plots[0]?.plot_id}
                   setPlotInfo={this.setPlotInfo}
                   showProjectMap={this.showProjectMap}
-                  plots={this.state.projectStats.plots}
+                  projectPlots={this.state.projectStats.plots}
                   plotInfo={this.state.plotInfo}
                   activeTab={this.state.activeTab}
                 />
@@ -243,6 +251,8 @@ class ProjectDashboard extends React.Component {
                   analyzedPlots={this.state.projectStats.analyzedPlots}
                   isProjectAdmin={this.state.projectDetails.isProjectAdmin}
                   userName={this.props.userName}
+                  plots={this.state.projectStats.plots}
+                  projectId={this.props.projectId}
                 />
               </div>
             </Tab>
@@ -253,23 +263,12 @@ class ProjectDashboard extends React.Component {
   }
 }
 
-function ProjectStats(props) {
-  const {
-    stats: {
-      totalPlots,
-      plotAssignments,
-      usersAssigned,
-      analyzedPlots,
-      partialPlots,
-      unanalyzedPlots,
-      averageConfidence,
-      minConfidence,
-      maxConfidence,
-      flaggedPlots,
-      plots,
-    },
-    projectDetails: { closedDate, createdDate, publishedDate },
-  } = props;
+function ProjectStats({ projectDetails, stats }) {
+  const [plots, setPlots] = useState(stats.plots || []);
+
+  useEffect(() => {
+    setPlots(stats.plots || []);
+  }, [stats.plots]);
 
   const renderDate = (title, date) => (
     <div style={{ alignItems: "center", display: "flex", marginRight: "1rem" }}>
@@ -286,45 +285,44 @@ function ProjectStats(props) {
   return (
     <>
       <div className="d-flex flex-column">
-        {totalPlots > 0 && (
+        {stats.totalPlots > 0 && (
           <div className="p-1" id="project-stats">
             <div className="mb-4">
               <h3>Project Dates:</h3>
               <div style={{ display: "flex", flexWrap: "wrap", padding: "0 .5rem" }}>
-                {renderDate("Created", createdDate || "Unknown")}
-                {renderDate("Published", publishedDate || "N/A")}
-                {renderDate("Closed", closedDate || "N/A")}
+                {renderDate("Created", projectDetails.createdDate || "Unknown")}
+                {renderDate("Published", projectDetails.publishedDate || "N/A")}
+                {renderDate("Closed", projectDetails.closedDate || "N/A")}
               </div>
             </div>
             <div className="mb-2">
               <h3>Project Stats:</h3>
               <div style={{ display: "flex", flexWrap: "wrap", padding: "0 .5rem" }}>
-                {renderStat("Total Plots", totalPlots)}
-                {plotAssignments > 0 && renderStat("Plot Assignments", plotAssignments)}
-                {plotAssignments > 0 && renderStat("Users Assigned", usersAssigned)}
-                {renderStat("Flagged", flaggedPlots)}
-                {renderStat("Analyzed", analyzedPlots)}
-                {plotAssignments > 0 && renderStat("Partial Plots", partialPlots)}
-                {renderStat("Unanalyzed", unanalyzedPlots)}
-                {renderStat("Average Confidence", `${averageConfidence} %`)}
-                {renderStat("Max Confidence", `${maxConfidence} %`)}
-                {renderStat("Min Confidence", `${minConfidence} %`)}
+                {renderStat("Total Plots", stats.totalPlots)}
+                {stats.plotAssignments > 0 && renderStat("Plot Assignments", stats.plotAssignments)}
+                {stats.plotAssignments > 0 && renderStat("Users Assigned", stats.usersAssigned)}
+                {renderStat("Flagged", stats.flaggedPlots)}
+                {renderStat("Analyzed", stats.analyzedPlots)}
+                {stats.plotAssignments > 0 && renderStat("Partial Plots", stats.partialPlots)}
+                {renderStat("Unanalyzed", stats.unanalyzedPlots)}
+                {renderStat("Average Confidence", `${stats.averageConfidence} %`)}
+                {renderStat("Max Confidence", `${stats.maxConfidence} %`)}
+                {renderStat("Min Confidence", `${stats.minConfidence} %`)}
               </div>
             </div>
           </div>
-
         )}
       </div>
-      <br/>
+      <br />
       Project Plots:
-      <br/>
-      <div style={{ maxHeight: '800px', overflowY: 'auto', minHeight: '800px' }}>
+      <br />
+      <div style={{ maxHeight: "800px", overflowY: "auto", minHeight: "800px" }}>
         <DataTable
-	  columns={projectStatsColumns}
-	  data={plots}
-	  fixedHeader={true}
-	  fixedHeaderScrollHeight={'200px'}
-          conditionalRowStyles={projectConditionalRowStyles}
+          columns={projectStatsColumns}
+          data={plots}
+          fixedHeader={true}
+          fixedHeaderScrollHeight={"200px"}
+          conditionalRowStyles={plotConditionalRowStyles}
           customStyles={customStyles}
           pagination
         />
@@ -333,18 +331,25 @@ function ProjectStats(props) {
   );
 }
 
-const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, plots, plotInfo }) => {
+const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, projectPlots, plotInfo }) => {
   const [newPlotId, setNewPlotId] = useState(plotId);
   const [inputPlotId, setInputPlotId] = useState(plotId);
+  const [plots, setPlots] = useState(projectPlots);
 
   useEffect(() => {
     console.log(activeTab);
     if(activeTab === 1) {
       getPlotData(-10000000, "next");
+      setNewPlotId(plotId);
+      setInputPlotId(plotId);
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    setPlots(projectPlots);
+  }, [projectPlots]);
   
-  const plotOverview = plots?.filter((plot) => plot.plot_id === newPlotId)[0];
+  const plotOverview =  plots?.find((plot) => plot.plot_id === newPlotId);
   const samplesInfo = plotInfo?.samples?.map((sample) => ({ ...sample, id: `${sample.visibleId}_${sample.userId}`}));
 
   const renderStat = (title, stat) => (
@@ -358,20 +363,20 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
       `/qaqc-plot?visibleId=${visibleId}&direction=${direction}&projectId=${projectId}`
     )
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-    .then((data) => {
-      if (data === "not-found") {
-        const err = (direction === "id" ? "Plot not" : "No more plots") +
-              " found for this navigation mode.";
-        this.setState ({modal: {alert: {alertType: "Plot Data Error", alertMessage: err}}});
-      } else {
-        setPlotInfo(data);
-        setInputPlotId(data.visibleId);
-        setNewPlotId(data.visibleId);
-        if (activeTab === 1) {
-          showProjectMap(activeTab);
+      .then((data) => {
+        if (data === "not-found") {
+          const err = (direction === "id" ? "Plot not" : "No more plots") +
+                " found for this navigation mode.";
+          this.setState ({modal: {alert: {alertType: "Plot Data Error", alertMessage: err}}});
+        } else {
+          setPlotInfo(data);
+          setInputPlotId(data.visibleId);
+          setNewPlotId(data.visibleId);
+          if (activeTab === 1) {
+            showProjectMap(activeTab);
+          }
         }
-      }
-    })
+      })
       .catch((response) => {
         console.error(response);
         this.setState ({modal: {alert: {alertType: "Plot Data Error", alertMessage: "Error retrieving plot data. See console for details."}}});
@@ -418,23 +423,27 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
     </div>
   );
 
-  const disagreement = (sampleDisagreement) => {
-    if(sampleDisagreement) {
-      const allValues = Object.values(sampleDisagreement)
-            .map(Object.values)
-            .flat();
-      const total = allValues.reduce((sum, value) => sum + value, 0);
-      const count = allValues.length;
-      return (total / count).toFixed(2);
-    } else {
-      return 0;
-    }
+  const setTableData = () => {
+    return samplesInfo?.map(sample => {
+      const samplesDisagreements = plotOverview.details.usersPlotInfo?.find(
+        (up) => up.visible_id === sample.visibleId && up.user_id === sample.userId
+      );
+      return samplesDisagreements?.disagreements
+        ? {
+          ...sample,
+          disagreement: samplesDisagreements.disagreements.some(obj => 
+            Object.values(obj).some(value => value !== 0)
+          ),
+          answers: JSON.stringify(samplesDisagreements.saved_answers),
+        }
+      : sample;
+    })
   }
-
   return (
     <>
       <div className="d-flex flex-column">
-        <h3> Plot Navigation: </h3>
+        <br/>
+        <h3> Plot Navigation</h3>
         {navButtons()}
         <div className="mb-2">
           <h3>Plot Stats:</h3>
@@ -442,9 +451,9 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
             {renderStat("Total Samples", 2)}
             {renderStat("Flagged", plotOverview?.num_flags)}
             {renderStat("Average Confidence", `${plotOverview?.avg_confidence} %`)}
-            {renderStat("Max Confidence", `${plotOverview?.avg_confidence} %`)}
-            {renderStat("Min Confidence", `${plotOverview?.avg_confidence} %`)}
-            {renderStat("Disagreement", `${disagreement(plotOverview?.details?.samplesDisagreements)}`)}
+            {renderStat("Max Confidence", `${plotOverview?.max_confidence} %`)}
+            {renderStat("Min Confidence", `${plotOverview?.min_confidence} %`)}
+            {renderStat("Disagreement", `${(plotOverview?.disagreement ?? 0).toFixed(2)} %`)}
           </div>
         </div>
       </div>
@@ -455,13 +464,7 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
         {(Object.keys(plotInfo).length !== 0) && (
           <DataTable
 	    columns={plotStatsColumns}
-	    data={samplesInfo.map(sample => {
-              const visibleId = sample.visibleId.toString();
-              const samplesDisagreements = plotOverview?.details.samplesDisagreements;
-              return samplesDisagreements[visibleId]
-                ? { ...sample, disagreement: Object.values(samplesDisagreements[visibleId]).some((i) => i !== 0)}
-              : sample;
-            })}
+            data={setTableData()}
 	    fixedHeader={true}
 	    fixedHeaderScrollHeight={'200px'}
             conditionalRowStyles={plotConditionalRowStyles}
@@ -475,39 +478,120 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
 }
 
 
-const UserStats = ({ userStats, analyzedPlots, isProjectAdmin, userName }) => {
+const UserStats = ({ userStats, analyzedPlots, isProjectAdmin, userName, plots, projectId }) => {
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  
+  const calculateUserDisagreement = () => {
+    const userDisagreement = {};
+    plots.forEach((plot) => {
+      const usersInfo = plot.details?.usersPlotInfo || [];
+      
+      usersInfo.forEach((userInfo) => {
+        const userId = userInfo.user_id;
+        const disagreements = userInfo.disagreements || [];
+        
+        const totalAnswers = disagreements.length;
+        if (totalAnswers === 0) return;  // Avoid division by zero
+        
+        const disagreeCount = disagreements.reduce((count, disagreement) => {
+          return count + (Object.values(disagreement).some(value => value !== 0) ? 1 : 0);
+        }, 0);
+        
+        if (!userDisagreement[userId]) {
+          userDisagreement[userId] = { disagreeCount: 0, totalAnswers: 0 };
+        }
+        
+        userDisagreement[userId].disagreeCount += disagreeCount;
+        userDisagreement[userId].totalAnswers += totalAnswers;
+      });
+    });
+    
+    const result = {};
+    for (const userId in userDisagreement) {
+      const { disagreeCount, totalAnswers } = userDisagreement[userId];
+      result[userId] = ((disagreeCount / totalAnswers) * 100).toFixed(2);
+    }
+    
+    return result;
+  }
+
+  const handleSelectedChange = ({ selectedRows }) => {
+    console.log(selectedRows);
+    setSelectedUsers(selectedUsers);
+  }
+
+  const mergedUserStats = () => {
+    const disagreement = calculateUserDisagreement();
+    return userStats?.map(user => {
+      const analysisTime = user.timedPlots > 0 ? (user.seconds / user.timedPlots / 1.0).toFixed(1) : 0;
+      return {
+        ...user,
+        disagreement: parseFloat((disagreement[user.user_id] || "0.00")),
+        analysisTime: (analysisTime >= 60) ? `${(analysisTime / 60).toFixed(2)} mins/plot` : `${analysisTime} secs/plot`
+      }
+    });
+  }
+
+  const disableUsers = async () => {
+    try {
+      const response = await fetch(`/disable-users?projectId=${projectId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userIds: selectedUsers }),
+      });
+      
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to disable users: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error disabling users:', error);
+      alert('An error occurred while disabling users.');
+    }
+  }
+  
   return (
     <>
       {userStats && (
-        <div>
-          <h3>User Completed:</h3>
-          {userStats.map((user, idx) => (
-            <StatsRow
-              key={user.email}
-              analysisTime={
-                user.timedPlots > 0 ? (user.seconds / user.timedPlots / 1.0).toFixed(2) : 0
-              }
-              plots={user.analyzed + user.flagged}
-              title={
-                isProjectAdmin || user.email === userName
-                  ? `${idx + 1}. ${user.email}`
-                  : `User ${idx + 1}`
-              }
+        <div className="d-flex flex-column"
+             style ={{ maxHeight: "1000px", overflowY: "auto", overflowX: "hidden"}}>
+          <br/>
+          <h3>Users Information</h3>
+          <div style={{ maxHeight: "800px", minHeight: "500px"}}>
+            <DataTable
+	      columns={userStatsColumns}
+              data={mergedUserStats()}
+	      fixedHeader={true}
+	      fixedHeaderScrollHeight={'200px'}
+              customStyles={customStyles}
+              selectableRows
+              onSelectedRowsChange={handleSelectedChange}
+              pagination
             />
-          ))}
-          <StatsRow
-            analysisTime={
-              userStats.reduce((p, c) => p + c.timedPlots, 0) > 0
-                ? (
-                  userStats.reduce((p, c) => p + c.seconds, 0) /
-                    userStats.reduce((p, c) => p + c.timedPlots, 0) /
-                    1.0
-                ).toFixed(2)
-                : 0
-            }
-            plots={analyzedPlots}
-            title="Total"
-          />
+          </div>
+          <hr/>
+          <div className="row mb-3 ml-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                className="disable-button"
+                style={{ height: "38px" }}
+                onClick={() => disableUsers()}
+              >
+                Ignore Selected Users
+              </button>
+              <button
+                className="enable-button"
+                style={{ height: "38px" }}
+                onClick={() => null}
+              >
+                Accept Selected Users
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>
@@ -523,10 +607,59 @@ function ProjectAOI() {
   );
 }
 
-const RenderFileInput = () => {
+const RenderFileInput = ({ projectId, setProjectStats }) => {
+  const [file, setFile] = useState(null);
+  const [error, setError] = useState(null);
+  
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  useEffect(() => {
+    if (!file) {
+      setError('No file selected');
+      return;
+    }
+    try {
+      const result = handleJsonFileUpload(file);
+      setProjectStats(result);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    }
+  }, [file]);
+
+  
+  const handleJsonFileUpload = async (file) => {
+    if (!file || file.type !== 'application/json') {
+      throw new Error('Please select a valid JSON file');
+    }
+    const fileContent = await file.text();
+
+    let jsonContent;
+    try {
+      jsonContent = {"sotFileJson": JSON.parse(fileContent)};
+    } catch (e) {
+      throw new Error('Invalid JSON file');
+    }
+    const response = await fetch(`/sot-disagreement?projectId=${projectId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(jsonContent),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  };
+  
   const downloadFile = async () => {
     try {
-      const response = await fetch("/sot-example");
+      const response = await fetch(`/sot-example?projectId=${projectId}`);
       const data = await response.json();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const link = document.createElement("a");
@@ -548,17 +681,17 @@ const RenderFileInput = () => {
           id="custom-upload"
           style={{ display: "flex", alignItems: "center", width: "fit-content" }}
         >
-          Upload plot file
+          Upload file
           <input
             accept={"application/json"}
             defaultValue=""
             id="source-of-truth-file"
-            onChange={(e) => null}
+            onChange={handleFileChange}
             style={{ display: "block" }}
             type="file"
           />
         </label>
-        <label className="ml-3 text-nowrap">File:{" "}</label>
+        <label className="ml-3 text-nowrap">File: {file ? file.name : 'No file selected'}</label>
         
         <div
           style={{
@@ -567,32 +700,7 @@ const RenderFileInput = () => {
             height: "40px",
           }}
         ></div>
-        
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <p style={{ margin: 0, marginRight: "10px" }}>Calculate disagreement using:</p>
-          
-          <label style={{ marginRight: "10px" }}>
-            <input
-              type="radio"
-              name="disagreement"
-              value="option1"
-              style={{ verticalAlign: "middle" }}
-              checked
-            />{" "}
-            Peer comparison
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="disagreement"
-              value="option2"
-              style={{ verticalAlign: "middle" }}
-            />{" "}
-            Source of Truth
-          </label>
-        </div>
       </div>
-      
       <div style={{ display: "flex", justifyContent: "center", marginTop: "10px" }}>
         <a href="#" onClick={downloadFile}>
           Download example source of truth file
@@ -602,12 +710,14 @@ const RenderFileInput = () => {
   );
 }
 
-const QaqcInformation = ({ children, activeTab, setActiveTab }) => {
+const QaqcInformation = ({ children, activeTab, setActiveTab, setProjectStats, projectId }) => {
   return (
     <>
       <div className="d-flex flex-column h-100 fixed-width">
         <h2 className="header px-0">QAQC Information</h2>
-        <RenderFileInput/>
+        <RenderFileInput
+          projectId={projectId}
+          setProjectStats={setProjectStats}/>
         <div>
           <div className="tab-buttons">
             {React.Children.map(children, (child, index) => (
@@ -643,7 +753,7 @@ const Tab = ({ label, children }) => {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-      <ProjectDashboard projectId={params.projectId || "0"} userName={session.userName} />
+      <ProjectDashboardQaqc projectId={params.projectId || "0"} userName={session.userName} />
     </NavigationBar>,
     document.getElementById("app")
   );

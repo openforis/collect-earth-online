@@ -1,5 +1,6 @@
 (ns collect-earth-online.db.imagery
-  (:require [triangulum.database :refer [call-sql sql-primitive]]
+  (:require [clojure.string :as cstr]
+            [triangulum.database :refer [call-sql sql-primitive]]
             [triangulum.type-conversion :as tc]
             [collect-earth-online.db.institutions :refer [is-inst-admin?]]
             [triangulum.response :refer [data-response]]))
@@ -102,3 +103,15 @@
 (defn archive-institution-imagery [{:keys [params]}]
   (call-sql "archive_imagery" (tc/val->int (:imageryId params)))
   (data-response ""))
+
+(defn bulk-archive-institution-imagery [{:keys [params]}]
+  (let [imagery-ids (cstr/join "," (:imageryIds params))]
+    (call-sql "archive_imagery_bulk" imagery-ids)
+    (data-response "")))
+
+(defn bulk-update-imagery-visibility [{:keys [params]}]
+  (let [imagery-id     (cstr/join "," (:imageryIds params))
+        visibility     (:visibility params)
+        institution-id (tc/val->int (:institutionId params))]
+    (call-sql "update_imagery_visibility_bulk" imagery-id visibility institution-id)
+    (data-response "")))

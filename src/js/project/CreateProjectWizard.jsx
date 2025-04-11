@@ -22,7 +22,7 @@ export default class CreateProjectWizard extends React.Component {
   constructor(props) {
     super(props);
 
-    this.steps = {
+    this.fullProjectSteps = {
       overview: {
         title: "Project Overview",
         description: "General information about the project",
@@ -33,6 +33,11 @@ export default class CreateProjectWizard extends React.Component {
             templateProjectList={this.state.templateProjectList}
             toggleTemplatePlots={this.toggleTemplatePlots}
             checkAllSteps={this.checkAllSteps}
+            steps={this.state.steps}
+            updateSteps={this.updateSteps}
+            updateProjectType={this.updateProjectType}
+            type={this.projectType}
+            fullProjectSteps={this.fullProjectSteps}
           />
         ),
         helpDescription: "Introduction",
@@ -49,8 +54,8 @@ export default class CreateProjectWizard extends React.Component {
             canDrag={false}
             context={this.context}
             imagery={this.context.institutionImagery.filter(
-              ({ title }) => (title === "Mapbox Satellite") ||
-              (title === "Open Street Maps")
+              ({ title }) => (title === "CEO: Mapbox Satellite") ||
+                (title === "CEO: Open Street Maps")
             )}
           />
         ),
@@ -59,19 +64,23 @@ export default class CreateProjectWizard extends React.Component {
       plots: {
         title: "Plot Design",
         description: "Area of interest and plot generation for collection",
-        StepComponent: () => <PlotStep getTotalPlots={this.getTotalPlots} />,
+        StepComponent: () => <PlotStep
+                               getTotalPlots={this.getTotalPlots}
+                               steps={this.state.steps}
+                               projectType={this.state.type}
+                             />,
         helpDescription: "Collection Map Preview",
         StepHelpComponent: () => (
           <AOIMap
             canDrag={
               !this.context.useTemplatePlots &&
-              !["csv", "shp"].includes(this.context.plotDistribution) &&
-              this.context.boundaryType === "manual"
+                !["csv", "shp"].includes(this.context.plotDistribution) &&
+                this.context.boundaryType === "manual"
             }
             context={this.context}
             imagery={this.context.institutionImagery.filter(
-              ({ title }) => (title === "Mapbox Satellite") ||
-              (title === "Open Street Maps")
+              ({ title }) => (title === "CEO: Mapbox Satellite") ||
+                (title === "CEO: Open Street Maps")
             )}
           />
         ),
@@ -81,14 +90,14 @@ export default class CreateProjectWizard extends React.Component {
         title: "Sample Design",
         description: "Sample generation for collection",
         StepComponent: () =>
-          this.context.useTemplatePlots ? (
-            <SampleReview />
-          ) : (
-            <SampleDesign
-              getSamplesPerPlot={this.getSamplesPerPlot}
-              getTotalPlots={this.getTotalPlots}
-            />
-          ),
+        this.context.useTemplatePlots ? (
+          <SampleReview />
+        ) : (
+          <SampleDesign
+            getSamplesPerPlot={this.getSamplesPerPlot}
+            getTotalPlots={this.getTotalPlots}
+          />
+        ),
         helpDescription: "Collection Map Preview",
         StepHelpComponent: SamplePreview,
         validate: this.validateSampleData,
@@ -114,13 +123,14 @@ export default class CreateProjectWizard extends React.Component {
         validate: () => [],
       },
     };
-
     this.state = {
+      steps: this.fullProjectSteps,
       complete: new Set(),
       templateProject: {},
       templatePlots: [],
-      draftProject: { ...blankProject},
       modal: null,
+      type: "regular",
+      draftProject: { ...blankProject}
     };
   }
 
@@ -134,6 +144,12 @@ export default class CreateProjectWizard extends React.Component {
       console.error(error);
       this.setState ({modal: {alert: {alertType: "Project Data Error", alertMessage: "Error retrieving the project data. See console for details."}}});
     });
+    this.setState({type: this.context?.projectDetails?.type,
+                   steps: this.context?.type === "regular" ?
+                   this.fullProjectSteps :
+                   filterObject(this.fullProjectSteps, ([key, _val]) =>
+                     ["overview", "imagery", "plots", "questions"].includes(key))
+                  });
     if (this.context.name !== "" || this.context.description !== "") this.checkAllSteps();
   }
 
@@ -163,6 +179,7 @@ export default class CreateProjectWizard extends React.Component {
       aoiFileName: this.context.aoiFileName,
       description: this.context.description,
       name: this.context.name,
+      type: this.context.type,
       privacyLevel: this.context.privacyLevel,
       projectOptions: this.context.projectOptions,
       designSettings: this.context.designSettings,
@@ -247,13 +264,22 @@ export default class CreateProjectWizard extends React.Component {
       }
     }
 
+  updateSteps = (steps) => this.setState({ steps: steps });
+  updateProjectType = (projectType) => {
+    const privacyLevel = projectType === "simplified" ? "public" : "institution";
+    this.setState({type: projectType},  () => {
+      this.context.setProjectDetails({ type: projectType, sampleDistribution: "center", privacyLevel: privacyLevel});
+      this.getTemplateProjects();
+    });
+  };
+
   getTemplateProjects = () =>
-    fetch("/get-template-projects")
+    fetch(`/get-template-projects?projectType=${this.state.type}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) =>
         this.setState({
           templateProjectList:
-            data && data.length > 0 ? data : [{ id: -1, name: "No template projects found" }],
+          data && data.length > 0 ? data : [{ id: -1, name: "No template projects found" }],
         })
       )
       .catch((error) => {
@@ -436,21 +462,21 @@ export default class CreateProjectWizard extends React.Component {
   getSteps = () => {
     const { projectId, originalProject } = this.context;
     return projectId === -1 || originalProject.availability === "unpublished"
-      ? this.steps
-      : filterObject(this.steps, ([key, _val]) =>
+      ? this.state.steps
+      : filterObject(this.state.steps, ([key, _val]) =>
           ["overview", "imagery", "questions"].includes(key)
         );
   };
 
   checkAllSteps = () => {
-    const validSteps = Object.entries(this.getSteps())
+    const validSteps = Object.entries(this.state.steps)
       .filter(([_key, val]) => val.validate().length === 0)
       .map(([key, _val]) => key);
     this.setState({ complete: new Set(validSteps) });
   };
 
   tryChangeStep = (newStep, alertUser = true) => {
-    const errorList = this.getSteps()[this.context.wizardStep].validate();
+    const errorList = this.state.steps[this.context.wizardStep].validate();
     this.setState({
       complete:
         errorList.length > 0
@@ -465,19 +491,19 @@ export default class CreateProjectWizard extends React.Component {
   };
 
   nextStep = () => {
-    const stepKeys = Object.keys(this.getSteps());
+    const stepKeys = Object.keys(this.state.steps);
     this.tryChangeStep(
       stepKeys[Math.min(stepKeys.length - 1, stepKeys.indexOf(this.context.wizardStep) + 1)]
     );
   };
 
   prevStep = () => {
-    const stepKeys = Object.keys(this.getSteps());
+    const stepKeys = Object.keys(this.state.steps);
     this.tryChangeStep(stepKeys[Math.max(0, stepKeys.indexOf(this.context.wizardStep) - 1)], false);
   };
 
   finish = () => {
-    const failedStep = Object.entries(this.getSteps()).find(([_key, val]) => {
+    const failedStep = Object.entries(this.state.steps).find(([_key, val]) => {
       const errorList = val.validate();
       if (errorList.length > 0) {
         this.setState ({modal: {alert: {alertType: "Finish Project Error", alertMessage: errorList.join("\n")}}});
@@ -546,7 +572,7 @@ export default class CreateProjectWizard extends React.Component {
   /// Render Functions
 
   renderStep = (stepName) => {
-    const steps = this.getSteps();
+    const steps = this.state.steps;
     const isLast = last(Object.keys(steps)) === stepName;
     const isSelected = stepName === this.context.wizardStep;
     const stepComplete = this.state.complete.has(stepName);
@@ -596,7 +622,7 @@ export default class CreateProjectWizard extends React.Component {
   };
 
   render() {
-    const steps = this.getSteps();
+    const steps = this.state.steps;
     const { description, StepComponent, helpDescription, StepHelpComponent } =
       steps[this.context.wizardStep];
     const isLast = last(Object.keys(steps)) === this.context.wizardStep;
@@ -625,7 +651,7 @@ export default class CreateProjectWizard extends React.Component {
           >
             <div className="bg-lightgreen w-100 py-1" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 1rem" }}>
               <h2 style={{ margin: 0, flexGrow: 1 }}>{description}</h2>
-              {this.context.projectId < 0 && Object.keys(this.getSteps()).indexOf(this.context.wizardStep) > 1 && (
+              {this.context.projectId < 0 && Object.keys(this.state.steps).indexOf(this.context.wizardStep) > 1 && (
                 <button className="btn btn-secondary" onClick={this.saveDraft} style={{ marginLeft: "auto" }} title="Save Draft (Remains for 7 days)">
                   <div style={{ color: "white" }}>
                     <SvgIcon icon="save" size="1rem" />
