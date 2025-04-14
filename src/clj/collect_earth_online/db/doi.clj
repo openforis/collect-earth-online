@@ -113,6 +113,8 @@
         (update :closed_date (fn [x] (when x (str x))))
         (update :published_date #(str %)))))
 
+;;;; Side Effects
+
 (defn upload-deposition-files!
   [doi-id zip-file]
   (let [headers    (req-headers)]
