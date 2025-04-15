@@ -64,7 +64,10 @@
 (defn most-frequent-answers-per-sample
   [users-samples]
   (let [grouped-by-visible (group-by :visible_id users-samples)
-        freq-count (fn [answers] (first (apply max-key val (frequencies answers))))
+        freq-count (fn [answers]
+                     (let [freqs (frequencies answers)
+                           [val count] (apply max-key val freqs)]
+                       (if (= 1 count) nil val)))
         process-answers (fn [answers]
                           (apply merge-with into
                                  (map #(into {} (map (fn [[k v]] [k [(get v "answer")]])) (:saved_answers %)) answers)))

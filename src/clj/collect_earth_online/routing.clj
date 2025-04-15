@@ -60,9 +60,9 @@
    [:get  "/metrics"]                        {:handler     (render-page "/metrics")
                                               :auth-type   :metrics
                                               :auth-action :block}
-   [:get  "/project-qaqc-dashboard"] {:handler     (render-page "/project-qaqc-dashboard")
-                                      :auth-type   :admin
-                                      :auth-action :redirect}
+   [:get  "/project-qaqc-dashboard"]         {:handler     (render-page "/project-qaqc-dashboard")
+                                              :auth-type   :admin
+                                              :auth-action :redirect}
 
    ;; Users API
    [:get  "/get-institution-users"]          {:handler     users/get-institution-users

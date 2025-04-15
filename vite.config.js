@@ -66,7 +66,13 @@ export default defineConfig({
     },
   },
   plugins: [
-    svgr(),
+    svgr({
+      exportAsDefault: false,
+      svgrOptions: {
+        ref: true,
+        // optionally add more svgr config here
+      }
+    }),
     nodePolyfills(),
     react({
       fastRefresh: true,
