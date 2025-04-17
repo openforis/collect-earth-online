@@ -3,11 +3,13 @@ import ReactDOM from "react-dom";
 import InstitutionEditor from "./components/InstitutionEditor";
 import { NavigationBar } from "./components/PageComponents";
 import { KBtoBase64Length } from "./utils/generalUtils";
+import Modal from "./components/Modal";
 
 class CreateInstitution extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      modal: null,
       newInstitutionDetails: {
         name: "",
         base64Image: "",
@@ -21,13 +23,13 @@ class CreateInstitution extends React.Component {
 
   createInstitution = () => {
     if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
-      alert("Institution logos must be smaller than 500kb");
+      this.setState ({modal: {alert: {alertType: "Institution Creation Error", alertMessage: "Institution logos must be smaller than 500kb"}}});
     } else if (this.state.newInstitutionDetails.name.length === 0) {
-      alert("Institution must have a name.");
+      this.setState ({modal: {alert: {alertType: "Institution Creation Error", alertMessage: "Institution must have a name."}}});
     } else if (this.state.newInstitutionDetails.description.length === 0) {
-      alert("Institution must have a description.");
+      this.setState ({modal: {alert: {alertType: "Institution Creation Error", alertMessage: "Institution must have a description."}}});
     } else if (!this.state.newInstitutionDetails.acceptTOS === true) {
-      alert("Please accept the Terms of Service.");
+      this.setState ({modal: {alert: {alertType: "Institution Creation Error", alertMessage: "Please accept the Terms of Service."}}});
     } else {
       fetch("/create-institution", {
         method: "POST",
@@ -52,7 +54,7 @@ class CreateInstitution extends React.Component {
             return Promise.reject(data[1]);
           }
         })
-        .catch((message) => alert("Error creating institution.\n\n" + message));
+        .catch((message) => this.setState ({modal: {alert: {alertType: "Institution Creation Error", alertMessage: "Error creating institution.\n\n" + message}}}));
     }
   };
 
@@ -77,6 +79,7 @@ class CreateInstitution extends React.Component {
 
   render() {
     return (
+      <>
       <InstitutionEditor
         acceptTOS={this.state.newInstitutionDetails.acceptTOS}
         buttonGroup={this.renderButtonGroup}
@@ -87,6 +90,13 @@ class CreateInstitution extends React.Component {
         title="Create New Institution"
         url={this.state.newInstitutionDetails.url}
       />
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
+      </>
     );
   }
 }

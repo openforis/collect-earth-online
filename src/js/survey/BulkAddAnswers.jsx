@@ -4,9 +4,12 @@ import SvgIcon from "../components/svg/SvgIcon";
 import { ProjectContext } from "../project/constants";
 import { getNextInSequence, partition, last } from "../utils/sequence";
 
+import Modal from "../components/Modal";
+
 export default function BulkAddAnswers({ closeDialog, surveyQuestionId, surveyQuestion }) {
   const [newAnswers, setAnswers] = useState("");
   const { surveyQuestions, setProjectDetails } = useContext(ProjectContext);
+  const [state, setState] = useState({modal: null});
 
   const getAnswerErrors = (answerPairs) =>
     [
@@ -20,7 +23,7 @@ export default function BulkAddAnswers({ closeDialog, surveyQuestionId, surveyQu
     const answerPairs = partition(newAnswers.split(/[,|\n|\t] */), 2);
     const answerErrors = getAnswerErrors(answerPairs);
     if (answerErrors.length) {
-      alert(answerErrors.join("\n"));
+      setState ({modal: {alert: {alertType: "Bulk Answer Error", alertMessage: answerErrors.join("\n")}}});
     } else {
       const newId = getNextInSequence(Object.keys(surveyQuestion.answers));
       const updatedAnswers = answerPairs.reduce((answers, [color, answer], idx) => {
@@ -54,6 +57,11 @@ export default function BulkAddAnswers({ closeDialog, surveyQuestionId, surveyQu
       style={{ display: "block", background: "rgba(0,0,0,0.3)" }}
       tabIndex="-1"
     >
+      {state.modal?.alert &&
+         <Modal title={state.modal.alert.alertType}
+                onClose={()=>{setState({modal: null});}}>
+           {state.modal.alert.alertMessage}
+         </Modal>}
       <div className="modal-dialog" role="document">
         <div className="modal-content text-left" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">

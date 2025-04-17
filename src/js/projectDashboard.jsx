@@ -6,6 +6,8 @@ import { LoadingModal, NavigationBar } from "./components/PageComponents";
 
 import { mercator } from "./utils/mercator";
 
+import Modal from "./components/Modal";
+
 class ProjectDashboard extends React.Component {
   constructor(props) {
     super(props);
@@ -16,6 +18,7 @@ class ProjectDashboard extends React.Component {
       mapConfig: null,
       plotList: [],
       modalMessage: null,
+      modal: null
     };
   }
 
@@ -46,7 +49,7 @@ class ProjectDashboard extends React.Component {
       this.getPlotList(projectId),
     ]).catch((error) => {
       console.error(error);
-      alert("Error retrieving the project info. See console for details.");
+      this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error retrieving the project info. See console for details."}}});
     });
   };
 
@@ -55,7 +58,7 @@ class ProjectDashboard extends React.Component {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data === "") {
-          alert("No project found with ID " + projectId + ".");
+          this.setState ({modal: {alert: {alertType: "Project Error", alertMessage: "No project found with ID " + projectId + "."}}});
           window.location = "/home";
         } else {
           this.setState({ projectDetails: data });
@@ -120,6 +123,11 @@ class ProjectDashboard extends React.Component {
     return (
       <div className="d-flex flex-column full-height p-3" id="project-dashboard">
         {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <div className="bg-darkgreen">
           <h1>Project Dashboard</h1>
         </div>

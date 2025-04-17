@@ -9,6 +9,7 @@ import {
 } from "../utils/generalUtils";
 import { ProjectContext, plotLimit } from "./constants";
 import { mercator } from "../utils/mercator";
+import Modal from "../components/Modal";
 
 export class PlotDesign extends React.Component {
   constructor(props) {
@@ -18,6 +19,7 @@ export class PlotDesign extends React.Component {
       latMin: "",
       lonMax: "",
       latMax: "",
+      modal: null,
     };
   }
 
@@ -264,7 +266,7 @@ export class PlotDesign extends React.Component {
         });
       });
     } catch {
-      alert("Unknown error loading shape file.");
+      this.setState ({modal: {alert: {alertType: "ShapeFile Error", alertMessage: "Unknown error loading shape file."}}});
     }
   };
 
@@ -272,6 +274,12 @@ export class PlotDesign extends React.Component {
     const { aoiFileName } = this.context;
     return (
       <div className="d-flex flex-column">
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         <div className="d-flex">
           <label
             className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"

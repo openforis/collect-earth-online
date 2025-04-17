@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Modal from "./Modal";
 
 export function ProjectVisibilityPopup({ selectedProjects, editProjectsBulk }) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -89,6 +90,7 @@ export function ProjectVisibilityPopup({ selectedProjects, editProjectsBulk }) {
 }
 
 export function DownloadPopup({ downloadProjectsBulk, selectedProjects }) {
+  const [state, setState] = useState({modal: null});
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({
     "plots": false,
@@ -110,15 +112,21 @@ export function DownloadPopup({ downloadProjectsBulk, selectedProjects }) {
 
   const handleDownload = () => {
     if (selectedProjects.length === 0) {
-      alert("Please select at least one project to download.");
+      setState ({modal: {alert: {alertType: "Project Download Alert", alertMessage: "Please select at least one project to download."}}});
       return;
     }
+    setState ({modal: {alert: {alertType: "Project Download", alertMessage: `Downloading: ${selectedItems.join(", ")}`}}});
     downloadProjectsBulk(selectedProjects, selectedOptions);
     setIsPopupOpen(false);
   };
 
   return (
     <div style={{ position: "relative" }}>
+      {state.modal?.alert &&
+         <Modal title={state.modal.alert.alertType}
+                onClose={()=>{setState({modal: null});}}>
+           {state.modal.alert.alertMessage}
+         </Modal>}
       <button
         className="button-dropdown"
         onClick={togglePopup}

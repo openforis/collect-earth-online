@@ -7,6 +7,7 @@ import ReviewChanges from "./project/ReviewChanges";
 import ManageProject from "./project/ManageProject";
 
 import { ProjectContext, blankProject } from "./project/constants";
+import Modal from "./components/Modal";
 
 class Project extends React.Component {
   constructor(props) {
@@ -29,7 +30,8 @@ class Project extends React.Component {
       wizardStep: "overview",
       doiPath: "",
       successMessage: "",
-      projectDraftId: this.props.projectDraftId
+      projectDraftId: this.props.projectDraftId,
+      modal: null
     };
   }
 
@@ -40,7 +42,7 @@ class Project extends React.Component {
     if (this.props.institutionId > 0) {
       this.getInstitutionImagery(this.props.institutionId);
     } else if (!this.props.projectId > 0) {
-      alert("Invalid URL.");
+      this.setState ({modal: {alert: {alertType: "Project Admin Alert", alertMessage: "Invalid URL."}}});
       window.location = "/home";
     }
   }
@@ -90,13 +92,13 @@ class Project extends React.Component {
       })
       .catch((response) => {
         console.log(response);
-        alert("Error retrieving the imagery list. See console for details.");
+        this.setState ({modal: {alert: {alertType: "Imagery Error", alertMessage: "Error retrieving the imagery list. See console for details."}}});
       });
 
   getDoiPath = (projectId) => {
     fetch(`/doi?projectId=${projectId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => this.setState({ doiPath: data.doiPath }))
+      .then((data) => this.setState({ doiPath: data.doiPath }));
   }
 
   /// Functions
@@ -128,6 +130,11 @@ class Project extends React.Component {
           doiPath: this.state.doiPath,
         }}
       >
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
         {this.state.successMessage && <SuccessModal message={this.state.successMessage} onClose={() => this.setState({ successMessage: ""})}/>}
         <div>

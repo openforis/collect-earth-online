@@ -17,6 +17,8 @@ import { mercator } from "./utils/mercator";
 import { isArray, isNumber } from "./utils/generalUtils";
 import { gridRowHeight } from "./geodash/constants";
 
+import Modal from "./components/Modal";
+
 class Geodash extends React.Component {
   constructor(props) {
     super(props);
@@ -28,8 +30,8 @@ class Geodash extends React.Component {
       initCenter: null,
       initZoom: null,
       vectorSource: null,
-      toggleSamples: Boolean(props.plotSamples)
-
+      toggleSamples: Boolean(props.plotSamples),
+      modal: null
     };
   }
 
@@ -46,7 +48,8 @@ class Geodash extends React.Component {
       )
       .catch((response) => {
         console.log(response);
-        alert("Error initializing Geo-Dash. See console for details.");
+        this.setState({modal: {alert: {alertType: "GeoDash Alert",
+                                       alertMessage: "Error initializing Geo-Dash. See console for details."}}});
       });
   }
 
@@ -189,6 +192,11 @@ class Geodash extends React.Component {
 
     return (
       <React.Fragment>
+        {this.state.modal?.alert &&
+         (<Modal title={this.state.modal.alert.alertType}
+                 onClose={()=>{this.setState({modal: null});}}>
+            {this.state.modal.alert.alertMessage}
+          </Modal>)}
         <button
           style={{
             margin: "auto 1rem"
