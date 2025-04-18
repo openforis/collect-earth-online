@@ -10,6 +10,9 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 // // https://vitejs.dev/config/
 // // TODO add conditions (prod/dev)
 export default defineConfig({
+  resolve: {
+    extensions: [".js", ".jsx", ".ts", ".tsx", ".json", ".svg"],
+  },
   server: {
     origin: "http://127.0.0.1:8080",
     hmr: {
@@ -67,9 +70,9 @@ export default defineConfig({
   },
   plugins: [
     svgr({
-      exportAsDefault: false,
+      exportAsDefault: true,
       svgrOptions: {
-        ref: true,
+        ref: true
         // optionally add more svgr config here
       }
     }),
