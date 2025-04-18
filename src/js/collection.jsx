@@ -1909,6 +1909,7 @@ class ImageryOptions extends React.Component {
             id="grid-check"
             onChange={() => this.enableGrid()}
             type="checkbox"
+            style={{"margin-right": "10px"}}
           />
           <label className="form-check-label" htmlFor="grid-check">
             Enable Map Grid
