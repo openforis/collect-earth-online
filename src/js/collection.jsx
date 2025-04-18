@@ -1906,7 +1906,6 @@ class ImageryOptions extends React.Component {
             })}
           <input
             checked={this.state.enableGrid}
-            className="form-check-input"
             id="grid-check"
             onChange={() => this.enableGrid()}
             type="checkbox"
