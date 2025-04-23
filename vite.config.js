@@ -1,8 +1,6 @@
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 import react from "@vitejs/plugin-react";
-import resolve from "@rollup/plugin-node-resolve";
-import { babel } from "@rollup/plugin-babel";
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // import babel from "@rollup/plugin-babel";
@@ -10,9 +8,6 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 // // https://vitejs.dev/config/
 // // TODO add conditions (prod/dev)
 export default defineConfig({
-  resolve: {
-    extensions: [".js", ".jsx", ".ts", ".tsx", ".json", ".svg"],
-  },
   server: {
     origin: "http://127.0.0.1:8080",
     hmr: {
@@ -25,9 +20,8 @@ export default defineConfig({
     minify: false,
     manifest: true,
     sourcemap: true,
-    plugins: [resolve(),
-              babel({ exclude: "node_modules/**" }),
-              nodePolyfills(),
+    plugins: [
+      nodePolyfills()
              ],
     rollupOptions: {
       external: ["react-dom/client"],
@@ -71,6 +65,8 @@ export default defineConfig({
   plugins: [
     svgr({
       exportAsDefault: true,
+      enforce: 'pre',
+      include: '**/*.svg',
       svgrOptions: {
         ref: true
         // optionally add more svgr config here
