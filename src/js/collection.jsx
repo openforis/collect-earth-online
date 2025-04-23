@@ -1127,10 +1127,10 @@ class Collection extends React.Component {
         <div className="row no-gutters">
 
           {/* Left Sidebar (ImageryLayerOptions) - Now Absolutely Positioned */}
-          {this.state.modal?.alert &&
-         <Modal title={this.state.modal.alert.alertType}
+          {this.state?.modal?.alert &&
+         <Modal title={this.state?.modal?.alert?.alertType}
                 onClose={()=>{this.setState({modal: null});}}>
-           {this.state.modal.alert.alertMessage}
+           {this.state?.modal?.alert?.alertMessage}
          </Modal>}
           {this.state.currentProject?.type === "simplified" && (
             <div
@@ -1384,7 +1384,7 @@ class SideBar extends React.Component {
         id="sidebar"
         style={{ overflowY: "auto", overflowX: "hidden"}}
       >
-        {this.state.modal?.alert &&
+        {this.state?.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
                 onClose={()=>{this.setState({modal: null});}}>
            {this.state.modal.alert.alertMessage}
