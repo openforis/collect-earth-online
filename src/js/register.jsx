@@ -121,17 +121,6 @@ class Register extends React.Component {
                   onChange={() => this.setState({ acceptDataTOS: !this.state.acceptDataTOS })}
                   type="checkbox"
                 />
-                <label className="form-check-label" htmlFor="data-tos-check">
-                  I agree to the{" "}
-                  <a
-                    href="https://assets.planet.com/docs/Planet_ParticipantLicenseAgreement_NICFI.pdf"
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    NICFI Data Access Terms
-                  </a>
-                  .
-                </label>
               </div>
               <button className="btn btn-lightgreen float-right mb-2" type="submit">
                 Register

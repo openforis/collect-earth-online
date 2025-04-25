@@ -3,6 +3,7 @@
             [clojure.string    :as str]
             [clj-http.client   :as client]
             [triangulum.type-conversion :as tc]
+            [triangulum.database        :refer [call-sql]]
             [triangulum.utils           :as u]
             [triangulum.config          :refer [get-config]]
             [collect-earth-online.db.imagery :refer [get-imagery-source-config]]
@@ -11,20 +12,20 @@
 ;;; Cache options
 
 (def ^:private cache-max-age     (* 24 60 60 1000)) ; Once a day
-(def ^:private nicfi-layer-cache (atom nil))
+(def ^:private tfo-layer-cache (atom nil))
 (def ^:private cached-time       (atom nil))
 
 (defn- reset-cache! [layers]
   (reset! cached-time (System/currentTimeMillis))
-  (reset! nicfi-layer-cache layers))
+  (reset! tfo-layer-cache layers))
 
 (defn- valid-cache? []
-  (and (some? @nicfi-layer-cache)
+  (and (some? @tfo-layer-cache)
        (< (- (System/currentTimeMillis) @cached-time) cache-max-age)))
 
 ;;; Fill cache
 
-(defn nicfi-dates []
+(defn tfo-dates []
   (as-> (client/get (str "https://api.planet.com/basemaps/v1/mosaics?_page_size=150&api_key=" (get-config :proxy :nicfi-key))) $
     (:body $)
     (json/read-str $ :key-fn keyword)
@@ -99,13 +100,20 @@
     ;; TODO check JSON for errors and parse (front end) using "&EXCEPTIONS=application/json"
     (client/get url)))
 
-(defn get-nicfi-dates [& _]
+(defn get-tfo-dates [& _]
   (when-not (valid-cache?)
-    (reset-cache! (nicfi-dates)))
-  (data-response @nicfi-layer-cache))
+    (reset-cache! (tfo-dates)))
+  (data-response @tfo-layer-cache))
 
-(defn get-nicfi-tiles [{:keys [params]}]
-  (let [{:keys [x y z dataLayer band]} params]
+(defn get-tfo-tiles [{:keys [params]}]
+  (let [{:keys [x y z dataLayer band]} params
+        institution-id (tc/val->int (:institutionId params))
+        access-token   (->> institution-id
+                            (call-sql "get_tfo_imagery_by_institution")
+                            (first)
+                            (:source_config)
+                            (tc/jsonb->clj)
+                            (:access_token))]
     (client/get (format "https://tiles0.planet.com/basemaps/v1/planet-tiles/%s/gmap/%s/%s/%s.png?proc=%s&api_key=%s"
-                        dataLayer z x y band (get-config :proxy :nicfi-key))
+                        dataLayer z x y band access-token)
                 {:as :stream})))

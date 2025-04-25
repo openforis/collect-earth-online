@@ -1,6 +1,6 @@
 import { isValidJSON } from "../utils/generalUtils";
 
-export const nicfiLayers = [
+export const tfoLayers = [
   "2015-12_2016-05",
   "2016-06_2016-11",
   "2016-12_2017-05",
@@ -155,8 +155,8 @@ export const imageryOptions = [
     url: "https://developers.planet.com/docs/apis/data/",
   },
   {
-    type: "PlanetNICFI",
-    label: "Planet NICFI",
+    type: "PlanetTFO",
+    label: "Planet TFO",
     optionalProxy: false,
     defaultProxy: false,
     params: [

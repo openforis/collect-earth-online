@@ -105,7 +105,6 @@ export default class MapWidget extends React.Component {
       const sourceNameToPath = {
         Landsat: "filteredLandsat",
         Sentinel2: "filteredSentinel2",
-        NICFI: "filteredNicfi",
       };
       const path =
         (sourceType === "Composite" && sourceNameToPath[sourceName]) || "imageCollectionByIndex";
@@ -160,8 +159,8 @@ export default class MapWidget extends React.Component {
       this.props.imageryList[0];
     const basemapLayer = new TileLayer({
       source: mercator.createSource(
-        (widget.basemapType === "PlanetNICFI") ? 
-          {... sourceConfig, time: widget.basemapNICFIDate}
+        (widget.basemapType === "PlanetTFO") ? 
+          {... sourceConfig, time: widget.basemapTFODate}
         : sourceConfig,
         id,
         attribution,

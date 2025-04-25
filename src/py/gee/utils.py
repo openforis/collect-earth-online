@@ -5,7 +5,7 @@ import math
 import sys
 import json
 from ee.ee_exception import EEException
-from gee.inputs import getLandsat, getS1, getLandsatToa, getNICFI, getSentinel2Toa, calcNDVI, calcEVI, calcEVI2, calcNDMI, calcNDWI
+from gee.inputs import getLandsat, getS1, getLandsatToa, getTFO, getSentinel2Toa, calcNDVI, calcEVI, calcEVI2, calcNDMI, calcNDWI
 
 
 ########## Helper functions ##########
@@ -225,8 +225,8 @@ def filteredCollectionBySourceName(startDate, endDate, source):
         collection = getLandsatToa(**{'startDate':startDate, 'endDate':endDate})
     elif source == 'sentinel2':
         collection =  getSentinel2Toa({'start':startDate, 'end':endDate})
-    elif source == 'nicfi':
-        collection = getNICFI({'start':startDate, 'end':endDate})
+    elif source == 'TFO':
+        collection = getTFO({'start':startDate, 'end':endDate})
     
     return collection
 
@@ -407,7 +407,7 @@ def getTimeSeriesByIndex(sourceName, indexName, scale, coords, startDate, endDat
         collection = (getLandsatToa(startDate, endDate, geometry)
                       .select([indexName],['index']))
     elif sourceName.lower() == 'nicfi':
-        collection = getNICFI({
+        collection = getTFO({
             'start':startDate,
             'end':endDate
         }).select([indexName],['index'])
