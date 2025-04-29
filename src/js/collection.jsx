@@ -15,7 +15,7 @@ import SurveyCollection from "./survey/SurveyCollection";
 import {
   PlanetMenu,
   PlanetDailyMenu,
-  PlanetNICFIMenu,
+  PlanetTFOMenu,
   SecureWatchMenu,
   SentinelMenu,
   GEEImageMenu,
@@ -1901,7 +1901,7 @@ class ImageryOptions extends React.Component {
                 {
                   Planet: <PlanetMenu {...individualProps} />,
                   PlanetDaily: <PlanetDailyMenu {...individualProps} />,
-                  PlanetNICFI: <PlanetNICFIMenu {...individualProps} />,
+                  PlanetTFO: <PlanetTFOMenu {...individualProps} />,
                   SecureWatch: <SecureWatchMenu {...individualProps} />,
                   Sentinel1: <SentinelMenu {...individualProps} />,
                   Sentinel2: <SentinelMenu {...individualProps} />,

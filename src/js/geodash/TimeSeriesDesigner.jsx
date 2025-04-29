@@ -53,7 +53,7 @@ export default function TimeSeriesDesigner() {
     <>
       <GDSelect
         dataKey="sourceName"
-        items={["Landsat", "NICFI", "Custom"]}
+        items={["Landsat", "Custom"]}
         title="Imagery Source"
       />
       {getWidgetDesign("sourceName") === "Landsat" && (
@@ -62,9 +62,6 @@ export default function TimeSeriesDesigner() {
           items={["NDVI", "EVI", "EVI 2", "NDMI", "NDWI", "NBR"]}
           title="Band to graph"
         />
-      )}
-      {getWidgetDesign("sourceName") === "NICFI" && (
-        <GDSelect dataKey="indexName" items={["NDVI", "R", "G", "B", "N"]} title="Band to graph" />
       )}
       {getWidgetDesign("sourceName") === "Custom" && (
         <>

@@ -207,7 +207,7 @@ mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
   return geeSource;
 };
 
-mercator.newestNICFILayer = () => {
+mercator.newestTFOLayer = () => {
   const latestDate = new Date(new Date().setDate(1));
   const month = latestDate.getMonth().toString().padStart(2, "0");
   const dateMonth = `${latestDate.getFullYear()}-${month}`;
@@ -258,11 +258,11 @@ mercator.createSource = (
         `?api_key=${sourceConfig.accessToken}`,
       attributions: attribution,
     });
-  } else if (type === "PlanetNICFI") {
-    const dataLayer = (sourceConfig.time === "newest") ? mercator.newestNICFILayer() : sourceConfig.time;
+  } else if (type === "PlanetTFO") {
+    const dataLayer = (sourceConfig.time === "newest") ? mercator.newestTFOLayer() : sourceConfig.time;
     return new XYZ({
       url:
-       "get-nicfi-tiles?z={z}&x={x}&y={y}" +
+       "get-tfo-tiles?z={z}&x={x}&y={y}" +
         `&dataLayer=${dataLayer}` +
         `&band=${sourceConfig.band}` +
         `&imageryId=${imageryId}`,

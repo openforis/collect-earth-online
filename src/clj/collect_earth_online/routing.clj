@@ -211,11 +211,11 @@
                                                 :auth-type   :admin
                                                 :auth-action :block}
    ;; Imagery API
-   [:get  "/get-institution-imagery"]          {:handler imagery/get-institution-imagery}
+   [:get  "/get-institution-imagery"]          {:handler     imagery/get-institution-imagery}
    [:get  "/get-project-imagery"]              {:handler     imagery/get-project-imagery
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-public-imagery"]               {:handler imagery/get-public-imagery}
+   [:get  "/get-public-imagery"]               {:handler     imagery/get-public-imagery}
    [:post "/add-institution-imagery"]          {:handler     imagery/add-institution-imagery
                                                 :auth-type   :admin
                                                 :auth-action :block}
@@ -250,10 +250,10 @@
    [:get  "/get-securewatch-dates"]         {:handler     proxy/get-securewatch-dates
                                              :auth-type   :no-cross
                                              :auth-action :block}
-   [:get "/get-nicfi-dates"]                {:handler     proxy/get-nicfi-dates
+   [:get "/get-tfo-dates"]                  {:handler     proxy/get-tfo-dates
                                              :auth-type   :no-cross
                                              :auth-action :block}
-   [:get  "/get-nicfi-tiles"]               {:handler     proxy/get-nicfi-tiles
+   [:get  "/get-tfo-tiles"]                 {:handler     proxy/get-tfo-tiles
                                              :auth-type   :no-cross
                                              :auth-action :block}
 

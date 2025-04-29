@@ -36,16 +36,16 @@ def test_landsat_toa():
     ), "landsat toa blue band is not a float (may be masked)"
 
 
-def test_nicfi():
-    col = getNICFI({"startDate": start, "endDate": end})
+def test_tfo():
+    col = getTFO({"startDate": start, "endDate": end})
 
     assert (
         col.limit(1).size().getInfo() == 1
-    ), "nicfi collection doesnt have correct number of images"
+    ), "tfo collection doesnt have correct number of images"
     valid_image_test = col.max().reduceRegion(ee.Reducer.max(), region, 500)
     assert isinstance(
         valid_image_test.getInfo()["NDVI"], float
-    ), "nicfi NDVI band is not a float (may be masked)"
+    ), "tfo NDVI band is not a float (may be masked)"
 
 
 class TestLandsatSr:
