@@ -105,3 +105,9 @@
     (call-sql "delete_project_widgets" project-id)
     (call-sql "copy_project_widgets" template-id project-id)
     (data-response (return-widgets project-id))))
+
+(defn validate-vis-params [{:keys [params]}]
+  (let [img-path (:imgPath params)
+        vis-params (tc/json->clj (:visParams params))
+        vis-errors (utils/validateJSON img-path vis-params)]
+    (data-response vis-errors (when vis-errors {:status 262}))))

@@ -302,19 +302,7 @@ class WidgetLayoutEditor extends React.PureComponent {
       };
     }
   };
-
-  getWidgetErrors = () => {
-    const { title, widgetDesign } = this.state;
-    return [
-      !title.length && "You must add a title for the widget.",
-      widgetDesign.hasOwnProperty("visParams") &&
-        !isValidJSON(widgetDesign.visParams) &&
-        "You have entered invalid JSON for Image Parameters",
-      widgetDesign.hasOwnProperty("assetId") && !widgetDesign.assetId && "Asset ID is required.",
-    ].filter((e) => e);
-  };
-
-  buildNewWidget = () => {
+    buildNewWidget = () => {
     const { title, type, widgetDesign, basemapNICFIDate } = this.state;
     return {
       name: title,
@@ -324,8 +312,23 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
   };
 
-  createNewWidget = () => {
-    const errors = this.getWidgetErrors();
+  getWidgetErrors = async () => {
+    const { title, widgetDesign } = this.state;
+    const { assetId, visParams } = widgetDesign;
+    const validateJSONRequest = await fetch(`/geo-dash/validate-vis-params?imgPath=${assetId}&visParams=${visParams}`);
+    const validateJSONResponse = await validateJSONRequest.json();
+    return [
+      !title.length && "You must add a title for the widget.",
+      validateJSONResponse,
+      widgetDesign.hasOwnProperty("visParams") &&
+        !isValidJSON(widgetDesign.visParams) &&
+        "You have entered invalid JSON for Image Parameters",
+      widgetDesign.hasOwnProperty("assetId") && !widgetDesign.assetId && "Asset ID is required.",
+    ].filter((e) => e);
+  };
+
+  createNewWidget = async () => {
+    const errors = await this.getWidgetErrors();
     if (errors.length) {
       this.setState ({modal: {alert: {alertType: "Widget Creation Error", alertMessage: errors.join("\n\n")}}});
     } else {
@@ -347,11 +350,11 @@ class WidgetLayoutEditor extends React.PureComponent {
     this.widgetAPIWrapper("create-widget", newWidget);
   };
 
-  saveWidgetEdits = () => {
+  saveWidgetEdits = async () => {
     const {
       originalWidget: { id, layout },
     } = this.state;
-    const errors = this.getWidgetErrors();
+    const errors = await this.getWidgetErrors();
     if (errors.length) {
       this.setState ({modal: {alert: {alertType: "Save Widget Error", alertMessage: errors.join("\n\n")}}});
     } else {
