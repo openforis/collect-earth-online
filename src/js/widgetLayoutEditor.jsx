@@ -317,6 +317,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     const { assetId, visParams } = widgetDesign;
     const validateJSONRequest = await fetch(`/geo-dash/validate-vis-params?imgPath=${assetId}&visParams=${visParams}`);
     const validateJSONResponse = await validateJSONRequest.json();
+    this.props.closeDialogs();
     return [
       !title.length && "You must add a title for the widget.",
       validateJSONResponse,
@@ -330,7 +331,7 @@ class WidgetLayoutEditor extends React.PureComponent {
   createNewWidget = async () => {
     const errors = await this.getWidgetErrors();
     if (errors.length) {
-      this.setState ({modal: {alert: {alertType: "Widget Creation Error", alertMessage: errors.join("\n\n")}}});
+      this.setState ({modal: {alert: {alertType: "Widget Creation Error", alertMessage: errors.join("\n\n")}}});    
     } else {
       this.widgetAPIWrapper("create-widget", {
         layout: this.getNextLayout(),
@@ -356,7 +357,8 @@ class WidgetLayoutEditor extends React.PureComponent {
     } = this.state;
     const errors = await this.getWidgetErrors();
     if (errors.length) {
-      this.setState ({modal: {alert: {alertType: "Save Widget Error", alertMessage: errors.join("\n\n")}}});
+      this.setState ({modal: {onClose: "",
+        alert: {alertType: "Save Widget Error", alertMessage: errors.join("\n\n")}}});
     } else {
       this.widgetAPIWrapper("update-widget", {
         id,
