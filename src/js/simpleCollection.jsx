@@ -6,7 +6,7 @@ import { LoadingModal } from "./components/PageComponents";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 
-import { nicfiLayers } from "./imagery/imageryOptions";
+import { tfoLayers } from "./imagery/imageryOptions";
 import {
   last,
   everyObject,
@@ -1013,8 +1013,8 @@ function ImageryOptions(props) {
         props.imageryList.map(
           (imagery) =>
             imagery.sourceConfig &&
-            imagery.sourceConfig.type === "PlanetNICFI" && (
-              <PlanetNICFIMenu
+            imagery.sourceConfig.type === "PlanetTFO" && (
+              <PlanetTFOMenu
                 key={imagery.id}
                 currentPlot={props.currentPlot}
                 currentProjectBoundary={props.currentProjectBoundary}
@@ -1032,13 +1032,13 @@ function ImageryOptions(props) {
   );
 }
 
-export class PlanetNICFIMenu extends React.Component {
+export class PlanetTFOMenu extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       selectedTime:
         this.props.sourceConfig.time === "newest"
-          ? last(nicfiLayers)
+          ? last(tfoLayers)
           : this.props.sourceConfig.time,
       selectedBand: this.props.sourceConfig.band,
     };
@@ -1090,7 +1090,7 @@ export class PlanetNICFIMenu extends React.Component {
             onChange={(e) => this.setState({ selectedTime: e.target.value })}
             value={this.state.selectedTime}
           >
-            {nicfiLayers.map((time) => (
+            {tfoLayers.map((time) => (
               <option key={time} value={time}>
                 {time}
               </option>
