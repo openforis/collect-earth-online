@@ -1047,10 +1047,14 @@ RETURNS TABLE (
         extra_plot_info       json,
         extra_sample_info     json,
         sample_internal_id    integer,
-        guest_interpreters    json
+        guest_usernames       jsonb
 ) AS $$
 
-WITH simplified_query AS (
+WITH guest_users AS (
+  SELECT jsonb_agg(interpreter_name) AS guest_usernames
+  FROM data_sharing
+  WHERE project_rid = _project_id
+), simplified_query AS (
     SELECT pl.visible_id,
         s.visible_id,
         ST_X(ST_Centroid(sample_geom)) AS lon,
@@ -1075,9 +1079,7 @@ WITH simplified_query AS (
     INNER JOIN imagery ON imagery_uid = sv.imagery_rid
     INNER JOIN users u ON u.user_uid = up.user_rid
     WHERE pl.project_rid = _project_id
-),
-
-regular_query AS (
+), regular_query AS (
     SELECT pl.visible_id,
         s.visible_id,
         ST_X(ST_Centroid(sample_geom)) AS lon,
@@ -1105,9 +1107,11 @@ regular_query AS (
 )
 
 SELECT * FROM (
-    SELECT * FROM simplified_query WHERE _type = 'simplified'
+    SELECT *,
+           (SELECT guest_usernames FROM guest_users) AS guest_usernames
+    FROM simplified_query WHERE _type = 'simplified'
     UNION ALL
-    SELECT * FROM regular_query WHERE _type = 'regular'
+    SELECT *, NULL FROM regular_query WHERE _type = 'regular'
 ) AS final_result
 
 $$ LANGUAGE SQL;

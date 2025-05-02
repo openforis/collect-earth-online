@@ -327,7 +327,17 @@ class WidgetLayoutEditor extends React.PureComponent {
       widgetDesign.hasOwnProperty("assetId") && !widgetDesign.assetId && "Asset ID is required.",
     ].filter((e) => e);
   };
-
+  
+  buildNewWidget = () => {
+    const { title, type, widgetDesign, basemapTFODate } = this.state;
+    return {
+      name: title,
+      basemapTFODate,
+      type,
+      ...widgetDesign,
+    };
+  };
+  
   createNewWidget = async () => {
     const errors = await this.getWidgetErrors();
     if (errors.length) {
@@ -471,10 +481,10 @@ class WidgetLayoutEditor extends React.PureComponent {
             id="widgetTitle"
             onChange={(e) => this.updateTitle(e.target.value)}
             placeholder={
-              this.getWidgetDesign("basemapNICFIDate") ?
-                "Planet NICFI " +
-                this.getWidgetDesign("basemapNICFIDate").slice(
-                  34, this.getWidgetDesign("basemapNICFIDate").length - 7)
+              this.getWidgetDesign("basemapTFODate") ?
+                "Planet TFO " +
+                this.getWidgetDesign("basemapTFODate").slice(
+                  34, this.getWidgetDesign("basemapTFODate").length - 7)
                 : "Enter Title"}
             type="text"
             value={this.state.title}

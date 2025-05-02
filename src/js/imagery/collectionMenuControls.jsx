@@ -194,13 +194,13 @@ export class PlanetDailyMenu extends React.Component {
   }
 }
 
-export class PlanetNICFIMenu extends React.Component {
+export class PlanetTFOMenu extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       selectedTime: this.props.sourceConfig.time,
       selectedBand: this.props.sourceConfig.band,
-      nicfiLayers: [],
+      tfoLayers: [],
       isDisabledLeft: false,
       isDisabledRight: true
     };
@@ -208,7 +208,7 @@ export class PlanetNICFIMenu extends React.Component {
 
   componentDidMount() {
     this.updatePlanetLayer();
-    this.getNICFILayers();
+    this.getTFOLayers();
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -218,24 +218,24 @@ export class PlanetNICFIMenu extends React.Component {
    
     if (prevState.selectedTime !== this.state.selectedTime) {
       this.setState((state) => {
-        const { nicfiLayers, selectedTime } = state;
-        const index = nicfiLayers.indexOf(selectedTime);
+        const { tfoLayers, selectedTime } = state;
+        const index = tfoLayers.indexOf(selectedTime);
 
         return {
-          isDisabledLeft: index >= nicfiLayers.length - 1,
+          isDisabledLeft: index >= tfoLayers.length - 1,
           isDisabledRight: index <= 0
         }
       })
     }
   }
 
-  getNICFILayers = () => {
-    fetch("/get-nicfi-dates")
+  getTFOLayers = () => {
+    fetch("/get-tfo-dates")
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((layers) => {
         this.setState(
           {
-            nicfiLayers: layers,
+            tfoLayers: layers,
             ...(this.props.sourceConfig.time === "newest" && { selectedTime: layers[0] }),
           },
           this.updatePlanetLayer
@@ -255,16 +255,16 @@ export class PlanetNICFIMenu extends React.Component {
 
   switchImagery = (direction) => {
     this.setState((prevState) => {
-      const { nicfiLayers, selectedTime } = prevState;
-      const currentIndex = nicfiLayers.indexOf(selectedTime);
+      const { tfoLayers, selectedTime } = prevState;
+      const currentIndex = tfoLayers.indexOf(selectedTime);
 
       const move = direction === "forward" ? -1 : 1;
       const newIndex = currentIndex + move;
 
       // Check boundary conditions
-      if (newIndex < 0 || newIndex >= nicfiLayers.length) return {};
+      if (newIndex < 0 || newIndex >= tfoLayers.length) return {};
 
-      return { selectedTime: nicfiLayers[newIndex] };
+      return { selectedTime: tfoLayers[newIndex] };
     }, this.updatePlanetLayer);
   }
 
@@ -283,9 +283,9 @@ export class PlanetNICFIMenu extends React.Component {
   };
 
   render() {
-    const { nicfiLayers, selectedTime, selectedBand } = this.state;
+    const { tfoLayers, selectedTime, selectedBand } = this.state;
     return (
-      nicfiLayers.length > 0 && (
+      tfoLayers.length > 0 && (
         <div className="my-2" style={{ display: this.props.visible ? "block" : "none" }}>
           <div className="slide-container v-center justify-content-center">
             <label className="mb-0 mr-2" htmlFor="time-selection">
@@ -299,7 +299,7 @@ export class PlanetNICFIMenu extends React.Component {
               value={selectedTime}
               className="mb-0 mr-1"
             >
-              {nicfiLayers.map((time) => (
+              {tfoLayers.map((time) => (
                 <option key={time} value={time}>
                   {time.slice(34, time.length - 7)}
                 </option>

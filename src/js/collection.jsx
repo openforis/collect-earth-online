@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
@@ -15,7 +15,7 @@ import SurveyCollection from "./survey/SurveyCollection";
 import {
   PlanetMenu,
   PlanetDailyMenu,
-  PlanetNICFIMenu,
+  PlanetTFOMenu,
   SecureWatchMenu,
   SentinelMenu,
   GEEImageMenu,
@@ -1641,52 +1641,56 @@ class PlotNavigation extends React.Component {
   }
 }
 
-class ExternalTools extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      showExternalTools: true,
-      auxWindow: null,
-      showLearningMaterial: false,
-    };
-  }
+export const ExternalTools = ({
+  zoomMapToPlot,
+  showGeoDash,
+  toggleShowSamples,
+  toggleShowBoundary,
+  state,
+  currentPlot,
+  currentProject,
+  KMLFeatures,
+  projectType
+}) => {
+  const [showExternalTools, setShowExternalTools] = useState(true);
+  const [auxWindow, setAuxWindow] = useState(null);
+  const [showLearningMaterial, setShowLearningMaterial] = useState(false);
 
-  geoButtons = () => (
+  const geoButtons = () => (
     <div className="ExternalTools__geo-buttons d-flex justify-content-between mb-2" id="plot-nav">
       <input
         className="btn btn-outline-lightgreen btn-sm col-6 mr-1"
-        onClick={this.props.zoomMapToPlot}
+        onClick={zoomMapToPlot}
         type="button"
         value="Re-Zoom"
       />
       <input
         className="btn btn-outline-lightgreen btn-sm col-6"
-        onClick={this.props.showGeoDash}
+        onClick={showGeoDash}
         type="button"
         value="GeoDash"
       />
     </div>
   );
 
-  toggleViewButtons = () => (
+  const toggleViewButtons = () => (
     <div className="ExternalTools__geo-buttons d-flex justify-content-between mb-2" id="plot-nav">
       <input
-        className={`btn btn-outline-${this.props.state.showSamples ? "red" : "lightgreen"} btn-sm col-6 mr-1`}
-        onClick={this.props.toggleShowSamples}
+        className={`btn btn-outline-${state.showSamples ? "red" : "lightgreen"} btn-sm col-6 mr-1`}
+        onClick={toggleShowSamples}
         type="button"
-        value={`${this.props.state.showSamples ? "Hide" : "Show"} Samples`}
+        value={`${state.showSamples ? "Hide" : "Show"} Samples`}
       />
       <input
-        className={`btn btn-outline-${this.props.state.showBoundary ? "red" : "lightgreen"} btn-sm col-6`}
-        onClick={this.props.toggleShowBoundary}
+        className={`btn btn-outline-${state.showBoundary ? "red" : "lightgreen"} btn-sm col-6`}
+        onClick={toggleShowBoundary}
         type="button"
-        value={`${this.props.state.showBoundary ? "Hide" : "Show"} Boundary`}
+        value={`${state.showBoundary ? "Hide" : "Show"} Boundary`}
       />
     </div>
   );
 
-  loadGEEScript = () => {
-    const { currentPlot, currentProject } = this.props;
+  const loadGEEScript = () => {
     const urlParams = currentPlot.plotGeom.includes("Point")
       ? currentProject.plotShape === "circle"
         ? "center=[" +
@@ -1705,84 +1709,93 @@ class ExternalTools extends React.Component {
             5
           )
       : "geoJson=" + currentPlot.plotGeom;
-    if (this.state.auxWindow) this.state.auxWindow.close();
-    this.setState({
-      auxWindow: window.open(
-        "https://collect-earth-online.projects.earthengine.app/view/ceo-plot-ancillary-hotfix#" + urlParams
-      ),
-    });
+
+    if (auxWindow) auxWindow.close();
+    const win = window.open(
+      "https://collect-earth-online.projects.earthengine.app/view/ceo-plot-ancillary-hotfix#" + urlParams
+    );
+    setAuxWindow(win);
   };
 
-  geeButton = () => (
+  const geeButton = () => (
     <input
       className="btn btn-outline-lightgreen btn-sm btn-block my-2"
-      onClick={this.loadGEEScript}
+      onClick={loadGEEScript}
       type="button"
       value="Go to GEE Script"
     />
   );
 
-  kmlButton = () => (
+  const kmlButton = () => (
     <a
       className="btn btn-outline-lightgreen btn-sm btn-block my-2"
-      download={
-        "ceo_projectId-" +
-        this.props.currentProject.id +
-        "_plotId-" +
-        this.props.currentPlot.visibleId +
-        ".kml"
-      }
+      download={`ceo_projectId-${currentProject.id}_plotId-${currentPlot.visibleId}.kml`}
       href={
-        "data:earth.kml+xml application/vnd.google-earth.kmz, " +
-          encodeURIComponent(this.props.KMLFeatures)
+        "data:earth.kml+xml application/vnd.google-earth.kmz," +
+        encodeURIComponent(KMLFeatures)
       }
     >
       Download Plot KML
     </a>
   );
 
-  learningMaterialButton = () => (
+  const learningMaterialButton = () => (
     <input
       className="btn btn-outline-lightgreen btn-sm btn-block my-2"
-      onClick={this.toggleLearningMaterial}
+      onClick={() => setShowLearningMaterial(prev => !prev)}
       type="button"
       value="Interpretation Instructions"
     />
   );
 
-  toggleLearningMaterial = () => {
-    this.setState(prevState => ({
-      showLearningMaterial: !prevState.showLearningMaterial
-    }));
+  const openInGoogleEarth = () => {
+    const plotGeom = JSON.parse(currentPlot?.plotGeom || "{}");
+    if (!plotGeom?.coordinates || plotGeom.coordinates.length < 2) {
+      console.warn("Invalid coordinates");
+      return;
+    }
+    const [lng, lat] = plotGeom.coordinates;
+    const url = `https://earth.google.com/web/@${lat},${lng},1000a,100d,35y,0h,0t,0r`;
+    window.open(url, "_blank");
   };
 
-  render() {
-    return this.props.currentPlot.id ? (
-      <>
-        <CollapsibleTitle
-          showGroup={this.state.showExternalTools}
-          title="External Tools"
-          toggleShow={() => this.setState({ showExternalTools: !this.state.showExternalTools })}
+  const renderGoogleEarthButton = () => (
+    <input
+      className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+      type="button"
+      value="Go to Google Earth Web"
+      onClick={openInGoogleEarth}
+    />
+  );
+
+  if (!currentPlot.id) return null;
+
+  return (
+    <>
+      <CollapsibleTitle
+        showGroup={showExternalTools}
+        title="External Tools"
+        toggleShow={() => setShowExternalTools(prev => !prev)}
+      />
+      {showExternalTools && (
+        <div className="mx-1">
+          {geoButtons()}
+          {projectType !== "simplified" && toggleViewButtons()}
+          {KMLFeatures && kmlButton()}
+          {currentProject.projectOptions.showGEEScript && geeButton()}
+          {learningMaterialButton()}
+          {renderGoogleEarthButton()}
+        </div>
+      )}
+      {showLearningMaterial && (
+        <LearningMaterialModal
+          learningMaterial={currentProject.learningMaterial}
+          onClose={() => setShowLearningMaterial(false)}
         />
-        {this.state.showExternalTools && (
-          <div className="mx-1">
-            {this.geoButtons()}
-            {this.props.projectType !== "simplified" ? this.toggleViewButtons() : null}
-            {this.props.KMLFeatures && this.kmlButton()}
-            {this.props.currentProject.projectOptions.showGEEScript && this.geeButton()}
-            {this.learningMaterialButton()}
-          </div>
-        )}
-        {this.state.showLearningMaterial && (
-          <LearningMaterialModal
-            learningMaterial={this.props.currentProject.learningMaterial}
-            onClose={this.toggleLearningMaterial}
-          />
-        )}
-      </>
-    ) : null;
-  }
-}
+      )}
+    </>
+  );
+};
 
 class PlotInformation extends React.Component {
   constructor(props) {
@@ -1901,7 +1914,7 @@ class ImageryOptions extends React.Component {
                 {
                   Planet: <PlanetMenu {...individualProps} />,
                   PlanetDaily: <PlanetDailyMenu {...individualProps} />,
-                  PlanetNICFI: <PlanetNICFIMenu {...individualProps} />,
+                  PlanetTFO: <PlanetTFOMenu {...individualProps} />,
                   SecureWatch: <SecureWatchMenu {...individualProps} />,
                   Sentinel1: <SentinelMenu {...individualProps} />,
                   Sentinel2: <SentinelMenu {...individualProps} />,

@@ -7,7 +7,7 @@ from gee.utils import initialize, listAvailableBands, imageToMapId, imageCollect
     getTimeSeriesByIndex, getStatistics, getDegradationPlotsByPoint, getDegradationPlotsByPointS1, \
     getDegradationTileUrlByDate, getDegradationTileUrlByDateS1, safeParseJSON, filteredNicfiCompositeToMapId
 from gee.planet import getPlanetMapID
-from gee.inputs import getLandsatToa, getNICFI
+from gee.inputs import getLandsatToa, getTFO
 
 
 def safeListGet(l, idx, default=None):
@@ -81,7 +81,7 @@ def filteredNicfi(requestDict):
     startDate = getDefault(requestDict, 'startDate', '1990-01-01')
     endDate = getDefault(requestDict, 'endDate', '2023-01-01')
     values = filteredNicfiCompositeToMapId(
-        getNICFI({'start':startDate, 'end':endDate}),
+        getTFO({'start':startDate, 'end':endDate}),
         {
             'min': getDefault(requestDict, 'min', '113,113,113'),
             'max': getDefault(requestDict, 'max', '1465,1465,1465'),

@@ -14,14 +14,12 @@ export default function PreImageCollectionDesigner({ isDual = false, prefixPath 
   const availableBands = {
     Landsat: "BLUE, GREEN,RED, NIR, SWIR1, TEMP, SWIR2",
     Sentinel2: "B1, B2, B3, B4, B5, B6, B7, B8, B8A, B9, B10, B11, B12, QA10, QA20, QA60",
-    NICFI: " R, G, B, N",
   };
 
   const sourceName = getWidgetDesign("sourceName");
 
   const sourceToItems = {
     Landsat: ["NDVI", "EVI", "EVI 2", "NDMI", "NDWI"],
-    NICFI: ["NDVI", "R", "G", "B", "N"],
     Sentinel2: ["NDVI", "EVI", "EVI 2", "NDMI", "NDWI"],
   };
 
@@ -30,7 +28,7 @@ export default function PreImageCollectionDesigner({ isDual = false, prefixPath 
       {!isDual && <BasemapSelector />}
       <GDSelect
         dataKey="sourceName"
-        items={["Landsat", "Sentinel-2", "NICFI"]}
+        items={["Landsat", "Sentinel-2"]}
         prefixPath={prefixPath}
         title="Imagery Source"
       />

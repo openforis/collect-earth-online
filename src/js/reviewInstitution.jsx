@@ -572,15 +572,15 @@ const ImageryList = (
   }) => {
     const [imageryToEdit, setImageryToEdit] = useState(null);
     const [imageryList, setImageryList] = useState([]);
-    const [nicfiLayers, setNicfiLayers] = useState([]);
+    const [tfoLayers, setTfoLayers] = useState([]);
     const [messageBox, setMessageBox] = useState(null);
     const [selectedImagery, setSelectedImagery] = useState([]);
 
-    // Fetch NICFI layers
+    // Fetch planet tfo layers
     useEffect(() => {
-      fetch("/get-nicfi-dates")
+      fetch("/get-tfo-dates")
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((layers) => setNicfiLayers(layers))
+        .then((layers) => setTfoLayers(layers))
         .catch((error) => console.error(error));
     }, []);
 
@@ -716,7 +716,7 @@ const ImageryList = (
         hideEditMode={hideEditMode}
         imageryToEdit={imageryToEdit}
         institutionId={institutionId}
-        nicfiLayers={nicfiLayers}
+        tfoLayers={tfoLayers}
         titleIsTaken={titleIsTaken}
       />
     ) : (
@@ -1108,19 +1108,19 @@ class NewImagery extends React.Component {
   };
 
   render() {
-    const { nicfiLayers, imageryToEdit } = this.props;
+    const { tfoLayers, imageryToEdit } = this.props;
     const isNewImagery = imageryToEdit.id === -1;
     const { type, params, optionalProxy } = imageryOptions[this.state.selectedType];
     // This is annoyingly hard coded.
     const displayParams =
-          type === "PlanetNICFI"
+          type === "PlanetTFO"
           ? [
             params[0],
             {
               ...params[1],
               options: [
                 ...params[1].options,
-                ...nicfiLayers.map((l) => ({ label: l.slice(34, l.length - 7), value: l })),
+                ...tfoLayers.map((l) => ({ label: l.slice(34, l.length - 7), value: l })),
               ],
             },
             params[2],

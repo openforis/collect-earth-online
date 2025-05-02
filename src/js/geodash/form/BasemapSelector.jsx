@@ -7,13 +7,13 @@ import SvgIcon from "../../components/svg/SvgIcon";
 export default function BasemapSelector() {
   const { widget, widgetDesign, setWidgetDesign, getWidgetDesign, imagery, getInstitutionImagery, institutionId } =
         useContext(EditorContext);
-  const [nicfiLayers, setNICFILayers] = useState([]);
+  const [TFOLayers, setTFOLayers] = useState([]);
   const [imageryType, setImageryType] = useState("");
   const [basemap, setBasemap] = useState(imagery.filter((i)=>i.id === getWidgetDesign("basemapId")));
 
-  function nicfiDateSelector(){
+  function tfoDateSelector(){
     const options = (
-      nicfiLayers || []).map(
+      tfoLayers || []).map(
         (l)=>{
           const name = l.slice(34, l.length - 7); 
           return (
@@ -26,36 +26,36 @@ export default function BasemapSelector() {
       );    
     return (
       <div>
-        <label htmlFor="nicfi-layer">Select Date:</label> 
+        <label htmlFor="tfo-layer">Select Date:</label> 
         <select
           className="form-control"
-          id="nicfi-layer"
+          id="tfo-layer"
           onChange={(e)=>{            
-            setWidgetDesign("basemapNICFIDate", e.target.value);
+            setWidgetDesign("basemapTFODate", e.target.value);
           }}
           value={
-            getWidgetDesign("basemapNICFIDate")}         
+            getWidgetDesign("basemapTFODate")}         
         >          
           {options}
         </select>
       </div>);
   }
   
-  const getNICFILayers = () => {
-    fetch("/get-nicfi-dates")
+  const getTFOLayers = () => {
+    fetch("/get-tfo-dates")
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((layers) => {
-        setNICFILayers(layers);
-        setWidgetDesign("basemapNICFIDate", widget[0].basemapNICFIDate);        
+        setTFOLayers(layers);
+        setWidgetDesign("basemapTFODate", widget[0].basemapTFODate);        
       })
       .catch((error) => console.error(error));
   };
   
   useEffect(()=> {
     setWidgetDesign("basemapType", imageryType);
-    (imageryType === "PlanetNICFI") ?
-      getNICFILayers() 
-      : setWidgetDesign("basemapNICFIDate", null);
+    (imageryType === "PlanetTFO") ?
+      getTFOLayers() 
+      : setWidgetDesign("basemapTFODate", null);
   }, [imageryType]);
   
   useEffect(()=>{
@@ -92,7 +92,7 @@ export default function BasemapSelector() {
           </option>
         ))}
       </select>
-      {(imageryType === "PlanetNICFI") && nicfiDateSelector()}
+      {(imageryType === "PlanetTFO") && tfoDateSelector()}
       <div style={{ fontSize: ".85em", padding: "0 .5rem" }}>
         Adding imagery to basemaps is available on the&nbsp;
         <a

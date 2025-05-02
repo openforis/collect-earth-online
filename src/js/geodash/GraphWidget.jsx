@@ -102,7 +102,7 @@ export default class GraphWidget extends React.Component {
   getScale = (widget) => {
     if (widget.sourceName === "Landsat") {
       return 30.0;
-    } else if (widget.sourceName === "NICFI") {
+    } else if (widget.sourceName === "TFO") {
       return 3.5;
     } else if (widget.sourceName === "Custom") {
       return Number(widget.scale);
