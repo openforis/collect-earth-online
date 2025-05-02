@@ -1749,12 +1749,12 @@ export const ExternalTools = ({
   );
 
   const openInGoogleEarth = () => {
-    const plotGeom = JSON.parse(currentPlot?.plotGeom || "{}");
-    if (!plotGeom?.coordinates || plotGeom.coordinates.length < 2) {
+    const plotGeom = mercator.getCentroid((currentPlot?.plotGeom || "{}"), true);
+    if (!plotGeom || plotGeom.length < 2) {
       console.warn("Invalid coordinates");
       return;
     }
-    const [lng, lat] = plotGeom.coordinates;
+    const [lng, lat] = plotGeom;
     const url = `https://earth.google.com/web/@${lat},${lng},1000a,100d,35y,0h,0t,0r`;
     window.open(url, "_blank");
   };

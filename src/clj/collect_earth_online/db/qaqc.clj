@@ -26,7 +26,7 @@
   [samples-disagreement]
   (let [disagreements-list (flatten (map :disagreements samples-disagreement))
         number-of-answers  (count disagreements-list)]
-    (if (> number-of-answers 0)
+    (if (> number-of-answers 1)
       (/ (reduce (fn [acc d] (+ acc (first (vals d)))) 0 disagreements-list)
          number-of-answers)
       0)))

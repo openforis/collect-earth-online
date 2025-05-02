@@ -31,6 +31,7 @@ import { fromExtent, fromCircle } from "ol/geom/Polygon";
 import { getArea, getDistance } from "ol/sphere";
 import { formatDateISO, isNumber } from "./generalUtils";
 import { mapboxAttributionText } from "../imagery/mapbox-attribution";
+import { getCenter } from 'ol/extent';
 
 /** ****************************************************************************
  ***
@@ -1512,6 +1513,29 @@ mercator.calculatePlotWidth = (latMin, lonMin, lonMax) => {
 
   return getDistance(point1, point2).toFixed(2);
 };
+
+mercator.getCentroid = (geoJson, reprojectToMap) => {
+  if (!geoJson) return [0, 0];
+
+  try {
+    const format = new GeoJSON();
+    const geometry = format.readGeometry(geoJson, {
+      dataProjection: 'EPSG:4326',
+      featureProjection: reprojectToMap ? 'EPSG:3857' : 'EPSG:4326',
+    });
+
+    const center = getCenter(geometry.getExtent());
+
+    return reprojectToMap
+      ? transform(center, 'EPSG:3857', 'EPSG:4326')
+      : center;
+
+  } catch (e) {
+    console.error("Error computing centroid:", e);
+    return [0, 0];
+  }
+};
+
 
 /*****************************************************************************
  ***
