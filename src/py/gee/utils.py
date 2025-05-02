@@ -75,6 +75,52 @@ def safeParseJSON(val):
                 return {}
 
 
+def validateJSON(image, params):
+    try:
+        dummy_img = ee.Image(image)
+        visd_img = dummy_img.visualize(**params)
+        vis_info = visd_img.getInfo()
+        return None
+    except Exception as e:
+        return str(e)
+
+
+'''def sanitize_vis_params(vis_params):
+    """Clean and validate visParams before use"""
+    valid_params = {}
+    
+    # Validate bands parameter
+    if 'bands' in vis_params:
+        bands = vis_params['bands']
+        if isinstance(bands, (list, tuple)) and all(isinstance(b, str) for b in bands):
+            valid_params['bands'] = list(bands)
+    
+    # Validate min/max
+    if 'min' in vis_params and 'max' in vis_params:
+        try:
+            valid_params['min'] = float(vis_params['min'])
+            valid_params['max'] = float(vis_params['max'])
+        except (TypeError, ValueError):
+            pass  # Skip invalid min/max
+    
+    # Validate palette (accepts list of colors or CSS string)
+    if 'palette' in vis_params:
+        palette = vis_params['palette']
+        if isinstance(palette, (list, tuple)):
+            valid_params['palette'] = list(palette)
+        elif isinstance(palette, str):
+            valid_params['palette'] = palette
+    
+    # Add other parameters you want to support
+    for param in ['gamma', 'opacity', 'gain']:
+        if param in vis_params:
+            try:
+                valid_params[param] = float(vis_params[param])
+            except (TypeError, ValueError):
+                pass
+    
+    return valid_params'''
+
 ########## Helper routes ##########
 
 

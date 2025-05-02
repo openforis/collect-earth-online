@@ -41,7 +41,7 @@ export default function Modal({
               &times;
             </button>
           </div>
-          <div className="modal-body">{children}</div>
+          <div className="modal-body" style={{"white-space": "pre-line"}}>{children}</div>
           <div className="modal-footer">
             <button className="btn btn-secondary btn-sm" onClick={onClose} type="button">
               {closeText}
