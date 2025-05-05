@@ -285,7 +285,7 @@ CREATE OR REPLACE FUNCTION add_imagery_to_all_institution_projects(_imagery_id i
 $$ LANGUAGE SQL;
 
 -- Delete imagery by id in bulk
-CREATE OR REPLACE FUNCTION archive_imagery_bulk(_imagery_ids_text TEXT)
+CREATE OR REPLACE FUNCTION archive_imagery_bulk(_imagery_ids_text TEXT, _institution_id INTEGER)
 RETURNS VOID AS $$
 DECLARE
     imagery_ids INTEGER[];
@@ -295,18 +295,34 @@ BEGIN
 
     UPDATE imagery
     SET archived = true
-    WHERE imagery_uid = ANY(imagery_ids);
+    WHERE imagery_uid IN (
+        SELECT imagery_uid FROM imagery
+        WHERE imagery_uid = ANY(imagery_ids)
+          AND institution_rid = _institution_id
+    );
 
     UPDATE projects
     SET imagery_rid = (SELECT select_first_public_imagery())
-    WHERE imagery_rid = ANY(imagery_ids);
+    WHERE imagery_rid IN (
+        SELECT imagery_uid FROM imagery
+        WHERE imagery_uid = ANY(imagery_ids)
+          AND institution_rid = _institution_id
+    );
 
     UPDATE project_widgets
     SET widget = jsonb_set(widget, '{"basemapId"}', to_jsonb((SELECT select_public_osm())))
-    WHERE (widget->>'basemapId')::integer = ANY(imagery_ids);
+    WHERE (widget->>'basemapId')::integer IN (
+        SELECT imagery_uid FROM imagery
+        WHERE imagery_uid = ANY(imagery_ids)
+          AND institution_rid = _institution_id
+    );
 
     DELETE FROM project_imagery
-    WHERE imagery_rid = ANY(imagery_ids);
+    WHERE imagery_rid IN (
+        SELECT imagery_uid FROM imagery
+        WHERE imagery_uid = ANY(imagery_ids)
+          AND institution_rid = _institution_id
+    );
 
 END;
 $$ LANGUAGE plpgsql;
@@ -325,12 +341,19 @@ BEGIN
     
     UPDATE imagery
     SET visibility = _visibility
-    WHERE imagery_uid = ANY(imagery_ids);
+    WHERE imagery_uid IN (
+        SELECT imagery_uid FROM imagery
+        WHERE imagery_uid = ANY(imagery_ids)
+          AND institution_rid = _institution_id
+    );
 
     UPDATE projects
     SET imagery_rid = (SELECT select_first_public_imagery())
-    WHERE imagery_rid = ANY(imagery_ids)
-        AND institution_rid <> _institution_id;
+    WHERE imagery_rid IN (
+        SELECT imagery_uid FROM imagery
+        WHERE imagery_uid = ANY(imagery_ids)
+          AND institution_rid = _institution_id
+    );
 END;
 $$ LANGUAGE plpgsql;
 
