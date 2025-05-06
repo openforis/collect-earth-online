@@ -302,18 +302,32 @@ class WidgetLayoutEditor extends React.PureComponent {
       };
     }
   };
+    buildNewWidget = () => {
+    const { title, type, widgetDesign, basemapNICFIDate } = this.state;
+    return {
+      name: title,
+      basemapNICFIDate,
+      type,
+      ...widgetDesign,
+    };
+  };
 
-  getWidgetErrors = () => {
+  getWidgetErrors = async () => {
     const { title, widgetDesign } = this.state;
+    const { assetId, visParams } = widgetDesign;
+    const validateJSONRequest = await fetch(`/geo-dash/validate-vis-params?imgPath=${assetId}&visParams=${visParams}`);
+    const validateJSONResponse = await validateJSONRequest.json();
+    this.props.closeDialogs();
     return [
       !title.length && "You must add a title for the widget.",
+      validateJSONResponse,
       widgetDesign.hasOwnProperty("visParams") &&
         !isValidJSON(widgetDesign.visParams) &&
         "You have entered invalid JSON for Image Parameters",
       widgetDesign.hasOwnProperty("assetId") && !widgetDesign.assetId && "Asset ID is required.",
     ].filter((e) => e);
   };
-
+  
   buildNewWidget = () => {
     const { title, type, widgetDesign, basemapTFODate } = this.state;
     return {
@@ -323,11 +337,11 @@ class WidgetLayoutEditor extends React.PureComponent {
       ...widgetDesign,
     };
   };
-
-  createNewWidget = () => {
-    const errors = this.getWidgetErrors();
+  
+  createNewWidget = async () => {
+    const errors = await this.getWidgetErrors();
     if (errors.length) {
-      this.setState ({modal: {alert: {alertType: "Widget Creation Error", alertMessage: errors.join("\n\n")}}});
+      this.setState ({modal: {alert: {alertType: "Widget Creation Error", alertMessage: errors.join("\n\n")}}});    
     } else {
       this.widgetAPIWrapper("create-widget", {
         layout: this.getNextLayout(),
@@ -347,13 +361,14 @@ class WidgetLayoutEditor extends React.PureComponent {
     this.widgetAPIWrapper("create-widget", newWidget);
   };
 
-  saveWidgetEdits = () => {
+  saveWidgetEdits = async () => {
     const {
       originalWidget: { id, layout },
     } = this.state;
-    const errors = this.getWidgetErrors();
+    const errors = await this.getWidgetErrors();
     if (errors.length) {
-      this.setState ({modal: {alert: {alertType: "Save Widget Error", alertMessage: errors.join("\n\n")}}});
+      this.setState ({modal: {onClose: "",
+        alert: {alertType: "Save Widget Error", alertMessage: errors.join("\n\n")}}});
     } else {
       this.widgetAPIWrapper("update-widget", {
         id,
