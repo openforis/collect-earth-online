@@ -4,6 +4,7 @@ import { LoadingModal, NavigationBar } from "./components/PageComponents";
 import { mercator } from "./utils/mercator";
 import { sortAlphabetically } from "./utils/generalUtils";
 import SvgIcon from "./components/svg/SvgIcon";
+import Modal from "./components/Modal";
 
 class Home extends React.Component {
   constructor(props) {
@@ -15,6 +16,7 @@ class Home extends React.Component {
       showSidePanel: true,
       userInstitutions: [],
       modalMessage: "Loading institutions",
+      modal: null
     };
   }
 
@@ -22,7 +24,7 @@ class Home extends React.Component {
     Promise.all([this.getImagery(), this.getInstitutions(), this.getProjects()])
       .catch((response) => {
         console.log(response);
-        alert("Error retrieving the collection data. See console for details.");
+        this.setState ({modal: {alert: {alertType: "Collection Alert", alertMessage: "Error retrieving the collection data. See console for details."}}});
       })
       .finally(() => this.setState({ modalMessage: null }));
   }
@@ -99,6 +101,11 @@ class Home extends React.Component {
             />
           </div>
         </div>
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
       </div>
     );
@@ -112,6 +119,7 @@ class MapPanel extends React.Component {
       mapConfig: null,
       clusterExtent: [],
       clickedFeatures: [],
+      modal: null,
     };
   }
 
@@ -202,6 +210,11 @@ class MapPanel extends React.Component {
         }
         id="mapPanel"
       >
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <div
           className="bg-lightgray"
           id="toggle-map-button"
@@ -709,11 +722,13 @@ class ProjectPopup extends React.Component {
   }
 }
 
+
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <Home userId={session.userId || -1} userRole={session.userRole || ""} />
     </NavigationBar>,
+    
     document.getElementById("app")
   );
 }

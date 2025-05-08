@@ -1,8 +1,6 @@
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 import react from "@vitejs/plugin-react";
-import resolve from "@rollup/plugin-node-resolve";
-import { babel } from "@rollup/plugin-babel";
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // import babel from "@rollup/plugin-babel";
@@ -22,9 +20,8 @@ export default defineConfig({
     minify: false,
     manifest: true,
     sourcemap: true,
-    plugins: [resolve(),
-              babel({ exclude: "node_modules/**" }),
-              nodePolyfills(),
+    plugins: [
+      nodePolyfills()
              ],
     rollupOptions: {
       external: ["react-dom/client"],
@@ -66,7 +63,15 @@ export default defineConfig({
     },
   },
   plugins: [
-    svgr(),
+    svgr({
+      exportAsDefault: true,
+      enforce: 'pre',
+      include: '**/*.svg',
+      svgrOptions: {
+        ref: true
+        // optionally add more svgr config here
+      }
+    }),
     nodePolyfills(),
     react({
       fastRefresh: true,

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
@@ -15,7 +15,7 @@ import SurveyCollection from "./survey/SurveyCollection";
 import {
   PlanetMenu,
   PlanetDailyMenu,
-  PlanetNICFIMenu,
+  PlanetTFOMenu,
   SecureWatchMenu,
   SentinelMenu,
   GEEImageMenu,
@@ -60,6 +60,7 @@ class Collection extends React.Component {
       inReviewMode: false,
       mapConfig: null,
       messageBox: null,
+      modal: null,
       plotList: [],
       plotters: [],
       userPlotList: [],
@@ -273,7 +274,7 @@ class Collection extends React.Component {
         })
         .catch((response) => {
           console.log(response);
-          alert("Error retrieving the project info. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Project Info Alert", alertMessage: "Error retrieving the project info. See console for details."}}});
         })
     );
 
@@ -416,7 +417,7 @@ class Collection extends React.Component {
 
   warnOnNoSamples = (plotData) => {
     if (plotData.samples.length === 0 && !this.state.currentProject.allowDrawnSamples) {
-      alert("This plot has no samples. Please flag the plot.");
+      this.setState ({modal: {alert: {alertType: "Plot Collection Alert", alertMessage: "This plot has no samples. Please flag the plot."}}});
       return false;
     } else {
       return true;
@@ -447,9 +448,7 @@ class Collection extends React.Component {
             const err = (direction === "id" ? "Plot not" : "No more plots") +
                   " found for this navigation mode.";
             const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
-            alert(
-              inReviewMode ? err + reviewModeWarning : err
-            );
+            this.setState ({modal: {alert: {alertType: "Plot Data Error", alertMessage: inReviewMode ? err + reviewModeWarning : err}}});
           } else {
             this.setState({
               userPlotList: data,
@@ -467,7 +466,7 @@ class Collection extends React.Component {
         })
         .catch((response) => {
           console.error(response);
-          alert("Error retrieving plot data. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Plot Data Retrieval Error", alertMessage: "Error retrieving plot data. See console for details."}}});
         })
     );
   };
@@ -519,7 +518,7 @@ class Collection extends React.Component {
         this.getPlotData(newPlot, "id");
       }
     } else {
-      alert("Please enter a number to go to plot.");
+      this.setState ({modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}});
     }
   };
 
@@ -537,9 +536,7 @@ class Collection extends React.Component {
     }).then((response) => {
       if (!response.ok) {
         console.log(response);
-        alert(
-          "Error maintaining plot lock. Your work may get overwritten. See console for details."
-        );
+        this.setState ({modal: {alert: {alertType: "Plot Lock Error", alertMessage: "Error maintaining plot lock. Your work may get overwritten. See console for details."}}});
       }
     });
   };
@@ -784,7 +781,7 @@ class Collection extends React.Component {
             return this.navToNextPlot(true);
           } else {
             console.log(response);
-            alert("Error flagging plot as bad. See console for details.");
+            this.setState ({modal: {alert: {alertType: "Plot Flagging Error", alertMessage: "Error flagging plot as bad. See console for details."}}});
           }
         })
       );
@@ -823,7 +820,7 @@ class Collection extends React.Component {
           if (this.state.inReviewMode) {
             this.setState({ remainingPlotters: this.state.remainingPlotters.filter((plotter) => plotter.userId != this.state.currentUserId) });
             if(this.state.remainingPlotters.length > 0) {
-              alert("There are more interpretations for this plot.\nPlease select the user from the user dropdown to review another interpretation.")
+              this.setState ({modal: {alert: {alertType: "Plot Interpretation Alert", alertMessage: "There are more interpretations for this plot.\nPlease select the user from the user dropdown to review another interpretation."}}});
               return null;
             }
           }
@@ -834,7 +831,7 @@ class Collection extends React.Component {
           }
         } else {
           console.log(response);
-          alert("Error saving your assignments to the database. See console for details.");
+          this.setState ({modal: {alert: {alertType: "Assignment Error", alertMessage: "Error saving your assignments to the database. See console for details."}}});
         }
       })
     );
@@ -892,10 +889,10 @@ class Collection extends React.Component {
     if (!this.warnOnNoSamples(this.state.currentPlot)) {
       return false;
     } else if (sampleIds.some((s) => !visibleIds.includes(s))) {
-      alert("Invalid Selection. Try selecting the question before answering.");
+      this.setState ({modal: {alert: {alertType: "Selection Error", alertMessage: "Invalid Selection. Try selecting the question before answering."}}});
       return false;
     } else if (sampleIds.length === 0) {
-      alert("Please select at least one sample before choosing an answer.");
+      this.setState ({modal: {alert: {alertType: "Selection Error", alertMessage: "Please select at least one sample before choosing an answer."}}});
       return false;
     } else {
       return true;
@@ -1134,6 +1131,11 @@ class Collection extends React.Component {
         <div className="row no-gutters">
 
           {/* Left Sidebar (ImageryLayerOptions) - Now Absolutely Positioned */}
+          {this.state?.modal?.alert &&
+         <Modal title={this.state?.modal?.alert?.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state?.modal?.alert?.alertMessage}
+         </Modal>}
           {this.state.currentProject?.type === "simplified" && (
             <div
               className="d-flex flex-column position-absolute full-height"
@@ -1332,27 +1334,25 @@ class SideBar extends React.Component {
       visibleSurveyQuestions,
       ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered));
     if (answerMode !== "question") {
-      alert("You must be in question mode to save the collection.");
+      this.setState ({modal: {alert: {alertType: "Collection Alert", alertMessage: "You must be in question mode to save the collection."}}});
       return false;
     } else if (currentPlot.flagged) {
       return true;
     } else if (inReviewMode) {
       if (!(noneAnswered || allAnswered)) {
-        alert(
-          "In review mode, plots can only be saved if all questions are answered or the answers are cleared."
-        );
+        this.setState ({modal: {alert: {alertType: "Review Mode Alert", alertMessage: "In review mode, plots can only be saved if all questions are answered or the answers are cleared."}}});
         return false;
       } else {
         return true;
       }
     } else if (!hasSamples) {
-      alert("The collection must have samples to be saved. Enter draw mode to add more samples.");
+      this.setState ({modal: {alert: {alertType: "Review Mode Alert", alertMessage: "The collection must have samples to be saved. Enter draw mode to add more samples."}}});
       return false;
     } else if (!allAnswered) {
-      alert("All questions must be answered to save the collection.");
+      this.setState ({modal: {alert: {alertType: "Review Mode Alert", alertMessage: "All questions must be answered to save the collection."}}});
       return false;
     } else if (collectConfidence && !confidence) {
-      alert("You must input the confidence before saving the interpretation.");
+      this.setState ({modal: {alert: {alertType: "Review Mode Alert", alertMessage: "You must input the confidence before saving the interpretation."}}});
       return false;
     } else {
       return true;
@@ -1388,6 +1388,12 @@ class SideBar extends React.Component {
         id="sidebar"
         style={{ overflowY: "auto", overflowX: "hidden"}}
       >
+        {this.state?.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         <ProjectTitle
           inReviewMode={this.props.inReviewMode}
           projectId={this.props.projectId}
@@ -1639,52 +1645,56 @@ class PlotNavigation extends React.Component {
   }
 }
 
-class ExternalTools extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      showExternalTools: true,
-      auxWindow: null,
-      showLearningMaterial: false,
-    };
-  }
+export const ExternalTools = ({
+  zoomMapToPlot,
+  showGeoDash,
+  toggleShowSamples,
+  toggleShowBoundary,
+  state,
+  currentPlot,
+  currentProject,
+  KMLFeatures,
+  projectType
+}) => {
+  const [showExternalTools, setShowExternalTools] = useState(true);
+  const [auxWindow, setAuxWindow] = useState(null);
+  const [showLearningMaterial, setShowLearningMaterial] = useState(false);
 
-  geoButtons = () => (
+  const geoButtons = () => (
     <div className="ExternalTools__geo-buttons d-flex justify-content-between mb-2" id="plot-nav">
       <input
         className="btn btn-outline-lightgreen btn-sm col-6 mr-1"
-        onClick={this.props.zoomMapToPlot}
+        onClick={zoomMapToPlot}
         type="button"
         value="Re-Zoom"
       />
       <input
         className="btn btn-outline-lightgreen btn-sm col-6"
-        onClick={this.props.showGeoDash}
+        onClick={showGeoDash}
         type="button"
         value="GeoDash"
       />
     </div>
   );
 
-  toggleViewButtons = () => (
+  const toggleViewButtons = () => (
     <div className="ExternalTools__geo-buttons d-flex justify-content-between mb-2" id="plot-nav">
       <input
-        className={`btn btn-outline-${this.props.state.showSamples ? "red" : "lightgreen"} btn-sm col-6 mr-1`}
-        onClick={this.props.toggleShowSamples}
+        className={`btn btn-outline-${state.showSamples ? "red" : "lightgreen"} btn-sm col-6 mr-1`}
+        onClick={toggleShowSamples}
         type="button"
-        value={`${this.props.state.showSamples ? "Hide" : "Show"} Samples`}
+        value={`${state.showSamples ? "Hide" : "Show"} Samples`}
       />
       <input
-        className={`btn btn-outline-${this.props.state.showBoundary ? "red" : "lightgreen"} btn-sm col-6`}
-        onClick={this.props.toggleShowBoundary}
+        className={`btn btn-outline-${state.showBoundary ? "red" : "lightgreen"} btn-sm col-6`}
+        onClick={toggleShowBoundary}
         type="button"
-        value={`${this.props.state.showBoundary ? "Hide" : "Show"} Boundary`}
+        value={`${state.showBoundary ? "Hide" : "Show"} Boundary`}
       />
     </div>
   );
 
-  loadGEEScript = () => {
-    const { currentPlot, currentProject } = this.props;
+  const loadGEEScript = () => {
     const urlParams = currentPlot.plotGeom.includes("Point")
       ? currentProject.plotShape === "circle"
         ? "center=[" +
@@ -1703,84 +1713,93 @@ class ExternalTools extends React.Component {
             5
           )
       : "geoJson=" + currentPlot.plotGeom;
-    if (this.state.auxWindow) this.state.auxWindow.close();
-    this.setState({
-      auxWindow: window.open(
-        "https://collect-earth-online.projects.earthengine.app/view/ceo-plot-ancillary-hotfix#" + urlParams
-      ),
-    });
+
+    if (auxWindow) auxWindow.close();
+    const win = window.open(
+      "https://collect-earth-online.projects.earthengine.app/view/ceo-plot-ancillary-hotfix#" + urlParams
+    );
+    setAuxWindow(win);
   };
 
-  geeButton = () => (
+  const geeButton = () => (
     <input
       className="btn btn-outline-lightgreen btn-sm btn-block my-2"
-      onClick={this.loadGEEScript}
+      onClick={loadGEEScript}
       type="button"
       value="Go to GEE Script"
     />
   );
 
-  kmlButton = () => (
+  const kmlButton = () => (
     <a
       className="btn btn-outline-lightgreen btn-sm btn-block my-2"
-      download={
-        "ceo_projectId-" +
-        this.props.currentProject.id +
-        "_plotId-" +
-        this.props.currentPlot.visibleId +
-        ".kml"
-      }
+      download={`ceo_projectId-${currentProject.id}_plotId-${currentPlot.visibleId}.kml`}
       href={
-        "data:earth.kml+xml application/vnd.google-earth.kmz, " +
-          encodeURIComponent(this.props.KMLFeatures)
+        "data:earth.kml+xml application/vnd.google-earth.kmz," +
+        encodeURIComponent(KMLFeatures)
       }
     >
       Download Plot KML
     </a>
   );
 
-  learningMaterialButton = () => (
+  const learningMaterialButton = () => (
     <input
       className="btn btn-outline-lightgreen btn-sm btn-block my-2"
-      onClick={this.toggleLearningMaterial}
+      onClick={() => setShowLearningMaterial(prev => !prev)}
       type="button"
       value="Interpretation Instructions"
     />
   );
 
-  toggleLearningMaterial = () => {
-    this.setState(prevState => ({
-      showLearningMaterial: !prevState.showLearningMaterial
-    }));
+  const openInGoogleEarth = () => {
+    const plotGeom = mercator.getCentroid((currentPlot?.plotGeom || "{}"), true);
+    if (!plotGeom || plotGeom.length < 2) {
+      console.warn("Invalid coordinates");
+      return;
+    }
+    const [lng, lat] = plotGeom;
+    const url = `https://earth.google.com/web/@${lat},${lng},1000a,100d,35y,0h,0t,0r`;
+    window.open(url, "_blank");
   };
 
-  render() {
-    return this.props.currentPlot.id ? (
-      <>
-        <CollapsibleTitle
-          showGroup={this.state.showExternalTools}
-          title="External Tools"
-          toggleShow={() => this.setState({ showExternalTools: !this.state.showExternalTools })}
+  const renderGoogleEarthButton = () => (
+    <input
+      className="btn btn-outline-lightgreen btn-sm btn-block my-2"
+      type="button"
+      value="Go to Google Earth Web"
+      onClick={openInGoogleEarth}
+    />
+  );
+
+  if (!currentPlot.id) return null;
+
+  return (
+    <>
+      <CollapsibleTitle
+        showGroup={showExternalTools}
+        title="External Tools"
+        toggleShow={() => setShowExternalTools(prev => !prev)}
+      />
+      {showExternalTools && (
+        <div className="mx-1">
+          {geoButtons()}
+          {projectType !== "simplified" && toggleViewButtons()}
+          {KMLFeatures && kmlButton()}
+          {currentProject.projectOptions.showGEEScript && geeButton()}
+          {learningMaterialButton()}
+          {renderGoogleEarthButton()}
+        </div>
+      )}
+      {showLearningMaterial && (
+        <LearningMaterialModal
+          learningMaterial={currentProject.learningMaterial}
+          onClose={() => setShowLearningMaterial(false)}
         />
-        {this.state.showExternalTools && (
-          <div className="mx-1">
-            {this.geoButtons()}
-            {this.props.projectType !== "simplified" ? this.toggleViewButtons() : null}
-            {this.props.KMLFeatures && this.kmlButton()}
-            {this.props.currentProject.projectOptions.showGEEScript && this.geeButton()}
-            {this.learningMaterialButton()}
-          </div>
-        )}
-        {this.state.showLearningMaterial && (
-          <LearningMaterialModal
-            learningMaterial={this.props.currentProject.learningMaterial}
-            onClose={this.toggleLearningMaterial}
-          />
-        )}
-      </>
-    ) : null;
-  }
-}
+      )}
+    </>
+  );
+};
 
 class PlotInformation extends React.Component {
   constructor(props) {
@@ -1899,7 +1918,7 @@ class ImageryOptions extends React.Component {
                 {
                   Planet: <PlanetMenu {...individualProps} />,
                   PlanetDaily: <PlanetDailyMenu {...individualProps} />,
-                  PlanetNICFI: <PlanetNICFIMenu {...individualProps} />,
+                  PlanetTFO: <PlanetTFOMenu {...individualProps} />,
                   SecureWatch: <SecureWatchMenu {...individualProps} />,
                   Sentinel1: <SentinelMenu {...individualProps} />,
                   Sentinel2: <SentinelMenu {...individualProps} />,
@@ -1910,10 +1929,10 @@ class ImageryOptions extends React.Component {
             })}
           <input
             checked={this.state.enableGrid}
-            className="form-check-input"
             id="grid-check"
             onChange={() => this.enableGrid()}
             type="checkbox"
+            style={{"margin-right": "10px"}}
           />
           <label className="form-check-label" htmlFor="grid-check">
             Enable Map Grid
@@ -1989,7 +2008,7 @@ class ProjectStats extends React.Component {
       .then((data) => this.setState({ stats: data }))
       .catch((response) => {
         console.error(response);
-        alert("Error getting project stats. See console for details.");
+        this.setState ({modal: {alert: {alertType: "Project Stats Error", alertMessage: "Error getting project stats. See console for details."}}});
       });
   }
 
@@ -2080,6 +2099,12 @@ class ProjectStats extends React.Component {
           zIndex: "10",
         }}
       >
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         {stats ? this.renderStats() : <label className="p-3">Loading...</label>}
       </div>
     );

@@ -10,6 +10,7 @@ import {
   sameContents,
 } from "../utils/sequence";
 import { ProjectContext } from "../project/constants";
+import Modal from "../components/Modal";
 
 class TextMatchForm extends React.Component {
   constructor(props) {
@@ -18,6 +19,7 @@ class TextMatchForm extends React.Component {
     this.state = {
       regex: "",
       questionId: -1,
+      modal: null
     };
   }
 
@@ -36,7 +38,7 @@ class TextMatchForm extends React.Component {
       regex.length === 0 && "The regex string is missing.",
     ].filter((m) => m);
     if (errorMessages.length > 0) {
-      alert(errorMessages.map((s) => "- " + s).join("\n"));
+      this.setState ({modal: {alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}}});
     } else {
       setProjectDetails({
         surveyRules: [
@@ -61,6 +63,11 @@ class TextMatchForm extends React.Component {
     );
     return lengthObject(availableQuestions) > 0 ? (
       <>
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <div className="form-group">
           <label>Survey Question</label>
           <select
@@ -126,7 +133,7 @@ class NumericRangeForm extends React.Component {
       max <= min && "Max must be larger than min.",
     ].filter((m) => m);
     if (errorMessages.length > 0) {
-      alert(errorMessages.map((s) => "- " + s).join("\n"));
+      this.setState ({modal: {alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}}});
     } else {
       setProjectDetails({
         surveyRules: [
@@ -229,7 +236,7 @@ class SumOfAnswersForm extends React.Component {
       !isNumber(validSum) && "You must ender a valid sum number.",
     ].filter((m) => m);
     if (errorMessages.length > 0) {
-      alert(errorMessages.map((s) => "- " + s).join("\n"));
+      this.setState ({modal: {alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}}});
     } else {
       setProjectDetails({
         surveyRules: [
@@ -335,7 +342,7 @@ class MatchingSumsForm extends React.Component {
         "Question set 1 and 2 cannot contain the same question.",
     ].filter((m) => m);
     if (errorMessages.length > 0) {
-      alert(errorMessages.map((s) => "- " + s).join("\n"));
+      this.setState ({modal: {alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}}});
     } else {
       setProjectDetails({
         surveyRules: [
@@ -466,7 +473,7 @@ class IncompatibleAnswersForm extends React.Component {
       (answerId1 < 0 || answerId2 < 0) && "You must select an answer for each question.",
     ].filter((m) => m);
     if (errorMessages.length > 0) {
-      alert(errorMessages.map((s) => "- " + s).join("\n"));
+      this.setState ({modal: {alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}}});
     } else {
       setProjectDetails({
         surveyRules: [

@@ -23,6 +23,7 @@ import { EditorContext, graphWidgetList, gridRowHeight, mapWidgetList } from "./
 import { isValidJSON } from "./utils/generalUtils";
 import { getNextInSequence, last } from "./utils/sequence";
 import BasemapSelector from "./geodash/form/BasemapSelector";
+import Modal from "./components/Modal";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -36,6 +37,7 @@ class WidgetLayoutEditor extends React.PureComponent {
       imagery: [],
       projectTemplateList: [],
       editDialog: false,
+      modal: null,
 
       // Widget specific state
       title: "",
@@ -124,7 +126,7 @@ class WidgetLayoutEditor extends React.PureComponent {
       .then(([widgets, projectTemplateList]) => this.setState({ widgets, projectTemplateList }))
       .catch((error) => {
         console.error(error);
-        alert("Error loading widget designer.  See console for details.");
+        this.setState ({modal: {alert: {alertType: "Widget Designer Error", alertMessage: "Error loading widget designer.  See console for details."}}});
       });
   }
 
@@ -141,7 +143,7 @@ class WidgetLayoutEditor extends React.PureComponent {
       .then((data) => this.setState({ imagery: data }))
       .catch((error) => {
         console.log(error);
-        alert("Error loading imagery.  See console for details.");
+        this.setState ({modal: {alert: {alertType: "Institution Imagery Error", alertMessage: "Error loading imagery.  See console for details."}}});
       });
 
   getProjectTemplateList = () =>
@@ -165,7 +167,7 @@ class WidgetLayoutEditor extends React.PureComponent {
       .then((data) => this.setState({ widgets: data }))
       .catch((error) => {
         console.error(error);
-        alert("Error loading updated widgets. See console for details.");
+        this.setState ({modal: {alert: {alertType: "Widget Loading Error", alertMessage: "Error loading updated widgets. See console for details."}}});
       });
   };
 
@@ -185,7 +187,7 @@ class WidgetLayoutEditor extends React.PureComponent {
       .then((data) => this.setState({ widgets: data }))
       .catch((error) => {
         console.error(error);
-        alert("Error copying template widgets. See console for details.");
+        this.setState ({modal: {alert: {alertType: "Copy Widget Error", alertMessage: "Error copying template widgets. See console for details."}}});
       });
   };
 
@@ -300,19 +302,7 @@ class WidgetLayoutEditor extends React.PureComponent {
       };
     }
   };
-
-  getWidgetErrors = () => {
-    const { title, widgetDesign } = this.state;
-    return [
-      !title.length && "You must add a title for the widget.",
-      widgetDesign.hasOwnProperty("visParams") &&
-        !isValidJSON(widgetDesign.visParams) &&
-        "You have entered invalid JSON for Image Parameters",
-      widgetDesign.hasOwnProperty("assetId") && !widgetDesign.assetId && "Asset ID is required.",
-    ].filter((e) => e);
-  };
-
-  buildNewWidget = () => {
+    buildNewWidget = () => {
     const { title, type, widgetDesign, basemapNICFIDate } = this.state;
     return {
       name: title,
@@ -322,10 +312,36 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
   };
 
-  createNewWidget = () => {
-    const errors = this.getWidgetErrors();
+  getWidgetErrors = async () => {
+    const { title, widgetDesign } = this.state;
+    const { assetId, visParams } = widgetDesign;
+    const validateJSONRequest = await fetch(`/geo-dash/validate-vis-params?imgPath=${assetId}&visParams=${visParams}`);
+    const validateJSONResponse = await validateJSONRequest.json();
+    this.props.closeDialogs();
+    return [
+      !title.length && "You must add a title for the widget.",
+      validateJSONResponse,
+      widgetDesign.hasOwnProperty("visParams") &&
+        !isValidJSON(widgetDesign.visParams) &&
+        "You have entered invalid JSON for Image Parameters",
+      widgetDesign.hasOwnProperty("assetId") && !widgetDesign.assetId && "Asset ID is required.",
+    ].filter((e) => e);
+  };
+  
+  buildNewWidget = () => {
+    const { title, type, widgetDesign, basemapTFODate } = this.state;
+    return {
+      name: title,
+      basemapTFODate,
+      type,
+      ...widgetDesign,
+    };
+  };
+  
+  createNewWidget = async () => {
+    const errors = await this.getWidgetErrors();
     if (errors.length) {
-      alert(errors.join("\n\n"));
+      this.setState ({modal: {alert: {alertType: "Widget Creation Error", alertMessage: errors.join("\n\n")}}});    
     } else {
       this.widgetAPIWrapper("create-widget", {
         layout: this.getNextLayout(),
@@ -345,13 +361,14 @@ class WidgetLayoutEditor extends React.PureComponent {
     this.widgetAPIWrapper("create-widget", newWidget);
   };
 
-  saveWidgetEdits = () => {
+  saveWidgetEdits = async () => {
     const {
       originalWidget: { id, layout },
     } = this.state;
-    const errors = this.getWidgetErrors();
+    const errors = await this.getWidgetErrors();
     if (errors.length) {
-      alert(errors.join("\n\n"));
+      this.setState ({modal: {onClose: "",
+        alert: {alertType: "Save Widget Error", alertMessage: errors.join("\n\n")}}});
     } else {
       this.widgetAPIWrapper("update-widget", {
         id,
@@ -464,10 +481,10 @@ class WidgetLayoutEditor extends React.PureComponent {
             id="widgetTitle"
             onChange={(e) => this.updateTitle(e.target.value)}
             placeholder={
-              this.getWidgetDesign("basemapNICFIDate") ?
-                "Planet NICFI " +
-                this.getWidgetDesign("basemapNICFIDate").slice(
-                  34, this.getWidgetDesign("basemapNICFIDate").length - 7)
+              this.getWidgetDesign("basemapTFODate") ?
+                "Planet TFO " +
+                this.getWidgetDesign("basemapTFODate").slice(
+                  34, this.getWidgetDesign("basemapTFODate").length - 7)
                 : "Enter Title"}
             type="text"
             value={this.state.title}
@@ -508,6 +525,12 @@ class WidgetLayoutEditor extends React.PureComponent {
           getInstitutionImagery: this.getInstitutionImagery,
         }}
       >
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         {addDialog && (
           <GeoDashModal
             body={this.dialogBody()}

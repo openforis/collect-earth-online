@@ -4,6 +4,7 @@ import Select from "../components/Select";
 import { mercator } from "../utils/mercator";
 import { monthlyMapping } from "../utils/generalUtils";
 import SvgIcon from "../components/svg/SvgIcon";
+import Modal from "../components/Modal";
 
 export class PlanetMenu extends React.Component {
   constructor(props) {
@@ -97,6 +98,7 @@ export class PlanetDailyMenu extends React.Component {
     this.state = {
       startDate: this.props.sourceConfig.startDate,
       endDate: this.props.sourceConfig.endDate,
+      modal: null,
     };
   }
 
@@ -126,7 +128,7 @@ export class PlanetDailyMenu extends React.Component {
     if (this.props.visible) {
       const { startDate, endDate } = this.state;
       if (new Date(startDate) > new Date(endDate)) {
-        alert("Start date must be smaller than the end date.");
+        this.setState ({modal: {alert: {alertType: "Planet Daily Layer Update Error", alertMessage: "Start date must be smaller than the end date."}}});
       } else {
         this.updateImageryInformation();
         mercator.currentMap
@@ -151,6 +153,11 @@ export class PlanetDailyMenu extends React.Component {
   render() {
     return (
       <div className="my-2" style={{ display: this.props.visible ? "block" : "none" }}>
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <div className="slide-container">
           <label>Start Date</label>
           <input
@@ -187,13 +194,13 @@ export class PlanetDailyMenu extends React.Component {
   }
 }
 
-export class PlanetNICFIMenu extends React.Component {
+export class PlanetTFOMenu extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       selectedTime: this.props.sourceConfig.time,
       selectedBand: this.props.sourceConfig.band,
-      nicfiLayers: [],
+      tfoLayers: [],
       isDisabledLeft: false,
       isDisabledRight: true
     };
@@ -201,7 +208,7 @@ export class PlanetNICFIMenu extends React.Component {
 
   componentDidMount() {
     this.updatePlanetLayer();
-    this.getNICFILayers();
+    this.getTFOLayers();
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -211,24 +218,24 @@ export class PlanetNICFIMenu extends React.Component {
    
     if (prevState.selectedTime !== this.state.selectedTime) {
       this.setState((state) => {
-        const { nicfiLayers, selectedTime } = state;
-        const index = nicfiLayers.indexOf(selectedTime);
+        const { tfoLayers, selectedTime } = state;
+        const index = tfoLayers.indexOf(selectedTime);
 
         return {
-          isDisabledLeft: index >= nicfiLayers.length - 1,
+          isDisabledLeft: index >= tfoLayers.length - 1,
           isDisabledRight: index <= 0
         }
       })
     }
   }
 
-  getNICFILayers = () => {
-    fetch("/get-nicfi-dates")
+  getTFOLayers = () => {
+    fetch("/get-tfo-dates")
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((layers) => {
         this.setState(
           {
-            nicfiLayers: layers,
+            tfoLayers: layers,
             ...(this.props.sourceConfig.time === "newest" && { selectedTime: layers[0] }),
           },
           this.updatePlanetLayer
@@ -248,16 +255,16 @@ export class PlanetNICFIMenu extends React.Component {
 
   switchImagery = (direction) => {
     this.setState((prevState) => {
-      const { nicfiLayers, selectedTime } = prevState;
-      const currentIndex = nicfiLayers.indexOf(selectedTime);
+      const { tfoLayers, selectedTime } = prevState;
+      const currentIndex = tfoLayers.indexOf(selectedTime);
 
       const move = direction === "forward" ? -1 : 1;
       const newIndex = currentIndex + move;
 
       // Check boundary conditions
-      if (newIndex < 0 || newIndex >= nicfiLayers.length) return {};
+      if (newIndex < 0 || newIndex >= tfoLayers.length) return {};
 
-      return { selectedTime: nicfiLayers[newIndex] };
+      return { selectedTime: tfoLayers[newIndex] };
     }, this.updatePlanetLayer);
   }
 
@@ -276,9 +283,9 @@ export class PlanetNICFIMenu extends React.Component {
   };
 
   render() {
-    const { nicfiLayers, selectedTime, selectedBand } = this.state;
+    const { tfoLayers, selectedTime, selectedBand } = this.state;
     return (
-      nicfiLayers.length > 0 && (
+      tfoLayers.length > 0 && (
         <div className="my-2" style={{ display: this.props.visible ? "block" : "none" }}>
           <div className="slide-container v-center justify-content-center">
             <label className="mb-0 mr-2" htmlFor="time-selection">
@@ -292,7 +299,7 @@ export class PlanetNICFIMenu extends React.Component {
               value={selectedTime}
               className="mb-0 mr-1"
             >
-              {nicfiLayers.map((time) => (
+              {tfoLayers.map((time) => (
                 <option key={time} value={time}>
                   {time.slice(34, time.length - 7)}
                 </option>
@@ -365,6 +372,7 @@ export class SecureWatchMenu extends React.Component {
       featureId: null,
       imageryDate: "",
       imageryCloudCover: "",
+      modal: null,
     };
   }
 
@@ -447,7 +455,7 @@ export class SecureWatchMenu extends React.Component {
           if (response.ok) {
             return response.json(); // if no layers are found, the response is XML. This will fail.
           } else {
-            alert("Error retrieving SecureWatch dates. See console for details.");
+            this.setState ({modal: {alert: {alertType: "SecureWatch Date Retrieval Error", alertMessage: "Error retrieving SecureWatch dates. See console for details."}}});
             return { features: [] };
           }
         })
@@ -490,7 +498,7 @@ export class SecureWatchMenu extends React.Component {
         })
         .catch((response) => {
           console.log(response);
-          alert("Error processing SecureWatch dates. See console for details.");
+          this.setState ({modal: {alert: {alertType: "SecureWatch Date Error", alertMessage: "Error processing SecureWatch dates. See console for details."}}});
         });
     });
   };
@@ -498,6 +506,12 @@ export class SecureWatchMenu extends React.Component {
   render() {
     return (
       <div className="my-2 mb-3" style={{ display: this.props.visible ? "block" : "none" }}>
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         <div className="slide-container">
           <label>Available Layers</label>
           {this.state.availableDates && this.state.availableDates.length > 0 ? (
@@ -726,6 +740,7 @@ export class GEEImageCollectionMenu extends React.Component {
       endDate: this.props.sourceConfig.endDate,
       visParams: this.props.sourceConfig.visParams,
       reducer: this.props.sourceConfig.reducer,
+      modal: null,
     };
   }
 
@@ -754,7 +769,7 @@ export class GEEImageCollectionMenu extends React.Component {
   updateGEEImageCollection = () => {
     const { startDate, endDate, visParams, reducer } = this.state;
     if (new Date(startDate) > new Date(endDate)) {
-      alert("Start date must be smaller than the end date.");
+      this.setState ({modal: {alert: {alertType: "GEE Image Collection Update Error", alertMessage: "Start date must be smaller than the end date."}}});
     } else {
       this.updateImageryInformation();
       mercator.updateLayerSource(
@@ -775,6 +790,12 @@ export class GEEImageCollectionMenu extends React.Component {
   render() {
     return (
       <div className="my-2" style={{ display: this.props.visible ? "block" : "none" }}>
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         <div className="slide-container">
           <label>Start Date</label>
           <input

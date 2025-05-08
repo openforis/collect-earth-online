@@ -489,7 +489,7 @@ def getS1(options):
         data = data.filterBounds(region)
     return data.select(targetBands)
 
-def getNICFI(options):
+def getTFO(options):
     if options is None:
         pass
     else:

@@ -9,7 +9,7 @@
   (let [image-type (:type source-config)]
     (cond-> source-config
       (#{"GeoServer" "SecureWatch"} image-type) (dissoc source-config :geoserverParams)
-      (#{"Planet" "PlanetNICFI"}    image-type) (dissoc source-config :accessToken))))
+      (#{"Planet" "PlanetTFO"}      image-type) (dissoc source-config :accessToken))))
 
 (defn- prepare-imagery [imagery inst-admin?]
   (mapv (fn [{:keys [imagery_id institution_id visibility title attribution extent is_proxied source_config]}]
@@ -105,8 +105,9 @@
   (data-response ""))
 
 (defn bulk-archive-institution-imagery [{:keys [params]}]
-  (let [imagery-ids (cstr/join "," (:imageryIds params))]
-    (call-sql "archive_imagery_bulk" imagery-ids)
+  (let [imagery-ids (cstr/join "," (:imageryIds params))
+        institution-id (tc/val->int (:insitutionId params))]
+    (call-sql "archive_imagery_bulk" imagery-ids institution-id)
     (data-response "")))
 
 (defn bulk-update-imagery-visibility [{:keys [params]}]

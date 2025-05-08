@@ -4,11 +4,14 @@ import ReviewForm from "./ReviewForm";
 
 import { ProjectContext } from "./constants";
 
+import Modal from "../components/Modal";
+
 export default class ReviewChanges extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       acceptTOS: false,
+      modal: null,
     };
   }
 
@@ -16,7 +19,7 @@ export default class ReviewChanges extends React.Component {
 
   createProject = () => {
     if (!this.state.acceptTOS) {
-      alert("You must accept the terms of service to continue.");
+      this.setState ({modal: {alert: {alertType: "Create Project Alert", alertMessage: "You must accept the terms of service to continue."}}});
     } else if (confirm("Do you really want to create this project?")) {
       this.context.processModal("Creating Project", () =>
         fetch("/create-project", {
@@ -43,7 +46,7 @@ export default class ReviewChanges extends React.Component {
             }
           })
           .catch((message) => {
-            alert("Error creating project:\n" + message);
+            this.setState ({modal: {alert: {alertType: "Create Project Alert", alertMessage: "Error creating project:\n" + message}}});
           })
       );
     }
@@ -72,14 +75,14 @@ export default class ReviewChanges extends React.Component {
           .then((data) => {
             if (data[0] && data[1] === "") {
               this.context.setContextState({ designMode: "manage" });
-              alert("Project successfully updated!");
+              this.setState ({modal: {alert: {alertType: "Update Project Alert", alertMessage: "Project successfully updated!"}}});
               return Promise.resolve();
             } else {
               return Promise.reject(data[1]);
             }
           })
           .catch((message) => {
-            alert("Error updating project:\n" + message);
+            this.setState ({modal: {alert: {alertType: "Update Project Alert", alertMessage: "Error updating project:\n" + message}}});
           })
       );
     }
@@ -174,6 +177,11 @@ export default class ReviewChanges extends React.Component {
   render() {
     return (
       <div className="d-flex flex-column full-height align-items-center p-3" id="changes">
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <div
           style={{
             display: "flex",

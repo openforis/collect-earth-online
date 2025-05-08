@@ -1,12 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
+import Modal from "./components/Modal";
 
 class PasswordRequest extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       email: "",
+      modal: null,
     };
   }
 
@@ -22,10 +24,10 @@ class PasswordRequest extends React.Component {
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && data[1] === "") {
-          alert("The reset key has been sent to your email.");
+          this.setState ({modal: {alert: {alertType: "Password Reset Request", alertMessage: "The reset key has been sent to your email."}}});
           window.location = "/home";
         } else {
-          alert(data[1]);
+          this.setState ({modal: {alert: {alertType: "Password Reset Error", alertMessage: data[1]}}});
         }
       })
       .catch((err) => console.log(err));
@@ -34,6 +36,12 @@ class PasswordRequest extends React.Component {
   render() {
     return (
       <div className="d-flex justify-content-center">
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         <div className="card card-lightgreen" id="request-form">
           <div className="card-header card-header-lightgreen">Enter your login email</div>
           <div className="card-body">

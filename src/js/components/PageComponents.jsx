@@ -250,7 +250,7 @@ export class NavigationBar extends React.Component {
                     {page}
                   </a>
                 </li>
-              ))}
+             ))}
               {!loggedOut && (
                 <li className={"nav-item" + (uri === "/account" && " active")}>
                   <a className="nav-link" href={"/account?accountId=" + userId}>
@@ -278,6 +278,7 @@ export class NavigationBar extends React.Component {
               )}
             </div>
           </div>
+          
         </nav>
         {children}
       </>

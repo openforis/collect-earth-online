@@ -3,8 +3,13 @@ import React from "react";
 import ReviewForm from "./ReviewForm";
 
 import { ProjectContext } from "./constants";
+import Modal from  "../components/Modal";
 
 export default class ManageProject extends React.Component {
+  constructor(props){
+    super(props);
+    this.state={modal: null};
+  }
   componentDidMount() {
     this.context.processModal("Loading Project Details", this.getProjectDetails);
     this.context.setProjectDetails({
@@ -22,7 +27,7 @@ export default class ManageProject extends React.Component {
       this.getProjectPlots(this.context.projectId),
     ]).catch((error) => {
       console.error(error);
-      alert("Error retrieving the project info. See console for details.");
+      this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error retrieving the project info. See console for details."}}});
     });
 
   getProjectById = (projectId) =>
@@ -30,7 +35,7 @@ export default class ManageProject extends React.Component {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data === "") {
-          alert("No project found with ID " + projectId + ".");
+          this.setState ({modal: {alert: {alertType: "Get Project Error", alertMessage: "No project found with ID " + projectId + "."}}});
           window.location = "/home";
         } else {
           this.context.setProjectDetails(data);
@@ -62,6 +67,11 @@ export default class ManageProject extends React.Component {
   render() {
     return (
       <div className="d-flex flex-column full-height align-items-center p-3" id="review-project">
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <div
           style={{
             display: "flex",
@@ -99,7 +109,7 @@ ManageProject.contextType = ProjectContext;
 class ProjectManagement extends React.Component {
   constructor(props) {
     super(props);
-
+    this.state = {modal: null};
     this.projectStates = {
       unpublished: {
         button: "Publish",
@@ -146,7 +156,7 @@ class ProjectManagement extends React.Component {
           })
           .catch((error) => {
             console.log(error);
-            alert("Error publishing project. See console for details.");
+            this.setState ({modal: {alert: {alertType: "Publish Project Error", alertMessage: "Error publishing project. See console for details."}}});
           })
       );
     }
@@ -164,7 +174,7 @@ class ProjectManagement extends React.Component {
           })
           .catch((error) => {
             console.log(error);
-            alert("Error closing project. See console for details.");
+            this.setState ({modal: {alert: {alertType: "Close Project Error", alertMessage: "Error closing project. See console for details."}}});
           })
       );
     }
@@ -177,11 +187,11 @@ class ProjectManagement extends React.Component {
         fetch(`/archive-project?projectId=${this.context.id}`, { method: "POST" }).then(
           (response) => {
             if (response.ok) {
-              alert("Project " + this.context.id + " has been deleted.");
+              this.setState ({modal: {alert: {alertType: "Delete Project Alert", alertMessage: "Project " + this.context.id + " has been deleted."}}});
               window.location = `/review-institution?institutionId=${this.context.institution}`;
             } else {
               console.log(response);
-              alert("Error deleting project. See console for details.");
+              this.setState ({modal: {alert: {alertType: "Delete Project Error", alertMessage: "Error deleting project. See console for details."}}});
             }
           }
         )
@@ -206,10 +216,10 @@ class ProjectManagement extends React.Component {
         }),
       }).then((response) => {
         if(response.ok) {
-          alert("A Digital Object Identifier was created for this project.");
+          this.setState ({modal: {alert: {alertType: "Create DOI Alert", alertMessage: "A Digital Object Identifier was created for this project."}}});
         } else {
           console.log(response);
-          alert("Error creating a Digital Object Identifier.");
+          this.setState ({modal: {alert: {alertType: "Create DOI Error", alertMessage: "Error creating a Digital Object Identifier."}}});
         }
       });
     }
@@ -227,10 +237,10 @@ class ProjectManagement extends React.Component {
         body: JSON.stringify({ projectId })
       }).then((response) => {
         if(response.ok) {
-          alert("The Digital Object Identifier was published for this project.");
+          this.setState ({modal: {alert: {alertType: "Publish DOI Alert", alertMessage: "The Digital Object Identifier was published for this project."}}});
         } else {
           console.log(response);
-          alert("Error publishing the Digital Object Identifier.");
+          this.setState ({modal: {alert: {alertType: "Publish DOI Error", alertMessage: "Error publishing the Digital Object Identifier."}}});
         }
       });
     }
@@ -254,6 +264,12 @@ class ProjectManagement extends React.Component {
 
     return (
       <div className="d-flex flex-column" id="project-management">
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
         <div className="d-flex">
           <div className="col-7">
             <div className="ProjectStats__dates-table mb-4">
@@ -299,7 +315,7 @@ class ProjectManagement extends React.Component {
                 if (canEdit) {
                   setContextState({ designMode: "wizard" });
                 } else {
-                  alert("You cannot edit a closed project.");
+                  this.setState ({modal: {alert: {alertType: "Edit Project Error", alertMessage: "You cannot edit a closed project."}}});
                 }
               }}
               type="button"
@@ -337,7 +353,6 @@ class ProjectManagement extends React.Component {
               onClick={() => window.open(`/project-qaqc-dashboard?projectId=${id}`)}
               type="button"
               value="Project QAQC Dashboard"
-              disabled={qaqcMethod === "none"}
             />
             <label className="my-2">Export Data</label>
             <input

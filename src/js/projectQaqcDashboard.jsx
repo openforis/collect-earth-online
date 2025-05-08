@@ -14,6 +14,8 @@ import { projectConditionalRowStyles,
 
 import { mercator } from "./utils/mercator";
 
+import Modal from "./components/Modal";
+
 class ProjectDashboardQaqc extends React.Component {
   constructor(props) {
     super(props);
@@ -27,8 +29,9 @@ class ProjectDashboardQaqc extends React.Component {
       activeTab: 0,
       plotId: 1,
       plotInfo: {},
+      modal: null,
     };
-      // Bind the methods to the class instance
+    // Bind the methods to the class instance
     this.showProjectMap = this.showProjectMap.bind(this);
     this.setActiveTab = this.setActiveTab.bind(this);
     this.setPlotInfo = this.setPlotInfo.bind(this);
@@ -45,16 +48,16 @@ class ProjectDashboardQaqc extends React.Component {
     // Show plots after both the map and plot list are loaded.
     if (
       (!prevState.mapConfig || prevState.plotList.length === 0) &&
-      this.state.mapConfig &&
-      this.state.plotList.length > 0
+        this.state.mapConfig &&
+        this.state.plotList.length > 0
     ) {
       mercator.addPlotOverviewLayers(this.state.mapConfig, this.state.plotList);
     }
     // Initialize the map when both projectDetails and imageryList are available
     if (
       (!prevState.projectDetails || prevState.imageryList.length === 0) &&
-      this.state.projectDetails &&
-      this.state.imageryList.length > 0
+        this.state.projectDetails &&
+        this.state.imageryList.length > 0
     ) {
       this.initializeMap();
     }
@@ -87,56 +90,56 @@ class ProjectDashboardQaqc extends React.Component {
       this.getPlotList(projectId),
     ]).catch((error) => {
       console.error(error);
-      alert("Error retrieving the project info. See console for details.");
+      this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error retrieving the project info. See console for details."}}});
     });
   };
 
   getProjectById = (projectId) =>
-    fetch(`/get-project-by-id?projectId=${projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (data === "") {
-          alert("No project found with ID " + projectId + ".");
-          window.location = "/home";
-        } else {
-          this.setState({ projectDetails: data });
-          return this.getImageryList(data.institution);
-        }
-      });
+  fetch(`/get-project-by-id?projectId=${projectId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      if (data === "") {
+        this.setState ({modal: {alert: {alertType: "Project Error", alertMessage: "No project found with ID " + projectId + "."}}});
+        window.location = "/home";
+      } else {
+        this.setState({ projectDetails: data });
+        return this.getImageryList(data.institution);
+      }
+    });
 
   getImageryList = (institutionId) =>
-    fetch(`/get-institution-imagery?institutionId=${institutionId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.setState(
-          {
-            imageryList: data,
-            projectDetails: {
-              ...this.state.projectDetails,
-              baseMapSource: this.state.projectDetails.baseMapSource || data[0].title,
-            },
-          }
-        );
-      });
+  fetch(`/get-institution-imagery?institutionId=${institutionId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      this.setState(
+        {
+          imageryList: data,
+          projectDetails: {
+            ...this.state.projectDetails,
+            baseMapSource: this.state.projectDetails.baseMapSource || data[0].title,
+          },
+        }
+      );
+    });
   
   getProjectStats = (projectId) =>
-    fetch(`/project-stats?projectId=${projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.setState({ projectStats: data, plotId: data.plots[0].plot_id });
-      });
+  fetch(`/project-stats?projectId=${projectId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      this.setState({ projectStats: data, plotId: data.plots[0].plot_id });
+    });
 
   getPlotList = (projectId) =>
-    fetch(`/get-project-plots?projectId=${projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => this.setState({ plotList: data }));
+  fetch(`/get-project-plots?projectId=${projectId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => this.setState({ plotList: data }));
 
   /// Helpers
 
   processModal = (message, promise) =>
-    this.setState({ modalMessage: message }, () =>
-      promise.finally(() => this.setState({ modalMessage: null }))
-    );
+  this.setState({ modalMessage: message }, () =>
+    promise.finally(() => this.setState({ modalMessage: null }))
+  );
 
   showProjectMap(activeTab = 0) {
     const { aoiFeatures, plotSize, plotShape } = this.state.projectDetails;
@@ -199,7 +202,12 @@ class ProjectDashboardQaqc extends React.Component {
   render() {
     return (
       <div className="d-flex flex-column full-height p-3" id="project-dashboard">
-        {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
+        {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}       
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <div className="bg-darkgreen">
           <h1>Project Dashboard</h1>
         </div>
@@ -359,7 +367,7 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
         if (data === "not-found") {
           const err = (direction === "id" ? "Plot not" : "No more plots") +
                 " found for this navigation mode.";
-          alert(err);
+          this.setState ({modal: {alert: {alertType: "Plot Data Error", alertMessage: err}}});
         } else {
           setPlotInfo(data);
           setInputPlotId(data.visibleId);
@@ -371,8 +379,8 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
       })
       .catch((response) => {
         console.error(response);
-        alert("Error retrieving plot data. See console for details.");
-      })
+        this.setState ({modal: {alert: {alertType: "Plot Data Error", alertMessage: "Error retrieving plot data. See console for details."}}});
+      });
   };
   
   const navButtons = () => (
@@ -405,7 +413,7 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
           if (!isNaN(inputPlotId)) {
             getPlotData(inputPlotId, "id");
           } else {
-            alert("Please enter a number to go to plot.");
+            this.setState ({modal: {alert: {alertType: "Plot Alert", alertMessage: "Please enter a number to go to plot."}}});
           }
         }}
         type="button"
@@ -488,9 +496,9 @@ const UserStats = ({ userStats, analyzedPlots, isProjectAdmin, userName, plots, 
         const totalAnswers = disagreements.length;
         if (totalAnswers === 0) return;  // Avoid division by zero
         
-      const disagreeCount = disagreements.reduce((count, disagreement) => {
-        return count + (Object.values(disagreement).some(value => value !== 0) ? 1 : 0);
-      }, 0);
+        const disagreeCount = disagreements.reduce((count, disagreement) => {
+          return count + (Object.values(disagreement).some(value => value !== 0) ? 1 : 0);
+        }, 0);
         
         if (!userDisagreement[userId]) {
           userDisagreement[userId] = { disagreeCount: 0, totalAnswers: 0 };
@@ -557,35 +565,35 @@ const UserStats = ({ userStats, analyzedPlots, isProjectAdmin, userName, plots, 
           <br/>
           <h3>Users Information</h3>
           <div style={{ maxHeight: "800px", minHeight: "500px"}}>
-          <DataTable
-	    columns={userStatsColumns}
-            data={mergedUserStats()}
-	    fixedHeader={true}
-	    fixedHeaderScrollHeight={'200px'}
-            customStyles={customStyles}
-            selectableRows
-            onSelectedRowsChange={handleSelectedChange}
-            pagination
-          />
+            <DataTable
+	      columns={userStatsColumns}
+              data={mergedUserStats()}
+	      fixedHeader={true}
+	      fixedHeaderScrollHeight={'200px'}
+              customStyles={customStyles}
+              selectableRows
+              onSelectedRowsChange={handleSelectedChange}
+              pagination
+            />
           </div>
           <hr/>
           <div className="row mb-3 ml-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ display: "flex", gap: "10px" }}>
-            <button
-              className="disable-button"
-              style={{ height: "38px" }}
-              onClick={() => disableUsers()}
-            >
-              Ignore Selected Users
-            </button>
-            <button
-              className="enable-button"
-              style={{ height: "38px" }}
-              onClick={() => null}
-            >
-              Accept Selected Users
-            </button>
-              </div>
+              <button
+                className="disable-button"
+                style={{ height: "38px" }}
+                onClick={() => disableUsers()}
+              >
+                Ignore Selected Users
+              </button>
+              <button
+                className="enable-button"
+                style={{ height: "38px" }}
+                onClick={() => null}
+              >
+                Accept Selected Users
+              </button>
+            </div>
           </div>
         </div>
       )}

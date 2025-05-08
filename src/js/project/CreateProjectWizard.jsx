@@ -16,6 +16,8 @@ import { mercator } from "../utils/mercator";
 import { last, lengthObject, removeFromSet, someObject, filterObject } from "../utils/sequence";
 import { ProjectContext, plotLimit, perPlotLimit, sampleLimit, blankProject } from "./constants";
 
+import Modal from "../components/Modal";
+
 export default class CreateProjectWizard extends React.Component {
   constructor(props) {
     super(props);
@@ -126,6 +128,7 @@ export default class CreateProjectWizard extends React.Component {
       complete: new Set(),
       templateProject: {},
       templatePlots: [],
+      modal: null,
       type: "regular",
       draftProject: { ...blankProject}
     };
@@ -139,7 +142,7 @@ export default class CreateProjectWizard extends React.Component {
     }
     Promise.all([this.getTemplateProjects(), this.getInstitutionUserList()]).catch((error) => {
       console.error(error);
-      alert("Error retrieving the project data. See console for details.");
+      this.setState ({modal: {alert: {alertType: "Project Data Error", alertMessage: "Error retrieving the project data. See console for details."}}});
     });
     this.setState({type: this.context?.projectDetails?.type,
                    steps: this.context?.type === "regular" ?
@@ -157,7 +160,7 @@ export default class CreateProjectWizard extends React.Component {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (!data) {
-          alert("No draft found with ID " + projectDraftId + ".");
+          this.setState ({modal: {alert: {alertType: "Get Draft Error", alertMessage: "No draft found with ID " + projectDraftId + "."}}});
           window.location = "/home";
         } else {
           this.context.setProjectDetails(data);
@@ -165,7 +168,7 @@ export default class CreateProjectWizard extends React.Component {
           return data.institution;
         }
       }).catch(() => {
-        alert("No draft found with ID " + projectDraftId + ".");
+        this.setState ({modal: {alert: {alertType: "Get Draft Error", alertMessage: "No draft found with ID " + projectDraftId + "."}}});
         window.location = "/home";
       })
       
@@ -225,8 +228,8 @@ export default class CreateProjectWizard extends React.Component {
               return Promise.reject(data[1]);
             }
           })
-          .catch((message) => {
-            alert("Error creating draft:\n" + message);
+            .catch((message) => {
+              this.setState ({modal: {alert: {alertType: "Create Draft Error", alertMessage: "Error creating draft:\n" + message}}});
           })
         );
       } else {
@@ -254,8 +257,8 @@ export default class CreateProjectWizard extends React.Component {
               return Promise.reject(data[1]);
             }
           })
-          .catch((message) => {
-            alert("Error creating draft:\n" + message);
+            .catch((message) => {
+              this.setState ({modal: {alert: {alertType: "Draft Creation Error", alertMessage: "Error creating draft:\n" + message}}});
           })
         );
       }
@@ -304,7 +307,7 @@ export default class CreateProjectWizard extends React.Component {
         this.setState({ templatePlots: [], templateProject: {} });
         this.context.setProjectDetails({ templateProjectId: -1 });
         console.error(error);
-        alert("Error getting complete template info. See console for details.");
+        this.setState ({modal: {alert: {alertType: "Project Template Error", alertMessage: "Error getting complete template info. See console for details."}}});
       });
 
   getTemplateById = (projectId) =>
@@ -481,7 +484,7 @@ export default class CreateProjectWizard extends React.Component {
           : this.state.complete.add(this.context.wizardStep),
     });
     if (alertUser && errorList.length > 0) {
-      alert(errorList.join("\n"));
+      this.setState ({modal: {alert: {alertType: "Change Step Error", alertMessage: errorList.join("\n")}}});
     } else {
       this.context.setContextState({ wizardStep: newStep });
     }
@@ -503,7 +506,7 @@ export default class CreateProjectWizard extends React.Component {
     const failedStep = Object.entries(this.state.steps).find(([_key, val]) => {
       const errorList = val.validate();
       if (errorList.length > 0) {
-        alert(errorList.join("\n"));
+        this.setState ({modal: {alert: {alertType: "Finish Project Error", alertMessage: errorList.join("\n")}}});
         return true;
       } else {
         return false;
@@ -625,6 +628,11 @@ export default class CreateProjectWizard extends React.Component {
     const isLast = last(Object.keys(steps)) === this.context.wizardStep;
     return (
       <div className="d-flex pb-5 full-height align-items-center flex-column" id="wizard">
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <div style={{ display: "flex", margin: ".75rem" }}>
           {Object.keys(steps).map((s) => this.renderStep(s))}
         </div>

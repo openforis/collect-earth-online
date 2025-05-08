@@ -7,12 +7,17 @@ import SvgIcon from "../components/svg/SvgIcon";
 
 import { formatNumberWithCommas } from "../utils/generalUtils";
 import { removeAtIndex, sumArray } from "../utils/sequence";
+import Modal from "../components/Modal";
 
 // TODO, two arrays for user and percent is probably not the best data structure.
 //      Originally we had the percent array only added for by percent assignments.
 //      Since making the component generic, we send percent for all type.  Therefore
 //      There is no meaningful separate and a single array of objects makes more sense.
 export default class AssignPlots extends React.Component {
+  constructor(props){
+    super(props);
+    this.state = {modal: null};
+  };
   getQaqcAssignment = () => this.context.designSettings.qaqcAssignment;
 
   getUserAssignment = () => this.context.designSettings.userAssignment;
@@ -149,6 +154,11 @@ export default class AssignPlots extends React.Component {
 
     return (
       <div disabled className="col-6">
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
         <h3 className="mb-3">Assign Plots</h3>
         <div className="ml-3">
           <div className="form-row">
@@ -180,7 +190,7 @@ export default class AssignPlots extends React.Component {
                                                      userMethod,
                                                      percents[idx],
                                                      totalPlots)
-                    : alert("A user in the CSV is not a valid user for this institution. Please fix this issue before proceeding.");
+                    : this.setState ({modal: {alert: {alertType: "CSV User Alert", alertMessage: "A user in the CSV is not a valid user for this institution. Please fix this issue before proceeding."}}});
                 })}
               </div>
               {userMethod === "percent" && users.length > 0 && (
