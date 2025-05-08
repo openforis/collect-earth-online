@@ -420,6 +420,9 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
       >
         Go to plot
       </button>
+      <button>
+        View Plot in Collection window
+      </button>
     </div>
   );
 
@@ -472,7 +475,22 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
             pagination
           />
         )}
-      </div>     
+      </div>
+      <div className="row mb-3 ml-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            className="enable-button"
+            style={{ height: "38px" }}
+            onClick={() => {
+              console.log(window.location.origin);
+              const path = `/collection?projectId=${projectId}&plotId=${plotId}`;
+              window.open(window.location.origin + path, "_blank");
+            }}
+          >
+            View Plot in Collection Page
+          </button>
+        </div>
+      </div>
     </>
   );
 }

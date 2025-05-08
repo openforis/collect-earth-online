@@ -96,6 +96,10 @@ class Collection extends React.Component {
 
     this.getProjectData();
     this.setState({ showAcceptedTermsModal: this.props.acceptedTerrms });
+    if(this.props.plotId) {
+      this.setReviewMode(true, this.navToPlot(this.props.plotId, true));
+
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -115,7 +119,8 @@ class Collection extends React.Component {
     if (
       this.state.mapConfig &&
       this.state.plotList.length > 0 &&
-      (this.state.mapConfig !== prevState.mapConfig || prevState.plotList.length === 0)
+      (this.state.mapConfig !== prevState.mapConfig || prevState.plotList.length === 0) &&
+      this.props.plotId
     ) {
       this.showProjectOverview();
     }
@@ -420,7 +425,7 @@ class Collection extends React.Component {
     }
   };
 
-  getPlotData = (visibleId, direction, forcedNavMode = null) => {
+  getPlotData = (visibleId, direction, forcedNavMode = null, reviewMode = null) => {
     const { currentUserId, navigationMode, inReviewMode, threshold } = this.state;
     const { type } = this.state.currentProject;
     const { projectId } = this.props;
@@ -432,7 +437,7 @@ class Collection extends React.Component {
             projectId,
             navigationMode: forcedNavMode || navigationMode,
             direction,
-            inReviewMode,
+            inReviewMode: reviewMode || inReviewMode,
             threshold,
             currentUserId,
             projectType: type,
@@ -453,6 +458,7 @@ class Collection extends React.Component {
               currentUserId: data[0].userId,
               ...this.newPlotValues(data[0]),
               answerMode: "question",
+              inReviewMode: reviewMode ? reviewMode : false,
             });
             if(type === "simplified")
               this.setDrawTool();
@@ -508,10 +514,10 @@ class Collection extends React.Component {
     }
   };
 
-  navToPlot = (newPlot) => {
+  navToPlot = (newPlot, adminReview = null) => {
     if (!isNaN(newPlot)) {
       if (this.confirmUnsaved()) {
-        this.getPlotData(newPlot, "id");
+        return adminReview ? this.getPlotData(newPlot, "id", 'analyzed', true) : this.getPlotData(newPlot, "id");
       }
     } else {
       this.setState ({modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}});
@@ -718,9 +724,14 @@ class Collection extends React.Component {
 
   setNavigationMode = (newMode) => this.setState({ navigationMode: newMode });
 
-  setReviewMode = (inReviewMode) => {
+  setReviewMode = (inReviewMode, callback = null) => {
     const { currentProject } = this.state;
-    this.setState({ inReviewMode });
+    if(callback) {
+      this.setState({ inReviewMode, callback });
+
+    } else {
+      this.setState({ inReviewMode });
+    }
     setProjectPreferences(currentProject.id, { inReviewMode });
     if (inReviewMode && this.state.navigationMode === "natural") {
       this.setNavigationMode("analyzed");
@@ -2162,7 +2173,7 @@ function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-v      <Collection projectId={params.projectId} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
+      <Collection projectId={params.projectId} plotId={params.plotId || null} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
     </NavigationBar>,
     document.getElementById("app")
   );
