@@ -273,7 +273,7 @@
   [req]
   (let [{:keys [params session]} req
         user-id          (:userId session)
-        project-id       (:projectId params)
+        project-id       (tc/val->int (:projectId params))
         interpreter-name (:interpreterName params)]
     (try
       (if (= -1 user-id)
