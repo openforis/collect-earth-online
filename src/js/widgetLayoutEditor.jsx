@@ -302,15 +302,6 @@ class WidgetLayoutEditor extends React.PureComponent {
       };
     }
   };
-    buildNewWidget = () => {
-    const { title, type, widgetDesign, basemapNICFIDate } = this.state;
-    return {
-      name: title,
-      basemapNICFIDate,
-      type,
-      ...widgetDesign,
-    };
-  };
 
   getWidgetErrors = async () => {
     const { title, widgetDesign } = this.state;
