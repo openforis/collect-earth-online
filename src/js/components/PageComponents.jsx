@@ -651,13 +651,9 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
                                      ? JSON.parse(layer.sourceConfig.visParams)
                                      : null;
 
-                               const paletteArray = visParams?.palette
-                                     ? visParams.palette.split(',').map(c => c.trim())
-                                     : [];
-
-                               const sliderColor = paletteArray.length === 0
+                               const sliderColor = visParams.palette.length === 0
                                      ? '#3b82f6'
-                                     : `#${paletteArray.length === 1 ? paletteArray[0] : paletteArray.pop()}`;
+                                     : paletteArray[0];
                                return (
                                  <div
                                    className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
