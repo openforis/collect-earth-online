@@ -420,9 +420,6 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
       >
         Go to plot
       </button>
-      <button>
-        View Plot in Collection window
-      </button>
     </div>
   );
 
