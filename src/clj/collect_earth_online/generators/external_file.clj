@@ -299,15 +299,16 @@
         json-data))
 
 (defn create-and-zip-files-for-doi
-  [project-id project-data]
-    (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "-files/")]
+  [project-id project-data doi-id]
+  (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "-files/")
+        zip-name    (str "files-" doi-id ".zip")]
     (sh-wrapper tmp-dir {} (str "rm -rf " folder-name) (str "mkdir " folder-name))
     (create-shape-files folder-name "plot" project-id)
     (create-shape-files folder-name "sample" project-id)
     (create-data-file folder-name project-data)
     (sh-wrapper tmp-dir {}
-                (str "7z a " folder-name "files" ".zip " folder-name "*"))
-    (str folder-name "files.zip")))
+                (str "7z a " folder-name zip-name " " folder-name "*"))
+    (str folder-name zip-name)))
 
 (defn zip-shape-files
   [project-id]

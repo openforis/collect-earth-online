@@ -387,14 +387,10 @@ class ProjectManagement extends React.Component {
               value="Download Shape Files"
             />
             <label className="my-2"> Digital Object Identifier </label>
-            <input className="btn btn-outline-lightgreen btn-sm w-100"
-                   onClick={() => this.createDoi()}
-                   type="button"
-                   value="Create DOI"/>
-            <input className="btn btn-outline-lightgreen btn-sm w-100"
-                   onClick={() => this.publishDoi()}
-                   type="button"
-                   value="Publish DOI"/>
+              <input className="btn btn-outline-lightgreen btn-sm w-100"
+                     onClick={() => this.createDoi()}
+                     type="button"
+                     value={this.context.doiPath === null ? "Create DOI" : "Update DOI"}/>
           </div>
         </div>
       </div>

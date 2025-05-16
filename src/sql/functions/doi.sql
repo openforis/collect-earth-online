@@ -14,6 +14,7 @@ CREATE OR REPLACE FUNCTION select_doi_by_id(_doi_id INTEGER)
   ) AS $$
      SELECT * FROM doi
      WHERE doi_uid = _doi_id
+     ORDER BY CREATED DESC
 $$ LANGUAGE SQL;
 
 -- Select DOI by project id.
@@ -28,6 +29,7 @@ CREATE OR REPLACE FUNCTION select_doi_by_project(_project_id INTEGER)
   ) AS $$
      SELECT * FROM doi
      WHERE project_rid = _project_id
+     ORDER BY CREATED DESC
 $$ LANGUAGE SQL;
 
 -- Insert DOI
