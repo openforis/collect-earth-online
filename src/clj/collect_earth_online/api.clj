@@ -3,57 +3,64 @@
             [malli.core :as m]
             [malli.util :as mu]
             [triangulum.response :refer [data-response]]
-            [triangulum.logging :refer [log]]
+            [triangulum.type-conversion :as tc]
             [malli.error :as me]))
 
+
+(def Int [:fn {} #(let [input %
+                        output (tc/val->int input)]
+                    (or (int? input) (= input (str output))))])
+
+(def Bool [:fn {} #(let [input %
+                         output (tc/val->bool input)]
+                     (or (boolean? input) (= input (str output))))])
 
 (def validation-map
   {:imagery/get-institution-imagery  [:map
                                       [:params [:map
-                                                [:institutionId :int]]]
-                                      #_[:session [:map
-                                                 [:userId :int]]]
-                                      ]
+                                                [:institutionId Int]]]
+                                      [:session [:map
+                                                 [:userId {:optional true} Int]]]]
    :imagery/get-project-imagery      [:map [:session [:map
-                                                      [:userId :int]]
+                                                      [:userId {:optional true} Int]]
                                             :params [:map
                                                      [:tokenKey :string]
-                                                     [:projectId :int]]]]
-   :imagery/get-public-imagery [:map [:params [:map]]]
+                                                     [:projectId Int]]]]
+   :imagery/get-public-imagery []
    :imagery/add-institution-imagery [:map [:params
                                            [:map
-                                            [:institutionId :int]
+                                            [:institutionId Int]
                                             [:imageryTitle :string]
                                             [:imageryAttribution :string]
                                             [:sourceConfig :string] ;;json
-                                            [:isProxied :boolean]
-                                            [:addToAllProjects :boolean]]]]
+                                            [:isProxied Bool]
+                                            [:addToAllProjects {:optional true} Bool]]]]
    :imagery/update-institution-imagery [:map [:params
                                               [:map
-                                               [:imageryId :int]
+                                               [:imageryId Int]
                                                [:imageryTitle :string]
                                                [:imageryAttribution :string]
                                                [:sourceConfig :string] ;;json
-                                               [:isProxied :boolean]
-                                               [:addToAllProjects :boolean]
-                                               [:institutionId :int]]]]
+                                               [:isProxied Bool]
+                                               [:addToAllProjects {:optional true} Bool]
+                                               [:institutionId Int]]]]
    :imagery/update-imagery-visibility [:map [:params
                                              [:map
-                                              [:imageryId :int]
+                                              [:imageryId Int]
                                               [:visibility :string]
-                                              [:institutionId :int]]]]
+                                              [:institutionId Int]]]]
    :imagery/archive-institution-imagery [:map [:params
                                                [:map
-                                                [:imageryId :int]]]]
+                                                [:imageryId Int]]]]
    :imagery/bulk-archive-institution-imagery [:map [:params
                                                     [:map
-                                                     [:institutionId :int]
-                                                     [:imageryIds [:vector :int]]]]]
+                                                     [:institutionId Int]
+                                                     [:imageryIds [:vector Int]]]]]
    :imagery/bulk-update-imagery-visibility [:map [:params
                                                   [:map
-                                                   [:imageryIds [:vector :int]]
+                                                   [:imageryIds [:vector Int]]
                                                    [:visibility :string]
-                                                   [:institutionId :int]]]]})
+                                                   [:institutionId Int]]]]})
 
 
 (defmacro payload [query]
