@@ -3,6 +3,7 @@
  :deps {clj-http/clj-http        {:mvn/version "3.10.3"}
         clj-python/libpython-clj {:mvn/version "2.025"}
         io.sentry/sentry-clj     {:mvn/version "7.11.216"}
+        metosin/malli            {:mvn/version "0.18.0"}
         org.clojure/clojure      {:mvn/version "1.11.1"}
         org.flatland/ordered     {:mvn/version "1.15.11"}
         org.clojure/data.json    {:mvn/version "1.0.0"}
