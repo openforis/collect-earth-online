@@ -63,13 +63,8 @@
                                                    [:institutionId Int]]]]})
 
 
-(defmacro payload [query]
+(defmacro validate [query]
   `(fn [args#]
-     (println (-> validation-map
-             (get ~(keyword (str query)))
-             ;; mu/closed-schema
-             (m/explain args#)
-             me/humanize))
      (if (-> validation-map
              (get ~(keyword (str query)))
              ;; mu/closed-schema
