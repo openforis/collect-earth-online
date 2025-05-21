@@ -1,5 +1,6 @@
 (ns collect-earth-online.api
   (:require [collect-earth-online.db.imagery :as imagery]
+            [collect-earth-online.db.geodash :as geodash]
             [malli.core :as m]
             [malli.util :as mu]
             [triangulum.response :refer [data-response]]
@@ -16,51 +17,84 @@
                      (or (boolean? input) (= input (str output))))])
 
 (def validation-map
-  {:imagery/get-institution-imagery  [:map
-                                      [:params [:map
-                                                [:institutionId Int]]]
-                                      [:session [:map
-                                                 [:userId {:optional true} Int]]]]
-   :imagery/get-project-imagery      [:map [:session [:map
-                                                      [:userId {:optional true} Int]]
-                                            :params [:map
-                                                     [:tokenKey :string]
-                                                     [:projectId Int]]]]
+  {:imagery/get-institution-imagery             [:map
+                                                 [:params  [:map
+                                                            [:institutionId      Int]]]
+                                                 [:session [:map
+                                                            [:userId
+                                                             {:optional true}    Int]]]]
+   :imagery/get-project-imagery                 [:map
+                                                 [:session [:map
+                                                            [:userId
+                                                             {:optional true}    Int]]]
+                                                 [:params  [:map
+                                                            [:tokenKey           :string]
+                                                            [:projectId          Int]]]]
    :imagery/get-public-imagery []
-   :imagery/add-institution-imagery [:map [:params
-                                           [:map
-                                            [:institutionId Int]
-                                            [:imageryTitle :string]
-                                            [:imageryAttribution :string]
-                                            [:sourceConfig :string] ;;json
-                                            [:isProxied Bool]
-                                            [:addToAllProjects {:optional true} Bool]]]]
-   :imagery/update-institution-imagery [:map [:params
-                                              [:map
-                                               [:imageryId Int]
-                                               [:imageryTitle :string]
-                                               [:imageryAttribution :string]
-                                               [:sourceConfig :string] ;;json
-                                               [:isProxied Bool]
-                                               [:addToAllProjects {:optional true} Bool]
-                                               [:institutionId Int]]]]
-   :imagery/update-imagery-visibility [:map [:params
-                                             [:map
-                                              [:imageryId Int]
-                                              [:visibility :string]
-                                              [:institutionId Int]]]]
-   :imagery/archive-institution-imagery [:map [:params
-                                               [:map
-                                                [:imageryId Int]]]]
-   :imagery/bulk-archive-institution-imagery [:map [:params
-                                                    [:map
-                                                     [:institutionId Int]
-                                                     [:imageryIds [:vector Int]]]]]
-   :imagery/bulk-update-imagery-visibility [:map [:params
-                                                  [:map
-                                                   [:imageryIds [:vector Int]]
-                                                   [:visibility :string]
-                                                   [:institutionId Int]]]]})
+   :imagery/add-institution-imagery             [:map
+                                                 [:params  [:map
+                                                            [:institutionId      Int]
+                                                            [:imageryTitle       :string]
+                                                            [:imageryAttribution :string]
+                                                            [:sourceConfig       :string]
+                                                            [:isProxied          Bool]
+                                                            [:addToAllProjects
+                                                             {:optional true}    Bool]]]]
+   :imagery/update-institution-imagery          [:map
+                                                 [:params  [:map
+                                                            [:imageryId          Int]
+                                                            [:imageryTitle       :string]
+                                                            [:imageryAttribution :string]
+                                                            [:sourceConfig       :string]
+                                                            [:isProxied          Bool]
+                                                            [:addToAllProjects
+                                                             {:optional true}    Bool]
+                                                            [:institutionId      Int]]]]
+   :imagery/update-imagery-visibility           [:map
+                                                 [:params  [:map
+                                                            [:imageryId          Int]
+                                                            [:visibility         :string]
+                                                            [:institutionId      Int]]]]
+   :imagery/archive-institution-imagery         [:map
+                                                 [:params  [:map
+                                                            [:imageryId          Int]]]]
+   :imagery/bulk-archive-institution-imagery    [:map
+                                                 [:params  [:map
+                                                            [:institutionId      Int]
+                                                            [:imageryIds [:vector Int]]]]]
+   :imagery/bulk-update-imagery-visibility      [:map
+                                                 [:params  [:map
+                                                            [:imageryIds [:vector Int]]
+                                                            [:visibility         :string]
+                                                            [:institutionId      Int]]]]
+   :geodash/gateway-request                     [:map
+                                                 [:params [:map
+                                                           [:path                :string]]]
+                                                 [:json-params                   :string]]
+   :geodash/get-project-widgets                 [:map
+                                                 [:params [:map
+                                                           [:projectId           Int]]]]
+   :geodash/create-dashboard-widget-by-id       [:map
+                                                 [:params [:map
+                                                           [:projectId           Int]
+                                                           [:widgetJSON          :string]]]]
+   :geodash/update-dashboard-widget-by-id       [:map
+                                                 [:params [:map
+                                                           [:projectId           Int]
+                                                           [:widgetJSON          :string]]]]
+   :geodash/delete-dashboard-widget-by-id       [:map
+                                                 [:params [:map
+                                                           [:projectId           Int]
+                                                           [:widgetJSON          :string]]]]   
+   :geodash/copy-project-widgets                [:map
+                                                 [:params [:map
+                                                           [:projectId           Int]
+                                                           [:templateId          Int]]]]
+   :geodash/validate-vis-params                 [:map
+                                                 [:params [:map
+                                                           [:imgPath             :string]
+                                                           [:visParams           :string]]]]
+   })
 
 
 (defmacro validate [query]
