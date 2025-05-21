@@ -1,5 +1,6 @@
 (ns collect-earth-online.routing
-  (:require [collect-earth-online.generators.ce-project :as ce-project]
+  (:require [collect-earth-online.api :refer [validate]]
+            [collect-earth-online.generators.ce-project :as ce-project]
             [collect-earth-online.db.doi          :as doi]
             [collect-earth-online.db.geodash      :as geodash]
             [collect-earth-online.db.imagery      :as imagery]
@@ -211,28 +212,28 @@
                                                 :auth-type   :admin
                                                 :auth-action :block}
    ;; Imagery API
-   [:get  "/get-institution-imagery"]          {:handler     imagery/get-institution-imagery}
-   [:get  "/get-project-imagery"]              {:handler     imagery/get-project-imagery
+   [:get  "/get-institution-imagery"]          {:handler      (validate imagery/get-institution-imagery)}
+   [:get  "/get-project-imagery"]              {:handler      (validate imagery/get-project-imagery)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-public-imagery"]               {:handler     imagery/get-public-imagery}
-   [:post "/add-institution-imagery"]          {:handler     imagery/add-institution-imagery
+   [:get  "/get-public-imagery"]               {:handler      (validate imagery/get-public-imagery)}
+   [:post "/add-institution-imagery"]          {:handler     (validate imagery/add-institution-imagery)
                                                 :auth-type   :admin
                                                 :auth-action :block}
-   [:post "/update-institution-imagery"]       {:handler     imagery/update-institution-imagery
+   [:post "/update-institution-imagery"]       {:handler     (validate imagery/update-institution-imagery)
                                                 :auth-type   :admin
                                                 :auth-action :block}
-   [:post "/update-imagery-visibility"]        {:handler     imagery/update-imagery-visibility
+   [:post "/update-imagery-visibility"]        {:handler     (validate imagery/update-imagery-visibility)
                                                 :auth-type   :admin
                                                 :auth-action :block}
-   [:post "/edit-imagery-bulk"]                {:handler     #'imagery/bulk-update-imagery-visibility
+   [:post "/edit-imagery-bulk"]                {:handler     (validate #'imagery/bulk-update-imagery-visibility)
                                                 :auth-type   :admin
                                                 :auth-action :block}
 
-   [:post "/archive-institution-imagery"]      {:handler     imagery/archive-institution-imagery
+   [:post "/archive-institution-imagery"]      {:handler     (validate imagery/archive-institution-imagery)
                                                 :auth-type   :admin
                                                 :auth-action :block}
-   [:post "/bulk-archive-institution-imagery"] {:handler     imagery/bulk-archive-institution-imagery
+   [:post "/bulk-archive-institution-imagery"] {:handler     (validate imagery/bulk-archive-institution-imagery)
                                                 :auth-type   :admin
                                                 :auth-action :block}
 
@@ -269,5 +270,5 @@
                                                :auth-type   :metrics
                                                :auth-action :block}
    [:get  "/metrics/get-project-count"]       {:handler     metrics/get-project-count}
-                                               :auth-type   :metrics
-                                               :auth-action :block})
+   :auth-type   :metrics
+   :auth-action :block})

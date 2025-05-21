@@ -1,5 +1,6 @@
 (ns collect-earth-online.handlers
-  (:require [collect-earth-online.db.institutions :refer [is-inst-admin?]]
+  (:require [collect-earth-online.db.imagery :as imagery]
+            [collect-earth-online.db.institutions :refer [is-inst-admin?]]
             [collect-earth-online.db.projects     :refer [can-collect? is-proj-admin?]]
             [collect-earth-online.db.metrics      :refer [show-metrics-user]]
             [ring.util.codec                      :refer [url-encode]]
@@ -7,6 +8,7 @@
             [triangulum.config                    :refer [get-config]]
             [triangulum.response                  :refer [no-cross-traffic?]]
             [triangulum.type-conversion           :refer [val->int]]))
+
 
 (defn route-authenticator [{:keys [session params headers] :as _request} auth-type]
   (let [user-id        (:userId session -1)
