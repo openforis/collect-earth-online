@@ -2,10 +2,10 @@
   (:require [collect-earth-online.db.imagery :as imagery]
             [collect-earth-online.db.geodash :as geodash]
             [malli.core :as m]
-            [malli.util :as mu]
             [triangulum.response :refer [data-response]]
             [triangulum.type-conversion :as tc]
-            [malli.error :as me]))
+
+            [clojure.pprint :refer [pprint]]))
 
 
 (def Int [:fn {} #(let [input %
@@ -18,7 +18,7 @@
 
 (def Json [:fn {} #(= % (-> % tc/json->clj tc/clj->json))])
 
-(def validation-map
+(def validation-map  
   {:imagery/get-institution-imagery             [:map
                                                  [:params  [:map
                                                             [:institutionId      Int]]]
@@ -30,7 +30,8 @@
                                                             [:userId
                                                              {:optional true}    Int]]]
                                                  [:params  [:map
-                                                            [:tokenKey           :string]
+                                                            [:tokenKey
+                                                             {:optional true}    :string]
                                                             [:projectId          Int]]]]
    :imagery/get-public-imagery                  [:map]
    :imagery/add-institution-imagery             [:map
@@ -38,7 +39,7 @@
                                                             [:institutionId      Int]
                                                             [:imageryTitle       :string]
                                                             [:imageryAttribution :string]
-                                                            [:sourceConfig       Json]
+                                                            [:sourceConfig       :string]
                                                             [:isProxied          Bool]
                                                             [:addToAllProjects
                                                              {:optional true}    Bool]]]]
@@ -47,7 +48,7 @@
                                                             [:imageryId          Int]
                                                             [:imageryTitle       :string]
                                                             [:imageryAttribution :string]
-                                                            [:sourceConfig       Json]
+                                                            [:sourceConfig       :string]
                                                             [:isProxied          Bool]
                                                             [:addToAllProjects
                                                              {:optional true}    Bool]
@@ -70,24 +71,52 @@
                                                             [:visibility         :string]
                                                             [:institutionId      Int]]]]
    :geodash/gateway-request                     [:map
-                                                 [:params [:map
-                                                           [:path                :string]]]
-                                                 [:json-params                   Json]]
+                                                 #_[:params [:map
+                                                           [:extent
+                                                            {:optional true}
+                                                            [:vector [:vector :float]]]
+                                                           [:basemapId
+                                                            {:optional true} Int]
+                                                           [:layout
+                                                            {:optional true}
+                                                            [:map
+                                                             [:h Int]
+                                                             [:w Int]
+                                                             [:x Int]
+                                                             [:y Int]]]
+                                                           [:name {:optional true}
+                                                            :string]
+                                                           [:startDate
+                                                            {:optional true}
+                                                            :string] ;;"2022-01-01",
+                                                           [:endDate
+                                                            {:optional true}
+                                                            :string] ;;"2022-01-01",
+                                                           [:type
+                                                            {:optional true}
+                                                            :string]
+                                                           [:id {:optonal true} Int]
+                                                           [:indexName {:optional true}
+                                                            :string]
+                                                           
+                                                           [:path
+                                                            {:optional true} :string]]]
+                                                 #_[:json-params {:optional true}                   :string]]
    :geodash/get-project-widgets                 [:map
                                                  [:params [:map
                                                            [:projectId           Int]]]]
    :geodash/create-dashboard-widget-by-id       [:map
                                                  [:params [:map
                                                            [:projectId           Int]
-                                                           [:widgetJSON          Json]]]]
+                                                           [:widgetJSON #_Json   :string]]]]
    :geodash/update-dashboard-widget-by-id       [:map
                                                  [:params [:map
                                                            [:projectId           Int]
-                                                           [:widgetJSON          Json]]]]
+                                                           [:widgetJSON  #_Json  :string]]]]
    :geodash/delete-dashboard-widget-by-id       [:map
                                                  [:params [:map
                                                            [:projectId           Int]
-                                                           [:widgetJSON          Json]]]]   
+                                                           [:widgetJSON  #_Json  :string]]]]   
    :geodash/copy-project-widgets                [:map
                                                  [:params [:map
                                                            [:projectId           Int]
@@ -95,19 +124,17 @@
    :geodash/validate-vis-params                 [:map
                                                  [:params [:map
                                                            [:imgPath             :string]
-                                                           [:visParams           Json]]]]
+                                                           [:visParams #_Json    :string]]]]
    })
 
 
 (defmacro validate [query]
   `(fn [args#]
-     (println (select-keys args# [:form-params :query-params :session]))
+     
      (if (-> validation-map
              (get ~(keyword (str query)))
-             ;; mu/closed-schema
              (m/validate args#))
        (~query args#)       
        (data-response "Invalid Request Payload"  {:status 403
                                                   :body args#}))))
-
 
