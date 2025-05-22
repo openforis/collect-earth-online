@@ -238,7 +238,7 @@
                                                 :auth-action :block}
 
    ;; GeoDash API
-   [:get  "/geo-dash/get-project-widgets"]  {:handler (validate) geodash/get-project-widgets}
+   [:get  "/geo-dash/get-project-widgets"]  {:handler (validate geodash/get-project-widgets)}
    [:post "/geo-dash/copy-project-widgets"] {:handler (validate geodash/copy-project-widgets)}
    [:post "/geo-dash/create-widget"]        {:handler (validate geodash/create-dashboard-widget-by-id)}
    [:post "/geo-dash/delete-widget"]        {:handler (validate geodash/delete-dashboard-widget-by-id)}

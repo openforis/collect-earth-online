@@ -16,6 +16,8 @@
                          output (tc/val->bool input)]
                      (or (boolean? input) (= input (str output))))])
 
+(def Json [:fn {} #(= % (-> % tc/json->clj tc/clj->json))])
+
 (def validation-map
   {:imagery/get-institution-imagery             [:map
                                                  [:params  [:map
@@ -30,13 +32,13 @@
                                                  [:params  [:map
                                                             [:tokenKey           :string]
                                                             [:projectId          Int]]]]
-   :imagery/get-public-imagery []
+   :imagery/get-public-imagery                  [:map]
    :imagery/add-institution-imagery             [:map
                                                  [:params  [:map
                                                             [:institutionId      Int]
                                                             [:imageryTitle       :string]
                                                             [:imageryAttribution :string]
-                                                            [:sourceConfig       :string]
+                                                            [:sourceConfig       Json]
                                                             [:isProxied          Bool]
                                                             [:addToAllProjects
                                                              {:optional true}    Bool]]]]
@@ -45,7 +47,7 @@
                                                             [:imageryId          Int]
                                                             [:imageryTitle       :string]
                                                             [:imageryAttribution :string]
-                                                            [:sourceConfig       :string]
+                                                            [:sourceConfig       Json]
                                                             [:isProxied          Bool]
                                                             [:addToAllProjects
                                                              {:optional true}    Bool]
@@ -70,22 +72,22 @@
    :geodash/gateway-request                     [:map
                                                  [:params [:map
                                                            [:path                :string]]]
-                                                 [:json-params                   :string]]
+                                                 [:json-params                   Json]]
    :geodash/get-project-widgets                 [:map
                                                  [:params [:map
                                                            [:projectId           Int]]]]
    :geodash/create-dashboard-widget-by-id       [:map
                                                  [:params [:map
                                                            [:projectId           Int]
-                                                           [:widgetJSON          :string]]]]
+                                                           [:widgetJSON          Json]]]]
    :geodash/update-dashboard-widget-by-id       [:map
                                                  [:params [:map
                                                            [:projectId           Int]
-                                                           [:widgetJSON          :string]]]]
+                                                           [:widgetJSON          Json]]]]
    :geodash/delete-dashboard-widget-by-id       [:map
                                                  [:params [:map
                                                            [:projectId           Int]
-                                                           [:widgetJSON          :string]]]]   
+                                                           [:widgetJSON          Json]]]]   
    :geodash/copy-project-widgets                [:map
                                                  [:params [:map
                                                            [:projectId           Int]
@@ -93,12 +95,13 @@
    :geodash/validate-vis-params                 [:map
                                                  [:params [:map
                                                            [:imgPath             :string]
-                                                           [:visParams           :string]]]]
+                                                           [:visParams           Json]]]]
    })
 
 
 (defmacro validate [query]
   `(fn [args#]
+     (println (select-keys args# [:form-params :query-params :session]))
      (if (-> validation-map
              (get ~(keyword (str query)))
              ;; mu/closed-schema
@@ -106,3 +109,5 @@
        (~query args#)       
        (data-response "Invalid Request Payload"  {:status 403
                                                   :body args#}))))
+
+
