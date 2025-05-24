@@ -285,3 +285,10 @@
           (data-response {:message "success"} {:session (assoc session :acceptedTerms true)})))
       (catch Exception e
         (data-response {:message "error when accepting data sharing terms."} {:status 500})))))
+
+(defn check-email-taken [{:keys [params]}]
+  (let [email (:email params)]    
+    (try (when (sql-primitive (call-sql"get_user_by_email" email))           
+           (data-response true))
+         (catch Exception e           
+           (data-response false)))))

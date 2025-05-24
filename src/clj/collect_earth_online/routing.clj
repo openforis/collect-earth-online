@@ -66,6 +66,7 @@
                                               :auth-action :redirect}
 
    ;; Users API
+   [:get  "/check-email-taken"]        {:handler     users/check-email-taken}
    [:get  "/get-institution-users"]          {:handler     users/get-institution-users
                                               :auth-type   :user
                                               :auth-action :block}

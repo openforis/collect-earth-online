@@ -16,9 +16,14 @@ class Register extends React.Component {
       userId: null
     };
   }
-  fetchUserIfExists = () => {
-    console.log(this.state.email);
-    this.setState ({userId: 1});
+  fetchUserIfExists = () => {    
+    fetch(`/check-email-taken?email=${this.state.email}`)
+      .then((response) => Promise.all([response.ok, response.text()]))
+      .then(([response, data]) => {
+        console.log("email-exists-check response", {userId: data === "true"});
+	this.setState ({userId: data === "true"});
+      });
+    
   };
   register = () => {
     if (!this.state.acceptTOS || !this.state.acceptDataTOS) {
@@ -71,14 +76,15 @@ class Register extends React.Component {
                   autoComplete="off"
                   className="form-control"
                   id="email"
-                  onChange={(e) => this.setState({ email: e.target.value })}
+                  onChange={(e) => this.setState({ email: e.target.value ,
+                                                   userId: null})}
                   onBlur={() => this.fetchUserIfExists()}
                   placeholder="Email"
                   type="email"
                   value={this.state.email}
                 />
               </div>
-              {this.state.userId === 0 && 
+              {this.state.userId === false && 
                <React.Fragment>
                  <div className="form-group">
                    <label htmlFor="password">Enter your password</label>
@@ -129,17 +135,16 @@ class Register extends React.Component {
                      onChange={() => this.setState({ acceptDataTOS: !this.state.acceptDataTOS })}
                      type="checkbox"
                    />
-                 </div>
+                   <label>{this.state.userId}</label>
+                     </div>
                </React.Fragment>}
               
               <button className="btn btn-lightgreen float-right mb-2"
                        type="submit"
-                       disabled={!this.state.userId}>
-                 { this.state.userId && this.state.userId > 0 ? "Resend Validation Email" : "Register"}
+                       disabled={this.state.userId === null}>
+                 { this.state.userId ? "Resend Validation Email" : "Register"}
 		 </button>
-              
-              
-              
+
               </form>
           </div>
         </div>
