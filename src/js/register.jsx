@@ -16,15 +16,28 @@ class Register extends React.Component {
       userId: null
     };
   }
+
   fetchUserIfExists = () => {    
     fetch(`/check-email-taken?email=${this.state.email}`)
       .then((response) => Promise.all([response.ok, response.text()]))
       .then(([response, data]) => {
         console.log("email-exists-check response", {userId: data === "true"});
 	this.setState ({userId: data === "true"});
-      });
-    
+      });    
   };
+
+  resendValidationEmail = () => {
+    fetch (`/resend-validation-email?email=${this.state.email}`, {
+      method: "POST"
+    })
+      .then((response) => Promise.all([response.ok, response.text()]))
+      .then ((response) => {
+	this.setState ({modal: {alert: {alertType: "Resend Validation Alert",
+                                         alertMessage: response[1]}}});
+      });
+  };
+
+
   register = () => {
     if (!this.state.acceptTOS || !this.state.acceptDataTOS) {
       this.setState({modal: {alert: {alertType: "Registration Alert",
@@ -67,7 +80,7 @@ class Register extends React.Component {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                this.register();
+                this.state.userId ? this.resendValidationEmail () : this.register() ;
               }}
             >
               <div className="form-group">
