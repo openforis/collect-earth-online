@@ -5,6 +5,7 @@
             [triangulum.response :refer [data-response]]
             [triangulum.type-conversion :as tc]
 
+            [malli.error :as me]
             [clojure.pprint :refer [pprint]]))
 
 
@@ -17,6 +18,39 @@
                      (or (boolean? input) (= input (str output))))])
 
 (def Json [:fn {} #(= % (-> % tc/json->clj tc/clj->json))])
+
+(def Coordinates [:vector {:min 2 :max 2} :float])
+
+(def GatewayPath [:enum "timeSeriesByIndex"
+                  "imageCollectionByIndex"
+                  "image"
+                  "degradationTimeSeries"
+                  "filteredSentinel2"
+                  "getPlanetTile"
+                  "statistics"
+                  "filteredSentinelSAR"
+                  "imageCollection"
+                  "filteredLandsat"
+                  "degradationTileUrl"
+                  "featureCollection"
+                  "getAvailableBands"
+                  "filteredNicfi"])
+
+(def GatewayRequest
+  [:map
+   [:path GatewayPath]
+   [:layout [:map
+             [:h Int]
+             [:w Int]
+             [:x Int]
+             [:y Int] ]]
+   [:name :string]
+   [:startDate #_ "YYYY-MM-DD" :string]
+   [:endDate #_ "YYYY-MM-DD" :string]
+   [:type :string]
+   [:geometry [:vector Coordinates]]
+   [:id Int]
+   [:indexName :string]])
 
 (def validation-map  
   {:imagery/get-institution-imagery             [:map
@@ -71,52 +105,24 @@
                                                             [:visibility         :string]
                                                             [:institutionId      Int]]]]
    :geodash/gateway-request                     [:map
-                                                 #_[:params [:map
-                                                           [:extent
-                                                            {:optional true}
-                                                            [:vector [:vector :float]]]
-                                                           [:basemapId
-                                                            {:optional true} Int]
-                                                           [:layout
-                                                            {:optional true}
-                                                            [:map
-                                                             [:h Int]
-                                                             [:w Int]
-                                                             [:x Int]
-                                                             [:y Int]]]
-                                                           [:name {:optional true}
-                                                            :string]
-                                                           [:startDate
-                                                            {:optional true}
-                                                            :string] ;;"2022-01-01",
-                                                           [:endDate
-                                                            {:optional true}
-                                                            :string] ;;"2022-01-01",
-                                                           [:type
-                                                            {:optional true}
-                                                            :string]
-                                                           [:id {:optonal true} Int]
-                                                           [:indexName {:optional true}
-                                                            :string]
-                                                           
-                                                           [:path
-                                                            {:optional true} :string]]]
-                                                 #_[:json-params {:optional true}                   :string]]
+                                                 [:params GatewayRequest]
+                                                 
+                                                 [:json-params {:optional true}  Json]]
    :geodash/get-project-widgets                 [:map
                                                  [:params [:map
                                                            [:projectId           Int]]]]
    :geodash/create-dashboard-widget-by-id       [:map
                                                  [:params [:map
                                                            [:projectId           Int]
-                                                           [:widgetJSON #_Json   :string]]]]
+                                                           [:widgetJSON          Json]]]]
    :geodash/update-dashboard-widget-by-id       [:map
                                                  [:params [:map
                                                            [:projectId           Int]
-                                                           [:widgetJSON  #_Json  :string]]]]
+                                                           [:widgetJSON          Json]]]]
    :geodash/delete-dashboard-widget-by-id       [:map
                                                  [:params [:map
                                                            [:projectId           Int]
-                                                           [:widgetJSON  #_Json  :string]]]]   
+                                                           [:widgetJSON          Json]]]]   
    :geodash/copy-project-widgets                [:map
                                                  [:params [:map
                                                            [:projectId           Int]
@@ -124,9 +130,8 @@
    :geodash/validate-vis-params                 [:map
                                                  [:params [:map
                                                            [:imgPath             :string]
-                                                           [:visParams #_Json    :string]]]]
+                                                           [:visParams           Json]]]]
    })
-
 
 (defmacro validate [query]
   `(fn [args#]
@@ -134,7 +139,7 @@
      (if (-> validation-map
              (get ~(keyword (str query)))
              (m/validate args#))
-       (~query args#)       
+       (~query args#)
        (data-response "Invalid Request Payload"  {:status 403
                                                   :body args#}))))
 

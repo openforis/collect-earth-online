@@ -238,13 +238,13 @@
                                                 :auth-action :block}
 
    ;; GeoDash API
-   [:get  "/geo-dash/get-project-widgets"]  {:handler (validate geodash/get-project-widgets)}
-   [:post "/geo-dash/copy-project-widgets"] {:handler (validate geodash/copy-project-widgets)}
-   [:post "/geo-dash/create-widget"]        {:handler (validate geodash/create-dashboard-widget-by-id)}
-   [:post "/geo-dash/delete-widget"]        {:handler (validate geodash/delete-dashboard-widget-by-id)}
-   [:post "/geo-dash/gateway-request"]      {:handler (validate geodash/gateway-request)}
-   [:get "/geo-dash/validate-vis-params"]   {:handler (validate geodash/validate-vis-params)}
-   [:post "/geo-dash/update-widget"]        {:handler (validate geodash/update-dashboard-widget-by-id)}
+   [:get  "/geo-dash/get-project-widgets"]  {:handler geodash/get-project-widgets}
+   [:post "/geo-dash/copy-project-widgets"] {:handler geodash/copy-project-widgets}
+   [:post "/geo-dash/create-widget"]        {:handler geodash/create-dashboard-widget-by-id}
+   [:post "/geo-dash/delete-widget"]        {:handler geodash/delete-dashboard-widget-by-id}
+   [:post "/geo-dash/gateway-request"]      {:handler geodash/gateway-request}
+   [:get "/geo-dash/validate-vis-params"]   {:handler geodash/validate-vis-params}
+   [:post "/geo-dash/update-widget"]        {:handler geodash/update-dashboard-widget-by-id}
    ;; Proxy Routes
    [:get  "/get-tile"]                      {:handler     proxy/proxy-imagery
                                              :auth-type   :no-cross
