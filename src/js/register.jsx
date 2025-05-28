@@ -98,7 +98,7 @@ class Register extends React.Component {
                 />
               </div>
               {this.state.userId === false && 
-               <React.Fragment>
+               <>
                  <div className="form-group">
                    <label htmlFor="password">Enter your password</label>
                    <input
@@ -150,7 +150,7 @@ class Register extends React.Component {
                    />
                    <label>{this.state.userId}</label>
                      </div>
-               </React.Fragment>}
+               </>}
               
               <button className="btn btn-lightgreen float-right mb-2"
                        type="submit"

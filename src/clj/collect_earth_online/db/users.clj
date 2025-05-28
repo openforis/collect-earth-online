@@ -288,7 +288,7 @@
 
 (defn check-email-taken [{:keys [params]}]
   (let [email (:email params)]    
-    (try (when (sql-primitive (call-sql"get_user_by_email" email))           
+    (try (when (sql-primitive (call-sql "get_user_by_email" email))           
            (data-response true))
          (catch Exception e           
            (data-response false)))))
