@@ -285,3 +285,31 @@
           (data-response {:message "success"} {:session (assoc session :acceptedTerms true)})))
       (catch Exception e
         (data-response {:message "error when accepting data sharing terms."} {:status 500})))))
+
+(defn check-email-taken [{:keys [params]}]
+  (let [email (:email params)]    
+    (try (when (sql-primitive (call-sql "get_user_by_email" email))           
+           (data-response true))
+         (catch Exception e           
+           (data-response false)))))
+
+(defn resend-validation-email [{:keys [params]}]
+  (let [email          (:email params)    
+        reset-key      (str (UUID/randomUUID))
+        timestamp      (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
+                           (.format (LocalDateTime/now)))
+        email-msg      (format (str "Dear %s,\n\n"
+                                    "Thank you for signing up for CEO!\n\n"
+                                    "Your Account Summary Details:\n\n"
+                                    "  Email: %s\n"
+                                    "  Created on: %s\n\n"
+                                    "  Click the following link to verify your email:\n"
+                                    "  %sverify-email?email=%s&passwordResetKey=%s\n\n"
+                                    "Kind Regards,\n"
+                                    "  The CEO Team")
+                               email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)]  
+        (try
+          (do (send-mail email nil nil "Welcome to CEO!" email-msg :text)
+              (data-response (format "Email Sent. Please check all inboxes at %s for a new email with further instructions." email)))
+          (catch Exception _
+	    (data-response  "A server error interrupted your request. Please try again or contact an administrator.")))))
