@@ -11,7 +11,6 @@ class Register extends React.Component {
       password: "",
       passwordConfirmation: "",
       acceptTOS: false,
-      acceptDataTOS: false,
       modal: null,
       userId: null
     };
@@ -39,9 +38,9 @@ class Register extends React.Component {
 
 
   register = () => {
-    if (!this.state.acceptTOS || !this.state.acceptDataTOS) {
+    if (!this.state.acceptTOS) {
       this.setState({modal: {alert: {alertType: "Registration Alert",
-                                     alertMessage: "You must accept both terms of service to continue."}}});
+                                     alertMessage: "You must accept the terms of service to continue."}}});
     } else {
       fetch("/register", {
         method: "POST",
@@ -140,16 +139,7 @@ class Register extends React.Component {
                      .
                    </label>
                  </div>
-                 <div className="form-check mb-3">
-                   <input
-                     checked={this.state.acceptDataTOS}
-                     className="form-check-input"
-                     id="data-tos-check"
-                     onChange={() => this.setState({ acceptDataTOS: !this.state.acceptDataTOS })}
-                     type="checkbox"
-                   />
-                   <label>{this.state.userId}</label>
-                     </div>
+                 
                </>}
               
               <button className="btn btn-lightgreen float-right mb-2"
