@@ -180,25 +180,25 @@
    [:get "/doi"]          {:handler     #'doi/get-doi-reference}
 
    ;; Plots API
-   [:get  "/get-collection-plot"]              {:handler     #'plots/get-collection-plot
+   [:get  "/get-collection-plot"]              {:handler     (validate #'plots/get-collection-plot)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-plot-disagreement"]            {:handler plots/get-plot-disagreement}
-   [:get  "/get-plot-sample-geom"]             {:handler plots/get-plot-sample-geom}
-   [:get  "/get-plotters"]                     {:handler     plots/get-plotters
+   [:get  "/get-plot-disagreement"]            {:handler (validate plots/get-plot-disagreement)}
+   [:get  "/get-plot-sample-geom"]             {:handler (validate plots/get-plot-sample-geom)}
+   [:get  "/get-plotters"]                     {:handler     (validate plots/get-plotters)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-project-plots"]                {:handler plots/get-project-plots}
-   [:post "/add-user-samples"]                 {:handler     #'plots/add-user-samples
+   [:get  "/get-project-plots"]                {:handler (validate plots/get-project-plots)}
+   [:post "/add-user-samples"]                 {:handler     (validate #'plots/add-user-samples)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:post "/flag-plot"]                        {:handler     plots/flag-plot
+   [:post "/flag-plot"]                        {:handler     (validate plots/flag-plot)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:post "/release-plot-locks"]               {:handler     plots/release-plot-locks
+   [:post "/release-plot-locks"]               {:handler     (validate plots/release-plot-locks)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:post "/reset-plot-lock"]                  {:handler     plots/reset-plot-lock
+   [:post "/reset-plot-lock"]                  {:handler     (validate plots/reset-plot-lock)
                                                 :auth-type   :collect
                                                 :auth-action :block}
    ;; Institutions API

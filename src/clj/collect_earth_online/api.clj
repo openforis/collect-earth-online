@@ -131,6 +131,69 @@
                                                  [:params [:map
                                                            [:imgPath             :string]
                                                            [:visParams           Json]]]]
+   :#'plots/get-collection-plot [:map
+                                 [:params [:map
+                                           [:navigationMode {:optional true} :string]
+                                           [:direction {:optional true}
+                                            [:enum "previous"
+                                             "next"
+                                             "id"]]
+                                           [:projectId Int]
+                                           [:visibleId Int]
+                                           [:threshold Int]
+                                           [:projectType  {:optional true} :string]
+                                           [:currentUserId {:optional true} Int]
+                                           [:inReviewMode {:optional true} Bool]]]
+                                 [:session [:map
+                                            [:userId {:optional true} Int]]]]
+   :plots/get-plot-disagreement [:map
+                                 [:params [:map
+                                           [:plotId Int]
+                                           [:projectId Int]]]]
+   :plots/get-plot-sample-geom [:map
+                                [:params [:map
+                                          [:plotId Int]]]]
+   :plots/get-plotters [:map
+                        [:params [:map
+                                  [:plotId Int]
+                                  [:projectId Int]]]]
+   :plots/get-project-plots [:map
+                             [:params [:map
+                                       [:max Int]
+                                       [:projectId Int]]]]
+   :#'plots/add-user-samples [:map
+                              [:params [:map
+                                        [:projectId Int]
+                                        [:plotId Int]
+                                        [:currentUserId {:optional true} Int]
+                                        [:inReviewMode Bool]
+                                        [:confidence {:optional true} Int]
+                                        [:confidenceComment :string]
+                                        [:collectionStart Int]
+                                        [:userSamples [:map]]
+                                        [:projectType [:enum "simplified" "regular"]]
+                                        [:imageryIds Json]]]
+                              [:session [:map
+                                         [:userId {:optional true} Int]]]]
+   :plots/flag-plot [:map
+                     [:params [:map
+                               [:projectId Int]
+                               [:plotId Int]
+                               [:currentUserId {:optional true} Int]
+                               [:inReviewMode {:optional true} Bool]
+                               [:collectionStart Int]
+                               [:flaggedReason :string]]]
+                     [:session [:map
+                                [:userId {:optional true} Int]]]]
+   :plots/release-plot-locks [:map
+                              [:session [:map
+                                         [:userId {:optional true} Int]]]]
+   :plots/reset-plot-lock [:map
+                           [:params [:map
+                                     [:plotId Int]]]
+                           [:session [:map
+                                      [:userId {:optional true} Int]]]]
+   
    })
 
 (defmacro validate [query]
