@@ -132,7 +132,7 @@
                                                  [:params [:map
                                                            [:imgPath             :string]
                                                            [:visParams           Json]]]]
-   :doi/create-doi!                             [:map
+   :#'doi/create-doi!                             [:map
                                                  [:session [:map
                                                             [:userId {:optional? true} Int]
                                                             ]]
@@ -141,10 +141,10 @@
                                                              [:projectName :string]
                                                              [:institution Int]
                                                              [:description :string]]]]
-   :doi/publish-doi!                            [:map
+   :#'doi/publish-doi!                            [:map
                                                  [:params [:map
                                                            [:projectId Int]]]]
-   :doi/get-doi-reference                       [:map
+   :#'doi/get-doi-reference                       [:map
                                                  [:params [:map
                                                            [:projectId Int]]]]
    })

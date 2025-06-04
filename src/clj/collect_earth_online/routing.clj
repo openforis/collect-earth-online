@@ -171,13 +171,13 @@
                                               :auth-action :block}
 
    ;; DOI API
-   [:post "/create-doi"]  {:handler     (validate doi/create-doi!)
+   [:post "/create-doi"]  {:handler     (validate #'doi/create-doi!)
                            :auth-type   :admin
                            :auth-action :block}
-   [:post "/publish-doi"] {:handler     (validate doi/publish-doi!)
+   [:post "/publish-doi"] {:handler     (validate #'doi/publish-doi!)
                            :auth-type   :admin
                            :auth-action :block}
-   [:get "/doi"]          {:handler     (validate doi/get-doi-reference)}
+   [:get "/doi"]          {:handler     (validate #'doi/get-doi-reference)}
 
    ;; Plots API
    [:get  "/get-collection-plot"]              {:handler     #'plots/get-collection-plot
