@@ -1,10 +1,11 @@
 (ns collect-earth-online.api
-  (:require [collect-earth-online.db.imagery :as imagery]
+  (:require [collect-earth-online.db.doi     :as doi]
             [collect-earth-online.db.geodash :as geodash]
+            [collect-earth-online.db.imagery :as imagery]
             [malli.core :as m]
             [triangulum.response :refer [data-response]]
             [triangulum.type-conversion :as tc]
-
+            
             [malli.error :as me]
             [clojure.pprint :refer [pprint]]))
 
@@ -131,11 +132,25 @@
                                                  [:params [:map
                                                            [:imgPath             :string]
                                                            [:visParams           Json]]]]
+   :#'doi/create-doi!                             [:map
+                                                 [:session [:map
+                                                            [:userId {:optional? true} Int]
+                                                            ]]
+                                                 [:params [:map
+                                                             [:projectId Int]
+                                                             [:projectName :string]
+                                                             [:institution Int]
+                                                             [:description :string]]]]
+   :#'doi/publish-doi!                            [:map
+                                                 [:params [:map
+                                                           [:projectId Int]]]]
+   :#'doi/get-doi-reference                       [:map
+                                                 [:params [:map
+                                                           [:projectId Int]]]]
    })
 
 (defmacro validate [query]
-  `(fn [args#]
-     
+  `(fn [args#]     
      (if (-> validation-map
              (get ~(keyword (str query)))
              (m/validate args#))
