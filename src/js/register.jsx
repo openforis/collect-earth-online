@@ -19,13 +19,12 @@ class Register extends React.Component {
   fetchUserIfExists = () => {    
     fetch(`/check-email-taken?email=${this.state.email}`)
       .then((response) => Promise.all([response.ok, response.text()]))
-      .then(([response, data]) => {
-        console.log("email-exists-check response", {userId: data === "true"});
+      .then(([response, data]) => {        
 	this.setState ({userId: data === "true"});
       });    
   };
 
-  resendValidationEmail = () => {
+  resendValidationEmail = () => {  
     fetch (`/resend-validation-email?email=${this.state.email}`, {
       method: "POST"
     })
@@ -57,6 +56,7 @@ class Register extends React.Component {
                                            alertMessage: "You have successfully created an account.  Please check your email for a link to verify your account."}}});           
             window.location = "/home";
           } else {
+            console.log(data);
             this.setState({modal: {alert: {alertType: "Registration Alert",
                                            alertMessage: data[1]}}});
           }
