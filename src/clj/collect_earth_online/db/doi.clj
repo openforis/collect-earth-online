@@ -23,6 +23,7 @@
     (http/get (str base-url "/deposit/depositions/" deposition-id) {:headers headers :as :json})))
 
 (defn get-doi-reference
+  "{:params {:projectId :int-str}}"
   [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
         doi-path   (:doi_path (first (call-sql "select_doi_by_project" project-id)))]
@@ -183,7 +184,13 @@
       published-doi)))
 
 (defn create-doi!
+  "{:params  {:projectId   :int-str
+              :projectName :string
+              :institution :int-str
+              :description :string}
+    :session  {:userId     :int-str}}"
   [{:keys [params session]}]
+  (println "received create-doi request")
   (let [user-id            (:userId session -1)
         project-id         (:projectId params)
         project-name       (:projectName params)
@@ -226,7 +233,8 @@
                          {:status 500}))))))
 
 (defn publish-doi!
-  "request zenodo to publish the DOI on DataCite"
+  "request zenodo to publish the DOI on DataCite
+  {:params {:projectId :int-str}}"
   [{:keys [params]}]
   (let [project-id (:projectId params)
         doi-id     (:doi_uid (first (call-sql "select_doi_by_project" project-id)))]
