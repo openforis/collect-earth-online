@@ -262,15 +262,13 @@
                                              :auth-action :block}
 
    ;; Metrics
-   [:get  "/metrics/get-imagery-access"]      {:handler     metrics/get-imagery-counts
+   [:get  "/metrics/get-imagery-access"]      {:handler     (validate metrics/get-imagery-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-projects-with-gee"]   {:handler     metrics/get-projects-with-gee
+   [:get  "/metrics/get-projects-with-gee"]   {:handler     (validate metrics/get-projects-with-gee)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-sample-plot-counts"]  {:handler     metrics/get-sample-plot-counts
+   [:get  "/metrics/get-sample-plot-counts"]  {:handler     (validate metrics/get-sample-plot-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-project-count"]       {:handler     metrics/get-project-count}
-   :auth-type   :metrics
-   :auth-action :block})
+   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}})
