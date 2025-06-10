@@ -78,8 +78,9 @@ def safeParseJSON(val):
 def validateJSON(image, params):
     try:
         dummy_img = ee.Image(image)
-        visd_img = dummy_img.visualize(**params)
-        vis_info = visd_img.getInfo()
+        if params:
+            visd_img = dummy_img.visualize(**params)
+            vis_info = visd_img.getInfo()
         return None
     except Exception as e:
         return str(e)
