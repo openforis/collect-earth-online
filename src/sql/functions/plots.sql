@@ -505,7 +505,7 @@ CREATE OR REPLACE FUNCTION update_user_plot(
    _imageryIds           jsonb
  ) RETURNS integer AS $$
     UPDATE user_plots up
-      SET confidence = up.confidence,
+      SET confidence = _confidence,
           confidence_comment = _confidence_comment,
           collection_start = up.collection_start,
           flagged = FALSE,

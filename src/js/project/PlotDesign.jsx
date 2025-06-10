@@ -7,6 +7,8 @@ import {
   readFileAsArrayBuffer,
   readFileAsBase64Url,
 } from "../utils/generalUtils";
+
+import { filterObject } from "../utils/sequence";
 import { ProjectContext, plotLimit } from "./constants";
 import { mercator } from "../utils/mercator";
 import Modal from "../components/Modal";
@@ -108,6 +110,7 @@ export class PlotDesign extends React.Component {
       numPlots: 1,
       plotSize: plotWidth / 2,
       allowDrawnSamples: true,
+      plotDistribution: "simplified",
       designSettings: {
         ...designSettings,
         sampleGeometries: {"lines": true, "points": true, "polygons": true}} })
@@ -308,7 +311,6 @@ export class PlotDesign extends React.Component {
 
   renderAOISelector = () => {
     const { boundaryType, type } = this.context;
-    const disableSelector = (type === "simplified") ? true : false;
     const boundaryOptions = [
       { value: "manual", label: "Input coordinates" },
       { value: "file", label: "Upload shp file" },
@@ -321,7 +323,6 @@ export class PlotDesign extends React.Component {
             className="form-control form-control-sm"
             onChange={(e) => this.setPlotDetails({ boundaryType: e.target.value })}
             value={boundaryType}
-            disabled={disableSelector}
           >
             {boundaryOptions.map(({ value, label }) => (
               <option key={value} value={value}>
@@ -455,7 +456,7 @@ export class PlotDesign extends React.Component {
         <div className="d-flex">
           {this.renderLabeledInput("Number of plots", "numPlots", disabled)}
           <span className="mx-3">{this.renderPlotShape()}</span>
-          {this.renderLabeledInput(plotUnits, "plotSize", disabled)}
+          {this.renderLabeledInput(plotUnits, "plotSize")}
         </div>
       </div>
     );
@@ -478,9 +479,18 @@ export class PlotDesign extends React.Component {
     );
   };
 
+  renderSimplifiedSelector = () => {
+    const { aoiFeatures } = this.context;
+    return (
+      <div>
+        {this.renderAOISelector()}
+        {aoiFeatures.map(this.renderStrataRow)}
+      </div>
+    );
+  };
+
   render() {
     const { plotDistribution, designSettings } = this.context;
-    const projectDetails = this.context;
     const { totalPlots } = this.props;
     const plotOptions = {
       random: {
@@ -514,8 +524,21 @@ export class PlotDesign extends React.Component {
           "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
         layout: this.renderFileInput("geojson"),
       },
-
     };
+
+    const simplifiedPlotOptions = {
+      ...filterObject(
+        plotOptions,
+        ([_id, item]) => item.display !== "Random" && item.display !== "Gridded"
+      ),
+      simplified: {
+        display: "Simplified AOI",
+        description: "Use the map preview or the coordinate inputs to create the project plot",
+        layout: this.renderSimplifiedSelector(),
+      },
+    };
+
+    const spatialDistributionOptions = this.context.type === 'simplified' ? simplifiedPlotOptions : plotOptions;
 
     return (
       <div id="plot-design">
@@ -536,20 +559,19 @@ export class PlotDesign extends React.Component {
                     : this.setPlotDetails({ plotDistribution: e.target.value })
                 }
                 value={plotDistribution}
-                disabled={this.context.type === "simplified"}
               >
-                {Object.entries(plotOptions).map(([key, options]) => (
+                {Object.entries(spatialDistributionOptions).map(([key, options]) => (
                   <option key={key} value={key}>
                     {options.display}
                   </option>
                 ))}
               </select>
             </div>
-            <p className="font-italic ml-2">{`- ${plotOptions[plotDistribution].description}`}</p>
-            {plotOptions[plotDistribution].alert &&
-              <p className="alert">- {plotOptions[plotDistribution].alert}</p>}
+            <p className="font-italic ml-2">{`- ${spatialDistributionOptions[plotDistribution].description}`}</p>
+            {spatialDistributionOptions[plotDistribution].alert &&
+              <p className="alert">- {spatialDistributionOptions[plotDistribution].alert}</p>}
           </div>
-          <div>{plotOptions[plotDistribution].layout}</div>
+          <div>{spatialDistributionOptions[plotDistribution].layout}</div>
           <p
             className="font-italic ml-2 small"
             style={{

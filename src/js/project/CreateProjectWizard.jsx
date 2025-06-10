@@ -268,7 +268,8 @@ export default class CreateProjectWizard extends React.Component {
   updateProjectType = (projectType) => {
     const privacyLevel = projectType === "simplified" ? "public" : "institution";
     this.setState({type: projectType},  () => {
-      this.context.setProjectDetails({ type: projectType, sampleDistribution: "center", privacyLevel: privacyLevel});
+      this.context.setProjectDetails({ type: projectType, plotDistribution: "simplified",
+                                       sampleDistribution: "center", privacyLevel: privacyLevel});
       this.getTemplateProjects();
     });
   };
