@@ -58,7 +58,7 @@
                                         "  Email: %s\n"
                                         "  Created on: %s\n\n"
                                         "  Click the following link to verify your email:\n"
-                                        "  %sverify-email?email=%s&passwordResetKey=%s\n\n"
+                                        "  %s/verify-email?email=%s&passwordResetKey=%s\n\n"
                                         "Kind Regards,\n"
                                         "  The CEO Team")
                                    email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)
@@ -68,7 +68,9 @@
           (do (call-sql "user_verified" user-id)
               (data-response "You have successfully created an account"))
           (try
-            (send-mail email nil nil "Welcome to CEO!" email-msg :text)
+            (do              
+              (send-mail email nil nil "Welcome to CEO!" email-msg :text)              
+              (data-response ""))            
             (catch Exception _
               (data-response (str "A new user account was created but there was a server error.  Please contact support@sig-gis.com.")))))))))
 
@@ -294,7 +296,7 @@
            (data-response false)))))
 
 (defn resend-validation-email [{:keys [params]}]
-  (let [email          (:email params)    
+  (let [email          (:email params)
         reset-key      (str (UUID/randomUUID))
         timestamp      (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
                            (.format (LocalDateTime/now)))
@@ -304,12 +306,12 @@
                                     "  Email: %s\n"
                                     "  Created on: %s\n\n"
                                     "  Click the following link to verify your email:\n"
-                                    "  %sverify-email?email=%s&passwordResetKey=%s\n\n"
+                                    "  %s/verify-email?email=%s&passwordResetKey=%s\n\n"
                                     "Kind Regards,\n"
                                     "  The CEO Team")
-                               email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)]  
-        (try
-          (do (send-mail email nil nil "Welcome to CEO!" email-msg :text)
-              (data-response (format "Email Sent. Please check all inboxes at %s for a new email with further instructions." email)))
-          (catch Exception _
-	    (data-response  "A server error interrupted your request. Please try again or contact an administrator.")))))
+                               email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)]
+    (try
+      (do (send-mail email nil nil "Welcome to CEO!" email-msg :text)
+          (data-response (format "Email Sent. Please check all inboxes at %s for a new email with further instructions." email)))
+      (catch Exception _
+	(data-response  "A server error interrupted your request. Please try again or contact an administrator.")))))
