@@ -149,7 +149,7 @@
                                                         [:imgPath             :string]
                                                         [:visParams           Json]]]]
    
-   :#'doi/create-doi!                        [:map
+   :doi/create-doi!                        [:map
                                               [:uri [:= "/create-doi"]]
                                               [:session [:map
                                                          [:userId {:optional true}  Int]]]
@@ -159,41 +159,48 @@
                                                         [:institution Int]
                                                         [:description :string]]]]
    
-   :#'doi/publish-doi!                       [:map
+   :doi/publish-doi!                       [:map
                                               [:uri [:= "/publish-doi"]]
                                               [:params [:map
                                                         [:projectId Int]]]]
-   :#'doi/get-doi-reference                  [:map
+   :doi/get-doi-reference                  [:map
                                               [:uri [:= "/doi"]]
                                               [:params [:map
                                                         [:projectId Int]]]]})
-(def Host (atom nil))
-(def Port (atom nil))
-(reset! Host (get-config :triangulum.server/http-port))
-(reset! Port (get-config :triangulum.server/http-host))
-(def request-wrapper
+
+(def Session
+  [:map 
+   [:userId        {:optional true} Int]
+   [:userName      {:optional true} :string]
+   [:acceptedTerms {:optional true} Bool]
+   [:userRole      {:optional true} :string]])
+
+(def request-wrapper #_[host port]
   [:map
    {:closed true}
    [:ssl-client-cert    :any] ;;can we do better than this?
    [:protocol           [:enum "HTTP/1.1" "HTTP/2" "h2c"]]
-   [:cookies            [:map-of :string :string]]
+   [:cookies            [:map-of :string :any]]
    [:remote-addr #_ "127.0.0.1" :string]
-   [:session            [:map-of :string :any]]
-   [:params             [:map-of :string :any]] ;;do we need to see all four?
-   [:form-params        [:map-of :string :any]] ;;or just one per request?
-   [:multipart-params   [:map-of :string :any]] ;;how do we stipulate that?
-   [:query-params       [:map-of :string :any]] ;;seriously
-   [:headers            [:map-of :string :string]
+   #_   [:uri                :string]
+   [:session            Session]
+   [:params             [:map]] ;;do we need to see all four?
+   [:form-params        [:map]#_[:map-of :string :any]] ;;or just one per request?
+   [:multipart-params   [:map]#_[:map-of :string :any]] ;;how do we stipulate that?
+   [:query-params       [:map]#_[:map-of :string :any]] ;;seriously   
+   ;; aren't all of the above -params keys merged due to triangulum?
+   [:headers            [:map-of :string :string]   
     #_{"connection" "close",
        "user-agent" "Apache-HttpClient/4.5.13 (Java/17.0.15)",
        "host" "local.collect.earth:8080",
        "accept-encoding" "gzip, deflate"}]
-   [:server-port        [:= Host]] 
-   [:server-name        [:= Port]]
+   [:server-port        [:= (get-config :triangulum.server/http-port)]] 
+   [:server-name        [:= (get-config :triangulum.server/http-host)]]
    [:content-length     [:maybe Int]]
    [:session/key        [:maybe :any]] ;;can we do better than this?
    [:content-type       [:maybe [:enum "application/json"
                                  "text/html"
+
                                  "application/x-www-form-urlencoded"
                                  "multipart/form-data"]]]
    [:character-encoding [:maybe [:enum "utf-8" "iso-8859-1"]]]   
@@ -203,21 +210,36 @@
    [:request-method     [:enum :get :post :put :delete :path :head :options]]])
 
 
-(defmacro validate [query]
+(defmacro validate
+  "all middlewares will have wrapped by the time this is applied to route"
+  [query]
   `(fn [args#]
+     
      (if (m/validate
           (->> ~(keyword (str query))
                (get validation-map)
                (mu/merge request-wrapper))
           args#)
        (~query args#)
-       (do        
-         (-> validation-map
-             (get ~(keyword (str query)))
-             (into [{:closed true}])         
-             (m/explain args#)
-             me/humanize
-             pprint)                  
-         (data-response "Invalid Request Payload"  #_{:status 403
-                                                      :body args#})))))
+       (do
+         (->> args# :params pprint)
+         (->> ~(keyword (str query)) pprint)
+         (->> ~(keyword (str query))
+              (get validation-map)
+              pprint)         
+         (->
+          (->> ~(keyword (str query))
+               (get validation-map)
+               (mu/merge request-wrapper))
+          (m/explain  args#)
+          me/humanize
+          pprint
+          )
+         (println (m/validate
+                   (->> ~(keyword (str query))
+                        (get validation-map)
+                        (mu/merge request-wrapper))
+                   args#))
+         (data-response "Invalid Request Payload"  {:status 403
+                                                    :body args#})))))
 
