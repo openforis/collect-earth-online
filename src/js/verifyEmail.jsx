@@ -12,7 +12,6 @@ class VerifyEmail extends React.Component {
   }
   
   componentDidMount() {
-    console.log(this.props.email);
     fetch("/verify-email", {
       method: "POST",
       headers: {

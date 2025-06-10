@@ -56,7 +56,6 @@ class Register extends React.Component {
                                            alertMessage: "You have successfully created an account.  Please check your email for a link to verify your account."}}});           
             window.location = "/home";
           } else {
-            console.log(data);
             this.setState({modal: {alert: {alertType: "Registration Alert",
                                            alertMessage: data[1]}}});
           }
