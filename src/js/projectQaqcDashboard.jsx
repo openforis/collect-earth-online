@@ -99,8 +99,10 @@ class ProjectDashboardQaqc extends React.Component {
     .then((response) => (response.ok ? response.json() : Promise.reject(response)))
     .then((data) => {
       if (data === "") {
-        this.setState ({modal: {alert: {alertType: "Project Error", alertMessage: "No project found with ID " + projectId + "."}}});
-        window.location = "/home";
+        this.setState ({modal: {alert: {alertType: "Project Error",
+                                        onClose: ()=>{window.location = "/home";},
+                                        alertMessage: "No project found with ID " + projectId + "."}}});
+        
       } else {
         this.setState({ projectDetails: data });
         return this.getImageryList(data.institution);

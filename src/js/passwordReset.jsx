@@ -27,8 +27,10 @@ class PasswordReset extends React.Component {
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && data[1] === "") {
-          this.setState ({modal: {alert: {alertType: "Password Reset Success", alertMessage: "You have successfully reset your password."}}});
-          window.location = "/login";
+          this.setState ({modal: {alert: {alertType: "Password Reset Success",
+                                          onClose: ()=>{window.location = "/login";},
+                                          alertMessage: "You have successfully reset your password."}}});
+          
         } else {
           this.setState ({modal: {alert: {alertType: "Reset Password Alert", alertMessage: data[1]}}});
         }
@@ -41,7 +43,8 @@ class PasswordReset extends React.Component {
       <div className="d-flex justify-content-center">
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
+                onClose={()=>{this.setState({modal: null});
+                              this.state.modal.alert.onClose();}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
 

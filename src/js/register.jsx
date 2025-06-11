@@ -53,8 +53,8 @@ class Register extends React.Component {
         .then((data) => {
           if (data[0] && data[1] === "") {
             this.setState({modal: {alert: {alertType: "Registration Alert",
-                                           alertMessage: "You have successfully created an account.  Please check your email for a link to verify your account."}}});           
-            window.location = "/home";
+                                           onClose: ()=>{window.location = "/home";},
+                                           alertMessage: "You have successfully created an account.  Please check your email for a link to verify your account."}}});            
           } else {
             this.setState({modal: {alert: {alertType: "Registration Alert",
                                            alertMessage: data[1]}}});
@@ -69,7 +69,8 @@ class Register extends React.Component {
       <div className="d-flex justify-content-center">
         {this.state.modal?.alert
          && (<Modal title={this.state.modal?.alert?.alertType}
-                    onClose={()=>{this.setState({modal: null});}}>
+                    onClose={()=>{this.setState({modal: null});                                  
+                                  this.state.modal.alert.onClose();}}>
                {this.state.modal?.alert?.alertMessage}
              </Modal>)}
         <div className="card card-lightgreen" id="register-form">

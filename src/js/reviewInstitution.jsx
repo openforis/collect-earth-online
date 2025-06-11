@@ -412,8 +412,9 @@ class InstitutionDescription extends React.Component {
         method: "POST",
       }).then((response) => {
         if (response.ok) {
-          this.setState ({modal: {alert: {alertType: "Institution Update", alertMessage: "Institution " + this.state.institutionDetails.name + " has been deleted."}}});
-          window.location = "/home";
+          this.setState ({modal: {alert: {alertType: "Institution Update",
+                                          onClose: ()=>{window.location = "/home";},
+                                          alertMessage: "Institution " + this.state.institutionDetails.name + " has been deleted."}}});
         } else {
           console.log(response);
           this.setState ({modal: {alert: {alertType: "Institution Update Error", alertMessage: "Error deleting institution. See console for details."}}});
