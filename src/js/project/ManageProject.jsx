@@ -35,8 +35,10 @@ export default class ManageProject extends React.Component {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data === "") {
-          this.setState ({modal: {alert: {alertType: "Get Project Error", alertMessage: "No project found with ID " + projectId + "."}}});
-          window.location = "/home";
+          this.setState ({modal: {alert: {alertType: "Get Project Error",
+                                          onClose: ()=>{window.location = "/home";},
+                                          alertMessage: "No project found with ID " + projectId + "."}}});
+          
         } else {
           this.context.setProjectDetails(data);
           this.context.setContextState({ originalProject: data });
@@ -69,7 +71,8 @@ export default class ManageProject extends React.Component {
       <div className="d-flex flex-column full-height align-items-center p-3" id="review-project">
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
+                onClose={()=>{this.setState({modal: null});
+                              this.state.modal.alert.onClose();}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
         <div
@@ -187,8 +190,10 @@ class ProjectManagement extends React.Component {
         fetch(`/archive-project?projectId=${this.context.id}`, { method: "POST" }).then(
           (response) => {
             if (response.ok) {
-              this.setState ({modal: {alert: {alertType: "Delete Project Alert", alertMessage: "Project " + this.context.id + " has been deleted."}}});
-              window.location = `/review-institution?institutionId=${this.context.institution}`;
+              this.setState ({modal: {alert: {alertType: "Delete Project Alert",
+                                              onClose: ()=>{window.location = `/review-institution?institutionId=${this.context.institution}`;},
+                                              alertMessage: "Project " + this.context.id + " has been deleted."}}});
+
             } else {
               console.log(response);
               this.setState ({modal: {alert: {alertType: "Delete Project Error", alertMessage: "Error deleting project. See console for details."}}});
