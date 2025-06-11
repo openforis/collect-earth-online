@@ -19,7 +19,7 @@
                          output (tc/val->bool input)]
                      (or (boolean? input) (= input (str output))))])
 
-(def Json [:fn {} #(= % (-> % tc/json->clj tc/clj->json))])
+(def Json [:map-of :string :any])
 
 (def Coordinates [:vector {:min 2 :max 2} :float])
 
@@ -74,6 +74,7 @@
    :imagery/get-public-imagery               [:map [:uri [:= "/get-public-imagery"]]]
    :imagery/add-institution-imagery          [:map
                                               [:uri [:= "/add-institution-imagery"]]
+                                              [:json-params Json]
                                               [:params  [:map
                                                          [:institutionId      Int]
                                                          [:imageryTitle       :string]
@@ -84,6 +85,7 @@
                                                           {:optional true}     Bool]]]]
    :imagery/update-institution-imagery       [:map
                                               [:uri [:= "/update-institution-imagery"]]
+                                              [:json-params Json]
                                               [:params  [:map
                                                          [:imageryId          Int]
                                                          [:imageryTitle       :string]
@@ -95,21 +97,25 @@
                                                          [:institutionId      Int]]]]
    :imagery/update-imagery-visibility        [:map
                                               [:uri [:= "/update-imagery-visibility"]]
+                                              [:json-params Json]
                                               [:params  [:map
                                                          [:imageryId          Int]
                                                          [:visibility         :string]
                                                          [:institutionId      Int]]]]
    :imagery/archive-institution-imagery      [:map
                                               [:uri [:= "/archive-institution-imagery"]]
+                                              [:json-params Json]
                                               [:params  [:map
                                                          [:imageryId          Int]]]]
    :imagery/bulk-archive-institution-imagery [:map
                                               [:uri [:= "/bulk-archive-institution-imagery"]]
+                                              [:json-params Json]
                                               [:params  [:map
                                                          [:institutionId      Int]
                                                          [:imageryIds [:vector Int]]]]]
    :imagery/bulk-update-imagery-visibility   [:map
                                               [:uri [:= "/edit-imagery-bulk"]]
+                                              [:json-params Json]
                                               [:params  [:map
                                                          [:imageryIds [:vector Int]]
                                                          [:visibility         :string]
@@ -203,7 +209,7 @@
 
                                  "application/x-www-form-urlencoded"
                                  "multipart/form-data"]]]
-   [:character-encoding [:maybe [:enum "utf-8" "iso-8859-1"]]]   
+   [:character-encoding [:maybe [:enum "UTF-8" "iso-8859-1"]]]   
    [:query-string       [:maybe :string]]
    [:body               [:any]] ;; stumped on how to desdcribe a ReadableStream
    [:scheme             [:enum :http :https]]
@@ -214,32 +220,21 @@
   "all middlewares will have wrapped by the time this is applied to route"
   [query]
   `(fn [args#]
-     
      (if (m/validate
           (->> ~(keyword (str query))
                (get validation-map)
                (mu/merge request-wrapper))
           args#)
-       (~query args#)
-       (do
-         (->> args# :params pprint)
-         (->> ~(keyword (str query)) pprint)
-         (->> ~(keyword (str query))
-              (get validation-map)
-              pprint)         
-         (->
-          (->> ~(keyword (str query))
-               (get validation-map)
-               (mu/merge request-wrapper))
-          (m/explain  args#)
-          me/humanize
-          pprint
-          )
-         (println (m/validate
-                   (->> ~(keyword (str query))
-                        (get validation-map)
-                        (mu/merge request-wrapper))
-                   args#))
-         (data-response "Invalid Request Payload"  {:status 403
-                                                    :body args#})))))
+       (~query args#)       
+       (data-response "Invalid Request Payload"  {:status 481
+                                                  :body args#}))))
 
+(comment
+  (->
+   (->> ~(keyword (str query))
+        (get validation-map)
+        (mu/merge request-wrapper))
+   (m/explain  args#)
+   me/humanize
+   pprint)
+  )

@@ -228,7 +228,7 @@
    [:post "/update-imagery-visibility"]        {:handler     (validate imagery/update-imagery-visibility)
                                                 :auth-type   :admin
                                                 :auth-action :block}
-   [:post "/edit-imagery-bulk"]                {:handler     (validate #'imagery/bulk-update-imagery-visibility)
+   [:post "/edit-imagery-bulk"]                {:handler     (validate imagery/bulk-update-imagery-visibility)
                                                 :auth-type   :admin
                                                 :auth-action :block}
 
