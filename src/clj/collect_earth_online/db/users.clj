@@ -122,7 +122,7 @@
         email     (sql-primitive (call-sql "set_password_reset_key" {:log? false} (:email params) reset-key))
         email-msg (format (str "Hi %s,\n\n"
                                "  To reset your password, simply click the following link:\n\n"
-                               "  %spassword-reset?email=%s&passwordResetKey=%s")
+                               "  %s/password-reset?email=%s&passwordResetKey=%s")
                           email (get-base-url) email reset-key)]
     (if email
       (try
