@@ -180,16 +180,16 @@
    [:get "/doi"]          {:handler     #'doi/get-doi-reference}
 
    ;; Plots API
-   [:get  "/get-collection-plot"]              {:handler     (validate #'plots/get-collection-plot)
+   [:get  "/get-collection-plot"]              {:handler     (validate plots/get-collection-plot)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-plot-disagreement"]            {:handler (validate plots/get-plot-disagreement)}
-   [:get  "/get-plot-sample-geom"]             {:handler (validate plots/get-plot-sample-geom)}
+   [:get  "/get-plot-disagreement"]            {:handler     (validate plots/get-plot-disagreement)}
+   [:get  "/get-plot-sample-geom"]             {:handler     (validate plots/get-plot-sample-geom)}
    [:get  "/get-plotters"]                     {:handler     (validate plots/get-plotters)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-project-plots"]                {:handler (validate plots/get-project-plots)}
-   [:post "/add-user-samples"]                 {:handler     (validate #'plots/add-user-samples)
+   [:get  "/get-project-plots"]                {:handler     (validate plots/get-project-plots)}
+   [:post "/add-user-samples"]                 {:handler     (validate plots/add-user-samples)
                                                 :auth-type   :collect
                                                 :auth-action :block}
    [:post "/flag-plot"]                        {:handler     (validate plots/flag-plot)
@@ -202,8 +202,8 @@
                                                 :auth-type   :collect
                                                 :auth-action :block}
    ;; Institutions API
-   [:get  "/get-all-institutions"]             {:handler institutions/get-all-institutions}
-   [:get  "/get-institution-by-id"]            {:handler institutions/get-institution-by-id}
+   [:get  "/get-all-institutions"]             {:handler     institutions/get-all-institutions}
+   [:get  "/get-institution-by-id"]            {:handler     institutions/get-institution-by-id}
    [:post "/archive-institution"]              {:handler     institutions/archive-institution
                                                 :auth-type   :admin
                                                 :auth-action :block}
@@ -214,11 +214,11 @@
                                                 :auth-type   :admin
                                                 :auth-action :block}
    ;; Imagery API
-   [:get  "/get-institution-imagery"]          {:handler      (validate imagery/get-institution-imagery)}
-   [:get  "/get-project-imagery"]              {:handler      (validate imagery/get-project-imagery)
+   [:get  "/get-institution-imagery"]          {:handler     (validate imagery/get-institution-imagery)}
+   [:get  "/get-project-imagery"]              {:handler     (validate imagery/get-project-imagery)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-public-imagery"]               {:handler      (validate imagery/get-public-imagery)}
+   [:get  "/get-public-imagery"]               {:handler     (validate imagery/get-public-imagery)}
    [:post "/add-institution-imagery"]          {:handler     (validate imagery/add-institution-imagery)
                                                 :auth-type   :admin
                                                 :auth-action :block}

@@ -17,6 +17,10 @@
                          output (tc/val->bool input)]
                      (or (boolean? input) (= input (str output))))])
 
+(def Lng [:fn {} #(let [input %
+                        output (tc/val->long input)]
+                    (or (int? input) (= input (str output))))])
+
 (def Json [:fn {} #(= % (-> % tc/json->clj tc/clj->json))])
 
 (def Coordinates [:vector {:min 2 :max 2} :float])
@@ -131,74 +135,93 @@
                                                  [:params [:map
                                                            [:imgPath             :string]
                                                            [:visParams           Json]]]]
-   :#'plots/get-collection-plot [:map
-                                 [:params [:map
-                                           [:navigationMode {:optional true} :string]
-                                           [:direction {:optional true}
-                                            [:enum "previous"
-                                             "next"
-                                             "id"]]
-                                           [:projectId Int]
-                                           [:visibleId Int]
-                                           [:threshold Int]
-                                           [:projectType  {:optional true} :string]
-                                           [:currentUserId {:optional true} Int]
-                                           [:inReviewMode {:optional true} Bool]]]
+   :plots/get-collection-plot [:map
+                               [:request-method [:= :get]]
+                               [:uri [:= "/get-collection-plot"]]
+                               [:params [:map
+                                         [:navigationMode {:optional true} :string]
+                                         [:direction {:optional true}
+                                          [:enum "previous"
+                                           "next"
+                                           "id"]]
+                                         [:projectId Int]
+                                         [:visibleId Int]
+                                         [:threshold Int]
+                                         [:projectType  {:optional true} :string]
+                                         [:currentUserId {:optional true} Int]
+                                         [:inReviewMode {:optional true} Bool]]]
                                  [:session [:map
                                             [:userId {:optional true} Int]]]]
    :plots/get-plot-disagreement [:map
+                                 [:request-method [:= :get]]
+                                 [:uri [:= "/get-plot-disagreement"]]
                                  [:params [:map
                                            [:plotId Int]
                                            [:projectId Int]]]]
    :plots/get-plot-sample-geom [:map
+                                [:request-method [:= :get]]
+                                [:uri [:= "/get-plot-sample-geom"]]
                                 [:params [:map
                                           [:plotId Int]]]]
    :plots/get-plotters [:map
+                        [:request-method [:= :get]]
+                        [:uri [:= "/get-plotters"]]
                         [:params [:map
-                                  [:plotId Int]
+                                  [:plotId {:optional true} Int]
                                   [:projectId Int]]]]
    :plots/get-project-plots [:map
+                             [:request-method [:= :get]]
+                             [:uri [:= "/get-project-plots"]]
                              [:params [:map
-                                       [:max Int]
+                                       [:max {:optional true} Int]
                                        [:projectId Int]]]]
-   :#'plots/add-user-samples [:map
-                              [:params [:map
-                                        [:projectId Int]
-                                        [:plotId Int]
-                                        [:currentUserId {:optional true} Int]
-                                        [:inReviewMode Bool]
-                                        [:confidence {:optional true} Int]
-                                        [:confidenceComment :string]
-                                        [:collectionStart Int]
-                                        [:userSamples [:map]]
-                                        [:projectType [:enum "simplified" "regular"]]
-                                        [:imageryIds Json]]]
+   :plots/add-user-samples [:map
+                            [:request-method [:= :post]]
+                            [:uri [:= "/add-user-samples"]]
+                            [:params [:map
+                                      [:projectId Int]
+                                      [:plotId Int]
+                                      [:inReviewMode Bool]
+                                      [:confidence {:optional true} Int]
+                                      [:confidenceComment [:maybe :string]]
+                                      [:collectionStart  Lng]
+                                      [:userSamples [:map]]
+                                      [:projectType [:enum "simplified" "regular"]]
+                                      [:imageryIds [:vector Int]]]]
                               [:session [:map
                                          [:userId {:optional true} Int]]]]
    :plots/flag-plot [:map
+                     [:request-method [:= :post]]
+                     [:uri [:= "/flag-plot"]]
                      [:params [:map
                                [:projectId Int]
                                [:plotId Int]
-                               [:currentUserId {:optional true} Int]
                                [:inReviewMode {:optional true} Bool]
-                               [:collectionStart Int]
+                               [:collectionStart Lng]
                                [:flaggedReason :string]]]
                      [:session [:map
                                 [:userId {:optional true} Int]]]]
    :plots/release-plot-locks [:map
+                              [:request-method [:= :post]]
+                              [:uri [:= "/release-plot-locks"]]
                               [:session [:map
                                          [:userId {:optional true} Int]]]]
    :plots/reset-plot-lock [:map
+                           [:request-method [:= :post]]
+                           [:uri [:= "/reset-plot-lock"]]
                            [:params [:map
                                      [:plotId Int]]]
                            [:session [:map
-                                      [:userId {:optional true} Int]]]]
-   
+                                      [:userId {:optional true} Int]]]]   
    })
 
 (defmacro validate [query]
   `(fn [args#]
-     
+     (-> validation-map
+             (get ~(keyword (str query)))
+             (m/explain args#)
+             me/humanize
+             pprint)
      (if (-> validation-map
              (get ~(keyword (str query)))
              (m/validate args#))
