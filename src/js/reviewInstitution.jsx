@@ -767,6 +767,26 @@ const ImageryList = (
               </div>
             </div>
             <hr />
+            <div className="row mb-1 d-flex font-weight-bold text-muted" style={{ alignItems: "center" }}>
+              <div className="col-1" style={{ paddingLeft: "4.5%" }}>
+                <input
+                  type="checkbox"
+                  checked={selectedImagery.length === imageryList.length && imageryList.length > 0}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedImagery(imageryList.map((img) => img.id));
+                    } else {
+                      setSelectedImagery([]);
+                    }
+                  }}
+                  aria-label="Select all imagery"
+                />
+              </div>
+              <div className="col-2 pr-0 pl-3">Visibility</div>
+              <div className="col pl-5">Imagery Title</div>
+              <div className="col-1 pl-4">Edit</div>
+              <div className="col-1 pl-4">Delete</div>
+            </div>
           </>
         )}
         {imageryList.length === 0 ? (
@@ -1340,16 +1360,16 @@ function ProjectList({
       return noProjects("There are no public projects.");
     } else {
       return projectList.map((project, uid) => (
-        <Project
-          key={uid} // eslint-disable-line react/no-array-index-key
-          deleteProject={deleteProject}
-          deleteProjectDraft={deleteProjectDraft}
-          isAdmin={isAdmin}
-          project={project}
-          institutionId={institutionId}
-          selectedProjects={selectedProjects}
-          setSelectedProjects={setSelectedProjects}
-        />
+          <Project
+            key={uid} // eslint-disable-line react/no-array-index-key
+            deleteProject={deleteProject}
+            deleteProjectDraft={deleteProjectDraft}
+            isAdmin={isAdmin}
+            project={project}
+            institutionId={institutionId}
+            selectedProjects={selectedProjects}
+            setSelectedProjects={setSelectedProjects}
+          />
       ));
     }
   };
@@ -1412,7 +1432,35 @@ function ProjectList({
               />
             </div>
           </div>
-          <hr />
+          <hr/>
+          <div className="row mb-1 d-flex font-weight-bold text-muted" style={{ alignItems: "center" }}>
+            <div className="col-1" style={{ paddingLeft: "4.5%" }}>
+              <input
+                type="checkbox"
+                checked={selectedProjects?.length === projectList?.length && projectList?.length > 0}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedProjects(projectList.map((p) => p.id));
+                  } else {
+                    setSelectedProjects([]);
+                  }
+                }}
+                aria-label="Select all projects"
+              />
+            </div>
+            <div className="col-2 pr-0">Visibility</div>
+            <div className="col">Project Name</div>
+            {isAdmin && (
+              <>
+                <div className="col-1 pl-0">Edit Project</div>
+                <div className="col-1 pl-0">Delete Project</div>
+                <div className="col-1 pl-0">Download Plots</div>
+                <div className="col-1 pl-0">Download Samples</div>
+                <div className="col-1 pl-0">Learning Material</div>
+              </>
+            )}
+          </div>
+          <hr/>
         </>
       )}
       {renderProjects()}
