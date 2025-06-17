@@ -58,8 +58,9 @@ class ProjectDashboard extends React.Component {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data === "") {
-          this.setState ({modal: {alert: {alertType: "Project Error", alertMessage: "No project found with ID " + projectId + "."}}});
-          window.location = "/home";
+          this.setState ({modal: {alert: {alertType: "Project Error",
+                                          onClose: ()=>{window.location = "/home";},
+                                          alertMessage: "No project found with ID " + projectId + "."}}});          
         } else {
           this.setState({ projectDetails: data });
           return this.getImageryList(data.institution);
@@ -125,7 +126,8 @@ class ProjectDashboard extends React.Component {
         {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
+                onClose={()=>{this.setState({modal: null});
+                              this.state.modal.alert.onClose();}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
         <div className="bg-darkgreen">
