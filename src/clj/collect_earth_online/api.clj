@@ -37,36 +37,30 @@
                   "filteredNicfi"])
 
 (def Project [:map
-              [:institutionId int?]
-              [:projectTemplate int?]
-              [:useTemplatePlots Bool]
-              [:useTemplateWidgets Bool]
+              [:institutionId {:optional true} Int]
+              [:projectTemplate {:optional true} Int]
+              [:useTemplatePlots {:optional true} Bool]
+              [:useTemplateWidgets {:optional true} Bool]
               [:imageryId int?]
               [:projectImageryList [:vector any?]]
               [:aoiFeatures
                [:maybe Json]
-               [:maybe [:aoiFileName string?]]]
+               [:maybe [:vector [:map
+                                 [:type [:enum "Polygon"]]
+                                 [:coordinates [:vector [:vector Coordinates]]]]]]
+               [:maybe [:map [:aoiFileName string?]]]]
               [:description string?]
               [:name string?]
               [:type [:enum "regular" "simplified"]]
-              [:privacyLevel [:enum "institution" "public" "private"]]
-              [:projectOptions
-               [:map
-                [:showGEEScript Bool]
-                [:showPlotInformation Bool]
-                [:collectConfidence Bool]
-                [:autoLaunchGeoDash Bool]]]
-              [:designSettings map?]
-              [:numPlots int?]
               [:plotDistribution [:enum "random" "grid" "shp" "csv" "json"]]
               [:plotShape [:maybe [:enum "square" "circle"]]]
               [:plotSize [:maybe int?]]
-              [:plotSpacing [:or string? int?]]
-              [:shufflePlots Bool]
+              [:plotSpacing  [:or string? int? :nil]]
+              [:shufflePlots [:or :nil Bool]]
               [:sampleDistribution [:enum "random" "even"]]
               [:samplesPerPlot int?]
-              [:sampleResolution [:or string? int?]]
-              [:allowDrawnSamples Bool]
+              [:sampleResolution  [:or string? int? :nil]]
+              [:allowDrawnSamples {:optional true} Bool]
               [:surveyQuestions map?]
               [:surveyRules [:vector any?]]])
 
@@ -165,26 +159,26 @@
                                            [:params [:map
                                                      [:imgPath             :string]
                                                      [:visParams           Json]]]]
-   :projects/create-project               [:map
+   :projects/create-project!               [:map
                                            [:params [:map Project]]]
-   :projects/update-project               [:map [:params [:map Project]]]
-   :projects/create-project-draft         [:map [:params [:map Project]]]
-   :projects/update-project-draft         [:map [:params [:map Project]]]
+   :projects/update-project!               [:map [:params [:map Project]]]
+   :projects/create-project-draft!         [:map [:params [:map Project]]]
+   :projects/update-project-draft!         [:map [:params [:map Project]]]
    :projects/close-project                [:map
                                            [:params [:projectId string?]]
                                            [:session [:userId Int]]]
-   :projects/archive-project              [:map
+   :projects/archive-project!              [:map
                                            [:params [:projectId]]]
    :projects/delete-projects-bulk         [:map
                                            [:params
                                             [:projectIds vector?]
                                             [:institutionId string?]]]
-   :projects/edit-projects-bulk           [:map
+   :projects/edit-projects-bulk!           [:map
                                            [:params
                                             [:projectIds vector?]
                                             [:institutionId string?]
                                             [:visibility [:enum "institution" "public" "private"]]]]
-   :projects/publish-project              [:map
+   :projects/publish-project!              [:map
                                            [:params
                                             [:projectId string?]
                                             [:clearSaved Bool]]
