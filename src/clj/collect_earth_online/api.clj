@@ -1,10 +1,11 @@
 (ns collect-earth-online.api
-  (:require [collect-earth-online.db.imagery :as imagery]
+  (:require [collect-earth-online.db.doi     :as doi]
             [collect-earth-online.db.geodash :as geodash]
+            [collect-earth-online.db.imagery :as imagery]
             [malli.core :as m]
             [triangulum.response :refer [data-response]]
             [triangulum.type-conversion :as tc]
-
+            
             [malli.error :as me]
             [clojure.pprint :refer [pprint]]))
 
@@ -20,6 +21,9 @@
 (def Json [:fn {} #(= % (-> % tc/json->clj tc/clj->json))])
 
 (def Coordinates [:vector {:min 2 :max 2} :float])
+
+(def Date
+  [:fn {} #(java.time.LocalDate/parse %)])
 
 (def GatewayPath [:enum "timeSeriesByIndex"
                   "imageCollectionByIndex"
@@ -192,10 +196,39 @@
                                            [:params
                                             [:fileName string?]
                                             [:fileb64 string?]]]})
+   :#'doi/create-doi!                     [:map
+                                           [:session [:map
+                                                      [:userId {:optional? true} Int]]]
+                                           [:params [:map
+                                                     [:projectId Int]
+                                                     [:projectName :string]
+                                                     [:institution Int]
+                                                     [:description :string]]]]
+   :#'doi/publish-doi!                    [:map
+                                           [:params [:map
+                                                     [:projectId Int]]]]
+   :#'doi/get-doi-reference               [:map
+                                           [:params [:map
+                                                     [:projectId Int]]]]
+   :metrics/get-imagery-access          [:map
+                                           [:params [:map
+                                                     [:startDate Date]
+                                                     [:endDate Date]]]]
+   :metrics/get-projects-with-gee       [:map
+                                           [:params [:map
+                                                     [:startDate Date]
+                                                     [:endDate Date]]]]
+   :metrics/get-sample-plots-counts     [:map
+                                           [:params [:map
+                                                     [:startDate Date]
+                                                     [:endDate Date]]]]
+   :metrics/get-project-count           [:map
+                                           [:params [:map
+                                                     [:startDate Date]
+                                                     [:endDate Date]]]]})
 
 (defmacro validate [query]
   `(fn [args#]
-     
      (if (-> validation-map
              (get ~(keyword (str query)))
              (m/validate args#))

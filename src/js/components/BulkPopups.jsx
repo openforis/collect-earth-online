@@ -115,7 +115,6 @@ export function DownloadPopup({ downloadProjectsBulk, selectedProjects }) {
       setState ({modal: {alert: {alertType: "Project Download Alert", alertMessage: "Please select at least one project to download."}}});
       return;
     }
-    setState ({modal: {alert: {alertType: "Project Download", alertMessage: `Downloading: ${selectedItems.join(", ")}`}}});
     downloadProjectsBulk(selectedProjects, selectedOptions);
     setIsPopupOpen(false);
   };

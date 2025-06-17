@@ -173,13 +173,13 @@
                                               :auth-action :block}
 
    ;; DOI API
-   [:post "/create-doi"]  {:handler     #'doi/create-doi!
+   [:post "/create-doi"]  {:handler     (validate #'doi/create-doi!)
                            :auth-type   :admin
                            :auth-action :block}
-   [:post "/publish-doi"] {:handler     #'doi/publish-doi!
+   [:post "/publish-doi"] {:handler     (validate #'doi/publish-doi!)
                            :auth-type   :admin
                            :auth-action :block}
-   [:get "/doi"]          {:handler     #'doi/get-doi-reference}
+   [:get "/doi"]          {:handler     (validate #'doi/get-doi-reference)}
 
    ;; Plots API
    [:get  "/get-collection-plot"]              {:handler     #'plots/get-collection-plot
@@ -264,13 +264,13 @@
                                              :auth-action :block}
 
    ;; Metrics
-   [:get  "/metrics/get-imagery-access"]      {:handler     metrics/get-imagery-counts
+   [:get  "/metrics/get-imagery-access"]      {:handler     (validate metrics/get-imagery-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-projects-with-gee"]   {:handler     metrics/get-projects-with-gee
+   [:get  "/metrics/get-projects-with-gee"]   {:handler     (validate metrics/get-projects-with-gee)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-sample-plot-counts"]  {:handler     metrics/get-sample-plot-counts
+   [:get  "/metrics/get-sample-plot-counts"]  {:handler     (validate metrics/get-sample-plot-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-project-count"]       {:handler     metrics/get-project-count}})
+   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}})

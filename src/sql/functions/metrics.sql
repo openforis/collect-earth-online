@@ -118,7 +118,7 @@ RETURNS BOOLEAN AS $$
 BEGIN
     RETURN EXISTS (
         SELECT 1
-        FROM metric_users
+        FROM metrics_users
         WHERE user_rid = user_id
     );
 END;
