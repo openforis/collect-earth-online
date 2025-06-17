@@ -169,33 +169,33 @@
    :projects/create-project-draft!         [:map [:params [:map Project]]]
    :projects/update-project-draft!         [:map [:params [:map Project]]]
    :projects/close-project                [:map
-                                           [:params [:projectId string?]]
+                                           [:params [:projectId Int]]
                                            [:session [:userId Int]]]
    :projects/archive-project!              [:map
-                                           [:params [:projectId]]]
+                                           [:params [:projectId Int]]]
    :projects/delete-projects-bulk         [:map
                                            [:params
-                                            [:projectIds vector?]
-                                            [:institutionId string?]]]
+                                            [:projectIds [:vector Int]]
+                                            [:institutionId Int]]]
    :projects/edit-projects-bulk!           [:map
                                            [:params
-                                            [:projectIds vector?]
-                                            [:institutionId string?]
+                                            [:projectIds [:vector Int]]
+                                            [:institutionId Int]
                                             [:visibility [:enum "institution" "public" "private"]]]]
    :projects/publish-project!              [:map
                                            [:params
-                                            [:projectId string?]
+                                            [:projectId Int]
                                             [:clearSaved Bool]]
                                            [:session [:userId Int]]]
    :projects/check-plot-csv               [:map
                                            [:params
-                                            [:projectId string?]
+                                            [:projectId Int]
                                             [:maybe [:plotFileName string?]]
                                             [:maybe [:plotFileBase64 string?]]]]
    :projects/import-ce-project            [:map
                                            [:params
                                             [:fileName string?]
-                                            [:fileb64 string?]]]})
+                                            [:fileb64 string?]]]
    :#'doi/create-doi!                     [:map
                                            [:session [:map
                                                       [:userId {:optional? true} Int]]]
