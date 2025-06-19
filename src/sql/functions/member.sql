@@ -317,6 +317,24 @@ CREATE OR REPLACE FUNCTION select_all_institutions(_user_id integer)
 
 $$ LANGUAGE SQL;
 
+-- Returns institutions where user is admin
+CREATE OR REPLACE FUNCTION get_user_admin_institutions(_user_id integer)
+ RETURNS table (
+    institution_id integer,
+    institution_name text
+ ) AS $$
+
+    SELECT iu.institution_rid, i.name
+    FROM institution_users iu
+    INNER JOIN institutions i
+        ON iu.institution_rid = i.institution_uid
+    WHERE iu.user_rid = _user_id
+        AND iu.role_rid = 1
+        AND i.archived = FALSE
+    ORDER BY i.name
+
+$$ LANGUAGE SQL;
+
 -- Returns one institution
 CREATE OR REPLACE FUNCTION select_institution_by_id(_institution_id integer, _user_id integer)
  RETURNS table (

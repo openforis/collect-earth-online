@@ -198,6 +198,16 @@
                       :perProject    (tc/jsonb->clj (:per_project stats))})
       (data-response {}))))
 
+(defn get-user-admin-institutions [{:keys [session]}]
+  (let [user-id (:userId session -1)]
+    (if (pos? user-id)
+      (->> (call-sql "get_user_admin_institutions" user-id)
+           (mapv (fn [{:keys [institution_id institution_name]}]
+                   {:id   institution_id
+                    :name institution_name}))
+           (data-response))
+      (data-response []))))
+
 (defn update-institution-role [{:keys [params]}]
   (let [new-user-email   (:newUserEmail params)
         account-id       (if-let [id (:accountId params)]
