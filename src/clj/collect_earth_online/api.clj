@@ -4,7 +4,7 @@
             [malli.core :as m]
             [triangulum.response :refer [data-response]]
             [triangulum.type-conversion :as tc]
-
+            
             [malli.error :as me]
             [clojure.pprint :refer [pprint]]))
 
@@ -171,33 +171,38 @@
    :projects/create-project-draft         [:map [:params [:map Project]]]
    :projects/update-project-draft         [:map [:params [:map Project]]]
    :projects/close-project                [:map
-                                           [:params [:projectId string?]]
-                                           [:session [:userId Int]]]
+                                           [:params [:map [:projectId string?]]]
+                                           [:session [:map [:userId Int]]]]
    :projects/archive-project              [:map
-                                           [:params [:projectId]]]
+                                           [:params [:map [:projectId]]]]
    :projects/delete-projects-bulk         [:map
                                            [:params
-                                            [:projectIds vector?]
-                                            [:institutionId string?]]]
+                                            [:map
+                                             [:projectIds vector?]
+                                             [:institutionId string?]]]]
    :projects/edit-projects-bulk           [:map
                                            [:params
-                                            [:projectIds vector?]
-                                            [:institutionId string?]
-                                            [:visibility [:enum "institution" "public" "private"]]]]
+                                            [:map
+                                             [:projectIds vector?]
+                                             [:institutionId string?]
+                                             [:visibility [:enum "institution" "public" "private"]]]]]
    :projects/publish-project              [:map
                                            [:params
-                                            [:projectId string?]
-                                            [:clearSaved Bool]]
-                                           [:session [:userId Int]]]
+                                            [:map
+                                             [:projectId string?]
+                                             [:clearSaved Bool]]]
+                                           [:session [:map [:userId Int]]]]
    :projects/check-plot-csv               [:map
                                            [:params
-                                            [:projectId string?]
-                                            [:maybe [:plotFileName string?]]
-                                            [:maybe [:plotFileBase64 string?]]]]
+                                            [:map
+                                             [:projectId string?]
+                                             [:plotFileName [:maybe string?]]
+                                             [:plotFileBase64 [:maybe string?]]]]]
    :projects/import-ce-project            [:map
                                            [:params
-                                            [:fileName string?]
-                                            [:fileb64 string?]]]})
+                                            [:map
+                                             [:fileName string?]
+                                             [:fileb64 string?]]]]})
 
 (defmacro validate [query]
   `(fn [args#]
