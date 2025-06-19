@@ -190,8 +190,8 @@
    :projects/check-plot-csv               [:map
                                            [:params
                                             [:projectId Int]
-                                            [:maybe [:plotFileName string?]]
-                                            [:maybe [:plotFileBase64 string?]]]]
+                                            [:plotFileName [:maybe string?]]
+                                            [:plotFileBase64 [:maybe string?]]]]
    :projects/import-ce-project            [:map
                                            [:params
                                             [:fileName string?]
