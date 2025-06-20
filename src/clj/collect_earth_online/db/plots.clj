@@ -30,7 +30,10 @@
 ;;;
 
 ;; TODO, CEO-32 update to only show users available plots
-(defn get-project-plots [{:keys [params]}]
+(defn get-project-plots
+  "{:params {:projectId :int-str
+             :max       :int-str?}}"
+  [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
         max-plots  (tc/val->int (:max params) 100000)] ; 100000 loads in ~1.5 seconds.
     (data-response (mapv #(set/rename-keys % {:visible_id :id
@@ -39,7 +42,9 @@
 
 (defn get-plotters
   "Gets all users that have collected plots on a project. If optional plotId
-   is passed, return results only for that plot."
+   is passed, return results only for that plot.
+  {:params {:projectId :int-str
+            :plotId    :int-str}}"
   [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
         plot-id    (tc/val->int (:plotId params))]
@@ -51,7 +56,9 @@
 ;;; GeoDash
 ;;;
 
-(defn get-plot-sample-geom [{:keys [params]}]
+(defn get-plot-sample-geom
+  "{:params {:plotId :int-str}}"
+  [{:keys [params]}]
   (let [plot-id (tc/val->int (:plotId params))]
     (data-response (if-let [plot-geom (sql-primitive (call-sql "select_plot_geom" plot-id))]
                      {:plotGeom    plot-geom
@@ -119,7 +126,9 @@
 
 (defn get-plot-disagreement
   "Returns data containing the survey questions augmented with agreement
-   and answer frequency."
+   and answer frequency.
+  {:params {:plotId    :int-str
+            :projectId :int-str}}"
   [{:keys [params]}]
   (let [plot-id       (tc/val->int (:plotId params))
         project-id    (tc/val->int (:projectId params))
@@ -149,13 +158,18 @@
 (defn- unlock-plots [user-id]
   (call-sql "unlock_plots" {:log? false} user-id))
 
-(defn reset-plot-lock [{:keys [params session]}]
+(defn reset-plot-lock
+  "{:params {:plotId :int-str}
+    :session {:userId :int-str?}}"
+  [{:keys [params session]}]
   (let [plot-id (tc/val->int (:plotId params))
         user-id (:userId session -1)]
     (call-sql "lock_plot_reset" {:log? false} plot-id user-id (time-plus-five-min))
     (data-response "")))
 
-(defn release-plot-locks [{:keys [params session]}]
+(defn release-plot-locks
+  "{:session {:userId :int-str?}}"
+  [{:keys [params session]}]
   (unlock-plots (:userId session -1))
   (data-response ""))
 
@@ -215,7 +229,18 @@
   "Gets plot information needed for the collections page.  The plot
    returned is based off of the navigation mode and direction.  Valid
    navigation modes are analyzed, unanalyzed, and all.  Valid directions
-   are previous, next, and id."
+   are previous, next, and id.
+  {:params  {:navigationMode :string?
+             :direction      :string?
+             :projectId      :int-str
+             :visibleId      :int-str 
+             :threshold      :int-str
+             :projectType    :string?
+             :currentUserId  :int-str?
+             :inReviewMode   :bool?}
+   :session {:userId         :int-str?}}
+
+"
   [{:keys [params session]}]
   (let [navigation-mode (:navigationMode params "unanalyzed")
         direction       (:direction params "next")
@@ -303,7 +328,19 @@
               (when-not review-mode? (Timestamp. collection-start))
               imagery-ids)))
 
-(defn add-user-samples [{:keys [params session]}]
+(defn add-user-samples
+  "{:params {:projectId :int-str
+             :plotId :int-str
+             :currentUserId :int-str?
+             :inReviewMode :bool
+             :confidence :int-str?
+             :confidenceComment :string
+             :collectionStart :long-str
+             :userSamples {}
+             :projectType ['simplified' 'regular]
+             :imageryIds :jsonb}
+    :session {:userId :int-str?}}"
+  [{:keys [params session]}]
   (let [project-id         (tc/val->int (:projectId params))
         plot-id            (tc/val->int (:plotId params))
         session-user-id    (:userId session -1)
@@ -365,7 +402,15 @@
     (unlock-plots user-id)
     (data-response "")))
 
-(defn flag-plot [{:keys [params session]}]
+(defn flag-plot
+  "{:params  {:projectId :int-str
+              :plotId    :int-str
+              :currentUserId :int-str?
+              :inReviewMode :bool?
+              :collectionStart :long-str
+              :flaggedReason :string}
+    :session {:userId    :int-str?}}"
+  [{:keys [params session]}]
   (let [project-id       (tc/val->int (:projectId params))
         plot-id          (tc/val->int (:plotId params))
         user-id          (:userId session -1)

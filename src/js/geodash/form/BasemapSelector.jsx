@@ -59,7 +59,7 @@ export default function BasemapSelector() {
   }, [imageryType]);
   
   useEffect(()=>{
-    setImageryType((imagery || []).filter((i)=> i.id === getWidgetDesign("basemapId"))[0].sourceConfig.type);
+    setImageryType((imagery || []).filter((i)=> i.id === getWidgetDesign("basemapId"))[0]?.sourceConfig.type);
     setBasemap((imagery || []).filter((i)=> i.id === getWidgetDesign("basemapId"))[0]);
   }, [imagery]);
   

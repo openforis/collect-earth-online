@@ -1144,10 +1144,6 @@ body {
   flex-wrap: nowrap;
 }
 
-.collection-page .full-height {
-  min-height: 100vh;
-}
-
 .collection-page .no-gutters {
   overflow: hidden;
 }

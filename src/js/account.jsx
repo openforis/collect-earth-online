@@ -37,8 +37,10 @@ class UserStats extends React.Component {
       .then((stats) => this.setState({ stats }))
       .catch((response) => {
         console.log(response);
-        this.setState ({modal: {alert: {alertType: "User Stats Alert", alertMessage: "No user found with ID " + this.props.accountId}}});
-        window.location = "/home";
+        this.setState ({modal: {alert: {alertType: "User Stats Alert",
+                                        onClose: ()=>{window.location = "/home";},
+                                        alertMessage: "No user found with ID " + this.props.accountId}}});
+        
       });
   };
 
@@ -48,7 +50,8 @@ class UserStats extends React.Component {
       <SectionBlock title="User Stats">
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
+                onClose={()=>{this.setState({modal: null});
+                              this.state.modal.alert.onClose();}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
         <div className="table table-sm" id="user-stats-table">
@@ -118,10 +121,10 @@ class AccountForm extends React.Component {
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && data[1] === "") {
-          this.setState ({modal: {alert: {alertType: "Update Account Success", alertMessage: "Your account details have been updated."}}});
-
-          // userName comes from the session, so we need to reload to update the props.
-          window.location.reload();
+          this.setState ({modal: {alert: {alertType: "Update Account Success",
+                                          onClose: ()=>{window.location.reload();},
+                                          alertMessage: "Your account details have been updated."}}});
+          // userName comes from the session, so we need to reload to update the props.          
         } else {
           this.setState ({modal: {alert: {alertType: "Update Account Error", alertMessage: data[1]}}});
         }
