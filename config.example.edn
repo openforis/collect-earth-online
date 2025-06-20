@@ -1,5 +1,6 @@
 {;; server (server)
  :triangulum.server/http-port         8080
+ :trinagulum.server/http-host       "local.collect.earth"
  :triangulum.server/nrepl             false
  :triangulum.server/nrepl-port        5555
  :triangulum.server/nrepl-bind        "127.0.0.1"

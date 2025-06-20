@@ -340,7 +340,7 @@
              :projectType ['simplified' 'regular]
              :imageryIds :jsonb}
     :session {:userId :int-str?}}"
-  [{:keys [params session]}] 
+  [{:keys [params session]}]
   (let [project-id         (tc/val->int (:projectId params))
         plot-id            (tc/val->int (:plotId params))
         session-user-id    (:userId session -1)
