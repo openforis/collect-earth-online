@@ -62,14 +62,14 @@
    [:description string?]
    [:name string?]
    [:type [:enum "regular" "simplified"]]
-   [:plotDistribution [:enum "random" "grid" "shp" "csv" "json"]]
+   [:plotDistribution [:enum "random" "grid" "shp" "csv" "json" "simplified"]]
    [:plotShape [:maybe [:enum "square" "circle"]]]
-   [:plotSize [:maybe Int]]
-   [:plotSpacing [:maybe Int]]
+   [:plotSize [:or string? Int]]
+   [:plotSpacing [:or string? Int]]
    [:shufflePlots [:maybe Bool]]
    [:sampleDistribution [:enum "random" "grid" "center" "shp" "csv" "json"]]
-   [:samplesPerPlot [:maybe Int]]
-   [:sampleResolution  [:maybe Int]]
+   [:samplesPerPlot [:or string? Int]]
+   [:sampleResolution [:or string? Int]]
    [:allowDrawnSamples {:optional true} Bool]
    [:surveyQuestions map?]
    [:surveyRules [:vector any?]]])
@@ -372,18 +372,12 @@
    [:request-method     [:enum :get :post :put :delete :path :head :options]]])
 
 
-(defmacro validate
-  "all middlewares will have wrapped by the time this is applied to route"
-  [query]
+(defmacro validate [query]
   `(fn [args#]
-     (if (m/validate
-          (->> ~(keyword (str query))
-               (get validation-map)
-               (mu/merge request-wrapper))
-          args#)
-       (~query args#)       
-       (data-response "Invalid Request Payload"  {:status 481
-                                                  :body args#}))))
+     (let [schema# (get validation-map ~(keyword (str query)))]
+       (if (m/validate schema# args#)
+         (~query args#)
+         (data-response (me/humanize (m/explain schema# args#)) {:status 403})))))
 
 (comment
   (->

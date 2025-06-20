@@ -108,7 +108,7 @@ export class PlotDesign extends React.Component {
       ...this.context,
       sampleDistribution: "center",
       numPlots: 1,
-      plotSize: plotWidth / 2,
+      plotSize: Math.floor(plotWidth / 2),
       allowDrawnSamples: true,
       plotDistribution: "simplified",
       designSettings: {
