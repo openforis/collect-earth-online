@@ -26,11 +26,14 @@ class VerifyEmail extends React.Component {
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && data[1] === "") {
-          this.setState ({modal: {alert: {alertType: "Verify Email", alertMessage: "You have successfully verified your email."}}});
-          window.location = "/login";
+          this.setState ({modal: {alert: {alertType: "Verify Email",
+                                          onClose: ()=> {window.location = "/login";},
+                                          alertMessage: "You have successfully verified your email."}}});
+          
         } else {
-          this.setState ({modal: {alert: {alertType: "Verify Email", alertMessage: data[1]}}});       
-          window.location = "/password-request";
+          this.setState ({modal: {alert: {alertType: "Verify Email",
+                                          onClose: ()=>{ window.location = "/password-request";},
+                                          alertMessage: data[1]}}});          
         }
       })
       .catch((err) => console.log(err));
@@ -41,7 +44,8 @@ class VerifyEmail extends React.Component {
       <div className="d-flex justify-content-center">
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
+                onClose={()=>{this.setState({modal: null});
+                              this.state.modal.alerts.onClose();}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
         <div className="card card-lightgreen" id="reset-form">

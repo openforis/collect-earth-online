@@ -24,8 +24,9 @@ class PasswordRequest extends React.Component {
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && data[1] === "") {
-          this.setState ({modal: {alert: {alertType: "Password Reset Request", alertMessage: "The reset key has been sent to your email."}}});
-          window.location = "/home";
+          this.setState ({modal: {alert: {alertType: "Password Reset Request",
+                                          onClose: ()=>{window.location = "/home";},
+                                          alertMessage: "The reset key has been sent to your email."}}});          
         } else {
           this.setState ({modal: {alert: {alertType: "Password Reset Error", alertMessage: data[1]}}});
         }
@@ -38,7 +39,8 @@ class PasswordRequest extends React.Component {
       <div className="d-flex justify-content-center">
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
+                onClose={()=>{this.setState({modal: null});
+                              this.state.modal.alert.onClose();}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
 

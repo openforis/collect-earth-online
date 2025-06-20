@@ -107,6 +107,7 @@
     (data-response (return-widgets project-id))))
 
 (defn validate-vis-params [{:keys [params]}]
+  (check-initialized)
   (let [img-path (:imgPath params)
         vis-params (tc/json->clj (:visParams params))
         vis-errors (utils/validateJSON img-path vis-params)]

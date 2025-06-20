@@ -119,8 +119,7 @@ class Collection extends React.Component {
     if (
       this.state.mapConfig &&
       this.state.plotList.length > 0 &&
-      (this.state.mapConfig !== prevState.mapConfig || prevState.plotList.length === 0) &&
-      this.props.plotId
+      (this.state.mapConfig !== prevState.mapConfig || prevState.plotList.length === 0)
     ) {
       this.showProjectOverview();
     }
@@ -458,7 +457,7 @@ class Collection extends React.Component {
               currentUserId: data[0].userId,
               ...this.newPlotValues(data[0]),
               answerMode: "question",
-              inReviewMode: reviewMode ? reviewMode : false,
+              inReviewMode: reviewMode ? reviewMode : inReviewMode,
             });
             if(type === "simplified")
               this.setDrawTool();

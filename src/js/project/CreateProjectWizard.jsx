@@ -160,16 +160,19 @@ export default class CreateProjectWizard extends React.Component {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (!data) {
-          this.setState ({modal: {alert: {alertType: "Get Draft Error", alertMessage: "No draft found with ID " + projectDraftId + "."}}});
-          window.location = "/home";
+          this.setState ({modal: {alert: {alertType: "Get Draft Error",
+                                          onClose: ()=>{window.location = "/home";},
+                                          alertMessage: "No draft found with ID " + projectDraftId + "."}}});          
         } else {
           this.context.setProjectDetails(data);
           this.context.setContextState({ originalProject: data });
           return data.institution;
         }
       }).catch(() => {
-        this.setState ({modal: {alert: {alertType: "Get Draft Error", alertMessage: "No draft found with ID " + projectDraftId + "."}}});
-        window.location = "/home";
+        this.setState ({modal: {alert: {alertType: "Get Draft Error",
+                                        onClose: ()=>{window.location = "/home";},
+                                        alertMessage: "No draft found with ID " + projectDraftId + "."}}});
+        
       })
       
     buildDraftObject = () => ({
@@ -268,7 +271,8 @@ export default class CreateProjectWizard extends React.Component {
   updateProjectType = (projectType) => {
     const privacyLevel = projectType === "simplified" ? "public" : "institution";
     this.setState({type: projectType},  () => {
-      this.context.setProjectDetails({ type: projectType, sampleDistribution: "center", privacyLevel: privacyLevel});
+      this.context.setProjectDetails({ type: projectType, plotDistribution: "simplified",
+                                       sampleDistribution: "center", privacyLevel: privacyLevel});
       this.getTemplateProjects();
     });
   };
@@ -630,7 +634,8 @@ export default class CreateProjectWizard extends React.Component {
       <div className="d-flex pb-5 full-height align-items-center flex-column" id="wizard">
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
+                onClose={()=>{this.setState({modal: null});
+                              this.state.modal.alert.onClose();}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
         <div style={{ display: "flex", margin: ".75rem" }}>
