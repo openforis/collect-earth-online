@@ -10,35 +10,64 @@
             [clojure.pprint :refer [pprint]]))
 
 
-(def Int [:fn {} #(let [input %
-                        output (tc/val->int input)]
-                    (or (int? input) (= input (str output))))])
+(def Int
+  [:fn {} #(let [input %
+                 output (tc/val->int input)]
+             (or (int? input) (= input (str output))))])
 
-(def Bool [:fn {} #(let [input %
-                         output (tc/val->bool input)]
-                     (or (boolean? input) (= input (str output))))])
+(def Bool
+  [:fn {} #(let [input %
+                 output (tc/val->bool input)]
+             (or (boolean? input) (= input (str output))))])
 
-(def Json [:fn {} #(= % (-> % tc/json->clj tc/clj->json))])
+(def Json
+  [:fn {} #(= % (-> % tc/json->clj tc/clj->json))])
 
 (def Coordinates [:vector {:min 2 :max 2} :float])
 
 (def Date
   [:fn {} #(java.time.LocalDate/parse %)])
 
-(def GatewayPath [:enum "timeSeriesByIndex"
-                  "imageCollectionByIndex"
-                  "image"
-                  "degradationTimeSeries"
-                  "filteredSentinel2"
-                  "getPlanetTile"
-                  "statistics"
-                  "filteredSentinelSAR"
-                  "imageCollection"
-                  "filteredLandsat"
-                  "degradationTileUrl"
-                  "featureCollection"
-                  "getAvailableBands"
-                  "filteredNicfi"])
+(def GatewayPath
+  [:enum "timeSeriesByIndex"
+   "imageCollectionByIndex"
+   "image"
+   "degradationTimeSeries"
+   "filteredSentinel2"
+   "getPlanetTile"
+   "statistics"
+   "filteredSentinelSAR"
+   "imageCollection"
+   "filteredLandsat"
+   "degradationTileUrl"
+   "featureCollection"
+   "getAvailableBands"
+   "filteredNicfi"])
+
+(def Project
+  [:map
+   [:institutionId {:optional true} Int]
+   [:projectTemplate {:optional true} Int]
+   [:useTemplatePlots {:optional true} Bool]
+   [:useTemplateWidgets {:optional true} Bool]
+   [:imageryId int?]
+   [:projectImageryList [:vector any?]]
+   [:aoiFeatures [:vector any?]]
+   [:aoiFileName [:maybe string?]]
+   [:description string?]
+   [:name string?]
+   [:type [:enum "regular" "simplified"]]
+   [:plotDistribution [:enum "random" "grid" "shp" "csv" "json"]]
+   [:plotShape [:maybe [:enum "square" "circle"]]]
+   [:plotSize [:maybe Int]]
+   [:plotSpacing [:maybe Int]]
+   [:shufflePlots [:maybe Bool]]
+   [:sampleDistribution [:enum "random" "grid" "center" "shp" "csv" "json"]]
+   [:samplesPerPlot [:maybe Int]]
+   [:sampleResolution  [:maybe Int]]
+   [:allowDrawnSamples {:optional true} Bool]
+   [:surveyQuestions map?]
+   [:surveyRules [:vector any?]]])
 
 (def GatewayRequest
   [:map
@@ -135,6 +164,44 @@
                                            [:params [:map
                                                      [:imgPath             :string]
                                                      [:visParams           Json]]]]
+   :projects/create-project!               [:map
+                                            [:params Project]]
+   :projects/update-project!               [:map [:params Project]]
+   :projects/create-project-draft!         [:map [:params Project]]
+   :projects/update-project-draft!         [:map [:params Project]]
+   :projects/close-project!               [:map
+                                           [:params [:map [:projectId Int]]]
+                                           [:session [:map [:userId Int]]]]
+   :projects/archive-project!             [:map
+                                            [:params [:map [:projectId Int]]]]
+   :projects/delete-projects-bulk!        [:map
+                                           [:params
+                                            [:map
+                                             [:projectIds [:vector Int]]
+                                             [:institutionId Int]]]]
+   :projects/edit-projects-bulk!           [:map
+                                            [:params
+                                             [:map
+                                              [:projectIds [:vector Int]]
+                                              [:institutionId Int]
+                                              [:visibility [:enum "institution" "public" "private" "users"]]]]]
+   :projects/publish-project!              [:map
+                                            [:params
+                                             [:map
+                                              [:projectId Int]
+                                              [:clearSaved Bool]]]
+                                            [:session [:map [:userId Int]]]]
+   :projects/check-plot-csv               [:map
+                                           [:params
+                                            [:map
+                                             [:projectId Int]
+                                             [:plotFileName [:maybe string?]]
+                                             [:plotFileBase64 [:maybe string?]]]]]
+   :projects/import-ce-project            [:map
+                                           [:params
+                                            [:map
+                                             [:fileName string?]
+                                             [:fileb64 string?]]]]
    :#'doi/create-doi!                     [:map
                                            [:session [:map
                                                       [:userId {:optional? true} Int]]]
@@ -174,4 +241,3 @@
        (~query args#)
        (data-response "Invalid Request Payload"  {:status 403
                                                   :body args#}))))
-
