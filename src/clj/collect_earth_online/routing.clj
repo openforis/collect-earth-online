@@ -91,29 +91,29 @@
    [:post "/register"]                       {:handler users/register}
    [:post "/confirm-data-sharing"]           {:handler #'users/confirm-data-sharing!}
    ;; Projects API
-   [:get  "/dump-project-aggregate-data"]    {:handler     #'projects/dump-project-aggregate-data!
+   [:get  "/dump-project-aggregate-data"]    {:handler     projects/dump-project-aggregate-data!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get  "/dump-project-raw-data"]          {:handler     #'projects/dump-project-raw-data!
+   [:get  "/dump-project-raw-data"]          {:handler     projects/dump-project-raw-data!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get  "/download-projects-bulk"]         {:handler     #'projects/download-projects-bulk
+   [:get  "/download-projects-bulk"]         {:handler     projects/download-projects-bulk
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get  "/get-home-projects"]              {:handler #'projects/get-home-projects}
-   [:get  "/get-institution-projects"]       {:handler #'projects/get-institution-projects}
-   [:get  "/get-institution-dash-projects"]  {:handler #'projects/get-institution-dash-projects}
-   [:get  "/get-project-by-id"]              {:handler #'projects/get-project-by-id}
-   [:get  "/get-template-projects"]          {:handler #'projects/get-template-projects}
-   [:get  "/get-template-by-id"]             {:handler #'projects/get-template-by-id}
-   [:get  "/get-project-stats"]              {:handler #'projects/get-project-stats}
-   [:get "/create-shape-files"]              {:handler     #'projects/create-shape-files!
+   [:get  "/get-home-projects"]              {:handler projects/get-home-projects}
+   [:get  "/get-institution-projects"]       {:handler projects/get-institution-projects}
+   [:get  "/get-institution-dash-projects"]  {:handler projects/get-institution-dash-projects}
+   [:get  "/get-project-by-id"]              {:handler projects/get-project-by-id}
+   [:get  "/get-template-projects"]          {:handler projects/get-template-projects}
+   [:get  "/get-template-by-id"]             {:handler projects/get-template-by-id}
+   [:get  "/get-project-stats"]              {:handler projects/get-project-stats}
+   [:get "/create-shape-files"]              {:handler     projects/create-shape-files!
                                               :auth-type   :user
                                               :auth-action :block}
-   [:get  "/get-project-draft-by-id"]        {:handler     #'projects/get-project-draft-by-id
+   [:get  "/get-project-draft-by-id"]        {:handler     projects/get-project-draft-by-id
                                               :auth-type   :user
                                               :auth-action :block}
-   [:get  "/get-project-drafts-by-user"]     {:handler     #'projects/get-project-drafts-by-user
+   [:get  "/get-project-drafts-by-user"]     {:handler     projects/get-project-drafts-by-user
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/archive-project"]                {:handler     (validate projects/archive-project!)
@@ -131,7 +131,7 @@
    [:post "/delete-projects-bulk"]           {:handler     (validate projects/delete-projects-bulk!)
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/edit-projects-bulk"]             {:handler     (validate #'projects/edit-projects-bulk!)
+   [:post "/edit-projects-bulk"]             {:handler     (validate projects/edit-projects-bulk!)
                                               :auth-type   :admin
                                               :auth-action :block}
    [:post "/create-project-draft"]           {:handler     (validate projects/create-project-draft!)
@@ -150,7 +150,7 @@
    [:post "/check-plot-csv"]                 {:handler     (validate projects/check-plot-csv)
                                               :auth-type   :user
                                               :auth-action :block}
-   [:post "/import-ce-project"]              {:handler     (validate ce-project/import-ce-project)
+   [:post "/import-ce-project"]              {:handler     (validate #'ce-project/import-ce-project)
                                               :auth-type   :user
                                               :auth-action :block}
 
