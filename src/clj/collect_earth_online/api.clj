@@ -21,6 +21,10 @@
                  output (tc/val->bool input)]
              (or (boolean? input) (= input (str output))))])
 
+(def Lng [:fn {} #(let [input %
+                        output (tc/val->long input)]
+                    (or (int? input) (= input (str output))))])
+
 (def Json
   [:fn {} #(= % (-> % tc/json->clj tc/clj->json))])
 
@@ -246,7 +250,85 @@
    :metrics/get-project-count           [:map
                                            [:params [:map
                                                      [:startDate Date]
-                                                     [:endDate Date]]]]})
+                                                     [:endDate Date]]]]
+   :plots/get-collection-plot [:map
+                               [:request-method [:= :get]]
+                               [:uri [:= "/get-collection-plot"]]
+                               [:params [:map
+                                         [:navigationMode {:optional true} :string]
+                                         [:direction {:optional true}
+                                          [:enum "previous"
+                                           "next"
+                                           "id"]]
+                                         [:projectId Int]
+                                         [:visibleId Int]
+                                         [:threshold Int]
+                                         [:projectType  {:optional true} :string]
+                                         [:currentUserId {:optional true} Int]
+                                         [:inReviewMode {:optional true} Bool]]]
+                                 [:session [:map
+                                            [:userId {:optional true} Int]]]]
+   :plots/get-plot-disagreement [:map
+                                 [:request-method [:= :get]]
+                                 [:uri [:= "/get-plot-disagreement"]]
+                                 [:params [:map
+                                           [:plotId Int]
+                                           [:projectId Int]]]]
+   :plots/get-plot-sample-geom [:map
+                                [:request-method [:= :get]]
+                                [:uri [:= "/get-plot-sample-geom"]]
+                                [:params [:map
+                                          [:plotId Int]]]]
+   :plots/get-plotters [:map
+                        [:request-method [:= :get]]
+                        [:uri [:= "/get-plotters"]]
+                        [:params [:map
+                                  [:plotId {:optional true} Int]
+                                  [:projectId Int]]]]
+   :plots/get-project-plots [:map
+                             [:request-method [:= :get]]
+                             [:uri [:= "/get-project-plots"]]
+                             [:params [:map
+                                       [:max {:optional true} Int]
+                                       [:projectId Int]]]]
+   :plots/add-user-samples [:map
+                            [:request-method [:= :post]]
+                            [:uri [:= "/add-user-samples"]]
+                            [:params [:map
+                                      [:projectId Int]
+                                      [:plotId Int]
+                                      [:inReviewMode Bool]
+                                      [:confidence {:optional true} Int]
+                                      [:confidenceComment [:maybe :string]]
+                                      [:collectionStart  Lng]
+                                      [:userSamples [:map]]
+                                      [:projectType [:enum "simplified" "regular"]]
+                                      [:imageryIds [:vector Int]]]]
+                              [:session [:map
+                                         [:userId {:optional true} Int]]]]
+   :plots/flag-plot [:map
+                     [:request-method [:= :post]]
+                     [:uri [:= "/flag-plot"]]
+                     [:params [:map
+                               [:projectId Int]
+                               [:plotId Int]
+                               [:inReviewMode {:optional true} Bool]
+                               [:collectionStart Lng]
+                               [:flaggedReason :string]]]
+                     [:session [:map
+                                [:userId {:optional true} Int]]]]
+   :plots/release-plot-locks [:map
+                              [:request-method [:= :post]]
+                              [:uri [:= "/release-plot-locks"]]
+                              [:session [:map
+                                         [:userId {:optional true} Int]]]]
+   :plots/reset-plot-lock [:map
+                           [:request-method [:= :post]]
+                           [:uri [:= "/reset-plot-lock"]]
+                           [:params [:map
+                                     [:plotId Int]]]
+                           [:session [:map
+                                      [:userId {:optional true} Int]]]]})
  
 (def Session
   [:map 
