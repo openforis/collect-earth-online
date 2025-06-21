@@ -71,6 +71,9 @@
    [:get  "/get-institution-users"]          {:handler     users/get-institution-users
                                               :auth-type   :user
                                               :auth-action :block}
+   [:get  "/get-user-admin-institutions"]    {:handler     users/get-user-admin-institutions
+                                              :auth-type   :user
+                                              :auth-action :block}
    [:get  "/get-user-stats"]                 {:handler     users/get-user-stats
                                               :auth-type   :user
                                               :auth-action :block}
