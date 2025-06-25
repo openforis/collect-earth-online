@@ -33,8 +33,6 @@
 (defn is-proj-admin? [user-id project-id token-key]
   (check-auth-common user-id project-id token-key "can_user_edit_project"))
 
-
-
 ;;;
 ;;; Get data functions
 ;;;
@@ -143,9 +141,6 @@
      :isProjectAdmin     (is-proj-admin? user-id project-id nil)
      :userRole           user-role
      :type               (:type project)}))
-
-(defn get-project-user-role [user-id project-id]
-  ())
 
 (defn get-project-by-id [{:keys [params session]}]
   (let [user-id    (:userId session -1)
