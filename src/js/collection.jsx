@@ -318,13 +318,10 @@ class Collection extends React.Component {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
-          const updatedImagery = data.map((imagery) => {
-            if(imagery.title === "CEO: Mapbox Satellite") {
-              return { ...imagery, visible: true};
-            } else {
-              return imagery;
-            }
-          });
+          const updatedImagery = data.map((imagery, index) => ({
+            ...imagery,
+            visible: index === 0
+          }));
           this.setState({ imageryList: updatedImagery });
           return Promise.resolve("resolved");
         } else {

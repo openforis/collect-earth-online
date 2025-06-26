@@ -59,8 +59,7 @@ export default function ReviewForm() {
         <AOIMap
           canDrag={false}
           context={context}
-          imagery={context.institutionImagery.filter(({ title }) => (title === "CEO: Mapbox Satellite") ||
-                                                                    (title === "CEO: Open Street Maps"))}
+          imagery={[context.institutionImagery[0]]}
         />
         <div className="row" style={{ borderBottom: "1px solid lightgray" }}>
           <div className="col-6 pt-3" style={{ borderRight: "1px solid lightgray" }}>

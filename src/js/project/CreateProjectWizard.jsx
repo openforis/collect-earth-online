@@ -53,10 +53,7 @@ export default class CreateProjectWizard extends React.Component {
           <AOIMap
             canDrag={false}
             context={this.context}
-            imagery={this.context.institutionImagery.filter(
-              ({ title }) => (title === "CEO: Mapbox Satellite") ||
-                (title === "CEO: Open Street Maps")
-            )}
+            imagery={[this.context.institutionImagery[0]]}
           />
         ),
         validate: this.validateImagery,
@@ -78,10 +75,7 @@ export default class CreateProjectWizard extends React.Component {
                 this.context.boundaryType === "manual"
             }
             context={this.context}
-            imagery={this.context.institutionImagery.filter(
-              ({ title }) => (title === "CEO: Mapbox Satellite") ||
-                (title === "CEO: Open Street Maps")
-            )}
+            imagery={[this.context.institutionImagery[0]]}
           />
         ),
         validate: this.validatePlotData,
