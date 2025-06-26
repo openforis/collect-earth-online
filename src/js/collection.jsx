@@ -498,8 +498,11 @@ class Collection extends React.Component {
     if (this.state.mapConfig) mercator.changeDrawTool(this.state.mapConfig, "drawLayer", drawTool);
   }
 
-  navToFirstPlot = () =>
-    this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed");
+  navToFirstPlot = () => {
+    this.state.currentProject?.userRole === 2 ?
+      this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed") :
+      this.setState ({modal: {alert: {alertType: "Collection Error", alertMessage: "Administrators must be in Admin Review to collect data. Please select Admin Review to collect data on this plot"}}}) ;
+    }
 
   navToNextPlot = (ignoreCheck) => {
     if (ignoreCheck || this.confirmUnsaved()) {
