@@ -110,25 +110,25 @@ class Collection extends React.Component {
     // Initialize map when imagery list is returned
     if (
       this.state.imageryList.length > 0 &&
-      this.state.currentProject.aoiFeatures &&
-      this.state.mapConfig == null
+        this.state.currentProject.aoiFeatures &&
+        this.state.mapConfig == null
     ) {
       this.initializeProjectMap();
     }
     // Load all project plots initially
     if (
       this.state.mapConfig &&
-      this.state.plotList.length > 0 &&
-      (this.state.mapConfig !== prevState.mapConfig || prevState.plotList.length === 0)
+        this.state.plotList.length > 0 &&
+        (this.state.mapConfig !== prevState.mapConfig || prevState.plotList.length === 0)
     ) {
       this.showProjectOverview();
     }
     // initialize current imagery to project default
     if (
       this.state.mapConfig &&
-      this.state.currentProject &&
-      this.state.imageryList.length > 0 &&
-      !this.state.currentImagery.id
+        this.state.currentProject &&
+        this.state.imageryList.length > 0 &&
+        !this.state.currentImagery.id
     ) {
       if (this.getImageryById(this.state.currentProject.imageryId)) {
         this.setBaseMapSource(this.state.currentProject.imageryId);
@@ -144,13 +144,13 @@ class Collection extends React.Component {
     // Initialize when new plot
     if (this.state.currentPlot.id && (
       this.state.currentPlot.id !== prevState.currentPlot.id
-      || this.state.showBoundary !== prevState.showBoundary
+        || this.state.showBoundary !== prevState.showBoundary
     )
        ) {
       this.showProjectPlot();
       if (
         this.state.currentProject.hasGeoDash &&
-        this.state.currentProject.projectOptions.autoLaunchGeoDash
+          this.state.currentProject.projectOptions.autoLaunchGeoDash
       ) {
         this.showGeoDash();
       }
@@ -163,17 +163,17 @@ class Collection extends React.Component {
 
     // Conditions required for samples to be shown
     const selectedQuestion =
-      this.state.currentProject.surveyQuestions[this.state.selectedQuestionId];
+          this.state.currentProject.surveyQuestions[this.state.selectedQuestionId];
     const prevSelectedQuestion =
-      prevState.currentProject.surveyQuestions[prevState.selectedQuestionId];
+          prevState.currentProject.surveyQuestions[prevState.selectedQuestionId];
 
     if (this.state.currentPlot.id && selectedQuestion.visible) {
       // Changing conditions for which samples need to be re-drawn
       if (
         this.state.selectedQuestionId !== prevState.selectedQuestionId ||
-        this.state.unansweredColor !== prevState.unansweredColor ||
-        this.state.userSamples !== prevState.userSamples ||
-        selectedQuestion.visible !== prevSelectedQuestion.visible ||
+          this.state.unansweredColor !== prevState.unansweredColor ||
+          this.state.userSamples !== prevState.userSamples ||
+          selectedQuestion.visible !== prevSelectedQuestion.visible ||
           this.state.showSamples !== prevState.showSamples ||
           this.state.showBoundary !== prevState.showBoundary
       ) {
@@ -186,7 +186,7 @@ class Collection extends React.Component {
     // Update user samples calculations for display
     if (
       lengthObject(this.state.currentProject.surveyQuestions) &&
-      this.state.userSamples !== prevState.userSamples
+        this.state.userSamples !== prevState.userSamples
     ) {
       this.updateQuestionStatus();
     }
@@ -194,9 +194,9 @@ class Collection extends React.Component {
     //  updateMapImagery is poorly named, this action is detecting if we need to show the "zoom to" overlay
     if (
       this.state.mapConfig &&
-      this.state.currentImagery.id &&
-      (this.state.currentImagery.id !== prevState.currentImagery.id ||
-        this.state.mapConfig !== prevState.mapConfig)
+        this.state.currentImagery.id &&
+        (this.state.currentImagery.id !== prevState.currentImagery.id ||
+         this.state.mapConfig !== prevState.mapConfig)
     ) {
       if (!prevState?.imageryIdsArray?.includes(this.state.currentImagery.id)) {
         this.setState((prevState) => ({
@@ -212,137 +212,137 @@ class Collection extends React.Component {
   }
 
   setImageryAttribution = (attributionSuffix) =>
-    this.setState({
-      imageryAttribution: this.state.currentImagery.attribution + attributionSuffix,
-    });
+  this.setState({
+    imageryAttribution: this.state.currentImagery.attribution + attributionSuffix,
+  });
 
   setImageryAttributes = (newImageryAttributes) =>
-    this.setState({ imageryAttributes: newImageryAttributes });
+  this.setState({ imageryAttributes: newImageryAttributes });
 
   processModal = (message, callBack) =>
-    new Promise(() =>
-      Promise.resolve(
-        this.setState({ modalMessage: message }, () =>
-          callBack().finally(() => this.setState({ modalMessage: null }))
-        )
+  new Promise(() =>
+    Promise.resolve(
+      this.setState({ modalMessage: message }, () =>
+        callBack().finally(() => this.setState({ modalMessage: null }))
       )
-    );
+    )
+  );
 
   showAlert = ({ title, body, closeText = "Close" }) =>
-    this.setState({
-      messageBox: {
-        body,
-        closeText,
-        title,
-        type: "alert",
-      },
-    });
+  this.setState({
+    messageBox: {
+      body,
+      closeText,
+      title,
+      type: "alert",
+    },
+  });
 
   getProjectData = () =>
-    this.processModal("Loading project details", () =>
-      Promise.all([
-        this.getProjectById(),
-        this.getProjectPlots(),
-        this.getImageryList(),
-        this.getPlotters(),
-      ])
-        .then(() => {
-          const reviewWarning = this.state.inReviewMode
-            ? "You are currently in 'Review Mode.'"
-            : "";
-          if (this.state.currentProject.availability === "unpublished") {
-            this.showAlert({
-              title: "Warning: Draft Mode",
-              body:
-                "This project is in draft mode. Only admins can collect. Any plot collections will be erased when the project is published.\n" +
-                reviewWarning,
-              closeText: "OK, I understand",
-            });
-          } else if (this.state.currentProject.availability === "closed") {
-            this.showAlert({
-              title: "Project Closed",
-              body:
-                "This project has been closed. Admins can make corrections to any plot.\n " +
-                reviewWarning,
-            });
-          } else if (this.state.inReviewMode) {
-            this.showAlert({
-              title: "Review Mode",
-              body: reviewWarning,
-            });
-          }
-        })
-        .catch((response) => {
-          console.log(response);
-          this.setState ({modal: {alert: {alertType: "Project Info Alert", alertMessage: "Error retrieving the project info. See console for details."}}});
-        })
-    );
+  this.processModal("Loading project details", () =>
+    Promise.all([
+      this.getProjectById(),
+      this.getProjectPlots(),
+      this.getImageryList(),
+      this.getPlotters(),
+    ])
+      .then(() => {
+        const reviewWarning = this.state.inReviewMode
+              ? "You are currently in 'Review Mode.'"
+              : "";
+        if (this.state.currentProject.availability === "unpublished") {
+          this.showAlert({
+            title: "Warning: Draft Mode",
+            body:
+            "This project is in draft mode. Only admins can collect. Any plot collections will be erased when the project is published.\n" +
+              reviewWarning,
+            closeText: "OK, I understand",
+          });
+        } else if (this.state.currentProject.availability === "closed") {
+          this.showAlert({
+            title: "Project Closed",
+            body:
+            "This project has been closed. Admins can make corrections to any plot.\n " +
+              reviewWarning,
+          });
+        } else if (this.state.inReviewMode) {
+          this.showAlert({
+            title: "Review Mode",
+            body: reviewWarning,
+          });
+        }
+      })
+      .catch((response) => {
+        console.log(response);
+        this.setState ({modal: {alert: {alertType: "Project Info Alert", alertMessage: "Error retrieving the project info. See console for details."}}});
+      })
+  );
 
   getProjectById = () =>
-    fetch(`/get-project-by-id?projectId=${this.props.projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((project) => {
-        // TODO This logic is currently invalid since this route can never return an archived project.
-        if (project.id > 0 && project.availability !== "archived") {
-          this.setState({ currentProject: project });
-          const { inReviewMode } = getProjectPreferences(project.id);
-          this.setReviewMode(
-            project.isProjectAdmin &&
-              (inReviewMode || (project.availability === "closed" && inReviewMode !== false))
-          );
-          return Promise.resolve("resolved");
-        } else {
-          return Promise.reject(
-            project.availability === "archived"
-              ? "This project is archived"
-              : "No project found with ID " + this.props.projectId + "."
-          );
-        }
-      });
+  fetch(`/get-project-by-id?projectId=${this.props.projectId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((project) => {
+      // TODO This logic is currently invalid since this route can never return an archived project.
+      if (project.id > 0 && project.availability !== "archived") {
+        this.setState({ currentProject: project });
+        const { inReviewMode } = getProjectPreferences(project.id);
+        this.setReviewMode(
+          project.isProjectAdmin &&
+            (inReviewMode || (project.availability === "closed" && inReviewMode !== false))
+        );
+        return Promise.resolve("resolved");
+      } else {
+        return Promise.reject(
+          project.availability === "archived"
+            ? "This project is archived"
+            : "No project found with ID " + this.props.projectId + "."
+        );
+      }
+    });
 
   // TODO, this can easily be a part of get-project-by-id
   getProjectPlots = () =>
-    fetch(`/get-project-plots?projectId=${this.props.projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (data.length > 0) {
-          this.setState({ plotList: data });
-          return Promise.resolve("resolved");
-        } else {
-          return Promise.reject("No plot information found");
-        }
-      });
+  fetch(`/get-project-plots?projectId=${this.props.projectId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      if (data.length > 0) {
+        this.setState({ plotList: data });
+        return Promise.resolve("resolved");
+      } else {
+        return Promise.reject("No plot information found");
+      }
+    });
 
   getImageryList = () =>
-    fetch(`/get-project-imagery?projectId=${this.props.projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (data.length > 0) {
-          const updatedImagery = data.map((imagery) => {
-            if(imagery.title === "CEO: Mapbox Satellite") {
-              return { ...imagery, visible: true};
-            } else {
-              return imagery;
-            }
-          });
-          this.setState({ imageryList: updatedImagery });
-          return Promise.resolve("resolved");
-        } else {
-          return Promise.reject("No project imagery found");
-        }
-      });
+  fetch(`/get-project-imagery?projectId=${this.props.projectId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      if (data.length > 0) {
+        const updatedImagery = data.map((imagery) => {
+          if(imagery.title === "CEO: Mapbox Satellite") {
+            return { ...imagery, visible: true};
+          } else {
+            return imagery;
+          }
+        });
+        this.setState({ imageryList: updatedImagery });
+        return Promise.resolve("resolved");
+      } else {
+        return Promise.reject("No project imagery found");
+      }
+    });
 
   getPlotters = () =>
-    fetch(`/get-plotters?projectId=${this.props.projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (isArray(data)) {
-          this.setState({ plotters: data });
-          return Promise.resolve("resolved");
-        } else {
-          return Promise.reject("Error getting plotter data.");
-        }
-      });
+  fetch(`/get-plotters?projectId=${this.props.projectId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      if (isArray(data)) {
+        this.setState({ plotters: data });
+        return Promise.resolve("resolved");
+      } else {
+        return Promise.reject("Error getting plotter data.");
+      }
+    });
 
   initializeProjectMap = () => {
     const mapConfig = mercator.createMap(
@@ -403,8 +403,8 @@ class Collection extends React.Component {
     mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
     if (
       currentPlot &&
-      !currentPlot.id &&
-      ["PlanetDaily", "SecureWatch"].includes(currentImagery.sourceConfig.type)
+        !currentPlot.id &&
+        ["PlanetDaily", "SecureWatch"].includes(currentImagery.sourceConfig.type)
     ) {
       mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", true);
     } else {
@@ -413,7 +413,7 @@ class Collection extends React.Component {
   };
 
   getImageryById = (imageryId) =>
-    this.state.imageryList.find((imagery) => imagery.id === imageryId);
+  this.state.imageryList.find((imagery) => imagery.id === imageryId);
 
   warnOnNoSamples = (plotData) => {
     if (plotData.samples.length === 0 && !this.state.currentProject.allowDrawnSamples) {
@@ -484,7 +484,7 @@ class Collection extends React.Component {
   };
 
   confirmUnsaved = () =>
-    !this.hasChanged() ||
+  !this.hasChanged() ||
     confirm(
       "You have unsaved changes. Any unsaved responses will be lost. Are you sure you want to continue?"
     );
@@ -499,10 +499,13 @@ class Collection extends React.Component {
   }
 
   navToFirstPlot = () => {
-    this.state.currentProject?.userRole === 2 ?
+    this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed", this.state.currentProject?.userRole);
+    /*
+      this.state.currentProject?.userRole === 2 ?
       this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed") :
-      this.setState ({modal: {alert: {alertType: "Collection Error", alertMessage: "Administrators must be in Admin Review to collect data. Please select Admin Review to collect data on this plot"}}}) ;
-    }
+      
+    */
+  }
 
   navToNextPlot = (ignoreCheck) => {
     if (ignoreCheck || this.confirmUnsaved()) {
@@ -553,20 +556,20 @@ class Collection extends React.Component {
     newPlotInput: newPlot.visibleId,
     userSamples: newPlot.samples
       ? newPlot.samples.reduce(
-          (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.savedAnswers || {} : {} }),
-          {}
-        )
+        (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.savedAnswers || {} : {} }),
+        {}
+      )
       : {},
     originalUserSamples: newPlot.samples
       ? copyValues
-        ? newPlot.samples.reduce((acc, cur) => ({ ...acc, [cur.id]: cur.savedAnswers || {} }), {})
-        : this.state.originalUserSamples
-      : {},
+      ? newPlot.samples.reduce((acc, cur) => ({ ...acc, [cur.id]: cur.savedAnswers || {} }), {})
+      : this.state.originalUserSamples
+    : {},
     userImages: newPlot.samples
       ? newPlot.samples.reduce(
-          (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.userImage || {} : {} }),
-          {}
-        )
+        (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.userImage || {} : {} }),
+        {}
+      )
       : {},
     selectedQuestionId: Number(
       findObject(
@@ -593,10 +596,10 @@ class Collection extends React.Component {
       mercator.geometryToVectorSource(
         currentPlot.plotGeom.includes("Point")
           ? mercator.getPlotPolygon(
-              currentPlot.plotGeom,
-              currentProject.plotSize,
-              currentProject.plotShape
-            )
+            currentPlot.plotGeom,
+            currentProject.plotSize,
+            currentProject.plotShape
+          )
           : mercator.parseGeoJson(currentPlot.plotGeom, true)
       ),
       mercator.ceoMapStyles("geom", (showBoundary ? "yellow" : "transparent")
@@ -692,8 +695,8 @@ class Collection extends React.Component {
   showGeoDash = () => {
     const { currentPlot, mapConfig, currentProject } = this.state;
     const plotRadius = currentProject.plotSize
-      ? currentProject.plotSize / 2.0
-      : mercator.getViewRadius(mapConfig);
+          ? currentProject.plotSize / 2.0
+          : mercator.getViewRadius(mapConfig);
     window.open(
       "/geo-dash?" +
         `institutionId=${this.state.currentProject.institution}` +
@@ -759,11 +762,11 @@ class Collection extends React.Component {
   };
 
   hasAnswers = () =>
-    _.some(Object.values(this.state.userSamples), (sample) => !_.isEmpty(sample)) ||
+  _.some(Object.values(this.state.userSamples), (sample) => !_.isEmpty(sample)) ||
     _.some(Object.values(this.state.userSamples), (sample) => !_.isEmpty(sample));
 
   confirmFlag = () =>
-    !this.hasAnswers() ||
+  !this.hasAnswers() ||
     confirm(
       "Flagging this plot will delete your previous answers. Are you sure you want to continue?"
     );
@@ -818,7 +821,7 @@ class Collection extends React.Component {
           userSamples: this.state.userSamples,
           userImages: this.state.userImages,
           newPlotSamples:
-            this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
+          this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
           inReviewMode: this.state.inReviewMode,
           currentUserId: this.state.currentUserId,
           imageryIds: this.state.imageryIds,
@@ -863,9 +866,9 @@ class Collection extends React.Component {
 
     return childQuestionIds.length
       ? childQuestionIds.reduce(
-          (acc, cur) => [...acc, ...this.getChildQuestionIds(cur)],
-          [currentQuestionId]
-        )
+        (acc, cur) => [...acc, ...this.getChildQuestionIds(cur)],
+        [currentQuestionId]
+      )
       : [currentQuestionId];
   };
 
@@ -927,13 +930,13 @@ class Collection extends React.Component {
 
         return (answerText != null &&
                 answerText != undefined) ?
-        {
-          ...acc,
-          [sampleId]: {
-            ...subQuestionsCleared,
-            [questionId]: newQuestion,
-          },
-        } : { ...acc };
+          {
+            ...acc,
+            [sampleId]: {
+              ...subQuestionsCleared,
+              [questionId]: newQuestion,
+            },
+          } : { ...acc };
       }, {});
 
       const newUserImages = sampleIds.reduce(
@@ -942,15 +945,15 @@ class Collection extends React.Component {
           [sampleId]: {
             id: this.state.currentImagery.id,
             attributes:
-              this.state.currentImagery.sourceConfig.type === "PlanetDaily"
-                ? {
-                    ...this.state.imageryAttributes,
-                    imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(
-                      this.state.mapConfig,
-                      this.state.currentImagery.id
-                    ),
-                  }
-                : this.state.imageryAttributes,
+            this.state.currentImagery.sourceConfig.type === "PlanetDaily"
+              ? {
+                ...this.state.imageryAttributes,
+                imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(
+                  this.state.mapConfig,
+                  this.state.currentImagery.id
+                ),
+              }
+            : this.state.imageryAttributes,
           },
         }),
         {}
@@ -986,9 +989,9 @@ class Collection extends React.Component {
           -1
         );
         const color =
-          componentType === "input" && userAnswer >= 0
-            ? _.get(firstEntry(answers), [1, "color"], "")
-            : _.get(answers, [userAnswer, "color"], "");
+              componentType === "input" && userAnswer >= 0
+              ? _.get(firstEntry(answers), [1, "color"], "")
+              : _.get(answers, [userAnswer, "color"], "");
 
         mercator.highlightSampleGeometry(feature, color);
       });
@@ -1008,7 +1011,7 @@ class Collection extends React.Component {
         const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestionId, "answerId"]);
         return (
           sampleAnswerId != null &&
-          (parentAnswerIds.length === 0 || parentAnswerIds.includes(sampleAnswerId))
+            (parentAnswerIds.length === 0 || parentAnswerIds.includes(sampleAnswerId))
         );
       });
     }
@@ -1021,12 +1024,12 @@ class Collection extends React.Component {
       ([questionId, question]) => {
         const visible = this.calcVisibleSamples(Number(questionId)) || [];
         const answered = visible
-          .filter((vs) => userSamples[vs.id][questionId])
-          .map((vs) => ({
-            sampleId: vs.id,
-            answerId: Number(userSamples[vs.id][questionId].answerId),
-            answerText: userSamples[vs.id][questionId].answer,
-          }));
+              .filter((vs) => userSamples[vs.id][questionId])
+              .map((vs) => ({
+                sampleId: vs.id,
+                answerId: Number(userSamples[vs.id][questionId].answerId),
+                answerText: userSamples[vs.id][questionId].answer,
+              }));
         return [questionId, { ...question, visible, answered }];
       }
     );
@@ -1042,9 +1045,9 @@ class Collection extends React.Component {
   toggleQuitModal = () => this.setState({ showQuitModal: !this.state.showQuitModal });
 
   toggleFlagged = () =>
-    this.setState({
-      currentPlot: { ...this.state.currentPlot, flagged: !this.state.currentPlot.flagged },
-    });
+  this.setState({
+    currentPlot: { ...this.state.currentPlot, flagged: !this.state.currentPlot.flagged },
+  });
   
   toggleImageryLayers = () => {
     this.setState((prevState) => ({
@@ -1126,13 +1129,13 @@ class Collection extends React.Component {
   };
 
   setConfidence = (confidence) =>
-    this.setState({ currentPlot: { ...this.state.currentPlot, confidence } });
+  this.setState({ currentPlot: { ...this.state.currentPlot, confidence } });
 
   setFlaggedReason = (flaggedReason) =>
-    this.setState({ currentPlot: { ...this.state.currentPlot, flaggedReason } });
+  this.setState({ currentPlot: { ...this.state.currentPlot, flaggedReason } });
 
   setConfidenceComment = (confidenceComment) =>
-    this.setState({ currentPlot: { ...this.state.currentPlot, confidenceComment } });
+  this.setState({ currentPlot: { ...this.state.currentPlot, confidenceComment } });
 
   render() {
     return (
@@ -1141,10 +1144,10 @@ class Collection extends React.Component {
 
           {/* Left Sidebar (ImageryLayerOptions) - Now Absolutely Positioned */}
           {this.state?.modal?.alert &&
-         <Modal title={this.state?.modal?.alert?.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
-           {this.state?.modal?.alert?.alertMessage}
-         </Modal>}
+           <Modal title={this.state?.modal?.alert?.alertType}
+                  onClose={()=>{this.setState({modal: null});}}>
+             {this.state?.modal?.alert?.alertMessage}
+           </Modal>}
           {this.state.currentProject?.type === "simplified" && (
             <div
               className="d-flex flex-column position-absolute full-height"
@@ -1199,6 +1202,7 @@ class Collection extends React.Component {
               surveyQuestions={this.state.currentProject.surveyQuestions}
               toggleQuitModal={this.toggleQuitModal}
               userName={this.props.userName}
+              userRole={this.state.currentProject.userRole}
               collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
             >
               <PlotNavigation
@@ -1334,14 +1338,14 @@ function ImageAnalysisPane({ imageryAttribution }) {
 
 class SideBar extends React.Component {
   checkCanSave = () => {
-    const { answerMode, currentPlot, inReviewMode, surveyQuestions, collectConfidence } = this.props;
+    const { answerMode, currentPlot, inReviewMode, surveyQuestions, collectConfidence, userRole } = this.props;
     const { confidence } = currentPlot;
     const visibleSurveyQuestions = filterObject(surveyQuestions, ([_id, val]) => val.hideQuestion != true);
     const noneAnswered = everyObject(visibleSurveyQuestions, ([_id, sq]) => safeLength(sq.answered) === 0);
     const hasSamples = safeLength(currentPlot.samples) > 0;
     const allAnswered = everyObject(
       visibleSurveyQuestions,
-      ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered));
+      ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered));    
     if (answerMode !== "question") {
       this.setState ({modal: {alert: {alertType: "Collection Alert", alertMessage: "You must be in question mode to save the collection."}}});
       return false;
@@ -1363,9 +1367,13 @@ class SideBar extends React.Component {
     } else if (collectConfidence && !confidence) {
       this.setState ({modal: {alert: {alertType: "Review Mode Alert", alertMessage: "You must input the confidence before saving the interpretation."}}});
       return false;
+    } else if (userRole === 1){
+      this.setState ({modal: {alert: {alertType: "Collection Error", alertMessage: "Administrators must be in Admin Review to collect data. Please select Admin Review to collect data on this plot"}}}) ;
+      return false;
     } else {
       return true;
     }
+    
   };
 
   renderQuitButton = () => (
@@ -1487,8 +1495,8 @@ class PlotNavigation extends React.Component {
         type="button"
       >
         {this.state.newPlotInput === this.props.currentPlot.visibleId && this.props.inReviewMode
-          ? "Refresh"
-          : "Go to plot"}
+         ? "Refresh"
+         : "Go to plot"}
       </button>
     </div>
   );
@@ -1607,9 +1615,9 @@ class PlotNavigation extends React.Component {
           </div>
           {isProjectAdmin && this.reviewMode(inReviewMode, setReviewMode)}
           {navigationMode === "confidence" &&
-            this.thresholdSlider("Confidence", threshold, setThreshold)}
+           this.thresholdSlider("Confidence", threshold, setThreshold)}
           {navigationMode === "qaqc" &&
-            this.thresholdSlider("Disagreement", threshold, setThreshold)}
+           this.thresholdSlider("Disagreement", threshold, setThreshold)}
           {navigationMode === "qaqc" && currentPlot.id && (
             <div
               style={{
@@ -1634,21 +1642,21 @@ class PlotNavigation extends React.Component {
             </div>
           )}
           {inReviewMode &&
-            this.selectUser(
-              navigationMode === "user" ? plotters : plotUsers,
-              currentUserId,
-              setCurrentUserId
-            )}
+           this.selectUser(
+             navigationMode === "user" ? plotters : plotUsers,
+             currentUserId,
+             setCurrentUserId
+           )}
         </div>
-           <div className="mt-2">
-             {loadingPlots ? (
-               <h3>Loading plot data...</h3>
-             ) : currentPlot?.id ? (
-               projectType !== "simplified" && this.navButtons()
-             ) : (
-               this.gotoButton()
-             )}
-           </div>
+        <div className="mt-2">
+          {loadingPlots ? (
+            <h3>Loading plot data...</h3>
+          ) : currentPlot?.id ? (
+            projectType !== "simplified" && this.navButtons()
+          ) : (
+            this.gotoButton()
+          )}
+        </div>
       </div>
     );
   }
@@ -1705,12 +1713,12 @@ export const ExternalTools = ({
 
   const loadGEEScript = () => {
     const urlParams = currentPlot.plotGeom.includes("Point")
-      ? currentProject.plotShape === "circle"
-        ? "center=[" +
+          ? currentProject.plotShape === "circle"
+          ? "center=[" +
           mercator.parseGeoJson(currentPlot.plotGeom).getCoordinates() +
           "];radius=" +
           currentProject.plotSize / 2
-        : "geoJson=" +
+          : "geoJson=" +
           mercator.geometryToGeoJSON(
             mercator.getPlotPolygon(
               currentPlot.plotGeom,
@@ -1721,7 +1729,7 @@ export const ExternalTools = ({
             "EPSG:3857",
             5
           )
-      : "geoJson=" + currentPlot.plotGeom;
+          : "geoJson=" + currentPlot.plotGeom;
 
     if (auxWindow) auxWindow.close();
     const win = window.open(
@@ -1745,7 +1753,7 @@ export const ExternalTools = ({
       download={`ceo_projectId-${currentProject.id}_plotId-${currentPlot.visibleId}.kml`}
       href={
         "data:earth.kml+xml application/vnd.google-earth.kmz," +
-        encodeURIComponent(KMLFeatures)
+          encodeURIComponent(KMLFeatures)
       }
     >
       Download Plot KML
@@ -1820,9 +1828,9 @@ class PlotInformation extends React.Component {
 
   render() {
     const hasExtraInfo =
-      Object.values(this.props.extraPlotInfo || {}).filter(
-        (value) => value && !(value instanceof Object)
-      ).length > 0;
+          Object.values(this.props.extraPlotInfo || {}).filter(
+            (value) => value && !(value instanceof Object)
+          ).length > 0;
     return (
       <>
         <CollapsibleTitle
@@ -1834,14 +1842,14 @@ class PlotInformation extends React.Component {
           hasExtraInfo ? (
             <ul className="plot-info__list mb-3 mx-1">
               {Object.entries(this.props.extraPlotInfo)
-                .filter(([_key, value]) => value && !(value instanceof Object))
-                .sort((a, b) => a[0].localeCompare(b[0])) // Sorting the array by keys alphabetically
-                .map(([key, value]) => (
-                  <li key={key} className="plot-info__item">
-                  <span className="plot-info__key">{key}</span>
-                  <span className="plot-info__value">{value}</span>
-                </li>
-                ))}
+               .filter(([_key, value]) => value && !(value instanceof Object))
+               .sort((a, b) => a[0].localeCompare(b[0])) // Sorting the array by keys alphabetically
+               .map(([key, value]) => (
+                 <li key={key} className="plot-info__item">
+                   <span className="plot-info__key">{key}</span>
+                   <span className="plot-info__value">{value}</span>
+                 </li>
+               ))}
             </ul>
           ) : (
             <div className="mb-3">There is no extra information for this plot.</div>
@@ -1875,17 +1883,17 @@ class ImageryOptions extends React.Component {
       currentPlot: props.currentPlot,
       currentProjectBoundary: props.currentProjectBoundary,
       extent:
-        props.currentPlot.id && props.currentProject.id
-          ? props.currentPlot.plotGeom.includes("Point")
-            ? mercator
-                .getPlotPolygon(
-                  props.currentPlot.plotGeom,
-                  props.currentProject.plotSize,
-                  props.currentProject.plotShape
-                )
-                .getExtent()
-            : mercator.parseGeoJson(props.currentPlot.plotGeom, true).getExtent()
-          : [],
+      props.currentPlot.id && props.currentProject.id
+        ? props.currentPlot.plotGeom.includes("Point")
+        ? mercator
+        .getPlotPolygon(
+          props.currentPlot.plotGeom,
+          props.currentProject.plotSize,
+          props.currentProject.plotShape
+        )
+        .getExtent()
+        : mercator.parseGeoJson(props.currentPlot.plotGeom, true).getExtent()
+      : [],
     };
 
     return (
@@ -1914,28 +1922,28 @@ class ImageryOptions extends React.Component {
             </select>
           )}
           {props.currentImageryId &&
-            props.imageryList.map((imagery) => {
-              const individualProps = {
-                ...commonProps,
-                key: imagery.id,
-                thisImageryId: imagery.id,
-                sourceConfig: imagery.sourceConfig,
-                visible: props.currentImageryId === imagery.id && this.state.showImageryOptions,
-              };
-              return (
-                imagery.sourceConfig &&
-                {
-                  Planet: <PlanetMenu {...individualProps} />,
-                  PlanetDaily: <PlanetDailyMenu {...individualProps} />,
-                  PlanetTFO: <PlanetTFOMenu {...individualProps} />,
-                  SecureWatch: <SecureWatchMenu {...individualProps} />,
-                  Sentinel1: <SentinelMenu {...individualProps} />,
-                  Sentinel2: <SentinelMenu {...individualProps} />,
-                  GEEImage: <GEEImageMenu {...individualProps} />,
-                  GEEImageCollection: <GEEImageCollectionMenu {...individualProps} />,
-                }[imagery.sourceConfig.type]
-              );
-            })}
+           props.imageryList.map((imagery) => {
+             const individualProps = {
+               ...commonProps,
+               key: imagery.id,
+               thisImageryId: imagery.id,
+               sourceConfig: imagery.sourceConfig,
+               visible: props.currentImageryId === imagery.id && this.state.showImageryOptions,
+             };
+             return (
+               imagery.sourceConfig &&
+                 {
+                   Planet: <PlanetMenu {...individualProps} />,
+                   PlanetDaily: <PlanetDailyMenu {...individualProps} />,
+                   PlanetTFO: <PlanetTFOMenu {...individualProps} />,
+                   SecureWatch: <SecureWatchMenu {...individualProps} />,
+                   Sentinel1: <SentinelMenu {...individualProps} />,
+                   Sentinel2: <SentinelMenu {...individualProps} />,
+                   GEEImage: <GEEImageMenu {...individualProps} />,
+                   GEEImageCollection: <GEEImageCollectionMenu {...individualProps} />,
+                 }[imagery.sourceConfig.type]
+             );
+           })}
           <input
             checked={this.state.enableGrid}
             id="grid-check"
@@ -2041,12 +2049,12 @@ class ProjectStats extends React.Component {
     const { userName } = this.props;
     // Totals
     const numTimedPlots = stats.userStats
-      ? stats.userStats.reduce((acc, cur) => acc + cur.timedPlots, 0)
-      : 0;
+          ? stats.userStats.reduce((acc, cur) => acc + cur.timedPlots, 0)
+          : 0;
     const aveTime =
-      numTimedPlots > 0
-        ? stats.userStats.reduce((acc, cur) => acc + cur.seconds, 0) / numTimedPlots / 1.0
-        : 0;
+          numTimedPlots > 0
+          ? stats.userStats.reduce((acc, cur) => acc + cur.seconds, 0) / numTimedPlots / 1.0
+          : 0;
 
     // This user
     const thisUser = stats.userStats.find((u) => u.email === userName);
@@ -2060,15 +2068,15 @@ class ProjectStats extends React.Component {
           {this.renderHeader("Project Statistics")}
           {this.renderRow("Total", stats.totalPlots)}
           {stats.plotAssignments > stats.totalPlots &&
-            this.renderRow("Plot Assignments", stats.plotAssignments)}
+           this.renderRow("Plot Assignments", stats.plotAssignments)}
           {this.renderRow("Analyzed", stats.analyzedPlots, stats.totalPlots)}
           {stats.plotAssignments > 0 &&
-            this.renderRow("Partial", stats.partialPlots, stats.totalPlots)}
+           this.renderRow("Partial", stats.partialPlots, stats.totalPlots)}
           {this.renderRow("Unanalyzed", stats.unanalyzedPlots, stats.totalPlots)}
           {this.renderRow("Flagged", stats.flaggedPlots, stats.totalPlots)}
           {stats.usersAssigned > 0
-            ? this.renderRow("Users Assigned", stats.usersAssigned)
-            : this.renderRow("Total Contributors", stats.userStats?.length)}
+           ? this.renderRow("Users Assigned", stats.usersAssigned)
+           : this.renderRow("Total Contributors", stats.userStats?.length)}
           {this.renderRow(
             "Average Collection Time",
             aveTime > 0 ? `${aveTime.toFixed(2)} secs` : "untimed"

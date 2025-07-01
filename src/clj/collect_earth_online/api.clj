@@ -265,7 +265,7 @@
                                          [:threshold Int]
                                          [:currentUserId [:maybe [:or :int :string]]]
                                          [:projectType  {:optional true} :string]
-                                         [:inReviewMode {:optional true} Bool]]]
+                                         [:inReviewMode {:optional true} Int]]]
                                  [:session [:map
                                             [:userId {:optional true} Int]]]]
    :plots/get-plot-disagreement [:map
@@ -297,7 +297,7 @@
                             [:params [:map
                                       [:projectId Int]
                                       [:plotId Int]
-                                      [:inReviewMode Bool]
+                                      [:inReviewMode Int]
                                       [:confidence {:optional true} Int]
                                       [:confidenceComment [:maybe :string]]
                                       [:collectionStart  Lng]
@@ -312,7 +312,7 @@
                      [:params [:map
                                [:projectId Int]
                                [:plotId Int]
-                               [:inReviewMode {:optional true} Bool]
+                               [:inReviewMode {:optional true} Int]
                                [:collectionStart Lng]
                                [:flaggedReason :string]]]
                      [:session [:map
