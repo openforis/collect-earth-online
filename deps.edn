@@ -9,7 +9,7 @@
         org.clojure/data.json    {:mvn/version "1.0.0"}
         org.clojure/data.csv     {:mvn/version "1.0.1"}
         org.clojure/data.xml     {:mvn/version "0.0.8"}
-        ring/ring                {:mvn/version "1.8.2"}
+        ring/ring                {:mvn/version "1.8.2"}        
         sig-gis/triangulum       {:git/url "https://github.com/sig-gis/triangulum"
                                   :git/sha "3d41dab63e1bc8ebe046f64db44ae3df986f5bdf"}}
 
@@ -21,6 +21,11 @@
            :rebel            {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
                               :main-opts  ["-m" "rebel-readline.main"]}
            :production       {:jvm-opts ["-XX:MaxRAMPercentage=90" "-XX:+PrintFlagsFinal"]}
+           :test             {:extra-paths ["test"]
+                              :extra-deps {io.github.cognitect-labs/test-runner
+                                           {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+                              :exec-fn cognitect.test-runner.api/test
+                              :main-opts ["-m" "cognitect.test-runner"]}
            :check-reflection {:main-opts ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
                                           "-e" "(require,'collect-earth-online.routing)"]}
            :check-deps       {:deps      {olical/depot {:mvn/version "1.8.4"}}
