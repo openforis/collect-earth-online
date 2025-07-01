@@ -263,8 +263,8 @@
                                          [:projectId Int]
                                          [:visibleId Int]
                                          [:threshold Int]
+                                         [:currentUserId [:maybe [:or :int :string]]]
                                          [:projectType  {:optional true} :string]
-                                         [:currentUserId {:optional true} Int]
                                          [:inReviewMode {:optional true} Bool]]]
                                  [:session [:map
                                             [:userId {:optional true} Int]]]]
