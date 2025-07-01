@@ -943,7 +943,9 @@
                           :analysis_duration
                           :imagery_title
                           :imagery_attributions
-                          :sample_geom])
+                          :sample_geom
+                          :confidence
+                          :confidence_comment])
 
 (defn dump-project-raw-data! [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
