@@ -22,10 +22,13 @@
                               :main-opts  ["-m" "rebel-readline.main"]}
            :production       {:jvm-opts ["-XX:MaxRAMPercentage=90" "-XX:+PrintFlagsFinal"]}
            :test             {:extra-paths ["test"]
-                              :extra-deps {io.github.cognitect-labs/test-runner
-                                           {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
-                              :exec-fn cognitect.test-runner.api/test
-                              :main-opts ["-m" "cognitect.test-runner"]}
+                              :extra-deps {com.cognitect/test-runner
+                                         {:git/url "https://github.com/cognitect-labs/test-runner.git"
+                                          :sha     "7284cda41fb9edc0f3bc6b6185cfb7138fc8a023"}}
+                              :main-opts   ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
+                                            "-m" "cognitect.test-runner"
+                                            "--exclude" ":db"]
+                              :exec-fn cognitect.test-runner.api/test}
            :check-reflection {:main-opts ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
                                           "-e" "(require,'collect-earth-online.routing)"]}
            :check-deps       {:deps      {olical/depot {:mvn/version "1.8.4"}}
