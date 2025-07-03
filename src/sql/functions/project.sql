@@ -1384,3 +1384,12 @@ RETURNS JSONB AS $$
     ) AS questions
     WHERE component_type = 'input';
 $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_user_role_by_project(_user_id int, _project_id int)
+RETURNS int AS $$
+    SELECT role_rid FROM institution_users iu
+     JOIN institutions i ON i.institution_uid = iu.institution_rid
+     JOIN projects p ON p.institution_rid = iu.institution_rid
+    WHERE p.project_uid = _project_id
+      AND iu.user_rid = _user_id;
+$$ LANGUAGE SQL;

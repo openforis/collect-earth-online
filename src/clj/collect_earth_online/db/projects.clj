@@ -103,7 +103,8 @@
                          (call-sql "select_template_projects" user-id type)))))
 
 (defn- build-project-by-id [user-id project-id]
-  (let [project (first (call-sql "select_project_by_id" project-id))]
+  (let [project (first (call-sql "select_project_by_id" project-id))
+        user-role (sql-primitive (call-sql "get_user_role_by_project" user-id project-id))]
     {:id                 (:project_id project) ; TODO dont return known values
      :institution        (:institution_id project) ; TODO legacy variable name, update to institutionId
      :imageryId          (:imagery_id project)
@@ -138,6 +139,7 @@
      :closedDate         (str (:closed_date project))
      :hasGeoDash         (:has_geo_dash project)
      :isProjectAdmin     (is-proj-admin? user-id project-id nil)
+     :userRole           user-role
      :type               (:type project)}))
 
 (defn get-project-by-id [{:keys [params session]}]
