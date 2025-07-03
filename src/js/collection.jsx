@@ -815,7 +815,6 @@ class Collection extends React.Component {
             ? this.state.currentPlot.confidenceComment
             : null,
           collectionStart: this.state.collectionStart,
-          userSamples: this.state.userSamples,
           userImages: this.state.userImages,
           newPlotSamples:
           this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
