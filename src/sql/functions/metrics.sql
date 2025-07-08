@@ -123,3 +123,50 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION get_plot_imagery_by_user(user_id INTEGER)
+RETURNS TABLE (
+        institution_id INTEGER,
+        user_id        INTEGER,
+        project_id     INTEGER,
+        plot_id        INTEGER,
+        collection_start DATE,
+        collection_time  DATE,
+        imagery_id       INTEGER,       
+        sample_count    INTEGER
+        ) AS $$
+SELECT 
+    iu.institution_rid,
+    up.user_rid,
+    p.project_uid,
+    plots.plot_uid,
+    up.collection_start,
+    up.collection_time,
+    sv.imagery_rid,
+    COUNT(s.sample_uid) AS sample_count
+FROM 
+    institution_users iu
+JOIN 
+    projects p ON p.institution_rid = iu.institution_rid
+JOIN 
+    plots ON plots.project_rid = p.project_uid
+JOIN 
+    user_plots up ON up.plot_rid = plots.plot_uid AND up.user_rid = iu.user_rid
+LEFT JOIN 
+    samples s ON s.plot_rid = plots.plot_uid
+LEFT JOIN 
+    sample_values sv ON sv.sample_rid = s.sample_uid AND sv.user_plot_rid = up.user_plot_uid
+WHERE 
+    iu.user_rid = 1
+GROUP BY 
+    iu.institution_rid,
+    up.user_rid,
+    p.project_uid,
+    plots.plot_uid,
+    up.user_plot_uid,
+    up.collection_start,
+    up.collection_time,
+    sv.imagery_rid;
+
+$$ LANGUAGE sql;

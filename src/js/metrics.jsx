@@ -24,7 +24,7 @@ const MetricsDashboard = () => {
   const metricsRoutes = {
     getImageryAccess: {
       displayName: "Imagery Access Metrics",
-      route: "/metrics/get-imagery-access"
+      route: "/metrics/get-imagery-conuts"
     },
     getProjectsWithGEE: {
       displayName: "Projects with GEE Metrics",

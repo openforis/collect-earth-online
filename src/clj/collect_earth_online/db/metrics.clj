@@ -30,7 +30,6 @@
       (log (ex-message e))
       (data-response "Internal server error." {:status 500}))))
 
-
 (defn get-imagery-counts [{:keys [params session]}]
   (let [validation (validate-dates params)]
     (if (:valid validation)
@@ -104,3 +103,12 @@
           (data-response "Internal server error." {:status 500})))
       (validation-error-response (:message validation)))))
 
+(defn get-plot-imagery [{:keys [params session]}]
+  (let [validation (validate-dates params)]
+    (if (:valid validation)
+      (try
+        (let [rows (call-sql "get_plot_imagery_by_user" (:userId params))])
+        (catch Exception e
+          (log (ex-message e))
+          (data-response "Internal server error." {:status 500})))
+      (validation-error-response (:message validation)))))

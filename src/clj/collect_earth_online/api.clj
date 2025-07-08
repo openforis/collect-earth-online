@@ -236,9 +236,11 @@
                                            [:params [:map
                                                      [:projectId Int]]]]
    :metrics/get-imagery-access          [:map
-                                           [:params [:map
-                                                     [:startDate Date]
-                                                     [:endDate Date]]]]
+                                         [:uri :string]
+                                         [:request-method [:= :get]]
+                                         [:params [:map
+                                                   [:startDate Date]
+                                                   [:endDate Date]]]]
    :metrics/get-projects-with-gee       [:map
                                            [:params [:map
                                                      [:startDate Date]
@@ -294,6 +296,7 @@
    :plots/add-user-samples [:map
                             [:request-method [:= :post]]
                             [:uri [:= "/add-user-samples"]]
+                            [:json-params [:map]]
                             [:params [:map
                                       [:projectId Int]
                                       [:plotId Int]
@@ -323,6 +326,7 @@
                               [:session [:map
                                          [:userId {:optional true} Int]]]]
    :plots/reset-plot-lock [:map
+                           [:json-params [:map]]
                            [:request-method [:= :post]]
                            [:uri [:= "/reset-plot-lock"]]
                            [:params [:map
@@ -374,7 +378,25 @@
 
 (defmacro validate [query]
   `(fn [args#]
-     (let [schema# (get validation-map ~(keyword (str query)))]
+     (println "Json Params:" (-> args# :params :confidence type) (-> args# :params :confidence))
+     (println ~(keyword (str query)))
+     (pprint (->> ~(keyword (str query))
+                  (get validation-map)))
+     (println "!!!!")
+     (pprint (->> ~(keyword (str query))
+                  (get validation-map)
+                  (mu/merge request-wrapper)))
+     (println "!!!!")
+     (pprint (-> args# :uri))
+     (println "!!!!!!!")
+     (->
+      (->> ~(keyword (str query))
+           (get validation-map)
+           (mu/merge request-wrapper))
+      (m/explain  args#)
+      me/humanize
+      pprint)
+     (let [schema# (mu/merge request-wrapper (get validation-map ~(keyword (str query))))]
        (if (m/validate schema# args#)
          (~query args#)
          (data-response (me/humanize (m/explain schema# args#)) {:status 403})))))
