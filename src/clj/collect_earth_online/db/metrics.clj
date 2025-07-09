@@ -2,6 +2,7 @@
   (:require
     [triangulum.database :refer [call-sql sql-primitive]]
     [triangulum.response :refer [data-response]]
+    [triangulum.type-conversion :refer [val->int]]
     [triangulum.logging  :refer [log]]
     [clojure.string :as str]))
 
@@ -103,11 +104,15 @@
           (data-response "Internal server error." {:status 500})))
       (validation-error-response (:message validation)))))
 
-(defn get-plot-imagery [{:keys [params session]}]
+(defn get-plot-imagery-counts [{:keys [params session]}]
   (let [validation (validate-dates params)]
     (if (:valid validation)
       (try
-        (let [rows (call-sql "get_plot_imagery_by_user" (:userId params))])
+        (->> rows
+             (mapv (fn [row] (-> row
+                                 (update-in [:collection_start] str)
+                                 (update-in [:collection_time] str))))
+             data-response)          
         (catch Exception e
           (log (ex-message e))
           (data-response "Internal server error." {:status 500})))
