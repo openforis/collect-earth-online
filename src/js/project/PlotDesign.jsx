@@ -13,6 +13,173 @@ import { ProjectContext, plotLimit } from "./constants";
 import { mercator } from "../utils/mercator";
 import Modal from "../components/Modal";
 
+export function NewPlotDesign (){
+  const {plotShape, newPlotDistribution} = useContext(ProjectContext);
+  const acceptedTypes = {
+      csv: "text/csv",
+      shp: "application/zip",
+      geojson: "application/json",
+    };    
+  const renderFileInput = (fileType) => {
+    return (
+      <div className="mb-3">
+        <div style={{display: "flex"}}>
+          <label
+            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+            htmlFor="plot-distribution-file"
+            id="custom-upload"
+            style={{ display: "flex", alignItems: "center", width: "fit-content" }}
+          >
+            Upload plot file
+            <input
+              accept={acceptedTypes[fileType]}
+              defaultValue=""
+              id="plot-distribution-file"
+              onChange={(e) => {console.log (e.target.files.length());}}
+              style={{ display: "none" }}
+              type="file"
+            />
+          </label>
+          <label className="ml-3 text-nowrap">
+            File:{" "}
+            Placeholder Text
+          </label>
+            </div>
+      </div>
+    );
+    
+  };
+
+  const renderPlotShape = () => {    
+    return (
+      <div className="form-group" style={{ display: "flex", flexDirection: "column" }}>
+        <label>Plot shape</label>
+        <div>
+          <div className="form-check form-check-inline">
+            <input
+              checked={plotShape === "circle"}
+              className="form-check-input"
+              id="plot-shape-circle"
+              onChange={() => console.log ("{this.setPlotDetails({ plotShape: \"circle\" })}")}
+              type="radio"
+            />
+            <label className="form-check-label" htmlFor="plot-shape-circle">
+              Circle
+            </label>
+          </div>
+          <div className="form-check form-check-inline">
+            <input
+              checked={plotShape === "square"}
+              className="form-check-input"
+              id="plot-shape-square"
+              onChange={() => console.log ("this.setPlotDetails({ plotShape: \\\"square\\\" })")}
+              type="radio"
+            />
+            <label className="form-check-label" htmlFor="plot-shape-square">
+              Square
+            </label>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+
+  const renderLabeledInput = (label, property, disabled = false) => (
+    <div className="form-group" style={{ width: "fit-content" }}>
+      <label htmlFor={property}>{label}</label>
+      <input
+        className="form-control form-control-sm"
+        id={property}
+        min="0"
+        onChange={(e) => console.log ("this.setPlotDetails({ [property]: Number(e.target.value) })")}
+        step="1"
+        type="number"
+        value=""//{this.context[property] || ""}
+        disabled = {disabled}
+      />
+    </div>
+  );
+
+
+  const renderCSV = () => {    
+    const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
+    return (
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {renderFileInput("csv")}
+        <div style={{ display: "flex" }}>
+          <span className="mr-3">{renderPlotShape()}</span>
+          {renderLabeledInput(plotUnits, "plotSize")}
+        </div>
+      </div>
+    );
+  };
+
+  const plotOptions = {
+      csv: {
+        display: "CSV File",
+        description:
+          "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
+        layout: renderCSV(),
+      },
+      shp: {
+        display: "SHP File",
+        alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
+        description:
+          "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
+        layout: renderFileInput("shp"),
+      },
+      geojson: {
+        display: "GeoJSON File",
+        alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
+        description:
+          "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
+        layout: renderFileInput("geojson"),
+      },
+    };
+  
+
+  return (
+    <div id="new-plot-design">
+      <h3 className="mb-3">Add New Plot</h3>
+      <div className="ml-3">
+        <div className="d-flex flex-column">
+          <div className="form-group" style={{width:"fit-content"}}>
+            <label>Spatial Distribution</label>
+            <select
+              className="form-control form-control-sm"
+              onChange={(e)=> {console.log ();}}
+              value=""
+            >
+              {Object.entries (plotOptions).map (([key, options]) => (
+                <option key={key} value={key}>
+                  {options.display}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="font-italic ml-2">{`- ${plotOptions[newPlotDistribution].description}`}</p>
+          {plotOptions[newPlotDistribution].alert &&
+           <p className="alert">- {plotOptions[newPlotDistribution].alert}</p>}
+        </div>
+        <div>{plotOptions[newPlotDistribution].layout}</div>
+       <p
+         className="font-italic ml-2 small"
+         style={{
+           color: "#006400", //totalPlots > plotLimit ? "#8B0000" : "#006400"
+           fontSize: "1rem",
+           whiteSpace: "pre-line",
+         }}
+	 >
+       `Plot Limit Warning`</p>
+      </div>
+    </div>
+  );
+
+};
+
+
+
 export class PlotDesign extends React.Component {
   constructor(props) {
     super(props);
@@ -589,6 +756,7 @@ export class PlotDesign extends React.Component {
               )}.`}
           </p>
         </div>
+        
       </div>
     );
   }

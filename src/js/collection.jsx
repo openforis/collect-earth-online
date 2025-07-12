@@ -496,10 +496,6 @@ class Collection extends React.Component {
     if (this.state.mapConfig) mercator.changeDrawTool(this.state.mapConfig, "drawLayer", drawTool);
   }
 
-  insertNewPlot = () => {    
-    this.setState({modal: {insertNewPlot: true}});
-  }
-
   navToFirstPlot = () => {
     this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed", this.state.currentProject?.userRole);
     /*
@@ -1217,7 +1213,6 @@ class Collection extends React.Component {
                   this.state.currentProject.designSettings?.userAssignment?.userMethod !== "none"
                 }
       
-                insertNewPlot={this.insertNewPlot}
                 inReviewMode={this.state.inReviewMode}
                 isProjectAdmin={this.state.currentProject.isProjectAdmin}
                 isQAQCEnabled={
@@ -1309,13 +1304,7 @@ class Collection extends React.Component {
             </SideBar>
           </div>
 
-          {/* Modals and Popups */}
-          {this.state?.modal?.insertNewPlot &&
-         <Modal title="Insert New Plots"
-                onClose={()=>{this.setState({modal: null});}}
-         >
-           <InsertNewPlotModal/>
-         </Modal>}
+          {/* Modals and Popups */}          
           {this.state.messageBox && (
             <Modal {...this.state.messageBox} onClose={() => this.setState({ messageBox: null })}>
               <p>{this.state.messageBox.body}</p>
@@ -1446,10 +1435,6 @@ class SideBar extends React.Component {
   }
 }
 
-function InsertNewPlotModal() {
-  return(<div id="insert-new-plot-modal">Insert New Plots!</div>);
-};
-
 class PlotNavigation extends React.Component {
   constructor(props) {
     super(props);
@@ -1482,20 +1467,6 @@ class PlotNavigation extends React.Component {
     </div>
   );
 
-  newPlotButton = () => (
-    <div className="row mb-2" id="insert-new-plots">
-      <div className="col">
-        <input
-          className="btn btn-outline-lightgreen btn-sm btn-block"
-          id="insert-new-plots-button"
-          name="insert-plot"
-          onClick={this.props.insertNewPlot}
-          type="button"
-          value="Add New Plots"
-        />
-      </div>
-    </div>
-  );
 
   navButtons = () => (
     <div className="row justify-content-center mb-2" id="plot-nav">
@@ -1688,8 +1659,7 @@ class PlotNavigation extends React.Component {
           ) : (
             this.gotoButton()
           )}
-        </div>
-        <div>{this.newPlotButton()}</div>
+        </div>        
       </div>
     );
   }
