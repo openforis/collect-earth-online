@@ -20,7 +20,13 @@ export default function PlotStep({ getTotalPlots, projectType }) {
           projectType={projectType}
         />                    
       )}
-      {availability === "published" && <NewPlotDesign/>}
+      {availability === "published" &&
+       <NewPlotDesign
+         aoiFeatures={aoiFeatures}
+         institutionUserList={institutionUserList}
+         totalPlots={totalPlots}
+         projectType={projectType}
+       />}
       {(projectType !== "simplified") ? (
        <div className="row mr-1">
          <AssignPlots institutionUserList={institutionUserList} totalPlots={totalPlots} />
