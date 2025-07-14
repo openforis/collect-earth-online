@@ -16,7 +16,7 @@ import Modal from "../components/Modal";
 export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, projecType}){
   const {projectId, designSettings, newPlotShape, newPlotDistribution, setProjectDetails} = useContext(ProjectContext);
   const [newPlotFileName, setNewPlotFileName] = useState("");
-  
+
   const acceptedTypes = {
       csv: "text/csv",
       shp: "application/zip",
@@ -24,8 +24,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
     };
 
   const setPlotDetails = (newDetail) => {
-    const resetAOI = ["csv", "shp", "geojson"].includes(newDetail.plotDistribution);
-    console.log ('setting plot details:', newDetail);
+    const resetAOI = ["csv", "shp", "geojson"].includes(newDetail.plotDistribution);   
     if (resetAOI) {
       this.setState({
         lonMin: "",
@@ -34,13 +33,14 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         latMax: "",
       });
     }
+
+
     setProjectDetails(
-      Object.assign(newDetail, { plots: [] }, resetAOI ? { aoiFeatures: [], aoiFileName: "" } : {})
-    );
+    Object.assign(newDetail, { plots: [] }, resetAOI ? { aoiFeatures: [], aoiFileName: "" } : {})
+    ); 
   };
 
-  const checkPlotFile = (plotFileName, plotFileBase64) => {    
-    console.log ('checking plot file');
+  const checkPlotFile = (fileName, plotFileBase64) => {        
     fetch("/check-plot-csv", {
       method: "POST",
       headers: {
@@ -49,21 +49,24 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
       },
       body: JSON.stringify({
         projectId,
-        plotFileName,
+        plotFileName: fileName,
         plotFileBase64
       }),
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {        
+        console.log(fileName, data);
+        //setNewPlotFileName(fileName);
+        /*
         setProjectDetails({
           designSettings: { ...designSettings,
                             userAssignment: data.userAssignment,
                             qaqcAssignment: data.qaqcAssignment}
-        });}
+        });*/}
       );
   };
 
-  const renderFileInput = (fileType) => {
+  const renderFileInput = (fileType, fileName) => {
     return (
       <div className="mb-3">
         <div style={{display: "flex"}}>
@@ -79,17 +82,14 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
               defaultValue=""
               id="plot-distribution-file"
               onChange={(e) => {
-                const file = e.target.files[0];
-                console.log('uploading file...');
-                readFileAsBase64Url (file, (base64) => {
-                  console.log('file read as base64');
-                  checkPlotFile(file.name, base64);  
-                  console.log ('plotfile checked', newPlotFileName);
-                  setNewPlotFileName (file.name);
+                const file = e.target.files[0];                
+                readFileAsBase64Url (file, (base64) => {                 
+                  checkPlotFile(file.name, base64);
+                  /*
                   return setPlotDetails({
                     newPlotFileName: file.name,
                     newPlotFileBase64: base64
-                  });
+                  }); */
                 });		
               }}
               style={{ display: "none" }}
@@ -98,7 +98,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
           </label>
           <label className="ml-3 text-nowrap">
             File:{" "}
-            {newPlotFileName || projectId > 0 ? "Use existing data": "None"}
+            {fileName || projectId > 0 ? "Use existing data": "None"}
           </label>
             </div>
       </div>
@@ -158,11 +158,11 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
   );
 
 
-  const renderCSV = () => {    
+  const renderCSV = (fileName) => {    
     const plotUnits = newPlotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {renderFileInput("csv")}
+        {renderFileInput("csv", fileName)}
         <div style={{ display: "flex" }}>
           <span className="mr-3">{renderPlotShape()}</span>
           {renderLabeledInput(plotUnits, "plotSize")}
@@ -176,21 +176,21 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         display: "CSV File",
         description:
           "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
-        layout: renderCSV(),
+        layout: renderCSV(newPlotFileName),
       },
       shp: {
         display: "SHP File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
-        layout: renderFileInput("shp"),
+        layout: renderFileInput("shp", newPlotFileName),
       },
       geojson: {
         display: "GeoJSON File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
-        layout: renderFileInput("geojson"),
+        layout: renderFileInput("geojson", newPlotFileName),
       },
     };
   

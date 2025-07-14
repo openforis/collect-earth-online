@@ -16,7 +16,9 @@
                                                                    sql-primitive]]
             [triangulum.logging                            :refer [log]]
             [triangulum.type-conversion                    :as tc]
-            [triangulum.utils                              :as u]))
+            [triangulum.utils                              :as u]
+
+            [clojure.pprint :refer [pprint]]))
 
 ;;;
 ;;; Auth functions
@@ -1039,6 +1041,8 @@
 
 (defn check-plot-csv
   [{:keys [params]}]
+  (println "checking plot csv...")
+  (pprint params)
   (let [project-id       (tc/val->int (:projectId params))
         plot-file-name   (:plotFileName params)
         plot-file-base64 (:plotFileBase64 params)
