@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import shp from "shpjs";
 
 import {
@@ -14,7 +14,9 @@ import { mercator } from "../utils/mercator";
 import Modal from "../components/Modal";
 
 export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, projecType}){
-  const {projectId, designSettings, newPlotShape, newPlotDistribution, setProjectDetails, plotFileName} = useContext(ProjectContext);
+  const {projectId, designSettings, newPlotShape, newPlotDistribution, setProjectDetails} = useContext(ProjectContext);
+  const [newPlotFileName, setNewPlotFileName] = useState("");
+  
   const acceptedTypes = {
       csv: "text/csv",
       shp: "application/zip",
@@ -23,6 +25,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
 
   const setPlotDetails = (newDetail) => {
     const resetAOI = ["csv", "shp", "geojson"].includes(newDetail.plotDistribution);
+    console.log ('setting plot details:', newDetail);
     if (resetAOI) {
       this.setState({
         lonMin: "",
@@ -37,6 +40,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
   };
 
   const checkPlotFile = (plotFileName, plotFileBase64) => {    
+    console.log ('checking plot file');
     fetch("/check-plot-csv", {
       method: "POST",
       headers: {
@@ -50,12 +54,12 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
       }),
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) =>
+      .then((data) => {        
         setProjectDetails({
           designSettings: { ...designSettings,
                             userAssignment: data.userAssignment,
                             qaqcAssignment: data.qaqcAssignment}
-        })
+        });}
       );
   };
 
@@ -76,11 +80,15 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
               id="plot-distribution-file"
               onChange={(e) => {
                 const file = e.target.files[0];
+                console.log('uploading file...');
                 readFileAsBase64Url (file, (base64) => {
-                  checkPlotFile(file.name, base64);
+                  console.log('file read as base64');
+                  checkPlotFile(file.name, base64);  
+                  console.log ('plotfile checked', newPlotFileName);
+                  setNewPlotFileName (file.name);
                   return setPlotDetails({
-                    plotFileName: file.name,
-                    plotFileBase64: base64
+                    newPlotFileName: file.name,
+                    newPlotFileBase64: base64
                   });
                 });		
               }}
@@ -90,7 +98,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
           </label>
           <label className="ml-3 text-nowrap">
             File:{" "}
-            {plotFileName || projectId > 0 ? "Use existing data": "None"}
+            {newPlotFileName || projectId > 0 ? "Use existing data": "None"}
           </label>
             </div>
       </div>
