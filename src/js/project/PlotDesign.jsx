@@ -14,8 +14,12 @@ import { mercator } from "../utils/mercator";
 import Modal from "../components/Modal";
 
 export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, projecType}){
-  const {projectId, designSettings, newPlotShape, newPlotDistribution, setProjectDetails} = useContext(ProjectContext);
-  const [newPlotFileName, setNewPlotFileName] = useState("");
+  const {projectId, designSettings, newPlotShape, newPlotFileName, newPlotDistribution, setProjectDetails} = useContext(ProjectContext);
+//  const [newPlotFileName, setNewPlotFileName] = useState("");
+  const [plotState, setPlotState] = useState({lonMin: "",
+                                              latMin: "",
+                                              lonMax: "",
+                                              latMax: "",});
 
   const acceptedTypes = {
       csv: "text/csv",
@@ -24,19 +28,14 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
     };
 
   const setPlotDetails = (newDetail) => {
-    const resetAOI = ["csv", "shp", "geojson"].includes(newDetail.plotDistribution);   
-    if (resetAOI) {
-      this.setState({
+    setPlotState({
         lonMin: "",
         latMin: "",
         lonMax: "",
         latMax: "",
       });
-    }
-
-
     setProjectDetails(
-    Object.assign(newDetail, { plots: [] }, resetAOI ? { aoiFeatures: [], aoiFileName: "" } : {})
+      Object.assign(newDetail, { plots: [] }, { aoiFeatures: [], aoiFileName: "" })
     ); 
   };
 
@@ -57,22 +56,22 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
       .then((data) => {        
         console.log(fileName, data);
         //setNewPlotFileName(fileName);
-        /*
+        
         setProjectDetails({
-          designSettings: { ...designSettings,
+        designSettings: { ...designSettings,
                             userAssignment: data.userAssignment,
                             qaqcAssignment: data.qaqcAssignment}
-        });*/}
+        });}
       );
   };
 
-  const renderFileInput = (fileType, fileName) => {
-    return (
+  const renderFileInput = (fileType) => {
+    return(
       <div className="mb-3">
         <div style={{display: "flex"}}>
           <label
             className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
-            htmlFor="plot-distribution-file"
+            htmlFor="new-plot-distribution-file"
             id="custom-upload"
             style={{ display: "flex", alignItems: "center", width: "fit-content" }}
           >
@@ -80,16 +79,16 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
             <input
               accept={acceptedTypes[fileType]}
               defaultValue=""
-              id="plot-distribution-file"
+              id="new-plot-distribution-file"
               onChange={(e) => {
                 const file = e.target.files[0];                
                 readFileAsBase64Url (file, (base64) => {                 
                   checkPlotFile(file.name, base64);
-                  /*
+                  
                   return setPlotDetails({
                     newPlotFileName: file.name,
                     newPlotFileBase64: base64
-                  }); */
+                  }); 
                 });		
               }}
               style={{ display: "none" }}
@@ -98,7 +97,8 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
           </label>
           <label className="ml-3 text-nowrap">
             File:{" "}
-            {fileName || projectId > 0 ? "Use existing data": "None"}
+            {newPlotFileName || "select file"
+	    }
           </label>
             </div>
       </div>
@@ -158,11 +158,11 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
   );
 
 
-  const renderCSV = (fileName) => {    
+  const renderCSV = () => {    
     const plotUnits = newPlotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {renderFileInput("csv", fileName)}
+        {renderFileInput("csv")}
         <div style={{ display: "flex" }}>
           <span className="mr-3">{renderPlotShape()}</span>
           {renderLabeledInput(plotUnits, "plotSize")}
@@ -176,21 +176,21 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         display: "CSV File",
         description:
           "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
-        layout: renderCSV(newPlotFileName),
+        layout: renderCSV(),
       },
       shp: {
         display: "SHP File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
-        layout: renderFileInput("shp", newPlotFileName),
+        layout: renderFileInput("shp"),
       },
       geojson: {
         display: "GeoJSON File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
-        layout: renderFileInput("geojson", newPlotFileName),
+        layout: renderFileInput("geojson"),
       },
     };
   
@@ -221,7 +221,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
            <p className="alert">- {plotOptions[newPlotDistribution].alert}</p>}
         </div>
         <div>{plotOptions[newPlotDistribution].layout}</div>
-       <p
+	<p
          className="font-italic ml-2 small"
          style={{
            color: totalPlots > plotLimit ? "#8B0000" : "#006400",

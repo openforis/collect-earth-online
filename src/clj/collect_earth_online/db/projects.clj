@@ -1041,8 +1041,6 @@
 
 (defn check-plot-csv
   [{:keys [params]}]
-  (println "checking plot csv...")
-  (pprint params)
   (let [project-id       (tc/val->int (:projectId params))
         plot-file-name   (:plotFileName params)
         plot-file-base64 (:plotFileBase64 params)
