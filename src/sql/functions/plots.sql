@@ -488,12 +488,14 @@ CREATE OR REPLACE FUNCTION insert_user_plot(
     _confidence          integer,
     _confidence_comment  text,
     _collection_start    timestamp,
-   _imageryIds           jsonb
+   _imageryIds           jsonb,
+   _used_kml             boolean,
+   _used_geodash         boolean
  ) RETURNS integer AS $$
     INSERT INTO user_plots AS up
-        (user_rid, plot_rid, confidence, confidence_comment ,collection_start, collection_time, imagery_ids)
+        (user_rid, plot_rid, confidence, confidence_comment, collection_start, collection_time, imagery_ids, used_kml, used_geodash)
     VALUES
-        (_user_id, _plot_id, _confidence, _confidence_comment , _collection_start, Now(), _imageryIds)
+        (_user_id, _plot_id, _confidence, _confidence_comment, _collection_start, Now(), _imageryIds, _used_kml, _used_geodash)
     RETURNING user_plot_uid
 $$ LANGUAGE SQL;
 

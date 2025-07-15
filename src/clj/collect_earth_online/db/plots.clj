@@ -304,7 +304,10 @@
 ;;;
 
 (defn upsert-user-plots
-  [user-plot plot-id user-id confidence confidence-comment collection-start imagery-ids review-mode? project-type]
+  [user-plot plot-id user-id
+   confidence confidence-comment collection-start
+   imagery-ids review-mode? project-type
+   used-kml used-geodash]
   (if user-plot
     (if (= project-type "simplified")
       (call-sql "insert_user_plot"
@@ -313,20 +316,26 @@
                 confidence
                 confidence-comment
                 (when-not review-mode? (Timestamp. collection-start))
-                imagery-ids)
+                imagery-ids
+                used-kml
+                used-geodash)
       (call-sql "update_user_plot"
                 user-plot
                 confidence
                 confidence-comment
                 (when-not review-mode? (Timestamp. collection-start))
-                imagery-ids))
+                imagery-ids
+                used-kml
+                used-geodash))
     (call-sql "insert_user_plot"
               plot-id
               user-id
               confidence
               confidence-comment
               (when-not review-mode? (Timestamp. collection-start))
-              imagery-ids)))
+              imagery-ids
+              used-kml
+              used-geodash)))
 
 (defn add-user-samples
   "{:params {:projectId :int-str
@@ -355,6 +364,8 @@
         user-images        (:userImages params)
         new-plot-samples   (:newPlotSamples params)
         project-type       (:projectType params)
+        used-kml           (:usedKML params)
+        used-geodash       (:usedGeodash params)
         user-id            (if review-mode? current-user-id session-user-id)
         imagery-ids        (tc/clj->jsonb (:imageryIds params))
         ;; Samples created in the UI have IDs starting with 1. When the new sample is created
@@ -390,7 +401,9 @@
                                              collection-start
                                              imagery-ids
                                              review-mode?
-                                             project-type))]
+                                             project-type
+                                             used-kml
+                                             used-geodash))]
         (call-sql "upsert_user_samples"
                   user-plot-id
                   plot-id
