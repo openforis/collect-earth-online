@@ -97,8 +97,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
           </label>
           <label className="ml-3 text-nowrap">
             File:{" "}
-            {newPlotFileName || "select file"
-	    }
+            {newPlotFileName || "select plotfile"}
           </label>
             </div>
       </div>
