@@ -15,7 +15,6 @@ import Modal from "../components/Modal";
 
 export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, projecType}){
   const {projectId, designSettings, newPlotShape, newPlotFileName, newPlotDistribution, setProjectDetails} = useContext(ProjectContext);
-//  const [newPlotFileName, setNewPlotFileName] = useState("");
   const [plotState, setPlotState] = useState({lonMin: "",
                                               latMin: "",
                                               lonMax: "",
@@ -54,9 +53,6 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {        
-        console.log(fileName, data);
-        //setNewPlotFileName(fileName);
-        
         setProjectDetails({
         designSettings: { ...designSettings,
                             userAssignment: data.userAssignment,
@@ -83,8 +79,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
               onChange={(e) => {
                 const file = e.target.files[0];                
                 readFileAsBase64Url (file, (base64) => {                 
-                  checkPlotFile(file.name, base64);
-                  
+                  checkPlotFile(file.name, base64);                  
                   return setPlotDetails({
                     newPlotFileName: file.name,
                     newPlotFileBase64: base64
@@ -97,7 +92,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
           </label>
           <label className="ml-3 text-nowrap">
             File:{" "}
-            {newPlotFileName || "select plotfile"}
+            {newPlotFileName || (projectId > 0 ? "Use existing data" : "None")}
           </label>
             </div>
       </div>

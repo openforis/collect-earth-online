@@ -147,7 +147,7 @@
                                               :auth-type   :admin
                                               :auth-action :block}
 
-   [:post "/check-plot-csv"]                 {:handler     (validate projects/check-plot-csv)
+   [:post "/check-plot-csv"]                 {:handler     #_(validate) projects/check-plot-csv
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/import-ce-project"]              {:handler     (validate #'ce-project/import-ce-project)

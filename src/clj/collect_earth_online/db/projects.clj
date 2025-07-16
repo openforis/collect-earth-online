@@ -1039,8 +1039,38 @@
   {:userAssignment (file-user-assignment plot-data)
    :qaqcAssignment (file-qaqc-assignment plot-data)})
 
+
+(defn get-plot-bounds [plots]
+  (println "getting plot-bounds")
+  (let [get-point (fn [pgobj]
+		    (let [[_ coords] (->> pgobj :plot_geom .getValue
+                                          (re-find #"POINT\(([^)]+)\)"))]
+		      (map #(Double/parseDouble %) (str/split coords #" "))))
+	points (map get-point plots)
+	x-points (map first points)
+	y-points (map last points)]
+    [[(apply min x-points) (apply min y-points)]
+     [(apply max x-points) (apply max y-points)]]))
+
+(defn fit-aoi-to-file [project-id file-plots]
+  (println "fitting project aoi to file bounds")
+  (let [[[x-min y-min] 
+         [x-max y-max]] (get-plot-bounds file-plots)
+        minmax-matrix [[min max]
+                       [min min]
+                       [max min]
+                       [max max]
+                       [min max]]
+        minmaxer (fn [[xfn yfn] [aoix aoiy]] 
+                   [(apply xfn [aoix (if (= xfn min) x-min x-max)])
+                    (apply yfn [aoiy (if (= yfn min) y-min y-max)])])]
+    (->> project-id (call-sql "select_project_features") first 
+         :feature .getValue tc/jsonb->clj :coordinates first
+         (mapv minmaxer minmax-matrix))))
+
 (defn check-plot-csv
   [{:keys [params]}]
+  (println "checking plot csv...")
   (let [project-id       (tc/val->int (:projectId params))
         plot-file-name   (:plotFileName params)
         plot-file-base64 (:plotFileBase64 params)
@@ -1050,17 +1080,24 @@
                                                             plot-file-base64
                                                             "plot"
                                                             [:visible_id])
+
+        file-bounds      (fit-aoi-to-file project-id plots)
+        _ (println "got file-bounds")
+        _ (pprint file-bounds)
         file-assignment? (some #(:user %) plots)
         updated-plots    (map (fn [row]
                                 (if (:reviewers row)
                                   (update row :reviewers #(str/split (str/replace % #"\[|\]" "") #"\s+"))
                                   row))
                               plots)]
+    (pprint file-bounds)
     (if file-assignment?
-      (data-response (create-design-settings-from-file updated-plots))
+      (data-response (-> updated-plots create-design-settings-from-file
+                         (assoc :file-aoi file-bounds)))
       (data-response  {:userAssignment {:userMethod "none"
                                         :users      []
                                         :percents   []}
+                       :file-aoi       file-bounds
                        :qaqcAssignment {:qaqcMethod "none"
                                         :smes       []
                                         :overlap    0}}))))

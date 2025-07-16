@@ -56,7 +56,7 @@
    [:useTemplatePlots {:optional true} Bool]
    [:useTemplateWidgets {:optional true} Bool]
    [:imageryId int?]
-   [:projectImageryList [:vector any?]]
+
    [:aoiFeatures [:vector any?]]
    [:aoiFileName [:maybe string?]]
    [:description string?]
