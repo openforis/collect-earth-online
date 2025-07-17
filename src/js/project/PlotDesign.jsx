@@ -14,7 +14,9 @@ import { mercator } from "../utils/mercator";
 import Modal from "../components/Modal";
 
 export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, projecType}){
-  const {projectId, designSettings, newPlotShape, newPlotFileName, newPlotDistribution, setProjectDetails} = useContext(ProjectContext);
+  const context = useContext(ProjectContext);
+  const {projectId, designSettings, newPlotShape, newPlotFileName, newPlotDistribution, setProjectDetails} = context;
+  const [projectState, setProjectState] = useState(context);
   const [plotState, setPlotState] = useState({lonMin: "",
                                               latMin: "",
                                               lonMax: "",
@@ -38,7 +40,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
     ); 
   };
 
-  const checkPlotFile = (fileName, plotFileBase64) => {        
+  const checkPlotFile = (fileName, plotFileBase64) => {
     fetch("/check-plot-csv", {
       method: "POST",
       headers: {
@@ -52,9 +54,17 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
       }),
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {        
+      .then((data) => {
+        const [[lonMin, latMin], [lonMax, latMax]] = data.fileBoundary;
+        const aoiFeatures = [mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)];
+        setPlotState({lonMin, lonMax, latMin, latMax});
+        setProjectState({          
+          aoiFileName: fileName,
+          boundary: data.fileBoundary,          
+          aoiFeatures});
         setProjectDetails({
-        designSettings: { ...designSettings,
+          aoiFeatures, lonMin, latMin, lonMax, latMax, plotFileName: fileName, plotFileBase64, aoiFileName: fileName, plotDistribution: "csv",
+          designSettings: { ...designSettings,
                             userAssignment: data.userAssignment,
                             qaqcAssignment: data.qaqcAssignment}
         });}
@@ -190,6 +200,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
   
 
   return (
+/*    <ProjectContext.Consumer >*/
     <div id="new-plot-design">
       <h3 className="mb-3">Add New Plot</h3>
       <div className="ml-3">
@@ -233,6 +244,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
        </p>
       </div>
     </div>
+/*    </ProjectContext.Consumer>*/
   );
 
 };

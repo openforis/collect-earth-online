@@ -195,7 +195,7 @@ export default class CreateProjectWizard extends React.Component {
       plotFileName: this.context.plotFileName,
       plotFileBase64: this.context.plotFileBase64,
       sampleFileName: this.context.sampleFileName,
-      sampleFileBase64: this.context.sampleFileBase64,
+      sampleFileBase64: this.context.sampleFileBase64
     });
 
     saveDraft = () => {
@@ -416,11 +416,12 @@ export default class CreateProjectWizard extends React.Component {
       useTemplatePlots,
       originalProject,
     } = this.context;
+    
     const totalPlots = this.getTotalPlots();
     const plotFileNeeded =
       !useTemplatePlots &&
       (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
-    
+    console.log("validating plot data", this.context);
     return getErrors({...this.context,
                       totalPlots: totalPlots,
                       plotFileNeeded: plotFileNeeded});
@@ -630,6 +631,7 @@ export default class CreateProjectWizard extends React.Component {
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
                 onClose={()=>{this.setState({modal: null});
+                              this.state.modal.alert.onClose &&
                               this.state.modal.alert.onClose();}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}

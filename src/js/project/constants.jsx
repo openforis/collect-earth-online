@@ -36,6 +36,8 @@ export const blankProject = {
     autoLaunchGeoDash: true,
   },  
   newPlotDistribution: "csv",
+  newPlotFileName: "",
+  newPlotBase64: "",
   plotDistribution: "random",
   imageryId: -1,
   aoiFeatures: [],
