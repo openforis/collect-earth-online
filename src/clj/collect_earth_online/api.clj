@@ -210,10 +210,11 @@
                                               [:projectId Int]
                                               [:clearSaved Bool]]]
                                             [:session [:map [:userId Int]]]]
-   :projects/check-plot-csv               [:map
+   :projects/check-plot-file               [:map
                                            [:params
                                             [:map
                                              [:projectId Int]
+                                             [:plotFileType [:maybe string?]]
                                              [:plotFileName [:maybe string?]]
                                              [:plotFileBase64 [:maybe string?]]]]]
    :projects/import-ce-project            [:map

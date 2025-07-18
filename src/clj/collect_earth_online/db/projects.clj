@@ -16,7 +16,9 @@
                                                                    sql-primitive]]
             [triangulum.logging                            :refer [log]]
             [triangulum.type-conversion                    :as tc]
-            [triangulum.utils                              :as u]))
+            [triangulum.utils                              :as u]
+
+            [clojure.pprint :refer [pprint]]))
 
 ;;;
 ;;; Auth functions
@@ -1037,21 +1039,31 @@
   {:userAssignment (file-user-assignment plot-data)
    :qaqcAssignment (file-qaqc-assignment plot-data)})
 
+(defn get-plot-points [dist plots]
+  (case dist
+    "shp" (reduce
+           (fn [points pgobj]
+	     (let [coord-pairs (->> pgobj :plot_geom .getValue
+                                    (call-sql "hex_ewkb_to_coordinate_arrays")
+                                    (map :coord_pair))]
+               (into points coord-pairs)))
+           [] plots
+           )
+    "csv" (map
+           (fn [pgobj]
+	     (let [[_ coords] (->> pgobj :plot_geom .getValue (re-find #"POINT\(([^)]+)\)"))]
+	       (map #(Double/parseDouble %) (str/split coords #" ")))) plots)))
 
-(defn get-plot-bounds [plots]  
-  (let [get-point (fn [pgobj]
-		    (let [[_ coords] (->> pgobj :plot_geom .getValue
-                                          (re-find #"POINT\(([^)]+)\)"))]
-		      (map #(Double/parseDouble %) (str/split coords #" "))))
-	points (map get-point plots)
+(defn get-plot-bounds [distribution plots]  
+  (let [points (get-plot-points distribution plots)
 	x-points (map first points)
 	y-points (map last points)]    
     [[(apply min x-points) (apply min y-points)]
      [(apply max x-points) (apply max y-points)]]))
 
-(defn fit-aoi-to-file [project-id file-plots]
+(defn fit-aoi-to-file [distribution project-id file-plots]
   (let [[[x-min y-min] 
-         [x-max y-max]] (get-plot-bounds file-plots)
+         [x-max y-max]] (get-plot-bounds distribution file-plots)
         minmax-matrix [[min max]
                        [min min]
                        [max min]
@@ -1067,9 +1079,9 @@
          first (mapv minmaxer minmax-matrix))
       project-features)))
 
-(defn update-bounds-by-file [project-id file-plots]
+(defn update-bounds-by-file [distribution project-id file-plots]
   (let [[[x-min y-min] 
-         [x-max y-max]] (get-plot-bounds file-plots)
+         [x-max y-max]] (get-plot-bounds distribution file-plots)
         project-features (call-sql "select_project_features" project-id)
         pgeom (if (seq project-features)
                 (->> project-features first :feature
@@ -1081,20 +1093,21 @@
      [(apply max (into [x-max] project-x)) (apply max (into [y-max] project-y))]]
   ))
 
-(defn check-plot-csv
+(defn check-plot-file
   [{:keys [params]}]
   (let [project-id       (tc/val->int (:projectId params))
         plot-file-name   (:plotFileName params)
         plot-file-base64 (:plotFileBase64 params)
+        distribution     (:plotFileType params)
+        
         plots            (external-file/load-external-data! project-id
-                                                            "csv"
+                                                            distribution
                                                             plot-file-name
                                                             plot-file-base64
                                                             "plot"
                                                             [:visible_id])
-
-        file-bounds      (update-bounds-by-file project-id plots)
-        file-aoi         (fit-aoi-to-file project-id plots)
+        file-bounds      (update-bounds-by-file distribution project-id plots)
+        file-aoi         (fit-aoi-to-file distribution project-id plots)
         file-assignment? (some #(:user %) plots)
         updated-plots    (map (fn [row]
                                 (if (:reviewers row)

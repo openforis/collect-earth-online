@@ -41,14 +41,15 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
     ); 
   };
 
-  const checkPlotFile = (fileName, plotFileBase64) => {
-    fetch("/check-plot-csv", {
+  const checkPlotFile = (plotFileType, fileName, plotFileBase64) => {
+    fetch("/check-plot-file", {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        plotFileType,
         projectId,
         plotFileName: fileName,
         plotFileBase64
@@ -90,10 +91,10 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
               onChange={(e) => {
                 const file = e.target.files[0];                
                 readFileAsBase64Url (file, (base64) => {                 
-                  checkPlotFile(file.name, base64);                  
+                  checkPlotFile(fileType, file.name, base64);                  
                   return setPlotDetails({
-                    newPlotFileName: file.name,
-                    newPlotFileBase64: base64
+                    plotFileName: file.name,
+                    PlotFileBase64: base64
                   }); 
                 });		
               }}
@@ -578,15 +579,16 @@ export class PlotDesign extends React.Component {
     );
   };
 
-  checkPlotFile = (plotFileName, plotFileBase64) => {
+  checkPlotFile = (plotFileType, plotFileName, plotFileBase64) => {
     const { projectId, designSettings } = this.context;
-    fetch("/check-plot-csv", {
+    fetch("/check-plot-file", {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        plotFileType,
         projectId,
         plotFileName,
         plotFileBase64
@@ -626,7 +628,7 @@ export class PlotDesign extends React.Component {
               onChange={(e) => {
                 const file = e.target.files[0];
                 readFileAsBase64Url(file, (base64) => {
-                  this.checkPlotFile(file.name, base64);
+                  this.checkPlotFile(fileType, file.name, base64);
                   return this.setPlotDetails({
                     plotFileName: file.name,
                     plotFileBase64: base64,

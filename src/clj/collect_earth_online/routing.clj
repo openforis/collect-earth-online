@@ -147,7 +147,7 @@
                                               :auth-type   :admin
                                               :auth-action :block}
 
-   [:post "/check-plot-csv"]                 {:handler     #_(validate) projects/check-plot-csv
+   [:post "/check-plot-file"]                {:handler     (validate projects/check-plot-file)
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/import-ce-project"]              {:handler     (validate #'ce-project/import-ce-project)
@@ -273,4 +273,5 @@
    [:get  "/metrics/get-sample-plot-counts"]  {:handler     (validate metrics/get-sample-plot-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}})
+   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}
+   })
