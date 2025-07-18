@@ -16,6 +16,7 @@ import Modal from "../components/Modal";
 export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, projecType}){
   const context = useContext(ProjectContext);
   const {projectId, designSettings, newPlotShape, newPlotFileName, newPlotDistribution, setProjectDetails} = context;
+  const [_newPlotFileName, setNewPlotFileName] = useState(newPlotFileName);
   const [projectState, setProjectState] = useState(context);
   const [newPlotSize, setNewPlotSize] = useState("");
   const [plotState, setPlotState] = useState({lonMin: "",
@@ -64,8 +65,9 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
           aoiFileName: fileName,
           boundary: data.fileBoundary,          
           aoiFeatures});
+        setNewPlotFileName(fileName);
         setProjectDetails({
-          aoiFeatures, lonMin, latMin, lonMax, latMax, plotFileName: fileName, plotFileBase64, aoiFileName: fileName, plotDistribution: "csv",
+          aoiFeatures, lonMin, latMin, lonMax, latMax, newPlotFileName: fileName, newPlotFileBase64: plotFileBase64, aoiFileName: fileName, newPlotDistribution: plotFileType,
           designSettings: { ...designSettings,
                             userAssignment: data.userAssignment,
                             qaqcAssignment: data.qaqcAssignment}
@@ -104,7 +106,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
           </label>
           <label className="ml-3 text-nowrap">
             File:{" "}
-            {newPlotFileName || (projectId > 0 ? "Use existing data" : "None")}
+            {_newPlotFileName || (projectId > 0 ? "Use existing data" : "None")}
           </label>
             </div>
       </div>
@@ -205,7 +207,6 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
   
 
   return (
-/*    <ProjectContext.Consumer >*/
     <div id="new-plot-design">
       <h3 className="mb-3">Add New Plot</h3>
       <div className="ml-3">
@@ -249,7 +250,6 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
        </p>
       </div>
     </div>
-/*    </ProjectContext.Consumer>*/
   );
 
 };

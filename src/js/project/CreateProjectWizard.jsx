@@ -421,7 +421,6 @@ export default class CreateProjectWizard extends React.Component {
     const plotFileNeeded =
       !useTemplatePlots &&
       (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
-    console.log("validating plot data", this.context);
     return getErrors({...this.context,
                       totalPlots: totalPlots,
                       plotFileNeeded: plotFileNeeded});

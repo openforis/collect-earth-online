@@ -16,9 +16,7 @@
                                                                    sql-primitive]]
             [triangulum.logging                            :refer [log]]
             [triangulum.type-conversion                    :as tc]
-            [triangulum.utils                              :as u]
-
-            [clojure.pprint :refer [pprint]]))
+            [triangulum.utils                              :as u]))
 
 ;;;
 ;;; Auth functions
@@ -1039,16 +1037,21 @@
   {:userAssignment (file-user-assignment plot-data)
    :qaqcAssignment (file-qaqc-assignment plot-data)})
 
-(defn get-plot-points [dist plots]
+(defn get-plot-points [dist plots]  
   (case dist
+    "geojson" (reduce
+               (fn [points pgobj]
+                 (let [coord-pairs (->> pgobj :plot_geom .getValue
+                                        tc/json->clj :coordinates first)]
+                   (into points coord-pairs)))
+               [] plots)
     "shp" (reduce
            (fn [points pgobj]
 	     (let [coord-pairs (->> pgobj :plot_geom .getValue
                                     (call-sql "hex_ewkb_to_coordinate_arrays")
                                     (map :coord_pair))]
                (into points coord-pairs)))
-           [] plots
-           )
+           [] plots)
     "csv" (map
            (fn [pgobj]
 	     (let [[_ coords] (->> pgobj :plot_geom .getValue (re-find #"POINT\(([^)]+)\)"))]
@@ -1105,7 +1108,7 @@
                                                             plot-file-name
                                                             plot-file-base64
                                                             "plot"
-                                                            [:visible_id])
+                                                            [:visible_id])        
         file-bounds      (update-bounds-by-file distribution project-id plots)
         file-aoi         (fit-aoi-to-file distribution project-id plots)
         file-assignment? (some #(:user %) plots)
