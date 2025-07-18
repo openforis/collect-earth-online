@@ -17,6 +17,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
   const context = useContext(ProjectContext);
   const {projectId, designSettings, newPlotShape, newPlotFileName, newPlotDistribution, setProjectDetails} = context;
   const [projectState, setProjectState] = useState(context);
+  const [newPlotSize, setNewPlotSize] = useState("");
   const [plotState, setPlotState] = useState({lonMin: "",
                                               latMin: "",
                                               lonMax: "",
@@ -152,10 +153,13 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         className="form-control form-control-sm"
         id={property}
         min="0"
-        onChange={(e) => setPlotDetails({ [property]: Number(e.target.value) })}
+        onChange={(e) =>{
+          console.log(e.target.value, property);
+          setNewPlotSize(e.target.value);
+          setPlotDetails({ [property]: Number(e.target.value) });}}
         step="1"
         type="number"
-        value={property || ""}
+        value={newPlotSize}
         disabled = {disabled}
       />
     </div>

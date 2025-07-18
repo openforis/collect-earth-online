@@ -65,11 +65,11 @@
    [:plotDistribution [:enum "random" "grid" "shp" "csv" "json" "simplified"]]
    [:plotShape [:maybe [:enum "square" "circle"]]]
    [:plotSize [:or string? Int]]
-   [:plotSpacing [:or string? Int]]
+   [:plotSpacing [:maybe Int]]
    [:shufflePlots [:maybe Bool]]
    [:sampleDistribution [:enum "random" "grid" "center" "shp" "csv" "json"]]
    [:samplesPerPlot [:or string? Int]]
-   [:sampleResolution [:or string? Int]]
+   [:sampleResolution [:maybe Int]]
    [:allowDrawnSamples {:optional true} Bool]
    [:surveyQuestions map?]
    [:surveyRules [:vector any?]]])

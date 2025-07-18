@@ -651,9 +651,9 @@
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery! project-id imagery-list))
-
+        
         (cond
-          (if #{"closed" "archived"} (:availability original-project))
+          (#{"closed" "archived"} (:availability original-project))
           nil
 
           (or (not= plot-distribution (:plot_distribution original-project))

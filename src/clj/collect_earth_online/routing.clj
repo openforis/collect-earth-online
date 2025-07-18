@@ -122,7 +122,7 @@
    [:post "/create-project"]                 {:handler     (validate projects/create-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/update-project"]                 {:handler     (validate projects/update-project!)
+   [:post "/update-project"]                 {:handler     #_(validate) #'projects/update-project!
                                               :auth-type   :admin
                                               :auth-action :block}
    [:get "/delete-project-draft"]            {:handler     (validate projects/delete-project-draft!)
