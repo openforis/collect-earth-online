@@ -470,7 +470,6 @@ class Collection extends React.Component {
   };
 
   hasChanged = () => !_.isEqual(this.state.userSamples, this.state.originalUserSamples);
-
   // https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
   unsavedWarning = (e) => {
     if (this.hasChanged()) {
@@ -479,6 +478,8 @@ class Collection extends React.Component {
       return "You have unsaved changes. Are you sure you want to leave?";
     }
   };
+
+  
 
   confirmUnsaved = () =>
   !this.hasChanged() ||
@@ -503,6 +504,8 @@ class Collection extends React.Component {
       
     */
   }
+
+  
 
   navToNextPlot = (ignoreCheck) => {
     if (ignoreCheck || this.confirmUnsaved()) {
@@ -1012,7 +1015,7 @@ class Collection extends React.Component {
         );
       });
     }
-  };
+  };  
 
   updateQuestionStatus = () => {
     const { userSamples } = this.state;
@@ -1209,6 +1212,7 @@ class Collection extends React.Component {
                 hasAssignedPlots={
                   this.state.currentProject.designSettings?.userAssignment?.userMethod !== "none"
                 }
+      
                 inReviewMode={this.state.inReviewMode}
                 isProjectAdmin={this.state.currentProject.isProjectAdmin}
                 isQAQCEnabled={
@@ -1300,7 +1304,7 @@ class Collection extends React.Component {
             </SideBar>
           </div>
 
-          {/* Modals and Popups */}
+          {/* Modals and Popups */}          
           {this.state.messageBox && (
             <Modal {...this.state.messageBox} onClose={() => this.setState({ messageBox: null })}>
               <p>{this.state.messageBox.body}</p>
@@ -1407,7 +1411,8 @@ class SideBar extends React.Component {
                 onClose={()=>{this.setState({modal: null});}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
-
+        
+        
         <ProjectTitle
           inReviewMode={this.props.inReviewMode}
           projectId={this.props.projectId}
@@ -1461,6 +1466,7 @@ class PlotNavigation extends React.Component {
       </div>
     </div>
   );
+
 
   navButtons = () => (
     <div className="row justify-content-center mb-2" id="plot-nav">
@@ -1653,7 +1659,7 @@ class PlotNavigation extends React.Component {
           ) : (
             this.gotoButton()
           )}
-        </div>
+        </div>        
       </div>
     );
   }

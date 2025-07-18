@@ -185,7 +185,7 @@
                            (str/join "', '" (map #(clean-header-text % design-type) invalid-headers))
                            "'")))))
 
-(defn load-external-data! [project-id distribution file-name file-base64 design-type primary-key]
+(defn load-external-data! [project-id distribution file-name file-base64 design-type primary-key]  
   (when (#{"csv" "shp" "geojson"} distribution)
     (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")
           saved-file  (pu/write-file-part-base64 file-name
