@@ -162,97 +162,72 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_public_imagery()
  RETURNS setOf imagery_return AS $$
 
-    SELECT shared_imagery_uid AS imagery_uid,
-        -1 AS institution_rid,
+    SELECT imagery_uid,
+        institution_rid,
         visibility,
         title,
         attribution,
         extent,
         is_proxied,
         source_config
-    FROM shared_imagery
-    WHERE archived = FALSE
+    FROM imagery
+    WHERE visibility = 'public'
+        AND archived = FALSE
 
 $$ LANGUAGE SQL;
 
 -- Returns all rows in imagery associated with institution_rid
 CREATE OR REPLACE FUNCTION select_imagery_by_institution(_institution_id integer, _user_id integer)
- RETURNS setof imagery_return AS $$
+ RETURNS setOf imagery_return AS $$
 
-    (SELECT imagery_uid AS imagery_uid,
-             institution_rid,
-             visibility,
-             title,
-             attribution,
-             extent,
-             is_proxied,
-             source_config
-      FROM imagery
-      WHERE archived = FALSE
+    SELECT imagery_uid,
+        institution_rid,
+        visibility,
+        title,
+        attribution,
+        extent,
+        is_proxied,
+        source_config
+    FROM imagery
+    WHERE archived = FALSE
         AND (visibility = 'public'
-              OR (institution_rid = _institution_id
-                  AND ((SELECT count(*) > 0
-                         FROM get_all_users_by_institution_id(_institution_id)
-                         WHERE user_id = _user_id)
-                      OR _user_id = 1))))
-
-    UNION
-
-    (SELECT shared_imagery_uid AS imagery_uid,
-             -1 AS institution_rid,
-             visibility,
-             title,
-             attribution,
-             extent,
-             is_proxied,
-             source_config
-      FROM shared_imagery
-      WHERE archived = FALSE)
-
-    ORDER BY imagery_uid;
+            OR (institution_rid = _institution_id
+                AND ((SELECT count(*) > 0
+                        FROM get_all_users_by_institution_id(_institution_id)
+                        WHERE user_id = _user_id)
+                    OR _user_id = 1)))
+    ORDER BY visibility DESC, title
 
 $$ LANGUAGE SQL;
 
 -- Returns all rows in imagery associated with institution_rid
 CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_id integer, _user_id integer, _token_key text)
- RETURNS setof imagery_return AS $$
+ RETURNS setOf imagery_return AS $$
 
-  (SELECT DISTINCT i.imagery_uid AS imagery_uid,
-           p.institution_rid,
-           i.visibility,
-           i.title,
-           i.attribution,
-           i.extent,
-           i.is_proxied,
-           i.source_config
+   SELECT DISTINCT imagery_uid,
+        p.institution_rid,
+        visibility,
+        title,
+        attribution,
+        extent,
+        is_proxied,
+        source_config
     FROM projects p
-    LEFT JOIN project_imagery pi ON pi.project_rid = p.project_uid
-    INNER JOIN imagery i ON i.imagery_uid = pi.imagery_rid OR i.imagery_uid = p.imagery_rid
-    WHERE p.project_uid = _project_id
-      AND i.archived = FALSE
-      AND (
-        i.visibility = 'public'
-        OR (
-          i.institution_rid = p.institution_rid
-          AND (
-            (SELECT count(*) > 0
-               FROM get_all_users_by_institution_id(p.institution_rid)
-               WHERE user_id = _user_id)
-            OR (_token_key IS NOT NULL AND _token_key = token_key)))
-        OR _user_id = 1))
-  UNION (
-    SELECT shared_imagery_uid AS imagery_uid,
-           -1 AS institution_rid,
-           visibility,
-           title,
-           attribution,
-           extent,
-           is_proxied,
-           source_config
-    FROM shared_imagery
-    WHERE archived = FALSE)
-
-  ORDER BY imagery_uid;
+    LEFT JOIN project_imagery pi
+        ON pi.project_rid = p.project_uid
+    INNER JOIN imagery i
+        ON pi.imagery_rid = i.imagery_uid
+            OR p.imagery_rid = i.imagery_uid
+    WHERE project_uid = _project_id
+        AND archived = FALSE
+        AND (visibility = 'public'
+             OR (i.institution_rid = p.institution_rid
+                 AND ((SELECT count(*) > 0
+                        FROM get_all_users_by_institution_id(p.institution_rid)
+                        WHERE user_id = _user_id)
+                      OR (token_key IS NOT NULL AND token_key = _token_key)))
+             OR _user_id = 1)
+    ORDER BY title
 
 $$ LANGUAGE SQL;
 

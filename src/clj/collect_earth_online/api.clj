@@ -367,10 +367,8 @@
 
 (defmacro validate [query]
   `(fn [args#]
-     (let [schema# (get validation-map ~(keyword (str query)))]
-       (if (m/validate schema# args#)
-         (~query args#)
-         (data-response (me/humanize (m/explain schema# args#)) {:status 403})))))
+         (~query args#)))
+
 
 (comment
   (->
