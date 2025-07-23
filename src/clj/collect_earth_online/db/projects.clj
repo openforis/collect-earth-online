@@ -585,7 +585,7 @@
                                  allow-drawn-samples?
                                  (call-sql "get_plot_centers_by_project" project-id))))))
 
-(defn update-project! [{:keys [params]}]
+(defn update-project! [{:keys [params]}] 
   (let [project-id           (tc/val->int (:projectId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
@@ -651,9 +651,9 @@
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery! project-id imagery-list))
-
+        
         (cond
-          (not= "unpublished" (:availability original-project))
+          (#{"closed" "archived"} (:availability original-project))
           nil
 
           (or (not= plot-distribution (:plot_distribution original-project))
@@ -666,25 +666,25 @@
                     (not= plot-spacing   (:plot_spacing original-project))
                     (not= shuffle-plots? (:shuffle_plots original-project)))))
           (doall
-            (call-sql "delete_plots_by_project" project-id)
-            (create-project-plots! project-id
-                                   plot-distribution
-                                   num-plots
-                                   plot-spacing
-                                   plot-shape
-                                   plot-size
-                                   plot-file-name
-                                   plot-file-base64
-                                   sample-distribution
-                                   samples-per-plot
-                                   sample-resolution
-                                   sample-file-name
-                                   sample-file-base64
-                                   allow-drawn-samples?
-                                   shuffle-plots?
-                                   design-settings
-                                   aoi-features
-                                   type))
+           (call-sql "delete_plots_by_project" project-id)
+           (create-project-plots! project-id
+                                  plot-distribution
+                                  num-plots
+                                  plot-spacing
+                                  plot-shape
+                                  plot-size
+                                  plot-file-name
+                                  plot-file-base64
+                                  sample-distribution
+                                  samples-per-plot
+                                  sample-resolution
+                                  sample-file-name
+                                  sample-file-base64
+                                  allow-drawn-samples?
+                                  shuffle-plots?
+                                  design-settings
+                                  aoi-features
+                                  type))
 
           :else
           (do
@@ -1037,17 +1037,80 @@
   {:userAssignment (file-user-assignment plot-data)
    :qaqcAssignment (file-qaqc-assignment plot-data)})
 
-(defn check-plot-csv
+(defn get-plot-points [dist plots]  
+  (case dist
+    "geojson" (reduce
+               (fn [points pgobj]
+                 (let [coord-pairs (->> pgobj :plot_geom .getValue
+                                        tc/json->clj :coordinates first)]
+                   (into points coord-pairs)))
+               [] plots)
+    "shp" (reduce
+           (fn [points pgobj]
+	     (let [coord-pairs (->> pgobj :plot_geom .getValue
+                                    (call-sql "hex_ewkb_to_coordinate_arrays")
+                                    (map :coord_pair))]
+               (into points coord-pairs)))
+           [] plots)
+    "csv" (map
+           (fn [pgobj]
+	     (let [[_ coords] (->> pgobj :plot_geom .getValue (re-find #"POINT\(([^)]+)\)"))]
+	       (map #(Double/parseDouble %) (str/split coords #" ")))) plots)))
+
+(defn get-plot-bounds [distribution plots]  
+  (let [points (get-plot-points distribution plots)
+	x-points (map first points)
+	y-points (map last points)]    
+    [[(apply min x-points) (apply min y-points)]
+     [(apply max x-points) (apply max y-points)]]))
+
+(defn fit-aoi-to-file [distribution project-id file-plots]
+  (let [[[x-min y-min] 
+         [x-max y-max]] (get-plot-bounds distribution file-plots)
+        minmax-matrix [[min max]
+                       [min min]
+                       [max min]
+                       [max max]
+                       [min max]]
+        minmaxer (fn [[xfn yfn] [aoix aoiy]] 
+                   [(apply xfn [aoix (if (= xfn min) x-min x-max)])
+                    (apply yfn [aoiy (if (= yfn min) y-min y-max)])])
+        project-features (call-sql "select_project_features" project-id)]
+    (if (seq project-features)
+      (->> project-features first 
+         :feature .getValue tc/jsonb->clj :coordinates
+         first (mapv minmaxer minmax-matrix))
+      project-features)))
+
+(defn update-bounds-by-file [distribution project-id file-plots]
+  (let [[[x-min y-min] 
+         [x-max y-max]] (get-plot-bounds distribution file-plots)
+        project-features (call-sql "select_project_features" project-id)
+        pgeom (if (seq project-features)
+                (->> project-features first :feature
+                     .getValue tc/jsonb->clj :coordinates first)
+                project-features)
+        project-x (map first pgeom )
+        project-y (map last pgeom)]    
+    [[(apply min (into [x-min] project-x)) (apply min (into [y-min] project-y))]
+     [(apply max (into [x-max] project-x)) (apply max (into [y-max] project-y))]]
+  ))
+
+(defn check-plot-file
   [{:keys [params]}]
   (let [project-id       (tc/val->int (:projectId params))
         plot-file-name   (:plotFileName params)
         plot-file-base64 (:plotFileBase64 params)
+        distribution     (:plotFileType params)
+        
         plots            (external-file/load-external-data! project-id
-                                                            "csv"
+                                                            distribution
                                                             plot-file-name
                                                             plot-file-base64
                                                             "plot"
-                                                            [:visible_id])
+                                                            [:visible_id])        
+        file-bounds      (update-bounds-by-file distribution project-id plots)
+        file-aoi         (fit-aoi-to-file distribution project-id plots)
         file-assignment? (some #(:user %) plots)
         updated-plots    (map (fn [row]
                                 (if (:reviewers row)
@@ -1055,10 +1118,14 @@
                                   row))
                               plots)]
     (if file-assignment?
-      (data-response (create-design-settings-from-file updated-plots))
+      (data-response (-> updated-plots create-design-settings-from-file
+                         (assoc :fileAoi file-aoi
+                                :fileBoundary file-bounds)))
       (data-response  {:userAssignment {:userMethod "none"
                                         :users      []
                                         :percents   []}
+                       :fileAoi       file-aoi
+                       :fileBoundary  file-bounds
                        :qaqcAssignment {:qaqcMethod "none"
                                         :smes       []
                                         :overlap    0}}))))

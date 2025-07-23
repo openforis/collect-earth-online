@@ -56,7 +56,7 @@
    [:useTemplatePlots {:optional true} Bool]
    [:useTemplateWidgets {:optional true} Bool]
    [:imageryId int?]
-   [:projectImageryList [:vector any?]]
+
    [:aoiFeatures [:vector any?]]
    [:aoiFileName [:maybe string?]]
    [:description string?]
@@ -65,11 +65,11 @@
    [:plotDistribution [:enum "random" "grid" "shp" "csv" "json" "simplified"]]
    [:plotShape [:maybe [:enum "square" "circle"]]]
    [:plotSize [:or string? Int]]
-   [:plotSpacing [:or string? Int]]
+   [:plotSpacing [:maybe Int]]
    [:shufflePlots [:maybe Bool]]
    [:sampleDistribution [:enum "random" "grid" "center" "shp" "csv" "json"]]
    [:samplesPerPlot [:or string? Int]]
-   [:sampleResolution [:or string? Int]]
+   [:sampleResolution [:maybe Int]]
    [:allowDrawnSamples {:optional true} Bool]
    [:surveyQuestions map?]
    [:surveyRules [:vector any?]]])
@@ -202,10 +202,11 @@
                                               [:projectId Int]
                                               [:clearSaved Bool]]]
                                             [:session [:map [:userId Int]]]]
-   :projects/check-plot-csv               [:map
+   :projects/check-plot-file               [:map
                                            [:params
                                             [:map
                                              [:projectId Int]
+                                             [:plotFileType [:maybe string?]]
                                              [:plotFileName [:maybe string?]]
                                              [:plotFileBase64 [:maybe string?]]]]]
    :projects/import-ce-project            [:map

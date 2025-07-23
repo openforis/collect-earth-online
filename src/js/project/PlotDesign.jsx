@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import shp from "shpjs";
 
 import {
@@ -12,6 +12,249 @@ import { filterObject } from "../utils/sequence";
 import { ProjectContext, plotLimit } from "./constants";
 import { mercator } from "../utils/mercator";
 import Modal from "../components/Modal";
+
+export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, projecType}){
+  const context = useContext(ProjectContext);
+  const {projectId, designSettings, newPlotShape, newPlotFileName, newPlotDistribution, setProjectDetails} = context;
+  const [_newPlotFileName, setNewPlotFileName] = useState(newPlotFileName);
+  const [projectState, setProjectState] = useState(context);
+  const [newPlotSize, setNewPlotSize] = useState("");
+  const [plotState, setPlotState] = useState({lonMin: "",
+                                              latMin: "",
+                                              lonMax: "",
+                                              latMax: "",});
+
+  const acceptedTypes = {
+      csv: "text/csv",
+      shp: "application/zip",
+      geojson: "application/json",
+    };
+
+  const setPlotDetails = (newDetail) => {
+    setPlotState({
+        lonMin: "",
+        latMin: "",
+        lonMax: "",
+        latMax: "",
+      });
+    setProjectDetails(
+      Object.assign(newDetail, { plots: [] }, { aoiFeatures: [], aoiFileName: "" })
+    ); 
+  };
+
+  const checkPlotFile = (plotFileType, fileName, plotFileBase64) => {
+    fetch("/check-plot-file", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        plotFileType,
+        projectId,
+        plotFileName: fileName,
+        plotFileBase64
+      }),
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        const [[lonMin, latMin], [lonMax, latMax]] = data.fileBoundary;
+        const aoiFeatures = [mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)];
+        setPlotState({lonMin, lonMax, latMin, latMax});
+        setProjectState({          
+          aoiFileName: fileName,
+          boundary: data.fileBoundary,          
+          aoiFeatures});
+        setNewPlotFileName(fileName);
+        setProjectDetails({
+          aoiFeatures, lonMin, latMin, lonMax, latMax, newPlotFileName: fileName, newPlotFileBase64: plotFileBase64, aoiFileName: fileName, newPlotDistribution: plotFileType,
+          designSettings: { ...designSettings,
+                            userAssignment: data.userAssignment,
+                            qaqcAssignment: data.qaqcAssignment}
+        });}
+      );
+  };
+
+  const renderFileInput = (fileType) => {
+    return(
+      <div className="mb-3">
+        <div style={{display: "flex"}}>
+          <label
+            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+            htmlFor="new-plot-distribution-file"
+            id="custom-upload"
+            style={{ display: "flex", alignItems: "center", width: "fit-content" }}
+          >
+            Upload plot file
+            <input
+              accept={acceptedTypes[fileType]}
+              defaultValue=""
+              id="new-plot-distribution-file"
+              onChange={(e) => {
+                const file = e.target.files[0];                
+                readFileAsBase64Url (file, (base64) => {                 
+                  checkPlotFile(fileType, file.name, base64);                  
+                  return setPlotDetails({
+                    plotFileName: file.name,
+                    PlotFileBase64: base64
+                  }); 
+                });		
+              }}
+              style={{ display: "none" }}
+              type="file"
+            />
+          </label>
+          <label className="ml-3 text-nowrap">
+            File:{" "}
+            {_newPlotFileName || (projectId > 0 ? "Use existing data" : "None")}
+          </label>
+            </div>
+      </div>
+    );
+    
+  };
+
+  const renderPlotShape = () => {    
+    return (
+      <div className="form-group" style={{ display: "flex", flexDirection: "column" }}>
+        <label>Plot shape</label>
+        <div>
+          <div className="form-check form-check-inline">
+            <input
+              checked={newPlotShape === "circle"}
+              className="form-check-input"
+              id="plot-shape-circle"
+              onChange={() => {setPlotDetails({ newPlotShape: "circle" });}}
+              type="radio"
+            />
+            <label className="form-check-label" htmlFor="plot-shape-circle">
+              Circle
+            </label>
+          </div>
+          <div className="form-check form-check-inline">
+            <input
+              checked={newPlotShape === "square"}
+              className="form-check-input"
+              id="plot-shape-square"
+              onChange={() => {setPlotDetails({ newPlotShape: "square"});}}
+              type="radio"
+            />
+            <label className="form-check-label" htmlFor="plot-shape-square">
+              Square
+            </label>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+
+  const renderLabeledInput = (label, property, disabled = false) => (
+    <div className="form-group" style={{ width: "fit-content" }}>
+      <label htmlFor={property}>{label}</label>
+      <input
+        className="form-control form-control-sm"
+        id={property}
+        min="0"
+        onChange={(e) =>{
+          console.log(e.target.value, property);
+          setNewPlotSize(e.target.value);
+          setPlotDetails({ [property]: Number(e.target.value) });}}
+        step="1"
+        type="number"
+        value={newPlotSize}
+        disabled = {disabled}
+      />
+    </div>
+  );
+
+
+  const renderCSV = () => {    
+    const plotUnits = newPlotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
+    return (
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {renderFileInput("csv")}
+        <div style={{ display: "flex" }}>
+          <span className="mr-3">{renderPlotShape()}</span>
+          {renderLabeledInput(plotUnits, "plotSize")}
+        </div>
+      </div>
+    );
+  };
+
+  const plotOptions = {
+      csv: {
+        display: "CSV File",
+        description:
+          "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
+        layout: renderCSV(),
+      },
+      shp: {
+        display: "SHP File",
+        alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
+        description:
+          "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
+        layout: renderFileInput("shp"),
+      },
+      geojson: {
+        display: "GeoJSON File",
+        alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
+        description:
+          "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
+        layout: renderFileInput("geojson"),
+      },
+    };
+  
+
+  return (
+    <div id="new-plot-design">
+      <h3 className="mb-3">Add New Plot</h3>
+      <div className="ml-3">
+        <div className="d-flex flex-column">
+          <div className="form-group" style={{width:"fit-content"}}>
+            <label>Spatial Distribution</label>
+            <select
+              className="form-control form-control-sm"
+              onChange={(e)=>
+                setPlotDetails({ newPlotDistribution: e.target.value})
+		}
+              value={newPlotDistribution}
+            >
+              {Object.entries (plotOptions).map (([key, options]) => (
+                <option key={key} value={key}>
+                  {options.display}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="font-italic ml-2">{`- ${plotOptions[newPlotDistribution].description}`}</p>
+          {plotOptions[newPlotDistribution].alert &&
+           <p className="alert">- {plotOptions[newPlotDistribution].alert}</p>}
+        </div>
+        <div>{plotOptions[newPlotDistribution].layout}</div>
+	<p
+         className="font-italic ml-2 small"
+         style={{
+           color: totalPlots > plotLimit ? "#8B0000" : "#006400",
+           fontSize: "1rem",
+           whiteSpace: "pre-line",
+         }}
+	 >
+       {totalPlots > 0 &&
+              `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
+            {totalPlots > 0 &&
+              totalPlots > plotLimit &&
+              `\n* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(
+                plotLimit
+              )}.`}
+       </p>
+      </div>
+    </div>
+  );
+
+};
+
+
 
 export class PlotDesign extends React.Component {
   constructor(props) {
@@ -113,7 +356,7 @@ export class PlotDesign extends React.Component {
       plotDistribution: "simplified",
       designSettings: {
         ...designSettings,
-        sampleGeometries: {"lines": true, "points": true, "polygons": true}} })
+        sampleGeometries: {"lines": true, "points": true, "polygons": true}} });
   }
 
   /// Render Functions
@@ -336,15 +579,16 @@ export class PlotDesign extends React.Component {
     );
   };
 
-  checkPlotFile = (plotFileName, plotFileBase64) => {
+  checkPlotFile = (plotFileType, plotFileName, plotFileBase64) => {
     const { projectId, designSettings } = this.context;
-    fetch("/check-plot-csv", {
+    fetch("/check-plot-file", {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        plotFileType,
         projectId,
         plotFileName,
         plotFileBase64
@@ -384,11 +628,11 @@ export class PlotDesign extends React.Component {
               onChange={(e) => {
                 const file = e.target.files[0];
                 readFileAsBase64Url(file, (base64) => {
-                  this.checkPlotFile(file.name, base64);
+                  this.checkPlotFile(fileType, file.name, base64);
                   return this.setPlotDetails({
                     plotFileName: file.name,
                     plotFileBase64: base64,
-                  })
+                  });
                 });
               }}
               style={{ display: "none" }}
@@ -589,6 +833,7 @@ export class PlotDesign extends React.Component {
               )}.`}
           </p>
         </div>
+        
       </div>
     );
   }
