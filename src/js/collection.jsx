@@ -85,6 +85,8 @@ class Collection extends React.Component {
       isImageryLayersExpanded: false,
       // only used for simplified projects
       centerSampleId: 0,
+      usedKML: false,
+      usedGeodash: false,
     };
   }
 
@@ -694,6 +696,7 @@ class Collection extends React.Component {
     const plotRadius = currentProject.plotSize
           ? currentProject.plotSize / 2.0
           : mercator.getViewRadius(mapConfig);
+    this.setState({ usedGeodash: true });
     window.open(
       "/geo-dash?" +
         `institutionId=${this.state.currentProject.institution}` +
@@ -815,7 +818,6 @@ class Collection extends React.Component {
             ? this.state.currentPlot.confidenceComment
             : null,
           collectionStart: this.state.collectionStart,
-          userSamples: this.state.userSamples,
           userImages: this.state.userImages,
           newPlotSamples:
           this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
@@ -823,6 +825,8 @@ class Collection extends React.Component {
           currentUserId: this.state.currentUserId,
           imageryIds: this.state.imageryIds,
           projectType: this.state.currentProject.type,
+          usedKML: this.state.usedKML,
+          usedGeodash: this.state.usedGeodash,
         }),
       }).then((response) => {
         if (response.ok) {
@@ -1134,6 +1138,8 @@ class Collection extends React.Component {
   setConfidenceComment = (confidenceComment) =>
   this.setState({ currentPlot: { ...this.state.currentPlot, confidenceComment } });
 
+  setUsedKML = (used) => this.setState({ usedKML: used });
+
   render() {
     return (
       <div className={`container-fluid collection-page`}>
@@ -1240,6 +1246,7 @@ class Collection extends React.Component {
                 toggleShowSamples={this.toggleShowSamples}
                 projectType={this.state.currentProject?.type}
                 state={{ showBoundary: this.state.showBoundary, showSamples: this.state.showSamples }}
+                setUsedKML={this.setUsedKML}
               />
               {this.state.currentPlot.id &&
                this.state.currentProject.projectOptions.showPlotInformation && (
@@ -1665,7 +1672,8 @@ export const ExternalTools = ({
   currentPlot,
   currentProject,
   KMLFeatures,
-  projectType
+  projectType,
+  setUsedKML
 }) => {
   const [showExternalTools, setShowExternalTools] = useState(true);
   const [auxWindow, setAuxWindow] = useState(null);
@@ -1750,6 +1758,7 @@ export const ExternalTools = ({
           encodeURIComponent(KMLFeatures)
       }
     >
+      onClick={() => setUsedKML(true)}
       Download Plot KML
     </a>
   );
