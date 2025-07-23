@@ -433,7 +433,7 @@ class Collection extends React.Component {
             projectId,
             navigationMode: forcedNavMode || navigationMode,
             direction,
-            inReviewMode: reviewMode || inReviewMode,
+            inReviewMode: (reviewMode || inReviewMode) ? true : false,
             threshold,
             currentUserId,
             projectType: type,
@@ -496,7 +496,7 @@ class Collection extends React.Component {
   }
 
   navToFirstPlot = () => {
-    this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed", this.state.currentProject?.userRole);
+    this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed");
     /*
       this.state.currentProject?.userRole === 2 ?
       this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed") :
@@ -1221,7 +1221,7 @@ class Collection extends React.Component {
                 navToPlot={this.navToPlot}
                 navToPrevPlot={this.navToPrevPlot}
                 plotters={this.state.plotters}
-                plotUsers={(this.state.userPlotList || []).filter((p) => p.userId)}
+                plotUsers={(this.state.userPlotList || [])?.filter((p) => p.userId)}
                 projectId={this.props.projectId}
                 setCurrentUserId={this.setCurrentUserId}
                 setNavigationMode={this.setNavigationMode}

@@ -257,7 +257,7 @@
                                          [:threshold Int]
                                          [:currentUserId [:maybe [:or :int :string]]]
                                          [:projectType  {:optional true} :string]
-                                         [:inReviewMode {:optional true} Int]]]
+                                         [:inReviewMode {:optional true} Bool]]]
                                  [:session [:map
                                             [:userId {:optional true} Int]]]]
    :plots/get-plot-disagreement [:map
