@@ -4,8 +4,9 @@
             [clojure.test.check            :as tc]
             [clojure.test.check.generators :as tg]
             [clojure.test.check.properties :as tp]
+            [collect-earth-online.db.projects-test :refer :all]
             [malli.core                    :as m]
-            [triangulum.datatbase :refer [call-sql] ]))
+            [triangulum.database :refer [call-sql] ]))
 
 (comment
   ;;determine testability:

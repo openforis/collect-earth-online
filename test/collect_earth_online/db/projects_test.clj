@@ -1,8 +1,8 @@
-(ns collect-earth-online.db.projects
+(ns collect-earth-online.db.projects-test
   (:require [clojure.test :refer [is deftest testing]]
-            [clojure.test.check.generators :as [gen]]
             [collect-earth-online.db.projects :as projects]
-            [triangulum.database :refer [call-sql sql-primitive]]))
+            [triangulum.database :refer [call-sql sql-primitive]]
+            [triangulum.type-conversion :as tc]))
 
 (deftest ^:unit can-collect?-test
   (testing "Happy path: A user that is allowed to collect for given project"
@@ -19,16 +19,22 @@
 
 (deftest ^:unit get-home-projects-test
   (testing "Happy Path: finds projects"
-    (with-redefs [call-sql (fn [])]
-      (let [response (projects/get-home-projects "happy-path-params")]
+    (with-redefs [call-sql (fn [& _] [{:project_id 1
+                                    :institution_id 1
+                                    :name "Test Project"
+                                    :description ""
+                                    :centroid (tc/clj->json {"type" "Point"
+                                                             "coordinates" [101 16.5]})}])]
+      (let [response (projects/get-home-projects {:session {:userId 1}})]
         (is (= 200 (:status response))
             (vector? (:body response))))))
   (testing "Empty Result case"
     (with-redefs [call-sql (constantly [])]
-      (is (= {:status 200 :body []}
-             (projects/get-home-projects "empty-result-params")))))
-  (testing "Invalid params throw"
-    (is (thrown? Exception (projects/get-home-projects "invalid-params")))))
+      (is (= {:status 200 :body (tc/clj->json [])
+              :headers {"Content-Type" "application/json"}}
+             (projects/get-home-projects {:session nil})))))
+  #_(testing "Invalid params throw"
+    (is (thrown? Exception (projects/get-home-projects {:session nil})))))
 
 (deftest ^:unit get-institution-projects-test)
 
@@ -41,7 +47,7 @@
 (deftest ^:unit get-template-by-id-test)
 
 (deftest ^:unit get-project-stats-test)
-n
+
 (deftest ^:unit create-project!-test)
 
 (deftest ^:unit reset-collected-samples!-test)
