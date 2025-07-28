@@ -110,18 +110,16 @@
    :imagery/get-public-imagery               [:map [:uri [:= "/get-public-imagery"]]]
    :imagery/add-institution-imagery          [:map
                                               [:uri [:= "/add-institution-imagery"]]
-                                              [:json-params Json]
                                               [:params  [:map
                                                          [:institutionId      Int]
                                                          [:imageryTitle       :string]
                                                          [:imageryAttribution :string]
-                                                         [:sourceConfig       :string]
+                                                         [:sourceConfig       [:map]]
                                                          [:isProxied          Bool]
                                                          [:addToAllProjects
                                                           {:optional true}     Bool]]]]
    :imagery/update-institution-imagery       [:map
                                               [:uri [:= "/update-institution-imagery"]]
-                                              [:json-params Json]
                                               [:params  [:map
                                                          [:imageryId          Int]
                                                          [:imageryTitle       :string]
@@ -133,25 +131,21 @@
                                                          [:institutionId      Int]]]]
    :imagery/update-imagery-visibility        [:map
                                               [:uri [:= "/update-imagery-visibility"]]
-                                              [:json-params Json]
                                               [:params  [:map
                                                          [:imageryId          Int]
                                                          [:visibility         :string]
                                                          [:institutionId      Int]]]]
    :imagery/archive-institution-imagery      [:map
                                               [:uri [:= "/archive-institution-imagery"]]
-                                              [:json-params Json]
                                               [:params  [:map
                                                          [:imageryId          Int]]]]
    :imagery/bulk-archive-institution-imagery [:map
                                               [:uri [:= "/bulk-archive-institution-imagery"]]
-                                              [:json-params Json]
                                               [:params  [:map
                                                          [:institutionId      Int]
                                                          [:imageryIds [:vector Int]]]]]
    :imagery/bulk-update-imagery-visibility   [:map
                                               [:uri [:= "/edit-imagery-bulk"]]
-                                              [:json-params Json]
                                               [:params  [:map
                                                          [:imageryIds [:vector Int]]
                                                          [:visibility         :string]
@@ -159,8 +153,8 @@
    :geodash/gateway-request                  [:map
                                               [:uri [:= "/geo-dash/gateway-request"]]
                                               [:params GatewayRequest]
-
                                               [:json-params {:optional true}  Json]]
+   
    :geodash/get-project-widgets           [:map
                                            [:uri [:= "/geo-dash/get-project-widgets"]]
                                            [:params [:map
@@ -387,7 +381,8 @@
    [:params             [:map]] ;;do we need to see all four?
    [:form-params        [:map]#_[:map-of :string :any]] ;;or just one per request?
    [:multipart-params   [:map]#_[:map-of :string :any]] ;;how do we stipulate that?
-   [:query-params       [:map]#_[:map-of :string :any]] ;;seriously   
+   [:query-params       [:map]#_[:map-of :string :any]] ;;seriously
+   [:json-params        [:map]]
    ;; aren't all of the above -params keys merged due to triangulum?
    [:headers            [:map-of :string :string]   
     #_{"connection" "close",
