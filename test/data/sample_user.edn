@@ -1,0 +1,4 @@
+{:user_id 1
+ :administrator true
+ :email "admin@ceo.dev"
+ :reset_key nil}

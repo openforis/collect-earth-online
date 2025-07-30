@@ -110,18 +110,16 @@
    :imagery/get-public-imagery               [:map [:uri [:= "/get-public-imagery"]]]
    :imagery/add-institution-imagery          [:map
                                               [:uri [:= "/add-institution-imagery"]]
-                                              [:json-params Json]
                                               [:params  [:map
                                                          [:institutionId      Int]
                                                          [:imageryTitle       :string]
                                                          [:imageryAttribution :string]
-                                                         [:sourceConfig       :string]
+                                                         [:sourceConfig       [:map]]
                                                          [:isProxied          Bool]
                                                          [:addToAllProjects
                                                           {:optional true}     Bool]]]]
    :imagery/update-institution-imagery       [:map
                                               [:uri [:= "/update-institution-imagery"]]
-                                              [:json-params Json]
                                               [:params  [:map
                                                          [:imageryId          Int]
                                                          [:imageryTitle       :string]
@@ -133,96 +131,113 @@
                                                          [:institutionId      Int]]]]
    :imagery/update-imagery-visibility        [:map
                                               [:uri [:= "/update-imagery-visibility"]]
-                                              [:json-params Json]
                                               [:params  [:map
                                                          [:imageryId          Int]
                                                          [:visibility         :string]
                                                          [:institutionId      Int]]]]
    :imagery/archive-institution-imagery      [:map
                                               [:uri [:= "/archive-institution-imagery"]]
-                                              [:json-params Json]
                                               [:params  [:map
                                                          [:imageryId          Int]]]]
    :imagery/bulk-archive-institution-imagery [:map
                                               [:uri [:= "/bulk-archive-institution-imagery"]]
-                                              [:json-params Json]
                                               [:params  [:map
                                                          [:institutionId      Int]
                                                          [:imageryIds [:vector Int]]]]]
    :imagery/bulk-update-imagery-visibility   [:map
                                               [:uri [:= "/edit-imagery-bulk"]]
-                                              [:json-params Json]
                                               [:params  [:map
                                                          [:imageryIds [:vector Int]]
                                                          [:visibility         :string]
                                                          [:institutionId      Int]]]]
    :geodash/gateway-request                  [:map
+                                              [:uri [:= "/geo-dash/gateway-request"]]
                                               [:params GatewayRequest]
-
                                               [:json-params {:optional true}  Json]]
+   
    :geodash/get-project-widgets           [:map
+                                           [:uri [:= "/geo-dash/get-project-widgets"]]
                                            [:params [:map
                                                      [:projectId           Int]]]]
    :geodash/create-dashboard-widget-by-id [:map
+                                           [:uri [:= "/geo-dash/create-widget"]]
                                            [:params [:map
                                                      [:projectId           Int]
                                                      [:widgetJSON          Json]]]]
    :geodash/update-dashboard-widget-by-id [:map
+                                           [:uri [:= "/geo-dash/update-widget"]]
                                            [:params [:map
                                                      [:projectId           Int]
                                                      [:widgetJSON          Json]]]]
    :geodash/delete-dashboard-widget-by-id [:map
+                                           [:uri [:= "/geo-dash/delete-widget"]]
                                            [:params [:map
                                                      [:projectId           Int]
                                                      [:widgetJSON          Json]]]]
    :geodash/copy-project-widgets          [:map
+                                           [:uri [:= "/geo-dash/copy-project-widgets"]]
                                            [:params [:map
                                                      [:projectId           Int]
                                                      [:templateId          Int]]]]
    :geodash/validate-vis-params           [:map
+                                           [:uri [:= "/geo-dash/validate-vis-params"]]
                                            [:params [:map
                                                      [:imgPath             :string]
                                                      [:visParams           Json]]]]
    :projects/create-project!               [:map
+                                            [:uri [:= "/create-project"]]
                                             [:params Project]]
-   :projects/update-project!               [:map [:params Project]]
-   :projects/create-project-draft!         [:map [:params Project]]
-   :projects/update-project-draft!         [:map [:params Project]]
+   :projects/update-project!               [:map
+                                            [:uri [:= "/update-project"]]
+                                            [:params Project]]
+   :projects/create-project-draft!         [:map
+                                            [:uri [:= "/create-project-draft"]]
+                                            [:params Project]]
+   :projects/update-project-draft!         [:map
+                                            [:uri [:= "/update-project-draft" ]]
+                                            [:params Project]]
    :projects/close-project!               [:map
+                                           [:uri [:= "/close-project"]]
                                            [:params [:map [:projectId Int]]]
                                            [:session [:map [:userId Int]]]]
    :projects/archive-project!             [:map
-                                            [:params [:map [:projectId Int]]]]
+                                           [:uri [:= "/archive-project"]]
+                                           [:params [:map [:projectId Int]]]]
    :projects/delete-projects-bulk!        [:map
+                                           [:uri [:= "/delete-projects-bulk"]]
                                            [:params
                                             [:map
                                              [:projectIds [:vector Int]]
                                              [:institutionId Int]]]]
    :projects/edit-projects-bulk!           [:map
+                                            [:uri [:= "/edit-projects-bulk"]]
                                             [:params
                                              [:map
                                               [:projectIds [:vector Int]]
                                               [:institutionId Int]
                                               [:visibility [:enum "institution" "public" "private" "users"]]]]]
    :projects/publish-project!              [:map
+                                            [:uri [:= "/publish-project"]]
                                             [:params
                                              [:map
                                               [:projectId Int]
                                               [:clearSaved Bool]]]
                                             [:session [:map [:userId Int]]]]
    :projects/check-plot-file               [:map
-                                           [:params
-                                            [:map
-                                             [:projectId Int]
-                                             [:plotFileType [:maybe string?]]
-                                             [:plotFileName [:maybe string?]]
-                                             [:plotFileBase64 [:maybe string?]]]]]
+                                            [:params
+                                             [:map
+                                              [:projectId Int]
+                                              [:plotFileType [:maybe string?]]
+                                              [:plotFileName [:maybe string?]]
+                                              [:plotFileBase64 [:maybe string?]]]]]
    :projects/import-ce-project            [:map
+                                           [:uri [:= "/import-ce-project"]]
                                            [:params
                                             [:map
                                              [:fileName string?]
                                              [:fileb64 string?]]]]
    :#'doi/create-doi!                     [:map
+                                           [:uri [:= "/create-doi"]]
                                            [:session [:map
                                                       [:userId {:optional? true} Int]]]
                                            [:params [:map
@@ -231,27 +246,41 @@
                                                      [:institution Int]
                                                      [:description :string]]]]
    :#'doi/publish-doi!                    [:map
+                                           [:uri [:= "/publish-doi"]]
                                            [:params [:map
                                                      [:projectId Int]]]]
    :#'doi/get-doi-reference               [:map
+                                           [:uri [:= "/doi"]]
                                            [:params [:map
                                                      [:projectId Int]]]]
-   :metrics/get-imagery-access          [:map
-                                           [:params [:map
-                                                     [:startDate Date]
-                                                     [:endDate Date]]]]
+   :metrics/get-imagery-counts          [:map
+                                         [:uri "metrics/get-imagery-counts"]
+                                         [:request-method [:= :get]]
+                                         [:params [:map
+                                                   [:startDate Date]
+                                                   [:endDate Date]]]]
    :metrics/get-projects-with-gee       [:map
-                                           [:params [:map
-                                                     [:startDate Date]
-                                                     [:endDate Date]]]]
+                                         [:uri [:= "/metrics/get-projects-with-gee"]]
+                                         [:request-method [:= :get]]
+                                         [:params [:map
+                                                   [:startDate Date]
+                                                   [:endDate Date]]]]
    :metrics/get-sample-plots-counts     [:map
-                                           [:params [:map
-                                                     [:startDate Date]
-                                                     [:endDate Date]]]]
+                                         [:uri [:= "/metrics/get-sample-plot-counts"]]
+                                         [:params [:map
+                                                   [:startDate Date]
+                                                   [:endDate Date]]]]
    :metrics/get-project-count           [:map
-                                           [:params [:map
-                                                     [:startDate Date]
-                                                     [:endDate Date]]]]
+                                         [:request-method [:= :get]]
+                                         [:uri [:= "/metrics/get-project-count"]]
+                                         [:params [:map
+                                                   [:startDate Date]
+                                                   [:endDate Date]]]]
+   :metrics/get-plot-imagery-counts    [:map
+                                        [:request-method [:= :get]]
+                                        [:uri [:= "/metrics/get-plot-imagery-counts"]]
+                                        [:params [:map
+                                                  [:userId Int]]]]
    :plots/get-collection-plot [:map
                                [:request-method [:= :get]]
                                [:uri [:= "/get-collection-plot"]]
@@ -267,8 +296,8 @@
                                          [:currentUserId [:maybe [:or :int :string]]]
                                          [:projectType  {:optional true} :string]
                                          [:inReviewMode {:optional true} Int]]]
-                                 [:session [:map
-                                            [:userId {:optional true} Int]]]]
+                               [:session [:map
+                                          [:userId {:optional true} Int]]]]
    :plots/get-plot-disagreement [:map
                                  [:request-method [:= :get]]
                                  [:uri [:= "/get-plot-disagreement"]]
@@ -295,6 +324,7 @@
    :plots/add-user-samples [:map
                             [:request-method [:= :post]]
                             [:uri [:= "/add-user-samples"]]
+                            [:json-params [:map]]
                             [:params [:map
                                       [:projectId Int]
                                       [:plotId Int]
@@ -324,6 +354,7 @@
                               [:session [:map
                                          [:userId {:optional true} Int]]]]
    :plots/reset-plot-lock [:map
+                           [:json-params [:map]]
                            [:request-method [:= :post]]
                            [:uri [:= "/reset-plot-lock"]]
                            [:params [:map
@@ -350,7 +381,8 @@
    [:params             [:map]] ;;do we need to see all four?
    [:form-params        [:map]#_[:map-of :string :any]] ;;or just one per request?
    [:multipart-params   [:map]#_[:map-of :string :any]] ;;how do we stipulate that?
-   [:query-params       [:map]#_[:map-of :string :any]] ;;seriously   
+   [:query-params       [:map]#_[:map-of :string :any]] ;;seriously
+   [:json-params        [:map]]
    ;; aren't all of the above -params keys merged due to triangulum?
    [:headers            [:map-of :string :string]   
     #_{"connection" "close",
@@ -370,12 +402,13 @@
    [:query-string       [:maybe :string]]
    [:body               [:any]] ;; stumped on how to desdcribe a ReadableStream
    [:scheme             [:enum :http :https]]
-   [:request-method     [:enum :get :post :put :delete :path :head :options]]])
+   [:request-method     [:enum :get :post :put :delete :path :head :options]]
+   [:uri :string]])
 
 
 (defmacro validate [query]
   `(fn [args#]
-     (let [schema# (get validation-map ~(keyword (str query)))]
+     (let [schema# (mu/merge request-wrapper (get validation-map ~(keyword (str query))))]
        (if (m/validate schema# args#)
          (~query args#)
          (data-response (me/humanize (m/explain schema# args#)) {:status 403})))))

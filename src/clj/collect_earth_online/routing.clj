@@ -71,6 +71,9 @@
    [:get  "/get-institution-users"]          {:handler     users/get-institution-users
                                               :auth-type   :user
                                               :auth-action :block}
+   [:get  "/get-user-admin-institutions"]    {:handler     users/get-user-admin-institutions
+                                              :auth-type   :user
+                                              :auth-action :block}
    [:get  "/get-user-stats"]                 {:handler     users/get-user-stats
                                               :auth-type   :user
                                               :auth-action :block}
@@ -247,7 +250,7 @@
    [:post "/geo-dash/create-widget"]        {:handler geodash/create-dashboard-widget-by-id}
    [:post "/geo-dash/delete-widget"]        {:handler geodash/delete-dashboard-widget-by-id}
    [:post "/geo-dash/gateway-request"]      {:handler geodash/gateway-request}
-   [:get "/geo-dash/validate-vis-params"]   {:handler geodash/validate-vis-params}
+   [:get "/geo-dash/validate-vis-params"]   {:handler geodash/gateway-request}
    [:post "/geo-dash/update-widget"]        {:handler geodash/update-dashboard-widget-by-id}
    ;; Proxy Routes
    [:get  "/get-tile"]                      {:handler     proxy/proxy-imagery
@@ -264,9 +267,10 @@
                                              :auth-action :block}
 
    ;; Metrics
-   [:get  "/metrics/get-imagery-access"]      {:handler     (validate metrics/get-imagery-counts)
+   [:get  "/metrics/get-imagery-counts"]      {:handler     (validate metrics/get-imagery-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
+   [:get  "/metrics/get-plot-imagery-counts"] {:handler (validate metrics/get-plot-imagery-counts)}
    [:get  "/metrics/get-projects-with-gee"]   {:handler     (validate metrics/get-projects-with-gee)
                                                :auth-type   :metrics
                                                :auth-action :block}
