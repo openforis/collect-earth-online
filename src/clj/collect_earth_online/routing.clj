@@ -125,7 +125,7 @@
    [:post "/create-project"]                 {:handler     (validate projects/create-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/update-project"]                 {:handler     #_(validate) #'projects/update-project!
+   [:post "/update-project"]                 {:handler     projects/update-project!
                                               :auth-type   :admin
                                               :auth-action :block}
    [:get "/delete-project-draft"]            {:handler     (validate projects/delete-project-draft!)
@@ -277,5 +277,4 @@
    [:get  "/metrics/get-sample-plot-counts"]  {:handler     (validate metrics/get-sample-plot-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}
-   })
+   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}})
