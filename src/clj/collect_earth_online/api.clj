@@ -382,7 +382,7 @@
    [:form-params        [:map]#_[:map-of :string :any]] ;;or just one per request?
    [:multipart-params   [:map]#_[:map-of :string :any]] ;;how do we stipulate that?
    [:query-params       [:map]#_[:map-of :string :any]] ;;seriously
-   [:json-params        [:map]]
+   #_[:json-params        [:map]]
    ;; aren't all of the above -params keys merged due to triangulum?
    [:headers            [:map-of :string :string]   
     #_{"connection" "close",
