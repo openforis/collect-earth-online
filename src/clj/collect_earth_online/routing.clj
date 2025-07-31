@@ -125,7 +125,7 @@
    [:post "/create-project"]                 {:handler     (validate projects/create-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/update-project"]                 {:handler     (validate projects/update-project!)
+   [:post "/update-project"]                 {:handler     projects/update-project!
                                               :auth-type   :admin
                                               :auth-action :block}
    [:get "/delete-project-draft"]            {:handler     (validate projects/delete-project-draft!)
@@ -150,7 +150,7 @@
                                               :auth-type   :admin
                                               :auth-action :block}
 
-   [:post "/check-plot-csv"]                 {:handler     (validate projects/check-plot-csv)
+   [:post "/check-plot-file"]                {:handler     (validate projects/check-plot-file)
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/import-ce-project"]              {:handler     (validate #'ce-project/import-ce-project)

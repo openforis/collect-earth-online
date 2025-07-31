@@ -3,10 +3,10 @@ import { ProjectContext } from "./constants";
 
 import AssignPlots from "./AssignPlots";
 import QualityControl from "./QualityControl";
-import { PlotDesign, PlotDesignReview } from "./PlotDesign";
+import { PlotDesign, PlotDesignReview, NewPlotDesign} from "./PlotDesign";
 
 export default function PlotStep({ getTotalPlots, projectType }) {
-  const { institutionUserList, aoiFeatures, useTemplatePlots } = useContext(ProjectContext);
+  const { institutionUserList, aoiFeatures, useTemplatePlots, availability } = useContext(ProjectContext);  
   const totalPlots = getTotalPlots();
   return (
     <>
@@ -18,8 +18,15 @@ export default function PlotStep({ getTotalPlots, projectType }) {
           institutionUserList={institutionUserList}
           totalPlots={totalPlots}
           projectType={projectType}
-        />
+        />                    
       )}
+      {availability === "published" &&
+       <NewPlotDesign
+         aoiFeatures={aoiFeatures}
+         institutionUserList={institutionUserList}
+         totalPlots={totalPlots}
+         projectType={projectType}
+       />}
       {(projectType !== "simplified") ? (
        <div className="row mr-1">
          <AssignPlots institutionUserList={institutionUserList} totalPlots={totalPlots} />

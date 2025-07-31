@@ -1393,3 +1393,16 @@ RETURNS int AS $$
     WHERE p.project_uid = _project_id
       AND iu.user_rid = _user_id;
 $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION hex_ewkb_to_all_vertices(hex_ewkb text)
+RETURNS TABLE(x float, y float) AS $$
+DECLARE
+    geom geometry;
+BEGIN
+    geom := ST_GeomFromEWKB(decode(hex_ewkb, 'hex'));
+    
+    RETURN QUERY
+    SELECT ST_X((dp).geom) AS x, ST_Y((dp).geom) AS y
+    FROM ST_DumpPoints(geom) AS dp;
+END;
+$$ LANGUAGE plpgsql;
