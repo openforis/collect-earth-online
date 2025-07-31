@@ -369,20 +369,18 @@
    [:acceptedTerms {:optional true} Bool]
    [:userRole      {:optional true} :string]])
 
-(def request-wrapper #_[host port]
+(def request-wrapper
   [:map
    {:closed true}
    [:ssl-client-cert    :any] ;;can we do better than this?
    [:protocol           [:enum "HTTP/1.1" "HTTP/2" "h2c"]]
    [:cookies            [:map-of :string :any]]
-   [:remote-addr #_ "127.0.0.1" :string]
-   #_   [:uri                :string]
+   [:remote-addr        :string]
    [:session            Session]
-   [:params             [:map]] ;;do we need to see all four?
-   [:form-params        [:map]#_[:map-of :string :any]] ;;or just one per request?
-   [:multipart-params   [:map]#_[:map-of :string :any]] ;;how do we stipulate that?
-   [:query-params       [:map]#_[:map-of :string :any]] ;;seriously
-   [:json-params        [:map]]
+   [:params             [:map]]
+   [:form-params        [:map]]
+   [:multipart-params   [:map]] 
+   [:query-params       [:map]]
    ;; aren't all of the above -params keys merged due to triangulum?
    [:headers            [:map-of :string :string]   
     #_{"connection" "close",

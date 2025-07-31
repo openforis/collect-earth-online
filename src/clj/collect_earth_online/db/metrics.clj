@@ -108,7 +108,7 @@
   (let [validation (validate-dates params)]
     (if (:valid validation)
       (try
-        (->> rows
+        (->> (call-sql "get_plot_imagery_by_user" (val->int (:userId session)))
              (mapv (fn [row] (-> row
                                  (update-in [:collection_start] str)
                                  (update-in [:collection_time] str))))
