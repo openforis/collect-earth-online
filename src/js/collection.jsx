@@ -125,7 +125,7 @@ class Collection extends React.Component {
     ) {
       this.showProjectOverview();
     }
-    // initialize current imagery to project default
+    // nninitialize current imagery to project default
     if (
       this.state.mapConfig &&
         this.state.currentProject &&
@@ -1190,8 +1190,8 @@ class Collection extends React.Component {
 
           {/* Main Content (Image Analysis Pane) - Now Always Full Width */}
           <div className="d-flex flex-column flex-grow-1">
-            <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} />
-          </div>
+            <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} />            
+          </div>                   
 
           {/* Right Sidebar (SideBar) - Fixed Width, Always Anchored */}
           <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
@@ -1332,9 +1332,29 @@ class Collection extends React.Component {
 
 function ImageAnalysisPane({ imageryAttribution }) {
   return (
-    <div className="pl-0 pr-0 full-height" id="image-analysis-pane">
+    <div className="pl-0 pr-0 full-height" id="image-analysis-pane" style={{position: 'relative'}}>
       <div className="row" id="imagery-info" style={{ justifyContent: "center" }}>
         <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{imageryAttribution}</p>
+      </div>
+      <div className="map-controls"
+           style={{position: 'absolute',
+                   bottom: '2em',
+                   right: '.5em',
+                   zIndex: 1}}>
+        <div className="ExternalTools__geo-buttons d-flex justify-content-between mb-2" id="plot-nav">
+          <input
+            className="btn btn-outline-lightgreen btn-sm col-6 mr-1"
+            onClick={()=>{console.log('zoomMap');}}
+            type="button"
+            value="Re-Zoom"
+          />
+          <input
+            className="btn btn-outline-lightgreen btn-sm col-6"
+            onClick={()=>{console.log('showGeoDash');}}
+            type="button"
+            value="GeoDash"
+          />
+        </div>
       </div>
     </div>
   );
@@ -2189,7 +2209,7 @@ function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-      <Collection projectId={params.projectId} plotId={params.plotId || null} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
+o      <Collection projectId={params.projectId} plotId={params.plotId || null} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
     </NavigationBar>,
     document.getElementById("app")
   );
