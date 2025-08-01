@@ -223,7 +223,7 @@
    [:get  "/get-project-imagery"]              {:handler     (validate imagery/get-project-imagery)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-public-imagery"]               {:handler     (validate imagery/get-public-imagery)}
+   [:get  "/get-public-imagery"]               {:handler     imagery/get-public-imagery}
    [:post "/add-institution-imagery"]          {:handler     (validate imagery/add-institution-imagery)
                                                 :auth-type   :admin
                                                 :auth-action :block}
@@ -270,7 +270,7 @@
    [:get  "/metrics/get-imagery-counts"]      {:handler     (validate metrics/get-imagery-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-plot-imagery-counts"] {:handler (validate metrics/get-plot-imagery-counts)}
+   ;; [:get  "/metrics/get-plot-imagery-counts"] {:handler (validate metrics/get-plot-imagery-counts)}
    [:get  "/metrics/get-projects-with-gee"]   {:handler     (validate metrics/get-projects-with-gee)
                                                :auth-type   :metrics
                                                :auth-action :block}

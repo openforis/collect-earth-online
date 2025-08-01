@@ -10,6 +10,10 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 export default defineConfig({
   server: {
     origin: "http://127.0.0.1:8080",
+     cors: {
+      origin: 'http://local.collect.earth:8080',
+      credentials: true,
+    },
     hmr: {
       overlay: false,
       nodePolyfills,
