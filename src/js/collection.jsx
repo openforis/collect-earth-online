@@ -1336,25 +1336,44 @@ function ImageAnalysisPane({ imageryAttribution }) {
       <div className="row" id="imagery-info" style={{ justifyContent: "center" }}>
         <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{imageryAttribution}</p>
       </div>
+      
       <div className="map-controls"
            style={{position: 'absolute',
                    bottom: '2em',
                    right: '.5em',
                    zIndex: 1}}>
-        <div className="ExternalTools__geo-buttons d-flex justify-content-between mb-2" id="plot-nav">
+        <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '1rem' }}>
           <input
-            className="btn btn-outline-lightgreen btn-sm col-6 mr-1"
+            className="btn btn-outline-lightgreen btn-sm"
             onClick={()=>{console.log('zoomMap');}}
             type="button"
             value="Re-Zoom"
           />
           <input
-            className="btn btn-outline-lightgreen btn-sm col-6"
-            onClick={()=>{console.log('showGeoDash');}}
+            className={`btn btn-outline-red btn-sm`}//${state.showSamples ? "red" : "lightgreen"}
+            onClick={()=>{console.log('toggleShowSamples');}}
             type="button"
-            value="GeoDash"
+            value={`Toggle Samples`} //${state.showSamples ? "Hide" : "Show"}
           />
-        </div>
+          <input
+            className={`btn btn-outline-red btn-sm`} //${state.showBoundary ? "red" : "lightgreen"}
+            onClick={()=>{console.log ('toggleShowBoundary');}}
+            type="button"
+            value={`Toggle Boundary`} //${state.showBoundary ? "Hide" : "Show"}
+          />
+          <div className="d-flex flex-column">
+            <button className="btn btn-sm"
+                  style={{backgroundColor: 'white',
+                          borderRadius: '25%',
+                          margin: 'auto 0 auto auto'}}>
+            <SvgIcon icon="plus" size="0.9rem" /></button>
+          <button className="btn btn-sm"
+                  style={{backgroundColor: 'white',
+                          borderRadius: '25%',
+                          margin: 'auto 0 auto auto'}}>
+            <SvgIcon icon="minus" size="0.9rem" /></button>
+          </div>
+             </div>
       </div>
     </div>
   );
