@@ -1,0 +1,162 @@
+.collection-sidebar-container {
+  position: fixed;
+  margin-top: 60px;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 25vw;
+  display: flex;
+  flex-direction: column;
+  background-color: #e6efef;
+  border-left: 1px solid #c9d6d6;
+  z-index: 1000;
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sidebar-footer {
+  position: sticky;
+  bottom: 0;
+  background-color: #fff;
+  border-top: 1px solid #c9d6d6;
+  padding: 16px 0;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+  width: 100%;
+}
+
+.sidebar-navigation {
+  background-color: #fff;
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-family: sans-serif;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sidebar-title {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.sidebar-info-button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #444;
+}
+
+.sidebar-label {
+  font-size: 12px;
+  color: #888;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.sidebar-select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.sidebar-mode {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.mode-label {
+  font-weight: 500;
+}
+
+.sidebar-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.sidebar-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.sidebar-slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ccc;
+  border-radius: 20px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 0.2s;
+}
+
+.sidebar-slider:before {
+  position: absolute;
+  content: "";
+  height: 12px;
+  width: 12px;
+  top: 4px;
+  left: 4px;
+  background-color: #fff;
+  transition: 0.2s;
+  border-radius: 50%;
+}
+
+input:checked + .sidebar-slider {
+  background-color: #3D7F7A;
+}
+
+input:checked + .sidebar-slider:before {
+  transform: translateX(16px);
+}
+
+.sidebar-footer-buttons {
+  display: flex;
+  grid-template-columns: 1fr 1fr;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: #fff;
+}
+
+.sidebar-footer-buttons btn {
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.btn.outline {
+  background-color: transparent;
+  border: 1px solid #3D7F7A;
+  color: #3D7F7A;
+}
+
+.btn.filled {
+  background-color: #3D7F7A;
+  color: white;
+  border: none;
+}
