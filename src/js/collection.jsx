@@ -1195,7 +1195,7 @@ class Collection extends React.Component {
 
           <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
             <CollectionSidebar>
-              <NewPlotNavigation projectTitle="TESTEEEE"/>
+              <NewPlotNavigation projectTitle={this.state.currentProject.name}/>
             </CollectionSidebar>
           </div>
 
