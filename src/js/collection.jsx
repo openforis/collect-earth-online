@@ -581,7 +581,7 @@ class Collection extends React.Component {
   });
 
   zoomToPlot = () => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot", 36);
-
+  setMapZoom = (zoom) => mercator.setMapZoom (this.state.mapConfig, zoom)
   showProjectPlot = () => {
     const { currentPlot, mapConfig, currentProject, showBoundary} = this.state;
     mercator.disableSelection(mapConfig);
@@ -1190,7 +1190,14 @@ class Collection extends React.Component {
 
           {/* Main Content (Image Analysis Pane) - Now Always Full Width */}
           <div className="d-flex flex-column flex-grow-1">
-            <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} />            
+            <ImageAnalysisPane
+              zoom={this.setMapZoom}
+              zoomMapToPlot={this.zoomMapToPlot}
+              toggleShowBoundary={this.toggleShowBoundary}
+              toggleShowSamples={this.toggleShowSamples}
+              showBoundary={this.state.showBoundary}
+              showSamples={this.state.showSamples}
+              imageryAttribution={this.state.imageryAttribution} />            
           </div>                   
 
           {/* Right Sidebar (SideBar) - Fixed Width, Always Anchored */}
@@ -1330,7 +1337,7 @@ class Collection extends React.Component {
   }
 }
 
-function ImageAnalysisPane({ imageryAttribution }) {
+function ImageAnalysisPane({ imageryAttribution, showBoundary, showSamples, toggleShowSamples, zoomMapToPlot, toggleShowBoundary, zoom}) {
   return (
     <div className="pl-0 pr-0 full-height" id="image-analysis-pane" style={{position: 'relative'}}>
       <div className="row" id="imagery-info" style={{ justifyContent: "center" }}>
@@ -1345,32 +1352,34 @@ function ImageAnalysisPane({ imageryAttribution }) {
         <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '1rem' }}>
           <input
             className="btn btn-outline-lightgreen btn-sm"
-            onClick={()=>{console.log('zoomMap');}}
+            onClick={zoomMapToPlot}
             type="button"
             value="Re-Zoom"
           />
           <input
-            className={`btn btn-outline-red btn-sm`}//${state.showSamples ? "red" : "lightgreen"}
-            onClick={()=>{console.log('toggleShowSamples');}}
+            className={`btn btn-outline-${showSamples ? "red" : "lightgreen"} btn-sm`}
+            onClick={toggleShowSamples}
             type="button"
-            value={`Toggle Samples`} //${state.showSamples ? "Hide" : "Show"}
+            value={`${showSamples ? "Hide" : "Show"} Samples`}
           />
           <input
-            className={`btn btn-outline-red btn-sm`} //${state.showBoundary ? "red" : "lightgreen"}
-            onClick={()=>{console.log ('toggleShowBoundary');}}
+            className={`btn btn-outline-${showBoundary ? "red" : "lightgreen"} btn-sm`} //
+            onClick={toggleShowBoundary}
             type="button"
-            value={`Toggle Boundary`} //${state.showBoundary ? "Hide" : "Show"}
+            value={`${showBoundary ? "Hide" : "Show"} Boundary`}
           />
           <div className="d-flex flex-column">
             <button className="btn btn-sm"
                   style={{backgroundColor: 'white',
                           borderRadius: '25%',
-                          margin: 'auto 0 auto auto'}}>
-            <SvgIcon icon="plus" size="0.9rem" /></button>
+                          margin: 'auto 0 auto auto'}}
+                    onClick={()=>{zoom(1);}}>
+		  <SvgIcon icon="plus" size="0.9rem" /></button>
           <button className="btn btn-sm"
                   style={{backgroundColor: 'white',
                           borderRadius: '25%',
-                          margin: 'auto 0 auto auto'}}>
+                          margin: 'auto 0 auto auto'}}
+                  onClick={()=>{zoom(-1)}}>
             <SvgIcon icon="minus" size="0.9rem" /></button>
           </div>
              </div>
@@ -2228,7 +2237,7 @@ function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-o      <Collection projectId={params.projectId} plotId={params.plotId || null} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
+      <Collection projectId={params.projectId} plotId={params.plotId || null} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
     </NavigationBar>,
     document.getElementById("app")
   );
