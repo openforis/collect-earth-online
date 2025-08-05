@@ -26,6 +26,7 @@ import Modal from "./components/Modal";
 import RadioButton from "./components/RadioButton";
 import Select from "./components/Select";
 import SvgIcon from "./components/svg/SvgIcon";
+import { CollectionSidebar, NewPlotNavigation } from "./components/CollectionSidebar";
 
 import { getQueryString, isNumber, asPercentage, isArray } from "./utils/generalUtils";
 import {
@@ -1192,118 +1193,10 @@ class Collection extends React.Component {
             <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} />
           </div>
 
-          {/* Right Sidebar (SideBar) - Fixed Width, Always Anchored */}
           <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
-            <SideBar
-              answerMode={this.state.answerMode}
-              currentPlot={this.state.currentPlot}
-              inReviewMode={this.state.inReviewMode}
-              postValuesToDB={this.postValuesToDB}
-              projectId={this.props.projectId}
-              projectName={this.state.currentProject.name}
-              surveyQuestions={this.state.currentProject.surveyQuestions}
-              toggleQuitModal={this.toggleQuitModal}
-              userName={this.props.userName}
-              userRole={this.state.currentProject.userRole}
-              collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
-            >
-              <PlotNavigation
-                collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
-                currentPlot={this.state.currentPlot}
-                currentUserId={this.state.currentUserId}
-                hasAssignedPlots={
-                  this.state.currentProject.designSettings?.userAssignment?.userMethod !== "none"
-                }
-                inReviewMode={this.state.inReviewMode}
-                isProjectAdmin={this.state.currentProject.isProjectAdmin}
-                isQAQCEnabled={
-                  this.state.currentProject.designSettings?.qaqcAssignment?.qaqcMethod !== "none"
-                }
-                loadingPlots={this.state.plotList.length === 0}
-                navigationMode={this.state.navigationMode}
-                navToFirstPlot={this.navToFirstPlot}
-                navToNextPlot={this.navToNextPlot}
-                navToPlot={this.navToPlot}
-                navToPrevPlot={this.navToPrevPlot}
-                plotters={this.state.plotters}
-                plotUsers={(this.state.userPlotList || []).filter((p) => p.userId)}
-                projectId={this.props.projectId}
-                setCurrentUserId={this.setCurrentUserId}
-                setNavigationMode={this.setNavigationMode}
-                setReviewMode={this.setReviewMode}
-                setThreshold={this.setThreshold}
-                threshold={this.state.threshold}
-                projectType={this.state.currentProject?.type}
-              />
-              <ExternalTools
-                currentPlot={this.state.currentPlot}
-                currentProject={this.state.currentProject}
-                KMLFeatures={this.state.KMLFeatures}
-                showGeoDash={this.showGeoDash}
-                zoomMapToPlot={this.zoomToPlot}
-                toggleShowBoundary={this.toggleShowBoundary}
-                toggleShowSamples={this.toggleShowSamples}
-                projectType={this.state.currentProject?.type}
-                state={{ showBoundary: this.state.showBoundary, showSamples: this.state.showSamples }}
-                setUsedKML={this.setUsedKML}
-              />
-              {this.state.currentPlot.id &&
-               this.state.currentProject.projectOptions.showPlotInformation && (
-                 <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo} />
-               )}
-              {this.state.currentProject.type === "regular" && (
-                <ImageryOptions
-                  currentImageryId={this.state.currentImagery.id}
-                  currentPlot={this.state.currentPlot}
-                  currentProject={this.state.currentProject}
-                  currentProjectBoundary={this.state.currentProject.boundary}
-                  imageryList={this.state.imageryList}
-                  loadingImages={this.state.imageryList.length === 0}
-                  mapConfig={this.state.mapConfig}
-                  setBaseMapSource={this.setBaseMapSource}
-                  setImageryAttributes={this.setImageryAttributes}
-                  setImageryAttribution={this.setImageryAttribution}
-                />
-              )}
-              {this.state.currentPlot.id ? (
-                <SurveyCollection
-                  allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
-                  answerMode={this.state.answerMode}
-                  collectConfidence={this.state.currentProject.projectOptions.collectConfidence}
-                  confidence={this.state.currentPlot.confidence}
-                  confidenceComment={this.state.currentPlot.confidenceComment}
-                  flagged={this.state.currentPlot.flagged}
-                  flaggedReason={this.state.currentPlot.flaggedReason}
-                  getSelectedSampleIds={this.getSelectedSampleIds}
-                  mapConfig={this.state.mapConfig}
-                  resetPlotValues={this.resetPlotValues}
-                  sampleGeometries={this.state.currentProject.designSettings.sampleGeometries}
-                  selectedQuestionId={this.state.selectedQuestionId}
-                  selectedSampleId={
-                    Object.keys(this.state.userSamples).length === 1
-                      ? parseInt(Object.keys(this.state.userSamples)[0])
-                      : this.state.selectedSampleId
-                  }
-                  setAnswerMode={this.setAnswerMode}
-                  setConfidence={this.setConfidence}
-                  setConfidenceComment={this.setConfidenceComment}
-                  setCurrentValue={this.setCurrentValue}
-                  setFlaggedReason={this.setFlaggedReason}
-                  setSelectedQuestion={this.setSelectedQuestion}
-                  setUnansweredColor={this.setUnansweredColor}
-                  surveyQuestions={this.state.currentProject.surveyQuestions}
-                  surveyRules={this.state.currentProject.surveyRules}
-                  toggleFlagged={this.toggleFlagged}
-                  unansweredColor={this.state.unansweredColor}
-                  projectType={this.state.currentProject?.type}
-                />
-              ) : (
-                <fieldset className="mb-3 justify-content-center text-center">
-                  <CollapsibleTitle showGroup title="Survey Questions" />
-                  <p>Please go to a plot to see survey questions</p>
-                </fieldset>
-              )}
-            </SideBar>
+            <CollectionSidebar>
+              <NewPlotNavigation projectTitle={this.state.currentProject.name}/>
+            </CollectionSidebar>
           </div>
 
           {/* Modals and Popups */}
