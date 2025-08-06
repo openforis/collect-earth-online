@@ -332,7 +332,7 @@
                                       [:confidence {:optional true} Int]
                                       [:confidenceComment [:maybe :string]]
                                       [:collectionStart  Lng]
-                                      [:userSamples [:map]]
+                                      [:userSamples {:optional true }[:map]]
                                       [:projectType [:enum "simplified" "regular"]]
                                       [:imageryIds [:vector Int]]]]
                               [:session [:map
@@ -340,6 +340,7 @@
    :plots/flag-plot [:map
                      [:request-method [:= :post]]
                      [:uri [:= "/flag-plot"]]
+                     [:json-params [:map]]
                      [:params [:map
                                [:projectId Int]
                                [:plotId Int]
