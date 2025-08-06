@@ -1,5 +1,6 @@
 import React from 'react';
 import '../../css/sidebar.css';
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 export const CollectionSidebar = ({ children }) => {
   return (
@@ -14,11 +15,35 @@ export const CollectionSidebar = ({ children }) => {
   );
 };
 
-export const NewPlotNavigation = ({projectTitle}) => {
+export const NewPlotNavigation = ({project}) => {
   return (
     <div className="collection-sidebar-navigation">
       <div className="collection-sidebar-header">
-        <span className="collection-sidebar-title">{projectTitle}</span>
+        <span>
+          <span className="collection-sidebar-title">{project.name}</span>
+          <span className="collection-sidebar-subtitle"> ({project.numPlots} Plots)</span>
+        </span>
+        <button className="collection-sidebar-info-button">i</button>
+      </div>
+      <div className="collection-sidebar-plot-navigation">
+        <input className="flex flex-col-6"></input>
+        <button className="btn outline"><FaChevronLeft /></button>
+        <button className="btn outline"><FaChevronRight/></button>        
+        <label className="btn filled"
+               onClick={()=>{console.log("going to plot");}}
+        >Go To Plot
+        </label>
+      </div>
+
+    </div>
+  );
+};
+
+export const NewPlotNavigationMode = ({projectTitle}) => {  
+  return (
+    <div className="collection-sidebar-navigation">
+      <div className="collection-sidebar-header">
+        <span className="collection-sidebar-title">{projectTitle}</span>        
         <button className="collection-sidebar-info-button">i</button>
       </div>
 
@@ -36,7 +61,7 @@ export const NewPlotNavigation = ({projectTitle}) => {
           <span className="collection-sidebar-slider round"></span>
         </label>
         <span className="mode-label">Admin Review</span>
-      </div>
+      </div>      
     </div>
   );
 };

@@ -23,7 +23,7 @@
 
 .collection-sidebar-footer {
   position: sticky;
-  bottom: 0;
+  bottom: 4rem;
   background-color: #fff;
   border-top: 1px solid #c9d6d6;
   padding: 16px 0;
@@ -48,6 +48,11 @@
 
 .collection-sidebar-title {
   font-weight: bold;
+  font-size: 14px;
+}
+
+.collection-sidebar-subtitle {
+  font-style: italic;
   font-size: 14px;
 }
 
@@ -149,6 +154,40 @@ input:checked + .collection-sidebar-slider:before {
   text-align: center;
 }
 
+.collection-sidebar-plot-navigation {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    align-self: stretch;
+}
+
+.collection-sidebar-plot-navigation input {
+    display: flex;
+    padding: 9px 14px 9px 14px;
+    align-items: center;
+    flex: 1 0 0;
+    max-width: 45%;
+    max-weight: 40px;
+}
+
+.collection-sidebar-plot-navigation button {
+    display: flex;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.collection-sidebar-plot-navigation label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+    margin-bottom: 0;
+    border-radius: 4px;
+}
+
 .btn.outline {
   background-color: transparent;
   border: 1px solid #3D7F7A;
@@ -160,3 +199,4 @@ input:checked + .collection-sidebar-slider:before {
   color: white;
   border: none;
 }
+
