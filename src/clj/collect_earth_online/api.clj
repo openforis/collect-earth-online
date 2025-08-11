@@ -56,7 +56,7 @@
    [:useTemplatePlots {:optional true} Bool]
    [:useTemplateWidgets {:optional true} Bool]
    [:imageryId int?]
-   [:projectImageryList [:vector any?]]
+
    [:aoiFeatures [:vector any?]]
    [:aoiFileName [:maybe string?]]
    [:description string?]
@@ -65,11 +65,11 @@
    [:plotDistribution [:enum "random" "grid" "shp" "csv" "json" "simplified"]]
    [:plotShape [:maybe [:enum "square" "circle"]]]
    [:plotSize [:or string? Int]]
-   [:plotSpacing [:or string? Int]]
+   [:plotSpacing [:maybe Int]]
    [:shufflePlots [:maybe Bool]]
    [:sampleDistribution [:enum "random" "grid" "center" "shp" "csv" "json"]]
    [:samplesPerPlot [:or string? Int]]
-   [:sampleResolution [:or string? Int]]
+   [:sampleResolution [:maybe Int]]
    [:allowDrawnSamples {:optional true} Bool]
    [:surveyQuestions map?]
    [:surveyRules [:vector any?]]])
@@ -223,13 +223,13 @@
                                               [:projectId Int]
                                               [:clearSaved Bool]]]
                                             [:session [:map [:userId Int]]]]
-   :projects/check-plot-csv               [:map
-                                           [:uri [:= "/check-plot-csv"]]
-                                           [:params
-                                            [:map
-                                             [:projectId Int]
-                                             [:plotFileName [:maybe string?]]
-                                             [:plotFileBase64 [:maybe string?]]]]]
+   :projects/check-plot-file               [:map
+                                            [:params
+                                             [:map
+                                              [:projectId Int]
+                                              [:plotFileType [:maybe string?]]
+                                              [:plotFileName [:maybe string?]]
+                                              [:plotFileBase64 [:maybe string?]]]]]
    :projects/import-ce-project            [:map
                                            [:uri [:= "/import-ce-project"]]
                                            [:params
@@ -369,20 +369,18 @@
    [:acceptedTerms {:optional true} Bool]
    [:userRole      {:optional true} :string]])
 
-(def request-wrapper #_[host port]
+(def request-wrapper
   [:map
    {:closed true}
    [:ssl-client-cert    :any] ;;can we do better than this?
    [:protocol           [:enum "HTTP/1.1" "HTTP/2" "h2c"]]
    [:cookies            [:map-of :string :any]]
-   [:remote-addr #_ "127.0.0.1" :string]
-   #_   [:uri                :string]
+   [:remote-addr        :string]
    [:session            Session]
-   [:params             [:map]] ;;do we need to see all four?
-   [:form-params        [:map]#_[:map-of :string :any]] ;;or just one per request?
-   [:multipart-params   [:map]#_[:map-of :string :any]] ;;how do we stipulate that?
-   [:query-params       [:map]#_[:map-of :string :any]] ;;seriously
-   #_[:json-params        [:map]]
+   [:params             [:map]]
+   [:form-params        [:map]]
+   [:multipart-params   [:map]] 
+   [:query-params       [:map]]
    ;; aren't all of the above -params keys merged due to triangulum?
    [:headers            [:map-of :string :string]   
     #_{"connection" "close",

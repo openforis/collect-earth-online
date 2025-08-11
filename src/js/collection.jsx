@@ -472,7 +472,6 @@ class Collection extends React.Component {
   };
 
   hasChanged = () => !_.isEqual(this.state.userSamples, this.state.originalUserSamples);
-
   // https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
   unsavedWarning = (e) => {
     if (this.hasChanged()) {
@@ -1462,7 +1461,6 @@ class SideBar extends React.Component {
                 onClose={()=>{this.setState({modal: null});}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
-
         <ProjectTitle
           inReviewMode={this.props.inReviewMode}
           projectId={this.props.projectId}
