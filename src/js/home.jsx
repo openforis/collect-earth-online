@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom";
 import { LoadingModal, NavigationBar } from "./components/PageComponents";
 import { mercator } from "./utils/mercator";
@@ -6,67 +6,53 @@ import { sortAlphabetically } from "./utils/generalUtils";
 import SvgIcon from "./components/svg/SvgIcon";
 import Modal from "./components/Modal";
 
-class Home extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      projects: [],
-      imagery: [],
-      institutions: [],
-      showSidePanel: true,
-      userInstitutions: [],
-      modalMessage: "Loading institutions",
-      modal: null
-    };
-  }
+import { useAtom } from'jotai';
+import { stateAtom } from './utils/constants';
 
-  componentDidMount() {
-    Promise.all([this.getImagery(), this.getInstitutions(), this.getProjects()])
-      .catch((response) => {
-        console.log(response);
-        this.setState ({modal: {alert: {alertType: "Collection Alert", alertMessage: "Error retrieving the collection data. See console for details."}}});
-      })
-      .finally(() => this.setState({ modalMessage: null }));
-  }
 
-  getProjects = () =>
+
+function Home ({ userRole, userId}) {
+  const [appState, setAppState] = useAtom(stateAtom);
+  
+  function getProjects () {
     fetch("/get-home-projects")
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
-          this.setState({ projects: data });
+          setAppState({ projects: data });
           return Promise.resolve();
         } else {
           return Promise.reject("No projects found");
         }
-      });
+      });}
 
-  getImagery = () =>
+  function getImagery () {
     fetch("/get-public-imagery")
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
-          this.setState({ imagery: data });
+          console.log('setting imagery data', data);
+          setAppState({ imagery: data });
           return Promise.resolve();
         } else {
           return Promise.reject("No imagery found");
         }
-      });
-
-  getInstitutions = () =>
+      });}
+  
+  function getInstitutions () {
     fetch("/get-all-institutions")
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
           const userInstitutions =
-            this.props.userRole !== "admin"
-              ? data.filter((institution) => institution.isMember)
-              : [];
+                userRole !== "admin"
+                ? data.filter((institution) => institution.isMember)
+                : [];
           const institutions =
-            userInstitutions.length > 0
-              ? data.filter((institution) => !userInstitutions.includes(institution))
-              : data;
-          this.setState({
+                userInstitutions.length > 0
+                ? data.filter((institution) => !userInstitutions.includes(institution))
+                : data;
+          setAppState({
             institutions,
             userInstitutions,
           });
@@ -75,43 +61,156 @@ class Home extends React.Component {
           return Promise.reject("No institutions found");
         }
       });
+  }
+  function toggleSidebar (mapConfig) {
+    setAppState({ showSidePanel: !appState.showSidePanel }, () => mercator.resize(mapConfig));}
+  
+  useEffect(()=>{
+    Promise.all([getImagery(), getInstitutions(), getProjects()])
+      .catch((response) => {
+        console.log(response);
+        setAppState ({modal: {alert: {alertType: "Collection Alert", alertMessage: "Error retrieving the collection data. See console for details."}}});
+      })
+      .finally(() => setAppState({ modalMessage: null }));
+  }, []);
+  
+  return (
+    <div id="bcontainer">
+      <span id="mobilespan" />
+      <div className="Wrapper">
+        <div className="row tog-effect">
+          {/*<SideBar
+            institutions={appState.institutions}
+            projects={appState.projects}
+            showSidePanel={appState.showSidePanel}
+            userId={userId}
+            userInstitutions={appState.userInstitutions}
+            userRole={userRole}
+          />*/}
+          <MapPanel
+            imagery={appState.imagery}
+            projects={appState.projects}
+            showSidePanel={appState.showSidePanel}
+            toggleSidebar={toggleSidebar}
+          />
+        </div>
+      </div>     
+      {appState.modal?.alert &&
+       <Modal title={appState.modal.alert.alertType}
+              onClose={()=>{setAppState({modal: null});}}>
+         {appState.modal.alert.alertMessage}
+       </Modal>}
+      {appState.modalMessage && <LoadingModal message={appState.modalMessage} />}
+    </div>
+  );
+}
+/*
+  class Home extends React.Component {
+  constructor(props) {
+  super(props);
+  this.state = {
+  projects: [],
+  imagery: [],
+  institutions: [],
+  showSidePanel: true,
+  userInstitutions: [],
+  modalMessage: "Loading institutions",
+  modal: null
+  };
+  }
+
+  componentDidMount() {
+  Promise.all([this.getImagery(), this.getInstitutions(), this.getProjects()])
+  .catch((response) => {
+  console.log(response);
+  this.setState ({modal: {alert: {alertType: "Collection Alert", alertMessage: "Error retrieving the collection data. See console for details."}}});
+  })
+  .finally(() => this.setState({ modalMessage: null }));
+  }
+
+  getProjects = () =>
+  fetch("/get-home-projects")
+  .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+  .then((data) => {
+  if (data.length > 0) {
+  this.setState({ projects: data });
+  return Promise.resolve();
+  } else {
+  return Promise.reject("No projects found");
+  }
+  });
+
+  getImagery = () =>
+  fetch("/get-public-imagery")
+  .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+  .then((data) => {
+  if (data.length > 0) {
+  this.setState({ imagery: data });
+  return Promise.resolve();
+  } else {
+  return Promise.reject("No imagery found");
+  }
+  });
+
+  getInstitutions = () =>
+  fetch("/get-all-institutions")
+  .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+  .then((data) => {
+  if (data.length > 0) {
+  const userInstitutions =
+  this.props.userRole !== "admin"
+  ? data.filter((institution) => institution.isMember)
+  : [];
+  const institutions =
+  userInstitutions.length > 0
+  ? data.filter((institution) => !userInstitutions.includes(institution))
+  : data;
+  this.setState({
+  institutions,
+  userInstitutions,
+  });
+  return Promise.resolve();
+  } else {
+  return Promise.reject("No institutions found");
+  }
+  });
 
   toggleSidebar = (mapConfig) =>
-    this.setState({ showSidePanel: !this.state.showSidePanel }, () => mercator.resize(mapConfig));
+  this.setState({ showSidePanel: !this.state.showSidePanel }, () => mercator.resize(mapConfig));
 
   render() {
-    return (
-      <div id="bcontainer">
-        <span id="mobilespan" />
-        <div className="Wrapper">
-          <div className="row tog-effect">
-            <SideBar
-              institutions={this.state.institutions}
-              projects={this.state.projects}
-              showSidePanel={this.state.showSidePanel}
-              userId={this.props.userId}
-              userInstitutions={this.state.userInstitutions}
-              userRole={this.props.userRole}
-            />
-            <MapPanel
-              imagery={this.state.imagery}
-              projects={this.state.projects}
-              showSidePanel={this.state.showSidePanel}
-              toggleSidebar={this.toggleSidebar}
-            />
-          </div>
-        </div>
-        {this.state.modal?.alert &&
-         <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
-           {this.state.modal.alert.alertMessage}
-         </Modal>}
-        {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
-      </div>
-    );
+  return (
+  <div id="bcontainer">
+  <span id="mobilespan" />
+  <div className="Wrapper">
+  <div className="row tog-effect">
+  <SideBar
+  institutions={this.state.institutions}
+  projects={this.state.projects}
+  showSidePanel={this.state.showSidePanel}
+  userId={this.props.userId}
+  userInstitutions={this.state.userInstitutions}
+  userRole={this.props.userRole}
+  />
+  <MapPanel
+  imagery={this.state.imagery}
+  projects={this.state.projects}
+  showSidePanel={this.state.showSidePanel}
+  toggleSidebar={this.toggleSidebar}
+  />
+  </div>
+  </div>
+  {this.state.modal?.alert &&
+  <Modal title={this.state.modal.alert.alertType}
+  onClose={()=>{this.setState({modal: null});}}>
+  {this.state.modal.alert.alertMessage}
+  </Modal>}
+  {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
+  </div>
+  );
   }
-}
-
+  }
+*/
 class MapPanel extends React.Component {
   constructor(props) {
     super(props);
@@ -126,16 +225,16 @@ class MapPanel extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     if (
       this.state.mapConfig === null &&
-      this.props.imagery.length > 0 &&
-      prevProps.imagery.length === 0
+        this.props.imagery.length > 0 &&
+        prevProps.imagery.length === 0
     ) {
       this.initializeMap();
     }
 
     if (
       this.state.mapConfig &&
-      this.props.projects.length > 0 &&
-      (!prevState.mapConfig || prevProps.projects.length === 0)
+        this.props.projects.length > 0 &&
+        (!prevState.mapConfig || prevProps.projects.length === 0)
     ) {
       this.addProjectMarkers(this.state.mapConfig, this.props.projects, 40); // clusterDistance = 40, use null to disable clustering
     }
@@ -143,8 +242,8 @@ class MapPanel extends React.Component {
 
   initializeMap = () => {
     const homePageLayer =
-      this.props.imagery.find((imagery) => imagery.title === "Mapbox Satellite w/ Labels") ||
-      this.props.imagery[0];
+          this.props.imagery.find((imagery) => imagery.title === "Mapbox Satellite w/ Labels") ||
+          this.props.imagery[0];
     const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
     mercator.setVisibleLayer(mapConfig, homePageLayer.id);
     this.setState({ mapConfig });
@@ -253,12 +352,12 @@ class SideBar extends React.Component {
   toggleShowFilters = () => this.setState({ showFilters: !this.state.showFilters });
 
   toggleFilterInstitution = () =>
-    this.setState({ filterInstitution: !this.state.filterInstitution });
+  this.setState({ filterInstitution: !this.state.filterInstitution });
 
   toggleShowEmptyInstitutions = () =>
-    this.setState({
-      showEmptyInstitutions: !this.state.showEmptyInstitutions,
-    });
+  this.setState({
+    showEmptyInstitutions: !this.state.showEmptyInstitutions,
+  });
 
   toggleSortByNumber = () => this.setState({ sortByNumber: !this.state.sortByNumber });
 
@@ -356,30 +455,30 @@ function InstitutionList({
   const filterTextLower = filterText.toLocaleLowerCase();
 
   const filterString = (str) =>
-    filterTextLower.length === 0 ||
-    (useFirstLetter
-      ? str.toLocaleLowerCase().startsWith(filterTextLower)
-      : str.toLocaleLowerCase().includes(filterTextLower));
+        filterTextLower.length === 0 ||
+        (useFirstLetter
+         ? str.toLocaleLowerCase().startsWith(filterTextLower)
+         : str.toLocaleLowerCase().includes(filterTextLower));
 
   const filteredProjects = filterInstitution
-    ? projects
-    : projects.filter((proj) => filterString(proj.name));
+        ? projects
+        : projects.filter((proj) => filterString(proj.name));
 
   const filterHasProj = (inst) =>
-    inst.projects.length > 0 || showEmptyInstitutions || inst.isMember;
+        inst.projects.length > 0 || showEmptyInstitutions || inst.isMember;
 
   const filteredInstitutions = institutions
-    .map((inst) => ({
-      ...inst,
-      projects: filteredProjects.filter((proj) => inst.id === proj.institutionId),
-    }))
-    // Filtering by institution, contains search string and contains projects or user is member
-    .filter((inst) => !filterInstitution || (filterHasProj(inst) && filterString(inst.name)))
-    // Filtering by projects, and has projects to show
-    .filter((inst) => filterInstitution || inst.projects.length > 0)
-    .sort((a, b) =>
-      sortByNumber ? b.projects.length - a.projects.length : sortAlphabetically(a.name, b.name)
-    );
+        .map((inst) => ({
+          ...inst,
+          projects: filteredProjects.filter((proj) => inst.id === proj.institutionId),
+        }))
+  // Filtering by institution, contains search string and contains projects or user is member
+        .filter((inst) => !filterInstitution || (filterHasProj(inst) && filterString(inst.name)))
+  // Filtering by projects, and has projects to show
+        .filter((inst) => filterInstitution || inst.projects.length > 0)
+        .sort((a, b) =>
+          sortByNumber ? b.projects.length - a.projects.length : sortAlphabetically(a.name, b.name)
+        );
 
   const userInstStyle = institutionListType === "user" ? { maxHeight: "fit-content" } : {};
 
@@ -407,10 +506,10 @@ function InstitutionList({
   ) : (
     <h3 className="p-3">
       {filterInstitution
-        ? institutionListType === "user"
-          ? "No Affiliations Found..."
-          : "No Institutions Found..."
-        : "No Projects Found..."}
+       ? institutionListType === "user"
+       ? "No Affiliations Found..."
+       : "No Institutions Found..."
+       : "No Projects Found..."}
     </h3>
   );
 }
@@ -569,7 +668,7 @@ class Institution extends React.Component {
               margin: "0 .5rem 0 .25rem",
               transition: "transform 150ms linear 0s",
               transform:
-                (props.forceInstitutionExpand || this.state.showProjectList) && "rotate(90deg)",
+              (props.forceInstitutionExpand || this.state.showProjectList) && "rotate(90deg)",
             }}
           >
             {props.projects && props.projects.length > 0 && (

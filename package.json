@@ -100,7 +100,7 @@
     "react-markdown": "^8.0.7",
     "react-refresh": "^0.17.0",
     "shpjs": "^4.0.2",
-    "unenv": "^0.6.1"
+    "unenv": "^0.6.2"
   },
   "devDependencies": {
     "@babel/core": "^7.17.5",
@@ -129,7 +129,7 @@
     "tern": "^0.23.0",
     "vite": "^4.5.5",
     "vite-plugin-html": "^3.2.2",
-    "vite-plugin-node-polyfills": "^0.23.0",
+    "vite-plugin-node-polyfills": "^0.24.0",
     "vite-plugin-svgr": "^4.3.0",
     "vitest": "^2.0.3",
     "webpack": "^5.69.1",

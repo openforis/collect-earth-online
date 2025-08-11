@@ -25,7 +25,7 @@ export default defineConfig({
              ],
     rollupOptions: {
       external: ["react-dom/client",
-		"unenv/node/process"],
+		 "unenv/node/process"],
       preserveEntrySignatures: "exports-only",
       input: [
         "src/js/about.jsx",

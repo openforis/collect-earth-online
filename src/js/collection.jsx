@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
-// import { useAtom } from 'jotai';
+import { useAtom } from 'jotai';
 import { stateAtom } from './utils/constants';
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
@@ -41,11 +41,11 @@ import {
   safeLength,
   mapObjectArray,
   filterObject,
-v} from "./utils/sequence";
+} from "./utils/sequence";
 import { getProjectPreferences, setProjectPreferences } from "./utils/preferences";
 import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
-vv
+
 class Collection extends React.Component {
   constructor(props) {
     super(props);
@@ -94,7 +94,7 @@ class Collection extends React.Component {
     };
   }
 
-  componentDidMount() {
+  componentDidMount() {    
     window.name = "_ceo_collection";
     window.addEventListener("beforeunload", this.unsavedWarning, { capture: true });
 
@@ -1143,9 +1143,7 @@ class Collection extends React.Component {
 
   setUsedKML = (used) => this.setState({ usedKML: used });
 
-  render() {
-    // const [appState, setAppState] = useAtom(stateAtom);
-    // setAppState(this.state);
+  render() {    
     return (
       <div className={`container-fluid collection-page`}>
         <div className="row no-gutters">
@@ -1199,24 +1197,10 @@ class Collection extends React.Component {
           </div>
 
           <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
-            <CollectionSidebar>
+            <CollectionSidebar state={this.state}>
               <NewPlotNavigationMode
                 projectTitle={this.state.currentProject.name}/>
-              <NewPlotNavigation
-                state={this.state}
-                /* appState */
-                setState={this.setState}
-                /*
-                appState={this.state}
-                userSamples={this.state.userSamples}
-                originalUserSamples={this.state.originalUserSamples}
-                currentPlot={this.state.currentPlot}
-                inReviewMode={this.state.inReviewMode}
-                currentUserId={this.state.currentUserId}
-                navigationMode={this.state.navigationMode}
-                threshold={this.state.threshold}
-                project={this.state.currentProject}
-                *//>
+              <NewPlotNavigation/>
             </CollectionSidebar>
           </div>
 
