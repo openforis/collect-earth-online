@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
+
+// import { useAtom } from 'jotai';
+import { stateAtom } from './utils/constants';
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 import _ from "lodash";
@@ -38,11 +41,11 @@ import {
   safeLength,
   mapObjectArray,
   filterObject,
-} from "./utils/sequence";
+v} from "./utils/sequence";
 import { getProjectPreferences, setProjectPreferences } from "./utils/preferences";
 import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
-
+vv
 class Collection extends React.Component {
   constructor(props) {
     super(props);
@@ -1141,6 +1144,8 @@ class Collection extends React.Component {
   setUsedKML = (used) => this.setState({ usedKML: used });
 
   render() {
+    // const [appState, setAppState] = useAtom(stateAtom);
+    // setAppState(this.state);
     return (
       <div className={`container-fluid collection-page`}>
         <div className="row no-gutters">
@@ -1199,6 +1204,7 @@ class Collection extends React.Component {
                 projectTitle={this.state.currentProject.name}/>
               <NewPlotNavigation
                 state={this.state}
+                /* appState */
                 setState={this.setState}
                 /*
                 appState={this.state}

@@ -24,12 +24,14 @@ export default defineConfig({
       nodePolyfills()
              ],
     rollupOptions: {
-      external: ["react-dom/client"],
+      external: ["react-dom/client",
+		"unenv/node/process"],
       preserveEntrySignatures: "exports-only",
       input: [
         "src/js/about.jsx",
         "src/js/account.jsx",
         "src/js/collection.jsx",
+	"src/js/utils/constants.jsx",
         "src/js/createInstitution.jsx",
         "src/js/geoDash.jsx",
         "src/js/geoDashHelp.jsx",

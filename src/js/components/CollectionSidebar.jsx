@@ -17,7 +17,7 @@ export const CollectionSidebar = ({ children }) => {
     </div>
   );
 };
-
+// appState, 
 export const NewPlotNavigation = ({state, setState/*project, userSamples, originalUserSamples, currentPlot, currentUserId, navigationMode, inReviewMode, threshold*/}) => {
   //currentplot, userSamples, originalUserSamples, getPlotData, adminReview, projectId
   const [navPlot, setNavPlot] = useState('');

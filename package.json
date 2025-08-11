@@ -99,7 +99,8 @@
     "react-icons": "^5.5.0",
     "react-markdown": "^8.0.7",
     "react-refresh": "^0.17.0",
-    "shpjs": "^4.0.2"
+    "shpjs": "^4.0.2",
+    "unenv": "^0.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.17.5",
