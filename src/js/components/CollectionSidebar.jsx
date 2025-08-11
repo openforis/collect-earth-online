@@ -35,6 +35,7 @@ export const NewPlotNavigation = ({state, setState/*project, userSamples, origin
     */
   function getPlotData (visibleId, direction, forcedNavMode = null, reviewMode = null) {
     console.log('getting plot data', state);
+    setState ({modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}});
 /*
     this.processModal("Getting plot", () =>
       fetch(
@@ -82,25 +83,21 @@ export const NewPlotNavigation = ({state, setState/*project, userSamples, origin
 
   
   function hasChanged () {
-    console.log('has userSamples changed?', state.userSamples, state.originalUserSamples);
     return !_.isEqual(state.userSamples, state.originalUserSamples);}
   
   function confirmUnsaved () {
-    console.log('confirming unsaved');
-    !hasChanged() ||
+    return !hasChanged() ||
       confirm(
         "You have unsaved changes. Any unsaved responses will be lost. Are you sure you want to continue?"
       );}
 
   function navToPlot (direction) {
-    console.log('nav to plot', state.currentPlot.visibleId, direction);
     if (confirmUnsaved()) {
       getPlotData(state.currentPlot.visibleId, direction);
     }
   };
   
   function navToPlotId (newPlot, adminReview = null) {
-    console.log('nav to plot id', newPlot);
     if (!isNaN(newPlot)) {
       if (confirmUnsaved()) {
         return adminReview ? getPlotData(newPlot, "id", 'analyzed', true)
@@ -115,8 +112,8 @@ export const NewPlotNavigation = ({state, setState/*project, userSamples, origin
     <div className="collection-sidebar-navigation">
       <div className="collection-sidebar-header">
         <span>
-          <span className="collection-sidebar-title">{project.name}</span>
-          <span className="collection-sidebar-subtitle"> ({project.numPlots} Plots)</span>
+          <span className="collection-sidebar-title">{state.currentProject.name}</span>
+          <span className="collection-sidebar-subtitle"> ({state.currentProject.numPlots} Plots)</span>
         </span>
         <button className="collection-sidebar-info-button">i</button>
       </div>

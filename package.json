@@ -82,6 +82,7 @@
     "airbnb-prop-types": "^2.16.0",
     "highcharts": "^9.1.0",
     "highcharts-react-official": "^3.0.0",
+    "jotai": "^2.13.1",
     "lodash": "^4.17.20",
     "ogr2ogr": "^1.5.0",
     "ol": "^6.4.3",
