@@ -1195,11 +1195,22 @@ class Collection extends React.Component {
 
           <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
             <CollectionSidebar>
-              {console.log(this.state)}
               <NewPlotNavigationMode
                 projectTitle={this.state.currentProject.name}/>
               <NewPlotNavigation
-                project={this.state.currentProject}/>
+                state={this.state}
+                setState={this.setState}
+                /*
+                appState={this.state}
+                userSamples={this.state.userSamples}
+                originalUserSamples={this.state.originalUserSamples}
+                currentPlot={this.state.currentPlot}
+                inReviewMode={this.state.inReviewMode}
+                currentUserId={this.state.currentUserId}
+                navigationMode={this.state.navigationMode}
+                threshold={this.state.threshold}
+                project={this.state.currentProject}
+                *//>
             </CollectionSidebar>
           </div>
 
