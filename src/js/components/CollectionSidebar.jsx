@@ -6,11 +6,12 @@ import _ from "lodash";
 import { useAtom } from 'jotai';
 
 import { stateAtom } from '../utils/constants';
+import Modal from "./Modal";
+import { LoadingModal } from "./PageComponents";
 
 
-export function CollectionSidebar ({ children, state }) {
-  const [appState, setAppState] = useAtom(stateAtom);
-  setAppState(state);
+export function CollectionSidebar ({ children }) {
+  const [appState, setAppState] = useAtom(stateAtom);  
   return (
     <div className="collection-sidebar-container">
       <div className="collection-sidebar-content">
@@ -19,6 +20,12 @@ export function CollectionSidebar ({ children, state }) {
       <div className="collection-sidebar-footer">
         <SidebarFooter/>
       </div>
+      {appState.modal?.alert &&
+       <Modal title={appState.modal.alert.alertType}
+              onClose={()=>{setAppState({ ... appState, modal: null});}}>
+         {appState.modal.alert.alertMessage}
+       </Modal>}
+      {appState.modalMessage && <LoadingModal message={appState.modalMessage} />}
     </div>
   );
 };
@@ -32,19 +39,18 @@ export function NewPlotNavigation  ()  {
   function processModal (message, callBack){
     new Promise(() =>
       Promise.resolve(
-        setAppState({ modalMessage: message }, () =>
-          callBack().finally(() => setAppState({ modalMessage: null }))
+        setAppState(prev => ({ ... prev, modalMessage: message }), () =>
+          callBack().finally(() => setAppState(prev => ({... prev,  modalMessage: null })))
         )
       )
     );}
 
   function getPlotData (visibleId, direction, forcedNavMode = null, reviewMode = null) {
 
-    setAppState ({...appState, modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}});
+    setAppState (prev => ({... prev , modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}}));
 
     console.log(appState);
 
-    console.log('getting plot data', _.isEqual(appState, {...appState, modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}}));
     /*
       this.processModal("Getting plot", () =>
       fetch(
@@ -100,8 +106,9 @@ export function NewPlotNavigation  ()  {
         "You have unsaved changes. Any unsaved responses will be lost. Are you sure you want to continue?"
       );}
 
-  function navToPlot (direction) {
+  function navToPlot (direction) {    
     if (confirmUnsaved()) {
+      console.log(appState);
       getPlotData(appState.currentPlot.visibleId, direction);
     }
   };
@@ -113,7 +120,7 @@ export function NewPlotNavigation  ()  {
           : getPlotData(newPlot, "id");
       }
     } else {
-      setAppState ({modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}});
+      setAppState (prev => ({ ... prev, modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}}));
     }
   };
   

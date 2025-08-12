@@ -6,27 +6,27 @@ import { sortAlphabetically } from "./utils/generalUtils";
 import SvgIcon from "./components/svg/SvgIcon";
 import Modal from "./components/Modal";
 
-import { useAtom } from'jotai';
+import { useAtom, useAtomValue } from'jotai';
 import { stateAtom } from './utils/constants';
 
 function SideBar ({ userId, userRole, showSidePanel, institutions, userInstitutions, projects}) {
   const [appState, setAppState] = useAtom(stateAtom);
   
-  function toggleShowFilters () {setAppState({ ... appState, showFilters: !appState.showFilters });}
+  function toggleShowFilters () {setAppState(prev => ({ ... prev, showFilters: !prev.showFilters }));}
 
   function toggleFilterInstitution () {
-  setAppState({ ... appState, filterInstitution: !appState.filterInstitution });}
+  setAppState(prev => ({ ... prev, filterInstitution: !prev.filterInstitution }));}
 
   function toggleShowEmptyInstitutions (){
-  setAppState({ ... appState,
-    showEmptyInstitutions: !appState.showEmptyInstitutions,
-  });}
+  setAppState(prev => ({ ... prev,
+    showEmptyInstitutions: !prev.showEmptyInstitutions,
+  }));}
 
-  function toggleSortByNumber () {setAppState({ ... appState, sortByNumber: !appState.sortByNumber });}
+  function toggleSortByNumber () {setAppState(prev=> ({ ... prev, sortByNumber: !appState.sortByNumber }));}
 
-  function toggleUseFirst () {setAppState({ ... appState, useFirstLetter: !appState.useFirstLetter });}
+  function toggleUseFirst () {setAppState(prev => ({ ... prev, useFirstLetter: !appState.useFirstLetter }));}
 
-  function updateFilterText (newText) { setAppState({ ... appState, filterText: newText });}
+  function updateFilterText (newText) {setAppState(prev => ({ ... prev, filterText: newText }));}
 
   return (
     // showSidePanel
@@ -106,15 +106,20 @@ function SideBar ({ userId, userRole, showSidePanel, institutions, userInstituti
     );
 }
 
-function Home ({ userRole, userId}) {
+function Home ({ userRole, userId }) {
   const [appState, setAppState] = useAtom(stateAtom);
+  
+  useEffect(()=>{
+    console.log('app state updated', appState);
+  }, [useAtomValue(stateAtom)]);
   
   function getProjects () {
     fetch("/get-home-projects")
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
-          setAppState({ ... appState,  projects: data });
+          console.log('got projects data', data);
+          setAppState(prev => ({ ... prev,  projects: data }));
           return Promise.resolve();
         } else {
           return Promise.reject("No projects found");
@@ -127,10 +132,8 @@ function Home ({ userRole, userId}) {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         console.log('got imagery', data);
-        if (data.length > 0) {
-          console.log('setting imagery data', data);
-          setAppState({ ... appState, imagery: data });
-          console.log('set imagery data', appState.imagery);
+        if (data.length > 0) {          
+          setAppState(prev => ({ ... prev, imagery: data }));          
           return Promise.resolve();
         } else {
           return Promise.reject("No imagery found");
@@ -142,6 +145,7 @@ function Home ({ userRole, userId}) {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
+          console.log('got inst data', data);
           const userInstitutions =
                 userRole !== "admin"
                 ? data.filter((institution) => institution.isMember)
@@ -150,10 +154,10 @@ function Home ({ userRole, userId}) {
                 userInstitutions.length > 0
                 ? data.filter((institution) => !userInstitutions.includes(institution))
                 : data;
-          setAppState({ ...appState,
+          setAppState(prev => ({ ...prev,
             institutions,
             userInstitutions,
-          });
+          }));
           return Promise.resolve();
         } else {
           return Promise.reject("No institutions found");
@@ -161,16 +165,16 @@ function Home ({ userRole, userId}) {
       });
   }
   function toggleSidebar (mapConfig) {
-    setAppState({ ... appState, showSidePanel: !appState.showSidePanel }, () => mercator.resize(mapConfig));}
+    setAppState(prev => ({ ... prev, showSidePanel: !prev.showSidePanel }), () => mercator.resize(mapConfig));}
   
   useEffect(()=>{
     console.log("does useEffect fire");
     Promise.all([getImagery(), getInstitutions(), getProjects()])
       .catch((response) => {
         console.log(response);
-        setAppState ({ ... appState, modal: {alert: {alertType: "Collection Alert", alertMessage: "Error retrieving the collection data. See console for details."}}});
+        setAppState (prev => ({ ... prev, modal: {alert: {alertType: "Collection Alert", alertMessage: "Error retrieving the collection data. See console for details."}}}));
       })
-      .finally(() => setAppState({... appState, modalMessage: null }));
+      .finally(() => setAppState(prev => ({... prev, modalMessage: null })));
   }, []);
   
   return (

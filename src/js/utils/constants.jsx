@@ -11,6 +11,7 @@ export const stateAtom = atom({
   currentPlot: {},
   currentUserId: -1,
   // attribution for showing in the map
+  filterText: "",
   imagery: [],
   projects: [],
   institutions: [],
