@@ -122,12 +122,15 @@ function Home ({ userRole, userId}) {
       });}
 
   function getImagery () {
+    console.log('getting imagery');
     fetch("/get-public-imagery")
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
+        console.log('got imagery', data);
         if (data.length > 0) {
           console.log('setting imagery data', data);
           setAppState({ ... appState, imagery: data });
+          console.log('set imagery data', appState.imagery);
           return Promise.resolve();
         } else {
           return Promise.reject("No imagery found");
@@ -161,6 +164,7 @@ function Home ({ userRole, userId}) {
     setAppState({ ... appState, showSidePanel: !appState.showSidePanel }, () => mercator.resize(mapConfig));}
   
   useEffect(()=>{
+    console.log("does useEffect fire");
     Promise.all([getImagery(), getInstitutions(), getProjects()])
       .catch((response) => {
         console.log(response);

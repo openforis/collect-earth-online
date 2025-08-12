@@ -2,6 +2,7 @@ import { atom } from 'jotai';
 
 /*
   TODO: Perhaps we can enforce this to a schema as well?
+  TODO: Triage some of these keys for redundancy
 */
 export const stateAtom = atom({
   collectionStart: 0,
