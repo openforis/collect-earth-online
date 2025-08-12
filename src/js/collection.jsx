@@ -26,7 +26,7 @@ import Modal from "./components/Modal";
 import RadioButton from "./components/RadioButton";
 import Select from "./components/Select";
 import SvgIcon from "./components/svg/SvgIcon";
-import { CollectionSidebar, NewPlotNavigation } from "./components/CollectionSidebar";
+import { CollectionSidebar } from "./components/CollectionSidebar";
 
 import { getQueryString, isNumber, asPercentage, isArray } from "./utils/generalUtils";
 import {
@@ -1194,9 +1194,12 @@ class Collection extends React.Component {
           </div>
 
           <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
-            <CollectionSidebar>
-              <NewPlotNavigation projectTitle={this.state.currentProject.name}/>
-            </CollectionSidebar>
+            <CollectionSidebar showGeoDash={this.showGeoDash}
+                               currentPlot={this.state.currentPlot}
+                               currentProject={this.state.currentProject}
+                               KMLFeatures={this.state.KMLFeatures}
+                               setUsedKML={this.setUsedKML}
+             />
           </div>
 
           {/* Modals and Popups */}
