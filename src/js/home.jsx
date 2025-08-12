@@ -9,7 +9,102 @@ import Modal from "./components/Modal";
 import { useAtom } from'jotai';
 import { stateAtom } from './utils/constants';
 
+function SideBar ({ userId, userRole, showSidePanel, institutions, userInstitutions, projects}) {
+  const [appState, setAppState] = useAtom(stateAtom);
+  
+  function toggleShowFilters () {setAppState({ ... appState, showFilters: !appState.showFilters });}
 
+  function toggleFilterInstitution () {
+  setAppState({ ... appState, filterInstitution: !appState.filterInstitution });}
+
+  function toggleShowEmptyInstitutions (){
+  setAppState({ ... appState,
+    showEmptyInstitutions: !appState.showEmptyInstitutions,
+  });}
+
+  function toggleSortByNumber () {setAppState({ ... appState, sortByNumber: !appState.sortByNumber });}
+
+  function toggleUseFirst () {setAppState({ ... appState, useFirstLetter: !appState.useFirstLetter });}
+
+  function updateFilterText (newText) { setAppState({ ... appState, filterText: newText });}
+
+  return (
+    // showSidePanel
+    true
+      ? (
+      <div
+        className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column"
+          id="lPanel"
+        >
+          {(userRole === "admin" || userId === -1) && (
+            <div className="bg-darkgreen">
+              <h1 className="tree_label" id="panelTitle">
+                Institutions
+              </h1>
+            </div>
+          )}
+          {userId > 0 && <CreateInstitutionButton />}
+          <InstitutionFilter
+            filterInstitution={appState.filterInstitution}
+            filterText={appState.filterText}
+            showEmptyInstitutions={appState.showEmptyInstitutions}
+            showFilters={appState.showFilters}
+            sortByNumber={appState.sortByNumber}
+            toggleFilterInstitution={toggleFilterInstitution}
+            toggleShowEmptyInstitutions={toggleShowEmptyInstitutions}
+            toggleShowFilters={toggleShowFilters}
+            toggleSortByNumber={toggleSortByNumber}
+            toggleUseFirst={toggleUseFirst}
+            updateFilterText={updateFilterText}
+            useFirstLetter={appState.useFirstLetter}
+          />
+          {userId > 0 && userRole !== "admin" && (
+            <>
+              <div className="bg-darkgreen">
+                <h2 className="tree_label" id="panelTitle">
+                  Your Affiliations
+                </h2>
+              </div>
+              <InstitutionList
+                filterInstitution={appState.filterInstitution}
+                filterText={appState.filterText}
+                institutionListType="user"
+                institutions={userInstitutions}
+                projects={projects}
+                showEmptyInstitutions={appState.showEmptyInstitutions}
+                sortByNumber={appState.sortByNumber}
+                useFirstLetter={appState.useFirstLetter}
+                userId={userId}
+              />
+              <div className="bg-darkgreen">
+                <h2 className="tree_label" id="panelTitle">
+                  Other Institutions
+                </h2>
+              </div>
+            </>
+          )}
+          {institutions.length > 0 && projects.length > 0 ? (
+            <InstitutionList
+              filterInstitution={appState.filterInstitution}
+              filterText={appState.filterText}
+              institutionListType="institutions"
+              institutions={institutions}
+              projects={projects}
+              showEmptyInstitutions={appState.showEmptyInstitutions}
+              sortByNumber={appState.sortByNumber}
+              useFirstLetter={appState.useFirstLetter}
+              userId={userId}
+            />
+          ) : userInstitutions.length > 0 ? (
+            <h3 className="p-3">No unaffiliated institutions found.</h3>
+          ) : (
+            <h3 className="p-3">Loading data...</h3>
+          )}
+        </div>
+    )
+      : <div></div>
+    );
+}
 
 function Home ({ userRole, userId}) {
   const [appState, setAppState] = useAtom(stateAtom);
@@ -19,7 +114,7 @@ function Home ({ userRole, userId}) {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
-          setAppState({ projects: data });
+          setAppState({ ... appState,  projects: data });
           return Promise.resolve();
         } else {
           return Promise.reject("No projects found");
@@ -32,7 +127,7 @@ function Home ({ userRole, userId}) {
       .then((data) => {
         if (data.length > 0) {
           console.log('setting imagery data', data);
-          setAppState({ imagery: data });
+          setAppState({ ... appState, imagery: data });
           return Promise.resolve();
         } else {
           return Promise.reject("No imagery found");
@@ -52,7 +147,7 @@ function Home ({ userRole, userId}) {
                 userInstitutions.length > 0
                 ? data.filter((institution) => !userInstitutions.includes(institution))
                 : data;
-          setAppState({
+          setAppState({ ...appState,
             institutions,
             userInstitutions,
           });
@@ -63,15 +158,15 @@ function Home ({ userRole, userId}) {
       });
   }
   function toggleSidebar (mapConfig) {
-    setAppState({ showSidePanel: !appState.showSidePanel }, () => mercator.resize(mapConfig));}
+    setAppState({ ... appState, showSidePanel: !appState.showSidePanel }, () => mercator.resize(mapConfig));}
   
   useEffect(()=>{
     Promise.all([getImagery(), getInstitutions(), getProjects()])
       .catch((response) => {
         console.log(response);
-        setAppState ({modal: {alert: {alertType: "Collection Alert", alertMessage: "Error retrieving the collection data. See console for details."}}});
+        setAppState ({ ... appState, modal: {alert: {alertType: "Collection Alert", alertMessage: "Error retrieving the collection data. See console for details."}}});
       })
-      .finally(() => setAppState({ modalMessage: null }));
+      .finally(() => setAppState({... appState, modalMessage: null }));
   }, []);
   
   return (
@@ -79,14 +174,14 @@ function Home ({ userRole, userId}) {
       <span id="mobilespan" />
       <div className="Wrapper">
         <div className="row tog-effect">
-          {/*<SideBar
+          <SideBar
             institutions={appState.institutions}
             projects={appState.projects}
             showSidePanel={appState.showSidePanel}
             userId={userId}
             userInstitutions={appState.userInstitutions}
             userRole={userRole}
-          />*/}
+          />
           <MapPanel
             imagery={appState.imagery}
             projects={appState.projects}
@@ -97,120 +192,14 @@ function Home ({ userRole, userId}) {
       </div>     
       {appState.modal?.alert &&
        <Modal title={appState.modal.alert.alertType}
-              onClose={()=>{setAppState({modal: null});}}>
+              onClose={()=>{setAppState({ ... appState, modal: null});}}>
          {appState.modal.alert.alertMessage}
        </Modal>}
       {appState.modalMessage && <LoadingModal message={appState.modalMessage} />}
     </div>
   );
 }
-/*
-  class Home extends React.Component {
-  constructor(props) {
-  super(props);
-  this.state = {
-  projects: [],
-  imagery: [],
-  institutions: [],
-  showSidePanel: true,
-  userInstitutions: [],
-  modalMessage: "Loading institutions",
-  modal: null
-  };
-  }
 
-  componentDidMount() {
-  Promise.all([this.getImagery(), this.getInstitutions(), this.getProjects()])
-  .catch((response) => {
-  console.log(response);
-  this.setState ({modal: {alert: {alertType: "Collection Alert", alertMessage: "Error retrieving the collection data. See console for details."}}});
-  })
-  .finally(() => this.setState({ modalMessage: null }));
-  }
-
-  getProjects = () =>
-  fetch("/get-home-projects")
-  .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-  .then((data) => {
-  if (data.length > 0) {
-  this.setState({ projects: data });
-  return Promise.resolve();
-  } else {
-  return Promise.reject("No projects found");
-  }
-  });
-
-  getImagery = () =>
-  fetch("/get-public-imagery")
-  .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-  .then((data) => {
-  if (data.length > 0) {
-  this.setState({ imagery: data });
-  return Promise.resolve();
-  } else {
-  return Promise.reject("No imagery found");
-  }
-  });
-
-  getInstitutions = () =>
-  fetch("/get-all-institutions")
-  .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-  .then((data) => {
-  if (data.length > 0) {
-  const userInstitutions =
-  this.props.userRole !== "admin"
-  ? data.filter((institution) => institution.isMember)
-  : [];
-  const institutions =
-  userInstitutions.length > 0
-  ? data.filter((institution) => !userInstitutions.includes(institution))
-  : data;
-  this.setState({
-  institutions,
-  userInstitutions,
-  });
-  return Promise.resolve();
-  } else {
-  return Promise.reject("No institutions found");
-  }
-  });
-
-  toggleSidebar = (mapConfig) =>
-  this.setState({ showSidePanel: !this.state.showSidePanel }, () => mercator.resize(mapConfig));
-
-  render() {
-  return (
-  <div id="bcontainer">
-  <span id="mobilespan" />
-  <div className="Wrapper">
-  <div className="row tog-effect">
-  <SideBar
-  institutions={this.state.institutions}
-  projects={this.state.projects}
-  showSidePanel={this.state.showSidePanel}
-  userId={this.props.userId}
-  userInstitutions={this.state.userInstitutions}
-  userRole={this.props.userRole}
-  />
-  <MapPanel
-  imagery={this.state.imagery}
-  projects={this.state.projects}
-  showSidePanel={this.state.showSidePanel}
-  toggleSidebar={this.toggleSidebar}
-  />
-  </div>
-  </div>
-  {this.state.modal?.alert &&
-  <Modal title={this.state.modal.alert.alertType}
-  onClose={()=>{this.setState({modal: null});}}>
-  {this.state.modal.alert.alertMessage}
-  </Modal>}
-  {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
-  </div>
-  );
-  }
-  }
-*/
 class MapPanel extends React.Component {
   constructor(props) {
     super(props);
@@ -336,111 +325,6 @@ class MapPanel extends React.Component {
   }
 }
 
-class SideBar extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      filterText: "",
-      filterInstitution: true,
-      useFirstLetter: false,
-      sortByNumber: true,
-      showEmptyInstitutions: false,
-      showFilters: false,
-    };
-  }
-
-  toggleShowFilters = () => this.setState({ showFilters: !this.state.showFilters });
-
-  toggleFilterInstitution = () =>
-  this.setState({ filterInstitution: !this.state.filterInstitution });
-
-  toggleShowEmptyInstitutions = () =>
-  this.setState({
-    showEmptyInstitutions: !this.state.showEmptyInstitutions,
-  });
-
-  toggleSortByNumber = () => this.setState({ sortByNumber: !this.state.sortByNumber });
-
-  toggleUseFirst = () => this.setState({ useFirstLetter: !this.state.useFirstLetter });
-
-  updateFilterText = (newText) => this.setState({ filterText: newText });
-
-  render() {
-    return (
-      this.props.showSidePanel && (
-        <div
-          className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column"
-          id="lPanel"
-        >
-          {(this.props.userRole === "admin" || this.props.userId === -1) && (
-            <div className="bg-darkgreen">
-              <h1 className="tree_label" id="panelTitle">
-                Institutions
-              </h1>
-            </div>
-          )}
-          {this.props.userId > 0 && <CreateInstitutionButton />}
-          <InstitutionFilter
-            filterInstitution={this.state.filterInstitution}
-            filterText={this.state.filterText}
-            showEmptyInstitutions={this.state.showEmptyInstitutions}
-            showFilters={this.state.showFilters}
-            sortByNumber={this.state.sortByNumber}
-            toggleFilterInstitution={this.toggleFilterInstitution}
-            toggleShowEmptyInstitutions={this.toggleShowEmptyInstitutions}
-            toggleShowFilters={this.toggleShowFilters}
-            toggleSortByNumber={this.toggleSortByNumber}
-            toggleUseFirst={this.toggleUseFirst}
-            updateFilterText={this.updateFilterText}
-            useFirstLetter={this.state.useFirstLetter}
-          />
-          {this.props.userId > 0 && this.props.userRole !== "admin" && (
-            <>
-              <div className="bg-darkgreen">
-                <h2 className="tree_label" id="panelTitle">
-                  Your Affiliations
-                </h2>
-              </div>
-              <InstitutionList
-                filterInstitution={this.state.filterInstitution}
-                filterText={this.state.filterText}
-                institutionListType="user"
-                institutions={this.props.userInstitutions}
-                projects={this.props.projects}
-                showEmptyInstitutions={this.state.showEmptyInstitutions}
-                sortByNumber={this.state.sortByNumber}
-                useFirstLetter={this.state.useFirstLetter}
-                userId={this.props.userId}
-              />
-              <div className="bg-darkgreen">
-                <h2 className="tree_label" id="panelTitle">
-                  Other Institutions
-                </h2>
-              </div>
-            </>
-          )}
-          {this.props.institutions.length > 0 && this.props.projects.length > 0 ? (
-            <InstitutionList
-              filterInstitution={this.state.filterInstitution}
-              filterText={this.state.filterText}
-              institutionListType="institutions"
-              institutions={this.props.institutions}
-              projects={this.props.projects}
-              showEmptyInstitutions={this.state.showEmptyInstitutions}
-              sortByNumber={this.state.sortByNumber}
-              useFirstLetter={this.state.useFirstLetter}
-              userId={this.props.userId}
-            />
-          ) : this.props.userInstitutions.length > 0 ? (
-            <h3 className="p-3">No unaffiliated institutions found.</h3>
-          ) : (
-            <h3 className="p-3">Loading data...</h3>
-          )}
-        </div>
-      )
-    );
-  }
-}
 
 function InstitutionList({
   institutions,
