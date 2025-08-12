@@ -1067,7 +1067,7 @@ class Collection extends React.Component {
       );
       
       updatedImageryList.forEach((layer, index) => {
-        const zindex = maxZIndex - index
+        const zindex = maxZIndex - index;
         mercator.setLayerVisibilityByLayerId(this.state.mapConfig, layer.id, layer.visible, zindex);
       });
       
@@ -1197,10 +1197,12 @@ class Collection extends React.Component {
           </div>
 
           <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
-            <CollectionSidebar state={this.state}>
+            <CollectionSidebar>
               <NewPlotNavigationMode
                 projectTitle={this.state.currentProject.name}/>
-              <NewPlotNavigation/>
+              <NewPlotNavigation projectId={this.props.projectId}
+                                 currentPlot={this.state.currentPlot}
+                                 currentProject={this.state.currentProject}/>
             </CollectionSidebar>
           </div>
 

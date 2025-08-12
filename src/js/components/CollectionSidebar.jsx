@@ -1,17 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import '../../css/sidebar.css';
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import SvgIcon from "./svg/SvgIcon";
 import _ from "lodash";
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { stateAtom } from '../utils/constants';
 import Modal from "./Modal";
 import { LoadingModal } from "./PageComponents";
+import { getQueryString,  } from "../utils/generalUtils";
+import { mercator } from "../utils/mercator";
+import {
+  firstEntry,
+  findObject,
+} from "../utils/sequence";
 
 
-export function CollectionSidebar ({ children }) {
-  const [appState, setAppState] = useAtom(stateAtom);  
+export function CollectionSidebar ({ children }) {  
+  const {modal, modalMessage} = useAtomValue(stateAtom);
+  const setAppState = useSetAtom(stateAtom);
+
   return (
     <div className="collection-sidebar-container">
       <div className="collection-sidebar-content">
@@ -20,85 +28,204 @@ export function CollectionSidebar ({ children }) {
       <div className="collection-sidebar-footer">
         <SidebarFooter/>
       </div>
-      {appState.modal?.alert &&
-       <Modal title={appState.modal.alert.alertType}
-              onClose={()=>{setAppState({ ... appState, modal: null});}}>
-         {appState.modal.alert.alertMessage}
+      {modal?.alert &&
+       <Modal title={modal.alert.alertType}
+              onClose={()=>{setAppState(prev => ({ ... prev, modal: null}));}}>
+         {modal.alert.alertMessage}
        </Modal>}
-      {appState.modalMessage && <LoadingModal message={appState.modalMessage} />}
+      {modalMessage && <LoadingModal message={modalMessage} />}
     </div>
   );
 };
 
-export function NewPlotNavigation  ()  {
 
-  const [appState, setAppState] = useAtom(stateAtom);
-
+export function NewPlotNavigation  ({ projectId, currentPlot, currentProject })  {
   const [navPlot, setNavPlot] = useState('');
+  const setAppState = useSetAtom(stateAtom);
+  const {threshold,
+         currentUserId,
+         // currentProject,
+         navigationMode,
+         inReviewMode,
+         originalUserSamples,
+         answerMode,
+         mapConfig,
+         userSamples,
+         // currentPlot,
+        } = useAtomValue(stateAtom);
+  const appState = useAtomValue(stateAtom);
+  useEffect(()=>{
+    console.log('appState changed', appState);
+  }, [appState]);
 
   function processModal (message, callBack){
-    new Promise(() =>
-      Promise.resolve(
-        setAppState(prev => ({ ... prev, modalMessage: message }), () =>
-          callBack().finally(() => setAppState(prev => ({... prev,  modalMessage: null })))
+    setAppState(prev => ({ ... prev, modalMessage: message }));
+    return Promise.resolve()
+      .then(() => callBack())
+      .finally(() => setAppState(prev => ({... prev,  modalMessage: null })));}
+
+  function newPlotValues (newPlot, copyValues = true) {
+    return ({
+      newPlotInput: newPlot.visibleId,
+      userSamples: newPlot.samples
+        ? newPlot.samples.reduce(
+          (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.savedAnswers || {} : {} }),
+          {}
         )
-      )
-    );}
+        : {},
+      originalUserSamples: newPlot.samples
+        ? copyValues
+        ? newPlot.samples.reduce((acc, cur) => ({ ...acc, [cur.id]: cur.savedAnswers || {} }), {})
+        : originalUserSamples
+      : {},
+      userImages: newPlot.samples
+        ? newPlot.samples.reduce(
+          (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.userImage || {} : {} }),
+          {}
+        )
+        : {},
+      selectedQuestionId: Number(
+        findObject(
+          currentProject.surveyQuestions,
+          ([_id, sq]) => sq.parentQuestionId === -1
+        )[0]
+      ),
+      collectionStart: Date.now(),
+      unansweredColor: "black",
+    });
+  };
 
-  function getPlotData (visibleId, direction, forcedNavMode = null, reviewMode = null) {
+  function featuresToDrawLayer (drawTool) {
+    const type = currentProject.type;
+    const samples = currentPlot.samples;
+    const visibleSamples = type === "simplified" ? samples.filter((s) => s.visibleId !== 1) : samples;
+    mercator.disableDrawing(mapConfig);
+    mercator.removeLayerById(mapConfig, "currentSamples");
+    mercator.removeLayerById(mapConfig, "drawLayer");
+    mercator.addVectorLayer(
+      mapConfig,
+      "drawLayer",
+      mercator.samplesToVectorSource(visibleSamples),
+      mercator.ceoMapStyles("draw", "orange"),
+      9999
+    );
+    mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
+  };
 
-    setAppState (prev => ({... prev , modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}}));
+  function featuresToSampleLayer () {
+    mercator.disableDrawing(mapConfig);
+    const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
+    const existingIds = allFeatures.map((f) => f.get("sampleId")).filter((id) => id);
+    const getMax = (samples) => Math.max(0, ...existingIds, ...samples.map((s) => s.id));
+    const newSamples = allFeatures.reduce(
+      (acc, cur) => [
+        ...acc,
+        {
+          id: cur.get("sampleId") || getMax(acc) + 1,
+          visibleId: cur.get("visibleId"),
+          sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857"),
+        },
+      ],
+      []
+    );
 
-    console.log(appState);
+    setAppState(prev => ({
+      ... prev,
+      currentPlot: { ...currentPlot, samples: newSamples },
+      userSamples: newSamples.reduce(
+        (acc, cur) => ({ ...acc, [cur.id]: userSamples[cur.id] || {} }),
+        {}
+      ),
+      userImages: newSamples.reduce(
+        (acc, cur) => ({ ...acc, [cur.id]: userImages[cur.id] || {} }),
+        {}
+      ),
+    }));
+  };
 
-    /*
-      this.processModal("Getting plot", () =>
-      fetch(
-      "/get-collection-plot?" +
-      getQueryString({
-      visibleId,
-      projectId,
-      navigationMode: forcedNavMode || navigationMode,
-      direction,
-      inReviewMode: reviewMode || inReviewMode,
-      threshold,
-      currentUserId,
-      projectType: type,
-      })
-      )
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-      if (data === "not-found") {
-      const err = (direction === "id" ? "Plot not" : "No more plots") +
-      " found for this navigation mode.";
-      const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
-      this.setState ({modal: {alert: {alertType: "Plot Data Error", alertMessage: inReviewMode ? err + reviewModeWarning : err}}});
+  function setSelectedQuestion  (newId) {setAppState(prev => ({... prev, selectedQuestionId: newId }));}
+
+  function setAnswerMode (newMode, drawTool) {
+    if (answerMode !== newMode) {
+      if (newMode === "draw") {
+        featuresToDrawLayer(drawTool);
       } else {
-      this.setState({
-      userPlotList: data,
-      remainingPlotters: data,
-      currentPlot: data[0],
-      currentUserId: data[0].userId,
-      ...this.newPlotValues(data[0]),
-      answerMode: "question",
-      inReviewMode: reviewMode ? reviewMode : inReviewMode,
-      });
-      if(type === "simplified")
-      this.setDrawTool();
-      // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
-      this.warnOnNoSamples(data[0]);
+        featuresToSampleLayer();
+        setSelectedQuestion(Number(firstEntry(currentProject.surveyQuestions)[0]));
       }
-      })
-      .catch((response) => {
-      console.error(response);
-      this.setState ({modal: {alert: {alertType: "Plot Data Retrieval Error", alertMessage: "Error retrieving plot data. See console for details."}}});
-      })
-      );*/
+      setAppState(prev=> ({... prev,  answerMode: newMode }));
+    }
+  };
+
+  function setDrawTool () {
+    const projectType = currentProject?.type;
+    const answerMode = projectType === "simplified" ? "draw" : "question";
+    const { polygons, lines, points } = currentProject.designSettings.sampleGeometries;
+    const drawTool = polygons ? "Polygon" : lines? "LineString" : "Point";
+    setAnswerMode(answerMode, drawTool);
+    if (mapConfig) mercator.changeDrawTool(mapConfig, "drawLayer", drawTool);
+  }
+
+  function warnOnNoSamples (plotData) {
+    if (plotData.samples.length === 0&& !currentProject.allowDrawnSamples) {
+      setAppState (prev => ({... prev,
+                             modal: {alert: {alertType: "Plot Collection Alert", alertMessage: "This plot has no samples. Please flag the plot."}}}));
+      return false;
+    } else {
+      return true;
+    }
+  };
+  
+  
+  function getPlotData (visibleId=1, direction, forcedNavMode = null, reviewMode = null) {       
+    processModal("Getting plot", () =>{      
+      return fetch(
+        "/get-collection-plot?" +
+          getQueryString({
+            visibleId,            
+            projectId,
+            navigationMode: forcedNavMode || navigationMode,
+            direction,
+            inReviewMode: reviewMode || inReviewMode,
+            threshold,
+            currentUserId,
+            projectType: currentProject.type,
+          })
+      )
+        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+        .then((data) => {
+          if (data === "not-found") {
+            const err = (direction === "id" ? "Plot not" : "No more plots") +
+                  " found for this navigation mode.";
+            const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
+            setAppState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Error", alertMessage: inReviewMode ? err + reviewModeWarning : err}}}));
+          } else {
+            setAppState (prev=> ({
+              ... prev,
+	      userPlotList: data,
+	      remainingPlotters: data,
+	      currentPlot: data[0],
+	      currentUserId: data[0].userId,
+	      ...newPlotValues(data[0]),
+	      answerMode: "question",
+	      inReviewMode: reviewMode || inReviewMode,
+	    }));
+            if(type === "simplified")
+              setDrawTool();
+            // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
+            warnOnNoSamples(data[0]);
+          }
+        })
+        .catch((response) => {
+          console.error(response);
+          setAppState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Retrieval Error", alertMessage: "Error retrieving plot data. See console for details."}}}));
+        });}
+    );
   };
 
   
   function hasChanged () {
-    return !_.isEqual(appState.userSamples, appState.originalUserSamples);}
+    return !_.isEqual(userSamples, originalUserSamples);}
   
   function confirmUnsaved () {
     return !hasChanged() ||
@@ -108,12 +235,12 @@ export function NewPlotNavigation  ()  {
 
   function navToPlot (direction) {    
     if (confirmUnsaved()) {
-      console.log(appState);
-      getPlotData(appState.currentPlot.visibleId, direction);
+      getPlotData(currentPlot.visibleId, direction);
     }
   };
   
   function navToPlotId (newPlot, adminReview = null) {
+   
     if (!isNaN(newPlot)) {
       if (confirmUnsaved()) {
         return adminReview ? getPlotData(newPlot, "id", 'analyzed', true)
@@ -128,8 +255,8 @@ export function NewPlotNavigation  ()  {
     <div className="collection-sidebar-navigation">
       <div className="collection-sidebar-header">
         <span>
-          <span className="collection-sidebar-title">{appState.currentProject.name}</span>
-          <span className="collection-sidebar-subtitle"> ({appState.currentProject.numPlots} Plots)</span>
+          <span className="collection-sidebar-title">{currentProject?.name}</span>
+          <span className="collection-sidebar-subtitle"> ({currentProject?.numPlots} Plots)</span>
         </span>
         <button className="collection-sidebar-info-button">i</button>
       </div>
