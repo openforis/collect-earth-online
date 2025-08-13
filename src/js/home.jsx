@@ -29,9 +29,7 @@ function SideBar ({ userId, userRole, showSidePanel, institutions, userInstituti
   function updateFilterText (newText) {setAppState(prev => ({ ... prev, filterText: newText }));}
 
   return (
-    // showSidePanel
-    true
-      ? (
+     showSidePanel  ? (
       <div
         className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column"
           id="lPanel"
