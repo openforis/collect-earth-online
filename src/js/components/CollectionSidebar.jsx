@@ -16,14 +16,16 @@ import {
 } from "../utils/sequence";
 
 
-export function CollectionSidebar ({ children }) {  
+export const CollectionSidebar = () => {  
   const {modal, modalMessage} = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
 
   return (
     <div className="collection-sidebar-container">
       <div className="collection-sidebar-content">
-        {children}
+        <NewPlotNavigationMode />
+        <NewPlotNavigation />
+
       </div>
       <div className="collection-sidebar-footer">
         <SidebarFooter/>
@@ -39,20 +41,20 @@ export function CollectionSidebar ({ children }) {
 };
 
 
-export function NewPlotNavigation  ({ projectId, currentPlot, currentProject })  {
+export const NewPlotNavigation = ({ projectId }) => {
   const [navPlot, setNavPlot] = useState('');
   const setAppState = useSetAtom(stateAtom);
   const {threshold,
          currentUserId,
-         // currentProject,
+         currentProject,
          navigationMode,
          inReviewMode,
          originalUserSamples,
-         answerMode,
          mapConfig,
          userSamples,
-         // currentPlot,
+         currentPlot,
         } = useAtomValue(stateAtom);
+  console.log(currentProject);
   const appState = useAtomValue(stateAtom);
   useEffect(()=>{
     console.log('appState changed', appState);
@@ -95,23 +97,6 @@ export function NewPlotNavigation  ({ projectId, currentPlot, currentProject }) 
     });
   };
 
-  function featuresToDrawLayer (drawTool) {
-    const type = currentProject.type;
-    const samples = currentPlot.samples;
-    const visibleSamples = type === "simplified" ? samples.filter((s) => s.visibleId !== 1) : samples;
-    mercator.disableDrawing(mapConfig);
-    mercator.removeLayerById(mapConfig, "currentSamples");
-    mercator.removeLayerById(mapConfig, "drawLayer");
-    mercator.addVectorLayer(
-      mapConfig,
-      "drawLayer",
-      mercator.samplesToVectorSource(visibleSamples),
-      mercator.ceoMapStyles("draw", "orange"),
-      9999
-    );
-    mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
-  };
-
   function featuresToSampleLayer () {
     mercator.disableDrawing(mapConfig);
     const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
@@ -143,29 +128,6 @@ export function NewPlotNavigation  ({ projectId, currentPlot, currentProject }) 
     }));
   };
 
-  function setSelectedQuestion  (newId) {setAppState(prev => ({... prev, selectedQuestionId: newId }));}
-
-  function setAnswerMode (newMode, drawTool) {
-    if (answerMode !== newMode) {
-      if (newMode === "draw") {
-        featuresToDrawLayer(drawTool);
-      } else {
-        featuresToSampleLayer();
-        setSelectedQuestion(Number(firstEntry(currentProject.surveyQuestions)[0]));
-      }
-      setAppState(prev=> ({... prev,  answerMode: newMode }));
-    }
-  };
-
-  function setDrawTool () {
-    const projectType = currentProject?.type;
-    const answerMode = projectType === "simplified" ? "draw" : "question";
-    const { polygons, lines, points } = currentProject.designSettings.sampleGeometries;
-    const drawTool = polygons ? "Polygon" : lines? "LineString" : "Point";
-    setAnswerMode(answerMode, drawTool);
-    if (mapConfig) mercator.changeDrawTool(mapConfig, "drawLayer", drawTool);
-  }
-
   function warnOnNoSamples (plotData) {
     if (plotData.samples.length === 0&& !currentProject.allowDrawnSamples) {
       setAppState (prev => ({... prev,
@@ -175,8 +137,7 @@ export function NewPlotNavigation  ({ projectId, currentPlot, currentProject }) 
       return true;
     }
   };
-  
-  
+    
   function getPlotData (visibleId=1, direction, forcedNavMode = null, reviewMode = null) {       
     processModal("Getting plot", () =>{      
       return fetch(
@@ -211,8 +172,6 @@ export function NewPlotNavigation  ({ projectId, currentPlot, currentProject }) 
 	      inReviewMode: reviewMode || inReviewMode,
 	    }));
             if(type === "simplified")
-              setDrawTool();
-            // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
             warnOnNoSamples(data[0]);
           }
         })

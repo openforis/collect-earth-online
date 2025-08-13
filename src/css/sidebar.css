@@ -23,7 +23,7 @@
 
 .collection-sidebar-footer {
   position: sticky;
-  bottom: 4rem;
+  bottom: 0;
   background-color: #fff;
   border-top: 1px solid #c9d6d6;
   padding: 16px 0;
