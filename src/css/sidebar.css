@@ -4,7 +4,7 @@
   top: 0;
   right: 0;
   height: 100vh;
-  width: 25vw;
+  width: 30vw;
   display: flex;
   flex-direction: column;
   background-color: #e6efef;
@@ -200,3 +200,64 @@ input:checked + .collection-sidebar-slider:before {
   border: none;
 }
 
+.ext-card {
+  background: #fff;
+  border: 1px solid #A4AAE0;
+  border-radius: 8px;
+  padding: 16px;
+  font-family: sans-serif;
+}
+
+.ext-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ext-title {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+.ext-info {
+  border: 1px solid #000;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ext-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.ext-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #3D7F7A;
+  color: #3D7F7A;
+  background: transparent;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ext-btn .ext-icon {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.ext-btn:hover {
+  background: rgba(45, 111, 116, 0.06);
+  border-color: #3D7F7A;
+}

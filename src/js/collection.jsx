@@ -74,15 +74,56 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
         const plotList = await plotsRes.json();
         const imageryListRaw = await imageryRes.json();
         const plotters = await plottersRes.json();
-        const imageryList = Array.isArray(imageryListRaw)
-          ? imageryListRaw.map((im, i) => ({ ...im, visible: i === 0 }))
-          : [];
-        setState((s) => ({
+        const imageryList = Array.isArray(imageryListRaw) ?
+              imageryListRaw.map((image, i) => ({ ...image, visible: i === 0 })) :
+              [];
+        // Initialize map on HTML ID
+        const mapConf = mercator.createMap(
+          "image-analysis-pane",
+          [0, 0],
+          1,
+          Array.isArray(imageryList) ? imageryList : []
+        );
+
+        // add AOI Polygon Layer
+        if (project?.aoiFeatures) {
+          mercator.addVectorLayer(
+            mapConf,
+            "currentAOI",
+            mercator.geomArrayToVectorSource(project.aoiFeatures),
+            mercator.ceoMapStyles("geom", "yellow"),
+            9999
+          );
+          mercator.zoomMapToLayer(mapConf, "currentAOI", 48);
+        }
+
+        // select Imagery and make it render on the map
+        const defaultImagery =
+              (project?.imageryId && imageryList.find(im => im.id === project.imageryId)) ||
+              imageryList[0] || null;
+
+        if (defaultImagery?.id) {
+          try {
+            mercator.setVisibleLayer(mapConf, defaultImagery.id);
+            const t = defaultImagery?.sourceConfig?.type;
+            const needsOverlay =
+                  Boolean(state.currentPlot) &&
+                  ["PlanetDaily", "SecureWatch"].includes(t);
+            mercator.setLayerVisibilityByLayerId(mapConf, "goToPlot", !!needsOverlay);
+          } catch (e) {
+            console.error("setVisibleLayer failed", e);
+          }
+        }
+
+        // set state
+        setState(s => ({
           ...s,
           currentProject: project,
           plotList,
           plotters: Array.isArray(plotters) ? plotters : [],
           imageryList,
+          mapConfig: mapConf,
+          currentImagery: defaultImagery || s.currentImagery,
           showAcceptTermsModal: !!acceptedTerms,
           modalMessage: null,
         }));
@@ -107,85 +148,402 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
     };
   }, [projectId, acceptedTerms, plotId, setState]);
 
-  // MAP EFFECT
+  // INIT PROJECT — show project overview when ready
   useEffect(() => {
-    const { imageryList, currentProject, mapConfig, currentImagery, currentPlot, showBoundary } =
-      state;
-    if (!mapConfig && imageryList.length > 0 && currentProject?.aoiFeatures) {
-      const mc = mercator.createMap("image-analysis-pane", [0, 0], 1, imageryList);
-      mercator.addVectorLayer(
-        mc,
-        "currentAOI",
-        mercator.geomArrayToVectorSource(currentProject.aoiFeatures),
-        mercator.ceoMapStyles("geom", "yellow"),
-        9999
-      );
-      mercator.zoomMapToLayer(mc, "currentAOI", 48);
-      setState((s) => ({ ...s, mapConfig: mc }));
-      return;
+    if (state.mapConfig && Array.isArray(state.plotList) && state.plotList.length > 0) {
+      showProjectOverview();
     }
-    if (state.mapConfig && state.imageryList.length > 0 && !state.currentImagery?.id) {
-      const preferred =
-        state.imageryList.find((i) => i.id === state.currentProject?.imageryId) ||
-        state.imageryList[0];
-      setState((s) => ({ ...s, currentImagery: preferred }));
-    }
-    if (state.mapConfig && state.currentPlot?.id) {
-      ["currentPlots", "currentPlot", "currentSamples", "drawLayer"].forEach((id) =>
-        mercator.removeLayerById(state.mapConfig, id)
-      );
-      mercator.addVectorLayer(
-        state.mapConfig,
-        "currentPlot",
-        mercator.geometryToVectorSource(
-          state.currentPlot.plotGeom?.includes("Point")
-            ? mercator.getPlotPolygon(
-                state.currentPlot.plotGeom,
-                state.currentProject.plotSize,
-                state.currentProject.plotShape
-              )
-            : mercator.parseGeoJson(state.currentPlot.plotGeom, true)
-        ),
-        mercator.ceoMapStyles("geom", state.showBoundary ? "yellow" : "transparent")
-      );
-      mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
-    }
-    if (state.mapConfig && state.currentImagery?.id) {
-      mercator.setVisibleLayer(state.mapConfig, state.currentImagery.id);
-      const needsOverlay =
-        !state.currentPlot?.id &&
-        ["PlanetDaily", "SecureWatch"].includes(state.currentImagery?.sourceConfig?.type);
-      mercator.setLayerVisibilityByLayerId(state.mapConfig, "goToPlot", !!needsOverlay);
-    }
-  }, [
-    state.imageryList,
-    state.currentProject?.aoiFeatures,
-    state.mapConfig,
-    state.currentImagery?.id,
-    state.currentImagery?.sourceConfig?.type,
-    state.currentPlot?.id,
-    state.currentPlot?.plotGeom,
-    state.currentProject?.plotSize,
-    state.currentProject?.plotShape,
-    state.showBoundary,
-    setState,
-  ]);
+  }, [state.mapConfig, state.plotList]);
 
-  // PLOT LOCK EFFECT
+  // UPDATE MAP WHEN STATE CHANGES — Auto launch geodash
   useEffect(() => {
     if (!state.currentPlot?.id) return;
-    if (state.currentProject?.type !== "regular") return;
-    const id = setInterval(() => {
-      fetch("/reset-plot-lock", {
-        method: "POST",
-        headers: { Accept: "application/json", "Content-Type": "application/json" },
-        body: JSON.stringify({ plotId: state.currentPlot.id, projectId }),
-      }).catch(() => {});
-    }, 60 * 1000);
-    setState((s) => ({ ...s, storedInterval: id }));
-    return () => clearInterval(id);
-  }, [state.currentPlot?.id, state.currentProject?.type, projectId, setState]);
 
+    showProjectPlot();
+
+    if (state.currentProject?.hasGeoDash && state.currentProject?.projectOptions?.autoLaunchGeoDash) {
+      showGeoDash();
+    }
+
+    if (state.storedInterval) clearInterval(state.storedInterval);
+    if (state.currentProject?.type === "regular") {
+      const id = setInterval(resetPlotLock, 60 * 1000);
+      setState((s) => ({ ...s, storedInterval: id }));
+    }
+
+    updateMapImagery();
+  }, [state.currentPlot?.id, state.showBoundary, state.currentProject?.hasGeoDash, state.currentProject?.projectOptions?.autoLaunchGeoDash, state.currentProject?.type]);
+
+  // GET PLOT DATA WHEN NEEDED - When getNewPlot changes to true, request plot data
+  useEffect(() => {
+    if(state.getNewPlot) {
+      getPlotData(state.newPlotId, state.navDirection);
+      setState(s => ({...s, getNewPlot: false}));
+    }
+  }, [state.getNewPlot]);
+
+  // UPDATE MAP WHEN STATE CHANGES — samples redraw (question/answers/visibility)
+  useEffect(() => {
+    if (!state.currentPlot?.id) return;
+
+    const selectedQuestion = state.currentProject?.surveyQuestions?.[state.selectedQuestionId];
+    if (selectedQuestion?.visible) {
+      showPlotSamples();
+      highlightSamplesByQuestion();
+      createPlotKML();
+    }
+  }, [
+    state.currentPlot?.id,
+    state.selectedQuestionId,
+    state.unansweredColor,
+    state.userSamples,
+    state.currentProject?.surveyQuestions?.[state.selectedQuestionId]?.visible,
+    state.showSamples,
+    state.showBoundary,
+  ]);
+
+  // UPDATE QUESTION STATUS — when userSamples change
+  useEffect(() => {
+    if (state.currentProject?.surveyQuestions && lengthObject(state.currentProject.surveyQuestions)) {
+      updateQuestionStatus();
+    }
+  }, [state.userSamples, state.currentProject?.surveyQuestions]);
+
+  // IMAGERY OVERLAY — when imagery or mapConfig changes; record imageryIds; update overlay
+  useEffect(() => {
+    if (!state.mapConfig || !state.currentImagery?.id) return;
+
+    if (!state.imageryIds?.includes(state.currentImagery.id)) {
+      setState((s) => ({ ...s, imageryIds: [...(s.imageryIds || []), state.currentImagery.id] }));
+    }
+
+    updateMapImagery();
+  }, [state.mapConfig, state.currentImagery?.id]);
+
+  // API CALLS
+  const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {       
+    processModal("Getting plot", ()=>{
+      return fetch(
+        "/get-collection-plot?" +
+          getQueryString({
+            visibleId,            
+            projectId,
+            navigationMode: forcedNavMode || state.navigationMode,
+            direction,
+            inReviewMode: reviewMode || state.inReviewMode,
+            threshold: state.threshold,
+            currentUserId: state.currentUserId,
+            projectType: state.currentProject.type,
+          })
+      )
+        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+        .then((data) => {
+          if (data === "not-found") {
+            const err = (direction === "id" ? "Plot not" : "No more plots") +
+                  " found for this navigation mode.";
+            const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
+            setState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Error", alertMessage: state.inReviewMode ? err + reviewModeWarning : err}}}));
+          } else {
+            setState (prev=> ({
+              ... prev,
+	      userPlotList: data,
+	      remainingPlotters: data,
+	      currentPlot: data[0],
+	      currentUserId: data[0].userId,
+	      ...newPlotValues(data[0]),
+	      answerMode: "question",
+	      inReviewMode: reviewMode || state.inReviewMode,
+              newPlotId: data[0].visibleId,
+	    }));
+          }
+        })
+        .catch((response) => {
+          console.error(response);
+          setState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Retrieval Error", alertMessage: "Error retrieving plot data. See console for details."}}}));
+        });}
+    );
+  };
+  
+
+  // Functions
+
+  const newPlotValues = (newPlot, copyValues = true) => ({	
+    newPlotInput: newPlot.visibleId,	
+    userSamples: newPlot.samples	
+      ? newPlot.samples.reduce(	
+        (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.savedAnswers || {} : {} }),	
+        {}	
+      )	
+      : {},	
+    originalUserSamples: newPlot.samples	
+      ? copyValues	
+      ? newPlot.samples.reduce((acc, cur) => ({ ...acc, [cur.id]: cur.savedAnswers || {} }), {})	
+      : state.originalUserSamples	
+    : {},	
+    userImages: newPlot.samples	
+      ? newPlot.samples.reduce(	
+        (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.userImage || {} : {} }),	
+        {}	
+      )	
+      : {},	
+    selectedQuestionId: Number(	
+      findObject(	
+        state.currentProject.surveyQuestions,	
+        ([_id, sq]) => sq.parentQuestionId === -1	
+      )[0]	
+    ),	
+    collectionStart: Date.now(),	
+    unansweredColor: "black",	
+  });
+
+  const processModal = (message, callBack) => {
+     setState(prev => ({ ... prev, modalMessage: message }));
+     return Promise.resolve()
+       .then(() => callBack())
+       .finally(() => setState(prev => ({... prev,  modalMessage: null })));}
+  
+  const zoomToPlot = () => mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
+  
+  const showProjectPlot = () => {
+    const { currentPlot, mapConfig, currentProject, showBoundary} = state;
+    mercator.disableSelection(mapConfig);
+    mercator.removeLayerById(mapConfig, "currentPlots");
+    mercator.removeLayerById(mapConfig, "currentPlot");
+    mercator.removeLayerById(mapConfig, "currentSamples");
+    mercator.removeLayerById(mapConfig, "drawLayer");
+    mercator.addVectorLayer(
+      mapConfig,
+      "currentPlot",
+      mercator.geometryToVectorSource(
+        currentPlot.plotGeom.includes("Point")
+          ? mercator.getPlotPolygon(
+            currentPlot.plotGeom,
+            currentProject.plotSize,
+            currentProject.plotShape
+          )
+          : mercator.parseGeoJson(currentPlot.plotGeom, true)
+      ),
+      mercator.ceoMapStyles("geom", (showBoundary ? "yellow" : "transparent")
+                           )
+    );
+    zoomToPlot();
+  };
+  
+  const showProjectOverview = () => {
+    mercator.addPlotLayer(state.mapConfig, state.plotList, (feature) =>
+      getPlotData(feature.get("features")[0].get("plotId"), "id")
+    );
+  };
+
+  const featuresToSampleLayer = () => {
+    mercator.disableDrawing(mapConfig);
+    const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
+    const existingIds = allFeatures.map((f) => f.get("sampleId")).filter((id) => id);
+    const getMax = (samples) => Math.max(0, ...existingIds, ...samples.map((s) => s.id));
+    const newSamples = allFeatures.reduce(
+      (acc, cur) => [
+        ...acc,
+        {
+          id: cur.get("sampleId") || getMax(acc) + 1,
+          visibleId: cur.get("visibleId"),
+          sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857"),
+        },
+      ],
+      []
+    );
+
+    setAppState(prev => ({
+      ... prev,
+      currentPlot: { ...currentPlot, samples: newSamples },
+      userSamples: newSamples.reduce(
+        (acc, cur) => ({ ...acc, [cur.id]: userSamples[cur.id] || {} }),
+        {}
+      ),
+      userImages: newSamples.reduce(
+        (acc, cur) => ({ ...acc, [cur.id]: userImages[cur.id] || {} }),
+        {}
+      ),
+    }));
+  };
+
+  const resetPlotLock = () => {	
+    fetch("/reset-plot-lock", {	
+      method: "POST",	
+      headers: {	
+        Accept: "application/json",	
+        "Content-Type": "application/json",	
+      },	
+      body: JSON.stringify({	
+        plotId: this.state.currentPlot.id,	
+        projectId: this.props.projectId,	
+      }),
+    }).then((response) => {	
+      if (!response.ok) {	
+        console.log(response);	
+        this.setState ({modal: {alert: {alertType: "Plot Lock Error", alertMessage: "Error maintaining plot lock. Your work may get overwritten. See console for details."}}});	
+      }	
+    });	
+  };
+  
+  const setImageryAttribution = (attributionSuffix) =>
+        setState(s => ({
+          ...s,
+          imageryAttribution: state.currentImagery.attribution + attributionSuffix,
+        }));
+
+  const setImageryAttributes = (newImageryAttributes) =>
+        setState(s => ({...s, imageryAttributes: newImageryAttributes }));
+
+  const getImageryById = (imageryId) =>
+        state.imageryList?.find((imagery) => imagery.id === imageryId);
+  
+  const updateMapImagery = () => {
+    const { currentPlot, mapConfig, currentImagery } = state;
+    mercator.setVisibleLayer(state.mapConfig, state.currentImagery.id);
+    if (
+      currentPlot &&
+        !currentPlot.id &&
+        ["PlanetDaily", "SecureWatch"].includes(currentImagery.sourceConfig.type)
+    ) {
+      mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", true);
+    } else {
+      mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", false);
+    }
+  };
+
+  const showPlotSamples = () => {
+    const { mapConfig, unansweredColor, currentProject, selectedQuestionId, showSamples} = state;
+    const { visible } = currentProject.surveyQuestions[selectedQuestionId];
+    const type = currentProject.type;
+    const visibleSamples = type === "simplified" ? visible.filter((s) => s.visibleId !== 1) : visible;
+    mercator.disableSelection(mapConfig);
+    mercator.disableDrawing(mapConfig);
+    mercator.removeLayerById(mapConfig, "currentSamples");
+    mercator.removeLayerById(mapConfig, "drawLayer");
+    mercator.addVectorLayer(
+      mapConfig,
+      "currentSamples",
+      mercator.samplesToVectorSource(visibleSamples),
+      mercator.ceoMapStyles("geom", (showSamples ? unansweredColor : "transparent")),
+      9999
+    );
+    mercator.enableSelection(
+      mapConfig,
+      "currentSamples",
+      (sampleId) => sampleId !== -1 && setState({ selectedSampleId: sampleId })
+    );
+  };
+
+  const updateQuestionStatus = () => {
+    const { userSamples } = state;
+    const newSurveyQuestions = mapObject(
+      state.currentProject.surveyQuestions,
+      ([questionId, question]) => {
+        const visible = calcVisibleSamples(Number(questionId)) || [];
+        const answered = visible
+              .filter((vs) => userSamples[vs.id][questionId])
+              .map((vs) => ({
+                sampleId: vs.id,
+                answerId: Number(userSamples[vs.id][questionId].answerId),
+                answerText: userSamples[vs.id][questionId].answer,
+              }));
+        return [questionId, { ...question, visible, answered }];
+      }
+    );
+    
+    setState(s => ({
+      ...s,
+      currentProject: {
+        ...state.currentProject,
+        surveyQuestions: newSurveyQuestions,
+      },
+    }));
+  };
+
+  const calcVisibleSamples = (currentQuestionId) => {
+    const {
+      currentProject: { surveyQuestions },
+      userSamples,
+    } = state;
+    const { parentQuestionId, parentAnswerIds } = surveyQuestions[currentQuestionId];
+
+    if (parentQuestionId === -1) {
+      return state.currentPlot?.samples;
+    } else {
+      return calcVisibleSamples(parentQuestionId)?.filter((sample) => {
+        const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestionId, "answerId"]);
+        return (
+          sampleAnswerId != null &&
+            (parentAnswerIds.length === 0 || parentAnswerIds.includes(sampleAnswerId))
+        );
+      });
+    }
+  }
+
+  const highlightSamplesByQuestion = () => {
+    const { selectedQuestionId, currentProject } = state;
+    const { answers, componentType } = currentProject.surveyQuestions[selectedQuestionId];
+    const allFeatures = mercator.getAllFeatures(state.mapConfig, "currentSamples") || [];
+
+    allFeatures
+      .filter((feature) => {
+        const sampleId = feature.get("sampleId");
+        return (
+          state.userSamples[sampleId] && state.userSamples[sampleId][selectedQuestionId]
+        );
+      })
+      .forEach((feature) => {
+        const sampleId = feature.get("sampleId");
+        const userAnswer = _.get(
+          state,
+          ["userSamples", sampleId, selectedQuestionId, "answerId"],
+          -1
+        );
+        const color =
+              componentType === "input" && userAnswer >= 0
+              ? _.get(firstEntry(answers), [1, "color"], "")
+              : _.get(answers, [userAnswer, "color"], "");
+
+        mercator.highlightSampleGeometry(feature, color);
+      });
+  };
+
+  const createPlotKML = () => {
+    const plotFeatures = mercator.getAllFeatures(state.mapConfig, "currentPlot");
+    const sampleFeatures = mercator.getAllFeatures(state.mapConfig, "currentSamples");
+    let KMLFeatures = mercator.getKMLFromFeatures([
+      mercator.asPolygonFeature(plotFeatures[0]),
+      ...sampleFeatures,
+    ]);
+    
+    setState(s => ({
+      ...s,
+      KMLFeatures: outlineKML(KMLFeatures)
+    }));
+  };
+  
+  const showGeoDash = () => {
+    const { currentPlot, mapConfig, currentProject } = state;
+    const plotRadius = currentProject.plotSize
+          ? currentProject.plotSize / 2.0
+          : mercator.getViewRadius(mapConfig);
+    setState(s => ({...s, usedGeodash: true }));
+    window.open(
+      "/geo-dash?" +
+        `institutionId=${state.currentProject.institution}` +
+        `&projectId=${projectId}` +
+        `&visiblePlotId=${currentPlot.visibleId}` +
+        `&plotId=${currentPlot.id}` +
+        `&plotExtent=${encodeURIComponent(JSON.stringify(mercator.getViewExtent(mapConfig)))}` +
+        `&plotShape=${
+          currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon"
+        }` +
+        `&center=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}` +
+        `&radius=${plotRadius}`,
+      `_geo-dash_${projectId}`
+    );
+  };
+  
   // RENDER
   return (
     <div className="container-fluid collection-page">
