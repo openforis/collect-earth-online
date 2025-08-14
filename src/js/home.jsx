@@ -29,79 +29,78 @@ function SideBar ({ userId, userRole, showSidePanel, institutions, userInstituti
   function updateFilterText (newText) {setAppState(prev => ({ ... prev, filterText: newText }));}
 
   return (
-     showSidePanel  ? (
+    showSidePanel  ? (
       <div
-        className={'col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column slide-left slide-in'}
-          id="lPanel"
-        >
-          {(userRole === "admin" || userId === -1) && (
+        className={'col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column slide-panel ' + (showSidePanel ? 'slide-panel-in' : 'slide-panel-out')}
+        id="lPanel"
+      >
+        {(userRole === "admin" || userId === -1) && (
+          <div className="bg-darkgreen">
+            <h1 className="tree_label" id="panelTitle">
+              Institutions
+            </h1>
+          </div>
+        )}
+        {userId > 0 && <CreateInstitutionButton />}
+        <InstitutionFilter
+          filterInstitution={appState.filterInstitution}
+          filterText={appState.filterText}
+          showEmptyInstitutions={appState.showEmptyInstitutions}
+          showFilters={appState.showFilters}
+          sortByNumber={appState.sortByNumber}
+          toggleFilterInstitution={toggleFilterInstitution}
+          toggleShowEmptyInstitutions={toggleShowEmptyInstitutions}
+          toggleShowFilters={toggleShowFilters}
+          toggleSortByNumber={toggleSortByNumber}
+          toggleUseFirst={toggleUseFirst}
+          updateFilterText={updateFilterText}
+          useFirstLetter={appState.useFirstLetter}
+        />
+        {userId > 0 && userRole !== "admin" && (
+          <>
             <div className="bg-darkgreen">
-              <h1 className="tree_label" id="panelTitle">
-                Institutions
-              </h1>
+              <h2 className="tree_label" id="panelTitle">
+                Your Affiliations
+              </h2>
             </div>
-          )}
-          {userId > 0 && <CreateInstitutionButton />}
-          <InstitutionFilter
-            filterInstitution={appState.filterInstitution}
-            filterText={appState.filterText}
-            showEmptyInstitutions={appState.showEmptyInstitutions}
-            showFilters={appState.showFilters}
-            sortByNumber={appState.sortByNumber}
-            toggleFilterInstitution={toggleFilterInstitution}
-            toggleShowEmptyInstitutions={toggleShowEmptyInstitutions}
-            toggleShowFilters={toggleShowFilters}
-            toggleSortByNumber={toggleSortByNumber}
-            toggleUseFirst={toggleUseFirst}
-            updateFilterText={updateFilterText}
-            useFirstLetter={appState.useFirstLetter}
-          />
-          {userId > 0 && userRole !== "admin" && (
-            <>
-              <div className="bg-darkgreen">
-                <h2 className="tree_label" id="panelTitle">
-                  Your Affiliations
-                </h2>
-              </div>
-              <InstitutionList
-                filterInstitution={appState.filterInstitution}
-                filterText={appState.filterText}
-                institutionListType="user"
-                institutions={userInstitutions}
-                projects={projects}
-                showEmptyInstitutions={appState.showEmptyInstitutions}
-                sortByNumber={appState.sortByNumber}
-                useFirstLetter={appState.useFirstLetter}
-                userId={userId}
-              />
-              <div className="bg-darkgreen">
-                <h2 className="tree_label" id="panelTitle">
-                  Other Institutions
-                </h2>
-              </div>
-            </>
-          )}
-          {institutions.length > 0 && projects.length > 0 ? (
             <InstitutionList
               filterInstitution={appState.filterInstitution}
               filterText={appState.filterText}
-              institutionListType="institutions"
-              institutions={institutions}
+              institutionListType="user"
+              institutions={userInstitutions}
               projects={projects}
               showEmptyInstitutions={appState.showEmptyInstitutions}
               sortByNumber={appState.sortByNumber}
               useFirstLetter={appState.useFirstLetter}
               userId={userId}
             />
-          ) : userInstitutions.length > 0 ? (
-            <h3 className="p-3">No unaffiliated institutions found.</h3>
-          ) : (
-            <h3 className="p-3">Loading data...</h3>
-          )}
-        </div>
-    )
-      : <div></div>
-    );
+            <div className="bg-darkgreen">
+              <h2 className="tree_label" id="panelTitle">
+                Other Institutions
+              </h2>
+            </div>
+          </>
+        )}
+        {institutions.length > 0 && projects.length > 0 ? (
+          <InstitutionList
+            filterInstitution={appState.filterInstitution}
+            filterText={appState.filterText}
+            institutionListType="institutions"
+            institutions={institutions}
+            projects={projects}
+            showEmptyInstitutions={appState.showEmptyInstitutions}
+            sortByNumber={appState.sortByNumber}
+            useFirstLetter={appState.useFirstLetter}
+            userId={userId}
+          />
+        ) : userInstitutions.length > 0 ? (
+          <h3 className="p-3">No unaffiliated institutions found.</h3>
+        ) : (
+          <h3 className="p-3">Loading data...</h3>
+        )}
+    </div>
+    ) : <div></div>
+  );
 }
 
 function Home ({ userRole, userId }) {
@@ -169,7 +168,8 @@ function Home ({ userRole, userId }) {
     <div id="bcontainer">
       <span id="mobilespan" />
       <div className="Wrapper">
-        <div className="row tog-effect">
+        <div className="row tog-effect"
+             style={{flexWrap: 'nowrap'}}>
           <SideBar
             institutions={appState.institutions}
             projects={appState.projects}
@@ -287,11 +287,7 @@ class MapPanel extends React.Component {
   render() {
     return (
       <div
-        className={
-          this.props.showSidePanel
-            ? "col-lg-9 col-md-12 pl-0 full-height"
-            : "col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9 full-height"
-        }
+        className='col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9 full-height'
         id="mapPanel"
       >
         {this.state.modal?.alert &&
@@ -300,7 +296,7 @@ class MapPanel extends React.Component {
            {this.state.modal.alert.alertMessage}
          </Modal>}
         <div
-          className="bg-lightgray"
+          className={'bg-lightgray ' + (this.props.showSidePanel ? 'slide-toggle-in' : 'slide-toggle-out')}
           id="toggle-map-button"
           onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
         >
