@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import '../../css/sidebar.css';
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import SvgIcon from "./svg/SvgIcon";
 import _ from "lodash";
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -8,22 +7,17 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { stateAtom } from '../utils/constants';
 import Modal from "./Modal";
 import { LoadingModal } from "./PageComponents";
-import { getQueryString,  } from "../utils/generalUtils";
 import { mercator } from "../utils/mercator";
-import {
-  firstEntry,
-  findObject,
-} from "../utils/sequence";
 
-
-export function CollectionSidebar ({ children }) {  
+export const CollectionSidebar = () => {  
   const {modal, modalMessage} = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
 
   return (
     <div className="collection-sidebar-container">
       <div className="collection-sidebar-content">
-        {children}
+        <NewPlotNavigation />
+        <ExternalTools />
       </div>
       <div className="collection-sidebar-footer">
         <SidebarFooter/>
@@ -39,191 +33,16 @@ export function CollectionSidebar ({ children }) {
 };
 
 
-export function NewPlotNavigation  ({ projectId, currentPlot, currentProject })  {
-  const [navPlot, setNavPlot] = useState('');
+export const NewPlotNavigation = () => {
   const setAppState = useSetAtom(stateAtom);
-  const {threshold,
-         currentUserId,
-         // currentProject,
-         navigationMode,
-         inReviewMode,
+  const {currentProject,
          originalUserSamples,
-         answerMode,
-         mapConfig,
          userSamples,
-         // currentPlot,
+         currentPlot,
+         inReviewMode,
+         navigationMode,
         } = useAtomValue(stateAtom);
-  const appState = useAtomValue(stateAtom);
-  useEffect(()=>{
-    console.log('appState changed', appState);
-  }, [appState]);
 
-  function processModal (message, callBack){
-    setAppState(prev => ({ ... prev, modalMessage: message }));
-    return Promise.resolve()
-      .then(() => callBack())
-      .finally(() => setAppState(prev => ({... prev,  modalMessage: null })));}
-
-  function newPlotValues (newPlot, copyValues = true) {
-    return ({
-      newPlotInput: newPlot.visibleId,
-      userSamples: newPlot.samples
-        ? newPlot.samples.reduce(
-          (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.savedAnswers || {} : {} }),
-          {}
-        )
-        : {},
-      originalUserSamples: newPlot.samples
-        ? copyValues
-        ? newPlot.samples.reduce((acc, cur) => ({ ...acc, [cur.id]: cur.savedAnswers || {} }), {})
-        : originalUserSamples
-      : {},
-      userImages: newPlot.samples
-        ? newPlot.samples.reduce(
-          (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.userImage || {} : {} }),
-          {}
-        )
-        : {},
-      selectedQuestionId: Number(
-        findObject(
-          currentProject.surveyQuestions,
-          ([_id, sq]) => sq.parentQuestionId === -1
-        )[0]
-      ),
-      collectionStart: Date.now(),
-      unansweredColor: "black",
-    });
-  };
-
-  function featuresToDrawLayer (drawTool) {
-    const type = currentProject.type;
-    const samples = currentPlot.samples;
-    const visibleSamples = type === "simplified" ? samples.filter((s) => s.visibleId !== 1) : samples;
-    mercator.disableDrawing(mapConfig);
-    mercator.removeLayerById(mapConfig, "currentSamples");
-    mercator.removeLayerById(mapConfig, "drawLayer");
-    mercator.addVectorLayer(
-      mapConfig,
-      "drawLayer",
-      mercator.samplesToVectorSource(visibleSamples),
-      mercator.ceoMapStyles("draw", "orange"),
-      9999
-    );
-    mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
-  };
-
-  function featuresToSampleLayer () {
-    mercator.disableDrawing(mapConfig);
-    const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
-    const existingIds = allFeatures.map((f) => f.get("sampleId")).filter((id) => id);
-    const getMax = (samples) => Math.max(0, ...existingIds, ...samples.map((s) => s.id));
-    const newSamples = allFeatures.reduce(
-      (acc, cur) => [
-        ...acc,
-        {
-          id: cur.get("sampleId") || getMax(acc) + 1,
-          visibleId: cur.get("visibleId"),
-          sampleGeom: mercator.geometryToGeoJSON(cur.getGeometry(), "EPSG:4326", "EPSG:3857"),
-        },
-      ],
-      []
-    );
-
-    setAppState(prev => ({
-      ... prev,
-      currentPlot: { ...currentPlot, samples: newSamples },
-      userSamples: newSamples.reduce(
-        (acc, cur) => ({ ...acc, [cur.id]: userSamples[cur.id] || {} }),
-        {}
-      ),
-      userImages: newSamples.reduce(
-        (acc, cur) => ({ ...acc, [cur.id]: userImages[cur.id] || {} }),
-        {}
-      ),
-    }));
-  };
-
-  function setSelectedQuestion  (newId) {setAppState(prev => ({... prev, selectedQuestionId: newId }));}
-
-  function setAnswerMode (newMode, drawTool) {
-    if (answerMode !== newMode) {
-      if (newMode === "draw") {
-        featuresToDrawLayer(drawTool);
-      } else {
-        featuresToSampleLayer();
-        setSelectedQuestion(Number(firstEntry(currentProject.surveyQuestions)[0]));
-      }
-      setAppState(prev=> ({... prev,  answerMode: newMode }));
-    }
-  };
-
-  function setDrawTool () {
-    const projectType = currentProject?.type;
-    const answerMode = projectType === "simplified" ? "draw" : "question";
-    const { polygons, lines, points } = currentProject.designSettings.sampleGeometries;
-    const drawTool = polygons ? "Polygon" : lines? "LineString" : "Point";
-    setAnswerMode(answerMode, drawTool);
-    if (mapConfig) mercator.changeDrawTool(mapConfig, "drawLayer", drawTool);
-  }
-
-  function warnOnNoSamples (plotData) {
-    if (plotData.samples.length === 0&& !currentProject.allowDrawnSamples) {
-      setAppState (prev => ({... prev,
-                             modal: {alert: {alertType: "Plot Collection Alert", alertMessage: "This plot has no samples. Please flag the plot."}}}));
-      return false;
-    } else {
-      return true;
-    }
-  };
-  
-  
-  function getPlotData (visibleId=1, direction, forcedNavMode = null, reviewMode = null) {       
-    processModal("Getting plot", () =>{      
-      return fetch(
-        "/get-collection-plot?" +
-          getQueryString({
-            visibleId,            
-            projectId,
-            navigationMode: forcedNavMode || navigationMode,
-            direction,
-            inReviewMode: reviewMode || inReviewMode,
-            threshold,
-            currentUserId,
-            projectType: currentProject.type,
-          })
-      )
-        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((data) => {
-          if (data === "not-found") {
-            const err = (direction === "id" ? "Plot not" : "No more plots") +
-                  " found for this navigation mode.";
-            const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
-            setAppState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Error", alertMessage: inReviewMode ? err + reviewModeWarning : err}}}));
-          } else {
-            setAppState (prev=> ({
-              ... prev,
-	      userPlotList: data,
-	      remainingPlotters: data,
-	      currentPlot: data[0],
-	      currentUserId: data[0].userId,
-	      ...newPlotValues(data[0]),
-	      answerMode: "question",
-	      inReviewMode: reviewMode || inReviewMode,
-	    }));
-            if(type === "simplified")
-              setDrawTool();
-            // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
-            warnOnNoSamples(data[0]);
-          }
-        })
-        .catch((response) => {
-          console.error(response);
-          setAppState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Retrieval Error", alertMessage: "Error retrieving plot data. See console for details."}}}));
-        });}
-    );
-  };
-
-  
   function hasChanged () {
     return !_.isEqual(userSamples, originalUserSamples);}
   
@@ -235,16 +54,18 @@ export function NewPlotNavigation  ({ projectId, currentPlot, currentProject }) 
 
   function navToPlot (direction) {    
     if (confirmUnsaved()) {
-      getPlotData(currentPlot.visibleId, direction);
+      setAppState (s => ({
+        ...s,
+        getNewPlot: true,
+        navDirection: direction
+      }))
     }
   };
   
-  function navToPlotId (newPlot, adminReview = null) {
-   
+  const navToPlotId = () => {
     if (!isNaN(newPlot)) {
       if (confirmUnsaved()) {
-        return adminReview ? getPlotData(newPlot, "id", 'analyzed', true)
-          : getPlotData(newPlot, "id");
+        setAppState(s => ({...s, getNewPlot: true, navDirection: 'id'}));
       }
     } else {
       setAppState (prev => ({ ... prev, modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}}));
@@ -260,10 +81,30 @@ export function NewPlotNavigation  ({ projectId, currentPlot, currentProject }) 
         </span>
         <button className="collection-sidebar-info-button">i</button>
       </div>
+      <label className="collection-sidebar-label">Navigate</label>
+      <select className="collection-sidebar-select"
+              selected={navigationMode}
+              onChange={(e) => setAppState(s => ({...s, navigationMode: e.target.value}))}>
+          <option value="natural">Default</option>
+          <option value="analyzed">Analyzed plots</option>
+          <option value="unanalyzed">Unanalyzed plots</option>
+          <option value="flagged">Flagged plots</option>
+        </select>
+
+      <div className="collection-sidebar-mode">
+        <label className="collection-sidebar-switch">
+          <input type="checkbox"
+                 checked={inReviewMode}
+                 onChange={(e) => setAppState(s => ({...s, inReviewMode: !s.inReviewMode}))}/>
+          <span className="collection-sidebar-slider round"></span>
+          </label>
+        <span className="mode-label">Admin Review</span>
+      </div>
+
       <div className="collection-sidebar-plot-navigation">
         <input className="flex flex-col-6"
-               value={navPlot}
-               onChange={(e)=>{setNavPlot(e.target.value);}}
+               value={currentPlot.visibleId || 0}
+               onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}))}}
         ></input>
         <button className="btn outline"
                 onClick={()=>{navToPlot('previous');}}>
@@ -274,7 +115,7 @@ export function NewPlotNavigation  ({ projectId, currentPlot, currentProject }) 
           <SvgIcon icon="rightArrow" size="0.9rem" />
         </button>
         <label className="btn filled"
-               onClick={()=>{navToPlotId(navPlot);}}
+               onClick={()=>{navToPlotId();}}
         >Go To Plot
         </label>
       </div>
@@ -283,29 +124,109 @@ export function NewPlotNavigation  ({ projectId, currentPlot, currentProject }) 
   );
 };
 
-export const NewPlotNavigationMode = ({projectTitle}) => {  
+export const ExternalTools = () => {
+  const [auxWindow, setAuxWindow] = useState(null);
+  const {
+    currentPlot,
+    currentProject,
+    KMLFeatures,
+  } = useAtomValue(stateAtom);
+
+  const loadGEEScript = () => {
+    let urlParams="";
+    if(currentPlot?.plotGeom){
+      urlParams = currentPlot?.plotGeom?.includes("Point")
+            ? currentProject.plotShape === "circle"
+            ? "center=[" +
+            mercator.parseGeoJson(currentPlot.plotGeom).getCoordinates() +
+            "];radius=" +
+            currentProject.plotSize / 2
+            : "geoJson=" +
+            mercator.geometryToGeoJSON(
+              mercator.getPlotPolygon(
+                currentPlot.plotGeom,
+                currentProject.plotSize,
+                currentProject.plotShape
+              ),
+              "EPSG:4326",
+              "EPSG:3857",
+              5
+            )
+            : "geoJson=" + currentPlot.plotGeom;
+    }
+    if (auxWindow) auxWindow.close();
+    const win = window.open(
+      "https://collect-earth-online.projects.earthengine.app/view/ceo-plot-ancillary-hotfix#" + urlParams
+    );
+    setAuxWindow(win);
+  };
+  const openInGoogleEarth = () => {
+    let plotGeom=[0,0]
+    if(currentPlot?.plotGeom){
+      plotGeom = mercator.getCentroid((currentPlot?.plotGeom || "{}"), true);
+      if (!plotGeom || plotGeom.length < 2) {
+        console.warn("Invalid coordinates");
+        return;
+      }
+    }
+    const [lng, lat] = plotGeom;
+    const url = `https://earth.google.com/web/@${lat},${lng},1000a,100d,35y,0h,0t,0r`;
+    window.open(url, "_blank");
+  };
+
+  const showGeoDash = () => {
+    const plotRadius = currentProject.plotSize
+          ? currentProject.plotSize / 2.0
+          : mercator.getViewRadius(mapConfig);
+    setState(s => ({...s, usedGeodash: true }));
+    window.open(
+      "/geo-dash?" +
+        `institutionId=${currentProject.institution}` +
+        `&projectId=${projectId}` +
+        `&visiblePlotId=${currentPlot.visibleId}` +
+        `&plotId=${currentPlot.id}` +
+        `&plotExtent=${encodeURIComponent(JSON.stringify(mercator.getViewExtent(mapConfig)))}` +
+        `&plotShape=${
+          currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon"
+        }` +
+        `&center=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}` +
+        `&radius=${plotRadius}`,
+      `_geo-dash_${projectId}`
+    );
+  };
+  
+
   return (
-    <div className="collection-sidebar-navigation">
-      <div className="collection-sidebar-header">
-        <span className="collection-sidebar-title">{projectTitle}</span>        
-        <button className="collection-sidebar-info-button">i</button>
+    <div className="ext-card">
+      <div className="ext-header">
+        <span className="ext-title">EXTERNAL TOOLS</span>
+        <button className="ext-info" aria-label="Info">i</button>
       </div>
 
-      <label className="collection-sidebar-label">Navigate</label>
-      <select className="collection-sidebar-select">
-        <option>Default</option>
-        <option>Analyzed plots</option>
-        <option>Unanalyzed plots</option>
-        <option>Flagged plots</option>
-      </select>
+      <div className="ext-grid">
+        <button className="ext-btn"
+              download={`ceo_projectId-${currentProject.id}_plotId-${currentPlot.visibleId}.kml`}
+                href={
+                  "data:earth.kml+xml application/vnd.google-earth.kmz," +
+                    encodeURIComponent(KMLFeatures)}
+        >
+          <span>Download Plot KML</span>
+        </button>
 
-      <div className="collection-sidebar-mode">
-        <label className="collection-sidebar-switch">
-          <input type="checkbox" />
-          <span className="collection-sidebar-slider round"></span>
-        </label>
-        <span className="mode-label">Admin Review</span>
-      </div>      
+        <button className="ext-btn"
+                onClick={loadGEEScript}>
+          <span>Go To GEE Script</span>
+        </button>
+
+        <button className="ext-btn">
+          <span>Interpretation Instructions</span>
+        </button>
+
+        <button className="ext-btn"
+                onClick={openInGoogleEarth}>
+          <span>Go To Google Earth Web</span>
+        </button>
+      </div>
     </div>
   );
 };

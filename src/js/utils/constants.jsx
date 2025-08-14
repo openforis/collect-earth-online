@@ -51,7 +51,9 @@ export const stateAtom = atom({
   centerSampleId: 0,
   usedKML: false,
   usedGeodash: false,
-  
+  getNewPlot: false,
+  newPlotId: -99999,
+  navDirection: "next",
 });
 
 
