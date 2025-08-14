@@ -17,8 +17,7 @@ export const CollectionSidebar = () => {
     <div className="collection-sidebar-container">
       <div className="collection-sidebar-content">
         <NewPlotNavigation />
-         <ExternalTools />
-
+        <ExternalTools />
       </div>
       <div className="collection-sidebar-footer">
         <SidebarFooter/>
@@ -40,6 +39,8 @@ export const NewPlotNavigation = () => {
          originalUserSamples,
          userSamples,
          currentPlot,
+         inReviewMode,
+         navigationMode,
         } = useAtomValue(stateAtom);
 
   function hasChanged () {
@@ -81,16 +82,20 @@ export const NewPlotNavigation = () => {
         <button className="collection-sidebar-info-button">i</button>
       </div>
       <label className="collection-sidebar-label">Navigate</label>
-        <select className="collection-sidebar-select">
-          <option>Default</option>
-          <option>Analyzed plots</option>
-          <option>Unanalyzed plots</option>
-          <option>Flagged plots</option>
+      <select className="collection-sidebar-select"
+              selected={navigationMode}
+              onChange={(e) => setAppState(s => ({...s, navigationMode: e.target.value}))}>
+          <option value="natural">Default</option>
+          <option value="analyzed">Analyzed plots</option>
+          <option value="unanalyzed">Unanalyzed plots</option>
+          <option value="flagged">Flagged plots</option>
         </select>
 
       <div className="collection-sidebar-mode">
         <label className="collection-sidebar-switch">
-          <input type="checkbox" />
+          <input type="checkbox"
+                 checked={inReviewMode}
+                 onChange={(e) => setAppState(s => ({...s, inReviewMode: !s.inReviewMode}))}/>
           <span className="collection-sidebar-slider round"></span>
           </label>
         <span className="mode-label">Admin Review</span>

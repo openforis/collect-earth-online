@@ -29,7 +29,7 @@ import Modal from "./components/Modal";
 import RadioButton from "./components/RadioButton";
 import Select from "./components/Select";
 import SvgIcon from "./components/svg/SvgIcon";
-import { CollectionSidebar, NewPlotNavigation, NewPlotNavigationMode } from "./components/CollectionSidebar";
+import { CollectionSidebar } from "./components/CollectionSidebar";
 
 import { getQueryString, isNumber, asPercentage, isArray } from "./utils/generalUtils";
 import {
@@ -366,21 +366,22 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
     }));
   };
 
-  const resetPlotLock = () => {	
-    fetch("/reset-plot-lock", {	
+  const resetPlotLock = () => {
+    console.log(state);
+    fetch("/reset-plot-lock", {
       method: "POST",	
       headers: {	
         Accept: "application/json",	
         "Content-Type": "application/json",	
       },	
       body: JSON.stringify({	
-        plotId: this.state.currentPlot.id,	
-        projectId: this.props.projectId,	
+        plotId: state.currentPlot.id,	
+        projectId: state.currentProject.projectId,	
       }),
     }).then((response) => {	
       if (!response.ok) {	
         console.log(response);	
-        this.setState ({modal: {alert: {alertType: "Plot Lock Error", alertMessage: "Error maintaining plot lock. Your work may get overwritten. See console for details."}}});	
+        setState (s => ({...s, modal: {alert: {alertType: "Plot Lock Error", alertMessage: "Error maintaining plot lock. Your work may get overwritten. See console for details."}}}));	
       }	
     });	
   };
@@ -394,9 +395,6 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   const setImageryAttributes = (newImageryAttributes) =>
         setState(s => ({...s, imageryAttributes: newImageryAttributes }));
 
-  const getImageryById = (imageryId) =>
-        state.imageryList?.find((imagery) => imagery.id === imageryId);
-  
   const updateMapImagery = () => {
     const { currentPlot, mapConfig, currentImagery } = state;
     mercator.setVisibleLayer(state.mapConfig, state.currentImagery.id);
