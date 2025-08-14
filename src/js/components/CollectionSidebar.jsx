@@ -126,6 +126,7 @@ export const NewPlotNavigation = () => {
 
 export const ExternalTools = () => {
   const [auxWindow, setAuxWindow] = useState(null);
+  const setState = useSetAtom(stateAtom);
   const {
     currentPlot,
     currentProject,
@@ -182,7 +183,7 @@ export const ExternalTools = () => {
     window.open(
       "/geo-dash?" +
         `institutionId=${currentProject.institution}` +
-        `&projectId=${projectId}` +
+        `&projectId=${currentProject.id}` +
         `&visiblePlotId=${currentPlot.visibleId}` +
         `&plotId=${currentPlot.id}` +
         `&plotExtent=${encodeURIComponent(JSON.stringify(mercator.getViewExtent(mapConfig)))}` +
@@ -191,7 +192,7 @@ export const ExternalTools = () => {
         }` +
         `&center=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}` +
         `&radius=${plotRadius}`,
-      `_geo-dash_${projectId}`
+      `_geo-dash_${currentProject.id}`
     );
   };
   
