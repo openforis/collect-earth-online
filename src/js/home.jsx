@@ -31,7 +31,7 @@ function SideBar ({ userId, userRole, showSidePanel, institutions, userInstituti
   return (
      showSidePanel  ? (
       <div
-        className="col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column"
+        className={'col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column slide-left slide-in'}
           id="lPanel"
         >
           {(userRole === "admin" || userId === -1) && (
@@ -105,18 +105,13 @@ function SideBar ({ userId, userRole, showSidePanel, institutions, userInstituti
 }
 
 function Home ({ userRole, userId }) {
-  const [appState, setAppState] = useAtom(stateAtom);
-  
-  useEffect(()=>{
-    console.log('app state updated', appState);
-  }, [useAtomValue(stateAtom)]);
+  const [appState, setAppState] = useAtom(stateAtom);  
   
   function getProjects () {
     fetch("/get-home-projects")
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
-          console.log('got projects data', data);
           setAppState(prev => ({ ... prev,  projects: data }));
           return Promise.resolve();
         } else {
@@ -125,11 +120,9 @@ function Home ({ userRole, userId }) {
       });}
 
   function getImagery () {
-    console.log('getting imagery');
     fetch("/get-public-imagery")
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
-        console.log('got imagery', data);
         if (data.length > 0) {          
           setAppState(prev => ({ ... prev, imagery: data }));          
           return Promise.resolve();
@@ -143,7 +136,6 @@ function Home ({ userRole, userId }) {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
-          console.log('got inst data', data);
           const userInstitutions =
                 userRole !== "admin"
                 ? data.filter((institution) => institution.isMember)
@@ -166,10 +158,8 @@ function Home ({ userRole, userId }) {
     setAppState(prev => ({ ... prev, showSidePanel: !prev.showSidePanel }), () => mercator.resize(mapConfig));}
   
   useEffect(()=>{
-    console.log("does useEffect fire");
     Promise.all([getImagery(), getInstitutions(), getProjects()])
       .catch((response) => {
-        console.log(response);
         setAppState (prev => ({ ... prev, modal: {alert: {alertType: "Collection Alert", alertMessage: "Error retrieving the collection data. See console for details."}}}));
       })
       .finally(() => setAppState(prev => ({... prev, modalMessage: null })));
