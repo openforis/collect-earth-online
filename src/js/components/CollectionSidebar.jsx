@@ -210,16 +210,12 @@ export const ExternalTools = () => {
                   "data:earth.kml+xml application/vnd.google-earth.kmz," +
                     encodeURIComponent(KMLFeatures)}
         >
-          <span className="ext-icon">
-            ⬇
-          </span>
           <span>Download Plot KML</span>
         </button>
 
         <button className="ext-btn"
                 onClick={loadGEEScript}>
           <span>Go To GEE Script</span>
-          <span className="ext-icon">↗</span>
         </button>
 
         <button className="ext-btn">
@@ -229,7 +225,6 @@ export const ExternalTools = () => {
         <button className="ext-btn"
                 onClick={openInGoogleEarth}>
           <span>Go To Google Earth Web</span>
-          <span className="ext-icon">↗</span>
         </button>
       </div>
     </div>
