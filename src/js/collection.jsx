@@ -48,7 +48,7 @@ import { outlineKML } from "./utils/kml";
 
 export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   const [state, setState] = useAtom(stateAtom);
-
+  useEffect(() => {console.log ('render!');}, [state.showSamples]);
   // INIT COLLECTION EFFECT
   useEffect(() => {
     window.name = "_ceo_collection";
@@ -303,7 +303,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
       .finally(() => setState(prev => ({... prev,  modalMessage: null })));};
   
   const zoomToPlot = () => mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
-  const setMapZoom = (zoom) => mercator.setMapZoom (this.state.mapConfig, zoom);
+  const setMapZoom = (zoom) => mercator.setMapZoom (state.mapConfig, zoom);
   const showProjectPlot = () => {
     const { currentPlot, mapConfig, currentProject, showBoundary} = state;
     mercator.disableSelection(mapConfig);
@@ -575,7 +575,9 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
           </div>
         )}
         <div className="d-flex flex-column flex-grow-1">
-          <ImageAnalysisPane imageryAttribution={state.imageryAttribution} />
+          <ImageAnalysisPane imageryAttribution={state.imageryAttribution}
+                             toggleShowBoundary={()=> {}}
+          />
         </div>
         <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
           <CollectionSidebar>
@@ -607,11 +609,31 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   );
 };
     
-function ImageAnalysisPane({ imageryAttribution }) {
+function ImageAnalysisPane({imageryAttribution}) {
+  // const [state, setState] = useAtom(stateAtom);
+/*  
+  const toggleShowBoundary = () => {
+  setState (s => ({...s, showBoundary: !state.showBoundary}));
+  };
+  
+  const toggleShowSamples = () =>  {
+    setState (s=> ({...s, showSamples: !state.showSamples}));
+  };
+
+  const zoomToPlot = () => {
+    state.mapConfig &&
+    mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
+  };
+
+  const zoom = (level) => {
+    state.mapConfig &&
+    mercator.setMapZoom(state.mapConfig, level);
+  };
+*/  
   return (
     <div className="pl-0 pr-0 full-height" id="image-analysis-pane" style={{position: 'relative'}}>
       <div className="row" id="imagery-info" style={{ justifyContent: "center" }}>
-        <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{imageryAttribution}</p>
+        <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{"imageryAttribution"}</p>
       </div>
       
       <div className="map-controls"
@@ -622,34 +644,40 @@ function ImageAnalysisPane({ imageryAttribution }) {
         <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '1rem' }}>
           <input
             className="btn btn-outline-lightgreen btn-sm"
-            onClick={zoomMapToPlot}
+            /* onClick={zoomToPlot} */
             type="button"
             value="Re-Zoom"
           />
           <input
-            className={`btn btn-outline-${showSamples ? "red" : "lightgreen"} btn-sm`}
-            onClick={toggleShowSamples}
+    /* className={`btn btn-outline-${state.showSamples ? "red" : "lightgreen"} btn-sm`} */
+            className='btn btn-outline-red'
+            /* onClick={toggleShowSamples} */
             type="button"
-            value={`${showSamples ? "Hide" : "Show"} Samples`}
+            value="Herp"
+            /* value={`${state.showSamples ? "Hide" : "Show"} Samples`} */
           />
           <input
-            className={`btn btn-outline-${showBoundary ? "red" : "lightgreen"} btn-sm`} //
-            onClick={toggleShowBoundary}
+    /* className={`btn btn-outline-${state.showBoundary ? "red" : "lightgreen"} btn-sm`}  */
+            className='btn btn-outline-red'
+            // onClick={toggleShowBoundary}
             type="button"
-            value={`${showBoundary ? "Hide" : "Show"} Boundary`}
+            value="Derp"
+            /* value={`${state.showBoundary ? "Hide" : "Show"} Boundary`} */
           />
           <div className="d-flex flex-column">
             <button className="btn btn-sm"
                   style={{backgroundColor: 'white',
                           borderRadius: '25%',
                           margin: 'auto 0 auto auto'}}
-                    onClick={()=>{zoom(1);}}>
+                    /* onClick={() => zoom(1)} */
+            >
 		  <SvgIcon icon="plus" size="0.9rem" /></button>
           <button className="btn btn-sm"
                   style={{backgroundColor: 'white',
                           borderRadius: '25%',
                           margin: 'auto 0 auto auto'}}
-                  onClick={()=>{zoom(-1)}}>
+                  /* onClick={() => zoom(-1)} */
+          >
             <SvgIcon icon="minus" size="0.9rem" /></button>
           </div>
              </div>

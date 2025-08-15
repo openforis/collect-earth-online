@@ -266,18 +266,20 @@
 
 
 .slide-panel {
-    transform: translateX(-100%);
+    /* transform: translateX(-100%); */
     position: absolute;
     z-index: 1;
     background: white;
+
 }
 
-
 .slide-panel-in {
+
     animation: slide-panel-in 0.5s forwards;
 }
 
 .slide-panel-out {
+
     animation: slide-panel-out 0.5s forwards;
 }
 
@@ -289,6 +291,11 @@
 @keyframes slide-panel-out {
     0% {transform: translateX(0%);}
     100% {transform: translateX(-100%);}
+}
+
+.hide-toggle {
+    animation: slide-toggle-out 0s forwards;
+    animation-duration: -1s;
 }
 
 .slide-toggle-in {
