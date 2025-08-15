@@ -1,41 +1,231 @@
-import React from 'react';
+import React, { useState, useEffect } from "react";
 import '../../css/sidebar.css';
+import SvgIcon from "./svg/SvgIcon";
+import _ from "lodash";
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
-export const CollectionSidebar = ({ children }) => {
+import { stateAtom } from '../utils/constants';
+import Modal from "./Modal";
+import { LoadingModal } from "./PageComponents";
+import { mercator } from "../utils/mercator";
+
+export const CollectionSidebar = () => {  
+  const {modal, modalMessage} = useAtomValue(stateAtom);
+  const setAppState = useSetAtom(stateAtom);
+
   return (
     <div className="collection-sidebar-container">
       <div className="collection-sidebar-content">
-        {children}
+        <NewPlotNavigation />
+        <ExternalTools />
       </div>
       <div className="collection-sidebar-footer">
         <SidebarFooter/>
       </div>
+      {modal?.alert &&
+       <Modal title={modal.alert.alertType}
+              onClose={()=>{setAppState(prev => ({ ... prev, modal: null}));}}>
+         {modal.alert.alertMessage}
+       </Modal>}
+      {modalMessage && <LoadingModal message={modalMessage} />}
     </div>
   );
 };
 
-export const NewPlotNavigation = ({projectTitle}) => {
+
+export const NewPlotNavigation = () => {
+  const setAppState = useSetAtom(stateAtom);
+  const {currentProject,
+         originalUserSamples,
+         userSamples,
+         currentPlot,
+         inReviewMode,
+         navigationMode,
+        } = useAtomValue(stateAtom);
+
+  function hasChanged () {
+    return !_.isEqual(userSamples, originalUserSamples);}
+  
+  function confirmUnsaved () {
+    return !hasChanged() ||
+      confirm(
+        "You have unsaved changes. Any unsaved responses will be lost. Are you sure you want to continue?"
+      );}
+
+  function navToPlot (direction) {    
+    if (confirmUnsaved()) {
+      setAppState (s => ({
+        ...s,
+        getNewPlot: true,
+        navDirection: direction
+      }))
+    }
+  };
+  
+  const navToPlotId = () => {
+    if (!isNaN(newPlot)) {
+      if (confirmUnsaved()) {
+        setAppState(s => ({...s, getNewPlot: true, navDirection: 'id'}));
+      }
+    } else {
+      setAppState (prev => ({ ... prev, modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}}));
+    }
+  };
+  
   return (
     <div className="collection-sidebar-navigation">
       <div className="collection-sidebar-header">
-        <span className="collection-sidebar-title">{projectTitle}</span>
+        <span>
+          <span className="collection-sidebar-title">{currentProject?.name}</span>
+          <span className="collection-sidebar-subtitle"> ({currentProject?.numPlots} Plots)</span>
+        </span>
         <button className="collection-sidebar-info-button">i</button>
       </div>
-
       <label className="collection-sidebar-label">Navigate</label>
-      <select className="collection-sidebar-select">
-        <option>Default</option>
-        <option>Analyzed plots</option>
-        <option>Unanalyzed plots</option>
-        <option>Flagged plots</option>
-      </select>
+      <select className="collection-sidebar-select"
+              selected={navigationMode}
+              onChange={(e) => setAppState(s => ({...s, navigationMode: e.target.value}))}>
+          <option value="natural">Default</option>
+          <option value="analyzed">Analyzed plots</option>
+          <option value="unanalyzed">Unanalyzed plots</option>
+          <option value="flagged">Flagged plots</option>
+        </select>
 
       <div className="collection-sidebar-mode">
         <label className="collection-sidebar-switch">
-          <input type="checkbox" />
+          <input type="checkbox"
+                 checked={inReviewMode}
+                 onChange={(e) => setAppState(s => ({...s, inReviewMode: !s.inReviewMode}))}/>
           <span className="collection-sidebar-slider round"></span>
-        </label>
+          </label>
         <span className="mode-label">Admin Review</span>
+      </div>
+
+      <div className="collection-sidebar-plot-navigation">
+        <input className="flex flex-col-6"
+               value={currentPlot.visibleId || 0}
+               onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}))}}
+        ></input>
+        <button className="btn outline"
+                onClick={()=>{navToPlot('previous');}}>
+          <SvgIcon icon="leftArrow" size="0.9rem" />
+        </button>
+        <button className="btn outline"
+                onClick={()=>{navToPlot('next');}}>
+          <SvgIcon icon="rightArrow" size="0.9rem" />
+        </button>
+        <label className="btn filled"
+               onClick={()=>{navToPlotId();}}
+        >Go To Plot
+        </label>
+      </div>
+
+    </div>
+  );
+};
+
+export const ExternalTools = () => {
+  const [auxWindow, setAuxWindow] = useState(null);
+  const {
+    currentPlot,
+    currentProject,
+    KMLFeatures,
+  } = useAtomValue(stateAtom);
+
+  const loadGEEScript = () => {
+    let urlParams="";
+    if(currentPlot?.plotGeom){
+      urlParams = currentPlot?.plotGeom?.includes("Point")
+            ? currentProject.plotShape === "circle"
+            ? "center=[" +
+            mercator.parseGeoJson(currentPlot.plotGeom).getCoordinates() +
+            "];radius=" +
+            currentProject.plotSize / 2
+            : "geoJson=" +
+            mercator.geometryToGeoJSON(
+              mercator.getPlotPolygon(
+                currentPlot.plotGeom,
+                currentProject.plotSize,
+                currentProject.plotShape
+              ),
+              "EPSG:4326",
+              "EPSG:3857",
+              5
+            )
+            : "geoJson=" + currentPlot.plotGeom;
+    }
+    if (auxWindow) auxWindow.close();
+    const win = window.open(
+      "https://collect-earth-online.projects.earthengine.app/view/ceo-plot-ancillary-hotfix#" + urlParams
+    );
+    setAuxWindow(win);
+  };
+  const openInGoogleEarth = () => {
+    let plotGeom=[0,0]
+    if(currentPlot?.plotGeom){
+      plotGeom = mercator.getCentroid((currentPlot?.plotGeom || "{}"), true);
+      if (!plotGeom || plotGeom.length < 2) {
+        console.warn("Invalid coordinates");
+        return;
+      }
+    }
+    const [lng, lat] = plotGeom;
+    const url = `https://earth.google.com/web/@${lat},${lng},1000a,100d,35y,0h,0t,0r`;
+    window.open(url, "_blank");
+  };
+
+  const showGeoDash = () => {
+    const plotRadius = currentProject.plotSize
+          ? currentProject.plotSize / 2.0
+          : mercator.getViewRadius(mapConfig);
+    setState(s => ({...s, usedGeodash: true }));
+    window.open(
+      "/geo-dash?" +
+        `institutionId=${currentProject.institution}` +
+        `&projectId=${projectId}` +
+        `&visiblePlotId=${currentPlot.visibleId}` +
+        `&plotId=${currentPlot.id}` +
+        `&plotExtent=${encodeURIComponent(JSON.stringify(mercator.getViewExtent(mapConfig)))}` +
+        `&plotShape=${
+          currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon"
+        }` +
+        `&center=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}` +
+        `&radius=${plotRadius}`,
+      `_geo-dash_${projectId}`
+    );
+  };
+  
+
+  return (
+    <div className="ext-card">
+      <div className="ext-header">
+        <span className="ext-title">EXTERNAL TOOLS</span>
+        <button className="ext-info" aria-label="Info">i</button>
+      </div>
+
+      <div className="ext-grid">
+        <button className="ext-btn"
+              download={`ceo_projectId-${currentProject.id}_plotId-${currentPlot.visibleId}.kml`}
+                href={
+                  "data:earth.kml+xml application/vnd.google-earth.kmz," +
+                    encodeURIComponent(KMLFeatures)}
+        >
+          <span>Download Plot KML</span>
+        </button>
+
+        <button className="ext-btn"
+                onClick={loadGEEScript}>
+          <span>Go To GEE Script</span>
+        </button>
+
+        <button className="ext-btn">
+          <span>Interpretation Instructions</span>
+        </button>
+
+        <button className="ext-btn"
+                onClick={openInGoogleEarth}>
+          <span>Go To Google Earth Web</span>
+        </button>
       </div>
     </div>
   );

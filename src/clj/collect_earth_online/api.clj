@@ -255,7 +255,7 @@
                                          [:threshold Int]
                                          [:currentUserId [:maybe [:or :int :string]]]
                                          [:projectType  {:optional true} :string]
-                                         [:inReviewMode {:optional true} Int]]]
+                                         [:inReviewMode {:optional true} Bool]]]
                                [:session [:map
                                           [:userId {:optional true} Int]]]]
    :plots/get-plot-disagreement [:map
@@ -282,12 +282,15 @@
                                       [:confidence {:optional true} Int]
                                       [:confidenceComment [:maybe :string]]
                                       [:collectionStart  Lng]
-                                      [:userSamples [:map]]
+                                      [:userSamples {:optional true }[:map]]
                                       [:projectType [:enum "simplified" "regular"]]
                                       [:imageryIds [:vector Int]]]]
                               [:session [:map
                                          [:userId {:optional true} Int]]]]
    :plots/flag-plot [:map
+                     [:request-method [:= :post]]
+                     [:uri [:= "/flag-plot"]]
+                     [:json-params [:map]]
                      [:params [:map
                                [:projectId Int]
                                [:plotId Int]
