@@ -255,7 +255,7 @@
                                          [:threshold Int]
                                          [:currentUserId [:maybe [:or :int :string]]]
                                          [:projectType  {:optional true} :string]
-                                         [:inReviewMode {:optional true} Int]]]
+                                         [:inReviewMode {:optional true} Bool]]]
                                [:session [:map
                                           [:userId {:optional true} Int]]]]
    :plots/get-plot-disagreement [:map
@@ -282,12 +282,15 @@
                                       [:confidence {:optional true} Int]
                                       [:confidenceComment [:maybe :string]]
                                       [:collectionStart  Lng]
-                                      [:userSamples [:map]]
+                                      [:userSamples {:optional true }[:map]]
                                       [:projectType [:enum "simplified" "regular"]]
                                       [:imageryIds [:vector Int]]]]
                               [:session [:map
                                          [:userId {:optional true} Int]]]]
    :plots/flag-plot [:map
+                     [:request-method [:= :post]]
+                     [:uri [:= "/flag-plot"]]
+                     [:json-params [:map]]
                      [:params [:map
                                [:projectId Int]
                                [:plotId Int]
@@ -315,7 +318,7 @@
 
 (def request-wrapper
   [:map
-   {:closed true}
+   {:closed false}
    [:ssl-client-cert    :any] ;;can we do better than this?
    [:protocol           [:any]]
    [:cookies            [:map-of :string :any]]
@@ -323,18 +326,13 @@
    [:session            Session]
    [:params             [:map]]
    [:form-params        [:map]]
-   [:multipart-params   [:map]] 
+   [:multipart-params   [:map]]
    [:query-params       [:map]]
-   ;; aren't all of the above -params keys merged due to triangulum?
-   [:headers            [:map-of :string :string]   
-    #_{"connection" "close",
-       "user-agent" "Apache-HttpClient/4.5.13 (Java/17.0.15)",
-       "host" "local.collect.earth:8080",
-       "accept-encoding" "gzip, deflate"}]
-   [:server-port        [:any]] 
+   [:headers            [:map-of :string :string]]
+   [:server-port        [:any]]
    [:server-name        [:any]]
    [:content-length     [:maybe Int]]
-   [:session/key        [:maybe :any]] ;;can we do better than this?
+   [:session/key        [:maybe :any]]
    [:content-type       [:maybe [:enum "application/json"
                                  "text/html"
 
