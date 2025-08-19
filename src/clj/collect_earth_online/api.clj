@@ -280,7 +280,7 @@
                                       [:confidence {:optional true} Int]
                                       [:confidenceComment [:maybe :string]]
                                       [:collectionStart  Lng]
-                                      [:userSamples [:map]]
+                                      [:userSamples {:optional true} [:map]]
                                       [:projectType [:enum "simplified" "regular"]]
                                       [:imageryIds [:vector Int]]]]
                               [:session [:map
@@ -312,7 +312,6 @@
 
 (def request-wrapper
   [:map
-   {:closed true}
    [:ssl-client-cert    :any]
    [:protocol           [:any]]
    [:cookies            [:map-of :string :any]]
@@ -321,7 +320,7 @@
    [:params             [:map]]
    [:form-params        [:map]]
    [:multipart-params   [:map]]
-   [:json-params        [:map]]
+   [:json-params        {:optional true} [:map]]
    [:query-params       [:map]]
    [:headers            [:map-of :string :string]   
     #_{"connection" "close",
