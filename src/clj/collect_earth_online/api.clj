@@ -142,8 +142,7 @@
                                                          [:visibility         :string]
                                                          [:institutionId      Int]]]]
    :geodash/gateway-request                  [:map
-                                              [:params GatewayRequest]
-                                              [:json-params {:optional true}  Json]]
+                                              [:params GatewayRequest]]
    
    :geodash/get-project-widgets           [:map
                                            [:params [:map
@@ -274,7 +273,6 @@
                                        [:max {:optional true} Int]
                                        [:projectId Int]]]]
    :plots/add-user-samples [:map
-                            [:json-params [:map]]
                             [:params [:map
                                       [:projectId Int]
                                       [:plotId Int]
@@ -300,7 +298,6 @@
                               [:session [:map
                                          [:userId {:optional true} Int]]]]
    :plots/reset-plot-lock [:map
-                           [:json-params [:map]]
                            [:params [:map
                                      [:plotId Int]]]
                            [:session [:map
@@ -316,16 +313,16 @@
 (def request-wrapper
   [:map
    {:closed true}
-   [:ssl-client-cert    :any] ;;can we do better than this?
+   [:ssl-client-cert    :any]
    [:protocol           [:any]]
    [:cookies            [:map-of :string :any]]
    [:remote-addr        :string]
    [:session            Session]
    [:params             [:map]]
    [:form-params        [:map]]
-   [:multipart-params   [:map]] 
+   [:multipart-params   [:map]]
+   [:json-params        [:map]]
    [:query-params       [:map]]
-   ;; aren't all of the above -params keys merged due to triangulum?
    [:headers            [:map-of :string :string]   
     #_{"connection" "close",
        "user-agent" "Apache-HttpClient/4.5.13 (Java/17.0.15)",
@@ -334,15 +331,11 @@
    [:server-port        [:any]] 
    [:server-name        [:any]]
    [:content-length     [:maybe Int]]
-   [:session/key        [:maybe :any]] ;;can we do better than this?
-   [:content-type       [:maybe [:enum "application/json"
-                                 "text/html"
-
-                                 "application/x-www-form-urlencoded"
-                                 "multipart/form-data"]]]
+   [:session/key        [:maybe :any]]
+   [:content-type       [:maybe :any]]
    [:character-encoding [:maybe [:enum "UTF-8" "iso-8859-1"]]]   
    [:query-string       [:maybe :string]]
-   [:body               [:any]] ;; stumped on how to desdcribe a ReadableStream
+   [:body               [:any]]
    [:scheme             [:enum :http :https]]
    [:request-method     [:enum :get :post :put :delete :path :head :options]]
    [:uri :string]])
