@@ -58,7 +58,7 @@ export const NewPlotNavigation = () => {
         ...s,
         getNewPlot: true,
         navDirection: direction
-      }))
+      }));
     }
   };
   
@@ -104,7 +104,7 @@ export const NewPlotNavigation = () => {
       <div className="collection-sidebar-plot-navigation">
         <input className="flex flex-col-6"
                value={currentPlot.visibleId || 0}
-               onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}))}}
+               onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}));}}
         ></input>
         <button className="btn outline"
                 onClick={()=>{navToPlot('previous');}}>
@@ -126,6 +126,7 @@ export const NewPlotNavigation = () => {
 
 export const ExternalTools = () => {
   const [auxWindow, setAuxWindow] = useState(null);
+  const [state, setState] = useAtom(stateAtom);
   const {
     currentPlot,
     currentProject,
@@ -161,7 +162,7 @@ export const ExternalTools = () => {
     setAuxWindow(win);
   };
   const openInGoogleEarth = () => {
-    let plotGeom=[0,0]
+    let plotGeom=[0,0];
     if(currentPlot?.plotGeom){
       plotGeom = mercator.getCentroid((currentPlot?.plotGeom || "{}"), true);
       if (!plotGeom || plotGeom.length < 2) {
@@ -177,21 +178,21 @@ export const ExternalTools = () => {
   const showGeoDash = () => {
     const plotRadius = currentProject.plotSize
           ? currentProject.plotSize / 2.0
-          : mercator.getViewRadius(mapConfig);
+          : mercator.getViewRadius(state.mapConfig);
     setState(s => ({...s, usedGeodash: true }));
     window.open(
       "/geo-dash?" +
         `institutionId=${currentProject.institution}` +
-        `&projectId=${projectId}` +
+        `&projectId=${currentProject.id}` +
         `&visiblePlotId=${currentPlot.visibleId}` +
         `&plotId=${currentPlot.id}` +
-        `&plotExtent=${encodeURIComponent(JSON.stringify(mercator.getViewExtent(mapConfig)))}` +
+        `&plotExtent=${encodeURIComponent(JSON.stringify(mercator.getViewExtent(state.mapConfig)))}` +
         `&plotShape=${
           currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon"
         }` +
         `&center=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}` +
         `&radius=${plotRadius}`,
-      `_geo-dash_${projectId}`
+      `_geo-dash_${currentProject.id}`
     );
   };
   

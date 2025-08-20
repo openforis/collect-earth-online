@@ -320,7 +320,7 @@
   [:map
    {:closed false}
    [:ssl-client-cert    :any] ;;can we do better than this?
-   [:protocol           [:enum "HTTP/1.1" "HTTP/2" "h2c"]]
+   [:protocol           [:any]]
    [:cookies            [:map-of :string :any]]
    [:remote-addr        :string]
    [:session            Session]

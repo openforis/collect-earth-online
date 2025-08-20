@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { stateAtom } from './utils/constants';
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
@@ -47,8 +47,7 @@ import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
 export const Collection = ({ projectId, acceptedTerms, plotId }) => {
-  const [state, setState] = useAtom(stateAtom);
-
+  const [state, setState] = useAtom(stateAtom);  
   // INIT COLLECTION EFFECT
   useEffect(() => {
     window.name = "_ceo_collection";
@@ -156,7 +155,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   }, [state.mapConfig, state.plotList]);
 
   // UPDATE MAP WHEN STATE CHANGES — Auto launch geodash
-  useEffect(() => {
+  useEffect(() => {    
     if (!state.currentPlot?.id) return;
 
     showProjectPlot();
@@ -183,7 +182,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   }, [state.getNewPlot]);
 
   // UPDATE MAP WHEN STATE CHANGES — samples redraw (question/answers/visibility)
-  useEffect(() => {
+  useEffect(() => {    
     if (!state.currentPlot?.id) return;
 
     const selectedQuestion = state.currentProject?.surveyQuestions?.[state.selectedQuestionId];
@@ -204,10 +203,13 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
 
   // UPDATE QUESTION STATUS — when userSamples change
   useEffect(() => {
+    //HERE'S OUR CULPRIT
+    
     if (state.currentProject?.surveyQuestions && lengthObject(state.currentProject.surveyQuestions)) {
       updateQuestionStatus();
     }
-  }, [state.userSamples, state.currentProject?.surveyQuestions]);
+  }, [state.userSamples //, state.currentProject?.surveyQuestions
+     ]);
 
   // IMAGERY OVERLAY — when imagery or mapConfig changes; record imageryIds; update overlay
   useEffect(() => {
@@ -300,10 +302,10 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
      setState(prev => ({ ... prev, modalMessage: message }));
      return Promise.resolve()
        .then(() => callBack())
-       .finally(() => setState(prev => ({... prev,  modalMessage: null })));}
+      .finally(() => setState(prev => ({... prev,  modalMessage: null })));};
   
   const zoomToPlot = () => mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
-  
+  const setMapZoom = (zoom) => mercator.setMapZoom (state.mapConfig, zoom);
   const showProjectPlot = () => {
     const { currentPlot, mapConfig, currentProject, showBoundary} = state;
     mercator.disableSelection(mapConfig);
@@ -367,7 +369,6 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   };
 
   const resetPlotLock = () => {
-    console.log(state);
     fetch("/reset-plot-lock", {
       method: "POST",	
       headers: {	
@@ -476,7 +477,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
         );
       });
     }
-  }
+  };
 
   const highlightSamplesByQuestion = () => {
     const { selectedQuestionId, currentProject } = state;
@@ -575,7 +576,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
           </div>
         )}
         <div className="d-flex flex-column flex-grow-1">
-          <ImageAnalysisPane imageryAttribution={state.imageryAttribution} />
+          <ImageAnalysisPane />
         </div>
         <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
           <CollectionSidebar>
@@ -604,14 +605,78 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
         )}
       </div>
     </div>
-  )
+  );
 };
     
-function ImageAnalysisPane({ imageryAttribution }) {
+function ImageAnalysisPane({}) {
+  const [state, setState] = useAtom(stateAtom);
+  
+  const toggleShowBoundary = () => {
+  setState (s => ({...s, showBoundary: !state.showBoundary}));
+  };
+  
+  const toggleShowSamples = () =>  {
+    setState (s=> ({...s, showSamples: !state.showSamples}));
+  };
+
+  const zoomToPlot = () => {
+    state.mapConfig &&
+    mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
+  };
+
+  const zoom = (level) => {
+    state.mapConfig &&
+    mercator.setMapZoom(state.mapConfig, level);
+  };
+  
   return (
-    <div className="pl-0 pr-0 full-height" id="image-analysis-pane">
+    <div className="pl-0 pr-0 full-height" id="image-analysis-pane" style={{position: 'relative'}}>
       <div className="row" id="imagery-info" style={{ justifyContent: "center" }}>
-        <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{imageryAttribution}</p>
+        <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{state.imageryAttribution}</p>
+      </div>
+      
+      <div className="map-controls"
+           style={{position: 'absolute',
+                   bottom: '2em',
+                   right: '.5em',
+                   zIndex: 1}}>
+        <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '1rem' }}>
+          <input
+            className="btn btn-outline-lightgreen btn-sm"
+            onClick={zoomToPlot}
+            type="button"
+            value="Re-Zoom"
+          />
+          <input
+    className={`btn btn-outline-${state.showSamples ? "red" : "lightgreen"} btn-sm`}
+
+            onClick={toggleShowSamples}
+            type="button"
+            value={`${state.showSamples ? "Hide" : "Show"} Samples`}
+          />
+          <input
+    className={`btn btn-outline-${state.showBoundary ? "red" : "lightgreen"} btn-sm`} 
+            onClick={toggleShowBoundary}
+            type="button"
+            value={`${state.showBoundary ? "Hide" : "Show"} Boundary`}
+          />
+          <div className="d-flex flex-column">
+            <button className="btn btn-sm"
+                  style={{backgroundColor: 'white',
+                          borderRadius: '25%',
+                          margin: 'auto 0 auto auto'}}
+                    onClick={() => zoom(1)}
+            >
+		  <SvgIcon icon="plus" size="0.9rem" /></button>
+          <button className="btn btn-sm"
+                  style={{backgroundColor: 'white',
+                          borderRadius: '25%',
+                          margin: 'auto 0 auto auto'}}
+                  onClick={() => zoom(-1)}
+          >
+            <SvgIcon icon="minus" size="0.9rem" /></button>
+          </div>
+             </div>
       </div>
     </div>
   );
@@ -1411,8 +1476,7 @@ class ProjectStats extends React.Component {
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked
-function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
-  console.log(institutionId);
+function QuitMenu({ institutionId, projectId, toggleQuitModal }) {  
   return (
     <div
       className="modal fade show"

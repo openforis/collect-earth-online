@@ -29,7 +29,7 @@ function SideBar ({ userId, userRole, showSidePanel, institutions, userInstituti
   function updateFilterText (newText) {setAppState(prev => ({ ... prev, filterText: newText }));}
 
   return (
-    showSidePanel  ? (
+    showSidePanel == null ? <div></div> :
       <div
         className={'col-lg-3 pr-0 pl-0 overflow-hidden full-height d-flex flex-column slide-panel ' + (showSidePanel ? 'slide-panel-in' : 'slide-panel-out')}
         id="lPanel"
@@ -99,7 +99,6 @@ function SideBar ({ userId, userRole, showSidePanel, institutions, userInstituti
           <h3 className="p-3">Loading data...</h3>
         )}
     </div>
-    ) : <div></div>
   );
 }
 
@@ -295,8 +294,16 @@ class MapPanel extends React.Component {
                 onClose={()=>{this.setState({modal: null});}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
-        <div
-          className={'bg-lightgray ' + (this.props.showSidePanel ? 'slide-toggle-in' : 'slide-toggle-out')}
+        {this.props.showSidePanel == null ?
+         (<div
+            className='bg-lightgray'
+            id="toggle-map-button"
+            onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
+          ><SvgIcon icon="rightDouble" size="1.25rem" /></div>) :
+         (<div
+          className={'bg-lightgray ' + (this.props.showSidePanel
+                                        ? 'slide-toggle-in'
+                                        : 'slide-toggle-out')}
           id="toggle-map-button"
           onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
         >
@@ -305,7 +312,7 @@ class MapPanel extends React.Component {
           ) : (
             <SvgIcon icon="rightDouble" size="1.25rem" />
           )}
-        </div>
+        </div>)}
         <div className="full-height" id="home-map-pane" style={{ maxWidth: "inherit" }} />
         <ProjectPopup
           clusterExtent={this.state.clusterExtent}
