@@ -162,7 +162,8 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_public_imagery()
  RETURNS setOf imagery_return AS $$
 
-    SELECT institution_rid,
+    SELECT imagery_uid,
+        institution_rid,
         visibility,
         title,
         attribution,
@@ -197,7 +198,8 @@ CREATE OR REPLACE FUNCTION select_imagery_by_institution(_institution_id integer
 
     UNION
 
-    (SELECT  institution_rid,
+    (SELECT  imagery_uid,
+             institution_rid,
              visibility,
              title,
              attribution,
@@ -239,7 +241,8 @@ CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_id integer, _user_
             OR (_token_key IS NOT NULL AND _token_key = token_key)))
         OR _user_id = 1))
   UNION (
-    SELECT institution_rid,
+    SELECT imagery_uid,
+           institution_rid,
            visibility,
            title,
            attribution,
