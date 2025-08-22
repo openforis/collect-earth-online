@@ -162,16 +162,15 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_public_imagery()
  RETURNS setOf imagery_return AS $$
 
-    SELECT shared_imagery_uid AS imagery_uid,
-        -1 AS institution_rid,
+    SELECT institution_uid,
         visibility,
         title,
         attribution,
         extent,
         is_proxied,
         source_config
-    FROM shared_imagery
-    WHERE archived = FALSE
+    FROM imagery
+    WHERE archived = FALSE AND global_imagery = TRUE
 
 $$ LANGUAGE SQL;
 
@@ -198,16 +197,15 @@ CREATE OR REPLACE FUNCTION select_imagery_by_institution(_institution_id integer
 
     UNION
 
-    (SELECT shared_imagery_uid AS imagery_uid,
-             -1 AS institution_rid,
+    (SELECT  institution_uid,
              visibility,
              title,
              attribution,
              extent,
              is_proxied,
              source_config
-      FROM shared_imagery
-      WHERE archived = FALSE)
+      FROM imagery
+      WHERE archived = FALSE AND global_imagery = TRUE)
 
     ORDER BY imagery_uid;
 
@@ -241,16 +239,15 @@ CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_id integer, _user_
             OR (_token_key IS NOT NULL AND _token_key = token_key)))
         OR _user_id = 1))
   UNION (
-    SELECT shared_imagery_uid AS imagery_uid,
-           -1 AS institution_rid,
+    SELECT institution_uid,
            visibility,
            title,
            attribution,
            extent,
            is_proxied,
            source_config
-    FROM shared_imagery
-    WHERE archived = FALSE)
+    FROM imagery
+    WHERE archived = FALSE AND global_imagery = TRUE)
 
   ORDER BY imagery_uid;
 
