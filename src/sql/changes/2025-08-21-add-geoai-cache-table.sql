@@ -1,4 +1,4 @@
-UPDATE TABLE projects ADD COLUMN plot_similatirty_asset text;
+ALTER TABLE projects ADD COLUMN plot_similatirty_asset text;
 
 CREATE TABLE geoai_cache (
   geoai_cache_uid SERIAL,
