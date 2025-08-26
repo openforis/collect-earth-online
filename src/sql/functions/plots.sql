@@ -283,6 +283,39 @@ CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
 $$ LANGUAGE SQL;
 
 
+CREATE OR REPLACE FUNCTION select_plots_by_similarity (_project_id integer, _ref_plot_id integer)
+RETURNS setOf collection_return  AS $$
+  
+SELECT p.plot_uid,
+        flagged,
+        flagged_reason,
+        confidence,
+        confidence_comment,
+        visible_id,
+        ST_AsGeoJSON(plot_geom) as plot_geom,
+        extra_plot_info,
+        pa.user_rid,
+        u.email
+    FROM similar_plots sp
+    CROSS JOIN unnest (sp.similar_plots) WITH ORDINALITY AS elem(plot_uid, ord)
+    JOIN plots p
+        ON p.plot_uid = elem.plot_uid
+    LEFT JOIN plot_assignments pa
+        ON p.plot_uid = pa.plot_rid
+    LEFT JOIN user_plots up
+        ON p.plot_uid = up.plot_rid
+        AND (pa.user_rid = up.user_rid OR NOT (SELECT project_has_assigned(_project_id)))
+    LEFT JOIN plot_locks pl
+        ON p.plot_uid = pl.plot_rid
+    LEFT JOIN users u
+        ON pa.user_rid = u.user_uid
+    
+WHERE sp.plot_rid = _ref_plot_id
+AND   sp.project_rid = _project_id
+ORDER BY elem.ord
+$$ LANGUAGE SQL;
+
+
 -- Lock plot to user
 CREATE OR REPLACE FUNCTION lock_plot(_plot_id integer, _user_id integer, _lock_end timestamp)
  RETURNS VOID AS $$
@@ -919,3 +952,5 @@ CREATE OR REPLACE FUNCTION convert_geojson_to_geom(_geojson TEXT)
 RETURNS GEOMETRY AS $$
     SELECT ST_GeomFromGeoJSON(_geojson);
 $$ LANGUAGE SQL;
+
+

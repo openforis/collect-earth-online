@@ -89,6 +89,7 @@ export const NewPlotNavigation = () => {
           <option value="analyzed">Analyzed plots</option>
           <option value="unanalyzed">Unanalyzed plots</option>
           <option value="flagged">Flagged plots</option>
+          <option value="similar">Similar Plots</option>
         </select>
 
       <div className="collection-sidebar-mode">

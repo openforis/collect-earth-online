@@ -210,7 +210,7 @@
      :email             email}))
 
 (defn get-correct-plot-navigation
-  [project-id user-id current-user-id review-mode? navigation-mode project-type threshold]
+  [project-id user-id current-user-id review-mode? navigation-mode project-type threshold reference-plot-id]
   (if (and (= project-type "simplified")
            (= navigation-mode "unanalyzed"))
     (call-sql "select_simplified_project_plot" project-id)
@@ -223,6 +223,7 @@
                            (call-sql "select_unanalyzed_plots" project-id user-id false))
       "user"       (call-sql "select_analyzed_plots" project-id current-user-id false)
       "qaqc"       (call-sql "select_qaqc_plots" project-id)
+      "similar"    (call-sql "select_plots_by_similarity" project-id reference-plot-id)
       [])))
 
 (defn get-collection-plot
@@ -247,6 +248,7 @@
         project-id      (tc/val->int (:projectId params))
         old-visible-id  (tc/val->int (:visibleId params))
         threshold       (tc/val->int (:threshold params))
+        ref-plot-id     (tc/val->int (:referencePlotId params))
         project-type    (:projectType params "regular")
         user-id         (:userId session -1)
         current-user-id (tc/val->int (:currentUserId params -1))
@@ -258,7 +260,8 @@
                                                      review-mode?
                                                      navigation-mode
                                                      project-type
-                                                     threshold)
+                                                     threshold
+                                                     ref-plot-id)
         grouped-plots   (group-by :visible_id proj-plots)
         sorted-plots    (->> (if (= navigation-mode "qaqc")
                                (filter-plot-disagreement project-id grouped-plots threshold)

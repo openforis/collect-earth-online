@@ -222,6 +222,10 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
     updateMapImagery();
   }, [state.mapConfig, state.currentImagery?.id]);
 
+  useEffect(()=> {
+    setState((s)=> ({ ...s, referencePlotId: 1}));
+  }, [state.navigationMode]);
+
   // API CALLS
   const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {       
     processModal("Getting plot", ()=>{
@@ -236,6 +240,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
             threshold: state.threshold,
             currentUserId: state.currentUserId,
             projectType: state.currentProject.type,
+            referencePlotId: state.referencePlotId || 0
           })
       )
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
