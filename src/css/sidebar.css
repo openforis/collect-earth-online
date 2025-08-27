@@ -1,6 +1,7 @@
 .collection-sidebar-container {
   position: fixed;
   margin-top: 60px;
+  padding-bottom: 60px;
   top: 0;
   right: 0;
   height: 100vh;
@@ -24,6 +25,7 @@
 .collection-sidebar-footer {
   position: sticky;
   bottom: 0;
+  height: 90px;
   background-color: #fff;
   border-top: 1px solid #c9d6d6;
   padding: 16px 0;
