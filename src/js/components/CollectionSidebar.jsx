@@ -8,19 +8,27 @@ import { stateAtom } from '../utils/constants';
 import Modal from "./Modal";
 import { LoadingModal } from "./PageComponents";
 import { mercator } from "../utils/mercator";
+import { SurveyQuestions } from "./SurveyQuestions.jsx";
 
-export const CollectionSidebar = () => {  
-  const {modal, modalMessage} = useAtomValue(stateAtom);
+export const CollectionSidebar = ({ processModal }) => {
+  const {modal, modalMessage, newPlotId} = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
 
   return (
     <div className="collection-sidebar-container">
       <div className="collection-sidebar-content">
         <NewPlotNavigation />
-        <ExternalTools />
+        {newPlotId > 0 ?
+         (
+           <>
+             <ExternalTools />
+             <SurveyQuestions />
+           </>
+         ) : null
+     }
       </div>
       <div className="collection-sidebar-footer">
-        <SidebarFooter/>
+        <SidebarFooter processModal={ processModal }/>
       </div>
       {modal?.alert &&
        <Modal title={modal.alert.alertType}
@@ -35,13 +43,14 @@ export const CollectionSidebar = () => {
 
 export const NewPlotNavigation = () => {
   const setAppState = useSetAtom(stateAtom);
-  const {currentProject,
-         originalUserSamples,
-         userSamples,
-         currentPlot,
-         inReviewMode,
-         navigationMode,
-        } = useAtomValue(stateAtom);
+  const {
+    currentProject,
+    originalUserSamples,
+    userSamples,
+    currentPlot,
+    inReviewMode,
+    navigationMode,
+  } = useAtomValue(stateAtom);
 
   function hasChanged () {
     return !_.isEqual(userSamples, originalUserSamples);}
@@ -103,7 +112,7 @@ export const NewPlotNavigation = () => {
 
       <div className="collection-sidebar-plot-navigation">
         <input className="flex flex-col-6"
-               value={currentPlot.visibleId || 0}
+               value={currentPlot?.visibleId || 0}
                onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}));}}
         ></input>
         <button className="btn outline"
@@ -137,23 +146,23 @@ export const ExternalTools = () => {
     let urlParams="";
     if(currentPlot?.plotGeom){
       urlParams = currentPlot?.plotGeom?.includes("Point")
-            ? currentProject.plotShape === "circle"
+            ? currentProject?.plotShape === "circle"
             ? "center=[" +
-            mercator.parseGeoJson(currentPlot.plotGeom).getCoordinates() +
+            mercator.parseGeoJson(currentPlot?.plotGeom).getCoordinates() +
             "];radius=" +
-            currentProject.plotSize / 2
+            currentProject?.plotSize / 2
             : "geoJson=" +
             mercator.geometryToGeoJSON(
               mercator.getPlotPolygon(
-                currentPlot.plotGeom,
-                currentProject.plotSize,
-                currentProject.plotShape
+                currentPlot?.plotGeom,
+                currentProject?.plotSize,
+                currentProject?.plotShape
               ),
               "EPSG:4326",
               "EPSG:3857",
               5
             )
-            : "geoJson=" + currentPlot.plotGeom;
+            : "geoJson=" + currentPlot?.plotGeom;
     }
     if (auxWindow) auxWindow.close();
     const win = window.open(
@@ -176,23 +185,23 @@ export const ExternalTools = () => {
   };
 
   const showGeoDash = () => {
-    const plotRadius = currentProject.plotSize
-          ? currentProject.plotSize / 2.0
+    const plotRadius = currentProject?.plotSize
+          ? currentProject?.plotSize / 2.0
           : mercator.getViewRadius(state.mapConfig);
     setState(s => ({...s, usedGeodash: true }));
     window.open(
       "/geo-dash?" +
-        `institutionId=${currentProject.institution}` +
-        `&projectId=${currentProject.id}` +
-        `&visiblePlotId=${currentPlot.visibleId}` +
-        `&plotId=${currentPlot.id}` +
+        `institutionId=${currentProject?.institution}` +
+        `&projectId=${currentProject?.id}` +
+        `&visiblePlotId=${currentPlot?.visibleId}` +
+        `&plotId=${currentPlot?.id}` +
         `&plotExtent=${encodeURIComponent(JSON.stringify(mercator.getViewExtent(state.mapConfig)))}` +
         `&plotShape=${
-          currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon"
+          currentPlot?.plotGeom?.includes("Point") ? currentProject?.plotShape : "polygon"
         }` +
-        `&center=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}` +
+        `&center=${currentPlot?.plotGeom?.includes("Point") ? currentPlot?.plotGeom : ""}` +
         `&radius=${plotRadius}`,
-      `_geo-dash_${currentProject.id}`
+      `_geo-dash_${currentProject?.id}`
     );
   };
   
@@ -206,7 +215,7 @@ export const ExternalTools = () => {
 
       <div className="ext-grid">
         <button className="ext-btn"
-              download={`ceo_projectId-${currentProject.id}_plotId-${currentPlot.visibleId}.kml`}
+              download={`ceo_projectId-${currentProject?.id}_plotId-${currentPlot?.visibleId}.kml`}
                 href={
                   "data:earth.kml+xml application/vnd.google-earth.kmz," +
                     encodeURIComponent(KMLFeatures)}
@@ -219,8 +228,9 @@ export const ExternalTools = () => {
           <span>Go To GEE Script</span>
         </button>
 
-        <button className="ext-btn">
-          <span>Interpretation Instructions</span>
+        <button className="ext-btn"
+                onClick={showGeoDash}>
+          <span>Open GeoDash</span>
         </button>
 
         <button className="ext-btn"
@@ -232,13 +242,141 @@ export const ExternalTools = () => {
   );
 };
 
-export const SidebarFooter = () => {
+export const SidebarFooter = ({ processModal }) => {
+
+  const {
+    currentProject,
+    currentPlot,
+    collectionStart,
+    userSamples,
+    currentUserId,
+    imageryIds,
+    userImages,
+    remainingPlotters,
+    usedKML,
+    usedGeodash,
+    inReviewMode,
+  } = useAtomValue(stateAtom);
+  const setAppState = useSetAtom(stateAtom);
+
+  const hasAnswers = () =>
+        _.some(Object.values(userSamples), (sample) => !_.isEmpty(sample)) ||
+        _.some(Object.values(userSamples), (sample) => !_.isEmpty(sample));
+
+  const confirmFlag = () =>
+        hasAnswers() ||
+        confirm(
+          "Flagging this plot will delete your previous answers. Are you sure you want to continue?"
+        );
+
+  const navToNextPlot = () => {
+    return setAppState(s => ({
+      ...s,
+      getNewPlot: true,
+      navDirection: 'next'
+    }));
+  }
+
+  const savePlotAnswers = () => {
+    processModal("Saving plot answers", () =>
+      fetch("/add-user-samples", {
+        method: "post",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          projectId: currentProject.id,
+          plotId: currentPlot.id,
+          confidence: currentProject.projectOptions.collectConfidence
+            ? currentPlot.confidence
+            : -1,
+          confidenceComment: currentProject.projectOptions.collectConfidence
+            ? currentPlot.confidenceComment
+            : null,
+          collectionStart: collectionStart,
+          userImages: userImages,
+          userSamples,
+          newPlotSamples: currentProject.allowDrawnSamples && currentPlot.samples,
+          inReviewMode: inReviewMode,
+          currentUserId: currentUserId,
+          imageryIds: imageryIds,
+          projectType: currentProject.type,
+          usedKML: usedKML,
+          usedGeodash: usedGeodash,
+        }),
+      }).then((response) => {
+        if (response.ok) {
+          if (inReviewMode) {
+            setAppState(s => ({...s, remainingPlotters: remainingPlotters.filter((plotter) => plotter.userId != currentUserId) }));
+            if(remainingPlotters.length > 0) {
+              setAppState(s => ({...s, modal: {alert: {alertType: "Plot Interpretation Alert", alertMessage: "There are more interpretations for this plot.\nPlease select the user from the user dropdown to review another interpretation."}}}));
+              return null;
+            }
+          }
+          if(currentProject.type !== "simplified") {
+            return navToNextPlot();
+          } else {
+            alert("Answers saved successfully!");
+          }
+        } else {
+          console.log(response);
+          setAppState(s => ({...s, modal: {alert: {alertType: "Assignment Error", alertMessage: "Error saving your assignments to the database. See console for details."}}}));
+        }
+      })
+    );
+  };
+
+  const flagPlot = () => {
+    if (confirmFlag()) {
+      processModal("Saving flagged plot", () =>
+        fetch("/flag-plot", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            projectId: currentProject.id,
+            plotId: currentPlot.id,
+            collectionStart: collectionStart,
+            flaggedReason: currentPlot.flaggedReason,
+            currentUserId: currentUserId,
+          }),
+        }).then((response) => {
+          if (response.ok) {
+            return navToNextPlot();
+          } else {
+            console.log(response);
+            setAppState(s => ({...s, modal: {alert: {alertType: "Plot Flagging Error", alertMessage: "Error flagging plot as bad. See console for details."}}}));
+          }
+        })
+      )
+    }
+  };
+
+  const postValuesToDB = () => {
+    if (currentPlot.flagged) {
+      flagPlot();
+    } else {
+      savePlotAnswers();
+    }
+  };
+
+  const toggleFlagged = () => setAppState(s => ({...s, currentPlot: {...s.currentPlot, flagged: !s.currentPlot.flagged}}))
+
   return (
     <div className="collection-sidebar-footer-buttons">
       <button className="btn outline">Clear All</button>
-      <button className="btn outline">Flag Plot</button>
+      <button className="btn outline"
+              onClick={toggleFlagged}>
+        {currentPlot.flagged ? "Unflag Plot" : "Flag Plot"}
+      </button>
       <button className="btn filled">Quit</button>
-      <button className="btn filled">Save & Continue</button>
+      <button className="btn filled"
+              onClick={postValuesToDB}
+      >Save & Continue</button>
     </div>
   );
 };
+
