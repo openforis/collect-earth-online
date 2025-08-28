@@ -5,7 +5,7 @@
   top: 0;
   right: 0;
   height: 100vh;
-  width: 33vw;
+  width: 35vw;
   display: flex;
   flex-direction: column;
   background-color: #e6efef;
@@ -50,7 +50,7 @@
 
 .collection-sidebar-title {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 18px;
 }
 
 .collection-sidebar-subtitle {

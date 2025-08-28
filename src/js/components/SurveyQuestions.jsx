@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import { stateAtom } from '../utils/constants';
 import { mercator } from '../utils/mercator';
+import SvgIcon from "./svg/SvgIcon";
 import {
   lengthObject,
   mapObjectArray,
@@ -10,38 +11,29 @@ import {
 import '../../css/survey.css';
 
 export const SurveyQuestions = () => {
-  const { currentProject,
+  const { answerMode,
+          currentProject,
           currentPlot,
           mapConfig,
           selectedSampleId,
           userSamples } = useAtomValue(stateAtom);
   const state = useAtomValue(stateAtom);
-  const setState = useSetAtom(stateAtom);
-  const [openTopId, setOpenTopId] = React.useState(null);
-  const [openByParent, setOpenByParent] = React.useState({})
+  const setAppState = useSetAtom(stateAtom);
+  const [openTopId, setOpenTopId] = useState(null);
+  const [openByParent, setOpenByParent] = useState({})
+
   const entries = (obj = {}) => Object.entries(obj || {});
   const visibleAnswers = (q) => entries(q.answers).filter(([, a]) => !a?.hide);
 
-const parents = useMemo(
-  () =>
-    mapObjectArray(
-      currentProject?.surveyQuestions || {},
-      ([id, q]) => ({ id: Number(id), ...q })
-    )
-      .filter((q) => (q.parentQuestionId ?? -1) < 0 && !q.hideQuestion)
-      .sort(
-        (a, b) =>
-          (a.cardOrder ?? Number.POSITIVE_INFINITY) -
-          (b.cardOrder ?? Number.POSITIVE_INFINITY)
-      ),
-  [currentProject?.surveyQuestions]
-);
 
+  //EFFECTS
   useEffect(() => {
     console.log(state);
   }, [currentProject, userSamples]);
 
-  // 1) Which samples to write to
+  //FUNCTIONS
+
+  // Which samples to write to
   const getSelectedSampleIds = (questionId) => {
     const answered = currentProject?.surveyQuestions?.[questionId]?.answered || [];
     const allFeatures = mercator.getAllFeatures(mapConfig, "currentSamples") || [];
@@ -58,13 +50,13 @@ const parents = useMemo(
     return list.map((f) => f.get("sampleId"));
   };
   
-  // 2) Validate the selection
+  // Validate the selection
   const checkSelection = (sampleIds, questionId) => {
     const q = currentProject?.surveyQuestions?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
 
     if (sampleIds.some((s) => !visibleIds.includes(s))) {
-      setState((s) => ({
+      setAppState((s) => ({
         ...s,
         modal: { alert: {
           alertType: "Selection Error",
@@ -75,7 +67,7 @@ const parents = useMemo(
     }
 
     if (sampleIds.length === 0) {
-      setState((s) => ({
+      setAppState((s) => ({
         ...s,
         modal: { alert: {
           alertType: "Selection Error",
@@ -88,9 +80,9 @@ const parents = useMemo(
     return true;
   };
 
-  // 3) Save the answer(s) to userSamples and userImages
+  // Save the answers to userSamples and userImages
   const setCurrentValue = (questionId, answerId, answerText) => {
-    setState((prev) => {
+    setAppState((prev) => {
       const sampleIds = getSelectedSampleIds(questionId);
       if (!checkSelection(sampleIds, questionId)) return prev;
 
@@ -169,8 +161,6 @@ const parents = useMemo(
     .filter(q => q.parentQuestionId === parentId && !q.hideQuestion)
     .sort((a, b) => (a.cardOrder ?? 1e9) - (b.cardOrder ?? 1e9));
 
-  // FUNCTIONS
-
   const getAnswerForSample = (qId, sampleId) => {
     const us = userSamples?.[sampleId]?.[qId];
     if (us) return { answerId: Number(us.answerId), answer: us.answer };
@@ -211,6 +201,7 @@ const parents = useMemo(
     return 'partial';
   };
 
+  //Check if the answer has been fully answered for all samples to determine its status
   const getQuestionStatus = (questionId) => {
     const base = getQuestionStatusShallow(questionId);
 
@@ -293,7 +284,7 @@ const parents = useMemo(
           prev[question.parentQuestionId] === question.id ? null : question.id,
         }));
       }
-      setState(s => ({ ...s, selectedQuestionId: question.id }));
+      setAppState(s => ({ ...s, selectedQuestionId: question.id }));
     };
 
     return (
@@ -427,46 +418,79 @@ const parents = useMemo(
     const render = renderers[q.componentType];
     return render ? render(q) : null;
   };
+
+  // MEMOIZATION
+  const parents = useMemo(
+    () =>
+    mapObjectArray(
+      currentProject?.surveyQuestions || {},
+      ([id, q]) => ({ id: Number(id), ...q })
+    )
+      .filter((q) => (q.parentQuestionId ?? -1) < 0 && !q.hideQuestion)
+      .sort(
+        (a, b) =>
+        (a.cardOrder ?? Number.POSITIVE_INFINITY) -
+          (b.cardOrder ?? Number.POSITIVE_INFINITY)
+      ),
+    [currentProject?.surveyQuestions]
+  );
+
+  const { validatedCount, totalTop } = useMemo(() => {
+    const total = parents.length;
+    let validated = 0;
+    for (const p of parents) {
+      if (getQuestionStatus(p.id) === 'complete') validated++;
+    }
+    return { validatedCount: validated, totalTop: total };
+  }, [parents, currentProject?.surveyQuestions, userSamples]);
+
+  
   return (
     <div className="sq-card">
       <div className="sq-header">
         <div className="sq-title-row">
-          <span className="sq-title">SURVEY QUESTIONS</span>
-          <span className="sq-subtitle">0/0 validated</span>
+          <span className="sq-title">
+            SURVEY{" "}
+            <span className="sq-subtitle">
+              {`${validatedCount}/${totalTop} questions answered`}
+            </span>
+          </span>
         </div>
-        <button className="sq-info" aria-label="Info">i</button>
       </div>
 
-      {currentPlot?.flagged ?
-       (
-         <>
-           <h2 style={{color: "red"}}> This plot has been flagged, unflag it to collect data.</h2>
-           <div className="sq-textarea-wrap">
-             <label className="sq-textarea-label">Flagged Reason (optional):</label>
-             <textarea
-               className="sq-textarea"
-               value={currentPlot?.flaggedReason || ''}
-               onChange={(e) =>
-                 setState((s) => ({
-                   ...s,
-                   currentPlot: {
-                     ...s.currentPlot,
-                     flaggedReason: e.target.value,
-                   },
-                 }))
-               }
-             />
-           </div>
-         </>
-       ) : (
-         <>
-           <div className="sq-list">
-             {parents.map(q => renderQuestionNode(q, 0))}
-             <ConfidenceItem isOpen={openTopId === 'confidence'}
-                             onToggle={() => setOpenTopId((prev) => (prev === 'confidence' ? null : 'confidence'))}/>
-           </div>
-         </>
-       )}
+      {currentPlot?.flagged ? (
+        <>
+          <h2 style={{ color: "red" }}>
+            This plot has been flagged, unflag it to collect data.
+          </h2>
+          <div className="sq-textarea-wrap">
+            <label className="sq-textarea-label">Flagged Reason (optional):</label>
+            <textarea
+              className="sq-textarea"
+              value={currentPlot?.flaggedReason || ""}
+              onChange={(e) =>
+                setAppState((s) => ({
+                  ...s,
+                  currentPlot: {
+                    ...s.currentPlot,
+                    flaggedReason: e.target.value,
+                  },
+                }))
+              }
+            />
+          </div>
+        </>
+      ) : (
+        <div className="sq-list">
+          {parents.map((q) => renderQuestionNode(q, 0))}
+          <ConfidenceItem
+            isOpen={openTopId === "confidence"}
+            onToggle={() =>
+              setOpenTopId((prev) => (prev === "confidence" ? null : "confidence"))
+            }
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -474,14 +498,43 @@ const parents = useMemo(
 
 const ConfidenceItem = ({ isOpen, onToggle }) => {
   const { currentProject, currentPlot } = useAtomValue(stateAtom);
-  const setState = useSetAtom(stateAtom);
+  const setAppState = useSetAtom(stateAtom);
+  const [confidenceStatus, setConfidenceStatus] = useState('none');
 
   if (!currentProject?.projectOptions?.collectConfidence) return null;
 
+  const calculateConfidenceStatus = () => {
+    const { confidence, confidenceComment } = currentPlot;
+    if(confidence && confidenceComment) {
+      setConfidenceStatus('complete');
+    } else if(!confidence && !confidenceComment) {
+      setConfidenceStatus('none');
+    } else {
+      setConfidenceStatus('partial');
+    }
+  }
+
+  useEffect(() => {
+    calculateConfidenceStatus();
+  }, [currentPlot?.confidence, currentPlot?.confidenceComment]);
+
+  console.log(confidenceStatus);
+  
   return (
     <div className={`sq-item ${isOpen ? 'open' : ''}`}>
       <button className="sq-item-head" onClick={onToggle}>
-        <span className="sq-radio" aria-hidden="true" />
+        <span className={`sq-radio sq-radio--${confidenceStatus}`} aria-hidden="true" >
+          {confidenceStatus === 'complete' && (
+            <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">
+              <path d="M6.5 11.2L3.3 8l1.1-1.1 2.1 2.1 5.1-5.1L12.7 5 6.5 11.2z" fill="currentColor"/>
+            </svg>
+          )}
+          {confidenceStatus === 'partial' && (
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+              <rect x="4" y="9" width="12" height="2" fill="currentColor" rx="1" />
+            </svg>
+            )}
+        </span>
         <span className="sq-text">Plot Confidence</span>
         <span className={`sq-chevron ${isOpen ? 'up' : 'down'}`} aria-hidden="true">▾</span>
       </button>
@@ -501,7 +554,7 @@ const ConfidenceItem = ({ isOpen, onToggle }) => {
               step="1"
               value={currentPlot?.confidence || 0}
               onChange={(e) =>
-                setState((s) => ({
+                setAppState((s) => ({
                   ...s,
                   currentPlot: {
                     ...s.currentPlot,
@@ -518,7 +571,7 @@ const ConfidenceItem = ({ isOpen, onToggle }) => {
               className="sq-textarea"
               value={currentPlot?.confidenceComment || ''}
               onChange={(e) =>
-                setState((s) => ({
+                setAppState((s) => ({
                   ...s,
                   currentPlot: {
                     ...s.currentPlot,
@@ -530,6 +583,231 @@ const ConfidenceItem = ({ isOpen, onToggle }) => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+export const DrawingTool = () => {
+  const { currentProject, currentPlot, mapConfig, answerMode } = useAtomValue(stateAtom);
+  const setAppState = useSetAtom(stateAtom);
+
+  const sg = currentProject?.sampleGeometries || {
+    points: true,
+    lines: true,
+    polygons: true,
+  };
+  const initialDrawTool = sg.polygons ? "Polygon" : sg.lines ? "LineString" : "Point";
+  const [drawTool, setDrawToolState] = useState(initialDrawTool);
+
+  // helpers moved here so this card is self-contained
+  const setAnswerMode = (newMode, tool) => {
+    setAppState((s) => ({ ...s, answerMode: newMode }));
+    if (newMode === "draw") {
+      featuresToDrawLayer(tool || drawTool);
+    } else {
+      featuresToSampleLayer();
+    }
+  };
+
+  const featuresToDrawLayer = (tool) => {
+    const type = currentProject.type;
+    const samples = currentPlot?.samples || [];
+    const visibleSamples =
+          type === "simplified" ? samples.filter((s) => s.visibleId !== 1) : samples;
+
+    mercator.disableDrawing(mapConfig);
+    mercator.removeLayerById(mapConfig, "currentSamples");
+    mercator.removeLayerById(mapConfig, "drawLayer");
+
+    mercator.addVectorLayer(
+      mapConfig,
+      "drawLayer",
+      mercator.samplesToVectorSource(visibleSamples),
+      mercator.ceoMapStyles("draw", "orange"),
+      9999
+    );
+
+    mercator.enableDrawing(mapConfig, "drawLayer", tool);
+  };
+
+  const featuresToSampleLayer = () => {
+    mercator.disableDrawing(mapConfig);
+    const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
+    const existingIds = allFeatures
+          .map((f) => f.get("sampleId"))
+          .filter((id) => id);
+
+    const getMax = (arr) => Math.max(0, ...existingIds, ...arr.map((s) => s.id));
+
+    const newSamples = allFeatures.reduce((acc, cur) => {
+      const nextId = cur.get("sampleId") || getMax(acc) + 1;
+      return [
+        ...acc,
+        {
+          id: nextId,
+          visibleId: cur.get("visibleId"),
+          sampleGeom: mercator.geometryToGeoJSON(
+            cur.getGeometry(),
+            "EPSG:4326",
+            "EPSG:3857"
+          ),
+        },
+      ];
+    }, []);
+
+    setAppState((prev) => ({
+      ...prev,
+      currentPlot: { ...prev.currentPlot, samples: newSamples },
+      userSamples: newSamples.reduce(
+        (acc, cur) => ({ ...acc, [cur.id]: prev.userSamples?.[cur.id] || {} }),
+        {}
+      ),
+      userImages: newSamples.reduce(
+        (acc, cur) => ({ ...acc, [cur.id]: prev.userImages?.[cur.id] || {} }),
+        {}
+      ),
+    }));
+  };
+
+  // enter draw mode on mount
+  useEffect(() => {
+    setAnswerMode("draw", initialDrawTool);
+    return () => setAnswerMode("answer");
+  }, [mapConfig]);
+
+  const buttonStyle = (active) => ({
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "36px",
+    height: "36px",
+    marginRight: "10px",
+    borderRadius: "6px",
+    border: `2px solid ${active ? "#2d6f74" : "#c9d6d6"}`,
+    background: active ? "#e6f4f4" : "#fff",
+    color: "#2d6f74",
+  });
+
+  const setDrawTool = (type) => {
+    setDrawToolState(type);
+    setAnswerMode("draw", type);
+  };
+
+  const clearAll = (tool = drawTool) => {
+    if (answerMode === "draw" && window.confirm("Do you want to clear all samples from the draw area?")) {
+      mercator.disableDrawing(mapConfig);
+      mercator.removeLayerById(mapConfig, "currentSamples");
+      mercator.removeLayerById(mapConfig, "drawLayer");
+
+      // re-add an empty draw layer and re-enable drawing
+      mercator.addVectorLayer(
+        mapConfig,
+        "drawLayer",
+        null,
+        mercator.ceoMapStyles("draw", "orange"),
+        9999
+      );
+      mercator.enableDrawing(mapConfig, "drawLayer", tool);
+    } else if (window.confirm("Do you want to clear all answers?")) {
+      if (typeof resetPlotValues === "function") {
+        resetPlotValues();
+      } else {
+        // fallback: clear in-app answers if no handler provided
+        setAppState((s) => ({
+          ...s,
+          userSamples: {},
+          userImages: {},
+        }));
+      }
+    }
+  };
+
+  const RenderDrawTool = ({ icon, title, type }) => (
+    <div
+      onClick={() => setDrawTool(type)}
+      style={{
+        alignItems: "center",
+        cursor: "pointer",
+        display: "flex",
+        padding: "8px 0",
+      }}
+      title={title}
+    >
+      <span style={buttonStyle(drawTool === type)}>
+        <SvgIcon icon={icon} size="2rem" />
+      </span>
+      {`${type} tool`}
+    </div>
+  );
+
+  const RenderDrawTools = () => (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      {sg.points && (
+        <RenderDrawTool
+          icon="point"
+          title="Click anywhere to add a new point."
+          type="Point"
+        />
+      )}
+      {sg.lines && (
+        <RenderDrawTool
+          icon="lineString"
+          title={
+            "Click anywhere to start drawing.\n" +
+              "A new point along the line string can be added with a single click.\n" +
+              "Right click or double click to finish drawing.\n"
+          }
+          type="LineString"
+        />
+      )}
+      {sg.polygons && (
+        <RenderDrawTool
+          icon="polygon"
+          title={
+            "Click anywhere to start drawing.\n" +
+              "A new vertex can be added with a single click.\n" +
+              "Right click, double click, or complete the polygon to finish drawing.\n"
+          }
+          type="Polygon"
+        />
+      )}
+      <ul style={{ textAlign: "left", marginTop: "8px" }}>
+        How To:
+        <li>To modify an existing feature, hold Ctrl and click to drag</li>
+        <li>To delete a feature, hold Ctrl and right click on it</li>
+        <li>To save changes, click “Save to samples” below</li>
+      </ul>
+    </div>
+  );
+
+  return (
+    <div className="sq-card">
+      <div className="sq-header">
+        <div className="sq-title-row">
+          <span className="sq-title">SAMPLE DRAWING TOOL</span>
+        </div>
+      </div>
+
+      <div className="sq-draw-body">
+        <RenderDrawTools />
+
+        <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
+          <button
+            className="btn btn-outline-lightgreen"
+            onClick={featuresToSampleLayer}
+            title="Save drawn features back to sample list"
+          >
+            Save samples
+          </button>
+          <button
+            className="btn btn-outline-lightgreen"
+            onClick={() => clearAll()}
+            title="Exit draw mode and return to answering"
+          >
+            Discard samples
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

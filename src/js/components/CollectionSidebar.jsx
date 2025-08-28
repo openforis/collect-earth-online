@@ -8,7 +8,7 @@ import { stateAtom } from '../utils/constants';
 import Modal from "./Modal";
 import { LoadingModal } from "./PageComponents";
 import { mercator } from "../utils/mercator";
-import { SurveyQuestions } from "./SurveyQuestions.jsx";
+import { SurveyQuestions, DrawingTool } from "./SurveyQuestions.jsx";
 
 export const CollectionSidebar = ({ processModal }) => {
   const {modal, modalMessage, newPlotId} = useAtomValue(stateAtom);
@@ -22,6 +22,7 @@ export const CollectionSidebar = ({ processModal }) => {
          (
            <>
              <ExternalTools />
+             <DrawingTool />
              <SurveyQuestions />
            </>
          ) : null

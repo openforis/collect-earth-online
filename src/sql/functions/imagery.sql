@@ -175,7 +175,7 @@ CREATE OR REPLACE FUNCTION select_public_imagery()
         global_imagery
     FROM imagery
     WHERE archived = FALSE
-    AND global_imagery=TRUE
+    AND global_imagery=TRUE ORDER BY imagery_uid ASC
 
 $$ LANGUAGE SQL;
 
