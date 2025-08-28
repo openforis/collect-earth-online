@@ -654,7 +654,7 @@ function ImageAnalysisPane({}) {
       <div className="map-controls"
            style={{position: 'absolute',
                    bottom: '2em',
-                   right: '.5em',
+                   right: '10vw',
                    zIndex: 1}}>
         <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '1rem' }}>
           <input

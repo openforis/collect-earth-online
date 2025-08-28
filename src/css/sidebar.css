@@ -305,6 +305,7 @@
 }
 
 .slide-toggle-out {
+    margin-left:1em;
     animation: slide-toggle-out 0.5s forwards;
 }
 

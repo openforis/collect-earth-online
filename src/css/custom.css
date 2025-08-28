@@ -866,7 +866,7 @@ input:checked + .switch-slider:before {
 }
 
 body {
-    margin-left: 10px;
+    /* margin-left: 1rem; */
     margin-top: 60px;
     overflow-x: hidden;
 }
