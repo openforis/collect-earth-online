@@ -286,7 +286,7 @@ class MapPanel extends React.Component {
   render() {
     return (
       <div
-        className='col-lg-9 col-md-12 pl-0 col-xl-12 col-xl-9 full-height'
+        className="full-height full-width"
         id="mapPanel"
       >
         {this.state.modal?.alert &&
@@ -296,14 +296,15 @@ class MapPanel extends React.Component {
          </Modal>}
         {this.props.showSidePanel == null ?
          (<div
-            className='bg-lightgray'
+            className='bg-lightgray hide-toggle'
             id="toggle-map-button"
             onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
           ><SvgIcon icon="rightDouble" size="1.25rem" /></div>) :
          (<div
-          className={'bg-lightgray ' + (this.props.showSidePanel
-                                        ? 'slide-toggle-in'
-                                        : 'slide-toggle-out')}
+            className={'bg-lightgray ' +
+                       (this.props.showSidePanel 
+                        ? 'slide-toggle-in'
+                        : 'slide-toggle-out')}
           id="toggle-map-button"
           onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
         >
@@ -313,7 +314,7 @@ class MapPanel extends React.Component {
             <SvgIcon icon="rightDouble" size="1.25rem" />
           )}
         </div>)}
-        <div className="full-height" id="home-map-pane" style={{ maxWidth: "inherit" }} />
+        <div className="full-height full-width" id="home-map-pane" style={{ maxWidth: "inherit" }} />
         <ProjectPopup
           clusterExtent={this.state.clusterExtent}
           features={this.state.clickedFeatures}

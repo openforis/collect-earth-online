@@ -84,6 +84,9 @@
 .full-height {
   height: calc(100vh - 60px);
 }
+.full-width {
+    right: 0;
+}
 .absolute-center {
   position: absolute;
   top: 50%;
