@@ -51,6 +51,7 @@ export const NewPlotNavigation = () => {
     currentPlot,
     inReviewMode,
     navigationMode,
+    newPlotId
   } = useAtomValue(stateAtom);
 
   function hasChanged () {
@@ -73,8 +74,10 @@ export const NewPlotNavigation = () => {
   };
   
   const navToPlotId = () => {
+    console.log("let's nav to plot id!");
     if (!isNaN(newPlot)) {
       if (confirmUnsaved()) {
+        console.log('succesfully confirmed unsaved, setAppState', useAtomValue(stateAtom).newPlotId);
         setAppState(s => ({...s, getNewPlot: true, navDirection: 'id'}));
       }
     } else {
@@ -93,7 +96,7 @@ export const NewPlotNavigation = () => {
       </div>
       <label className="collection-sidebar-label">Navigate</label>
       <select className="collection-sidebar-select"
-              selected={navigationMode}
+              selected={navigationMode}        
               onChange={(e) => setAppState(s => ({...s, navigationMode: e.target.value}))}>
           <option value="natural">Default</option>
           <option value="analyzed">Analyzed plots</option>
@@ -113,7 +116,7 @@ export const NewPlotNavigation = () => {
 
       <div className="collection-sidebar-plot-navigation">
         <input className="flex flex-col-6"
-               value={currentPlot?.visibleId || 0}
+               value={newPlotId || currentPlot?.visibleId ||  0}
                onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}));}}
         ></input>
         <button className="btn outline"

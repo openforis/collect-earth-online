@@ -174,7 +174,9 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
 
   // GET PLOT DATA WHEN NEEDED - When getNewPlot changes to true, request plot data
   useEffect(() => {
+    console.log('getNewPlot useEffect fires', state.getNewPlot);
     if(state.getNewPlot) {
+      console.log('getting plot data...', state.newPlotId);
       getPlotData(state.newPlotId, state.navDirection);
       setState(s => ({...s, getNewPlot: false}));
     }
