@@ -329,11 +329,7 @@
    [:server-name        [:any]]
    [:content-length     [:maybe Int]]
    [:session/key        [:maybe :any]]
-   [:content-type       [:maybe [:enum "application/json"
-                                 "text/html"
-
-                                 "application/x-www-form-urlencoded"
-                                 "multipart/form-data"]]]
+   [:content-type       [:maybe :any]]
    [:character-encoding [:maybe [:enum "UTF-8" "iso-8859-1"]]]   
    [:query-string       [:maybe :string]]
    [:body               [:any]] ;; stumped on how to desdcribe a ReadableStream
