@@ -223,7 +223,8 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   }, [state.mapConfig, state.currentImagery?.id]);
 
   useEffect(()=> {
-    setState((s)=> ({ ...s, referencePlotId: 1}));
+    state.navigationMode === 'similar' &&
+      setState((s)=> ({ ...s, referencePlotId: 1}));
   }, [state.navigationMode]);
 
   // API CALLS
