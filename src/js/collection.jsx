@@ -175,7 +175,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   // GET PLOT DATA WHEN NEEDED - When getNewPlot changes to true, request plot data
   useEffect(() => {
     if(state.getNewPlot) {
-      getPlotData(state.newPlotId, state.navDirection);
+      getPlotData(state.newPlotId || -999, state.navDirection);
       setState(s => ({...s, getNewPlot: false}));
     }
   }, [state.getNewPlot]);
@@ -654,7 +654,7 @@ function ImageAnalysisPane({}) {
       <div className="map-controls"
            style={{position: 'absolute',
                    bottom: '2em',
-                   right: '.5em',
+                   right: '10vw',
                    zIndex: 1}}>
         <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '1rem' }}>
           <input

@@ -28,7 +28,7 @@ export const SurveyQuestions = () => {
 
   //EFFECTS
   useEffect(() => {
-    console.log(state);
+    // console.log(state);
   }, [currentProject, userSamples]);
 
   //FUNCTIONS
@@ -517,8 +517,6 @@ const ConfidenceItem = ({ isOpen, onToggle }) => {
   useEffect(() => {
     calculateConfidenceStatus();
   }, [currentPlot?.confidence, currentPlot?.confidenceComment]);
-
-  console.log(confidenceStatus);
   
   return (
     <div className={`sq-item ${isOpen ? 'open' : ''}`}>
