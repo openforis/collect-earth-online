@@ -209,7 +209,19 @@ export const ExternalTools = () => {
       `_geo-dash_${currentProject?.id}`
     );
   };
-  
+
+  const downloadKML = () => {
+    const blob = new Blob([KMLFeatures], { type: "application/vnd.google-earth.kml+xml" });
+    const url = URL.createObjectURL(blob);
+
+    const link = Object.assign(document.createElement("a"), {
+      href: url,
+      download: `ceo_projectId-${currentProject?.id}_plotId-${currentPlot?.visibleId}.kml`
+    });
+
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="ext-card">
@@ -220,10 +232,7 @@ export const ExternalTools = () => {
 
       <div className="ext-grid">
         <button className="ext-btn"
-              download={`ceo_projectId-${currentProject?.id}_plotId-${currentPlot?.visibleId}.kml`}
-                href={
-                  "data:earth.kml+xml application/vnd.google-earth.kmz," +
-                    encodeURIComponent(KMLFeatures)}
+                onClick={downloadKML}
         >
           <span>Download Plot KML</span>
         </button>
