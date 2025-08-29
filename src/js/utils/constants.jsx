@@ -52,7 +52,7 @@ export const stateAtom = atom({
   usedKML: false,
   usedGeodash: false,
   getNewPlot: false,
-  newPlotId: -99999,
+  newPlotId: null,
   navDirection: "next",
 });
 

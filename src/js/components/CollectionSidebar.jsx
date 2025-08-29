@@ -74,10 +74,8 @@ export const NewPlotNavigation = () => {
   };
   
   const navToPlotId = () => {
-    console.log("let's nav to plot id!");
-    if (!isNaN(newPlot)) {
+    if (!isNaN(newPlotId)) {
       if (confirmUnsaved()) {
-        console.log('succesfully confirmed unsaved, setAppState', useAtomValue(stateAtom).newPlotId);
         setAppState(s => ({...s, getNewPlot: true, navDirection: 'id'}));
       }
     } else {
@@ -116,7 +114,10 @@ export const NewPlotNavigation = () => {
 
       <div className="collection-sidebar-plot-navigation">
         <input className="flex flex-col-6"
-               value={newPlotId || currentPlot?.visibleId ||  0}
+               placeholder={currentPlot?.visibleId ?
+                            'Current Plot: ' + currentPlot?.visibleId
+                            : 'Select a Plot to begin'}
+               value={newPlotId}
                onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}));}}
         ></input>
         <button className="btn outline"
