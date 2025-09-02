@@ -250,7 +250,7 @@
    [:post "/geo-dash/create-widget"]        {:handler geodash/create-dashboard-widget-by-id}
    [:post "/geo-dash/delete-widget"]        {:handler geodash/delete-dashboard-widget-by-id}
    [:post "/geo-dash/gateway-request"]      {:handler geodash/gateway-request}
-   [:get "/geo-dash/validate-vis-params"]   {:handler geodash/gateway-request}
+   [:get "/geo-dash/validate-vis-params"]   {:handler geodash/validate-vis-params}
    [:post "/geo-dash/update-widget"]        {:handler geodash/update-dashboard-widget-by-id}
    ;; Proxy Routes
    [:get  "/get-tile"]                      {:handler     proxy/proxy-imagery

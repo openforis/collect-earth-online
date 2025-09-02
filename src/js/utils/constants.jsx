@@ -39,7 +39,7 @@ export const stateAtom = atom({
   KMLFeatures: null,
   showBoundary: true,
   showSamples: true,
-  showSidebar: false,
+  showSidebar: null,
   showQuitModal: false,
   answerMode: "question",
   modalMessage: null,
@@ -52,7 +52,7 @@ export const stateAtom = atom({
   usedKML: false,
   usedGeodash: false,
   getNewPlot: false,
-  newPlotId: -99999,
+  newPlotId: null,
   navDirection: "next",
 });
 

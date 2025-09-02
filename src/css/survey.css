@@ -1,0 +1,265 @@
+.sq-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  font-family: sans-serif;
+}
+
+.sq-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  height: 25px;
+}
+
+.sq-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sq-title {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.sq-subtitle {
+  font-size: 14px;
+  color: #6e7a7a;
+}
+
+.sq-info {
+  border: 1px solid #000;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sq-list {
+  border-top: 1px solid #e6efef;
+}
+
+.sq-item {
+  border-bottom: 1px solid #e6efef;
+}
+
+.sq-item-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1.5px solid #ebf7f7;
+  cursor: pointer;
+  padding: 14px 8px;
+  text-align: left;
+}
+
+.sq-item .sq-item-head .sq-radio {
+  width: 24px;
+  aspect-ratio: 1/1;
+  height: auto;
+  border-radius: 50%;
+  border: 2px solid #d33;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  flex: 0 0 24px;
+  color: #fff;
+  transition: background .15s, border-color .15s;
+}
+
+.sq-item .sq-item-head .sq-radio.sq-radio--complete {
+  background: #2d6f74;
+  border-color: #2d6f74;
+}
+
+.sq-item .sq-item-head .sq-radio.sq-radio--partial {
+  background: #f0ad4e;
+  border-color: #f0ad4e;
+}
+
+.sq-item .sq-item-head .sq-radio.sq-radio--none {
+  background: #fff;
+  border-color: #d33;
+}
+
+.sq-children {
+  position: relative;
+  margin-left: 4px;
+  padding-left: 8px;
+}
+.sq-children::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: #00000080;
+  border-radius: 1px;
+}
+
+.depth-1  { background: #f9fdfd; }
+.depth-2  { background: #f2fafa; }
+.depth-3  { background: #ebf7f7; }
+.depth-4  { background: #e4f4f4; }
+.depth-5  { background: #ddf1f1; }
+.depth-6  { background: #d6eeee; }
+.depth-7  { background: #cfeaea; }
+.depth-8  { background: #c8e7e7; }
+.depth-9  { background: #c1e4e4; }
+.depth-10 { background: #bae0e0; }
+
+.sq-item.depth-1,
+.sq-item.depth-2,
+.sq-item.depth-3,
+.sq-item.depth-4,
+.sq-item.depth-5,
+.sq-item.depth-6,
+.sq-item.depth-7,
+.sq-item.depth-8,
+.sq-item.depth-9,
+.sq-item.depth-10 {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.sq-text {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.sq-chevron {
+  font-size: 16px;
+  transition: transform 0.15s ease;
+}
+
+.sq-chevron.up {
+  transform: rotate(180deg);
+}
+
+/* For button-type answers */
+.sq-answers {
+    display: grid;
+    grid-template-columns: repeat(var(--cols, 1), 1fr);
+    gap: 12px;
+    padding: 10px;
+}
+
+.sq-pill {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 2px solid #2d6f74;
+  border-radius: 10px;
+  background: #fff;
+  color: #2d6f74;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.sq-pill.active {
+  transform: scale(1.05);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.sq-radio-group {
+  display: flex;
+  gap: 16px;
+  padding: 12px 8px 16px 38px;
+}
+
+.sq-radio-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #263030;
+}
+
+.sq-dropdown-wrap {
+  padding: 12px 8px 16px 38px;
+}
+
+.sq-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #c9d6d6;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.sq-input-wrap {
+  padding: 12px 8px 16px 38px;
+}
+
+.sq-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #c9d6d6;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.sq-confidence {
+  padding: 12px 8px 16px 38px;
+  display: grid;
+  gap: 12px;
+}
+
+.sq-range-wrap {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.sq-range {
+  width: 100%;
+  accent-color: #2d6f74;
+}
+
+.sq-range-label {
+  font-size: 16px;
+  color: #263030;
+}
+
+.sq-textarea-wrap {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
+.sq-textarea-label {
+  font-size: 16px;
+  color: #263030;
+}
+
+.sq-textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 10px;
+  border: 1px solid #c9d6d6;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}

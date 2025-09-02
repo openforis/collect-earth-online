@@ -15,7 +15,8 @@ CREATE TYPE imagery_return AS (
     attribution       text,
     extent            jsonb,
     is_proxied        boolean,
-    source_config     jsonb
+    source_config     jsonb,
+    global_imagery    boolean
 );
 
 -- Returns a single imagery by ID
@@ -29,7 +30,8 @@ CREATE OR REPLACE FUNCTION select_imagery_by_id(_imagery_id integer)
         attribution,
         extent,
         is_proxied,
-        source_config
+        source_config,
+        global_imagery
     FROM imagery
     WHERE imagery_uid = _imagery_id
 
@@ -162,16 +164,18 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION select_public_imagery()
  RETURNS setOf imagery_return AS $$
 
-    SELECT shared_imagery_uid AS imagery_uid,
-        -1 AS institution_rid,
+    SELECT imagery_uid,
+        institution_rid,
         visibility,
         title,
         attribution,
         extent,
         is_proxied,
-        source_config
-    FROM shared_imagery
+        source_config,
+        global_imagery
+    FROM imagery
     WHERE archived = FALSE
+    AND global_imagery=TRUE ORDER BY imagery_uid ASC
 
 $$ LANGUAGE SQL;
 
@@ -186,7 +190,8 @@ CREATE OR REPLACE FUNCTION select_imagery_by_institution(_institution_id integer
              attribution,
              extent,
              is_proxied,
-             source_config
+             source_config,
+             global_imagery
       FROM imagery
       WHERE archived = FALSE
         AND (visibility = 'public'
@@ -198,16 +203,18 @@ CREATE OR REPLACE FUNCTION select_imagery_by_institution(_institution_id integer
 
     UNION
 
-    (SELECT shared_imagery_uid AS imagery_uid,
-             -1 AS institution_rid,
-             visibility,
-             title,
-             attribution,
-             extent,
-             is_proxied,
-             source_config
-      FROM shared_imagery
-      WHERE archived = FALSE)
+    (SELECT imagery_uid,
+            institution_rid,
+            visibility,
+            title,
+            attribution,
+            extent,
+            is_proxied,
+            source_config,
+            global_imagery
+      FROM imagery
+      WHERE archived = FALSE
+      AND global_imagery=TRUE)
 
     ORDER BY imagery_uid;
 
@@ -224,7 +231,8 @@ CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_id integer, _user_
            i.attribution,
            i.extent,
            i.is_proxied,
-           i.source_config
+           i.source_config,
+           i.global_imagery
     FROM projects p
     LEFT JOIN project_imagery pi ON pi.project_rid = p.project_uid
     INNER JOIN imagery i ON i.imagery_uid = pi.imagery_rid OR i.imagery_uid = p.imagery_rid
@@ -241,16 +249,18 @@ CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_id integer, _user_
             OR (_token_key IS NOT NULL AND _token_key = token_key)))
         OR _user_id = 1))
   UNION (
-    SELECT shared_imagery_uid AS imagery_uid,
-           -1 AS institution_rid,
+    SELECT imagery_uid,
+           institution_rid,
            visibility,
            title,
            attribution,
            extent,
            is_proxied,
-           source_config
-    FROM shared_imagery
-    WHERE archived = FALSE)
+           source_config,
+           global_imagery
+    FROM imagery
+    WHERE archived = FALSE
+    AND global_imagery=TRUE)
 
   ORDER BY imagery_uid;
 
@@ -392,7 +402,8 @@ RETURNS setOf imagery_return AS $$
            attribution,
            extent,
            is_proxied,
-           source_config
+           source_config,
+           global_imagery
     FROM imagery
     WHERE institution_rid = _institution_id
     AND source_config->>'type' = 'planetTFO';

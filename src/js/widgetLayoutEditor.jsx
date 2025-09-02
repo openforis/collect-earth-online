@@ -273,7 +273,7 @@ class WidgetLayoutEditor extends React.PureComponent {
   getNextLayout = (width = 3, height = 1) => {
     const { widgets } = this.state;
     const layouts = widgets.map((w) => w.layout);
-    const nextY = getNextInSequence(layouts.map((l) => l.y || 0));
+    const nextY = getNextInSequence(layouts.map((l) => l?.y || 0));
 
     if (height === 1) {
       const emptyXY = _.range(nextY)
@@ -281,7 +281,7 @@ class WidgetLayoutEditor extends React.PureComponent {
           const row = layouts.filter((l) => l.y === y);
           const emptyX = _.range(10).filter((x) =>
             row.every(
-              (l) => (x < l.x && x + width <= l.x) || (x >= l.x + l.w && x + width >= l.x + l.w)
+              (l) => (x < l?.x && x + width <= l?.x) || (x >= l?.x + l?.w && x + width >= l?.x + l?.w)
             )
           );
           return { x: _.first(emptyX), y };
@@ -379,16 +379,16 @@ class WidgetLayoutEditor extends React.PureComponent {
   };
 
   sameLayout = (layout1, layout2) =>
-    layout1.x === layout2.x &&
-    layout1.y === layout2.y &&
-    layout1.h === layout2.h &&
-    layout1.w === layout2.w;
+    layout1?.x === layout2?.x &&
+    layout1?.y === layout2?.y &&
+    layout1?.h === layout2?.h &&
+    layout1?.w === layout2?.w;
 
   onLayoutChange = (layout) => {
     const { widgets } = this.state;
     widgets.forEach((stateWidget) => {
-      const thisLayout = layout.find((l) => Number(l.i) === stateWidget.id);
-      if (!this.sameLayout(stateWidget.layout, thisLayout)) {
+      const thisLayout = layout.find((l) => Number(l?.i) === stateWidget?.id);
+      if (!this.sameLayout(stateWidget?.layout, thisLayout)) {
         const { x, y, h, w } = thisLayout;
         this.widgetAPIWrapper("update-widget", { ...stateWidget, layout: { x, y, h, w } });
       }

@@ -275,12 +275,11 @@
                                        [:max {:optional true} Int]
                                        [:projectId Int]]]]
    :plots/add-user-samples [:map
-                            [:json-params [:map]]
                             [:params [:map
                                       [:projectId Int]
                                       [:plotId Int]
-                                      [:inReviewMode Int]
-                                      [:confidence {:optional true} Int]
+                                      [:inReviewMode Bool]
+                                      [:confidence [:maybe Int]]
                                       [:confidenceComment [:maybe :string]]
                                       [:collectionStart  Lng]
                                       [:userSamples {:optional true }[:map]]
@@ -289,13 +288,10 @@
                               [:session [:map
                                          [:userId {:optional true} Int]]]]
    :plots/flag-plot [:map
-                     [:request-method [:= :post]]
-                     [:uri [:= "/flag-plot"]]
-                     [:json-params [:map]]
                      [:params [:map
                                [:projectId Int]
                                [:plotId Int]
-                               [:inReviewMode {:optional true} Int]
+                               [:inReviewMode {:optional true} Bool]
                                [:collectionStart Lng]
                                [:flaggedReason :string]]]
                      [:session [:map
@@ -334,11 +330,7 @@
    [:server-name        [:any]]
    [:content-length     [:maybe Int]]
    [:session/key        [:maybe :any]]
-   [:content-type       [:maybe [:enum "application/json"
-                                 "text/html"
-
-                                 "application/x-www-form-urlencoded"
-                                 "multipart/form-data"]]]
+   [:content-type       [:maybe :any]]
    [:character-encoding [:maybe [:enum "UTF-8" "iso-8859-1"]]]   
    [:query-string       [:maybe :string]]
    [:body               [:any]] ;; stumped on how to desdcribe a ReadableStream

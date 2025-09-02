@@ -1,10 +1,11 @@
 .collection-sidebar-container {
   position: fixed;
   margin-top: 60px;
+  padding-bottom: 60px;
   top: 0;
   right: 0;
   height: 100vh;
-  width: 25vw;
+  width: 35vw;
   display: flex;
   flex-direction: column;
   background-color: #e6efef;
@@ -24,6 +25,7 @@
 .collection-sidebar-footer {
   position: sticky;
   bottom: 0;
+  height: 90px;
   background-color: #fff;
   border-top: 1px solid #c9d6d6;
   padding: 16px 0;
@@ -48,7 +50,7 @@
 
 .collection-sidebar-title {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 18px;
 }
 
 .collection-sidebar-subtitle {
@@ -274,12 +276,10 @@
 }
 
 .slide-panel-in {
-
     animation: slide-panel-in 0.5s forwards;
 }
 
 .slide-panel-out {
-
     animation: slide-panel-out 0.5s forwards;
 }
 
@@ -302,7 +302,7 @@
     animation: slide-toggle-in 0.5s forwards;
 }
 
-.slide-toggle-out {
+.slide-toggle-out {    
     animation: slide-toggle-out 0.5s forwards;
 }
 
@@ -313,6 +313,6 @@
 
 @keyframes slide-toggle-out {
     0% {transform: translateX(25vw);}
-    100% {transform: translateX(0vw);}
+    100% {transform: translateX(0.75vw);}
 }
 

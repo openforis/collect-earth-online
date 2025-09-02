@@ -42,7 +42,6 @@ import {
   mapObjectArray,
   filterObject,
 } from "./utils/sequence";
-import { getProjectPreferences, setProjectPreferences } from "./utils/preferences";
 import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
@@ -155,7 +154,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   }, [state.mapConfig, state.plotList]);
 
   // UPDATE MAP WHEN STATE CHANGES — Auto launch geodash
-  useEffect(() => {    
+  useEffect(() => {
     if (!state.currentPlot?.id) return;
 
     showProjectPlot();
@@ -176,7 +175,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   // GET PLOT DATA WHEN NEEDED - When getNewPlot changes to true, request plot data
   useEffect(() => {
     if(state.getNewPlot) {
-      getPlotData(state.newPlotId, state.navDirection);
+      getPlotData(state.newPlotId || -999, state.navDirection);
       setState(s => ({...s, getNewPlot: false}));
     }
   }, [state.getNewPlot]);
@@ -201,15 +200,12 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
     state.showBoundary,
   ]);
 
-  // UPDATE QUESTION STATUS — when userSamples change
+  // UPDATE QUESTION STATUS
   useEffect(() => {
-    //HERE'S OUR CULPRIT
-    
     if (state.currentProject?.surveyQuestions && lengthObject(state.currentProject.surveyQuestions)) {
       updateQuestionStatus();
     }
-  }, [state.userSamples //, state.currentProject?.surveyQuestions
-     ]);
+  }, [state.userSamples]);
 
   // IMAGERY OVERLAY — when imagery or mapConfig changes; record imageryIds; update overlay
   useEffect(() => {
@@ -229,7 +225,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
 
   // API CALLS
   const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {       
-    processModal("Getting plot", ()=>{
+    processModal("Getting plot", () => {
       return fetch(
         "/get-collection-plot?" +
           getQueryString({
@@ -309,9 +305,52 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
      return Promise.resolve()
        .then(() => callBack())
       .finally(() => setState(prev => ({... prev,  modalMessage: null })));};
+
+  const showPlotSamples = () => {
+    const {
+      mapConfig,
+      unansweredColor,
+      currentProject,
+      selectedQuestionId,
+      showSamples,
+    } = state;
+
+    if (!mapConfig || !currentProject || selectedQuestionId == null) return;
+
+    const selectedQuestion = currentProject.surveyQuestions?.[selectedQuestionId];
+    if (!selectedQuestion) return;
+
+    const type = currentProject.type;
+    const baseVisible = Array.isArray(selectedQuestion.visible) ? selectedQuestion.visible : [];
+    const visibleSamples = type === "simplified"
+          ? baseVisible.filter((s) => s.visibleId !== 1)
+          : baseVisible;
+
+    mercator.disableSelection(mapConfig);
+    mercator.disableDrawing(mapConfig);
+    mercator.removeLayerById(mapConfig, "currentSamples");
+    mercator.removeLayerById(mapConfig, "drawLayer");
+
+    mercator.addVectorLayer(
+      mapConfig,
+      "currentSamples",
+      mercator.samplesToVectorSource(visibleSamples),
+      mercator.ceoMapStyles("geom", showSamples ? unansweredColor : "transparent"),
+      9999
+    );
+
+    mercator.enableSelection(
+      mapConfig,
+      "currentSamples",
+      (sampleId) => {
+        if (sampleId === -1) return;
+        setState((s) => ({ ...s, selectedSampleId: sampleId }));
+      }
+    );
+  };
   
   const zoomToPlot = () => mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
-  const setMapZoom = (zoom) => mercator.setMapZoom (state.mapConfig, zoom);
+
   const showProjectPlot = () => {
     const { currentPlot, mapConfig, currentProject, showBoundary} = state;
     mercator.disableSelection(mapConfig);
@@ -383,7 +422,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
       },	
       body: JSON.stringify({	
         plotId: state.currentPlot.id,	
-        projectId: state.currentProject.projectId,	
+        projectId: state.currentProject.id,
       }),
     }).then((response) => {	
       if (!response.ok) {	
@@ -414,29 +453,6 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
     } else {
       mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", false);
     }
-  };
-
-  const showPlotSamples = () => {
-    const { mapConfig, unansweredColor, currentProject, selectedQuestionId, showSamples} = state;
-    const { visible } = currentProject.surveyQuestions[selectedQuestionId];
-    const type = currentProject.type;
-    const visibleSamples = type === "simplified" ? visible.filter((s) => s.visibleId !== 1) : visible;
-    mercator.disableSelection(mapConfig);
-    mercator.disableDrawing(mapConfig);
-    mercator.removeLayerById(mapConfig, "currentSamples");
-    mercator.removeLayerById(mapConfig, "drawLayer");
-    mercator.addVectorLayer(
-      mapConfig,
-      "currentSamples",
-      mercator.samplesToVectorSource(visibleSamples),
-      mercator.ceoMapStyles("geom", (showSamples ? unansweredColor : "transparent")),
-      9999
-    );
-    mercator.enableSelection(
-      mapConfig,
-      "currentSamples",
-      (sampleId) => sampleId !== -1 && setState({ selectedSampleId: sampleId })
-    );
   };
 
   const updateQuestionStatus = () => {
@@ -585,7 +601,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
           <ImageAnalysisPane />
         </div>
         <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
-          <CollectionSidebar>
+          <CollectionSidebar processModal={processModal}>
           </CollectionSidebar>
         </div>
         {state.messageBox && (
@@ -644,7 +660,7 @@ function ImageAnalysisPane({}) {
       <div className="map-controls"
            style={{position: 'absolute',
                    bottom: '2em',
-                   right: '.5em',
+                   right: '10vw',
                    zIndex: 1}}>
         <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '1rem' }}>
           <input
