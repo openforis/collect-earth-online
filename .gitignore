@@ -11,12 +11,14 @@ collect-earth-online.iml
 .log
 .lsp
 
+
 # Build Directories and Files
 logs
 node_modules/
 target/
 config.edn
 package-lock.json
+pnpm-lock.yaml
 announcement.txt
 __pycache__
 classes
