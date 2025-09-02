@@ -330,7 +330,7 @@
                                               (second)))
                           "id"       (or
                                       (when (= navigation-mode "similar")
-                                        (take-last 1 sorted-plots))
+                                        (->> sorted-plots rest (take 1)))
                                       (some (fn [[visible-id plots]]
                                               (and (= visible-id old-visible-id)
                                                    plots))
