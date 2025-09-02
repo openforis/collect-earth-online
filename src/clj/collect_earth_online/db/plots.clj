@@ -300,12 +300,15 @@
         grouped-plots   (group-by :visible_id proj-plots)
         sorted-plots    (case navigation-mode
                           "qaqc" (sort-by first (filter-plot-disagreement project-id grouped-plots threshold))
-                          "similar" (filter-pred-idx #(= (:visible_id %) old-visible-id) proj-plots)
+                          "similar"
+			  (if (some #(= (:visible_id %) old-visible-id) proj-plots)
+			      (filter-pred-idx #(= (:visible_id %) old-visible-id) proj-plots)
+			    (take 3 (into [nil nil] proj-plots)))
                           (sort-by first grouped-plots))
         plots-info      (case direction
                           "next"     (or
                                       (when (= navigation-mode "similar")
-                                        (last sorted-plots))
+                                        (take-last 1 sorted-plots))
                                       (->> sorted-plots
                                            (some (fn [[visible-id plots]]
                                                    (and (> visible-id old-visible-id)
@@ -316,7 +319,7 @@
                                            (when-not (= navigation-mode "natural"))))
                           "previous" (or
                                       (when (= navigation-mode "similar")
-                                        (first sorted-plots))
+                                        (take 1 sorted-plots))
                                       (->> sorted-plots
                                            (sort-by first #(compare %2 %1))
                                            (some (fn [[visible-id plots]]
@@ -327,7 +330,7 @@
                                               (second)))
                           "id"       (or
                                       (when (= navigation-mode "similar")
-                                        (second sorted-plots))
+                                        (take-last 1 sorted-plots))
                                       (some (fn [[visible-id plots]]
                                               (and (= visible-id old-visible-id)
                                                    plots))
