@@ -215,7 +215,6 @@ CREATE OR REPLACE FUNCTION select_imagery_by_institution(_institution_id integer
       FROM imagery
       WHERE archived = FALSE
       AND global_imagery=TRUE)
-
     ORDER BY imagery_uid;
 
 $$ LANGUAGE SQL;
@@ -261,7 +260,6 @@ CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_id integer, _user_
     FROM imagery
     WHERE archived = FALSE
     AND global_imagery=TRUE)
-
   ORDER BY imagery_uid;
 
 $$ LANGUAGE SQL;
