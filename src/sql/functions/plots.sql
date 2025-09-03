@@ -296,8 +296,8 @@ SELECT p.plot_uid,
         extra_plot_info,
         pa.user_rid,
         u.email
-    FROM similar_plots sp
-    CROSS JOIN unnest (sp.similar_plots) WITH ORDINALITY AS elem(plot_uid, ord)
+    FROM geoai_cache gc
+    CROSS JOIN unnest (gc.similar_plots) WITH ORDINALITY AS elem(plot_uid, ord)
     JOIN plots p
         ON p.plot_uid = elem.plot_uid
     LEFT JOIN plot_assignments pa
@@ -310,8 +310,8 @@ SELECT p.plot_uid,
     LEFT JOIN users u
         ON pa.user_rid = u.user_uid
     
-WHERE sp.plot_rid = _ref_plot_id
-AND   sp.project_rid = _project_id
+WHERE gc.plot_rid = _ref_plot_id
+AND   gc.project_rid = _project_id
 ORDER BY elem.ord
 $$ LANGUAGE SQL;
 

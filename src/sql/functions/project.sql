@@ -607,10 +607,10 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     LEFT JOIN project_widgets
         ON project_rid = project_uid
     JOIN geoai_cache gc
-        ON project_rid = project_uid
+        ON gc.project_rid = project_uid
     WHERE project_uid = _project_id
         AND availability <> 'archived'
-    GROUP BY project_uid
+    GROUP BY project_uid, gc.similar_plots
 
 $$ LANGUAGE SQL;
 

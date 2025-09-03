@@ -303,38 +303,43 @@
                           "similar"
 			  (if (some #(= (:visible_id %) old-visible-id) proj-plots)
 			      (filter-pred-idx #(= (:visible_id %) old-visible-id) proj-plots)
-			    (take 3 (into [nil nil] proj-plots)))
+			      (take 3 (into [nil nil] proj-plots)))
                           (sort-by first grouped-plots))
         plots-info      (case direction
-                          "next"     (or
-                                      (when (= navigation-mode "similar")
-                                        (take-last 1 sorted-plots))
-                                      (->> sorted-plots
+                          "next"     (case navigation-mode "similar"
+                                           (->> sorted-plots
+                                                (take-last 1)
+                                                (remove nil?)
+                                                seq)					   
+					   (or
+					    (->> sorted-plots
+						 (some (fn [[visible-id plots]]
+							 (and (> visible-id old-visible-id)
+							      plots))))
+					    (-> sorted-plots first second)))
+                          "previous" (case navigation-mode "similar"
+                                           (->> sorted-plots
+                                                (take 1)
+                                                (remove nil?)
+                                                seq)
+					   (or
+					    (->> sorted-plots
+						 (sort-by first #(compare %2 %1))
+						 (some (fn [[visible-id plots]]
+							 (and (< visible-id old-visible-id)
+							      plots))))
+                                            (->> sorted-plots
+						 (last)
+						 (second))))
+                          "id"       (case navigation-mode "similar"
+					   (->> sorted-plots
+                                                (take-last 2)
+                                                (remove nil?)
+                                                seq)					   
                                            (some (fn [[visible-id plots]]
-                                                   (and (> visible-id old-visible-id)
-                                                        plots))))
-                                      (->> sorted-plots
-                                           (first)
-                                           (second)
-                                           (when-not (= navigation-mode "natural"))))
-                          "previous" (or
-                                      (when (= navigation-mode "similar")
-                                        (take 1 sorted-plots))
-                                      (->> sorted-plots
-                                           (sort-by first #(compare %2 %1))
-                                           (some (fn [[visible-id plots]]
-                                                   (and (< visible-id old-visible-id)
-                                                        plots))))
-                                         (->> sorted-plots
-                                              (last)
-                                              (second)))
-                          "id"       (or
-                                      (when (= navigation-mode "similar")
-                                        (->> sorted-plots rest (take 1)))
-                                      (some (fn [[visible-id plots]]
-                                              (and (= visible-id old-visible-id)
-                                                   plots))
-                                            sorted-plots)))]
+                                                   (and (= visible-id old-visible-id)
+                                                        plots))
+                                                 sorted-plots)))]
     (if plots-info
       (try
         (when (not= project-type "simplified")
