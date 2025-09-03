@@ -115,9 +115,12 @@ export const NewPlotNavigation = () => {
 
       <div className="collection-sidebar-plot-navigation">
         <input className="flex flex-col-6"
-               placeholder={currentPlot?.visibleId ?
-                            'Current Plot: ' + currentPlot?.visibleId
-                            : 'Select a Plot to begin'}
+               placeholder={
+                 navigationMode === "similar" ? "Reference Plot Id: " +
+                 currentProject.reference_plot_rid
+                   : currentPlot?.visibleId ?
+                   'Current Plot: ' + currentPlot?.visibleId
+                   : 'Select a Plot to begin'}
                value={newPlotId}
                onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}));}}
         ></input>

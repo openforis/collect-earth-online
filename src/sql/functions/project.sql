@@ -563,7 +563,9 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     closed_date            date,
     has_geo_dash           boolean,
     token_key              text,
-    type                   text
+    type                   text,
+    similar_plots          int[],
+    reference_plot_rid     integer
  ) AS $$
 
     SELECT project_uid,
@@ -598,9 +600,13 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         closed_date,
         count(widget_uid) > 0,
         token_key,
-        type::TEXT
+        type::TEXT,
+        gc.similar_plots,
+        reference_plot_rid        
     FROM projects
     LEFT JOIN project_widgets
+        ON project_rid = project_uid
+    JOIN geoai_cache gc
         ON project_rid = project_uid
     WHERE project_uid = _project_id
         AND availability <> 'archived'
