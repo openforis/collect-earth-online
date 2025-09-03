@@ -140,6 +140,7 @@
      :hasGeoDash         (:has_geo_dash project)
      :isProjectAdmin     (is-proj-admin? user-id project-id nil)
      :userRole           user-role
+     :referencePlotId    (:reference_plot_rid project)
      :type               (:type project)}))
 
 (defn get-project-by-id [{:keys [params session]}]
