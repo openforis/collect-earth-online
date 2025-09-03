@@ -142,8 +142,7 @@
                                                          [:visibility         :string]
                                                          [:institutionId      Int]]]]
    :geodash/gateway-request                  [:map
-                                              [:params GatewayRequest]
-                                              [:json-params {:optional true}  Json]]
+                                              [:params GatewayRequest]]
    
    :geodash/get-project-widgets           [:map
                                            [:params [:map
@@ -281,7 +280,7 @@
                                       [:confidence [:maybe Int]]
                                       [:confidenceComment [:maybe :string]]
                                       [:collectionStart  Lng]
-                                      [:userSamples {:optional true }[:map]]
+                                      [:userSamples {:optional true} [:map]]
                                       [:projectType [:enum "simplified" "regular"]]
                                       [:imageryIds [:vector Int]]]]
                               [:session [:map
@@ -299,7 +298,6 @@
                               [:session [:map
                                          [:userId {:optional true} Int]]]]
    :plots/reset-plot-lock [:map
-                           [:json-params [:map]]
                            [:params [:map
                                      [:plotId Int]]]
                            [:session [:map
@@ -323,16 +321,21 @@
    [:params             [:map]]
    [:form-params        [:map]]
    [:multipart-params   [:map]]
+   [:json-params        {:optional true} [:map]]
    [:query-params       [:map]]
-   [:headers            [:map-of :string :string]]
-   [:server-port        [:any]]
+   [:headers            [:map-of :string :string]   
+    #_{"connection" "close",
+       "user-agent" "Apache-HttpClient/4.5.13 (Java/17.0.15)",
+       "host" "local.collect.earth:8080",
+       "accept-encoding" "gzip, deflate"}]
+   [:server-port        [:any]] 
    [:server-name        [:any]]
    [:content-length     [:maybe Int]]
    [:session/key        [:maybe :any]]
    [:content-type       [:maybe :any]]
    [:character-encoding [:maybe [:enum "UTF-8" "iso-8859-1"]]]   
    [:query-string       [:maybe :string]]
-   [:body               [:any]] ;; stumped on how to desdcribe a ReadableStream
+   [:body               [:any]]
    [:scheme             [:enum :http :https]]
    [:request-method     [:enum :get :post :put :delete :path :head :options]]
    [:uri :string]])
