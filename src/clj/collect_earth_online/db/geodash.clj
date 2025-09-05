@@ -111,4 +111,5 @@
   (let [img-path (:imgPath params)
         vis-params (tc/json->clj (:visParams params))
         vis-errors (utils/validateJSON img-path vis-params)]
-    (data-response vis-errors (when vis-errors {:status 262}))))
+    (data-response "" {:status 200})))
+

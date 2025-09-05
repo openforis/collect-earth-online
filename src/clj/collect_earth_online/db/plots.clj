@@ -25,6 +25,41 @@
   (/ (tc/val->float (apply + coll))
      (count coll)))
 
+(defn pred-idx-nav
+  "returns the next or previous datum of an array 
+   proximal to an array datum that matches a predicate.
+  =  args:
+  - pred: an expression with one parameter that returns a boolean
+  - coll: an indexed collection
+  - dir: [:prev | :next] indicates to return preceeding or following datum.
+  = returns:
+  - if a datum of coll matches pred, and a datum of coll is proximal in dir,
+    (ie, preceding matching datum when dir is :prev, or following when :next)
+    will return the proximal datum.
+  - if no datum of coll matches pred, or if no datum exists in dir,
+    (ie, the first datum when dir = :prev or the last when dir = :next
+    returns nil."
+  [pred coll dir]
+  (let [loop-coll (into [nil] coll)]
+    (loop [[prev this & foll] loop-coll]
+      (if (pred this)
+        (case dir
+          :prev prev
+          :next (first foll))
+        (when (seq foll)
+              (recur (into [this] foll)))))))
+
+(defn filter-pred-idx
+  [pred coll]
+  (let [loop-coll (into [nil] coll)]
+    (loop [[prev this & foll] loop-coll]
+      (if (pred this)
+        [prev this (first foll)]
+        (when (seq foll)
+              (recur (into [this] foll)))))))
+
+
+
 ;;;
 ;;; Project Level
 ;;;
@@ -210,7 +245,7 @@
      :email             email}))
 
 (defn get-correct-plot-navigation
-  [project-id user-id current-user-id review-mode? navigation-mode project-type threshold]
+  [project-id user-id current-user-id review-mode? navigation-mode project-type threshold reference-plot-id]
   (if (and (= project-type "simplified")
            (= navigation-mode "unanalyzed"))
     (call-sql "select_simplified_project_plot" project-id)
@@ -223,6 +258,7 @@
                            (call-sql "select_unanalyzed_plots" project-id user-id false))
       "user"       (call-sql "select_analyzed_plots" project-id current-user-id false)
       "qaqc"       (call-sql "select_qaqc_plots" project-id)
+      "similar"    (call-sql "select_plots_by_similarity" project-id reference-plot-id)
       [])))
 
 (defn get-collection-plot
@@ -247,6 +283,7 @@
         project-id      (tc/val->int (:projectId params))
         old-visible-id  (tc/val->int (:visibleId params))
         threshold       (tc/val->int (:threshold params))
+        ref-plot-id     (tc/val->int (:referencePlotId params))
         project-type    (:projectType params "regular")
         user-id         (:userId session -1)
         current-user-id (tc/val->int (:currentUserId params -1))
@@ -258,34 +295,51 @@
                                                      review-mode?
                                                      navigation-mode
                                                      project-type
-                                                     threshold)
+                                                     threshold
+                                                     ref-plot-id)
         grouped-plots   (group-by :visible_id proj-plots)
-        sorted-plots    (->> (if (= navigation-mode "qaqc")
-                               (filter-plot-disagreement project-id grouped-plots threshold)
-                               grouped-plots)
-                             (sort-by first))
+        sorted-plots    (case navigation-mode
+                          "qaqc" (sort-by first (filter-plot-disagreement project-id grouped-plots threshold))
+                          "similar"
+			  (if (some #(= (:visible_id %) old-visible-id) proj-plots)
+			      (filter-pred-idx #(= (:visible_id %) old-visible-id) proj-plots)
+			      (take 3 (into [nil nil] proj-plots)))
+                          (sort-by first grouped-plots))
         plots-info      (case direction
-                          "next"     (or
-                                      (->> sorted-plots
+                          "next"     (case navigation-mode "similar"
+                                           (->> sorted-plots
+                                                (take-last 1)
+                                                (remove nil?)
+                                                seq)					   
+					   (or
+					    (->> sorted-plots
+						 (some (fn [[visible-id plots]]
+							 (and (> visible-id old-visible-id)
+							      plots))))
+					    (-> sorted-plots first second)))
+                          "previous" (case navigation-mode "similar"
+                                           (->> sorted-plots
+                                                (take 1)
+                                                (remove nil?)
+                                                seq)
+					   (or
+					    (->> sorted-plots
+						 (sort-by first #(compare %2 %1))
+						 (some (fn [[visible-id plots]]
+							 (and (< visible-id old-visible-id)
+							      plots))))
+                                            (->> sorted-plots
+						 (last)
+						 (second))))
+                          "id"       (case navigation-mode "similar"
+					   (->> sorted-plots
+                                                (take-last 2)
+                                                (remove nil?)
+                                                seq)					   
                                            (some (fn [[visible-id plots]]
-                                                   (and (> visible-id old-visible-id)
-                                                        plots))))
-                                      (->> sorted-plots
-                                           (first)
-                                           (second)
-                                           (when-not (= navigation-mode "natural"))))
-                          "previous" (or (->> sorted-plots
-                                              (sort-by first #(compare %2 %1))
-                                              (some (fn [[visible-id plots]]
-                                                      (and (< visible-id old-visible-id)
-                                                           plots))))
-                                         (->> sorted-plots
-                                              (last)
-                                              (second)))
-                          "id"       (some (fn [[visible-id plots]]
-                                             (and (= visible-id old-visible-id)
-                                                  plots))
-                                           sorted-plots))]
+                                                   (and (= visible-id old-visible-id)
+                                                        plots))
+                                                 sorted-plots)))]
     (if plots-info
       (try
         (when (not= project-type "simplified")
@@ -440,3 +494,5 @@
               flagged-reason)
     (unlock-plots user-id)
     (data-response "")))
+
+

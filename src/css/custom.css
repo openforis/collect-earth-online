@@ -84,6 +84,9 @@
 .full-height {
   height: calc(100vh - 60px);
 }
+.full-width {
+    right: 0;
+}
 .absolute-center {
   position: absolute;
   top: 50%;
@@ -866,7 +869,7 @@ input:checked + .switch-slider:before {
 }
 
 body {
-    margin-left: 10px;
+    /* margin-left: 1rem; */
     margin-top: 60px;
     overflow-x: hidden;
 }
