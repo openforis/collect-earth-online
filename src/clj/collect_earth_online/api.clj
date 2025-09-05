@@ -254,7 +254,8 @@
                                          [:threshold Int]
                                          [:currentUserId [:maybe [:or :int :string]]]
                                          [:projectType  {:optional true} :string]
-                                         [:inReviewMode {:optional true} Int]]]
+                                         [:inReviewMode {:optional true} Bool]
+                                         [:referencePlotId {:optional true} Int]]]
                                [:session [:map
                                           [:userId {:optional true} Int]]]]
    :plots/get-plot-disagreement [:map
@@ -276,8 +277,8 @@
                             [:params [:map
                                       [:projectId Int]
                                       [:plotId Int]
-                                      [:inReviewMode Int]
-                                      [:confidence {:optional true} Int]
+                                      [:inReviewMode Bool]
+                                      [:confidence [:maybe Int]]
                                       [:confidenceComment [:maybe :string]]
                                       [:collectionStart  Lng]
                                       [:userSamples {:optional true} [:map]]
@@ -289,7 +290,7 @@
                      [:params [:map
                                [:projectId Int]
                                [:plotId Int]
-                               [:inReviewMode {:optional true} Int]
+                               [:inReviewMode {:optional true} Bool]
                                [:collectionStart Lng]
                                [:flaggedReason :string]]]
                      [:session [:map
@@ -312,7 +313,8 @@
 
 (def request-wrapper
   [:map
-   [:ssl-client-cert    :any]
+   {:closed false}
+   [:ssl-client-cert    :any] ;;can we do better than this?
    [:protocol           [:any]]
    [:cookies            [:map-of :string :any]]
    [:remote-addr        :string]

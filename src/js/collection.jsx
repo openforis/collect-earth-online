@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
+
+import { useAtom, useSetAtom } from 'jotai';
+import { stateAtom } from './utils/constants';
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 import _ from "lodash";
@@ -26,6 +29,7 @@ import Modal from "./components/Modal";
 import RadioButton from "./components/RadioButton";
 import Select from "./components/Select";
 import SvgIcon from "./components/svg/SvgIcon";
+import { CollectionSidebar } from "./components/CollectionSidebar";
 
 import { getQueryString, isNumber, asPercentage, isArray } from "./utils/generalUtils";
 import {
@@ -38,407 +42,202 @@ import {
   mapObjectArray,
   filterObject,
 } from "./utils/sequence";
-import { getProjectPreferences, setProjectPreferences } from "./utils/preferences";
 import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
-class Collection extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      collectionStart: 0,
-      currentProject: { surveyQuestions: {}, institution: "" },
-      currentImagery: { id: "", sourceConfig: {} },
-      currentPlot: {},
-      currentUserId: -1,
-      // attribution for showing in the map
-      imageryAttribution: "",
-      // attributes to record when sample is saved
-      imageryAttributes: {},
-      imageryIds: [],
-      imageryList: [],
-      inReviewMode: false,
-      mapConfig: null,
-      messageBox: null,
-      modal: null,
-      plotList: [],
-      plotters: [],
-      userPlotList: [],
-      remainingPlotters: [],
-      unansweredColor: "black",
-      selectedQuestionId: -1,
-      selectedSampleId: -1,
-      userSamples: {},
-      originalUserSamples: {},
-      userImages: {},
-      storedInterval: null,
-      KMLFeatures: null,
-      showBoundary: true,
-      showSamples: true,
-      showSidebar: false,
-      showQuitModal: false,
-      answerMode: "question",
-      modalMessage: null,
-      navigationMode: "natural",
-      threshold: 90,
-      showAcceptTermsModal: false,
-      isImageryLayersExpanded: false,
-      // only used for simplified projects
-      centerSampleId: 0,
-      usedKML: false,
-      usedGeodash: false,
-    };
-  }
-
-  componentDidMount() {
+export const Collection = ({ projectId, acceptedTerms, plotId }) => {
+  const [state, setState] = useAtom(stateAtom);  
+  // INIT COLLECTION EFFECT
+  useEffect(() => {
     window.name = "_ceo_collection";
-    window.addEventListener("beforeunload", this.unsavedWarning, { capture: true });
+    const beforeUnload = (e) => {};
+    window.addEventListener("beforeunload", beforeUnload, { capture: true });
+    fetch(`/release-plot-locks?projectId=${projectId}`, { method: "POST" }).catch(() => {});
+    let cancelled = false;
+    (async () => {
+      setState((s) => ({ ...s, modalMessage: "Loading project details" }));
+      try {
+        const [projectRes, plotsRes, imageryRes, plottersRes] = await Promise.all([
+          fetch(`/get-project-by-id?projectId=${projectId}`),
+          fetch(`/get-project-plots?projectId=${projectId}`),
+          fetch(`/get-project-imagery?projectId=${projectId}`),
+          fetch(`/get-plotters?projectId=${projectId}`),
+        ]);
+        if (cancelled) return;
+        if (!projectRes.ok) throw projectRes;
+        if (!plotsRes.ok) throw plotsRes;
+        if (!imageryRes.ok) throw imageryRes;
+        if (!plottersRes.ok) throw plottersRes;
+        const project = await projectRes.json();
+        const plotList = await plotsRes.json();
+        const imageryListRaw = await imageryRes.json();
+        const plotters = await plottersRes.json();
+        const imageryList = Array.isArray(imageryListRaw) ?
+              imageryListRaw.map((image, i) => ({ ...image, visible: i === 0 })) :
+              [];
+        // Initialize map on HTML ID
+        const mapConf = mercator.createMap(
+          "image-analysis-pane",
+          [0, 0],
+          1,
+          Array.isArray(imageryList) ? imageryList : []
+        );
 
-    fetch(`/release-plot-locks?projectId=${this.props.projectId}`, { method: "POST" });
+        // add AOI Polygon Layer
+        if (project?.aoiFeatures) {
+          mercator.addVectorLayer(
+            mapConf,
+            "currentAOI",
+            mercator.geomArrayToVectorSource(project.aoiFeatures),
+            mercator.ceoMapStyles("geom", "yellow"),
+            9999
+          );
+          mercator.zoomMapToLayer(mapConf, "currentAOI", 48);
+        }
 
-    this.getProjectData();
-    this.setState({ showAcceptedTermsModal: this.props.acceptedTerrms });
-    if(this.props.plotId) {
-      this.setReviewMode(true, this.navToPlot(this.props.plotId, true));
+        // select Imagery and make it render on the map
+        const defaultImagery =
+              (project?.imageryId && imageryList.find(im => im.id === project.imageryId)) ||
+              imageryList[0] || null;
 
-    }
-  }
+        if (defaultImagery?.id) {
+          try {
+            mercator.setVisibleLayer(mapConf, defaultImagery.id);
+            const t = defaultImagery?.sourceConfig?.type;
+            const needsOverlay =
+                  Boolean(state.currentPlot) &&
+                  ["PlanetDaily", "SecureWatch"].includes(t);
+            mercator.setLayerVisibilityByLayerId(mapConf, "goToPlot", !!needsOverlay);
+          } catch (e) {
+            console.error("setVisibleLayer failed", e);
+          }
+        }
 
-  componentDidUpdate(prevProps, prevState) {
-    //
-    // Initialize after apis return.
-    //
-
-    // Initialize map when imagery list is returned
-    if (
-      this.state.imageryList.length > 0 &&
-        this.state.currentProject.aoiFeatures &&
-        this.state.mapConfig == null
-    ) {
-      this.initializeProjectMap();
-    }
-    // Load all project plots initially
-    if (
-      this.state.mapConfig &&
-        this.state.plotList.length > 0 &&
-        (this.state.mapConfig !== prevState.mapConfig || prevState.plotList.length === 0)
-    ) {
-      this.showProjectOverview();
-    }
-    // initialize current imagery to project default
-    if (
-      this.state.mapConfig &&
-        this.state.currentProject &&
-        this.state.imageryList.length > 0 &&
-        !this.state.currentImagery.id
-    ) {
-      if (this.getImageryById(this.state.currentProject.imageryId)) {
-        this.setBaseMapSource(this.state.currentProject.imageryId);
-      } else {
-        this.setBaseMapSource(this.state.imageryList[0].id);
-      }
-    }
-
-    //
-    // Update map when state changes
-    //
-
-    // Initialize when new plot
-    if (this.state.currentPlot.id && (
-      this.state.currentPlot.id !== prevState.currentPlot.id
-        || this.state.showBoundary !== prevState.showBoundary
-    )
-       ) {
-      this.showProjectPlot();
-      if (
-        this.state.currentProject.hasGeoDash &&
-          this.state.currentProject.projectOptions.autoLaunchGeoDash
-      ) {
-        this.showGeoDash();
-      }
-      clearInterval(this.state.storedInterval);
-      if(this.state.currentProject?.type === "regular")
-        this.setState({ storedInterval: setInterval(this.resetPlotLock, 1 * 60 * 1000) });
-      //  updateMapImagery is poorly named, this function is detecting if we need to show the "zoom to" overlay
-      this.updateMapImagery();
-    }
-
-    // Conditions required for samples to be shown
-    const selectedQuestion =
-          this.state.currentProject.surveyQuestions[this.state.selectedQuestionId];
-    const prevSelectedQuestion =
-          prevState.currentProject.surveyQuestions[prevState.selectedQuestionId];
-
-    if (this.state.currentPlot.id && selectedQuestion.visible) {
-      // Changing conditions for which samples need to be re-drawn
-      if (
-        this.state.selectedQuestionId !== prevState.selectedQuestionId ||
-          this.state.unansweredColor !== prevState.unansweredColor ||
-          this.state.userSamples !== prevState.userSamples ||
-          selectedQuestion.visible !== prevSelectedQuestion.visible ||
-          this.state.showSamples !== prevState.showSamples ||
-          this.state.showBoundary !== prevState.showBoundary
-      ) {
-        this.showPlotSamples();
-        this.highlightSamplesByQuestion();
-        this.createPlotKML();
-      }
-    }
-
-    // Update user samples calculations for display
-    if (
-      lengthObject(this.state.currentProject.surveyQuestions) &&
-        this.state.userSamples !== prevState.userSamples
-    ) {
-      this.updateQuestionStatus();
-    }
-
-    //  updateMapImagery is poorly named, this action is detecting if we need to show the "zoom to" overlay
-    if (
-      this.state.mapConfig &&
-        this.state.currentImagery.id &&
-        (this.state.currentImagery.id !== prevState.currentImagery.id ||
-         this.state.mapConfig !== prevState.mapConfig)
-    ) {
-      if (!prevState?.imageryIdsArray?.includes(this.state.currentImagery.id)) {
-        this.setState((prevState) => ({
-          imageryIds: [...prevState.imageryIds, this.state.currentImagery.id],
+        // set state
+        setState(s => ({
+          ...s,
+          currentProject: project,
+          plotList,
+          plotters: Array.isArray(plotters) ? plotters : [],
+          imageryList,
+          mapConfig: mapConf,
+          currentImagery: defaultImagery || s.currentImagery,
+          showAcceptTermsModal: !!acceptedTerms,
+          modalMessage: null,
+        }));
+        if (plotId) {}
+      } catch (err) {
+        console.error(err);
+        setState((s) => ({
+          ...s,
+          modalMessage: null,
+          modal: {
+            alert: {
+              alertType: "Project Info Alert",
+              alertMessage: "Error retrieving the project info. See console for details.",
+            },
+          },
         }));
       }
-      this.updateMapImagery();
+    })();
+    return () => {
+      window.removeEventListener("beforeunload", beforeUnload, { capture: true });
+      cancelled = true;
+    };
+  }, [projectId, acceptedTerms, plotId, setState]);
+
+  // INIT PROJECT — show project overview when ready
+  useEffect(() => {
+    if (state.mapConfig && Array.isArray(state.plotList) && state.plotList.length > 0) {
+      showProjectOverview();
     }
-  }
+  }, [state.mapConfig, state.plotList]);
 
-  componentWillUnmount() {
-    window.removeEventListener("beforeunload", this.unsavedWarning, { capture: true });
-  }
+  // UPDATE MAP WHEN STATE CHANGES — Auto launch geodash
+  useEffect(() => {
+    if (!state.currentPlot?.id) return;
 
-  setImageryAttribution = (attributionSuffix) =>
-  this.setState({
-    imageryAttribution: this.state.currentImagery.attribution + attributionSuffix,
-  });
+    showProjectPlot();
 
-  setImageryAttributes = (newImageryAttributes) =>
-  this.setState({ imageryAttributes: newImageryAttributes });
-
-  processModal = (message, callBack) =>
-  new Promise(() =>
-    Promise.resolve(
-      this.setState({ modalMessage: message }, () =>
-        callBack().finally(() => this.setState({ modalMessage: null }))
-      )
-    )
-  );
-
-  showAlert = ({ title, body, closeText = "Close" }) =>
-  this.setState({
-    messageBox: {
-      body,
-      closeText,
-      title,
-      type: "alert",
-    },
-  });
-
-  getProjectData = () =>
-  this.processModal("Loading project details", () =>
-    Promise.all([
-      this.getProjectById(),
-      this.getProjectPlots(),
-      this.getImageryList(),
-      this.getPlotters(),
-    ])
-      .then(() => {
-        const reviewWarning = this.state.inReviewMode
-              ? "You are currently in 'Review Mode.'"
-              : "";
-        if (this.state.currentProject.availability === "unpublished") {
-          this.showAlert({
-            title: "Warning: Draft Mode",
-            body:
-            "This project is in draft mode. Only admins can collect. Any plot collections will be erased when the project is published.\n" +
-              reviewWarning,
-            closeText: "OK, I understand",
-          });
-        } else if (this.state.currentProject.availability === "closed") {
-          this.showAlert({
-            title: "Project Closed",
-            body:
-            "This project has been closed. Admins can make corrections to any plot.\n " +
-              reviewWarning,
-          });
-        } else if (this.state.inReviewMode) {
-          this.showAlert({
-            title: "Review Mode",
-            body: reviewWarning,
-          });
-        }
-      })
-      .catch((response) => {
-        console.log(response);
-        this.setState ({modal: {alert: {alertType: "Project Info Alert", alertMessage: "Error retrieving the project info. See console for details."}}});
-      })
-  );
-
-  getProjectById = () =>
-  fetch(`/get-project-by-id?projectId=${this.props.projectId}`)
-    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-    .then((project) => {
-      // TODO This logic is currently invalid since this route can never return an archived project.
-      if (project.id > 0 && project.availability !== "archived") {
-        this.setState({ currentProject: project });
-        const { inReviewMode } = getProjectPreferences(project.id);
-        this.setReviewMode(
-          project.isProjectAdmin &&
-            (inReviewMode || (project.availability === "closed" && inReviewMode !== false))
-        );
-        return Promise.resolve("resolved");
-      } else {
-        return Promise.reject(
-          project.availability === "archived"
-            ? "This project is archived"
-            : "No project found with ID " + this.props.projectId + "."
-        );
-      }
-    });
-
-  // TODO, this can easily be a part of get-project-by-id
-  getProjectPlots = () =>
-  fetch(`/get-project-plots?projectId=${this.props.projectId}`)
-    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-    .then((data) => {
-      if (data.length > 0) {
-        this.setState({ plotList: data });
-        return Promise.resolve("resolved");
-      } else {
-        return Promise.reject("No plot information found");
-      }
-    });
-
-  getImageryList = () =>
-    fetch(`/get-project-imagery?projectId=${this.props.projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (data.length > 0) {
-          const updatedImagery = data.map((imagery, index) => ({
-            ...imagery,
-            visible: index === 0
-          }));
-          this.setState({ imageryList: updatedImagery });
-          return Promise.resolve("resolved");
-        } else {
-          return Promise.reject("No project imagery found");
-        }
-      });
-
-  getPlotters = () =>
-  fetch(`/get-plotters?projectId=${this.props.projectId}`)
-    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-    .then((data) => {
-      if (isArray(data)) {
-        this.setState({ plotters: data });
-        return Promise.resolve("resolved");
-      } else {
-        return Promise.reject("Error getting plotter data.");
-      }
-    });
-
-  initializeProjectMap = () => {
-    const mapConfig = mercator.createMap(
-      "image-analysis-pane",
-      [0.0, 0.0],
-      1,
-      this.state.imageryList
-    );
-    mercator.addVectorLayer(
-      mapConfig,
-      "currentAOI",
-      mercator.geomArrayToVectorSource(this.state.currentProject.aoiFeatures),
-      mercator.ceoMapStyles("geom", "yellow"),
-      9999
-    );
-    mercator.zoomMapToLayer(mapConfig, "currentAOI", 48);
-    this.setState({ mapConfig });
-  };
-
-  showProjectOverview = () => {
-    mercator.addPlotLayer(this.state.mapConfig, this.state.plotList, (feature) =>
-      this.getPlotData(feature.get("features")[0].get("plotId"), "id")
-    );
-  };
-
-  setBaseMapSource = (newBaseMapSource) => {
-    // remove planet daily layer switcher
-    mercator.currentMap
-      .getControls()
-      .getArray()
-      .filter((control) => control.element.classList.contains("planet-layer-switcher"))
-      .map((control) => mercator.currentMap.removeControl(control));
-    this.setState(
-      {
-        currentImagery: this.getImageryById(newBaseMapSource),
-      },
-      () => {
-        // all other than having separate menu components
-        if (
-          ![
-            "Planet",
-            "PlanetDaily",
-            "SecureWatch",
-            "Sentinel1",
-            "Sentinel2",
-            "GEEImage",
-            "GEEImageCollection",
-          ].includes(this.state.currentImagery.sourceConfig.type)
-        ) {
-          this.setImageryAttribution("");
-        }
-      }
-    );
-  };
-
-  updateMapImagery = () => {
-    const { currentPlot, mapConfig, currentImagery } = this.state;
-    mercator.setVisibleLayer(this.state.mapConfig, this.state.currentImagery.id);
-    if (
-      currentPlot &&
-        !currentPlot.id &&
-        ["PlanetDaily", "SecureWatch"].includes(currentImagery.sourceConfig.type)
-    ) {
-      mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", true);
-    } else {
-      mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", false);
+    if (state.currentProject?.hasGeoDash && state.currentProject?.projectOptions?.autoLaunchGeoDash) {
+      showGeoDash();
     }
-  };
 
-  getImageryById = (imageryId) =>
-  this.state.imageryList.find((imagery) => imagery.id === imageryId);
-
-  warnOnNoSamples = (plotData) => {
-    if (plotData.samples.length === 0 && !this.state.currentProject.allowDrawnSamples) {
-      this.setState ({modal: {alert: {alertType: "Plot Collection Alert", alertMessage: "This plot has no samples. Please flag the plot."}}});
-      return false;
-    } else {
-      return true;
+    if (state.storedInterval) clearInterval(state.storedInterval);
+    if (state.currentProject?.type === "regular") {
+      const id = setInterval(resetPlotLock, 60 * 1000);
+      setState((s) => ({ ...s, storedInterval: id }));
     }
-  };
 
-  getPlotData = (visibleId, direction, forcedNavMode = null, reviewMode = null) => {
-    const { currentUserId, navigationMode, inReviewMode, threshold } = this.state;
-    const { type } = this.state.currentProject;
-    const { projectId } = this.props;
-    this.processModal("Getting plot", () =>
-      fetch(
+    updateMapImagery();
+  }, [state.currentPlot?.id, state.showBoundary, state.currentProject?.hasGeoDash, state.currentProject?.projectOptions?.autoLaunchGeoDash, state.currentProject?.type]);
+
+  // GET PLOT DATA WHEN NEEDED - When getNewPlot changes to true, request plot data
+  useEffect(() => {
+    if(state.getNewPlot) {
+      getPlotData(state.newPlotId || -999, state.navDirection);
+      setState(s => ({...s, getNewPlot: false}));
+    }
+  }, [state.getNewPlot]);
+
+  // UPDATE MAP WHEN STATE CHANGES — samples redraw (question/answers/visibility)
+  useEffect(() => {    
+    if (!state.currentPlot?.id) return;
+
+    const selectedQuestion = state.currentProject?.surveyQuestions?.[state.selectedQuestionId];
+    if (selectedQuestion?.visible) {
+      showPlotSamples();
+      highlightSamplesByQuestion();
+      createPlotKML();
+    }
+  }, [
+    state.currentPlot?.id,
+    state.selectedQuestionId,
+    state.unansweredColor,
+    state.userSamples,
+    state.currentProject?.surveyQuestions?.[state.selectedQuestionId]?.visible,
+    state.showSamples,
+    state.showBoundary,
+  ]);
+
+  // UPDATE QUESTION STATUS
+  useEffect(() => {
+    if (state.currentProject?.surveyQuestions && lengthObject(state.currentProject.surveyQuestions)) {
+      updateQuestionStatus();
+    }
+  }, [state.userSamples]);
+
+  // IMAGERY OVERLAY — when imagery or mapConfig changes; record imageryIds; update overlay
+  useEffect(() => {
+    if (!state.mapConfig || !state.currentImagery?.id) return;
+
+    if (!state.imageryIds?.includes(state.currentImagery.id)) {
+      setState((s) => ({ ...s, imageryIds: [...(s.imageryIds || []), state.currentImagery.id] }));
+    }
+
+    updateMapImagery();
+  }, [state.mapConfig, state.currentImagery?.id]);
+
+  useEffect(()=> {
+    state.navigationMode === 'similar' &&
+      setState((s)=> ({ ...s, referencePlotId: 1}));
+  }, [state.navigationMode]);
+
+  // API CALLS
+  const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {       
+    processModal("Getting plot", () => {
+      return fetch(
         "/get-collection-plot?" +
           getQueryString({
-            visibleId,
+            visibleId,            
             projectId,
-            navigationMode: forcedNavMode || navigationMode,
+            navigationMode: forcedNavMode || state.navigationMode,
             direction,
-            inReviewMode: reviewMode || inReviewMode,
-            threshold,
-            currentUserId,
-            projectType: type,
+            inReviewMode: reviewMode || state.inReviewMode,
+            threshold: state.threshold,
+            currentUserId: state.currentUserId,
+            projectType: state.currentProject.type,
+            referencePlotId: state.referencePlotId || 0
           })
       )
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
@@ -447,142 +246,113 @@ class Collection extends React.Component {
             const err = (direction === "id" ? "Plot not" : "No more plots") +
                   " found for this navigation mode.";
             const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
-            this.setState ({modal: {alert: {alertType: "Plot Data Error", alertMessage: inReviewMode ? err + reviewModeWarning : err}}});
+            setState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Error", alertMessage: state.inReviewMode ? err + reviewModeWarning : err}}}));
           } else {
-            this.setState({
-              userPlotList: data,
-              remainingPlotters: data,
-              currentPlot: data[0],
-              currentUserId: data[0].userId,
-              ...this.newPlotValues(data[0]),
-              answerMode: "question",
-              inReviewMode: reviewMode ? reviewMode : inReviewMode,
-            });
-            if(type === "simplified")
-              this.setDrawTool();
-            // TODO, this is probably redundant.  Projects are not allowed to be created with no samples.
-            this.warnOnNoSamples(data[0]);
+            setState (prev=> ({
+              ... prev,
+	      userPlotList: data,
+	      remainingPlotters: data,
+	      currentPlot: data[0],
+	      currentUserId: data[0].userId,
+	      ...newPlotValues(data[0]),
+	      answerMode: "question",
+	      inReviewMode: reviewMode || state.inReviewMode,
+              newPlotId: data[0].visibleId,
+	    }));
           }
         })
         .catch((response) => {
           console.error(response);
-          this.setState ({modal: {alert: {alertType: "Plot Data Retrieval Error", alertMessage: "Error retrieving plot data. See console for details."}}});
-        })
+          setState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Retrieval Error", alertMessage: "Error retrieving plot data. See console for details."}}}));
+        });}
     );
   };
+  
 
-  hasChanged = () => !_.isEqual(this.state.userSamples, this.state.originalUserSamples);
-  // https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
-  unsavedWarning = (e) => {
-    if (this.hasChanged()) {
-      e.preventDefault();
-      e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
-      return "You have unsaved changes. Are you sure you want to leave?";
-    }
-  };
+  // Functions
 
-  confirmUnsaved = () =>
-  !this.hasChanged() ||
-    confirm(
-      "You have unsaved changes. Any unsaved responses will be lost. Are you sure you want to continue?"
-    );
-
-  setDrawTool = () => {
-    const projectType = this.state.currentProject?.type;
-    const answerMode = projectType === "simplified" ? "draw" : "question";
-    const { polygons, lines, points } = this.state.currentProject.designSettings.sampleGeometries;
-    const drawTool = polygons ? "Polygon" : lines? "LineString" : "Point";
-    this.setAnswerMode(answerMode, drawTool);
-    if (this.state.mapConfig) mercator.changeDrawTool(this.state.mapConfig, "drawLayer", drawTool);
-  }
-
-  navToFirstPlot = () => {
-    this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed", this.state.currentProject?.userRole);
-    /*
-      this.state.currentProject?.userRole === 2 ?
-      this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed") :
-      
-    */
-  }
-
-  navToNextPlot = (ignoreCheck) => {
-    if (ignoreCheck || this.confirmUnsaved()) {
-      this.getPlotData(this.state.currentPlot.visibleId, "next");
-    }
-  };
-
-  navToPrevPlot = () => {
-    if (this.confirmUnsaved()) {
-      this.getPlotData(this.state.currentPlot.visibleId, "previous");
-    }
-  };
-
-  navToPlot = (newPlot, adminReview = null) => {
-    if (!isNaN(newPlot)) {
-      if (this.confirmUnsaved()) {
-        return adminReview ? this.getPlotData(newPlot, "id", 'analyzed', true) : this.getPlotData(newPlot, "id");
-      }
-    } else {
-      this.setState ({modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}});
-    }
-  };
-
-  resetPlotLock = () => {
-    fetch("/reset-plot-lock", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        plotId: this.state.currentPlot.id,
-        projectId: this.props.projectId,
-      }),
-    }).then((response) => {
-      if (!response.ok) {
-        console.log(response);
-        this.setState ({modal: {alert: {alertType: "Plot Lock Error", alertMessage: "Error maintaining plot lock. Your work may get overwritten. See console for details."}}});
-      }
-    });
-  };
-
-  resetPlotValues = () => {
-    this.setState(this.newPlotValues(this.state.currentPlot, false));
-  };
-
-  newPlotValues = (newPlot, copyValues = true) => ({
-    newPlotInput: newPlot.visibleId,
-    userSamples: newPlot.samples
-      ? newPlot.samples.reduce(
-        (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.savedAnswers || {} : {} }),
-        {}
-      )
-      : {},
-    originalUserSamples: newPlot.samples
-      ? copyValues
-      ? newPlot.samples.reduce((acc, cur) => ({ ...acc, [cur.id]: cur.savedAnswers || {} }), {})
-      : this.state.originalUserSamples
-    : {},
-    userImages: newPlot.samples
-      ? newPlot.samples.reduce(
-        (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.userImage || {} : {} }),
-        {}
-      )
-      : {},
-    selectedQuestionId: Number(
-      findObject(
-        this.state.currentProject.surveyQuestions,
-        ([_id, sq]) => sq.parentQuestionId === -1
-      )[0]
-    ),
-    collectionStart: Date.now(),
-    unansweredColor: "black",
+  const newPlotValues = (newPlot, copyValues = true) => ({	
+    newPlotInput: newPlot.visibleId,	
+    userSamples: newPlot.samples	
+      ? newPlot.samples.reduce(	
+        (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.savedAnswers || {} : {} }),	
+        {}	
+      )	
+      : {},	
+    originalUserSamples: newPlot.samples	
+      ? copyValues	
+      ? newPlot.samples.reduce((acc, cur) => ({ ...acc, [cur.id]: cur.savedAnswers || {} }), {})	
+      : state.originalUserSamples	
+    : {},	
+    userImages: newPlot.samples	
+      ? newPlot.samples.reduce(	
+        (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.userImage || {} : {} }),	
+        {}	
+      )	
+      : {},	
+    selectedQuestionId: Number(	
+      findObject(	
+        state.currentProject.surveyQuestions,	
+        ([_id, sq]) => sq.parentQuestionId === -1	
+      )[0]	
+    ),	
+    collectionStart: Date.now(),	
+    unansweredColor: "black",	
   });
 
-  zoomToPlot = () => mercator.zoomMapToLayer(this.state.mapConfig, "currentPlot", 36);
+  const processModal = (message, callBack) => {
+     setState(prev => ({ ... prev, modalMessage: message }));
+     return Promise.resolve()
+       .then(() => callBack())
+      .finally(() => setState(prev => ({... prev,  modalMessage: null })));};
 
-  showProjectPlot = () => {
-    const { currentPlot, mapConfig, currentProject, showBoundary} = this.state;
+  const showPlotSamples = () => {
+    const {
+      mapConfig,
+      unansweredColor,
+      currentProject,
+      selectedQuestionId,
+      showSamples,
+    } = state;
+
+    if (!mapConfig || !currentProject || selectedQuestionId == null) return;
+
+    const selectedQuestion = currentProject.surveyQuestions?.[selectedQuestionId];
+    if (!selectedQuestion) return;
+
+    const type = currentProject.type;
+    const baseVisible = Array.isArray(selectedQuestion.visible) ? selectedQuestion.visible : [];
+    const visibleSamples = type === "simplified"
+          ? baseVisible.filter((s) => s.visibleId !== 1)
+          : baseVisible;
+
+    mercator.disableSelection(mapConfig);
+    mercator.disableDrawing(mapConfig);
+    mercator.removeLayerById(mapConfig, "currentSamples");
+    mercator.removeLayerById(mapConfig, "drawLayer");
+
+    mercator.addVectorLayer(
+      mapConfig,
+      "currentSamples",
+      mercator.samplesToVectorSource(visibleSamples),
+      mercator.ceoMapStyles("geom", showSamples ? unansweredColor : "transparent"),
+      9999
+    );
+
+    mercator.enableSelection(
+      mapConfig,
+      "currentSamples",
+      (sampleId) => {
+        if (sampleId === -1) return;
+        setState((s) => ({ ...s, selectedSampleId: sampleId }));
+      }
+    );
+  };
+  
+  const zoomToPlot = () => mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
+
+  const showProjectPlot = () => {
+    const { currentPlot, mapConfig, currentProject, showBoundary} = state;
     mercator.disableSelection(mapConfig);
     mercator.removeLayerById(mapConfig, "currentPlots");
     mercator.removeLayerById(mapConfig, "currentPlot");
@@ -603,52 +373,16 @@ class Collection extends React.Component {
       mercator.ceoMapStyles("geom", (showBoundary ? "yellow" : "transparent")
                            )
     );
-    this.zoomToPlot();
+    zoomToPlot();
   };
-
-  showPlotSamples = () => {
-    const { mapConfig, unansweredColor, currentProject, selectedQuestionId, showSamples} = this.state;
-    const { visible } = currentProject.surveyQuestions[selectedQuestionId];
-    const type = currentProject.type;
-    const visibleSamples = type === "simplified" ? visible.filter((s) => s.visibleId !== 1) : visible;
-    mercator.disableSelection(mapConfig);
-    mercator.disableDrawing(mapConfig);
-    mercator.removeLayerById(mapConfig, "currentSamples");
-    mercator.removeLayerById(mapConfig, "drawLayer");
-    mercator.addVectorLayer(
-      mapConfig,
-      "currentSamples",
-      mercator.samplesToVectorSource(visibleSamples),
-      mercator.ceoMapStyles("geom", (showSamples ? unansweredColor : "transparent")),
-      9999
-    );
-    mercator.enableSelection(
-      mapConfig,
-      "currentSamples",
-      (sampleId) => sampleId !== -1 && this.setState({ selectedSampleId: sampleId })
+  
+  const showProjectOverview = () => {
+    mercator.addPlotLayer(state.mapConfig, state.plotList, (feature) =>
+      getPlotData(feature.get("features")[0].get("plotId"), "id")
     );
   };
 
-  featuresToDrawLayer = (drawTool) => {
-    const { mapConfig, currentPlot, currentProject } = this.state;
-    const type = currentProject.type;
-    const samples = currentPlot.samples;
-    const visibleSamples = type === "simplified" ? samples.filter((s) => s.visibleId !== 1) : samples;
-    mercator.disableDrawing(mapConfig);
-    mercator.removeLayerById(mapConfig, "currentSamples");
-    mercator.removeLayerById(mapConfig, "drawLayer");
-    mercator.addVectorLayer(
-      mapConfig,
-      "drawLayer",
-      mercator.samplesToVectorSource(visibleSamples),
-      mercator.ceoMapStyles("draw", "orange"),
-      9999
-    );
-    mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
-  };
-
-  featuresToSampleLayer = () => {
-    const { mapConfig, userSamples, userImages, currentPlot } = this.state;
+  const featuresToSampleLayer = () => {
     mercator.disableDrawing(mapConfig);
     const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
     const existingIds = allFeatures.map((f) => f.get("sampleId")).filter((id) => id);
@@ -665,7 +399,8 @@ class Collection extends React.Component {
       []
     );
 
-    this.setState({
+    setAppState(prev => ({
+      ... prev,
       currentPlot: { ...currentPlot, samples: newSamples },
       userSamples: newSamples.reduce(
         (acc, cur) => ({ ...acc, [cur.id]: userSamples[cur.id] || {} }),
@@ -675,316 +410,113 @@ class Collection extends React.Component {
         (acc, cur) => ({ ...acc, [cur.id]: userImages[cur.id] || {} }),
         {}
       ),
-    });
+    }));
   };
 
-  toggleShowBoundary = () => {
-    this.setState ({...this.state,
-                    showBoundary: !this.state.showBoundary
-                   });
+  const resetPlotLock = () => {
+    fetch("/reset-plot-lock", {
+      method: "POST",	
+      headers: {	
+        Accept: "application/json",	
+        "Content-Type": "application/json",	
+      },	
+      body: JSON.stringify({	
+        plotId: state.currentPlot.id,	
+        projectId: state.currentProject.id,
+      }),
+    }).then((response) => {	
+      if (!response.ok) {	
+        console.log(response);	
+        setState (s => ({...s, modal: {alert: {alertType: "Plot Lock Error", alertMessage: "Error maintaining plot lock. Your work may get overwritten. See console for details."}}}));	
+      }	
+    });	
   };
+  
+  const setImageryAttribution = (attributionSuffix) =>
+        setState(s => ({
+          ...s,
+          imageryAttribution: state.currentImagery.attribution + attributionSuffix,
+        }));
 
-  toggleShowSamples = () => {
-    this.setState ({...this.state,
-                    showSamples: !this.state.showSamples
-                   });
-  };
+  const setImageryAttributes = (newImageryAttributes) =>
+        setState(s => ({...s, imageryAttributes: newImageryAttributes }));
 
-  showGeoDash = () => {
-    const { currentPlot, mapConfig, currentProject } = this.state;
-    const plotRadius = currentProject.plotSize
-          ? currentProject.plotSize / 2.0
-          : mercator.getViewRadius(mapConfig);
-    this.setState({ usedGeodash: true });
-    window.open(
-      "/geo-dash?" +
-        `institutionId=${this.state.currentProject.institution}` +
-        `&projectId=${this.props.projectId}` +
-        `&visiblePlotId=${currentPlot.visibleId}` +
-        `&plotId=${currentPlot.id}` +
-        `&plotExtent=${encodeURIComponent(JSON.stringify(mercator.getViewExtent(mapConfig)))}` +
-        `&plotShape=${
-          currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon"
-        }` +
-        `&center=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}` +
-        `&radius=${plotRadius}`,
-      `_geo-dash_${this.props.projectId}`
-    );
-  };
-
-
-  createPlotKML = () => {
-    const plotFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentPlot");
-    const sampleFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples");
-    let KMLFeatures = mercator.getKMLFromFeatures([
-      mercator.asPolygonFeature(plotFeatures[0]),
-      ...sampleFeatures,
-    ]);
-
-    this.setState({
-      KMLFeatures: outlineKML(KMLFeatures)
-    });
-  };
-
-  setNavigationMode = (newMode) => this.setState({ navigationMode: newMode });
-
-  setReviewMode = (inReviewMode, callback = null) => {
-    const { currentProject } = this.state;
-    if(callback) {
-      this.setState({ inReviewMode, callback });
-
+  const updateMapImagery = () => {
+    const { currentPlot, mapConfig, currentImagery } = state;
+    mercator.setVisibleLayer(state.mapConfig, state.currentImagery.id);
+    if (
+      currentPlot &&
+        !currentPlot.id &&
+        ["PlanetDaily", "SecureWatch"].includes(currentImagery.sourceConfig.type)
+    ) {
+      mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", true);
     } else {
-      this.setState({ inReviewMode });
-    }
-    setProjectPreferences(currentProject.id, { inReviewMode });
-    if (inReviewMode && this.state.navigationMode === "natural") {
-      this.setNavigationMode("analyzed");
-    } else if (!inReviewMode && ["qaqc", "user"].includes(this.state.navigationMode)) {
-      this.setNavigationMode("natural");
+      mercator.setLayerVisibilityByLayerId(mapConfig, "goToPlot", false);
     }
   };
 
-  setThreshold = (threshold) => this.setState({ threshold });
-
-  setCurrentUserId = (currentUserId) => {
-    const { userPlotList } = this.state;
-    const newPlot = (userPlotList || []).find((p) => p.userId === currentUserId);
-    if (newPlot) {
-      this.setState({
-        currentUserId,
-        currentPlot: newPlot,
-        ...this.newPlotValues(newPlot),
-      });
-    } else {
-      this.setState({ currentUserId });
-    }
-  };
-
-  hasAnswers = () =>
-  _.some(Object.values(this.state.userSamples), (sample) => !_.isEmpty(sample)) ||
-    _.some(Object.values(this.state.userSamples), (sample) => !_.isEmpty(sample));
-
-  confirmFlag = () =>
-  !this.hasAnswers() ||
-    confirm(
-      "Flagging this plot will delete your previous answers. Are you sure you want to continue?"
+  const updateQuestionStatus = () => {
+    const { userSamples } = state;
+    const newSurveyQuestions = mapObject(
+      state.currentProject.surveyQuestions,
+      ([questionId, question]) => {
+        const visible = calcVisibleSamples(Number(questionId)) || [];
+        const answered = visible
+              .filter((vs) => userSamples[vs.id][questionId])
+              .map((vs) => ({
+                sampleId: vs.id,
+                answerId: Number(userSamples[vs.id][questionId].answerId),
+                answerText: userSamples[vs.id][questionId].answer,
+              }));
+        return [questionId, { ...question, visible, answered }];
+      }
     );
-
-  flagPlot = () => {
-    if (this.confirmFlag()) {
-      this.processModal("Saving flagged plot", () =>
-        fetch("/flag-plot", {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            projectId: this.props.projectId,
-            plotId: this.state.currentPlot.id,
-            collectionStart: this.state.collectionStart,
-            flaggedReason: this.state.currentPlot.flaggedReason,
-            inReviewMode: this.state.inReviewMode,
-            currentUserId: this.state.currentUserId,
-          }),
-        }).then((response) => {
-          if (response.ok) {
-            return this.navToNextPlot(true);
-          } else {
-            console.log(response);
-            this.setState ({modal: {alert: {alertType: "Plot Flagging Error", alertMessage: "Error flagging plot as bad. See console for details."}}});
-          }
-        })
-      );
-    }
+    
+    setState(s => ({
+      ...s,
+      currentProject: {
+        ...state.currentProject,
+        surveyQuestions: newSurveyQuestions,
+      },
+    }));
   };
 
-  savePlotAnswers = () => {
-    this.processModal("Saving plot answers", () =>
-      fetch("/add-user-samples", {
-        method: "post",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          projectId: this.props.projectId,
-          plotId: this.state.currentPlot.id,
-          confidence: this.state.currentProject.projectOptions.collectConfidence
-            ? this.state.currentPlot.confidence
-            : -1,
-          confidenceComment: this.state.currentProject.projectOptions.collectConfidence
-            ? this.state.currentPlot.confidenceComment
-            : null,
-          collectionStart: this.state.collectionStart,
-          userImages: this.state.userImages,
-          newPlotSamples:
-          this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
-          inReviewMode: this.state.inReviewMode,
-          currentUserId: this.state.currentUserId,
-          imageryIds: this.state.imageryIds,
-          projectType: this.state.currentProject.type,
-          usedKML: this.state.usedKML,
-          usedGeodash: this.state.usedGeodash,
-        }),
-      }).then((response) => {
-        if (response.ok) {
-          if (this.state.inReviewMode) {
-            this.setState({ remainingPlotters: this.state.remainingPlotters.filter((plotter) => plotter.userId != this.state.currentUserId) });
-            if(this.state.remainingPlotters.length > 0) {
-              this.setState ({modal: {alert: {alertType: "Plot Interpretation Alert", alertMessage: "There are more interpretations for this plot.\nPlease select the user from the user dropdown to review another interpretation."}}});
-              return null;
-            }
-          }
-          if(this.state.currentProject.type !== "simplified") {
-            return this.navToNextPlot(true);
-          } else {
-            alert("Answers saved successfully!");
-          }
-        } else {
-          console.log(response);
-          this.setState ({modal: {alert: {alertType: "Assignment Error", alertMessage: "Error saving your assignments to the database. See console for details."}}});
-        }
-      })
-    );
-  };
+  const calcVisibleSamples = (currentQuestionId) => {
+    const {
+      currentProject: { surveyQuestions },
+      userSamples,
+    } = state;
+    const { parentQuestionId, parentAnswerIds } = surveyQuestions[currentQuestionId];
 
-  postValuesToDB = () => {
-    if (this.state.currentPlot.flagged) {
-      this.flagPlot();
+    if (parentQuestionId === -1) {
+      return state.currentPlot?.samples;
     } else {
-      this.savePlotAnswers();
-    }
-  };
-
-  getChildQuestionIds = (currentQuestionId) => {
-    const { surveyQuestions } = this.state.currentProject;
-    const childQuestionIds = mapObjectArray(
-      filterObject(surveyQuestions, ([_id, val]) => val.parentQuestionId === currentQuestionId),
-      ([key, _val]) => Number(key)
-    );
-
-    return childQuestionIds.length
-      ? childQuestionIds.reduce(
-        (acc, cur) => [...acc, ...this.getChildQuestionIds(cur)],
-        [currentQuestionId]
-      )
-      : [currentQuestionId];
-  };
-
-  keyDifference = (o1, features) => {
-    const objKeys = o1.map(i => i.sampleId);
-    const sampleIds = features.map(f => f.get("sampleId"));
-    const unansweredKeys = sampleIds.filter(k => !objKeys.includes(k));
-    return features.filter(f => unansweredKeys.includes(f.get("sampleId")));
-  };
-
-  getSelectedSampleIds = (questionId) => {
-    const { answered } = this.state.currentProject.surveyQuestions[questionId];
-    const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
-    const unansweredFeatures = this.keyDifference(answered, allFeatures);
-    const selectedSamples = mercator.getSelectedSamples(this.state.mapConfig);
-    const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
-    return (
-      (selectedFeatures.length === 0 && answered.length === 0) ||
-        lengthObject(this.state.userSamples) === 1
-        ? allFeatures
-        : selectedFeatures.length !== 0
-        ? selectedFeatures
-        : unansweredFeatures
-    ).map((sf) => sf.get("sampleId"));
-  };
-
-  checkSelection = (sampleIds, questionId) => {
-    const questionToSet = this.state.currentProject.surveyQuestions[questionId];
-    const visibleIds = questionToSet.visible.map((v) => v.id);
-    if (!this.warnOnNoSamples(this.state.currentPlot)) {
-      return false;
-    } else if (sampleIds.some((s) => !visibleIds.includes(s))) {
-      this.setState ({modal: {alert: {alertType: "Selection Error", alertMessage: "Invalid Selection. Try selecting the question before answering."}}});
-      return false;
-    } else if (sampleIds.length === 0) {
-      this.setState ({modal: {alert: {alertType: "Selection Error", alertMessage: "Please select at least one sample before choosing an answer."}}});
-      return false;
-    } else {
-      return true;
-    }
-  };
-
-  setCurrentValue = (questionId, answerId, answerText) => {
-    const sampleIds = this.getSelectedSampleIds(questionId);
-
-    if (this.checkSelection(sampleIds, questionId)) {
-      const newSamples = sampleIds.reduce((acc, sampleId) => {
-        const newQuestion = {
-          answerId,
-          ...(answerText !== "" && { answer: answerText }),
-        };
-
-        const childQuestionIds = this.getChildQuestionIds(questionId);
-
-        const subQuestionsCleared = filterObject(
-          this.state.userSamples[sampleId],
-          ([key, _val]) => !childQuestionIds.includes(Number(key))
+      return calcVisibleSamples(parentQuestionId)?.filter((sample) => {
+        const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestionId, "answerId"]);
+        return (
+          sampleAnswerId != null &&
+            (parentAnswerIds.length === 0 || parentAnswerIds.includes(sampleAnswerId))
         );
-
-        return (answerText != null &&
-                answerText != undefined) ?
-          {
-            ...acc,
-            [sampleId]: {
-              ...subQuestionsCleared,
-              [questionId]: newQuestion,
-            },
-          } : { ...acc };
-      }, {});
-
-      const newUserImages = sampleIds.reduce(
-        (acc, sampleId) => ({
-          ...acc,
-          [sampleId]: {
-            id: this.state.currentImagery.id,
-            attributes:
-            this.state.currentImagery.sourceConfig.type === "PlanetDaily"
-              ? {
-                ...this.state.imageryAttributes,
-                imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(
-                  this.state.mapConfig,
-                  this.state.currentImagery.id
-                ),
-              }
-            : this.state.imageryAttributes,
-          },
-        }),
-        {}
-      );
-
-      this.setState({
-        userSamples: { ...this.state.userSamples, ...newSamples },
-        userImages: { ...this.state.userImages, ...newUserImages },
-        selectedQuestionId: questionId,
       });
     }
   };
 
-  setSelectedQuestion = (newId) => this.setState({ selectedQuestionId: newId });
-
-  highlightSamplesByQuestion = () => {
-    const { selectedQuestionId, currentProject } = this.state;
+  const highlightSamplesByQuestion = () => {
+    const { selectedQuestionId, currentProject } = state;
     const { answers, componentType } = currentProject.surveyQuestions[selectedQuestionId];
-    const allFeatures = mercator.getAllFeatures(this.state.mapConfig, "currentSamples") || [];
+    const allFeatures = mercator.getAllFeatures(state.mapConfig, "currentSamples") || [];
 
     allFeatures
       .filter((feature) => {
         const sampleId = feature.get("sampleId");
         return (
-          this.state.userSamples[sampleId] && this.state.userSamples[sampleId][selectedQuestionId]
+          state.userSamples[sampleId] && state.userSamples[sampleId][selectedQuestionId]
         );
       })
       .forEach((feature) => {
         const sampleId = feature.get("sampleId");
         const userAnswer = _.get(
-          this.state,
+          state,
           ["userSamples", sampleId, selectedQuestionId, "answerId"],
           -1
         );
@@ -997,343 +529,176 @@ class Collection extends React.Component {
       });
   };
 
-  calcVisibleSamples = (currentQuestionId) => {
-    const {
-      currentProject: { surveyQuestions },
-      userSamples,
-    } = this.state;
-    const { parentQuestionId, parentAnswerIds } = surveyQuestions[currentQuestionId];
-
-    if (parentQuestionId === -1) {
-      return this.state.currentPlot.samples;
-    } else {
-      return this.calcVisibleSamples(parentQuestionId).filter((sample) => {
-        const sampleAnswerId = _.get(userSamples, [sample.id, parentQuestionId, "answerId"]);
-        return (
-          sampleAnswerId != null &&
-            (parentAnswerIds.length === 0 || parentAnswerIds.includes(sampleAnswerId))
-        );
-      });
-    }
-  };
-
-  updateQuestionStatus = () => {
-    const { userSamples } = this.state;
-    const newSurveyQuestions = mapObject(
-      this.state.currentProject.surveyQuestions,
-      ([questionId, question]) => {
-        const visible = this.calcVisibleSamples(Number(questionId)) || [];
-        const answered = visible
-              .filter((vs) => userSamples[vs.id][questionId])
-              .map((vs) => ({
-                sampleId: vs.id,
-                answerId: Number(userSamples[vs.id][questionId].answerId),
-                answerText: userSamples[vs.id][questionId].answer,
-              }));
-        return [questionId, { ...question, visible, answered }];
-      }
-    );
-
-    this.setState({
-      currentProject: {
-        ...this.state.currentProject,
-        surveyQuestions: newSurveyQuestions,
-      },
-    });
-  };
-
-  toggleQuitModal = () => this.setState({ showQuitModal: !this.state.showQuitModal });
-
-  toggleFlagged = () =>
-  this.setState({
-    currentPlot: { ...this.state.currentPlot, flagged: !this.state.currentPlot.flagged },
-  });
-  
-  toggleImageryLayers = () => {
-    this.setState((prevState) => ({
-      isImageryLayersExpanded: !prevState.isImageryLayersExpanded,
+  const createPlotKML = () => {
+    const plotFeatures = mercator.getAllFeatures(state.mapConfig, "currentPlot");
+    const sampleFeatures = mercator.getAllFeatures(state.mapConfig, "currentSamples");
+    let KMLFeatures = mercator.getKMLFromFeatures([
+      mercator.asPolygonFeature(plotFeatures[0]),
+      ...sampleFeatures,
+    ]);
+    
+    setState(s => ({
+      ...s,
+      KMLFeatures: outlineKML(KMLFeatures)
     }));
   };
   
-  toggleLayer = (layerId, imageryList) => {
-    const maxZIndex = imageryList.length - 1;
-    this.setState((prevState) => {
-      const updatedImageryList = prevState.imageryList.map((layer) => 
-        layer.id === layerId ? { ...layer, visible: !layer.visible } : layer
-      );
-      
-      updatedImageryList.forEach((layer, index) => {
-        const zindex = maxZIndex - index
-        mercator.setLayerVisibilityByLayerId(this.state.mapConfig, layer.id, layer.visible, zindex);
-      });
-      
-      return { imageryList: updatedImageryList };
-    });
-  };
-
-  resetLayers = () => {
-    this.setState((prevState) => {
-      const updatedImageryList = prevState.imageryList.map((layer) => 
-        layer.title === "CEO: Mapbox Satellite" ? { ...layer, visible: true } : { ...layer, visible: false }
-      );
-      
-      updatedImageryList.forEach((layer, index) => {
-        mercator.setLayerVisibilityByLayerId(this.state.mapConfig, layer.id, layer.visible);
-      });
-      
-      return { imageryList: updatedImageryList };
-    });
+  const showGeoDash = () => {
+    const { currentPlot, mapConfig, currentProject } = state;
+    const plotRadius = currentProject.plotSize
+          ? currentProject.plotSize / 2.0
+          : mercator.getViewRadius(mapConfig);
+    setState(s => ({...s, usedGeodash: true }));
+    window.open(
+      "/geo-dash?" +
+        `institutionId=${state.currentProject.institution}` +
+        `&projectId=${projectId}` +
+        `&visiblePlotId=${currentPlot.visibleId}` +
+        `&plotId=${currentPlot.id}` +
+        `&plotExtent=${encodeURIComponent(JSON.stringify(mercator.getViewExtent(mapConfig)))}` +
+        `&plotShape=${
+          currentPlot.plotGeom.includes("Point") ? currentProject.plotShape : "polygon"
+        }` +
+        `&center=${currentPlot.plotGeom.includes("Point") ? currentPlot.plotGeom : ""}` +
+        `&radius=${plotRadius}`,
+      `_geo-dash_${projectId}`
+    );
   };
   
-  changeOpacity = (layerId, opacity) => {
-    const { mapConfig } = this.state;
-    const layer = mercator.getLayerById(mapConfig, layerId);
-    if (layer) {
-      layer.setOpacity(opacity);
-      this.setState((prevState) => ({
-        imageryList: prevState.imageryList.map((layer) =>
-          layer.id === layerId ? { ...layer, opacity } : layer
-        ),
-      }));
-    }
-  };
-
-  onDragEnd = (result, imageryList, setImageryList) => {
-    if (!result.destination) return;
-    const { mapConfig } = this.state;
-    const reorderedList = [...imageryList];
-    const [movedItem] = reorderedList.splice(result.source.index, 1);
-    reorderedList.splice(result.destination.index, 0, movedItem);
-    const maxZIndex = reorderedList.length - 1;
-    reorderedList.forEach((layer, index) => {
-      const olLayer = mercator.getLayerById(mapConfig, layer.id);
-      if (olLayer) olLayer.setZIndex(maxZIndex - index);
-    });
-    setImageryList(reorderedList);
-  };
-
-  setImageryList = (newList) => this.setState({ imageryList: newList });
-  setUnansweredColor = (newColor) => this.setState({ unansweredColor: newColor });
-  toggleAcceptTermsModal = () => this.setState({ showAcceptTermsModal: !this.state.showAcceptTermsModal });
-
-  setAnswerMode = (newMode, drawTool) => {
-    if (this.state.answerMode !== newMode) {
-      if (newMode === "draw") {
-        this.featuresToDrawLayer(drawTool);
-      } else {
-        this.featuresToSampleLayer();
-        this.setSelectedQuestion(Number(firstEntry(this.state.currentProject.surveyQuestions)[0]));
-      }
-      this.setState({ answerMode: newMode });
-    }
-  };
-
-  setConfidence = (confidence) =>
-  this.setState({ currentPlot: { ...this.state.currentPlot, confidence } });
-
-  setFlaggedReason = (flaggedReason) =>
-  this.setState({ currentPlot: { ...this.state.currentPlot, flaggedReason } });
-
-  setConfidenceComment = (confidenceComment) =>
-  this.setState({ currentPlot: { ...this.state.currentPlot, confidenceComment } });
-
-  setUsedKML = (used) => this.setState({ usedKML: used });
-
-  render() {
-    return (
-      <div className={`container-fluid collection-page`}>
-        <div className="row no-gutters">
-
-          {/* Left Sidebar (ImageryLayerOptions) - Now Absolutely Positioned */}
-          {this.state?.modal?.alert &&
-           <Modal title={this.state?.modal?.alert?.alertType}
-                  onClose={()=>{this.setState({modal: null});}}>
-             {this.state?.modal?.alert?.alertMessage}
-           </Modal>}
-          {this.state.currentProject?.type === "simplified" && (
-            <div
-              className="d-flex flex-column position-absolute full-height"
-              style={{
-                top: 0,
-                left: this.state.isImageryLayersExpanded ? "0px" : "-550px",
-                width: "550px",
-                height: "100%",
-                backgroundColor: "#fff",
-                boxShadow: "2px 0 5px rgba(0, 0, 0, 0.2)",
-                transition: "left 0.3s ease",
-                zIndex: 10,
-              }}
-            >
-              <ImageryLayerOptions
-                imageryList={this.state.imageryList}
-                onDragEnd={this.onDragEnd}
-                setImageryList={this.setImageryList}
-                onToggleLayer={this.toggleLayer}
-                onChangeOpacity={this.changeOpacity}
-                onReset={this.resetLayers}
-                isImageryLayersExpanded={this.state.isImageryLayersExpanded}
-              />
-
-              {/* Sidebar Toggle Button - Stays Visible */}
-              <button
-                className="toggle-sidebar position-absolute"
-                onClick={this.toggleImageryLayers}
-                style={{
-
-                }}
-              >
-                {this.state.isImageryLayersExpanded ? <FaChevronLeft /> : <FaChevronRight />}
-              </button>
-            </div>
-          )}
-
-          {/* Main Content (Image Analysis Pane) - Now Always Full Width */}
-          <div className="d-flex flex-column flex-grow-1">
-            <ImageAnalysisPane imageryAttribution={this.state.imageryAttribution} />
-          </div>
-
-          {/* Right Sidebar (SideBar) - Fixed Width, Always Anchored */}
-          <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
-            <SideBar
-              answerMode={this.state.answerMode}
-              currentPlot={this.state.currentPlot}
-              inReviewMode={this.state.inReviewMode}
-              postValuesToDB={this.postValuesToDB}
-              projectId={this.props.projectId}
-              projectName={this.state.currentProject.name}
-              surveyQuestions={this.state.currentProject.surveyQuestions}
-              toggleQuitModal={this.toggleQuitModal}
-              userName={this.props.userName}
-              userRole={this.state.currentProject.userRole}
-              collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
-            >
-              <PlotNavigation
-                collectConfidence={this.state.currentProject.projectOptions?.collectConfidence}
-                currentPlot={this.state.currentPlot}
-                currentUserId={this.state.currentUserId}
-                hasAssignedPlots={
-                  this.state.currentProject.designSettings?.userAssignment?.userMethod !== "none"
-                }
-                inReviewMode={this.state.inReviewMode}
-                isProjectAdmin={this.state.currentProject.isProjectAdmin}
-                isQAQCEnabled={
-                  this.state.currentProject.designSettings?.qaqcAssignment?.qaqcMethod !== "none"
-                }
-                loadingPlots={this.state.plotList.length === 0}
-                navigationMode={this.state.navigationMode}
-                navToFirstPlot={this.navToFirstPlot}
-                navToNextPlot={this.navToNextPlot}
-                navToPlot={this.navToPlot}
-                navToPrevPlot={this.navToPrevPlot}
-                plotters={this.state.plotters}
-                plotUsers={(this.state.userPlotList || []).filter((p) => p.userId)}
-                projectId={this.props.projectId}
-                setCurrentUserId={this.setCurrentUserId}
-                setNavigationMode={this.setNavigationMode}
-                setReviewMode={this.setReviewMode}
-                setThreshold={this.setThreshold}
-                threshold={this.state.threshold}
-                projectType={this.state.currentProject?.type}
-              />
-              <ExternalTools
-                currentPlot={this.state.currentPlot}
-                currentProject={this.state.currentProject}
-                KMLFeatures={this.state.KMLFeatures}
-                showGeoDash={this.showGeoDash}
-                zoomMapToPlot={this.zoomToPlot}
-                toggleShowBoundary={this.toggleShowBoundary}
-                toggleShowSamples={this.toggleShowSamples}
-                projectType={this.state.currentProject?.type}
-                state={{ showBoundary: this.state.showBoundary, showSamples: this.state.showSamples }}
-                setUsedKML={this.setUsedKML}
-              />
-              {this.state.currentPlot.id &&
-               this.state.currentProject.projectOptions.showPlotInformation && (
-                 <PlotInformation extraPlotInfo={this.state.currentPlot.extraPlotInfo} />
-               )}
-              {this.state.currentProject.type === "regular" && (
-                <ImageryOptions
-                  currentImageryId={this.state.currentImagery.id}
-                  currentPlot={this.state.currentPlot}
-                  currentProject={this.state.currentProject}
-                  currentProjectBoundary={this.state.currentProject.boundary}
-                  imageryList={this.state.imageryList}
-                  loadingImages={this.state.imageryList.length === 0}
-                  mapConfig={this.state.mapConfig}
-                  setBaseMapSource={this.setBaseMapSource}
-                  setImageryAttributes={this.setImageryAttributes}
-                  setImageryAttribution={this.setImageryAttribution}
-                />
-              )}
-              {this.state.currentPlot.id ? (
-                <SurveyCollection
-                  allowDrawnSamples={this.state.currentProject.allowDrawnSamples}
-                  answerMode={this.state.answerMode}
-                  collectConfidence={this.state.currentProject.projectOptions.collectConfidence}
-                  confidence={this.state.currentPlot.confidence}
-                  confidenceComment={this.state.currentPlot.confidenceComment}
-                  flagged={this.state.currentPlot.flagged}
-                  flaggedReason={this.state.currentPlot.flaggedReason}
-                  getSelectedSampleIds={this.getSelectedSampleIds}
-                  mapConfig={this.state.mapConfig}
-                  resetPlotValues={this.resetPlotValues}
-                  sampleGeometries={this.state.currentProject.designSettings.sampleGeometries}
-                  selectedQuestionId={this.state.selectedQuestionId}
-                  selectedSampleId={
-                    Object.keys(this.state.userSamples).length === 1
-                      ? parseInt(Object.keys(this.state.userSamples)[0])
-                      : this.state.selectedSampleId
-                  }
-                  setAnswerMode={this.setAnswerMode}
-                  setConfidence={this.setConfidence}
-                  setConfidenceComment={this.setConfidenceComment}
-                  setCurrentValue={this.setCurrentValue}
-                  setFlaggedReason={this.setFlaggedReason}
-                  setSelectedQuestion={this.setSelectedQuestion}
-                  setUnansweredColor={this.setUnansweredColor}
-                  surveyQuestions={this.state.currentProject.surveyQuestions}
-                  surveyRules={this.state.currentProject.surveyRules}
-                  toggleFlagged={this.toggleFlagged}
-                  unansweredColor={this.state.unansweredColor}
-                  projectType={this.state.currentProject?.type}
-                />
-              ) : (
-                <fieldset className="mb-3 justify-content-center text-center">
-                  <CollapsibleTitle showGroup title="Survey Questions" />
-                  <p>Please go to a plot to see survey questions</p>
-                </fieldset>
-              )}
-            </SideBar>
-          </div>
-
-          {/* Modals and Popups */}
-          {this.state.messageBox && (
-            <Modal {...this.state.messageBox} onClose={() => this.setState({ messageBox: null })}>
-              <p>{this.state.messageBox.body}</p>
-            </Modal>
-          )}
-          {(!this.props.acceptedTerms && this.state.currentProject?.type === "simplified") && (
-            <AcceptTermsModal institutionId={this.state.currentProject.institution}
-                              projectId={this.props.projectId}
-                              toggleAcceptTermsModal={this.toggleAcceptTermsModal} />
-          )}
-          {this.state.showQuitModal && (
-            <QuitMenu institutionId={this.state.currentProject.institution}
-                      projectId={this.props.projectId}
-                      toggleQuitModal={this.toggleQuitModal} />
-          )}
-        </div>
-      </div>
-
-    );
-  }
-}
-
-function ImageAnalysisPane({ imageryAttribution }) {
+  // RENDER
   return (
-    <div className="pl-0 pr-0 full-height" id="image-analysis-pane">
+    <div className="container-fluid collection-page">
+      <div className="row no-gutters">
+        {state?.modal?.alert && (
+          <Modal title={state.modal.alert.alertType} onClose={() => setState((s) => ({ ...s, modal: null }))}>
+            {state.modal.alert.alertMessage}
+          </Modal>
+        )}
+        {state.currentProject?.type === "simplified" && (
+          <div
+            className="d-flex flex-column position-absolute full-height"
+            style={{
+              top: 0,
+              left: state.isImageryLayersExpanded ? "0px" : "-550px",
+              width: "550px",
+              height: "100%",
+              backgroundColor: "#fff",
+              boxShadow: "2px 0 5px rgba(0,0,0,.2)",
+              transition: "left .3s ease",
+              zIndex: 10,
+            }}
+          >
+            <ImageryLayerOptions imageryList={state.imageryList} />
+            <button
+              className="toggle-sidebar position-absolute"
+              onClick={() => setState((s) => ({ ...s, isImageryLayersExpanded: !s.isImageryLayersExpanded }))}
+            >
+              {state.isImageryLayersExpanded ? <FaChevronLeft /> : <FaChevronRight />}
+            </button>
+          </div>
+        )}
+        <div className="d-flex flex-column flex-grow-1">
+          <ImageAnalysisPane />
+        </div>
+        <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
+          <CollectionSidebar processModal={processModal}>
+          </CollectionSidebar>
+        </div>
+        {state.messageBox && (
+          <Modal {...state.messageBox} onClose={() => setState((s) => ({ ...s, messageBox: null }))}>
+            <p>{state.messageBox.body}</p>
+          </Modal>
+        )}
+        {!acceptedTerms && state.currentProject?.type === "simplified" && (
+          <AcceptTermsModal
+            institutionId={state.currentProject.institution}
+            projectId={projectId}
+            toggleAcceptTermsModal={() =>
+              setState((s) => ({ ...s, showAcceptTermsModal: !s.showAcceptTermsModal }))
+            }
+          />
+        )}
+        {state.showQuitModal && (
+          <QuitMenu
+            institutionId={state.currentProject.institution}
+            projectId={projectId}
+            toggleQuitModal={() => setState((s) => ({ ...s, showQuitModal: !s.showQuitModal }))}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+    
+function ImageAnalysisPane({}) {
+  const [state, setState] = useAtom(stateAtom);
+  
+  const toggleShowBoundary = () => {
+  setState (s => ({...s, showBoundary: !state.showBoundary}));
+  };
+  
+  const toggleShowSamples = () =>  {
+    setState (s=> ({...s, showSamples: !state.showSamples}));
+  };
+
+  const zoomToPlot = () => {
+    state.mapConfig &&
+    mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
+  };
+
+  const zoom = (level) => {
+    state.mapConfig &&
+    mercator.setMapZoom(state.mapConfig, level);
+  };
+  
+  return (
+    <div className="pl-0 pr-0 full-height" id="image-analysis-pane" style={{position: 'relative'}}>
       <div className="row" id="imagery-info" style={{ justifyContent: "center" }}>
-        <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{imageryAttribution}</p>
+        <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{state.imageryAttribution}</p>
+      </div>
+      
+      <div className="map-controls"
+           style={{position: 'absolute',
+                   bottom: '2em',
+                   right: '10vw',
+                   zIndex: 1}}>
+        <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '1rem' }}>
+          <input
+            className="btn btn-outline-lightgreen btn-sm"
+            onClick={zoomToPlot}
+            type="button"
+            value="Re-Zoom"
+          />
+          <input
+    className={`btn btn-outline-${state.showSamples ? "red" : "lightgreen"} btn-sm`}
+
+            onClick={toggleShowSamples}
+            type="button"
+            value={`${state.showSamples ? "Hide" : "Show"} Samples`}
+          />
+          <input
+    className={`btn btn-outline-${state.showBoundary ? "red" : "lightgreen"} btn-sm`} 
+            onClick={toggleShowBoundary}
+            type="button"
+            value={`${state.showBoundary ? "Hide" : "Show"} Boundary`}
+          />
+          <div className="d-flex flex-column">
+            <button className="btn btn-sm"
+                  style={{backgroundColor: 'white',
+                          borderRadius: '25%',
+                          margin: 'auto 0 auto auto'}}
+                    onClick={() => zoom(1)}
+            >
+		  <SvgIcon icon="plus" size="0.9rem" /></button>
+          <button className="btn btn-sm"
+                  style={{backgroundColor: 'white',
+                          borderRadius: '25%',
+                          margin: 'auto 0 auto auto'}}
+                  onClick={() => zoom(-1)}
+          >
+            <SvgIcon icon="minus" size="0.9rem" /></button>
+          </div>
+             </div>
       </div>
     </div>
   );
@@ -2133,8 +1498,7 @@ class ProjectStats extends React.Component {
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked
-function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
-  console.log(institutionId);
+function QuitMenu({ institutionId, projectId, toggleQuitModal }) {  
   return (
     <div
       className="modal fade show"
