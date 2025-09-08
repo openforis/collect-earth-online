@@ -1,10 +1,11 @@
 (ns collect-earth-online.db.geoai
-  (:require [clj-http.client :as http]
-            [clojure.data.json :as json]
+  (:require [clj-http.client            :as http]
+            [clojure.data.json          :as json]
             [triangulum.type-conversion :as tc]
-            [triangulum.config :refer [get-config]]
-            [triangulum.database :refer [call-sql]]
-            [clj-gcloud.storage :as st]))
+            [triangulum.config          :refer [get-config]]
+            [triangulum.database        :refer [call-sql sql-primitive]]
+            [triangulum.response        :refer [data-response]]
+            [clj-gcloud.storage         :as st]))
 
 (defonce gcs-resource
   (st/init
@@ -46,12 +47,13 @@
   (str "{" (clojure.string/join "," (map int arr)) "}"))
 
 (defn- search-plot-by-similarity
-  [project-id plot-id]
-  (let [req (:body (http/get
-                    (str (get-config :gcs-integration :api-url) "/search")
-                    {:query-params {:uniqueid plot-id
-                                    :table    table
-                                    :matches  5}}))
+  [project-id plot-id year]
+  (let [bq-table          (sql-primitive (call-sql "get_bq_table" project-id year))
+        req               (:body (http/get
+                                  (str (get-config :gcs-integration :api-url) "/search")
+                                  {:query-params {:uniqueid plot-id
+                                                  :table    bq-table
+                                                  :matches  5}}))
         similar-plots-arr (map #(get % :base_plotid) req)]
     (call-sql "insert_geoai_cache"
               project-id
@@ -59,9 +61,16 @@
               (clj->int-array-literal similar-plots-arr)
               (tc/clj->jsonb req))))
 
+(defn- process-plot-similarity
+  [project-id plot-id similarity-years file-name]
+  (upload-json-to-gcs project-id)
+  (prepare-similarity-table project-id file-name similarity-years)
+  (search-plot-by-similarity project-id plot-id (first similarity-years)))
+
 (defn start-plot-similarity! [{:keys [params]}]
   (let [project-id        (:projectId params)
         reference-plot-id (:referencePlotId params)
         similarity-years  (:similarityYears params)
         file-name         (str "ceo-" project-id "-plots")]
-     (upload-json-to-gcs project-id)))
+    (future (process-plot-similarity project-id reference-plot-id similarity-years file-name))
+    (data-response {:message "calculating plot similarity."})))
