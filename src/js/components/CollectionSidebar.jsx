@@ -51,7 +51,9 @@ export const NewPlotNavigation = () => {
     currentPlot,
     inReviewMode,
     navigationMode,
-    newPlotId
+    newPlotId,
+    visibleId,
+    plotNavigation,
   } = useAtomValue(stateAtom);
 
   function hasChanged () {
@@ -127,16 +129,18 @@ export const NewPlotNavigation = () => {
                onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}));}}
         ></input>
         <button className="btn outline"
+                disabled={!plotNavigation[0]}
                 onClick={()=>{navToPlot('previous');}}>
           <SvgIcon icon="leftArrow" size="0.9rem" />
         </button>
         <button className="btn outline"
+                disabled={!plotNavigation[2]}
                 onClick={()=>{navToPlot('next');}}>
           <SvgIcon icon="rightArrow" size="0.9rem" />
         </button>
         <label className="btn filled"
                onClick={()=>{navToPlotId();}}
-        >Go To Plot
+        >{visibleId ? 'Go To Plot' : 'Begin Collection'}
         </label>
       </div>
 

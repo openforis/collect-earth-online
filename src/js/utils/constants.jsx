@@ -54,6 +54,8 @@ export const stateAtom = atom({
   getNewPlot: false,
   newPlotId: null,
   navDirection: "next",
+  visibleId: null,
+  plotNavigation: [null, null, null],
 });
 
 
