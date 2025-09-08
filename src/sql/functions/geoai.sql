@@ -42,7 +42,7 @@ CREATE OR REPLACE FUNCTION insert_geoai_cache(
   ) VALUES (
     _project_id,
     _plot_id,
-    _similar_plots,
+    _similar_plots::integer[],
     _metadata
   )
   RETURNING geoai_cache_uid
