@@ -175,7 +175,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   // GET PLOT DATA WHEN NEEDED - When getNewPlot changes to true, request plot data
   useEffect(() => {
     if(state.getNewPlot) {
-      getPlotData(state.newPlotId, state.navDirection);
+      getPlotData(state.newPlotId || -999, state.navDirection);
       setState(s => ({...s, getNewPlot: false}));
     }
   }, [state.getNewPlot]);
@@ -224,12 +224,12 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   }, [state.navigationMode]);
 
   // API CALLS
-  const getPlotData = (visibleId, direction, forcedNavMode = null, reviewMode = null) => {
+  const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {       
     processModal("Getting plot", () => {
       return fetch(
         "/get-collection-plot?" +
           getQueryString({
-            visibleId: visibleId || -1,
+            visibleId,            
             projectId,
             navigationMode: forcedNavMode || state.navigationMode,
             direction,
@@ -248,10 +248,8 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
             const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
             setState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Error", alertMessage: state.inReviewMode ? err + reviewModeWarning : err}}}));
           } else {
-            console.log("got plot for collection", data);
             setState (prev=> ({
               ... prev,
-              plotNavigation: data[0].navigation,
 	      userPlotList: data,
 	      remainingPlotters: data,
 	      currentPlot: data[0],

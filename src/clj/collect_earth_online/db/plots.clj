@@ -242,8 +242,7 @@
                           (take 1 (filter (fn [s] (= 1 (:visibleId s))) samples))
                           samples)
      :userId            user_id
-     :email             email
-     :navigation        [nil nil 1]}))
+     :email             email}))
 
 (defn get-correct-plot-navigation
   [project-id user-id current-user-id review-mode? navigation-mode project-type threshold reference-plot-id]
@@ -262,7 +261,6 @@
       "similar"    (call-sql "select_plots_by_similarity" project-id reference-plot-id)
       [])))
 
-(require '[clojure.pprint :refer [pprint]])
 (defn get-collection-plot
   "Gets plot information needed for the collections page.  The plot
    returned is based off of the navigation mode and direction.  Valid
@@ -280,7 +278,6 @@
 
 "
   [{:keys [params session]}]
-  (pprint params)
   (let [navigation-mode (:navigationMode params "unanalyzed")
         direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
@@ -305,8 +302,8 @@
                           "qaqc" (sort-by first (filter-plot-disagreement project-id grouped-plots threshold))
                           "similar"
 			  (if (some #(= (:visible_id %) old-visible-id) proj-plots)
-			    (filter-pred-idx #(= (:visible_id %) old-visible-id) proj-plots)
-			    (take 3 (into [nil nil] proj-plots)))
+			      (filter-pred-idx #(= (:visible_id %) old-visible-id) proj-plots)
+			      (take 3 (into [nil nil] proj-plots)))
                           (sort-by first grouped-plots))
         plots-info      (case direction
                           "next"     (case navigation-mode "similar"
@@ -338,17 +335,11 @@
 					   (->> sorted-plots
                                                 (take-last 2)
                                                 (remove nil?)
-                                                seq)
-                                           (if (> 0 old-visible-id)
-                                             (-> sorted-plots first second)
-				             (some
-                                              
-                                              (fn [[visible-id plots]]
-                                                (and (= visible-id old-visible-id)
-                                                     plots))
-                                              sorted-plots))
-                                            
-                                           ))]
+                                                seq)					   
+                                           (some (fn [[visible-id plots]]
+                                                   (and (= visible-id old-visible-id)
+                                                        plots))
+                                                 sorted-plots)))]
     (if plots-info
       (try
         (when (not= project-type "simplified")
