@@ -83,4 +83,5 @@
  :collect-earth-online.gcs-integration/project-name ""
  :collect-earth-online.gcs-integration/credentials  ""
  :collect-earth-online.gcs-integration/bucket-url   ""
+ :collect-earth-online.gcs-integration/api-url      ""
  }
