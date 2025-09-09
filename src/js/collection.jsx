@@ -251,15 +251,15 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
             console.log("got plot for collection", data);
             setState (prev=> ({
               ... prev,
-              plotNavigation: data[0].navigation,
-	      userPlotList: data,
-	      remainingPlotters: data,
-	      currentPlot: data[0],
-	      currentUserId: data[0].userId,
-	      ...newPlotValues(data[0]),
+              plotNavigation: data.navigation,
+	      userPlotList: [data],
+	      remainingPlotters: [data],
+	      currentPlot: data,
+	      currentUserId: data.userId,
+	      ...newPlotValues(data),
 	      answerMode: "question",
 	      inReviewMode: reviewMode || state.inReviewMode,
-              newPlotId: data[0].visibleId,
+              newPlotId: data.visibleId,
 	    }));
           }
         })
