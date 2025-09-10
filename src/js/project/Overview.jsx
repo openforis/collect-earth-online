@@ -12,7 +12,7 @@ export function Overview(props) {
     privacyLevel,
     setProjectDetails,
     projectOptions,
-    projectOptions: { showGEEScript, showPlotInformation, collectConfidence, autoLaunchGeoDash },
+    projectOptions: { showGEEScript, showPlotInformation, collectConfidence, autoLaunchGeoDash, plotSimilarity },
     projectId,
     type,
     learningMaterial

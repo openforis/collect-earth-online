@@ -34,6 +34,7 @@ export const blankProject = {
     showPlotInformation: false,
     collectConfidence: false,
     autoLaunchGeoDash: true,
+    plotSimilarity: false
   },  
   newPlotDistribution: "csv",
   newPlotFileName: "",

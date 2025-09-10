@@ -158,9 +158,9 @@
                                               :auth-type   :user
                                               :auth-action :block}
 
-   [:post "/start-plot-similarity"           {:handler     #'geoai/start-plot-similarity!
+   [:post "/start-plot-similarity"]          {:handler     #'geoai/start-plot-similarity!
                                               :auth-type   :admin
-                                              :auth-action :block}]
+                                              :auth-action :block}
 
    ;; QAQC API
    [:get "/project-stats"]                   {:handler     #'qaqc/get-project-stats
