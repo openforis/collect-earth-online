@@ -9,6 +9,15 @@ import Modal from "./Modal";
 import { LoadingModal } from "./PageComponents";
 import { mercator } from "../utils/mercator";
 import { SurveyQuestions, DrawingTool } from "./SurveyQuestions.jsx";
+import {
+  PlanetMenu,
+  PlanetDailyMenu,
+  PlanetTFOMenu,
+  SecureWatchMenu,
+  SentinelMenu,
+  GEEImageMenu,
+  GEEImageCollectionMenu,
+} from "../imagery/collectionMenuControls";
 
 export const CollectionSidebar = ({ processModal }) => {
   const {modal, modalMessage, newPlotId} = useAtomValue(stateAtom);
@@ -22,6 +31,7 @@ export const CollectionSidebar = ({ processModal }) => {
          (
            <>
              <ExternalTools />
+             <ImageryOptions />
              <DrawingTool />
              <SurveyQuestions />
            </>
@@ -400,3 +410,152 @@ export const SidebarFooter = ({ processModal }) => {
   );
 };
 
+export const ImageryOptions = () => {
+  const {
+    mapConfig,
+    currentPlot,
+    currentProject,
+    loadingImages,
+    currentImagery,
+    imageryList = [],
+    imagery,
+  } = useAtomValue(stateAtom);
+  const setAppState = useSetAtom(stateAtom);
+
+  const [open, setOpen] = useState(true);
+  const [enableGrid, setEnableGrid] = useState(false);
+
+  useEffect(() => {
+    console.log(imageryList);
+    console.log(imagery);
+    console.log(currentPlot);
+  }, [currentPlot]);
+
+
+  const setBaseMapSource = (id) => {
+    const img = imageryList.find((i) => Number(i.id) === Number(id)) || null;
+    setAppState((s) => ({
+      ...s,
+      currentImageryId: id,
+      currentImagery: img,
+    }));
+  };
+
+  const setImageryAttributes = (attrs) => {
+    setAppState((s) => ({
+      ...s,
+      imageryAttributes: { ...(s.imageryAttributes || {}), ...(attrs || {}) },
+    }));
+  };
+
+  const setImageryAttribution = (attr) => {
+    setAppState((s) => ({
+      ...s,
+      imageryAttribution: attr,
+    }));
+  };
+
+  const toggleGrid = () => {
+    const next = !enableGrid;
+    setEnableGrid(next);
+    mercator.addGridLayer(mapConfig, next);
+  };
+
+  const extent = (() => {
+    if (!(currentPlot?.id && currentProject?.id)) return [];
+    const geom = currentPlot.plotGeom || "";
+    if (geom.includes("Point")) {
+      return mercator
+        .getPlotPolygon(geom, currentProject.plotSize, currentProject.plotShape)
+        .getExtent();
+    }
+    return mercator.parseGeoJson(geom, true).getExtent();
+  })();
+
+  const commonProps = {
+    mapConfig,
+    setImageryAttribution,
+    setImageryAttributes,
+    currentPlot,
+    currentProjectBoundary: currentProject?.boundary,
+    extent,
+  };
+
+  return (
+    <div className="sq-card">
+      <div className="sq-header">
+        <div className="sq-title-row">
+          <span className="sq-title">
+            Imagery Options
+          </span>
+        </div>
+      </div>
+
+      {open && (
+        <div className="sq-body">
+          {loadingImages && <h3 className="sq-muted">Loading imagery data...</h3>}
+
+          {currentImagery.id && (
+            <div className="sq-field">
+              <label htmlFor="base-map-source" className="sq-label">
+                Base imagery
+              </label>
+              <select
+                className="sq-select"
+                id="base-map-source"
+                name="base-map-source"
+                onChange={(e) => setBaseMapSource(parseInt(e.target.value, 10))}
+                value={currentImagery.id}
+              >
+                {imageryList.map((imagery) => (
+                  <option key={imagery.id} value={imagery.id}>
+                    {imagery.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {currentImagery.id &&
+           imageryList.map((imagery) => {
+              const visible = currentImagery.id === imagery.id && open;
+              if (!imagery.sourceConfig) return null;
+
+              const propsForMenu = {
+                ...commonProps,
+                key: imagery.id,
+                thisImageryId: imagery.id,
+                sourceConfig: imagery.sourceConfig,
+                visible,
+              };
+
+              const byType = {
+                Planet: <PlanetMenu {...propsForMenu} />,
+                PlanetDaily: <PlanetDailyMenu {...propsForMenu} />,
+                PlanetTFO: <PlanetTFOMenu {...propsForMenu} />,
+                SecureWatch: <SecureWatchMenu {...propsForMenu} />,
+                Sentinel1: <SentinelMenu {...propsForMenu} />,
+                Sentinel2: <SentinelMenu {...propsForMenu} />,
+                GEEImage: <GEEImageMenu {...propsForMenu} />,
+                GEEImageCollection: <GEEImageCollectionMenu {...propsForMenu} />,
+              };
+
+              return byType[imagery.sourceConfig.type] || null;
+            })}
+
+          <div className="sq-field" style={{ marginTop: 12 }}>
+            <label className="sq-switch">
+              <input
+                type="checkbox"
+                checked={enableGrid}
+                onChange={toggleGrid}
+              />
+              <span className="sq-switch-slider" />
+              <span className="sq-switch-label">Enable map grid</span>
+            </label>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

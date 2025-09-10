@@ -250,7 +250,7 @@ export function Overview(props) {
           <input
             checked={plotSimilarity}
             className="form-check-input"
-            id="autoLaunchGeoDash"
+            id="similarPlots"
             onChange={() =>
               setProjectDetails({
                 projectOptions: { ...projectOptions, navigateByPlotSimilarity: !plotSimilarity },
@@ -258,8 +258,8 @@ export function Overview(props) {
             }
             type="checkbox"
           />
-          <label className="form-check-label" htmlFor="autoLaunchGeoDash">
-            Auto-launch Geo-Dash
+          <label className="form-check-label" htmlFor="similarPlots">
+            Enable navigation by similarity
           </label>
         </div>
       </div>
