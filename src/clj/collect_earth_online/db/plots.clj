@@ -216,7 +216,7 @@
            :visibleId    visible_id})
         (call-sql "select_plot_samples" {:log? false} plot-id user-id)))
 
-(defn- build-collection-plot [plot-info user-id review-mode? project-type]
+(defn- build-collection-plot [plot-info user-uid review-mode? project-type]
   (let [{:keys [plot_id
                 flagged
                 confidence
@@ -227,9 +227,9 @@
                 visible_id
                 user_id
                 email]} plot-info
-        samples (prepare-samples-array plot_id (if (and review-mode? (pos? user_id))
+        samples (prepare-samples-array plot_id (if (and review-mode? user_id (pos? user_id))
                                                  user_id
-                                                 user-id))]
+                                                 user-uid))]
     {:id                plot_id
      :flagged           flagged
      :flaggedReason     (or flagged_reason "")
