@@ -841,7 +841,7 @@ export class PlotDesign extends React.Component {
 PlotDesign.contextType = ProjectContext;
 
 export function PlotDesignReview() {
-  const { institutionImagery } = useContext(ProjectContext);
+  const { institutionImagery } = useContext(ProjectContext);  
   return (
     <div className="d-flex">
       <div className="col-6">
@@ -936,7 +936,8 @@ export function PlotReview() {
 }
 
 export function AOIReview() {
-  const { aoiFeatures, aoiFileName } = useContext(ProjectContext);
+  const context = useContext(ProjectContext);
+  const { aoiFeatures, aoiFileName } = context;
   const boundaryExtent = mercator.parseGeoJson(aoiFeatures[0], false).getExtent();
   return (
     <div id="aoi-review">
