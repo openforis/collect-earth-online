@@ -12,7 +12,7 @@ export function Overview(props) {
     privacyLevel,
     setProjectDetails,
     projectOptions,
-    projectOptions: { showGEEScript, showPlotInformation, collectConfidence, autoLaunchGeoDash },
+    projectOptions: { showGEEScript, showPlotInformation, collectConfidence, autoLaunchGeoDash, plotSimilarity },
     projectId,
     type,
     learningMaterial
@@ -246,6 +246,22 @@ export function Overview(props) {
             Auto-launch Geo-Dash
           </label>
         </div>
+        <div className="form-check">
+          <input
+            checked={plotSimilarity}
+            className="form-check-input"
+            id="similarPlots"
+            onChange={() =>
+              setProjectDetails({
+                projectOptions: { ...projectOptions, navigateByPlotSimilarity: !plotSimilarity },
+              })
+            }
+            type="checkbox"
+          />
+          <label className="form-check-label" htmlFor="similarPlots">
+            Enable navigation by similarity
+          </label>
+        </div>
       </div>
     </div>
   );
@@ -443,6 +459,13 @@ export function OverviewReview() {
           <b>{projectOptions.autoLaunchGeoDash ? "Auto-launch " : "Don't Auto-launch "}</b>
           Geo-Dash Window
         </li>
+        {projectOptions.plotSimilarity ? (
+          <>
+            <li>
+              Navigate by plot similarity enabled
+            </li>
+          </> 
+        ) : null}
       </ul>
       {learningMaterialOpen && <LearningMaterialModal learningMaterial={learningMaterial} onClose={toggleLearningMaterial} />}
     </div>
