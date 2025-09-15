@@ -52,8 +52,8 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION get_bigquery_table(_project_id int, _year int)
   RETURNS text AS $$
 
-    SELECT geoai_assets ->> p_year
+    SELECT geoai_assets ->> _year
     FROM projects
-    WHERE project_uid = p_project_uid
+    WHERE project_uid = _project_uid
 
   $$ LANGUAGE SQL;
