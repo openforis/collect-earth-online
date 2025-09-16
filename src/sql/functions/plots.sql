@@ -172,7 +172,9 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION select_unanalyzed_plot_ids(_project_id integer, _user_id integer, _review_mode boolean)
- RETURNS integer AS $$
+ RETURNS TABLE(
+  plot_id integer
+) AS $$
 
     SELECT plot_uid
     FROM plots
@@ -266,8 +268,9 @@ CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id i
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION select_analyzed_plot_ids(_project_id integer, _user_id integer, _review_mode boolean)
- RETURNS integer AS $$
-
+ RETURNS TABLE(
+  plot_id integer
+) AS $$
     SELECT plot_uid
     FROM plots
     INNER JOIN user_plots up
@@ -307,7 +310,9 @@ CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id in
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION select_flagged_plot_ids(_project_id integer, _user_id integer, _review_mode boolean)
- RETURNS integer AS $$
+ RETURNS TABLE(
+  plot_id integer
+) AS $$
 
     SELECT plot_uid
     FROM plots
@@ -349,12 +354,10 @@ CREATE OR REPLACE FUNCTION select_confidence_plots(
 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION select_confidence_plot_ids(
-    _project_id integer,
-    _user_id integer,
-    _review_mode boolean,
-    _threshold integer
- ) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION select_confidence_plot_ids(_project_id integer, _user_id integer, _review_mode boolean, _threshold integer)
+ RETURNS TABLE(
+   plot_id integer
+ ) AS $$
 
     SELECT plot_uid
     FROM plots
@@ -402,8 +405,9 @@ CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION select_qaqc_plot_ids(_project_id integer)
- RETURNS integer AS $$
-
+ RETURNS TABLE(
+  plot_id integer
+) AS $$
     WITH assigned_count AS (
         SELECT pa.plot_rid AS plot_rid, count(pa.user_rid) users
         FROM plots, plot_assignments pa
