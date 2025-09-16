@@ -224,7 +224,18 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   }, [state.navigationMode]);
 
   // API CALLS
-  const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {       
+  const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {
+    console.log('getting plot', {
+            visibleId,            
+            projectId,
+            navigationMode: forcedNavMode || state.navigationMode,
+            direction,
+            inReviewMode: reviewMode || state.inReviewMode,
+            threshold: state.threshold,
+            currentUserId: state.currentUserId,
+            projectType: state.currentProject.type,
+            referencePlotId: state.referencePlotId || 0
+    });
     processModal("Getting plot", () => {
       return fetch(
         "/get-collection-plot?" +

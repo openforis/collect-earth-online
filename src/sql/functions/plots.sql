@@ -124,6 +124,7 @@ CREATE TYPE simplified_collection_return AS (
     extra_plot_info    json
 );
 
+
 CREATE OR REPLACE FUNCTION select_simplified_project_plot(_project_id integer)
 RETURNS setOf simplified_collection_return AS $$
     SELECT plot_uid,
@@ -170,6 +171,76 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
 
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION select_unanalyzed_plot_ids(_project_id integer, _user_id integer, _review_mode boolean)
+ RETURNS integer AS $$
+
+    SELECT plot_uid
+    FROM plots
+    LEFT JOIN plot_assignments pa
+        ON plot_uid = pa.plot_rid
+    LEFT JOIN user_plots up
+        ON plot_uid = up.plot_rid
+        AND (pa.user_rid = up.user_rid OR NOT (SELECT project_has_assigned(_project_id)))
+    LEFT JOIN plot_locks pl
+        ON plot_uid = pl.plot_rid
+    WHERE project_rid = _project_id
+        AND user_plot_uid IS NULL
+        AND ((pa.user_rid IS NULL
+                AND (pl.lock_end IS NULL
+                     OR localtimestamp > pl.lock_end)) -- unlocked
+             OR pa.user_rid = _user_id                 -- assigned
+             OR _review_mode)                          -- admin TODO, CEO-208 should admin be able to visit a locked plot? probably.
+    ORDER BY visible_id ASC
+
+$$ LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION select_unanalyzed_plot(_plot_id integer)
+ RETURNS collection_return AS $$
+
+    SELECT plot_uid,
+        up.flagged,
+        up.flagged_reason,
+        confidence,
+        confidence_comment,
+        visible_id,
+        ST_AsGeoJSON(plot_geom) as plot_geom,
+        extra_plot_info,
+        pa.user_rid,
+        u.email
+    FROM plots
+    INNER JOIN user_plots up
+        ON plot_uid = plot_rid    
+    LEFT JOIN plot_assignments pa
+        ON plot_uid = pa.plot_rid
+    LEFT JOIN users u
+        ON pa.user_rid = u.user_uid
+    WHERE plot_uid = _plot_id
+        
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION select_plot_by_id(_plot_id integer)
+ RETURNS collection_return AS $$
+
+    SELECT plot_uid,
+        up.flagged,
+        up.flagged_reason,
+        confidence,
+        confidence_comment,
+        visible_id,
+        ST_AsGeoJSON(plot_geom) as plot_geom,
+        extra_plot_info,
+        u.user_uid,
+        u.email
+    FROM plots
+    INNER JOIN user_plots up
+        ON plot_uid = plot_rid
+    INNER JOIN users u
+        ON u.user_uid = up.user_rid
+    WHERE plot_uid = _plot_id
+
+$$ LANGUAGE SQL;
+
 CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS setOf collection_return AS $$
 
@@ -194,6 +265,22 @@ CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id i
 
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION select_analyzed_plot_ids(_project_id integer, _user_id integer, _review_mode boolean)
+ RETURNS integer AS $$
+
+    SELECT plot_uid
+    FROM plots
+    INNER JOIN user_plots up
+        ON plot_uid = plot_rid
+    WHERE project_rid = _project_id
+        AND (up.user_rid = _user_id OR _review_mode)
+    ORDER BY visible_id ASC
+
+$$ LANGUAGE SQL;
+
+
+
+
 CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS setOf collection_return AS $$
 
@@ -212,6 +299,20 @@ CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id in
         ON plot_uid = plot_rid
     INNER JOIN users u
         ON u.user_uid = up.user_rid
+    WHERE project_rid = _project_id
+        AND (up.user_rid = _user_id OR _review_mode)
+        AND flagged = TRUE
+    ORDER BY visible_id ASC
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION select_flagged_plot_ids(_project_id integer, _user_id integer, _review_mode boolean)
+ RETURNS integer AS $$
+
+    SELECT plot_uid
+    FROM plots
+    LEFT JOIN user_plots up
+        ON plot_uid = plot_rid
     WHERE project_rid = _project_id
         AND (up.user_rid = _user_id OR _review_mode)
         AND flagged = TRUE
@@ -248,6 +349,24 @@ CREATE OR REPLACE FUNCTION select_confidence_plots(
 
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION select_confidence_plot_ids(
+    _project_id integer,
+    _user_id integer,
+    _review_mode boolean,
+    _threshold integer
+ ) RETURNS integer AS $$
+
+    SELECT plot_uid
+    FROM plots
+    INNER JOIN user_plots up
+        ON plot_uid = plot_rid
+    WHERE project_rid = _project_id
+        AND (up.user_rid = _user_id OR _review_mode)
+        AND confidence <= _threshold
+    ORDER BY visible_id ASC
+
+$$ LANGUAGE SQL;
+
 CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
  RETURNS setOf collection_return AS $$
 
@@ -276,6 +395,29 @@ CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
         ON plot_uid = up.plot_rid
     INNER JOIN users u
         ON u.user_uid = up.user_rid
+    WHERE project_rid = _project_id
+        AND ac.users > 1
+    ORDER BY visible_id ASC
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION select_qaqc_plot_ids(_project_id integer)
+ RETURNS integer AS $$
+
+    WITH assigned_count AS (
+        SELECT pa.plot_rid AS plot_rid, count(pa.user_rid) users
+        FROM plots, plot_assignments pa
+        WHERE project_rid = _project_id
+            AND plot_uid = pa.plot_rid
+        GROUP BY pa.plot_rid
+    )
+
+    SELECT plot_uid
+    FROM plots
+    INNER JOIN assigned_count ac
+        ON plot_uid = ac.plot_rid
+    INNER JOIN user_plots up
+        ON plot_uid = up.plot_rid
     WHERE project_rid = _project_id
         AND ac.users > 1
     ORDER BY visible_id ASC

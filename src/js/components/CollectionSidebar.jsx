@@ -36,7 +36,7 @@ export const CollectionSidebar = ({ processModal }) => {
              <SurveyQuestions />
            </>
          ) : null
-     }
+        }
       </div>
       <div className="collection-sidebar-footer">
         <SidebarFooter processModal={ processModal }/>
@@ -106,12 +106,12 @@ export const NewPlotNavigation = () => {
       <select className="collection-sidebar-select"
               selected={navigationMode}        
               onChange={(e) => setAppState(s => ({...s, navigationMode: e.target.value}))}>
-          <option value="natural">Default</option>
-          <option value="analyzed">Analyzed plots</option>
-          <option value="unanalyzed">Unanalyzed plots</option>
-          <option value="flagged">Flagged plots</option>
-          <option value="similar">Similar Plots</option>
-        </select>
+        <option value="natural">Default</option>
+        <option value="analyzed">Analyzed plots</option>
+        <option value="unanalyzed">Unanalyzed plots</option>
+        <option value="flagged">Flagged plots</option>
+        {currentProject.referencePlotId && <option value="similar">Similar Plots</option>}
+      </select>
 
       <div className="collection-sidebar-mode">
         <label className="collection-sidebar-switch">
@@ -119,7 +119,7 @@ export const NewPlotNavigation = () => {
                  checked={inReviewMode}
                  onChange={(e) => setAppState(s => ({...s, inReviewMode: !s.inReviewMode}))}/>
           <span className="collection-sidebar-slider round"></span>
-          </label>
+        </label>
         <span className="mode-label">Admin Review</span>
         {navigationMode === "similar" &&
          <span>Reference Plot: {currentProject.referencePlotId}</span>}
@@ -129,7 +129,7 @@ export const NewPlotNavigation = () => {
         <input className="flex flex-col-6"
                placeholder={
                  navigationMode === "similar" ? "Reference Plot Id: " +
-                 currentProject.referencePlotId
+                   currentProject.referencePlotId
                    : currentPlot?.visibleId ?
                    'Current Plot: ' + currentPlot?.visibleId
                    : 'Select a Plot to begin'}
@@ -167,23 +167,23 @@ export const ExternalTools = () => {
     let urlParams="";
     if(currentPlot?.plotGeom){
       urlParams = currentPlot?.plotGeom?.includes("Point")
-            ? currentProject?.plotShape === "circle"
-            ? "center=[" +
-            mercator.parseGeoJson(currentPlot?.plotGeom).getCoordinates() +
-            "];radius=" +
-            currentProject?.plotSize / 2
-            : "geoJson=" +
-            mercator.geometryToGeoJSON(
-              mercator.getPlotPolygon(
-                currentPlot?.plotGeom,
-                currentProject?.plotSize,
-                currentProject?.plotShape
-              ),
-              "EPSG:4326",
-              "EPSG:3857",
-              5
-            )
-            : "geoJson=" + currentPlot?.plotGeom;
+        ? currentProject?.plotShape === "circle"
+        ? "center=[" +
+        mercator.parseGeoJson(currentPlot?.plotGeom).getCoordinates() +
+        "];radius=" +
+        currentProject?.plotSize / 2
+        : "geoJson=" +
+        mercator.geometryToGeoJSON(
+          mercator.getPlotPolygon(
+            currentPlot?.plotGeom,
+            currentProject?.plotSize,
+            currentProject?.plotShape
+          ),
+          "EPSG:4326",
+          "EPSG:3857",
+          5
+        )
+      : "geoJson=" + currentPlot?.plotGeom;
     }
     if (auxWindow) auxWindow.close();
     const win = window.open(
@@ -349,8 +349,7 @@ export const SidebarFooter = ({ processModal }) => {
           } else {
             alert("Answers saved successfully!");
           }
-        } else {
-          console.log(response);
+        } else {          
           setAppState(s => ({...s, modal: {alert: {alertType: "Assignment Error", alertMessage: "Error saving your assignments to the database. See console for details."}}}));
         }
       })
@@ -377,7 +376,6 @@ export const SidebarFooter = ({ processModal }) => {
           if (response.ok) {
             return navToNextPlot();
           } else {
-            console.log(response);
             setAppState(s => ({...s, modal: {alert: {alertType: "Plot Flagging Error", alertMessage: "Error flagging plot as bad. See console for details."}}}));
           }
         })
@@ -423,14 +421,7 @@ export const ImageryOptions = () => {
   const setAppState = useSetAtom(stateAtom);
 
   const [open, setOpen] = useState(true);
-  const [enableGrid, setEnableGrid] = useState(false);
-
-  useEffect(() => {
-    console.log(imageryList);
-    console.log(imagery);
-    console.log(currentPlot);
-  }, [currentPlot]);
-
+  const [enableGrid, setEnableGrid] = useState(false);  
 
   const setBaseMapSource = (id) => {
     const img = imageryList.find((i) => Number(i.id) === Number(id)) || null;
@@ -518,30 +509,30 @@ export const ImageryOptions = () => {
 
           {currentImagery.id &&
            imageryList.map((imagery) => {
-              const visible = currentImagery.id === imagery.id && open;
-              if (!imagery.sourceConfig) return null;
+             const visible = currentImagery.id === imagery.id && open;
+             if (!imagery.sourceConfig) return null;
 
-              const propsForMenu = {
-                ...commonProps,
-                key: imagery.id,
-                thisImageryId: imagery.id,
-                sourceConfig: imagery.sourceConfig,
-                visible,
-              };
+             const propsForMenu = {
+               ...commonProps,
+               key: imagery.id,
+               thisImageryId: imagery.id,
+               sourceConfig: imagery.sourceConfig,
+               visible,
+             };
 
-              const byType = {
-                Planet: <PlanetMenu {...propsForMenu} />,
-                PlanetDaily: <PlanetDailyMenu {...propsForMenu} />,
-                PlanetTFO: <PlanetTFOMenu {...propsForMenu} />,
-                SecureWatch: <SecureWatchMenu {...propsForMenu} />,
-                Sentinel1: <SentinelMenu {...propsForMenu} />,
-                Sentinel2: <SentinelMenu {...propsForMenu} />,
-                GEEImage: <GEEImageMenu {...propsForMenu} />,
-                GEEImageCollection: <GEEImageCollectionMenu {...propsForMenu} />,
-              };
+             const byType = {
+               Planet: <PlanetMenu {...propsForMenu} />,
+               PlanetDaily: <PlanetDailyMenu {...propsForMenu} />,
+               PlanetTFO: <PlanetTFOMenu {...propsForMenu} />,
+               SecureWatch: <SecureWatchMenu {...propsForMenu} />,
+               Sentinel1: <SentinelMenu {...propsForMenu} />,
+               Sentinel2: <SentinelMenu {...propsForMenu} />,
+               GEEImage: <GEEImageMenu {...propsForMenu} />,
+               GEEImageCollection: <GEEImageCollectionMenu {...propsForMenu} />,
+             };
 
-              return byType[imagery.sourceConfig.type] || null;
-            })}
+             return byType[imagery.sourceConfig.type] || null;
+           })}
 
           <div className="sq-field" style={{ marginTop: 12 }}>
             <label className="sq-switch">

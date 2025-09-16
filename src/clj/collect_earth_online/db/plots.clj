@@ -251,7 +251,7 @@
     (call-sql "select_simplified_project_plot" project-id)
     (case navigation-mode
       "unanalyzed" (call-sql "select_unanalyzed_plots" project-id user-id review-mode?)
-      "analyzed"   (call-sql "select_analyzed_plots"   project-id user-id review-mode?)
+      "analyzed"   (call-sfl "select_analyzed_plots"   project-id user-id review-mode?)
       "flagged"    (call-sql "select_flagged_plots"    project-id user-id review-mode?)
       "confidence" (call-sql "select_confidence_plots" project-id user-id review-mode? threshold)
       "natural"    (concat (call-sql "select_analyzed_plots" project-id user-id false)
@@ -260,7 +260,7 @@
       "qaqc"       (call-sql "select_qaqc_plots" project-id)
       "similar"    (call-sql "select_plots_by_similarity" project-id reference-plot-id)
       [])))
-
+(require '[clojure.pprint :refer [pprint]])
 (defn get-collection-plot
   "Gets plot information needed for the collections page.  The plot
    returned is based off of the navigation mode and direction.  Valid
@@ -278,6 +278,7 @@
 
 "
   [{:keys [params session]}]
+  (pprint {:params params :session session})
   (let [navigation-mode (:navigationMode params "unanalyzed")
         direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
@@ -302,8 +303,8 @@
                           "qaqc" (sort-by first (filter-plot-disagreement project-id grouped-plots threshold))
                           "similar"
 			  (if (some #(= (:visible_id %) old-visible-id) proj-plots)
-			      (filter-pred-idx #(= (:visible_id %) old-visible-id) proj-plots)
-			      (take 3 (into [nil nil] proj-plots)))
+			    (filter-pred-idx #(= (:visible_id %) old-visible-id) proj-plots)
+			    (take 3 (into [nil nil] proj-plots)))
                           (sort-by first grouped-plots))
         plots-info      (case direction
                           "next"     (case navigation-mode "similar"
