@@ -173,10 +173,11 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION select_unanalyzed_plot_ids(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS TABLE(
-  plot_id integer
+  plot_id integer,
+  visible_id integer
 ) AS $$
 
-    SELECT plot_uid
+    SELECT plot_uid, visible_id
     FROM plots
     LEFT JOIN plot_assignments pa
         ON plot_uid = pa.plot_rid
@@ -269,9 +270,11 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION select_analyzed_plot_ids(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS TABLE(
-  plot_id integer
+  plot_id integer,
+  visible_id integer
 ) AS $$
-    SELECT plot_uid
+
+    SELECT plot_uid, visible_id
     FROM plots
     INNER JOIN user_plots up
         ON plot_uid = plot_rid
@@ -311,10 +314,11 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION select_flagged_plot_ids(_project_id integer, _user_id integer, _review_mode boolean)
  RETURNS TABLE(
-  plot_id integer
+  plot_id integer,
+  visible_id integer
 ) AS $$
 
-    SELECT plot_uid
+    SELECT plot_uid, visible_id
     FROM plots
     LEFT JOIN user_plots up
         ON plot_uid = plot_rid
@@ -356,10 +360,11 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION select_confidence_plot_ids(_project_id integer, _user_id integer, _review_mode boolean, _threshold integer)
  RETURNS TABLE(
-   plot_id integer
- ) AS $$
+  plot_id integer,
+  visible_id integer
+) AS $$
 
-    SELECT plot_uid
+    SELECT plot_uid, visible_id
     FROM plots
     INNER JOIN user_plots up
         ON plot_uid = plot_rid
@@ -406,8 +411,11 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION select_qaqc_plot_ids(_project_id integer)
  RETURNS TABLE(
-  plot_id integer
+  plot_id integer,
+  visible_id integer
 ) AS $$
+
+
     WITH assigned_count AS (
         SELECT pa.plot_rid AS plot_rid, count(pa.user_rid) users
         FROM plots, plot_assignments pa
@@ -416,7 +424,7 @@ CREATE OR REPLACE FUNCTION select_qaqc_plot_ids(_project_id integer)
         GROUP BY pa.plot_rid
     )
 
-    SELECT plot_uid
+  SELECT plot_uid, visible_id
     FROM plots
     INNER JOIN assigned_count ac
         ON plot_uid = ac.plot_rid
