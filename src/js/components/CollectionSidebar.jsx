@@ -9,6 +9,15 @@ import Modal from "./Modal";
 import { LoadingModal } from "./PageComponents";
 import { mercator } from "../utils/mercator";
 import { SurveyQuestions, DrawingTool } from "./SurveyQuestions.jsx";
+import {
+  PlanetMenu,
+  PlanetDailyMenu,
+  PlanetTFOMenu,
+  SecureWatchMenu,
+  SentinelMenu,
+  GEEImageMenu,
+  GEEImageCollectionMenu,
+} from "../imagery/collectionMenuControls";
 
 export const CollectionSidebar = ({ processModal }) => {
   const {modal, modalMessage, newPlotId} = useAtomValue(stateAtom);
@@ -22,11 +31,12 @@ export const CollectionSidebar = ({ processModal }) => {
          (
            <>
              <ExternalTools />
+             <ImageryOptions />
              <DrawingTool />
              <SurveyQuestions />
            </>
          ) : null
-     }
+        }
       </div>
       <div className="collection-sidebar-footer">
         <SidebarFooter processModal={ processModal }/>
@@ -51,9 +61,7 @@ export const NewPlotNavigation = () => {
     currentPlot,
     inReviewMode,
     navigationMode,
-    newPlotId,
-    visibleId,
-    plotNavigation,
+    newPlotId
   } = useAtomValue(stateAtom);
 
   function hasChanged () {
@@ -98,12 +106,12 @@ export const NewPlotNavigation = () => {
       <select className="collection-sidebar-select"
               selected={navigationMode}        
               onChange={(e) => setAppState(s => ({...s, navigationMode: e.target.value}))}>
-          <option value="natural">Default</option>
-          <option value="analyzed">Analyzed plots</option>
-          <option value="unanalyzed">Unanalyzed plots</option>
-          <option value="flagged">Flagged plots</option>
-          <option value="similar">Similar Plots</option>
-        </select>
+        <option value="natural">Default</option>
+        <option value="analyzed">Analyzed plots</option>
+        <option value="unanalyzed">Unanalyzed plots</option>
+        <option value="flagged">Flagged plots</option>
+        {currentProject.referencePlotId && <option value="similar">Similar Plots</option>}
+      </select>
 
       <div className="collection-sidebar-mode">
         <label className="collection-sidebar-switch">
@@ -111,7 +119,7 @@ export const NewPlotNavigation = () => {
                  checked={inReviewMode}
                  onChange={(e) => setAppState(s => ({...s, inReviewMode: !s.inReviewMode}))}/>
           <span className="collection-sidebar-slider round"></span>
-          </label>
+        </label>
         <span className="mode-label">Admin Review</span>
         {navigationMode === "similar" &&
          <span>Reference Plot: {currentProject.referencePlotId}</span>}
@@ -121,7 +129,7 @@ export const NewPlotNavigation = () => {
         <input className="flex flex-col-6"
                placeholder={
                  navigationMode === "similar" ? "Reference Plot Id: " +
-                 currentProject.referencePlotId
+                   currentProject.referencePlotId
                    : currentPlot?.visibleId ?
                    'Current Plot: ' + currentPlot?.visibleId
                    : 'Select a Plot to begin'}
@@ -129,18 +137,16 @@ export const NewPlotNavigation = () => {
                onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}));}}
         ></input>
         <button className="btn outline"
-                disabled={!plotNavigation[0]}
                 onClick={()=>{navToPlot('previous');}}>
           <SvgIcon icon="leftArrow" size="0.9rem" />
         </button>
         <button className="btn outline"
-                disabled={!plotNavigation[2]}
                 onClick={()=>{navToPlot('next');}}>
           <SvgIcon icon="rightArrow" size="0.9rem" />
         </button>
         <label className="btn filled"
                onClick={()=>{navToPlotId();}}
-        >{visibleId ? 'Go To Plot' : 'Begin Collection'}
+        >Go To Plot
         </label>
       </div>
 
@@ -161,23 +167,23 @@ export const ExternalTools = () => {
     let urlParams="";
     if(currentPlot?.plotGeom){
       urlParams = currentPlot?.plotGeom?.includes("Point")
-            ? currentProject?.plotShape === "circle"
-            ? "center=[" +
-            mercator.parseGeoJson(currentPlot?.plotGeom).getCoordinates() +
-            "];radius=" +
-            currentProject?.plotSize / 2
-            : "geoJson=" +
-            mercator.geometryToGeoJSON(
-              mercator.getPlotPolygon(
-                currentPlot?.plotGeom,
-                currentProject?.plotSize,
-                currentProject?.plotShape
-              ),
-              "EPSG:4326",
-              "EPSG:3857",
-              5
-            )
-            : "geoJson=" + currentPlot?.plotGeom;
+        ? currentProject?.plotShape === "circle"
+        ? "center=[" +
+        mercator.parseGeoJson(currentPlot?.plotGeom).getCoordinates() +
+        "];radius=" +
+        currentProject?.plotSize / 2
+        : "geoJson=" +
+        mercator.geometryToGeoJSON(
+          mercator.getPlotPolygon(
+            currentPlot?.plotGeom,
+            currentProject?.plotSize,
+            currentProject?.plotShape
+          ),
+          "EPSG:4326",
+          "EPSG:3857",
+          5
+        )
+      : "geoJson=" + currentPlot?.plotGeom;
     }
     if (auxWindow) auxWindow.close();
     const win = window.open(
@@ -343,8 +349,7 @@ export const SidebarFooter = ({ processModal }) => {
           } else {
             alert("Answers saved successfully!");
           }
-        } else {
-          console.log(response);
+        } else {          
           setAppState(s => ({...s, modal: {alert: {alertType: "Assignment Error", alertMessage: "Error saving your assignments to the database. See console for details."}}}));
         }
       })
@@ -371,7 +376,6 @@ export const SidebarFooter = ({ processModal }) => {
           if (response.ok) {
             return navToNextPlot();
           } else {
-            console.log(response);
             setAppState(s => ({...s, modal: {alert: {alertType: "Plot Flagging Error", alertMessage: "Error flagging plot as bad. See console for details."}}}));
           }
         })
@@ -404,3 +408,145 @@ export const SidebarFooter = ({ processModal }) => {
   );
 };
 
+export const ImageryOptions = () => {
+  const {
+    mapConfig,
+    currentPlot,
+    currentProject,
+    loadingImages,
+    currentImagery,
+    imageryList = [],
+    imagery,
+  } = useAtomValue(stateAtom);
+  const setAppState = useSetAtom(stateAtom);
+
+  const [open, setOpen] = useState(true);
+  const [enableGrid, setEnableGrid] = useState(false);  
+
+  const setBaseMapSource = (id) => {
+    const img = imageryList.find((i) => Number(i.id) === Number(id)) || null;
+    setAppState((s) => ({
+      ...s,
+      currentImageryId: id,
+      currentImagery: img,
+    }));
+  };
+
+  const setImageryAttributes = (attrs) => {
+    setAppState((s) => ({
+      ...s,
+      imageryAttributes: { ...(s.imageryAttributes || {}), ...(attrs || {}) },
+    }));
+  };
+
+  const setImageryAttribution = (attr) => {
+    setAppState((s) => ({
+      ...s,
+      imageryAttribution: attr,
+    }));
+  };
+
+  const toggleGrid = () => {
+    const next = !enableGrid;
+    setEnableGrid(next);
+    mercator.addGridLayer(mapConfig, next);
+  };
+
+  const extent = (() => {
+    if (!(currentPlot?.id && currentProject?.id)) return [];
+    const geom = currentPlot.plotGeom || "";
+    if (geom.includes("Point")) {
+      return mercator
+        .getPlotPolygon(geom, currentProject.plotSize, currentProject.plotShape)
+        .getExtent();
+    }
+    return mercator.parseGeoJson(geom, true).getExtent();
+  })();
+
+  const commonProps = {
+    mapConfig,
+    setImageryAttribution,
+    setImageryAttributes,
+    currentPlot,
+    currentProjectBoundary: currentProject?.boundary,
+    extent,
+  };
+
+  return (
+    <div className="sq-card">
+      <div className="sq-header">
+        <div className="sq-title-row">
+          <span className="sq-title">
+            Imagery Options
+          </span>
+        </div>
+      </div>
+
+      {open && (
+        <div className="sq-body">
+          {loadingImages && <h3 className="sq-muted">Loading imagery data...</h3>}
+
+          {currentImagery.id && (
+            <div className="sq-field">
+              <label htmlFor="base-map-source" className="sq-label">
+                Base imagery
+              </label>
+              <select
+                className="sq-select"
+                id="base-map-source"
+                name="base-map-source"
+                onChange={(e) => setBaseMapSource(parseInt(e.target.value, 10))}
+                value={currentImagery.id}
+              >
+                {imageryList.map((imagery) => (
+                  <option key={imagery.id} value={imagery.id}>
+                    {imagery.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {currentImagery.id &&
+           imageryList.map((imagery) => {
+             const visible = currentImagery.id === imagery.id && open;
+             if (!imagery.sourceConfig) return null;
+
+             const propsForMenu = {
+               ...commonProps,
+               key: imagery.id,
+               thisImageryId: imagery.id,
+               sourceConfig: imagery.sourceConfig,
+               visible,
+             };
+
+             const byType = {
+               Planet: <PlanetMenu {...propsForMenu} />,
+               PlanetDaily: <PlanetDailyMenu {...propsForMenu} />,
+               PlanetTFO: <PlanetTFOMenu {...propsForMenu} />,
+               SecureWatch: <SecureWatchMenu {...propsForMenu} />,
+               Sentinel1: <SentinelMenu {...propsForMenu} />,
+               Sentinel2: <SentinelMenu {...propsForMenu} />,
+               GEEImage: <GEEImageMenu {...propsForMenu} />,
+               GEEImageCollection: <GEEImageCollectionMenu {...propsForMenu} />,
+             };
+
+             return byType[imagery.sourceConfig.type] || null;
+           })}
+
+          <div className="sq-field" style={{ marginTop: 12 }}>
+            <label className="sq-switch">
+              <input
+                type="checkbox"
+                checked={enableGrid}
+                onChange={toggleGrid}
+              />
+              <span className="sq-switch-slider" />
+              <span className="sq-switch-label">Enable map grid</span>
+            </label>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

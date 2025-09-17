@@ -897,10 +897,12 @@ class NewImagery extends React.Component {
   uploadCustomImagery = (isNew) => {
     const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.imageryParams);
     const messages = this.validateParams(this.state.selectedType, sanitizedParams);
+    console.log('uploading imaery', messages, sanitizedParams);
     if (messages.length > 0) {
       this.setState ({modal: {alert: {alertType: "Imagery Upload", alertMessage: messages.join(", ")}}});
     } else {
       const sourceConfig = this.buildSecureWatch(this.stackParams(sanitizedParams)); // TODO define SecureWatch so stack params works correctly.
+      console.log('checking imagery params', this.state.imageryTitle, this.state.imageryTitle.length, this.state.imageryAttribution.length, this.state.selectedType, this.props.titleIsTaken(this.state.imageryTitle, this.props.imageryToEdit.id), this.props.imageryToEdit.id);
       if (this.state.imageryTitle.length === 0 ||
           (this.state.imageryAttribution.length === 0 && this.state.selectedType !== "14")) {
         this.setState ({modal: {alert: {alertType: "Imagery Upload Error", alertMessage: "You must include a title and attribution."}}});
@@ -1197,7 +1199,9 @@ class NewImagery extends React.Component {
             <button
               className="btn btn-sm btn-block btn-outline-lightgreen btn-group py-2 font-weight-bold"
               id="add-imagery-button"
-              onClick={() => this.uploadCustomImagery(isNewImagery)}
+              onClick={() => {
+                console.log("uploading custom imagery", isNewImagery);
+                this.uploadCustomImagery(isNewImagery);}}
               style={{
                 alignItems: "center",
                 display: "flex",
