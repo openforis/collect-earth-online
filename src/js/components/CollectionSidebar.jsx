@@ -61,7 +61,8 @@ export const NewPlotNavigation = () => {
     currentPlot,
     inReviewMode,
     navigationMode,
-    newPlotId
+    newPlotId,
+    plotNavigation
   } = useAtomValue(stateAtom);
 
   function hasChanged () {
@@ -73,7 +74,7 @@ export const NewPlotNavigation = () => {
         "You have unsaved changes. Any unsaved responses will be lost. Are you sure you want to continue?"
       );}
 
-  function navToPlot (direction) {    
+  function navToPlot (direction) {
     if (confirmUnsaved()) {
       setAppState (s => ({
         ...s,
@@ -137,10 +138,12 @@ export const NewPlotNavigation = () => {
                onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}));}}
         ></input>
         <button className="btn outline"
+                disabled={plotNavigation && !plotNavigation[0]}
                 onClick={()=>{navToPlot('previous');}}>
           <SvgIcon icon="leftArrow" size="0.9rem" />
         </button>
         <button className="btn outline"
+                disabled={plotNavigation && !plotNavigation[2]}
                 onClick={()=>{navToPlot('next');}}>
           <SvgIcon icon="rightArrow" size="0.9rem" />
         </button>

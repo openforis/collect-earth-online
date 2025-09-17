@@ -54,6 +54,7 @@ export const stateAtom = atom({
   getNewPlot: false,
   newPlotId: null,
   navDirection: "next",
+  visibleId: -1
 });
 
 

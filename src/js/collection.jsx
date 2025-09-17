@@ -43,7 +43,7 @@ import {
   filterObject,
 } from "./utils/sequence";
 import { mercator } from "./utils/mercator";
-vimport { outlineKML } from "./utils/kml";
+import { outlineKML } from "./utils/kml";
 
 export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   const [state, setState] = useAtom(stateAtom);  
@@ -174,10 +174,8 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
 
   // GET PLOT DATA WHEN NEEDED - When getNewPlot changes to true, request plot data
   useEffect(() => {
-    if(state.getNewPlot) {
-      getPlotData(state.newPlotId || -999, state.navDirection);
-      setState(s => ({...s, getNewPlot: false}));
-    }
+    state.getNewPlot && getPlotData(state.newPlotId, state.navDirection);
+    setState((prev) => ({...prev, getNewPlot: false}));
   }, [state.getNewPlot]);
 
   // UPDATE MAP WHEN STATE CHANGES — samples redraw (question/answers/visibility)
@@ -220,22 +218,11 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
 
   useEffect(()=> {
     state.navigationMode === 'similar' &&
-      setState((s)=> ({ ...s, referencePlotId: 1}));
+      setState((s)=> ({ ...s, referencePlotId: s.currentPlot.referencePlotId}));
   }, [state.navigationMode]);
 
   // API CALLS
-  const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {
-    console.log('getting plot', {
-            visibleId,            
-            projectId,
-            navigationMode: forcedNavMode || state.navigationMode,
-            direction,
-            inReviewMode: reviewMode || state.inReviewMode,
-            threshold: state.threshold,
-            currentUserId: state.currentUserId,
-            projectType: state.currentProject.type,
-            referencePlotId: state.referencePlotId || 0
-    });
+  const getPlotData = (visibleId, direction, forcedNavMode = null, reviewMode = null) => {
     processModal("Getting plot", () => {
       return fetch(
         "/get-collection-plot?" +
@@ -261,15 +248,15 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
           } else {
             setState (prev=> ({
               ... prev,
-              plotNavigation: data.navigation,
-	      userPlotList: [data],
-	      remainingPlotters: [data],
-	      currentPlot: data,
-	      currentUserId: data.userId,
-	      ...newPlotValues(data),
+              plotNavigation: data[0].plotNavigation,
+	      userPlotList: data,
+	      remainingPlotters: data,
+	      currentPlot: data[0],
+	      currentUserId: data[0].userId,
+	      ...newPlotValues(data[0]),
 	      answerMode: "question",
 	      inReviewMode: reviewMode || state.inReviewMode,
-              newPlotId: data.visibleId,
+              newPlotId: data[0].visibleId,
 	    }));
           }
         })
@@ -438,7 +425,6 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
       }),
     }).then((response) => {	
       if (!response.ok) {	
-        console.log(response);	
         setState (s => ({...s, modal: {alert: {alertType: "Plot Lock Error", alertMessage: "Error maintaining plot lock. Your work may get overwritten. See console for details."}}}));	
       }	
     });	

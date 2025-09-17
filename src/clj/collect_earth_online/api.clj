@@ -249,7 +249,7 @@
                                            "next"
                                            "id"]]
                                          [:projectId Int]
-                                         [:visibleId Int]
+                                         [:visibleId :string]
                                          [:threshold Int]
                                          [:currentUserId [:maybe [:or :int :string]]]
                                          [:projectType  {:optional true} :string]

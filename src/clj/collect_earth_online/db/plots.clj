@@ -61,6 +61,13 @@
         (when (seq foll)
               (recur (into [this] foll)))))))
 
+(defn get-least [idx key coll]
+  (if (some (fn [this] (= (get this key) idx)) coll)
+    (filter-pred-idx (fn [this] (= (get this key) idx)) coll)
+    (let [least-idx (-> (filter (fn [this] (> (get this key) idx)) coll)
+                        first
+                        (get key))]
+      (filter-pred-idx (fn [this] (= (get this key) least-idx)) coll))))
 ;;;
 ;;; Project Level
 ;;;
@@ -216,7 +223,7 @@
            :visibleId    visible_id})
         (call-sql "select_plot_samples" {:log? false} plot-id user-id)))
 
-(defn- build-collection-plot [plot-info user-uid review-mode? project-type]
+(defn- build-collection-plot [plot-info user-uid review-mode? project-type navigation]
   (let [{:keys [plot_id
                 flagged
                 confidence
@@ -226,8 +233,7 @@
                 extra_plot_info
                 visible_id
                 user_id
-                email
-                navigation]} plot-info
+                email]} plot-info
         samples (prepare-samples-array plot_id (if (and review-mode? user_id (pos? user_id))
                                                  user_id
                                                  user-uid))]
@@ -263,6 +269,8 @@
       "similar"    (call-sql "select_plots_by_similarity" project-id reference-plot-id)
       [])))
 
+
+(require '[clojure.pprint :refer [pprint]])
 (defn get-collection-plot
   "Gets plot information needed for the collections page.  The plot
    returned is based off of the navigation mode and direction.  Valid
@@ -278,6 +286,7 @@
              :inReviewMode   :bool?}
    :session {:userId         :int-str?}}"
   [{:keys [params session] :as this}]
+  ;; (pprint (select-keys this [:params :session] ))
   (let [navigation-mode (:navigationMode params "unanalyzed")
         direction       (:direction params "next")
         project-id      (tc/val->int (:projectId params))
@@ -296,34 +305,27 @@
                                                      navigation-mode
                                                      project-type
                                                      threshold
-                                                     ref-plot-id)
-        plot-ids (->> (case navigation-mode "qaqc"
-                            (filter-plot-disagreement project-id threshold plot_ids)
-                            (group-by :visible_id plot_ids ))
-                      (sort-by first)
-                      (map (fn [[_ plot]] plot)))
-
-        get-nav-plots  (fn [plot-id]
-                         (if (some #(= (:visible_id %) visible-id) plot-ids)
-	                   (filter-pred-idx #(= (:visible_id %) visible-id) plot-ids)
-	                   (take 3 (into [nil nil] plot-ids))))
+                                                     ref-plot-id)   
+        plot-ids        (->> (case navigation-mode "qaqc"
+                                   (filter-plot-disagreement project-id threshold plot_ids)
+                                   (group-by :visible_id plot_ids))
+                             (sort-by first)
+                             (reduce (fn [acc [_ plot]] (into acc plot)) []))
         [prev-plot
          this-plot
-         next-plot]     (get-nav-plots visible-id)
-        nav-plots (-> (case direction
-                        "next" next-plot
-                        "id" this-plot
-                        "previous" prev-plot)
-                      :visible_id get-nav-plots)                
-        plot-info (-> (case direction
-                        "next"     next-plot
-                        "id"       this-plot          
-                        "previous" prev-plot)
-                      :plot_id
-                      (call-sql "select_plot_by_id")
-                      first
-                      (assoc :navigation nav-plots))]
-    (if plot-info
+         next-plot]     (get-least visible-id :visible_id plot-ids)
+        nav-plots       (-> (case direction
+                              "next" next-plot
+                              "id" this-plot
+                              "previous" prev-plot)
+                            :visible_id (get-least :visible_id plot-ids))
+        plot-info       (->> (case direction
+                               "previous" prev-plot
+                               this-plot)
+                             :plot_id
+                             (call-sql "select_plot_by_id"))]
+    
+    (if (seq plot-info)
       (try
         (when (not= project-type "simplified")
           (unlock-plots user-id)
@@ -331,7 +333,7 @@
                     (:plot_id (first plot-info))
                     user-id
                     (time-plus-five-min)))
-        (data-response (map #(build-collection-plot % user-id review-mode? project-type) plot-info))
+        (data-response (map #(build-collection-plot % user-id review-mode? project-type nav-plots) plot-info))
         (catch Exception _e
           (data-response "Unable to get the requested plot.  Please try again.")))
       (data-response "not-found"))))

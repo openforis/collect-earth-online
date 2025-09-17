@@ -212,7 +212,7 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plot(_plot_id integer)
         pa.user_rid,
         u.email
     FROM plots
-    INNER JOIN user_plots up
+    LEFT JOIN user_plots up
         ON plot_uid = plot_rid    
     LEFT JOIN plot_assignments pa
         ON plot_uid = pa.plot_rid
@@ -236,9 +236,9 @@ CREATE OR REPLACE FUNCTION select_plot_by_id(_plot_id integer)
         u.user_uid,
         u.email
     FROM plots
-    INNER JOIN user_plots up
+    LEFT JOIN user_plots up
         ON plot_uid = plot_rid
-    INNER JOIN users u
+    LEFT JOIN users u
         ON u.user_uid = up.user_rid
     WHERE plot_uid = _plot_id
 
