@@ -150,6 +150,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   useEffect(() => {
     if (state.mapConfig && Array.isArray(state.plotList) && state.plotList.length > 0) {
       showProjectOverview();
+      reprocessPlotSimilarity();
     }
   }, [state.mapConfig, state.plotList]);
 
@@ -305,6 +306,28 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
      return Promise.resolve()
        .then(() => callBack())
       .finally(() => setState(prev => ({... prev,  modalMessage: null })));};
+
+  const reprocessPlotSimilarity = () => {
+    fetch(`/recalculate-plot-similarity`, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        projectId: state.currentProject.id,
+        referencePlotId: state.currentProject.plotSimilarityDetails.referencePlotId,
+        similarityYears: state.currentProject.plotSimilarityDetails.years,
+      })
+    })
+      .then((response) => {
+        if (response.ok) {
+          null;
+        } else {
+          this.setState({modal: {alert: {alertType: "Recalculate Similarity Error", alertMessage: "Error recalculating plot similarity. See console for details."}}});
+        }
+      }
+  )};
 
   const showPlotSamples = () => {
     const {

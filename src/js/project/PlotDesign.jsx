@@ -862,7 +862,8 @@ export class PlotDesign extends React.Component {
                     onChange={(e) => this.context.setProjectDetails({ plotSimilarityDetails: { ...this.context.plotSimilarityDetails, referencePlotId: e.target.value }})}
                     type="number"
                     value={this.context.plotSimilarityDetails?.referencePlotId}
-                          />
+                  />
+                  <br/>
                   <label htmlFor="year"> Year for comparison: {"  "} </label>
                   <DatePicker
                     selected={
@@ -872,14 +873,11 @@ export class PlotDesign extends React.Component {
                     }
                     onChange={(d) => {
                       const year = d.getFullYear();
-                      const currentYears = this.context.plotSimilarityDetails?.years || [];
 
                       this.context.setProjectDetails({
                         plotSimilarityDetails: {
                           ...this.context.plotSimilarityDetails,
-                          years: currentYears.includes(year)
-                            ? currentYears
-                            : [year, ...currentYears],
+                          years: [year]
                         },
                       });
                     }}

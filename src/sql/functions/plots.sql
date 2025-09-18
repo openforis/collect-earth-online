@@ -962,3 +962,14 @@ RETURNS INTEGER AS $$
     AND visible_id = _visible_id
 
 $$ LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION get_plot_visible_id_by_id(_project_id INTEGER, _id INTEGER)
+RETURNS INTEGER AS $$
+
+  SELECT visible_id
+  FROM PLOTS
+  WHERE project_rid = _project_id
+    AND plot_uid = _id
+
+$$ LANGUAGE SQL;

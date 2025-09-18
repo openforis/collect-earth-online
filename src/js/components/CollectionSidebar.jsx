@@ -125,15 +125,13 @@ export const NewPlotNavigation = () => {
           <span className="collection-sidebar-slider round"></span>
           </label>
         <span className="mode-label">Admin Review</span>
-        {navigationMode === "similar" &&
-         <span>Reference Plot: {currentProject.referencePlotId}</span>}
       </div>
 
       <div className="collection-sidebar-plot-navigation">
         <input className="flex flex-col-6"
                placeholder={
                  navigationMode === "similar" ? "Reference Plot Id: " +
-                 currentProject.referencePlotId
+                 currentProject?.plotSimilarityDetails?.referencePlotId
                    : currentPlot?.visibleId ?
                    'Current Plot: ' + currentPlot?.visibleId
                    : 'Select a Plot to begin'}
@@ -153,7 +151,16 @@ export const NewPlotNavigation = () => {
         >Go To Plot
         </label>
       </div>
-
+      <br/>
+        {navigationMode === "similar" &&
+         (
+           <>
+             <div className="collection-sidebar-mode">
+               <span>Reference Plot: {currentProject?.plotSimilarityDetails?.referencePlotId}</span>
+               <span>{" "}Reference Year: {currentProject?.plotSimilarityDetails?.years[0]} </span>
+             </div>
+           </>
+         )}
     </div>
   );
 };

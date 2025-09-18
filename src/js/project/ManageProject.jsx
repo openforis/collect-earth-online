@@ -203,33 +203,6 @@ class ProjectManagement extends React.Component {
     }
   };
 
-  reprocessPlotSimilarity = () => {
-    if (confirm("Do you want to recalculate plot similarity?")) {
-      this.context.processModal("Recalculating plot similarity", () =>
-        fetch(`/recalculate-plot-similarity`, {
-          method: "POST",
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json; charset=utf-8",
-          },
-          body: JSON.stringify({
-            projectId: this.context.id,
-            referencePlotId: this.context.plotSimilarityDetails.referencePlotId,
-            similarityYears: this.context.plotSimilarityDetails.years,
-          })
-        })
-          .then((response) => {
-            if (response.ok) {
-              confirm("Plot similarity is being recalculated.")
-            } else {
-              this.setState ({modal: {alert: {alertType: "Delete Project Error", alertMessage: "Error deleting project. See console for details."}}});
-            }
-          }
-        )
-      );
-    }
-  };
-
   createDoi = () => {
     const { projectId, institution, description, name } = this.context;
     if (confirm("Do you want to create a DOI for this project?\nBy creating a DOI, collection data and plot/samples shape files will be uploaded to Zenodo.")) {

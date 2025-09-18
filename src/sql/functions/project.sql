@@ -565,7 +565,8 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     token_key              text,
     type                   text,
     similar_plots          int[],
-    reference_plot_rid     integer
+    reference_plot_rid     integer,
+    plot_similarity_years  jsonb
  ) AS $$
 
     SELECT project_uid,
@@ -602,7 +603,8 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         token_key,
         type::TEXT,
         gc.similar_plots,
-        reference_plot_rid        
+        reference_plot_rid,
+        (SELECT jsonb_agg(key) FROM jsonb_object_keys(geoai_assets) AS key) AS plot_similarity_years
     FROM projects
     LEFT JOIN project_widgets
         ON project_rid = project_uid

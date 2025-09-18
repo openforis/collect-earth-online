@@ -54,6 +54,8 @@ export const stateAtom = atom({
   getNewPlot: false,
   newPlotId: null,
   navDirection: "next",
+  plotSimilarityDetails: {referencePlotId: 1,
+                          years: [2024]}
 });
 
 
