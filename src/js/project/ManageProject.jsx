@@ -184,7 +184,6 @@ class ProjectManagement extends React.Component {
   };
 
   deleteProject = () => {
-    console.log(this.context);
     if (confirm("Do you want to delete this project? This operation cannot be undone.")) {
       this.context.processModal("Deleting project", () =>
         fetch(`/archive-project?projectId=${this.context.id}`, { method: "POST" }).then(
@@ -196,6 +195,33 @@ class ProjectManagement extends React.Component {
 
             } else {
               console.log(response);
+              this.setState ({modal: {alert: {alertType: "Delete Project Error", alertMessage: "Error deleting project. See console for details."}}});
+            }
+          }
+        )
+      );
+    }
+  };
+
+  reprocessPlotSimilarity = () => {
+    if (confirm("Do you want to recalculate plot similarity?")) {
+      this.context.processModal("Recalculating plot similarity", () =>
+        fetch(`/recalculate-plot-similarity`, {
+          method: "POST",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json; charset=utf-8",
+          },
+          body: JSON.stringify({
+            projectId: this.context.id,
+            referencePlotId: this.context.plotSimilarityDetails.referencePlotId,
+            similarityYears: this.context.plotSimilarityDetails.years,
+          })
+        })
+          .then((response) => {
+            if (response.ok) {
+              confirm("Plot similarity is being recalculated.")
+            } else {
               this.setState ({modal: {alert: {alertType: "Delete Project Error", alertMessage: "Error deleting project. See console for details."}}});
             }
           }
@@ -332,6 +358,16 @@ class ProjectManagement extends React.Component {
               type="button"
               value="Delete Project"
             />
+            {this.context.projectOptions?.plotSimilarity ? (
+              <>
+                <input
+                  className="btn btn-outline-red btn-sm w-100"
+                  onClick={this.reprocessPlotSimilarity}
+                  type="button"
+                  value="Reprocess Plot Similarity"
+                />
+              </>
+            ) : null}
             <label className="my-2">External Links</label>
             <input
               className="btn btn-outline-lightgreen btn-sm w-100"

@@ -20,7 +20,7 @@ import {
 } from "../imagery/collectionMenuControls";
 
 export const CollectionSidebar = ({ processModal }) => {
-  const {modal, modalMessage, newPlotId} = useAtomValue(stateAtom);
+  const {modal, modalMessage, newPlotId, currentProject} = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
 
   return (
@@ -32,8 +32,12 @@ export const CollectionSidebar = ({ processModal }) => {
            <>
              <ExternalTools />
              <ImageryOptions />
-             <DrawingTool />
              <SurveyQuestions />
+             {currentProject.allowDrawnSamples ? (
+               <>
+                 <DrawingTool />
+               </>
+             ) : null}
            </>
          ) : null
      }

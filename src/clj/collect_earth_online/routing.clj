@@ -161,6 +161,10 @@
    [:post "/start-plot-similarity"]          {:handler     #'geoai/start-plot-similarity!
                                               :auth-type   :admin
                                               :auth-action :block}
+   [:post "/recalculate-plot-similarity"]    {:handler     #'geoai/recalculate-plot-similarity
+                                              :auth-type   :admin
+                                              :auth-action :block}
+
 
    ;; QAQC API
    [:get "/project-stats"]                   {:handler     #'qaqc/get-project-stats

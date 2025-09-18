@@ -220,7 +220,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
 
   useEffect(()=> {
     state.navigationMode === 'similar' &&
-      setState((s)=> ({ ...s, referencePlotId: 1}));
+      setState((s)=> ({ ...s, referencePlotId: state.currentProject.referencePlotId}));
   }, [state.navigationMode]);
 
   // API CALLS

@@ -62,4 +62,6 @@ export const blankProject = {
   useTemplatePlots: false,
   projectImageryList: [],
   plots: [],
+  plotSimilarityDetails: {referencePlotId: 1,
+                          years: [2024]}
 };

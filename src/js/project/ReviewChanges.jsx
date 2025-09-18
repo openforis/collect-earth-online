@@ -47,8 +47,8 @@ export default class ReviewChanges extends React.Component {
                 },
                 body: JSON.stringify({
                   projectId: data[1].projectId,
-                  referencePlotId: 1,
-                  similarityYears: [2024],
+                  referencePlotId: this.context.plotSimilarityDetails.referencePlotId,
+                  similarityYears: this.context.plotSimilarityDetails.years,
                 })
               });
               window.location = `/review-project?projectId=${data[1].projectId}`;
@@ -75,7 +75,7 @@ export default class ReviewChanges extends React.Component {
         fetch("/update-project", {
           method: "POST",
           headers: {
-            Accept: "application/json",
+            "Accept": "application/json",
             "Content-Type": "application/json; charset=utf-8",
           },
           body: JSON.stringify({

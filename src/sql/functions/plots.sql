@@ -953,4 +953,12 @@ RETURNS GEOMETRY AS $$
     SELECT ST_GeomFromGeoJSON(_geojson);
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION get_plot_id_by_visible_id(_project_id INTEGER, _visible_id INTEGER)
+RETURNS INTEGER AS $$
 
+  SELECT plot_uid
+  FROM PLOTS
+  WHERE project_rid = _project_id
+    AND visible_id = _visible_id
+
+$$ LANGUAGE SQL;
