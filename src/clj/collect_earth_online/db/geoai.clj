@@ -77,3 +77,15 @@
         plot-id           (sql-primitive (call-sql "get_plot_id_by_visible_id" project-id reference-plot-id))]
     (process-plot-similarity project-id plot-id similarity-years file-name)
     (data-response {:message "calculating plot similarity."})))
+
+(defn recalculate-plot-similarity [{:keys [params]}]
+  (let [project-id        (:projectId params)
+        reference-plot-id (tc/val->int (:referencePlotId params))
+        similarity-years  (:similarityYears params)
+        file-name         (str "ceo-" project-id "-plots")
+        plot-id           (sql-primitive (call-sql "get_plot_id_by_visible_id" project-id reference-plot-id))]
+    (try
+      (search-plot-by-similarity project-id plot-id (first similarity-years))
+      (data-response {:message "successfully reprocessed plot similarity"})
+      (catch Exception ex
+        (data-response {:message "error recalculating plot similarity"})))))
