@@ -46,7 +46,8 @@ import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
 export const Collection = ({ projectId, acceptedTerms, plotId }) => {
-  const [state, setState] = useAtom(stateAtom);  
+  const [state, setState] = useAtom(stateAtom);
+
   // INIT COLLECTION EFFECT
   useEffect(() => {
     window.name = "_ceo_collection";
@@ -587,7 +588,81 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
       `_geo-dash_${projectId}`
     );
   };
-  
+
+  // Layers panel functions
+  const setImageryList = (newList) =>
+        setState((s) => ({ ...s, imageryList: newList }));
+
+  const resetLayers = () =>
+        setState((prev) => {
+          const updated = prev.imageryList.map((layer) =>
+            layer.title === "Mapbox Satellite"
+              ? { ...layer, visible: true }
+            : { ...layer, visible: false }
+          );
+
+          updated.forEach((layer) => {
+            mercator.setLayerVisibilityByLayerId(
+              prev.mapConfig,
+              layer.id,
+              layer.visible
+            );
+          });
+
+          return { ...prev, imageryList: updated };
+        });
+
+  const toggleLayer = (layerId) =>
+        setState((prev) => {
+          const updated = prev.imageryList.map((layer) =>
+            layer.id === layerId ? { ...layer, visible: !layer.visible } : layer
+          );
+
+          const maxZ = updated.length - 1;
+          updated.forEach((layer, index) => {
+            const z = maxZ - index;
+            mercator.setLayerVisibilityByLayerId(
+              prev.mapConfig,
+              layer.id,
+              layer.visible,
+              z
+            );
+          });
+
+          return { ...prev, imageryList: updated };
+        });
+
+  const changeOpacity = (layerId, opacity) => {
+    const { mapConfig } = state;
+    const olLayer = mercator.getLayerById(mapConfig, layerId);
+    if (olLayer) {
+      olLayer.setOpacity(opacity);
+      setState((prev) => ({
+        ...prev,
+        imageryList: prev.imageryList.map((l) =>
+          l.id === layerId ? { ...l, opacity } : l
+        ),
+      }));
+    }
+  };
+
+  const dragEnd = (result) => {
+    if (!result?.destination) return;
+
+    const { mapConfig, imageryList } = state;
+    const reordered = [...imageryList];
+    const [moved] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, moved);
+
+    const maxZ = reordered.length - 1;
+    reordered.forEach((layer, index) => {
+      const olLayer = mercator.getLayerById(mapConfig, layer.id);
+      if (olLayer) olLayer.setZIndex(maxZ - index);
+    });
+
+    setImageryList(reordered);
+  };
+
   // RENDER
   return (
     <div className="container-fluid collection-page">
@@ -611,7 +686,15 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
               zIndex: 10,
             }}
           >
-            <ImageryLayerOptions imageryList={state.imageryList} />
+            <ImageryLayerOptions
+              imageryList={state.imageryList}
+              setImageryList={setImageryList}
+              onDragEnd={dragEnd}
+              onToggleLayer={toggleLayer}
+              onChangeOpacity={changeOpacity}
+              onReset={resetLayers}
+              isImageryLayersExpanded={state.isImageryLayersExpanded}
+            />
             <button
               className="toggle-sidebar position-absolute"
               onClick={() => setState((s) => ({ ...s, isImageryLayersExpanded: !s.isImageryLayersExpanded }))}

@@ -628,7 +628,6 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
                <h3>Imagery Layer Options</h3>
              </div>
              <hr />
-
              <DragDropContext onDragEnd={(result) => onDragEnd(result, imageryList, setImageryList)}>
                {/* Imagery Layers */}
                <div className="sidebar-section">
@@ -647,13 +646,28 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
                          {imageryLayers.map((layer, index) => (
                            <Draggable key={layer.id} draggableId={layer.id.toString()} index={index}>
                              {(provided, snapshot) => {
+                               const ensureHex = (color) =>
+                                     /^[0-9a-f]{6}$/i.test(color) ? `#${color}` : color;
                                const visParams = layer.sourceConfig?.visParams
                                      ? JSON.parse(layer.sourceConfig.visParams)
                                      : null;
-
-                               const sliderColor = visParams?.palette?.length === 0
-                                     ? '#3b82f6'
-                                     : visParams.palette[0];
+                               const palette = Array.isArray(visParams?.palette)
+                                     ? visParams.palette
+                                     : [];
+                               const sliderStyle =
+                                     palette.length === 2
+                                     ? {
+                                       '--first-slider-color': ensureHex(palette[0]),
+                                       '--slider-color': ensureHex(palette[1]),
+                                     }
+                                     : palette.length
+                                     ? {
+                                       '--slider-color': ensureHex(palette[0]),
+                                     }
+                                     : {
+                                       '--first-slider-color': '#d1d5db',
+                                       '--slider-color': '#3b82f6',
+                                     };
                                return (
                                  <div
                                    className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
@@ -666,7 +680,7 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
                                      checked={layer.visible}
                                      onChange={() => onToggleLayer(layer.id, imageryList)}
                                    />
-                                   <span className="layer-title">  {layer.title}</span>
+                                   <span className="layer-title"> {" "} {layer.title}</span>
                                    <input
                                      type="range"
                                      min="0"
@@ -675,20 +689,18 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
                                      className="layer-range"
                                      value={layer.opacity || 1}
                                      onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
-                                     style={{
-                                       '--slider-color': sliderColor }}
+                                     style={{ sliderStyle }}
                                    />
                                  </div>
                                )}}
-                              </Draggable>
-                             ))}
+                           </Draggable>
+                         ))}
                          {provided.placeholder && <div className="placeholder"></div>}
                        </div>
                      )}
                    </Droppable>
                  )}
                </div>
-
                {/* Polygon Layers */}
                <div className="sidebar-section">
                  <div className="section-header" onClick={() => toggleSection("polygon")}>

@@ -34,6 +34,7 @@ export const customStyles = {
   table: {
     style: {
       maxHeight: "600px",
+      height: "600px",
       overflowY: "auto",
       height: "600px",
     },

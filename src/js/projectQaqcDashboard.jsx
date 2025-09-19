@@ -65,10 +65,11 @@ class ProjectDashboardQaqc extends React.Component {
 
   initializeMap() {
     const { imageryId, aoiFeatures } = this.state.projectDetails;
-    const singleImagery = this.state.imageryList.find((i) => i.id === imageryId);
+    const singleImagery = this.state.imageryList[0] ||
+          this.state.imageryList.find((i) => i.id === 1317);
     // Initialize the basemap
     const mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, [singleImagery]);
-    mercator.setVisibleLayer(mapConfig, imageryId);
+    mercator.setVisibleLayer(mapConfig, 1317);
     mercator.removeLayerById(mapConfig, "currentPlot");
     mercator.addVectorLayer(
       mapConfig,
@@ -323,7 +324,6 @@ function ProjectStats({ projectDetails, stats }) {
           columns={projectStatsColumns}
           data={plots}
           fixedHeader={true}
-          fixedHeaderScrollHeight={"200px"}
           conditionalRowStyles={plotConditionalRowStyles}
           customStyles={customStyles}
           pagination
@@ -468,7 +468,6 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
 	    columns={plotStatsColumns}
             data={setTableData()}
 	    fixedHeader={true}
-	    fixedHeaderScrollHeight={'200px'}
             conditionalRowStyles={plotConditionalRowStyles}
             customStyles={customStyles}
             pagination
@@ -583,7 +582,6 @@ const UserStats = ({ userStats, analyzedPlots, isProjectAdmin, userName, plots, 
 	      columns={userStatsColumns}
               data={mergedUserStats()}
 	      fixedHeader={true}
-	      fixedHeaderScrollHeight={'200px'}
               customStyles={customStyles}
               selectableRows
               onSelectedRowsChange={handleSelectedChange}
