@@ -31,11 +31,11 @@ CREATE OR REPLACE FUNCTION update_geoai_assets(_project_id INTEGER, _reference_p
 CREATE OR REPLACE FUNCTION insert_geoai_cache(
   _project_id    INTEGER,
   _plot_id       INTEGER,
-  _similar_plots text,
-  _metadata      jsonb
-  ) RETURNS INTEGER AS $$
+  _similar_plots TEXT,
+  _metadata      JSONB
+) RETURNS INTEGER AS $$
 
-  INSERT INTO geoai_cache(
+  INSERT INTO geoai_cache (
     project_rid,
     plot_rid,
     similar_plots,
@@ -46,7 +46,11 @@ CREATE OR REPLACE FUNCTION insert_geoai_cache(
     _similar_plots::INTEGER[],
     _metadata
   )
-  RETURNING geoai_cache_uid
+  ON CONFLICT (project_rid, plot_rid)
+  DO UPDATE SET
+    similar_plots = EXCLUDED.similar_plots,
+    metadata = EXCLUDED.metadata
+  RETURNING geoai_cache_uid;
 
 $$ LANGUAGE SQL;
 
