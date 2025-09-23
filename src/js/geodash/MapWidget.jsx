@@ -9,7 +9,7 @@ import { mercator } from "../utils/mercator";
 
 import SvgIcon from "../components/svg/SvgIcon";
 
-export default class MapWidget extends React.Component {
+export default class MapWidget extends React.Component {  
   constructor(props) {
     super(props);
     this.state = {
@@ -61,6 +61,7 @@ export default class MapWidget extends React.Component {
       body: JSON.stringify(postObject),
     });
     const data = await (res.ok ? res.json() : Promise.reject());
+    console.log("fetched source url:", data);
     if (data && data.hasOwnProperty("url")) {
       this.setCache(postObject, data.url);
       return data.url;
@@ -85,9 +86,10 @@ export default class MapWidget extends React.Component {
   /// Get widget URL
 
   getPostObject = (widget) => {
-    if (widget.type === "imageAsset") {
+    switch(widget.type) {
+    case "imageAsset":
       return { path: "image", ...widget };
-    } else if (widget.type === "degradationTool") {
+    case "degradationTool":
       const { stretch, imageDate, degDataType, plotExtentPolygon } = this.props;
       return {
         path: "degradationTileUrl",
@@ -97,22 +99,22 @@ export default class MapWidget extends React.Component {
         imageDate,
         ...widget,
       };
-    } else if (widget.type === "polygonCompare") {
+    case "polygonCompare":
       const { visiblePlotId } = this.props;
       return { path: "featureCollection", matchID: visiblePlotId, ...widget };
-    } else if (widget.type === "preImageCollection") {
+    case "preImageCollection":
       const { sourceName, sourceType } = widget;
       const sourceNameToPath = {
         Landsat: "filteredLandsat",
         Sentinel2: "filteredSentinel2",
       };
-      const path =
-        (sourceType === "Composite" && sourceNameToPath[sourceName]) || "imageCollectionByIndex";
-
+      const path = (sourceType === "Composite" && sourceNameToPath[sourceName]) || "imageCollectionByIndex";
       return { path, ...widget };
-    } else if (widget.type === "imageCollectionAsset") {
+    case "imageCollectionAsset":
       return { path: "imageCollection", ...widget };
-    } else {
+    case "dynamicWorld":
+      return { path: "dynamicWorld", ...widget};
+    default:
       return {};
     }
   };
@@ -120,8 +122,10 @@ export default class MapWidget extends React.Component {
   /// Cache
 
   wrapCache = async (widget) => {
+    console.log("wrapping cache widget", widget);
     const postObject = this.getPostObject(widget);
-    const cacheUrl = this.checkForCache(postObject);
+    console.log("wrapping cache postObject", postObject);
+    const cacheUrl = null; //this.checkForCache(postObject);
     if (cacheUrl) {
       return cacheUrl;
     } else {
@@ -318,8 +322,12 @@ export default class MapWidget extends React.Component {
   };
 
   loadWidgetSource = async () => {
+    console.log("loading widget source...");
+    const dualVector = ["dualImagery", "dynamicWorld"];
     const { widget, idx } = this.props;
+    // if (dualVector.includes(widget.type)) {
     if (widget.type === "dualImagery") {
+      console.log("wrapping cache", this.props);
       const [url1, url2] = await Promise.all([
         this.wrapCache(widget.image1),
         this.wrapCache(widget.image2),
@@ -354,10 +362,10 @@ export default class MapWidget extends React.Component {
   renderSliderControls = () => {
     const { overlayValue, opacityValue } = this.state;
     const { widget } = this.props;
-
+    const dualVector = ["dualImagery", "dynamicWorld"];
     return (
       <div className="d-flex">
-        {widget.type === "dualImagery" ? (
+        {dualVector.includes(widget.type) ? (
           <>
             {this.renderSlider(opacityValue, this.updateOpacity, "opacity", "Opacity")}
             {this.renderSlider(overlayValue, this.updateOverlay, "overlay", "Overlay Layers")}

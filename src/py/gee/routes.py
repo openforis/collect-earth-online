@@ -5,7 +5,7 @@ from gee.utils import initialize, listAvailableBands, imageToMapId, imageCollect
     filteredImageCompositeToMapId, filteredSentinelComposite, filteredSentinelSARComposite, \
     filteredImageByIndexToMapId, getFeatureCollectionTileUrl, getTimeSeriesByCollectionAndIndex, \
     getTimeSeriesByIndex, getStatistics, getDegradationPlotsByPoint, getDegradationPlotsByPointS1, \
-    getDegradationTileUrlByDate, getDegradationTileUrlByDateS1, safeParseJSON, filteredNicfiCompositeToMapId
+    getDegradationTileUrlByDate, getDegradationTileUrlByDateS1, safeParseJSON, filteredNicfiCompositeToMapId, getDynamicWorldUrls
 from gee.planet import getPlanetMapID
 from gee.inputs import getLandsatToa, getTFO
 
@@ -235,10 +235,23 @@ def degradationTileUrl(requestDict):
         }
     return values
 
+# ########## DynamicWorld ##########
+
+def dynamicWorld(requestDict):
+    geometry = getDefault(requestDict, 'geometry')
+    startDate="2021-01-01"
+    endDate="2022-01-01"
+    visParams = safeParseJSON(getDefault(requestDict, 'visParams', {}))
+    return getDynamicWorldUrls(
+        getDefault(requestDict, 'geometry'),
+        getDefault(requestDict, 'startDate'),
+        getDefault(requestDict, 'endDate'),
+        visParams)
+
 
 # ########## Stats ##########
 
 
 def statistics(requestDict):
-    values = getStatistics(getDefault(requestDict, 'extent', None))
-    return values
+    values = getStatistics(getDefault(requestDict, 'extent', None))    
+    return {url: values}

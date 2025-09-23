@@ -641,3 +641,6 @@ def getStatistics(extent):
         populationResults = reducePop()
 
     return elevationResults.combine(populationResults).getInfo()
+
+def getDynamicWorldUrls(geometry, startDate, endDate, visParams):
+    return  ee.ImageCollection("GOOGLE/DYNAMICWORLD/V1").filterDate(startDate, endDate).filterBounds(geometry).select('label').reduce(ee.Reducer.mode())

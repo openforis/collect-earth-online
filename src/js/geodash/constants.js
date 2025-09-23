@@ -10,6 +10,7 @@ export const mapWidgetList = [
   "dualImagery",
   "polygonCompare",
   "preImageCollection",
+  "dynamicWorld"
 ];
 
 export const graphWidgetList = ["timeSeries"];
