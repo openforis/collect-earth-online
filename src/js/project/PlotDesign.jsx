@@ -158,7 +158,6 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         id={property}
         min="0"
         onChange={(e) =>{
-          console.log(e.target.value, property);
           setNewPlotSize(e.target.value);
           setPlotDetails({ [property]: Number(e.target.value) });}}
         step="1"

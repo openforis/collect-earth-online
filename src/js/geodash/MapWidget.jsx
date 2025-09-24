@@ -61,7 +61,6 @@ export default class MapWidget extends React.Component {
       body: JSON.stringify(postObject),
     });
     const data = await (res.ok ? res.json() : Promise.reject());
-    console.log("fetched source url:", data);
     if (data && data.hasOwnProperty("url")) {
       this.setCache(postObject, data.url);
       return data.url;
@@ -122,10 +121,8 @@ export default class MapWidget extends React.Component {
   /// Cache
 
   wrapCache = async (widget) => {
-    console.log("wrapping cache widget", widget);
     const postObject = this.getPostObject(widget);
-    console.log("wrapping cache postObject", postObject);
-    const cacheUrl = null; //this.checkForCache(postObject);
+    const cacheUrl = this.checkForCache(postObject);
     if (cacheUrl) {
       return cacheUrl;
     } else {
@@ -322,12 +319,8 @@ export default class MapWidget extends React.Component {
   };
 
   loadWidgetSource = async () => {
-    console.log("loading widget source...");
-    const dualVector = ["dualImagery", "dynamicWorld"];
     const { widget, idx } = this.props;
-    // if (dualVector.includes(widget.type)) {
     if (widget.type === "dualImagery") {
-      console.log("wrapping cache", this.props);
       const [url1, url2] = await Promise.all([
         this.wrapCache(widget.image1),
         this.wrapCache(widget.image2),

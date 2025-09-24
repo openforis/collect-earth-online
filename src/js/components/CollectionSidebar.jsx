@@ -429,13 +429,6 @@ export const ImageryOptions = () => {
   const [open, setOpen] = useState(true);
   const [enableGrid, setEnableGrid] = useState(false);
 
-  useEffect(() => {
-    console.log(imageryList);
-    console.log(imagery);
-    console.log(currentPlot);
-  }, [currentPlot]);
-
-
   const setBaseMapSource = (id) => {
     const img = imageryList.find((i) => Number(i.id) === Number(id)) || null;
     setAppState((s) => ({

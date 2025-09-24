@@ -54,9 +54,8 @@
    "statistics"             gee/statistics
    "timeSeriesByIndex"      gee/timeSeriesByIndex
    "dynamicWorld"           gee/dynamicWorld})
-(require '[clojure.pprint :refer [pprint]])
+
 (defn gateway-request [{:keys [params json-params]}]
-  (pprint {:params params :json-params json-params})
   (check-initialized)
   (data-response (if-let [py-fn (some-> params :path path->python)]
                    (binding [*item-tuple-cutoff* 0]
@@ -81,12 +80,9 @@
   (let [project-id (tc/val->int (:projectId params))]
     (data-response (return-widgets project-id))))
 
-(require '[clojure.pprint :refer [pprint]])
 (defn create-dashboard-widget-by-id [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
         widget     (tc/json->jsonb (:widgetJSON params))]
-    (pprint ["widget"
-             (tc/jsonb->clj widget)])
     (call-sql "add_project_widget"
               project-id
               widget)
