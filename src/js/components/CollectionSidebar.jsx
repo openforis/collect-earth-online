@@ -300,6 +300,7 @@ export const SidebarFooter = ({ processModal }) => {
     userSamples,
     currentUserId,
     imageryIds,
+    mapConfig,
     userImages,
     remainingPlotters,
     usedKML,
@@ -440,7 +441,6 @@ export const SidebarFooter = ({ processModal }) => {
       answerMode === "draw" &&
         confirm("Do you want to clear all samples from the draw area?")
     ) {
-      const { mapConfig } = this.props;
       mercator.disableDrawing(mapConfig);
       mercator.removeLayerById(mapConfig, "currentSamples");
       mercator.removeLayerById(mapConfig, "drawLayer");
