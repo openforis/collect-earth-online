@@ -237,16 +237,12 @@ def degradationTileUrl(requestDict):
 
 # ########## DynamicWorld ##########
 
-def dynamicWorld(requestDict):
+def dynamicWorld(requestDict):    
     geometry = getDefault(requestDict, 'geometry')
     startDate="2021-01-01"
     endDate="2022-01-01"
     visParams = safeParseJSON(getDefault(requestDict, 'visParams', {}))
-    return getDynamicWorldUrls(
-        getDefault(requestDict, 'geometry'),
-        getDefault(requestDict, 'startDate'),
-        getDefault(requestDict, 'endDate'),
-        visParams)
+    return imageCollectionToMapId("GOOGLE/DYNAMICWORLD/V1", visParams, 'Mode', startDate, endDate)
 
 
 # ########## Stats ##########
