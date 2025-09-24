@@ -36,7 +36,9 @@ export const CollectionSidebar = ({ processModal }) => {
          (
            <>
              <ExternalTools />
-             <ImageryOptions />
+             {currentProject?.type !== 'simplified' ?
+              (<ImageryOptions />): null
+             }
              <SurveyQuestions />
              {currentProject.allowDrawnSamples ? (
                <>
