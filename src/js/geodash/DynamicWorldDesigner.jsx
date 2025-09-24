@@ -11,28 +11,18 @@ import ImageCollectionAssetDesigner from "./ImageCollectionAssetDesigner";
 export default function DynamicWorldDesigner({prefixPath = ""}) {
 
   return (
-    <>      
-
-      <GDInput
-        dataKey="assetId"
-        placeholder="GOOGLE/DYNAMICWORLD/V1"
-        prefixPath={prefixPath}
-        title="HARDCODE THIS TO DYNAMICWORLD"
-      />
-        
-      <GDSelect
-        dataKey="reducer"
-        items={["Mode"]}
-        prefixPath={prefixPath}
-        title="Collection Reducer"
-      />
+    <>
       <GDTextArea
         dataKey="visParams"
-        defaultValue={'{"min":0, "max": 0.3}'}
+        placeholder={'{"min":0, "max": 8}'}
         prefixPath={prefixPath}
-        title="HARDCODE THESE FOR NOW, BUT MAYBE ALLOW USERS TO CUSTOMIZE PALLET"
+        title="Image Parameters (JSON format)"
       />
-      <GDDateRange optional prefixPath={prefixPath} />
+      <GDDateRange prefixPath={prefixPath} />
     </>
   );
 }
+
+/*
+{'{"min":0, "max": 8, "palette": ["#419BDF", "#397D49", "#88B053", "#7A87C6", "#E49635", "#DFC35A", "#C4281B", "#A59B8F", "#B39FE1"]}'}
+ */

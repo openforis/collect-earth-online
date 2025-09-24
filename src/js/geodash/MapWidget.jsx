@@ -355,10 +355,10 @@ export default class MapWidget extends React.Component {
   renderSliderControls = () => {
     const { overlayValue, opacityValue } = this.state;
     const { widget } = this.props;
-    const dualVector = ["dualImagery", "dynamicWorld"];
+    
     return (
       <div className="d-flex">
-        {dualVector.includes(widget.type) ? (
+        {(widget.type === "dualImagery") ? (
           <>
             {this.renderSlider(opacityValue, this.updateOpacity, "opacity", "Opacity")}
             {this.renderSlider(overlayValue, this.updateOverlay, "overlay", "Overlay Layers")}

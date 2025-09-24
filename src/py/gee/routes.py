@@ -5,7 +5,7 @@ from gee.utils import initialize, listAvailableBands, imageToMapId, imageCollect
     filteredImageCompositeToMapId, filteredSentinelComposite, filteredSentinelSARComposite, \
     filteredImageByIndexToMapId, getFeatureCollectionTileUrl, getTimeSeriesByCollectionAndIndex, \
     getTimeSeriesByIndex, getStatistics, getDegradationPlotsByPoint, getDegradationPlotsByPointS1, \
-    getDegradationTileUrlByDate, getDegradationTileUrlByDateS1, safeParseJSON, filteredNicfiCompositeToMapId, getDynamicWorldUrls
+    getDegradationTileUrlByDate, getDegradationTileUrlByDateS1, safeParseJSON, filteredNicfiCompositeToMapId
 from gee.planet import getPlanetMapID
 from gee.inputs import getLandsatToa, getTFO
 
