@@ -1,6 +1,8 @@
 (ns collect-earth-online.routing
   (:require [collect-earth-online.api :refer [validate]]
             [collect-earth-online.generators.ce-project :as ce-project]
+            [collect-earth-online.gcloud          :as gcloud]
+            [collect-earth-online.sse             :as sse]
             [collect-earth-online.db.doi          :as doi]
             [collect-earth-online.db.geodash      :as geodash]
             [collect-earth-online.db.geoai        :as geoai]
@@ -286,4 +288,8 @@
    [:get  "/metrics/get-sample-plot-counts"]  {:handler     (validate metrics/get-sample-plot-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}})
+   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}
+   [:post "/start-listener"]                  {:handler gcloud/handle-async}
+   [:get "/broadcast"]                       {:handler sse/sse-handler}
+   }
+  )
