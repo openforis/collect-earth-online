@@ -6,6 +6,7 @@ export default function SSEClient() {
   const eventSourceRef = useRef(null);
 
   const disconnectSSE = useCallback (() => {
+    console.log('SSE: Disconnecting');
     if (eventSourceRef.current) {
       eventSourceRef.current.close ();
       eventSourceRef.current = null;
@@ -15,25 +16,32 @@ export default function SSEClient() {
 
   
   const connectSSE = useCallback(() => {
-
+    
+    console.log('SSE: Attempting to connect');
     setStatus('connecting');
+    
     eventSourceRef.current = new EventSource('/broadcast');
+    
     eventSourceRef.current.onopen = () => {
+      console.log('SSE: Connection opened');
       setStatus('connected');      
     };
         
     eventSourceRef.current.onmessage = (event) => {
-      if (event.data === 'heartbeat') { return;};
-      console.log (event);      
+      console.log('SSE: Received message: ', event);
+      if (event.data === 'heartbeat') { console.log ('SSE: Heartbeat received');};
+      console.log ('SSE: Data received', event.data);
     };
     
     eventSourceRef.current.onerror = (error) => {
+      console.log('SSE: Error occurred', error);
+      setStatus('error');
       setTimeout (() => {
         disconnectSSE ();
         connectSSE ();
       }, 3000);
     }; 
-  }, []);
+  }, [disconnectSSE]);
   
 
   useEffect (() => {

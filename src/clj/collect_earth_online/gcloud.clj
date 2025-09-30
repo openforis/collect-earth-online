@@ -11,7 +11,11 @@
 (defn respond [msg]
   (println "Received message:" msg)
   (broadcast! {:message msg})
-  (swap! listener-state assoc :last-message msg))
+  (swap! list))
+
+(defn test-response [_]
+  (broadcast! "Test broadcast message")
+  (data-response {:message "Test broadcast sent"}))
 
 (defn start-listener [project-name subscription-name]
   (when-not (:active? @listener-state)    
