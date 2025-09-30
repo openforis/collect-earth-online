@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export default function SSEClient() {
+export default function SSEClient({callback}) {
   const [status, setStatus] = useState('disconnected');
-  
   const eventSourceRef = useRef(null);
 
   const disconnectSSE = useCallback (() => {
-    console.log('SSE: Disconnecting');
     if (eventSourceRef.current) {
       eventSourceRef.current.close ();
       eventSourceRef.current = null;
@@ -16,25 +14,22 @@ export default function SSEClient() {
 
   
   const connectSSE = useCallback(() => {
-    
-    console.log('SSE: Attempting to connect');
+   
     setStatus('connecting');
     
-    eventSourceRef.current = new EventSource('/broadcast');
+    eventSourceRef.current = new EventSource('/open-socket');
     
     eventSourceRef.current.onopen = () => {
-      console.log('SSE: Connection opened');
       setStatus('connected');      
     };
         
     eventSourceRef.current.onmessage = (event) => {
-      console.log('SSE: Received message: ', event);
       if (event.data === 'heartbeat') { console.log ('SSE: Heartbeat received');};
-      console.log ('SSE: Data received', event.data);
+      event.data.length > 0 &&
+        callback(s => ({...s, modal: {alert: {alertMessage: event.data}}})); 
     };
     
     eventSourceRef.current.onerror = (error) => {
-      console.log('SSE: Error occurred', error);
       setStatus('error');
       setTimeout (() => {
         disconnectSSE ();
@@ -53,10 +48,13 @@ export default function SSEClient() {
   
   useEffect (() => {
     if (status === 'error') {
+      connectSSE();
+      /*
       const timer = setTimeout (() => {
         connectSSE ();
-      }, 5000);
-      return () => clearTimeout (timer);
+        }, 5000);
+        */
+      // return () => clearTimeout (timer);
     };
   }, [status, connectSSE]);
 

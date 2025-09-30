@@ -2,22 +2,16 @@
   (:require [clojure.core.async :as async :refer [go put! <! close! chan]]
             [jonotin.core :refer [subscribe!]]
             [triangulum.response        :refer [data-response]]
-            [collect-earth-online.sse :refer [broadcast!]]
-            [clojure.pprint :refer [pprint]]))
+            [collect-earth-online.sse :refer [broadcast!]]))
 
 (defonce listener-state (atom {:active? false
                                :last-message nil}))
 
 (defn respond [msg]
-  (println "Received message:" msg)
   (broadcast! {:message msg})
   (swap! list))
 
-(defn test-response [_]
-  (broadcast! "Test broadcast message")
-  (data-response {:message "Test broadcast sent"}))
-
-(defn start-listener [project-name subscription-name]
+(defn gcloud-listener [project-name subscription-name]
   (when-not (:active? @listener-state)    
     (future
       (try
@@ -33,7 +27,7 @@
 (defn handle-async [{:keys [params session]}]
   (try
     (when-not (:active? @listener-state)
-      (start-listener "collect-earth-online" "MySub")
+      (gcloud-listener "collect-earth-online" "MySub")
       (swap! listener-state assoc :active? true))    
     (data-response {:message "Listener started"})
     (catch Exception e 

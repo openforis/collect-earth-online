@@ -289,8 +289,7 @@
                                                :auth-type   :metrics
                                                :auth-action :block}
    [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}
-   [:post "/start-listener"]                  {:handler gcloud/handle-async}
-   [:get "/broadcast"]                       {:handler sse/sse-handler}
-   [:post "/test-response"] {:handler gcloud/test-response}
+   [:post "/gcloud-listener"]                  {:handler gcloud/gcloud-handler}
+   [:get "/open-socket"]                       {:handler sse/sse-handler}   
    }
   )

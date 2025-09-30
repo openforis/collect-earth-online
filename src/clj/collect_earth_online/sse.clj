@@ -17,22 +17,17 @@
       (try
         (loop [] #_[retries 10]
               #_(when (< 0 retries))
-              (when-let [^String msg (async/<!! ch)]
-                (println "SSE: Sending message to client: " msg)
+              (when-let [^String msg (async/<!! ch)]                
                 (doto writer (.write (str "data: " msg "\n\n")) (.flush)))
               (recur #_(dec retries)))
-        (catch java.io.IOException _
-          (println "SSE: Client disconnected"))
-        (finally
-          (println "SSE: Closing channel")
+        (catch java.io.IOException _)
+        (finally          
           (swap! clients disj ch)
           (async/close! ch))))))
 
 (defn send>!! [ch message]
-  (println "SSE: Attempting to send message to client" message)
   (let [sent? (async/>!! ch message)]
     (when-not sent?
-      (println "SSE: Channel closed, removing from clients")
       (swap! clients disj ch))
     sent?))
 
@@ -44,10 +39,8 @@
         (recur)))))
 
 (defn sse-handler [_]
-  (println "SSE: New client connecting")
   (let [ch (async/chan 10)]
     (swap! clients conj ch)
-    (send>!! ch "Connected to SSE Server")
     (heartbeat>!! ch 10000)
     {:status 200
      :headers {"Content-Type"  "text/event-stream"
@@ -56,10 +49,8 @@
      :body ch}))
 
 (defn broadcast! [message]
-  (println "Broadcasting to " (count @clients) " clients: " )
   (let [message-str (if (string? message)
                       message
                       (:message message "No message content"))]
     (doseq [ch @clients]
-      (println "SSE: Sending message to client channel: " ch)
       (send>!! ch message-str))))

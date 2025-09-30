@@ -57,34 +57,29 @@ export function Overview(props) {
     props.updateSteps(updatedSteps);
   };
 
-  const processAsyncResult = (data) => {
-    console.log (data.message);
-    setAppState(s => ({...s, modal: {alert: {
-      alertMessage: data.message,
-      alertType: "Handling Async Request"}}}));
-  };
+
 
   const handleAsyncEvent = () => {
-    setAppState(s => ({...s, modal: {alert: {alertType: "Sending Async Request"}}}));
-    fetch('/start-listener', {
+    setAppState(s => ({...s, showAlert: {message: "Sending Async Request"}}));
+    fetch('/gcloud-listener', {
       method: "POST",
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify ({
-        foo: "bar"
+      body: JSON.stringify ({        
       })      
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then ((data) => {        
-        processAsyncResult(data);
+      .then ((data) => {
+        setAppState(s => ({... s, showAlert: {message: "Async Request Successful. Pending Response."}}));        
       });
     
   };
 
   return (
     <div id="project-info">
+      {state.showAlert && <p className="alert">{state.showAlert.message}</p>}
       {state.modal?.alert &&
        <Modal title={state.modal.alert.alertType}
               onClose={()=>{setAppState(prev => ({ ... prev, modal: null}));}}>
@@ -128,9 +123,10 @@ export function Overview(props) {
          </>
        )}
       <br/>
-      <SSEClient/>
+      <SSEClient callback={setAppState}/>
+    
       <button
-        onClick={()=>{handleAsyncEvent();}}
+        onClick={handleAsyncEvent}
       >
         Click Me For Async Event!
       </button>
