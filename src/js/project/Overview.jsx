@@ -57,26 +57,6 @@ export function Overview(props) {
     props.updateSteps(updatedSteps);
   };
 
-
-
-  const handleAsyncEvent = () => {
-    setAppState(s => ({...s, showAlert: {message: "Sending Async Request"}}));
-    fetch('/gcloud-listener', {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify ({        
-      })      
-    })
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then ((data) => {
-        setAppState(s => ({... s, showAlert: {message: "Async Request Successful. Pending Response."}}));        
-      });
-    
-  };
-
   return (
     <div id="project-info">
       {state.showAlert && <p className="alert">{state.showAlert.message}</p>}
@@ -85,6 +65,9 @@ export function Overview(props) {
               onClose={()=>{setAppState(prev => ({ ... prev, modal: null}));}}>
          {state.modal.alert.alertMessage}
        </Modal>}
+      <SSEClient onmessage={(event) => {
+        setAppState (s=> ({...s, modal: {alert: {alertMessage: event.data}}}));
+      }} />
       <div className="form-group">
         <label htmlFor="project-name">Project Type</label>
         <select
@@ -123,13 +106,6 @@ export function Overview(props) {
          </>
        )}
       <br/>
-      <SSEClient callback={setAppState}/>
-    
-      <button
-        onClick={handleAsyncEvent}
-      >
-        Click Me For Async Event!
-      </button>
       <h3>Project Information</h3>
       <div className="ml-3">
         <div className="form-group">
