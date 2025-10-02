@@ -36,7 +36,6 @@ export const customStyles = {
       maxHeight: "600px",
       height: "600px",
       overflowY: "auto",
-      height: "600px",
     },
   },
 };

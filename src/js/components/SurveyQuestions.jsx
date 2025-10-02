@@ -5,22 +5,25 @@ import { mercator } from '../utils/mercator';
 import SvgIcon from "./svg/SvgIcon";
 import {
   lengthObject,
-  mapObjectArray,
   filterObject,
+  mapObjectArray,
 } from '../utils/sequence';
+import { LearningMaterialModal } from "./PageComponents";
+
+import '../../css/sidebar.css'
 import '../../css/survey.css';
 
+
 export const SurveyQuestions = () => {
-  const { answerMode,
-          currentProject,
+  const { currentProject,
           currentPlot,
           mapConfig,
           selectedSampleId,
           userSamples } = useAtomValue(stateAtom);
-  const state = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
   const [openTopId, setOpenTopId] = useState(null);
   const [openByParent, setOpenByParent] = useState({})
+  const [showLearningMaterial, setShowLearningMaterial] = useState(false);
 
   const entries = (obj = {}) => Object.entries(obj || {});
   const visibleAnswers = (q) => entries(q.answers).filter(([, a]) => !a?.hide);
@@ -28,7 +31,6 @@ export const SurveyQuestions = () => {
 
   //EFFECTS
   useEffect(() => {
-    // console.log(state);
   }, [currentProject, userSamples]);
 
   //FUNCTIONS
@@ -419,6 +421,10 @@ export const SurveyQuestions = () => {
     return render ? render(q) : null;
   };
 
+  const toggleLearningMaterial = () => {
+    setShowLearningMaterial((prev) => !prev);
+  };
+
   // MEMOIZATION
   const parents = useMemo(
     () =>
@@ -446,16 +452,19 @@ export const SurveyQuestions = () => {
 
   
   return (
-    <div className="sq-card">
-      <div className="sq-header">
+    <div className="collection-sidebar-card">
+      <div className="collection-sidebar-header">
         <div className="sq-title-row">
-          <span className="sq-title">
+          <span className="collection-sidebar-title">
             SURVEY{" "}
             <span className="sq-subtitle">
               {`${validatedCount}/${totalTop} questions answered`}
             </span>
           </span>
         </div>
+        <button className="collection-sidebar-info-button"
+                aria-label="Info"
+                onClick={toggleLearningMaterial}>i</button>
       </div>
 
       {currentPlot?.flagged ? (
@@ -490,6 +499,12 @@ export const SurveyQuestions = () => {
             }
           />
         </div>
+      )}
+      {showLearningMaterial && (
+        <LearningMaterialModal
+          learningMaterial={currentProject?.learningMaterial}
+          onClose={toggleLearningMaterial}
+        />
       )}
     </div>
   );

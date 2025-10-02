@@ -10,6 +10,11 @@ import { LoadingModal } from "./PageComponents";
 import { mercator } from "../utils/mercator";
 import { SurveyQuestions, DrawingTool } from "./SurveyQuestions.jsx";
 import {
+  everyObject,
+  safeLength,
+  filterObject,
+} from "../utils/sequence";
+import {
   PlanetMenu,
   PlanetDailyMenu,
   PlanetTFOMenu,
@@ -31,7 +36,9 @@ export const CollectionSidebar = ({ processModal }) => {
          (
            <>
              <ExternalTools />
-             <ImageryOptions />
+             {currentProject?.type !== 'simplified' ?
+              (<ImageryOptions />): null
+             }
              <SurveyQuestions />
              {currentProject.allowDrawnSamples ? (
                <>
@@ -98,7 +105,7 @@ export const NewPlotNavigation = () => {
   };
   
   return (
-    <div className="collection-sidebar-navigation">
+    <div className="collection-sidebar-card">
       <div className="collection-sidebar-header">
         <span>
           <span className="collection-sidebar-title">{currentProject?.name}</span>
@@ -251,10 +258,10 @@ export const ExternalTools = () => {
   };
 
   return (
-    <div className="ext-card">
-      <div className="ext-header">
-        <span className="ext-title">EXTERNAL TOOLS</span>
-        <button className="ext-info" aria-label="Info">i</button>
+    <div className="collection-sidebar-card">
+      <div className="collection-sidebar-header">
+        <span className="collection-sidebar-title">EXTERNAL TOOLS</span>
+        <button className="collection-sidebar-info-button" aria-label="Info">i</button>
       </div>
 
       <div className="ext-grid">
@@ -283,6 +290,7 @@ export const ExternalTools = () => {
   );
 };
 
+
 export const SidebarFooter = ({ processModal }) => {
 
   const {
@@ -292,11 +300,13 @@ export const SidebarFooter = ({ processModal }) => {
     userSamples,
     currentUserId,
     imageryIds,
+    mapConfig,
     userImages,
     remainingPlotters,
     usedKML,
     usedGeodash,
     inReviewMode,
+    answerMode,
   } = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
 
@@ -396,7 +406,140 @@ export const SidebarFooter = ({ processModal }) => {
     }
   };
 
+  const resetPlotValues = () => {
+    setAppState((prev) => {
+      const newPlot = prev.currentPlot;
+      const copyValues = false;
+      const samples = newPlot?.samples || [];
+
+      const bySample = (pick, copy) =>
+            Object.fromEntries(samples.map((s) => [s.id, copy ? (pick(s) || {}) : {}]));
+
+      const selectedQuestionId = Number(
+        (Object.entries(prev.currentProject?.surveyQuestions || {}).find(
+          ([_id, sq]) => sq.parentQuestionId === -1
+        )?.[0]) ?? -1
+      );
+
+      return {
+        ...prev,
+        newPlotInput: newPlot.visibleId,
+        userSamples: bySample((s) => s.savedAnswers, copyValues),
+        originalUserSamples: copyValues
+          ? bySample((s) => s.savedAnswers, true)
+          : prev.originalUserSamples,
+        userImages: bySample((s) => s.userImage, copyValues),
+        selectedQuestionId,
+        collectionStart: Date.now(),
+        unansweredColor: "black",
+      };
+    });
+  };
+
+  const clearAll = (drawTool) => {
+    if (
+      answerMode === "draw" &&
+        confirm("Do you want to clear all samples from the draw area?")
+    ) {
+      mercator.disableDrawing(mapConfig);
+      mercator.removeLayerById(mapConfig, "currentSamples");
+      mercator.removeLayerById(mapConfig, "drawLayer");
+      mercator.addVectorLayer(
+        mapConfig,
+        "drawLayer",
+        null,
+        mercator.ceoMapStyles("draw", "orange")
+      );
+      mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
+    } else if (confirm("Do you want to clear all answers?")) {
+      resetPlotValues();
+    }
+  };
+
+  const checkCanSave = () => {
+    const { surveyQuestions, collectConfidence } = currentProject;
+    const { confidence } = currentPlot;
+    const visibleSurveyQuestions = filterObject(surveyQuestions, ([_id, val]) => val.hideQuestion != true);
+    const noneAnswered = everyObject(visibleSurveyQuestions, ([_id, sq]) => safeLength(sq.answered) === 0);
+    const hasSamples = safeLength(currentPlot.samples) > 0;
+    const allAnswered = everyObject(
+      visibleSurveyQuestions,
+      ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered));
+    if (answerMode !== "question") {
+      setAppState((prev) => ({
+        ...prev,
+        modal: {
+          alert: {
+            alertType: "Collection Alert",
+            alertMessage:
+            "You must be in question mode to save the collection.",
+          },
+        },
+      }));
+      return false;
+    } else if (currentPlot.flagged) {
+      return true;
+    } else if (inReviewMode) {
+      if (!(noneAnswered || allAnswered)) {
+        setAppState((prev) => ({
+          ...prev,
+          modal: {
+            alert: {
+              alertType: "Review Mode Alert",
+              alertMessage:
+              "In review mode, plots can only be saved if all questions are answered or the answers are cleared.",
+            },
+          },
+        }));
+        return false;
+      } else {
+        return true;
+      }
+    } else if (!hasSamples) {
+      setAppState((prev) => ({
+        ...prev,
+        modal: {
+          alert: {
+            alertType: "Review Mode Alert",
+            alertMessage:
+            "The collection must have samples to be saved. Enter draw mode to add more samples.",
+          },
+        },
+      }));
+      return false;
+    } else if (!allAnswered) {
+      setAppState((prev) => ({
+        ...prev,
+        modal: {
+          alert: {
+            alertType: "Review Mode Alert",
+            alertMessage:
+            "All questions must be answered to save the collection.",
+          },
+        },
+      }));
+      return false;
+    } else if (collectConfidence && !confidence) {
+      setAppState((prev) => ({
+        ...prev,
+        modal: {
+          alert: {
+            alertType: "Review Mode Alert",
+            alertMessage:
+            "You must input the confidence before saving the interpretation.",
+          },
+        },
+      }));
+      return false;
+    } else {
+      return true;
+    }
+  };
+
   const postValuesToDB = () => {
+    if(!checkCanSave()) {
+      return false;
+    };
     if (currentPlot.flagged) {
       flagPlot();
     } else {
@@ -408,15 +551,21 @@ export const SidebarFooter = ({ processModal }) => {
 
   return (
     <div className="collection-sidebar-footer-buttons">
-      <button className="btn outline">Clear All</button>
+      <button className="btn outline"
+              onClick={clearAll}>
+        Clear All
+      </button>
       <button className="btn outline"
               onClick={toggleFlagged}>
         {currentPlot.flagged ? "Unflag Plot" : "Flag Plot"}
       </button>
-      <button className="btn filled">Quit</button>
       <button className="btn filled"
-              onClick={postValuesToDB}
-      >Save & Continue</button>
+              onClick={() => setAppState(s => ({...s, showQuitModal: !s.showQuitModal}))}
+      >Quit</button>
+      <button className="btn filled"
+              onClick={postValuesToDB}>
+        Save & Continue
+      </button>
     </div>
   );
 };
@@ -435,13 +584,6 @@ export const ImageryOptions = () => {
 
   const [open, setOpen] = useState(true);
   const [enableGrid, setEnableGrid] = useState(false);
-
-  useEffect(() => {
-    console.log(imageryList);
-    console.log(imagery);
-    console.log(currentPlot);
-  }, [currentPlot]);
-
 
   const setBaseMapSource = (id) => {
     const img = imageryList.find((i) => Number(i.id) === Number(id)) || null;

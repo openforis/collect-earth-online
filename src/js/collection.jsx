@@ -151,7 +151,9 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
   useEffect(() => {
     if (state.mapConfig && Array.isArray(state.plotList) && state.plotList.length > 0) {
       showProjectOverview();
-      reprocessPlotSimilarity();
+      if(state.currentProject?.projectOptions?.plotSimilarity){
+        reprocessPlotSimilarity();
+      }
     }
   }, [state.mapConfig, state.plotList]);
 
