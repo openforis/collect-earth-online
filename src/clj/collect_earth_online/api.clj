@@ -5,10 +5,8 @@
             [malli.core :as m]
             [malli.util :as mu]
             [triangulum.response :refer [data-response]]
-            [triangulum.type-conversion :as tc]
-            [triangulum.config :refer [get-config]]
-            [malli.error :as me]
-            [clojure.pprint :refer [pprint]]))
+            [triangulum.type-conversion :as tc]            
+            [malli.error :as me]))
 
 
 (def Int
@@ -350,6 +348,7 @@
          (data-response (me/humanize (m/explain schema# args#)) {:status 403})))))
 
 (comment
+  (require '[clojure.pprint :refer [pprint]])
   (->
    (->> ~(keyword (str query))
         (get validation-map)

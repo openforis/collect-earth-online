@@ -1,9 +1,13 @@
 import React, { useContext, useState } from "react";
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { LearningMaterialModal } from "../components/PageComponents";
 import { capitalizeFirst,  readFileAsBase64Url } from "../utils/generalUtils";
 import { filterObject } from "../utils/sequence";
 import { ProjectContext } from "./constants";
+import { stateAtom } from "../utils/constants";
+import Modal from "../components/Modal";
+import SSEClient from "../socket";
 
 export function Overview(props) {
   const {
@@ -19,6 +23,9 @@ export function Overview(props) {
   } = useContext(ProjectContext);
 
   const [selectedType, setSelectedType] = useState(type || "regular");
+
+  const setAppState = useSetAtom(stateAtom);
+  const state = useAtomValue(stateAtom);
   
   const importCollectProject = (fileName, fileb64) => {
     fetch(`/import-ce-project`, {
@@ -48,10 +55,19 @@ export function Overview(props) {
     setSelectedType(selectedValue);
     props.updateProjectType(selectedValue);
     props.updateSteps(updatedSteps);
-  }
+  };
 
   return (
     <div id="project-info">
+      {state.showAlert && <p className="alert">{state.showAlert.message}</p>}
+      {state.modal?.alert &&
+       <Modal title={state.modal.alert.alertType}
+              onClose={()=>{setAppState(prev => ({ ... prev, modal: null}));}}>
+         {state.modal.alert.alertMessage}
+       </Modal>}
+      <SSEClient onmessage={(event) => {
+        setAppState (s=> ({...s, modal: {alert: {alertMessage: event.data}}}));
+      }} />
       <div className="form-group">
         <label htmlFor="project-name">Project Type</label>
         <select
@@ -71,23 +87,23 @@ export function Overview(props) {
       </div>
       {projectId < 0 &&
        (<>
-          <ProjectTemplateSelection {...props} />
-          <h3> Import Collect Earth Project</h3>
-          <input
-            accept="application/zip"
-            defaultValue=""
-            id="collect-earth-project-input"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              readFileAsBase64Url(file, (base64) => {
-                importCollectProject(file.name, base64);
-              });
-            }}
-            style={{ display: "block" }}
-            type="file"
-            disabled={selectedType === "simplified"}
-          />
-        </>
+           <ProjectTemplateSelection {...props} />
+           <h3> Import Collect Earth Project</h3>
+           <input
+             accept="application/zip"
+             defaultValue=""
+             id="collect-earth-project-input"
+             onChange={(e) => {
+               const file = e.target.files[0];
+               readFileAsBase64Url(file, (base64) => {
+                 importCollectProject(file.name, base64);
+               });
+             }}
+             style={{ display: "block" }}
+             type="file"
+             disabled={selectedType === "simplified"}
+           />
+         </>
        )}
       <br/>
       <h3>Project Information</h3>
@@ -176,8 +192,8 @@ export function Overview(props) {
         </div>
         <p className="font-italic ml-2 small" id="privacy-level-text">
           {(privacyLevel === "public" || privacyLevel === "users") &&
-            "**Public imagery will be visible to all users, and institution imagery will only be available" +
-              " to the users in this institution."}
+           "**Public imagery will be visible to all users, and institution imagery will only be available" +
+           " to the users in this institution."}
         </p>
       </div>
       <h3>Project Options</h3>
@@ -321,19 +337,19 @@ class ProjectTemplateSelection extends React.Component {
                   </option>
                 )}
                 {templateProjectList &&
-                  templateProjectList
-                    .filter(
-                      (proj) =>
-                        (showPublic || institutionId === proj.institutionId) &&
-                        (proj.id + proj.name.toLocaleLowerCase()).includes(
-                          projectFilter.toLocaleLowerCase()
-                        )
-                    )
-                    .map((proj) => (
-                      <option key={proj.id} value={proj.id}>
-                        {proj.id} - {proj.name}
-                      </option>
-                    ))}
+                 templateProjectList
+                 .filter(
+                   (proj) =>
+                   (showPublic || institutionId === proj.institutionId) &&
+                     (proj.id + proj.name.toLocaleLowerCase()).includes(
+                       projectFilter.toLocaleLowerCase()
+                     )
+                 )
+                 .map((proj) => (
+                   <option key={proj.id} value={proj.id}>
+                     {proj.id} - {proj.name}
+                   </option>
+                 ))}
               </select>
             </div>
             <div className="form-group">
