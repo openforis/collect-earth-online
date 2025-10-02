@@ -9,7 +9,7 @@
                                :last-message nil}))
 
 (defn respond [msg]
-  (broadcast! {:message msg})
+  (broadcast! {:status msg})
   (swap! list))
 
 (defn gcloud-listener [project-name topic-name]
@@ -18,7 +18,7 @@
       (try
         (let [sub (subscribe! {:project-name project-name
                                :subscription-name topic-name
-                               :handle-msg-fn (fn [_] (respond "process complete"))
+                               :handle-msg-fn respond
                                :handler-error-fn (fn [err] 
                                                    (println "Error:" err)
                                                    (swap! listener-state assoc
