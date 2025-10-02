@@ -84,4 +84,5 @@
  :collect-earth-online.gcs-integration/credentials  ""
  :collect-earth-online.gcs-integration/bucket-url   ""
  :collect-earth-online.gcs-integration/api-url      ""
+ :collect-earth-online.gc-integration/topic-name    "table_jobs-sub"
  }
