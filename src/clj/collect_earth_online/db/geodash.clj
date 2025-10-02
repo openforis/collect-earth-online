@@ -52,7 +52,8 @@
    "imageCollection"        gee/imageCollection
    "imageCollectionByIndex" gee/imageCollectionByIndex
    "statistics"             gee/statistics
-   "timeSeriesByIndex"      gee/timeSeriesByIndex})
+   "timeSeriesByIndex"      gee/timeSeriesByIndex
+   "dynamicWorld"           gee/dynamicWorld})
 
 (defn gateway-request [{:keys [params json-params]}]
   (check-initialized)

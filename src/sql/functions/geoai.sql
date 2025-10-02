@@ -10,13 +10,30 @@ CREATE OR REPLACE FUNCTION get_plots_as_geojson(_project_id INTEGER)
   AS $$
   SELECT
       p.plot_uid AS id,
-      (ST_AsGeoJSON (p.plot_geom))::jsonb
-  FROM
-      plots p
+      ST_AsGeoJSON(
+        CASE
+          WHEN GeometryType(p.plot_geom) = 'POINT' THEN
+            CASE pr.plot_shape
+              WHEN 'circle' THEN ST_Transform(ST_Buffer(ST_Transform(p.plot_geom, 3857), pr.plot_size / 2), 4326)
+              WHEN 'square' THEN ST_Transform(
+                                  ST_MakeEnvelope(
+                                    ST_X(ST_Transform(p.plot_geom, 3857)) - pr.plot_size / 2,
+                                    ST_Y(ST_Transform(p.plot_geom, 3857)) - pr.plot_size / 2,
+                                    ST_X(ST_Transform(p.plot_geom, 3857)) + pr.plot_size / 2,
+                                    ST_Y(ST_Transform(p.plot_geom, 3857)) + pr.plot_size / 2,
+                                    3857
+                                  ),
+                                  4326
+                                )
+              ELSE p.plot_geom
+            END
+          ELSE p.plot_geom
+        END
+      )::jsonb AS geometry
+  FROM plots p
+  JOIN projects pr ON pr.project_uid = p.project_rid
   WHERE project_rid = _project_id
-
-$$
-LANGUAGE SQL;
+$$ LANGUAGE SQL;
 
 
 CREATE OR REPLACE FUNCTION update_geoai_assets(_project_id INTEGER, _reference_plot INTEGER, _geoai_assets jsonb)
