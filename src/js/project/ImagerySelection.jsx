@@ -62,13 +62,13 @@ export function ImagerySelection() {
       <h3>Additional Imagery</h3>
       <div className="ml-3">
         <div className="form-group">
-          <label>Public Imagery</label>
+          <label>Platform Imagery</label>
           {renderImageryRow(
-            institutionImagery.filter((imagery) => imagery.visibility === "public"),
+            institutionImagery.filter((imagery) => imagery.visibility ==="platform"),
             imageryId,
             projectImageryList,
             setProjectDetails,
-            "public"
+            "platform"
           )}
         </div>
         <div className="form-group">
@@ -83,6 +83,16 @@ export function ImagerySelection() {
             projectImageryList,
             setProjectDetails,
             "institution"
+          )}
+        </div>
+        <div className="form-group">
+          <label>Public Imagery</label>
+          {renderImageryRow(
+            institutionImagery.filter((imagery) => imagery.visibility === "public"),
+            imageryId,
+            projectImageryList,
+            setProjectDetails,
+            "public"
           )}
         </div>
       </div>

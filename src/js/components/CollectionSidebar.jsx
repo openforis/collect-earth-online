@@ -25,14 +25,14 @@ import {
 } from "../imagery/collectionMenuControls";
 
 export const CollectionSidebar = ({ processModal }) => {
-  const {modal, modalMessage, newPlotId, currentProject} = useAtomValue(stateAtom);
+  const {modal, modalMessage, currentPlot, currentProject} = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
 
   return (
     <div className="collection-sidebar-container">
       <div className="collection-sidebar-content">
         <NewPlotNavigation />
-        {newPlotId > 0 ?
+        {currentPlot.id > 0 ?
          (
            <>
              <ExternalTools />
@@ -134,31 +134,33 @@ export const NewPlotNavigation = () => {
         <span className="mode-label">Admin Review</span>
       </div>
 
-      <div className="collection-sidebar-plot-navigation">
-        <input className="flex flex-col-6"
-               placeholder={
-                 navigationMode === "similar" ? "Reference Plot Id: " +
-                 currentProject?.plotSimilarityDetails?.referencePlotId
-                   : currentPlot?.visibleId ?
-                   'Current Plot: ' + currentPlot?.visibleId
-                   : 'Select a Plot to begin'}
-               value={newPlotId}
-               onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}));}}
-        ></input>
-        <button className="btn outline"
-                onClick={()=>{navToPlot('previous');}}>
-          <SvgIcon icon="leftArrow" size="0.9rem" />
-        </button>
-        <button className="btn outline"
-                onClick={()=>{navToPlot('next');}}>
-          <SvgIcon icon="rightArrow" size="0.9rem" />
-        </button>
-        <label className="btn filled"
-               onClick={()=>{navToPlotId();}}
-        >Go To Plot
-        </label>
-      </div>
-      <br/>
+      {currentPlot?.id > 0 ? (
+        <>
+        <div className="collection-sidebar-plot-navigation">
+          <input className="flex flex-col-6"
+                 placeholder={
+                   navigationMode === "similar" ? "Reference Plot Id: " +
+                     currentProject?.plotSimilarityDetails?.referencePlotId
+                     : currentPlot?.visibleId ?
+                     'Current Plot: ' + currentPlot?.visibleId
+                     : 'Select a Plot to begin'}
+                 value={newPlotId}
+                 onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}));}}
+          ></input>
+          <button className="btn outline"
+                  onClick={()=>{navToPlot('previous');}}>
+            <SvgIcon icon="leftArrow" size="0.9rem" />
+          </button>
+          <button className="btn outline"
+                  onClick={()=>{navToPlot('next');}}>
+            <SvgIcon icon="rightArrow" size="0.9rem" />
+          </button>
+          <label className="btn filled"
+                 onClick={()=>{navToPlotId();}}
+          >Go To Plot
+          </label>
+        </div>
+        <br/>
         {navigationMode === "similar" &&
          (
            <>
@@ -168,6 +170,18 @@ export const NewPlotNavigation = () => {
              </div>
            </>
          )}
+        </>
+      ) : (
+        <>
+          <div className="collection-sidebar-plot-navigation">
+            <button className="btn filled"
+                    style={{width: 'max-content'}}
+                    onClick={()=>{navToPlot('next');}}>
+              Go to first plot
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
