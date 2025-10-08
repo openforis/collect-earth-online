@@ -29,8 +29,8 @@
   (try
     (when-not (:active? @listener-state)
       (gcloud-listener
-       (:project-name (get-config :gcs-integration) "collect-earth-online")
-       (:topic-name   (get-config :gcs-integration) "MySub"))
+       (get-config :gcs-integration :project-name)
+       (get-config :gcs-integration :topic-name))
       (swap! listener-state assoc :active? true))    
     (data-response {:message "Listener started"})
     (catch Exception e 

@@ -15,11 +15,10 @@
     (with-open [out    output-stream
                 writer (io/writer out)]
       (try
-        (loop [] #_[retries 10]
-              #_(when (< 0 retries))
+        (loop []
               (when-let [^String msg (async/<!! ch)]                
                 (doto writer (.write (str "data: " msg "\n\n")) (.flush)))
-              (recur #_(dec retries)))
+              (recur))
         (catch java.io.IOException _)
         (finally          
           (swap! clients disj ch)
