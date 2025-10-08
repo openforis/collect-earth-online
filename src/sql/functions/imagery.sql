@@ -10,13 +10,12 @@ DROP TYPE IF EXISTS imagery_return CASCADE;
 CREATE TYPE imagery_return AS (
     imagery_id        integer,
     institution_id    integer,
-    visibility        text,
+    visibility        visibility_type,
     title             text,
     attribution       text,
     extent            jsonb,
     is_proxied        boolean,
-    source_config     jsonb,
-    global_imagery    boolean
+    source_config     jsonb
 );
 
 -- Returns a single imagery by ID
@@ -30,8 +29,7 @@ CREATE OR REPLACE FUNCTION select_imagery_by_id(_imagery_id integer)
         attribution,
         extent,
         is_proxied,
-        source_config,
-        global_imagery
+        source_config
     FROM imagery
     WHERE imagery_uid = _imagery_id
 
@@ -92,7 +90,7 @@ CREATE OR REPLACE FUNCTION add_institution_imagery(
     INSERT INTO imagery
         (institution_rid, visibility, title, attribution, extent, is_proxied, source_config)
     VALUES
-        (_institution_id, _visibility, _title, _attribution, _extent, _is_proxied, _source_config)
+        (_institution_id, _visibility::visibility_type, _title, _attribution, _extent, _is_proxied, _source_config)
     RETURNING imagery_uid
 
 $$ LANGUAGE SQL;
@@ -124,7 +122,7 @@ CREATE OR REPLACE FUNCTION update_imagery_visibility(
  ) RETURNS void AS $$
 
     UPDATE imagery
-    SET visibility = _visibility
+    SET visibility = _visibility::visibility_type
     WHERE imagery_uid = _imagery_id;
 
     UPDATE projects
@@ -171,97 +169,78 @@ CREATE OR REPLACE FUNCTION select_public_imagery()
         attribution,
         extent,
         is_proxied,
-        source_config,
-        global_imagery
+        source_config
     FROM imagery
     WHERE archived = FALSE
-    AND global_imagery=TRUE ORDER BY imagery_uid ASC
+    AND visibility='platform' ORDER BY imagery_uid ASC
 
 $$ LANGUAGE SQL;
 
 -- Returns all rows in imagery associated with institution_rid
-CREATE OR REPLACE FUNCTION select_imagery_by_institution(_institution_id integer, _user_id integer)
- RETURNS setof imagery_return AS $$
-
-    (SELECT imagery_uid AS imagery_uid,
-             institution_rid,
-             visibility,
-             title,
-             attribution,
-             extent,
-             is_proxied,
-             source_config,
-             global_imagery
-      FROM imagery
-      WHERE archived = FALSE
-        AND (visibility = 'public'
-              OR (institution_rid = _institution_id
-                  AND ((SELECT count(*) > 0
-                         FROM get_all_users_by_institution_id(_institution_id)
-                         WHERE user_id = _user_id)
-                      OR _user_id = 1))))
-
-    UNION
-
-    (SELECT imagery_uid,
-            institution_rid,
-            visibility,
-            title,
-            attribution,
-            extent,
-            is_proxied,
-            source_config,
-            global_imagery
-      FROM imagery
-      WHERE archived = FALSE
-      AND global_imagery=TRUE)
-    ORDER BY imagery_uid;
-
-$$ LANGUAGE SQL;
-
--- Returns all rows in imagery associated with institution_rid
-CREATE OR REPLACE FUNCTION select_imagery_by_project(_project_id integer, _user_id integer, _token_key text)
- RETURNS setof imagery_return AS $$
-
-  (SELECT DISTINCT i.imagery_uid AS imagery_uid,
-           p.institution_rid,
-           i.visibility,
-           i.title,
-           i.attribution,
-           i.extent,
-           i.is_proxied,
-           i.source_config,
-           i.global_imagery
-    FROM projects p
-    LEFT JOIN project_imagery pi ON pi.project_rid = p.project_uid
-    INNER JOIN imagery i ON i.imagery_uid = pi.imagery_rid OR i.imagery_uid = p.imagery_rid
-    WHERE p.project_uid = _project_id
-      AND i.archived = FALSE
-      AND (
-        i.visibility = 'public'
-        OR (
-          i.institution_rid = p.institution_rid
-          AND (
-            (SELECT count(*) > 0
-               FROM get_all_users_by_institution_id(p.institution_rid)
-               WHERE user_id = _user_id)
-            OR (_token_key IS NOT NULL AND _token_key = token_key)))
-        OR _user_id = 1))
-  UNION (
-    SELECT imagery_uid,
-           institution_rid,
-           visibility,
-           title,
-           attribution,
-           extent,
-           is_proxied,
-           source_config,
-           global_imagery
-    FROM imagery
-    WHERE archived = FALSE
-    AND global_imagery=TRUE)
+CREATE OR REPLACE FUNCTION select_imagery_by_institution(
+  _institution_id integer,
+  _user_id integer
+)
+RETURNS SETOF imagery_return AS $$
+  SELECT imagery_uid,
+         institution_rid,
+         visibility,
+         title,
+         attribution,
+         extent,
+         is_proxied,
+         source_config
+  FROM imagery
+  WHERE archived = FALSE
+    AND (
+      institution_rid = _institution_id
+      OR visibility = 'platform'
+    )
   ORDER BY imagery_uid;
+$$ LANGUAGE SQL;
 
+-- Returns all rows in imagery associated with institution_rid
+CREATE OR REPLACE FUNCTION select_imagery_by_project(
+  _project_id INTEGER,
+  _user_id INTEGER,
+  _token_key TEXT
+)
+RETURNS SETOF imagery_return AS $$
+  WITH project_info AS (
+    SELECT
+      p.project_uid,
+      p.institution_rid
+    FROM projects p
+    WHERE p.project_uid = _project_id
+  ),
+  user_is_in_institution AS (
+    SELECT EXISTS (
+      SELECT 1
+      FROM get_all_users_by_institution_id((SELECT institution_rid FROM project_info))
+      WHERE user_id = _user_id
+    ) AS is_member
+  )
+
+  SELECT DISTINCT
+    i.imagery_uid,
+    i.institution_rid,
+    i.visibility,
+    i.title,
+    i.attribution,
+    i.extent,
+    i.is_proxied,
+    i.source_config
+  FROM project_info p
+  LEFT JOIN project_imagery pi ON pi.project_rid = p.project_uid
+  INNER JOIN imagery i
+    ON i.imagery_uid = pi.imagery_rid OR i.imagery_uid = p.project_uid
+  WHERE i.archived = FALSE
+    AND (
+      _user_id = 1
+      OR (SELECT is_member FROM user_is_in_institution)
+      OR i.visibility IN ('public', 'platform')
+    )
+  ORDER BY i.imagery_uid
 $$ LANGUAGE SQL;
 
 --
@@ -373,7 +352,7 @@ BEGIN
     INTO imagery_ids;
     
     UPDATE imagery
-    SET visibility = _visibility
+    SET visibility = _visibility::visibility_type
     WHERE imagery_uid IN (
         SELECT imagery_uid FROM imagery
         WHERE imagery_uid = ANY(imagery_ids)
@@ -400,8 +379,7 @@ RETURNS setOf imagery_return AS $$
            attribution,
            extent,
            is_proxied,
-           source_config,
-           global_imagery
+           source_config
     FROM imagery
     WHERE institution_rid = _institution_id
     AND source_config->>'type' = 'planetTFO';
