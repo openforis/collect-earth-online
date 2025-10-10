@@ -43,6 +43,7 @@ CREATE OR REPLACE FUNCTION create_project(
     _options                jsonb,
     _design_settings        jsonb,
     _type                   text
+
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
@@ -211,6 +212,7 @@ CREATE OR REPLACE FUNCTION update_project(
     _options                jsonb,
     _design_settings        jsonb,
     _type                   text
+
  ) RETURNS void AS $$
 
     UPDATE projects
@@ -267,7 +269,7 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
                 COUNT(sample_uid) / COUNT(DISTINCT plot_uid)
             END) AS samples
         FROM project_plots
-    ) a
+    )
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;

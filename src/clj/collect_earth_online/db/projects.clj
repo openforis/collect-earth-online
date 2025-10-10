@@ -473,7 +473,8 @@
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
         type                 (:type params)
-        token-key            (str (UUID/randomUUID))]
+        token-key            (str (UUID/randomUUID))
+        reference-plot-id    (-> params :plotSimilarityDetails :referencePlotId)]
     (try
       (let [project-id (sql-primitive (call-sql "create_project"
                                                 institution-id

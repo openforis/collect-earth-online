@@ -1,6 +1,8 @@
 (ns collect-earth-online.routing
   (:require [collect-earth-online.api :refer [validate]]
             [collect-earth-online.generators.ce-project :as ce-project]
+            [collect-earth-online.gcloud          :as gcloud]
+            [collect-earth-online.sse             :as sse]
             [collect-earth-online.db.doi          :as doi]
             [collect-earth-online.db.geodash      :as geodash]
             [collect-earth-online.db.geoai        :as geoai]
@@ -123,7 +125,7 @@
    [:post "/archive-project"]                {:handler     (validate projects/archive-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/create-project"]                 {:handler     (validate projects/create-project!)
+   [:post "/create-project"]                 {:handler     projects/create-project!
                                               :auth-type   :admin
                                               :auth-action :block}
    [:post "/update-project"]                 {:handler     projects/update-project!
@@ -286,4 +288,8 @@
    [:get  "/metrics/get-sample-plot-counts"]  {:handler     (validate metrics/get-sample-plot-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}})
+   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}
+   [:post "/gcloud-listener"]                  {:handler gcloud/gcloud-handler}
+   [:get "/open-socket"]                       {:handler sse/sse-handler}   
+   }
+  )

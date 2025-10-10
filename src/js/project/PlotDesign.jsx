@@ -266,6 +266,9 @@ export class PlotDesign extends React.Component {
       plotIdList: [],
     };
   }
+  lastNumPlots = null;
+  lastCalculatedPlots = null;
+  lastCalcInputs = {};
 
   componentDidMount() {
     this.setCoordsFromBoundary();
@@ -275,7 +278,7 @@ export class PlotDesign extends React.Component {
     if (this.props.aoiFeatures && prevProps.aoiFeatures !== this.props.aoiFeatures) {
       this.setCoordsFromBoundary();
     }
-    const { lonMin, latMin, lonMax, latMax } = this.state;
+
     if (
       this.context.type === "simplified" &&
         (lonMin !== prevState.lonMin ||
@@ -284,6 +287,13 @@ export class PlotDesign extends React.Component {
          latMax !== prevState.latMax)
     ) {
       this.setSimplifiedProjectDetails();
+    }
+    if (this.props.totalPlots &&
+        this.props.totalPlots !== prevProps.totalPlots &&
+        Number.isFinite(Number(this.props.totalPlots))
+    ) {
+      const plotIds = Array.from({ length: this.props.totalPlots }, (_, i) => i + 1);
+      this.setState({ plotIdList: plotIds });
     }
   }
 
