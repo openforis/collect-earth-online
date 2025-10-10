@@ -36,11 +36,18 @@ CREATE OR REPLACE FUNCTION get_plots_as_geojson(_project_id INTEGER)
 $$ LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION update_geoai_assets(_project_id INTEGER, _reference_plot INTEGER, _geoai_assets jsonb)
+CREATE OR REPLACE FUNCTION update_geoai_assets(_project_id INTEGER, _geoai_assets jsonb)
   RETURNS void AS $$
     UPDATE projects
-    SET geoai_assets = _geoai_assets,
-        reference_plot_rid = _reference_plot
+    SET geoai_assets = _geoai_assets
+    WHERE project_uid = _project_id
+
+  $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION update_reference_plot(_project_id INTEGER, _plot_id INTEGER)
+  RETURNS void AS $$
+    UPDATE projects
+    SET reference_plot_rid = _plot_id
     WHERE project_uid = _project_id
 
   $$ LANGUAGE SQL;

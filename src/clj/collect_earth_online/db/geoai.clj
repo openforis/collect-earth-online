@@ -36,20 +36,11 @@
     (st/copy-file-to-storage gcs-resource tmp-file (str gs-url file-name ".geojson"))
     gs-url))
 
-(defn- prepare-similarity-table
-  [project-id file-name years plot-id]
-  (let [req (:body (http/post (str (get-config :gcs-integration :api-url) "/prep")
-                       {:form-params  {:years years
-                                       :gcp_file (str gs-url file-name ".geojson")}
-                        :content-type :json
-                        :as           :json}))]
-    (call-sql "update_geoai_assets" project-id plot-id (tc/clj->jsonb (:tables req)))))
-
 (defn clj->int-array-literal
   [arr]
   (str "{" (clojure.string/join "," (map int arr)) "}"))
 
-(defn- search-plot-by-similarity
+(defn search-plot-by-similarity
   [project-id plot-id year]
   (let [bq-table          (sql-primitive (call-sql "get_bq_table" project-id (str year)))
         req               (:body (http/get
@@ -64,19 +55,12 @@
               (clj->int-array-literal similar-plots-arr)
               (tc/clj->jsonb req))))
 
-(defn- process-plot-similarity
-  [project-id plot-id similarity-years file-name]
-  (upload-json-to-gcs project-id file-name)
-  (prepare-similarity-table project-id file-name similarity-years plot-id)
-  (search-plot-by-similarity project-id plot-id (first similarity-years)))
-
 (defn start-plot-similarity! [{:keys [params]}]
   (let [project-id        (:projectId params)
         reference-plot-id (tc/val->int (:referencePlotId params))
         similarity-years  (:similarityYears params)
-        file-name         (str "ceo-" project-id "-plots")
-        plot-id           (sql-primitive (call-sql "get_plot_id_by_visible_id" project-id reference-plot-id))]
-    (process-plot-similarity project-id plot-id similarity-years file-name)
+        file-name         (str "ceo-" project-id "-plots_" (first similarity-years))]
+    (upload-json-to-gcs project-id file-name)
     (data-response {:message "calculating plot similarity."})))
 
 (defn recalculate-plot-similarity [{:keys [params]}]

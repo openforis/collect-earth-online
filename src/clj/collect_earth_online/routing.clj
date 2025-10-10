@@ -125,7 +125,7 @@
    [:post "/archive-project"]                {:handler     (validate projects/archive-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/create-project"]                 {:handler     (validate projects/create-project!)
+   [:post "/create-project"]                 {:handler     projects/create-project!
                                               :auth-type   :admin
                                               :auth-action :block}
    [:post "/update-project"]                 {:handler     projects/update-project!

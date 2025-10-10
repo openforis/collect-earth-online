@@ -130,6 +130,7 @@ export default class ReviewChanges extends React.Component {
     plotFileBase64: this.context.plotFileBase64,
     sampleFileName: this.context.sampleFileName,
     sampleFileBase64: this.context.sampleFileBase64,
+    plotSimilarityDetails: this.context.plotSimilarityDetails
   });
 
   /// Render Functions

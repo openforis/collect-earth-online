@@ -1,29 +1,45 @@
 (ns collect-earth-online.gcloud
-  (:require [clojure.core.async :as async :refer [go put! <! close! chan]]
-            [jonotin.core :refer [subscribe!]]
-            [triangulum.response        :refer [data-response]]
-            [collect-earth-online.sse :refer [broadcast!]]
-            [triangulum.config :refer [get-config]]))
+  (:require [collect-earth-online.sse      :refer [broadcast!]]
+            [collect-earth-online.db.geoai :refer [search-plot-by-similarity]]
+            [triangulum.type-conversion    :as tc]
+            [jonotin.core                  :refer [subscribe!]]
+            [triangulum.response           :refer [data-response]]
+            [triangulum.database           :refer [call-sql]]
+            [triangulum.config             :refer [get-config]]))
 
-(defonce listener-state (atom {:active? false
-                               :last-message nil}))
+(defonce listener-state
+  (atom {:active? false
+         :last-message nil}))
 
 (defn respond [msg]
-  (broadcast! {:status msg})
-  (swap! list))
+  (try
+    (let [response            (tc/json->clj msg)
+          [_ project-id year] (re-find #"ceo-(\d+)-plots_(\d+)\.geojson" (:source_file response))
+          table-name          (:processed_table response)
+          plot-id             (:reference_plot_rid (call-sql "select_project_by_id" (tc/val->int project-id)))]
+      (call-sql "update_geoai_assets" (tc/val->int project-id) (tc/clj->jsonb {year table-name}))
+      (search-plot-by-similarity (tc/val->int project-id) plot-id year)
+      (broadcast! {:status msg})
+      (swap! listener-state assoc :last-message msg))
+    (catch Exception e
+      (println "Error broadcasting Pub/Sub message:" (.getMessage e)))))
 
-(defn gcloud-listener [project-name topic-name]
-  (when-not (:active? @listener-state)    
+(defn gcloud-listener [project-name subscription-name]
+  (when-not (:active? @listener-state)
     (future
       (try
-        (let [sub (subscribe! {:project-name project-name
-                               :subscription-name topic-name
-                               :handle-msg-fn respond
-                               :handler-error-fn (fn [err] 
-                                                   (println "Error:" err)
-                                                   (swap! listener-state assoc
-                                                          :active? false))})]
-          sub)))))
+        (subscribe! {:project-name project-name
+                     :subscription-name subscription-name
+                     :handle-msg-fn respond
+                     :handler-error-fn
+                     (fn [err]
+                       (println "GCloud Pub/Sub listener error:" err)
+                       (swap! listener-state assoc :active? false))})
+        (println "Listener started")
+        (swap! listener-state assoc :active? true)
+        (catch Exception e
+          (println "Error starting listener:" (.getMessage e))
+          (swap! listener-state assoc :active? false))))))
 
 (defn gcloud-handler [{:keys [params session]}]
   (try
@@ -37,8 +53,3 @@
       (println e)
       (data-response {:message "Error starting listener"
                       :error (str e)}))))
-
-(comment
-  (let [project-name (:project-name (get-config :gcs-integration ) "foo")
-                                   topic-name (:topic-name   (get-config :gcs-integration) "MySub")]
-                               (gcloud-listener project-name topic-name)))
