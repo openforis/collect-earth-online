@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
+import { useAtom } from "jotai";
 
+
+import { institutionPageAtom } from "./state/institutionPage";
 import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
 import SvgIcon from "./components/svg/SvgIcon";
@@ -11,299 +14,155 @@ import { sortAlphabetically, capitalizeFirst, KBtoBase64Length } from "./utils/g
 import { safeLength } from "./utils/sequence";
 import { imageryOptions } from "./imagery/imageryOptions";
 
-class ReviewInstitution extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      imageryCount: 0,
-      usersCount: 0,
-      projectList: null,
-      isAdmin: false,
-      selectedTab: 0,
-      modalMessage: null,
-      selectedProject: [],
-      selectedImagery: [],
-      modal: null,
-    };
-  }
 
-  /// Lifecycle
+export const ReviewInstitution = ({ institutionId, userId }) => {
+  const [pageState, setPageState] = useAtom(institutionPageAtom);
+  const setPage = (update) => setPageState((prev) => ({ ...prev, ...update }));
 
-  componentDidMount() {
-    // Load the projectList
-    this.getProjectList();
-  }
-
-  /// API Calls
-
-  getProjectList = () => {
-    this.processModal(
+  // --- API Calls
+  const getProjectList = useCallback(() => {
+    processModal(
       "Loading institution data",
       Promise.allSettled([
-        fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
-          .then(response => response.ok ? response.json() : Promise.reject(response))
-          .then(projects => projects.map(project => ({ ...project, isDraft: false }))), // Add isDraft: false to each project
-        fetch(`/get-project-drafts-by-user?institutionId=${this.props.institutionId}`)
-          .then(response => response.ok ? response.json() : Promise.reject(response))
-          .then(projects => projects.map(project => ({ ...project, isDraft: true }))) // Add isDraft: true to each draft project
+        fetch(`/get-institution-projects?institutionId=${institutionId}`)
+          .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+          .then((projects) => projects.map((project) => ({ ...project, isDraft: false }))),
+        fetch(`/get-project-drafts-by-user?institutionId=${institutionId}`)
+          .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+          .then((projects) => projects.map((project) => ({ ...project, isDraft: true }))),
       ])
-        .then(results => {
-          const institutionProjects =
-                results[0].status === "fulfilled" ? results[0].value : [];
-          const draftProjects =
-                results[1].status === "fulfilled" ? results[1].value : [];
-
+        .then((results) => {
+          const institutionProjects = results[0].status === "fulfilled" ? results[0].value : [];
+          const draftProjects = results[1].status === "fulfilled" ? results[1].value : [];
           const combinedProjects = institutionProjects.concat(draftProjects);
-          this.setState({ projectList: combinedProjects });
+          setPage({ projectList: combinedProjects });
         })
-        .catch(error => {
-          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error retrieving the project info. Both Requests failed."}}});
-
-        })
+        .catch(() =>
+          setPage({
+            modal: {
+              alert: {
+                alertType: "Project Info Error",
+                alertMessage: "Error retrieving the project info. Both requests failed.",
+              },
+            },
+          })
+        )
     );
-  };
-  archiveProject = (projectId) => {
-    if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
-      fetch(`/archive-project?projectId=${projectId}`, { method: "POST" }).then((response) => {
-        if (response.ok) {
-          this.getProjectList();
-          this.setState ({modal: {alert: {alertType: "Project Info", alertMessage: "Project " + projectId + " has been deleted."}}});
-        } else {
-          console.log(response);
-          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error deleting project. See console for details."}}});
-        }
-      });
-    }
-  };
+  }, [institutionId]);
 
-  deleteProjectDraft = (projectDraftId) => {
-    if (confirm("Do you REALLY want to delete this project draft? This operation cannot be undone.")) {
-      fetch(`/delete-project-draft?projectDraftId=${projectDraftId}`, { method: "GET" }).then((response) => {
-        if (response.ok) {
-          this.getProjectList();
-          this.setState ({modal: {alert: {alertType: "Project Info", alertMessage: "Project " + projectDraftId + " has been deleted."}}});
-        } else {
-          console.log(response);
-          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error deleting project. See console for details."}}});
-        }
-      });
-    }
-  };
-
-  deleteProjectsBulk = (projectIds) => {
-    if (confirm("Do you REALLY want to delete ALL selected projects? This operation cannot be undone.")) {
-      fetch(`/delete-projects-bulk?institutionId=${this.props.institutionId}`,
-            {
-              method: "POST",
-              body: JSON.stringify({ "projectIds": projectIds }),
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-            })
-        .then((response) => {
+  const archiveProject = useCallback(
+    (projectId) => {
+      if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
+        fetch(`/archive-project?projectId=${projectId}`, { method: "POST" }).then((response) => {
           if (response.ok) {
-            this.getProjectList();
-            this.setState ({modal: {alert: {alertType: "Project Info", alertMessage: "Selected projects have been deleted."}}});
+            getProjectList();
+            setPage({ modal: { alert: { alertType: "Project Info", alertMessage: `Project ${projectId} has been deleted.` } } });
           } else {
-            console.log(response);
-            this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error deleting projects. See console for details."}}});
+            console.error(response);
+            setPage({ modal: { alert: { alertType: "Project Info Error", alertMessage: "Error deleting project. See console for details." } } });
           }
-        });
-    }
-  };
-
-  editProjectsBulk = (projectIds, selectedVisibility) => {
-    if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
-      fetch(`/edit-projects-bulk?institutionId=${this.props.institutionId}`,
-            {
-              method: "POST",
-              body: JSON.stringify({
-                "projectIds": projectIds,
-                "visibility": selectedVisibility
-              }),
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-            })
-        .then((response) => {
-          if (response.ok) {
-            this.getProjectList();
-            this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: `The visibility of the selected projects have been changed to ${selectedVisibility}`}}});
-          } else {
-            console.log(response);
-            this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error editing project visibility. See console for details."}}});
-          }
-        });
-    }
-  };
-
-  deleteImageryBulk = (imageryIds, getImageryList) => {
-    fetch("/bulk-archive-institution-imagery", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        institutionId: this.props.institutionId,
-        imageryIds,
-      }),
-    }).then((response) => {
-      if (response.ok) {
-        getImageryList();
-        showAlert({
-          title: "Imagery Deleted",
-          body: "Imagery has been successfully deleted.",
-        });
-      } else {
-        console.error(response);
-        showAlert({
-          title: "Error",
-          body: "Error deleting imagery. See console for details.",
         });
       }
-    });
-  };
-
-  downloadProjectsBulk = (selectedProjects, selectedOptions) => {
-    const fileTypes = Object.entries(selectedOptions)
-          .filter(([_, value]) => value)
-          .map(([key]) => key);
-    const fileTypesStr = fileTypes.join(',');
-    const projectIds = selectedProjects.join(',');
-    window.open(
-      `/download-projects-bulk?projectIds=${projectIds}&institutionId=${this.props.institutionId}&fileTypes=${fileTypesStr}`
-    );
-  }
-
-  editImageryBulk = (imageryIds, selectedVisibility) => {
-    if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
-      fetch("/edit-imagery-bulk",
-            {
-              method: "POST",
-              body: JSON.stringify({
-                imageryIds: imageryIds,
-                visibility: selectedVisibility,
-                institutionId: this.props.institutionId
-              }),
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-            })
-        .then((response) => {
-          if (response.ok) {
-            this.getProjectList();
-            alert(`The visibility of the selected projects have been changed to ${selectedVisibility}`);
-          } else {
-            console.log(response);
-            alert("Error editing project visibility. See console for details.");
-          }
-        });
-    }
-  };
-
-  /// Set State
-
-  setImageryCount = (newCount) => this.setState({ imageryCount: newCount });
-
-  setUsersCount = (newCount) => this.setState({ usersCount: newCount });
-
-  setIsAdmin = (isAdmin) => this.setState({ isAdmin });
-
-  /// Helpers
-
-  processModal = (message, promise) =>
-  this.setState({ modalMessage: message }, () =>
-    promise.finally(() => this.setState({ modalMessage: null }))
+    },
+    [getProjectList]
   );
 
-  /// Render Function
+  const deleteProjectDraft = useCallback(
+    (projectDraftId) => {
+      if (confirm("Do you REALLY want to delete this project draft? This operation cannot be undone.")) {
+        fetch(`/delete-project-draft?projectDraftId=${projectDraftId}`).then((response) => {
+          if (response.ok) {
+            getProjectList();
+            setPage({ modal: { alert: { alertType: "Project Info", alertMessage: `Project ${projectDraftId} has been deleted.` } } });
+          } else {
+            console.error(response);
+            setPage({ modal: { alert: { alertType: "Project Info Error", alertMessage: "Error deleting project draft. See console for details." } } });
+          }
+        });
+      }
+    },
+    [getProjectList]
+  );
 
-  headerTab = (name, count, index, disabled = false) => (
-    <div className="col-lg-4 col-xs-12 px-2">
-      <div
-        className={"px-3" + (disabled ? "disabled-group" : "")}
-        onClick={() => this.setState({ selectedTab: index })}
-      >
-        <h2
-          className="header"
-          style={{ borderRadius: "5px", cursor: disabled ? "not-allowed" : "pointer" }}
-        >
+  const deleteProjectsBulk = useCallback(
+    (projectIds) => {
+      if (confirm("Do you REALLY want to delete ALL selected projects? This operation cannot be undone.")) {
+        fetch(`/delete-projects-bulk?institutionId=${institutionId}`, {
+          method: "POST",
+          headers: { Accept: "application/json", "Content-Type": "application/json" },
+          body: JSON.stringify({ projectIds }),
+        }).then((response) => {
+          if (response.ok) {
+            getProjectList();
+            setPage({ modal: { alert: { alertType: "Project Info", alertMessage: "Selected projects have been deleted." } } });
+          } else {
+            console.error(response);
+            setPage({ modal: { alert: { alertType: "Project Info Error", alertMessage: "Error deleting projects. See console for details." } } });
+          }
+        });
+      }
+    },
+    [getProjectList, institutionId]
+  );
+
+  const processModal = useCallback((message, promise) => {
+    setPage({ modalMessage: message });
+    promise.finally(() => setPage({ modalMessage: null }));
+  }, []);
+
+  // --- Lifecycle
+  useEffect(() => { getProjectList(); }, [getProjectList]);
+
+  // --- Helpers
+  const headerTab = (name, count, index, disabled = false) => (
+    <div className="col-lg-4 col-xs-12 px-2" key={index}>
+      <div className={"px-3" + (disabled ? " disabled-group" : "")} onClick={() => !disabled && setPage({ selectedTab: index })}>
+        <h2 className="header" style={{ borderRadius: "5px", cursor: disabled ? "not-allowed" : "pointer" }}>
           {name}
           <span className="badge badge-pill badge-light ml-2">{count}</span>
-          <span className="float-right">
-            {index === this.state.selectedTab && <SvgIcon icon="downCaret" size="1rem" />}
-          </span>
+          <span className="float-right">{index === pageState.selectedTab && <SvgIcon icon="downCaret" size="1rem" />}</span>
         </h2>
       </div>
     </div>
   );
 
-  render() {
-    return (
-      <div id="review-institution">
-        {this.state.modal?.alert &&
-         <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
-           {this.state.modal.alert.alertMessage}
-         </Modal>}
-        {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
-        <InstitutionDescription
-          institutionId={this.props.institutionId}
-          isAdmin={this.state.isAdmin}
-          setIsAdmin={this.setIsAdmin}
-          userId={this.props.userId}
-        />
-        <div className="row justify-content-center">
-          <div className="col-lg-7 col-xs-12 align-items-center mb-5">
-            <div className="row">
-              {this.headerTab(
-                "Projects",
-                this.state.projectList ? this.state.projectList.length : 0,
-                0
-              )}
-              {this.headerTab("Imagery", this.state.imageryCount, 1)}
-              {this.headerTab("Users", this.state.usersCount, 2, this.props.userId < 0)}
-            </div>
-            <ProjectList
-              deleteProject={this.archiveProject}
-              deleteProjectDraft={this.deleteProjectDraft}
-              institutionId={this.props.institutionId}
-              isAdmin={this.state.isAdmin}
-              isVisible={this.state.selectedTab === 0}
-              projectList={this.state.projectList}
-              deleteProjectsBulk={this.deleteProjectsBulk}
-              editProjectsBulk={this.editProjectsBulk}
-              downloadProjectsBulk={this.downloadProjectsBulk}
-            />
-            <ImageryList
-              institutionId={this.props.institutionId}
-              isAdmin={this.state.isAdmin}
-              isVisible={this.state.selectedTab === 1}
-              setImageryCount={this.setImageryCount}
-              userId={this.props.userId}
-              deleteImageryBulk={this.deleteImageryBulk}
-              editImageryBulk={this.editImageryBulk}
-            />
-            {this.props.userId > 0 && (
-              <UserList
-                institutionId={this.props.institutionId}
-                isAdmin={this.state.isAdmin}
-                isVisible={this.state.selectedTab === 2}
-                processModal={this.processModal}
-                setUsersCount={this.setUsersCount}
-                userId={this.props.userId}
-              />
-            )}
+  // --- Render
+  return (
+    <div id="review-institution">
+      {pageState.modal?.alert && (
+        <Modal title={pageState.modal.alert.alertType} onClose={() => setPage({ modal: null })}>
+          {pageState.modal.alert.alertMessage}
+        </Modal>
+      )}
+      {pageState.modalMessage && <LoadingModal message={pageState.modalMessage} />}
+
+      <InstitutionDescription institutionId={institutionId} isAdmin={pageState.isAdmin} setIsAdmin={(isAdmin) => setPage({ isAdmin })} userId={userId} />
+
+      <div className="row justify-content-center">
+        <div className="col-lg-7 col-xs-12 align-items-center mb-5">
+          <div className="row">
+            {headerTab("Projects", pageState.projectList ? pageState.projectList.length : 0, 0)}
+            {headerTab("Imagery", pageState.imageryCount, 1)}
+            {headerTab("Users", pageState.usersCount, 2, userId < 0)}
           </div>
+
+          <ProjectList deleteProject={archiveProject} deleteProjectDraft={deleteProjectDraft} institutionId={institutionId}
+            isAdmin={pageState.isAdmin} isVisible={pageState.selectedTab === 0} projectList={pageState.projectList}
+            deleteProjectsBulk={deleteProjectsBulk} />
+
+          <ImageryList institutionId={institutionId} isAdmin={pageState.isAdmin} isVisible={pageState.selectedTab === 1}
+            setImageryCount={(imageryCount) => setPage({ imageryCount })} userId={userId} />
+
+          {userId > 0 && (
+            <UserList institutionId={institutionId} isAdmin={pageState.isAdmin} isVisible={pageState.selectedTab === 2}
+              processModal={processModal} setUsersCount={(usersCount) => setPage({ usersCount })} userId={userId} />
+          )}
         </div>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
+
 
 class InstitutionDescription extends React.Component {
   constructor(props) {
