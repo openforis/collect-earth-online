@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import { stateAtom } from '../utils/constants';
 import { mercator } from '../utils/mercator';
+import { SidebarCard } from "./Sidebar";
 import SvgIcon from "./svg/SvgIcon";
 import {
   lengthObject,
@@ -452,21 +453,17 @@ export const SurveyQuestions = () => {
 
   
   return (
-    <div className="collection-sidebar-card">
-      <div className="collection-sidebar-header">
-        <div className="sq-title-row">
-          <span className="collection-sidebar-title">
-            SURVEY{" "}
-            <span className="sq-subtitle">
-              {`${validatedCount}/${totalTop} questions answered`}
-            </span>
+    <SidebarCard
+      title={
+        <>
+          SURVEY{" "}
+          <span className="sq-subtitle">
+            {`${validatedCount}/${totalTop} questions answered`}
           </span>
-        </div>
-        <button className="collection-sidebar-info-button"
-                aria-label="Info"
-                onClick={toggleLearningMaterial}>i</button>
-      </div>
-
+        </>
+      }
+      infoText="View and answer survey questions for this plot"
+    >
       {currentPlot?.flagged ? (
         <>
           <h2 style={{ color: "red" }}>
@@ -506,7 +503,7 @@ export const SurveyQuestions = () => {
           onClose={toggleLearningMaterial}
         />
       )}
-    </div>
+    </SidebarCard>
   );
 };
 
@@ -794,16 +791,14 @@ export const DrawingTool = () => {
   );
 
   return (
-    <div className="sq-card">
-      <div className="sq-header">
-        <div className="sq-title-row">
-          <span className="sq-title">SAMPLE DRAWING TOOL</span>
-        </div>
-      </div>
-
+    <SidebarCard
+      title="Sample Drawing Tool"
+      collapsible
+      defaultOpen={true}
+      infoText="Draw or edit samples directly on the map"
+    >
       <div className="sq-draw-body">
         <RenderDrawTools />
-
         <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
           <button
             className="btn btn-outline-lightgreen"
@@ -821,6 +816,6 @@ export const DrawingTool = () => {
           </button>
         </div>
       </div>
-    </div>
+    </SidebarCard>
   );
 };

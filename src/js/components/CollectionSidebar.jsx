@@ -5,10 +5,9 @@ import _ from "lodash";
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { stateAtom } from '../utils/constants';
-import Modal from "./Modal";
-import { LoadingModal } from "./PageComponents";
 import { mercator } from "../utils/mercator";
 import { SurveyQuestions, DrawingTool } from "./SurveyQuestions.jsx";
+import { Sidebar, SidebarCard } from "./Sidebar";
 import {
   everyObject,
   safeLength,
@@ -25,43 +24,34 @@ import {
 } from "../imagery/collectionMenuControls";
 
 export const CollectionSidebar = ({ processModal }) => {
-  const {modal, modalMessage, currentPlot, currentProject} = useAtomValue(stateAtom);
-  const setAppState = useSetAtom(stateAtom);
+  const { currentPlot, currentProject } = useAtomValue(stateAtom);
+
+  const content = (
+    <>
+      <NewPlotNavigation />
+      {currentPlot.id > 0 && (
+        <>
+          <ExternalTools />
+          {currentProject?.type !== "simplified" && <ImageryOptions />}
+          <SurveyQuestions />
+          {currentProject.allowDrawnSamples && <DrawingTool />}
+        </>
+      )}
+    </>
+  );
+
+  const footer = <SidebarFooter processModal={processModal} />;
 
   return (
-    <div className="collection-sidebar-container">
-      <div className="collection-sidebar-content">
-        <NewPlotNavigation />
-        {currentPlot.id > 0 ?
-         (
-           <>
-             <ExternalTools />
-             {currentProject?.type !== 'simplified' ?
-              (<ImageryOptions />): null
-             }
-             <SurveyQuestions />
-             {currentProject.allowDrawnSamples ? (
-               <>
-                 <DrawingTool />
-               </>
-             ) : null}
-           </>
-         ) : null
-     }
-      </div>
-      <div className="collection-sidebar-footer">
-        <SidebarFooter processModal={ processModal }/>
-      </div>
-      {modal?.alert &&
-       <Modal title={modal.alert.alertType}
-              onClose={()=>{setAppState(prev => ({ ... prev, modal: null}));}}>
-         {modal.alert.alertMessage}
-       </Modal>}
-      {modalMessage && <LoadingModal message={modalMessage} />}
-    </div>
+    <Sidebar
+      stateAtom={stateAtom}
+      processModal={processModal}
+      children={content}
+      footer={footer}
+      style={{"right": 0, "width": "35vw"}}
+    />
   );
 };
-
 
 export const NewPlotNavigation = () => {
   const setAppState = useSetAtom(stateAtom);
@@ -105,84 +95,85 @@ export const NewPlotNavigation = () => {
   };
   
   return (
-    <div className="collection-sidebar-card">
-      <div className="collection-sidebar-header">
-        <span>
-          <span className="collection-sidebar-title">{currentProject?.name}</span>
-          <span className="collection-sidebar-subtitle"> ({currentProject?.numPlots} Plots)</span>
-        </span>
-        <button className="collection-sidebar-info-button">i</button>
-      </div>
-      <label className="collection-sidebar-label">Navigate</label>
-      <select className="collection-sidebar-select"
-              selected={navigationMode}        
-              onChange={(e) => setAppState(s => ({...s, navigationMode: e.target.value}))}>
-          <option value="natural">Default</option>
-          <option value="analyzed">Analyzed plots</option>
-          <option value="unanalyzed">Unanalyzed plots</option>
-          <option value="flagged">Flagged plots</option>
-          <option value="similar">Similar Plots</option>
-        </select>
+    <SidebarCard
+      title={
+        <>
+          {currentProject?.name}
+          <span className="sidebar-subtitle"> ({currentProject?.numPlots} Plots)</span>
+        </>
+      }
+      infoText="Navigate between plots and manage review mode"
+    >
+      <label className="sidebar-label">Navigate</label>
+      <select
+        className="sidebar-select"
+        value={navigationMode}
+        onChange={(e) => setAppState((s) => ({ ...s, navigationMode: e.target.value }))}
+      >
+        <option value="natural">Default</option>
+        <option value="analyzed">Analyzed plots</option>
+        <option value="unanalyzed">Unanalyzed plots</option>
+        <option value="flagged">Flagged plots</option>
+        <option value="similar">Similar Plots</option>
+      </select>
 
-      <div className="collection-sidebar-mode">
-        <label className="collection-sidebar-switch">
-          <input type="checkbox"
-                 checked={inReviewMode}
-                 onChange={(e) => setAppState(s => ({...s, inReviewMode: !s.inReviewMode}))}/>
-          <span className="collection-sidebar-slider round"></span>
-          </label>
+      <div className="sidebar-mode">
+        <label className="sidebar-switch">
+          <input
+            type="checkbox"
+            checked={inReviewMode}
+            onChange={() => setAppState((s) => ({ ...s, inReviewMode: !s.inReviewMode }))}
+          />
+          <span className="sidebar-slider round"></span>
+        </label>
         <span className="mode-label">Admin Review</span>
       </div>
 
       {currentPlot?.id > 0 ? (
         <>
-        <div className="collection-sidebar-plot-navigation">
-          <input className="flex flex-col-6"
-                 placeholder={
-                   navigationMode === "similar" ? "Reference Plot Id: " +
-                     currentProject?.plotSimilarityDetails?.referencePlotId
-                     : currentPlot?.visibleId ?
-                     'Current Plot: ' + currentPlot?.visibleId
-                     : 'Select a Plot to begin'}
-                 value={newPlotId}
-                 onChange={(e)=>{setAppState(s => ({ ...s, newPlotId: e.target.value}));}}
-          ></input>
-          <button className="btn outline"
-                  onClick={()=>{navToPlot('previous');}}>
-            <SvgIcon icon="leftArrow" size="0.9rem" />
-          </button>
-          <button className="btn outline"
-                  onClick={()=>{navToPlot('next');}}>
-            <SvgIcon icon="rightArrow" size="0.9rem" />
-          </button>
-          <label className="btn filled"
-                 onClick={()=>{navToPlotId();}}
-          >Go To Plot
-          </label>
-        </div>
-        <br/>
-        {navigationMode === "similar" &&
-         (
-           <>
-             <div className="collection-sidebar-mode">
-               <span>Reference Plot: {currentProject?.plotSimilarityDetails?.referencePlotId}</span>
-               <span>{" "}Reference Year: {currentProject?.plotSimilarityDetails?.years[0]} </span>
-             </div>
-           </>
-         )}
+          <div className="sidebar-plot-navigation">
+            <input
+              className="flex flex-col-6"
+              placeholder={
+                navigationMode === "similar"
+                  ? "Reference Plot Id: " + currentProject?.plotSimilarityDetails?.referencePlotId
+                  : currentPlot?.visibleId
+                  ? "Current Plot: " + currentPlot?.visibleId
+                  : "Select a Plot to begin"
+              }
+              value={newPlotId}
+              onChange={(e) => setAppState((s) => ({ ...s, newPlotId: e.target.value }))}
+            />
+            <button className="btn outline" onClick={() => navToPlot("previous")}>
+              <SvgIcon icon="leftArrow" size="0.9rem" />
+            </button>
+            <button className="btn outline" onClick={() => navToPlot("next")}>
+              <SvgIcon icon="rightArrow" size="0.9rem" />
+            </button>
+            <label className="btn filled" onClick={navToPlotId}>
+              Go To Plot
+            </label>
+          </div>
+          <br />
+          {navigationMode === "similar" && (
+            <div className="sidebar-mode">
+              <span>Reference Plot: {currentProject?.plotSimilarityDetails?.referencePlotId}</span>
+              <span>{" "}Reference Year: {currentProject?.plotSimilarityDetails?.years[0]}</span>
+            </div>
+          )}
         </>
       ) : (
-        <>
-          <div className="collection-sidebar-plot-navigation">
-            <button className="btn filled"
-                    style={{width: 'max-content'}}
-                    onClick={()=>{navToPlot('next');}}>
-              Go to first plot
-            </button>
-          </div>
-        </>
+        <div className="sidebar-plot-navigation">
+          <button
+            className="btn filled"
+            style={{ width: "max-content" }}
+            onClick={() => navToPlot("next")}
+          >
+            Go to first plot
+          </button>
+        </div>
       )}
-    </div>
+    </SidebarCard>
   );
 };
 
@@ -272,35 +263,28 @@ export const ExternalTools = () => {
   };
 
   return (
-    <div className="collection-sidebar-card">
-      <div className="collection-sidebar-header">
-        <span className="collection-sidebar-title">EXTERNAL TOOLS</span>
-        <button className="collection-sidebar-info-button" aria-label="Info">i</button>
-      </div>
-
+    <SidebarCard
+      title="External Tools"
+      infoText="Access external applications like GeoDash, Google Earth, and GEE Script"
+    >
       <div className="ext-grid">
-        <button className="ext-btn"
-                onClick={downloadKML}
-        >
+        <button className="ext-btn" onClick={downloadKML}>
           <span>Download Plot KML</span>
         </button>
 
-        <button className="ext-btn"
-                onClick={loadGEEScript}>
+        <button className="ext-btn" onClick={loadGEEScript}>
           <span>Go To GEE Script</span>
         </button>
 
-        <button className="ext-btn"
-                onClick={showGeoDash}>
+        <button className="ext-btn" onClick={showGeoDash}>
           <span>Open GeoDash</span>
         </button>
 
-        <button className="ext-btn"
-                onClick={openInGoogleEarth}>
+        <button className="ext-btn" onClick={openInGoogleEarth}>
           <span>Go To Google Earth Web</span>
         </button>
       </div>
-    </div>
+    </SidebarCard>
   );
 };
 
@@ -564,7 +548,7 @@ export const SidebarFooter = ({ processModal }) => {
   const toggleFlagged = () => setAppState(s => ({...s, currentPlot: {...s.currentPlot, flagged: !s.currentPlot.flagged}}))
 
   return (
-    <div className="collection-sidebar-footer-buttons">
+    <div className="sidebar-footer-buttons">
       <button className="btn outline"
               onClick={clearAll}>
         Clear All
@@ -649,80 +633,73 @@ export const ImageryOptions = () => {
   };
 
   return (
-    <div className="sq-card">
-      <div className="sq-header">
-        <div className="sq-title-row">
-          <span className="sq-title">
-            Imagery Options
-          </span>
-        </div>
-      </div>
+    <SidebarCard
+      title="Imagery Options"
+      collapsible
+      defaultOpen={open}
+      infoText="Configure the imagery sources, visualization, and grid overlay"
+    >
+      {loadingImages && <h3 className="sq-muted">Loading imagery data...</h3>}
 
-      {open && (
-        <div className="sq-body">
-          {loadingImages && <h3 className="sq-muted">Loading imagery data...</h3>}
-
-          {currentImagery.id && (
-            <div className="sq-field">
-              <label htmlFor="base-map-source" className="sq-label">
-                Base imagery
-              </label>
-              <select
-                className="sq-select"
-                id="base-map-source"
-                name="base-map-source"
-                onChange={(e) => setBaseMapSource(parseInt(e.target.value, 10))}
-                value={currentImagery.id}
-              >
-                {imageryList.map((imagery) => (
-                  <option key={imagery.id} value={imagery.id}>
-                    {imagery.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {currentImagery.id &&
-           imageryList.map((imagery) => {
-              const visible = currentImagery.id === imagery.id && open;
-              if (!imagery.sourceConfig) return null;
-
-              const propsForMenu = {
-                ...commonProps,
-                key: imagery.id,
-                thisImageryId: imagery.id,
-                sourceConfig: imagery.sourceConfig,
-                visible,
-              };
-
-              const byType = {
-                Planet: <PlanetMenu {...propsForMenu} />,
-                PlanetDaily: <PlanetDailyMenu {...propsForMenu} />,
-                PlanetTFO: <PlanetTFOMenu {...propsForMenu} />,
-                SecureWatch: <SecureWatchMenu {...propsForMenu} />,
-                Sentinel1: <SentinelMenu {...propsForMenu} />,
-                Sentinel2: <SentinelMenu {...propsForMenu} />,
-                GEEImage: <GEEImageMenu {...propsForMenu} />,
-                GEEImageCollection: <GEEImageCollectionMenu {...propsForMenu} />,
-              };
-
-              return byType[imagery.sourceConfig.type] || null;
-            })}
-
-          <div className="sq-field" style={{ marginTop: 12 }}>
-            <label className="sq-switch">
-              <input
-                type="checkbox"
-                checked={enableGrid}
-                onChange={toggleGrid}
-              />
-              <span className="sq-switch-slider" />
-              <span className="sq-switch-label">Enable map grid</span>
-            </label>
-          </div>
+      {currentImagery.id && (
+        <div className="sq-field">
+          <label htmlFor="base-map-source" className="sq-label">
+            Base imagery
+          </label>
+          <select
+            className="sq-select"
+            id="base-map-source"
+            name="base-map-source"
+            onChange={(e) => setBaseMapSource(parseInt(e.target.value, 10))}
+            value={currentImagery.id}
+          >
+            {imageryList.map((imagery) => (
+              <option key={imagery.id} value={imagery.id}>
+                {imagery.title}
+              </option>
+            ))}
+          </select>
         </div>
       )}
-    </div>
+
+      {currentImagery.id &&
+       imageryList.map((imagery) => {
+         const visible = currentImagery.id === imagery.id && open;
+         if (!imagery.sourceConfig) return null;
+
+         const propsForMenu = {
+           ...commonProps,
+           key: imagery.id,
+           thisImageryId: imagery.id,
+           sourceConfig: imagery.sourceConfig,
+           visible,
+         };
+
+         const byType = {
+           Planet: <PlanetMenu {...propsForMenu} />,
+           PlanetDaily: <PlanetDailyMenu {...propsForMenu} />,
+           PlanetTFO: <PlanetTFOMenu {...propsForMenu} />,
+           SecureWatch: <SecureWatchMenu {...propsForMenu} />,
+           Sentinel1: <SentinelMenu {...propsForMenu} />,
+           Sentinel2: <SentinelMenu {...propsForMenu} />,
+           GEEImage: <GEEImageMenu {...propsForMenu} />,
+           GEEImageCollection: <GEEImageCollectionMenu {...propsForMenu} />,
+         };
+
+         return byType[imagery.sourceConfig.type] || null;
+       })}
+
+      <div className="sq-field" style={{ marginTop: 12 }}>
+        <label className="sq-switch">
+          <input
+            type="checkbox"
+            checked={enableGrid}
+            onChange={toggleGrid}
+          />
+          <span className="sq-switch-slider" />
+          <span className="sq-switch-label">Enable map grid</span>
+        </label>
+      </div>
+    </SidebarCard>
   );
 };
