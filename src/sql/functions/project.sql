@@ -259,8 +259,8 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
     )
 
     UPDATE projects
-    SET num_plots = plots,
-        samples_per_plot = samples
+    SET num_plots = stats.plots,
+        samples_per_plot = stats.samples
     FROM (
         SELECT COUNT(DISTINCT plot_uid) AS plots,
             (CASE WHEN COUNT(DISTINCT plot_uid) = 0 THEN
@@ -269,7 +269,7 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
                 COUNT(sample_uid) / COUNT(DISTINCT plot_uid)
             END) AS samples
         FROM project_plots
-    )
+    ) As stats
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
