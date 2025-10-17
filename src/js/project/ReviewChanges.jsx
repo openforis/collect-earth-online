@@ -71,7 +71,7 @@ export default class ReviewChanges extends React.Component {
         "Collection data will be cleared to reset the project. Do you really want to update this project?"
       )
     ) {
-      this.context.processModal("Updating Project", () =>
+      this.context.processModal("Updating Project", () =>        
         fetch("/update-project", {
           method: "POST",
           headers: {
@@ -79,6 +79,7 @@ export default class ReviewChanges extends React.Component {
             "Content-Type": "application/json; charset=utf-8",
           },
           body: JSON.stringify({
+            append: this.context.append,
             projectId: this.context.projectId,
             ...this.buildProjectObject(),
           }),

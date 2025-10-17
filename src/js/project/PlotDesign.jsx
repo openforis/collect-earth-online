@@ -37,7 +37,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         latMax: "",
       });
     setProjectDetails(
-      Object.assign(newDetail, { plots: [] }, { aoiFeatures: [], aoiFileName: "" })
+      Object.assign(newDetail, { plots: [] }, { aoiFeatures: [], aoiFileName: "" },)
     ); 
   };
 
@@ -66,7 +66,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
           aoiFeatures});
         setNewPlotFileName(fileName);
         setProjectDetails({
-          aoiFeatures, lonMin, latMin, lonMax, latMax, newPlotFileName: fileName, newPlotFileBase64: plotFileBase64, aoiFileName: fileName, newPlotDistribution: plotFileType,
+          aoiFeatures, lonMin, latMin, lonMax, latMax, newPlotFileName: fileName, plotFileBase64: plotFileBase64, aoiFileName: fileName, newPlotDistribution: plotFileType,
           designSettings: { ...designSettings,
                             userAssignment: data.userAssignment,
                             qaqcAssignment: data.qaqcAssignment}
@@ -74,7 +74,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
       );
   };
 
-  const renderFileInput = (fileType) => {
+  const renderFileInput = (fileType, append) => {
     return(
       <div className="mb-3">
         <div style={{display: "flex"}}>
@@ -95,7 +95,8 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
                   checkPlotFile(fileType, file.name, base64);                  
                   return setPlotDetails({
                     plotFileName: file.name,
-                    PlotFileBase64: base64
+                    PlotFileBase64: base64,
+                    append
                   }); 
                 });		
               }}
@@ -167,11 +168,11 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
   );
 
 
-  const renderCSV = () => {    
+  const renderCSV = (fileType, append) => {
     const plotUnits = newPlotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {renderFileInput("csv")}
+        {renderFileInput("csv", append)}
         <div style={{ display: "flex" }}>
           <span className="mr-3">{renderPlotShape()}</span>
           {renderLabeledInput(plotUnits, "plotSize")}
@@ -185,39 +186,38 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         display: "CSV File",
         description:
           "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
-        layout: renderCSV(),
+        layout: renderCSV,
       },
       shp: {
         display: "SHP File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
-        layout: renderFileInput("shp"),
+        layout: renderFileInput,
       },
       geojson: {
         display: "GeoJSON File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
-        layout: renderFileInput("geojson"),
+        layout: renderFileInput,
       },
     };
   
 
   return (
     <div id="new-plot-design">
-      <h3 className="mb-3">Add New Plot</h3>
+      <h3 className="mb-3">Add New Plot(s)</h3>
       <div className="ml-3">
         <div className="d-flex flex-column">
           <div className="form-group" style={{width:"fit-content"}}>
             <label>Spatial Distribution</label>
             <select
               className="form-control form-control-sm"
-              onChange={(e)=>
-                setPlotDetails({ newPlotDistribution: e.target.value})
+              onChange={(e)=>{
+                setPlotDetails({ newPlotDistribution: e.target.value});}
 		}
-              value={newPlotDistribution}
-            >
+              value={newPlotDistribution}>
               {Object.entries (plotOptions).map (([key, options]) => (
                 <option key={key} value={key}>
                   {options.display}
@@ -229,7 +229,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
           {plotOptions[newPlotDistribution].alert &&
            <p className="alert">- {plotOptions[newPlotDistribution].alert}</p>}
         </div>
-        <div>{plotOptions[newPlotDistribution].layout}</div>
+        <div>{plotOptions[newPlotDistribution].layout(newPlotDistribution, true)}</div>
 	<p
          className="font-italic ml-2 small"
          style={{
@@ -700,7 +700,7 @@ export class PlotDesign extends React.Component {
       );
   }
 
-  renderFileInput = (fileType) => {
+  renderFileInput = (fileType, append) => {
     const acceptedTypes = {
       csv: "text/csv",
       shp: "application/zip",
@@ -731,6 +731,7 @@ export class PlotDesign extends React.Component {
                   return this.setPlotDetails({
                     plotFileName: file.name,
                     plotFileBase64: base64,
+                    append
                   });
                 });
               }}
@@ -754,12 +755,12 @@ export class PlotDesign extends React.Component {
     );
   }
   
-  renderCSV = () => {
+  renderCSV = (fileType, append) => {
     const { plotShape } = this.context;
     const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {this.renderFileInput("csv")}
+        {this.renderFileInput("csv", append)}
         <div style={{ display: "flex" }}>
           <span className="mr-3">{this.renderPlotShape()}</span>
           {this.renderLabeledInput(plotUnits, "plotSize")}
@@ -839,33 +840,33 @@ export class PlotDesign extends React.Component {
       random: {
         display: "Random",
         description: "Plot centers will be randomly distributed within the project boundary.",
-        layout: this.renderRandom(),
+        layout: this.renderRandom,
       },
       gridded: {
         display: "Gridded",
         description:
           "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.",
-        layout: this.renderGridded(),
+        layout: this.renderGridded,
       },
       csv: {
         display: "CSV File",
         description:
           "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
-        layout: this.renderCSV(),
+        layout: this.renderCSV,
       },
       shp: {
         display: "SHP File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
-        layout: this.renderFileInput("shp"),
+        layout: this.renderFileInput,
       },
       geojson: {
         display: "GeoJSON File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
-        layout: this.renderFileInput("geojson"),
+        layout: this.renderFileInput,
       },
     };
 
@@ -914,7 +915,7 @@ export class PlotDesign extends React.Component {
             {spatialDistributionOptions[plotDistribution].alert &&
              <p className="alert">- {spatialDistributionOptions[plotDistribution].alert}</p>}
           </div>
-          <div>{spatialDistributionOptions[plotDistribution].layout}</div>
+          <div>{spatialDistributionOptions[plotDistribution].layout(plotDistribution, false)}</div>
           <p
             className="font-italic ml-2 small"
             style={{

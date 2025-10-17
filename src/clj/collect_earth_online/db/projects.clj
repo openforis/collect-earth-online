@@ -409,7 +409,8 @@
                                       plot-size
                                       shuffle-plots?
                                       aoi-features
-                                      type))]
+                                      type))
+        existing-project-plots (call-sql "select_limited_project_plots" project-id 100000)]
     (insert-rows! "plots" plots))
 
   ;; Boundary is only used for Planet at this point.
@@ -590,8 +591,8 @@
                                  nil
                                  allow-drawn-samples?
                                  (call-sql "get_plot_centers_by_project" project-id))))))
-
-(defn update-project! [{:keys [params]}] 
+;;THIS ONE
+(defn update-project! [{:keys [params]}]
   (let [project-id           (tc/val->int (:projectId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
@@ -624,7 +625,8 @@
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
         type                 (:type params)
-        original-project     (first (call-sql "select_project_by_id" project-id))]
+        original-project     (first (call-sql "select_project_by_id" project-id))
+        append-plots?        (:append params)]
     (if original-project
       (try
         (call-sql "update_project"
@@ -657,7 +659,6 @@
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery! project-id imagery-list))
-        
         (cond
           (#{"closed" "archived"} (:availability original-project))
           nil
@@ -671,29 +672,29 @@
                     (not= plot-size      (:plot_size original-project))
                     (not= plot-spacing   (:plot_spacing original-project))
                     (not= shuffle-plots? (:shuffle_plots original-project)))))
-          (doall
-           (call-sql "delete_plots_by_project" project-id)
-           (create-project-plots! project-id
-                                  plot-distribution
-                                  num-plots
-                                  plot-spacing
-                                  plot-shape
-                                  plot-size
-                                  plot-file-name
-                                  plot-file-base64
-                                  sample-distribution
-                                  samples-per-plot
-                                  sample-resolution
-                                  sample-file-name
-                                  sample-file-base64
-                                  allow-drawn-samples?
-                                  shuffle-plots?
-                                  design-settings
-                                  aoi-features
-                                  type))
+          (do
+            (when-not append-plots? (call-sql "delete_plots_by_project" project-id))
+            (create-project-plots! project-id
+                                   plot-distribution
+                                   num-plots
+                                   plot-spacing
+                                   plot-shape
+                                   plot-size
+                                   plot-file-name
+                                   plot-file-base64
+                                   sample-distribution
+                                   samples-per-plot
+                                   sample-resolution
+                                   sample-file-name
+                                   sample-file-base64
+                                   allow-drawn-samples?
+                                   shuffle-plots?
+                                   design-settings
+                                   aoi-features
+                                   type))
 
           :else
-          (do
+          (do            
             ;; Always recreate samples or reset them
             (if (or (not= sample-distribution (:sample_distribution original-project))
                     (if (#{"csv" "shp" "geojson"} sample-distribution)
@@ -1101,20 +1102,19 @@
     [[(apply min (into [x-min] project-x)) (apply min (into [y-min] project-y))]
      [(apply max (into [x-max] project-x)) (apply max (into [y-max] project-y))]]
   ))
-
+;;OR THIS ONE
 (defn check-plot-file
   [{:keys [params]}]
   (let [project-id       (tc/val->int (:projectId params))
         plot-file-name   (:plotFileName params)
         plot-file-base64 (:plotFileBase64 params)
-        distribution     (:plotFileType params)
-        
+        distribution     (:plotFileType params)        
         plots            (external-file/load-external-data! project-id
                                                             distribution
                                                             plot-file-name
                                                             plot-file-base64
                                                             "plot"
-                                                            [:visible_id])        
+                                                            [:visible_id])
         file-bounds      (update-bounds-by-file distribution project-id plots)
         file-aoi         (fit-aoi-to-file distribution project-id plots)
         file-assignment? (some #(:user %) plots)
