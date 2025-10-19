@@ -42,3 +42,43 @@
 (defn epsg3857-point-resolution
   [point]
   (/ 1 (Math/cosh (/ (second point) wsg84-radius))))
+
+(require '[clojure.pprint :refer [pprint]])
+(defn- close-enough
+  "compares a point's x and y values to determine if it is 
+   basically the same point as another given set of 
+   coordinates, relative to a given tolerance"
+  [{a-x :lat a-y :lon :as point-a} {b-x :lat b-y :lon :as point-b} & [tolerance]]
+  (pprint  ["close-enough??" point-a point-b ])
+  (let [tol   (or tolerance 1e-10)
+        close (fn [a b]
+                (let [diff  (abs (- a b))
+                      scale (max 1.0 (abs a) (abs b))]
+                  (or (zero? diff)
+                      (< diff tol)
+                      (< (/ diff scale) tol))))]
+    (and (close a-x b-x) (close a-y b-y))))
+
+(defn distinct-points
+  ""
+  [points-a points-b & [tolerance]]
+  (let [points-b (map (fn [point]
+                        (let [[lat lon] (-> point :center tc/json->clj :coordinates)]
+                          (assoc point :lat lat :lon lon))))
+        points-a (map (fn [point]
+                        (let [[lat lon] (->> point :plot_geom
+                                             (re-seq #"-?\d+\.\d+")
+                                             (map parse-double))]
+                          (assoc point :lat lat :lon lon))))
+        tol (or tolerance 1e-10)
+        b-groups (group-by (fn [point]
+                             [(long (/ (:lat point) tol)) (long (/ (:lon point) tol))])
+                           points-b)]
+    (remove (fn [point]
+              (let [cell [(long (/ (:lat point) tol))
+                          (long (/ (:lon point) tol))]]
+                (some #(close-enough point % tol)
+                      (mapcat b-groups [(cell)
+                                        (mapv inc cell)
+                                        (mapv dec cell)]))))
+            points-a)))

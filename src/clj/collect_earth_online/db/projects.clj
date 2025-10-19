@@ -7,7 +7,7 @@
             [clojure.string                                :as str]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
             [collect-earth-online.generators.external-file :as external-file]
-            [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
+            [collect-earth-online.utils.geom               :refer [make-geo-json-polygon distinct-points]]
             [collect-earth-online.utils.part-utils         :as pu]
             [triangulum.response                           :refer [data-response]]
             [triangulum.database                           :refer [call-sql
@@ -378,6 +378,19 @@
   (call-sql "copy_template_plots" template-id project-id)
   (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id) project-id))
 
+(require '[clojure.pprint :refer [pprint]])
+
+(defn- merge-unique-plots [old-plots new-plots]
+  (let [old-ids (into #{} (map :visible_id) old-plots)]
+    (reduce (fn [acc plot]
+              (let [base-id (:visible_id plot)
+                    final-id (->> (iterate inc base-id)
+                                  (drop-while #(contains? (into #{} (map :visible_id) acc) %))
+                                  first)]
+                (conj acc (assoc plot :visible_id final-id))))
+            old-plots
+            new-plots)))
+
 (defn- create-project-plots! [project-id
                               plot-distribution
                               num-plots
@@ -410,8 +423,23 @@
                                       shuffle-plots?
                                       aoi-features
                                       type))
-        existing-project-plots (call-sql "select_limited_project_plots" project-id 100000)]
-    (insert-rows! "plots" plots))
+        existing-project-plots (call-sql "select_limited_project_plots" project-id 100000)
+        _ (pprint ["got existing project plots, getting distinct new plots"
+                   "\n existing project plots \n"
+                   (count existing-project-plots) (first existing-project-plots)
+                   "\n new plots \n"
+                   (count plots) (first plots)
+                  "\n \n"])
+        distinct-new-plots (distinct-points plots existing-project-plots)
+        merged-plots (merge-unique-plots existing-project-plots distinct-new-plots)
+        ]
+    (pprint ["\n distinct new plots: \n"
+             (count distinct-new-plots) (first distinct-new-plots)
+             "\n attempting to merge new plots: \n"
+             (count merged-plots) (first merged-plots)
+             "\n \n"
+             ])
+    #_(insert-rows! "plots" plots))
 
   ;; Boundary is only used for Planet at this point.
   (pu/try-catch-throw #(call-sql "set_boundary"
