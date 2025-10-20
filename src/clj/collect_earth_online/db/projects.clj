@@ -378,7 +378,29 @@
   (call-sql "copy_template_plots" template-id project-id)
   (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id) project-id))
 
-(defn merge-unique-plots [old-plots new-plots]
+
+(defn get-plot-points [dist plots]  
+  (case dist
+    "geojson" (reduce
+               (fn [points pgobj]
+                 (let [coord-pairs (->> pgobj :plot_geom .getValue
+                                        tc/json->clj :coordinates first)]
+                   (into points coord-pairs)))
+               [] plots)
+    "shp" (reduce
+           (fn [points pgobj]
+             (let [coord-pairs (->> pgobj :plot_geom .getValue
+                                    (call-sql "hex_ewkb_to_all_vertices")
+                                    (map (fn [{:keys [x y]}]
+                                           [x y])))]
+               (into points coord-pairs)))
+           [] plots)
+    "csv" (map
+           (fn [pgobj]
+	     (let [[_ coords] (->> pgobj :plot_geom .getValue (re-find #"POINT\(([^)]+)\)"))]
+	       (map #(Double/parseDouble %) (str/split coords #" ")))) plots)))
+
+(defn- merge-unique-plots [old-plots new-plots]
   (let [old-ids (into #{} (map :visible_id) old-plots)]
     (mapv (fn [plot]
             (let [final-id (->> (iterate inc (:visible_id plot))
@@ -386,6 +408,21 @@
                                 first)]
               (assoc plot :visible_id final-id)))            
           new-plots)))
+
+(defn- update-project-plots! [old_plots new_plots]
+  (let [old-plots (map (fn [point]
+                         (let [[lat lon] (-> point :center tc/json->clj :coordinates)]
+                           (assoc point :lat lat :lon lon))) old_plots)
+        new-plots (map (fn [point]
+                         (let [[lat lon] (->> point :plot_geom .getValue
+                                              (re-seq #"-?\d+\.\d+")
+                                              (map parse-double))]
+                           (assoc point :lat lat :lon lon))) new_plots)
+        distinct-new-plots   (distinct-points old-plots new-plots)
+        ;; merged-plots (merge-unique-plots old_plots distinct-new-plots)
+        ]
+    (merge-unique-plots old_plots new_plots)
+    #_(map #(dissoc % :lat :lon) merged-plots)))
 
 (defn- create-project-plots! [project-id
                               plot-distribution
@@ -419,18 +456,11 @@
                                       shuffle-plots?
                                       aoi-features
                                       type))
-        existing-project-plots (call-sql "select_limited_project_plots" project-id 100000)
-        old-plots (map (fn [point]
-                         (let [[lat lon] (-> point :center tc/json->clj :coordinates)]
-                           (assoc point :lat lat :lon lon))) existing-project-plots)
-        new-plots (map (fn [point]
-                                    (let [[lat lon] (->> point :plot_geom .getValue
-                                                         (re-seq #"-?\d+\.\d+")
-                                                         (map parse-double))]
-                                      (assoc point :lat lat :lon lon))) plots)
-        distinct-new-plots   (distinct-points old-plots new-plots)        
-        merged-plots (merge-unique-plots existing-project-plots distinct-new-plots)]
-    (insert-rows! "plots" (map #(dissoc % :lat :lon) merged-plots)))
+        existing-project-plots (call-sql "select_limited_project_plots" project-id 100000)]
+    (println (->> plots first :plot_geom .getValue (call-sql "hex_ewkb_to_all_vertices") first))
+    (insert-rows! "plots" (if (seq existing-project-plots)
+                            (update-project-plots! existing-project-plots plots)
+                            plots)))
 
   ;; Boundary is only used for Planet at this point.
   (pu/try-catch-throw #(call-sql "set_boundary"
@@ -610,7 +640,7 @@
                                  nil
                                  allow-drawn-samples?
                                  (call-sql "get_plot_centers_by_project" project-id))))))
-;;THIS ONE
+
 (defn update-project! [{:keys [params]}]
   (let [project-id           (tc/val->int (:projectId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
@@ -691,7 +721,7 @@
                     (not= plot-size      (:plot_size original-project))
                     (not= plot-spacing   (:plot_spacing original-project))
                     (not= shuffle-plots? (:shuffle_plots original-project)))))
-          (do
+          (do            
             (when-not append-plots? (call-sql "delete_plots_by_project" project-id))
             (create-project-plots! project-id
                                    plot-distribution
@@ -1063,28 +1093,8 @@
   {:userAssignment (file-user-assignment plot-data)
    :qaqcAssignment (file-qaqc-assignment plot-data)})
 
-(defn get-plot-points [dist plots]  
-  (case dist
-    "geojson" (reduce
-               (fn [points pgobj]
-                 (let [coord-pairs (->> pgobj :plot_geom .getValue
-                                        tc/json->clj :coordinates first)]
-                   (into points coord-pairs)))
-               [] plots)
-    "shp" (reduce
-           (fn [points pgobj]
-	     (let [coord-pairs (->> pgobj :plot_geom .getValue
-                                    (call-sql "hex_ewkb_to_coordinate_arrays")
-                                    (map :coord_pair))]
-               (into points coord-pairs)))
-           [] plots)
-    "csv" (map
-           (fn [pgobj]
-	     (let [[_ coords] (->> pgobj :plot_geom .getValue (re-find #"POINT\(([^)]+)\)"))]
-	       (map #(Double/parseDouble %) (str/split coords #" ")))) plots)))
-
 (defn get-plot-bounds [distribution plots]  
-  (let [points (get-plot-points distribution plots)
+  (let [points (get-plot-points distribution (take 3 plots))
 	x-points (map first points)
 	y-points (map last points)]    
     [[(apply min x-points) (apply min y-points)]
@@ -1121,7 +1131,7 @@
     [[(apply min (into [x-min] project-x)) (apply min (into [y-min] project-y))]
      [(apply max (into [x-max] project-x)) (apply max (into [y-max] project-y))]]
   ))
-;;OR THIS ONE
+
 (defn check-plot-file
   [{:keys [params]}]
   (let [project-id       (tc/val->int (:projectId params))

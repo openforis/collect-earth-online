@@ -74,7 +74,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
       );
   };
 
-  const renderFileInput = (fileType, append) => {
+  const renderFileInput = (fileType, append) => {    
     return(
       <div className="mb-3">
         <div style={{display: "flex"}}>
@@ -90,13 +90,14 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
               defaultValue=""
               id="new-plot-distribution-file"
               onChange={(e) => {
+                console.log("updooted the file!", append);
                 const file = e.target.files[0];                
                 readFileAsBase64Url (file, (base64) => {                 
                   checkPlotFile(fileType, file.name, base64);                  
                   return setPlotDetails({
                     plotFileName: file.name,
                     PlotFileBase64: base64,
-                    append
+                    append: true,
                   }); 
                 });		
               }}
@@ -731,7 +732,7 @@ export class PlotDesign extends React.Component {
                   return this.setPlotDetails({
                     plotFileName: file.name,
                     plotFileBase64: base64,
-                    append
+                    append: false
                   });
                 });
               }}
