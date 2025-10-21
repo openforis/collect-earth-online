@@ -191,7 +191,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
       },
       shp: {
         display: "SHP File",
-        alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
+        alert: "Please ensure your shapefile does not include duplicate plots.",
         description:
           "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
         layout: renderFileInput,
@@ -213,24 +213,27 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         <div className="d-flex flex-column">
           <div className="form-group" style={{width:"fit-content"}}>
             <label>Spatial Distribution</label>
-            <select
-              className="form-control form-control-sm"
-              onChange={(e)=>{
-                setPlotDetails({ newPlotDistribution: e.target.value});}
-		}
-              value={newPlotDistribution}>
-              {Object.entries (plotOptions).map (([key, options]) => (
-                <option key={key} value={key}>
-                  {options.display}
-                </option>
-              ))}
-            </select>
+            <div style={{ position: "relative" }}>
+              {plotOptions[newPlotDistribution].alert &&
+               <p className="alert"> {plotOptions[newPlotDistribution].alert}</p>}
+              <select
+                className="form-control form-control-sm"
+                onChange={(e)=>{
+                  setPlotDetails({ newPlotDistribution: e.target.value});}
+		         }
+                value={newPlotDistribution}>
+                {Object.entries (plotOptions).map (([key, options]) => (
+                  <option key={key} value={key}>
+                    {options.display}
+                  </option>
+                ))}
+              </select>
+            </div>            
           </div>
-          <p className="font-italic ml-2">{`- ${plotOptions[newPlotDistribution].description}`}</p>
-          {plotOptions[newPlotDistribution].alert &&
-           <p className="alert">- {plotOptions[newPlotDistribution].alert}</p>}
+          <p className="font-italic ml-2">{`- ${plotOptions[newPlotDistribution].description}`}</p>          
         </div>
-        <div>{plotOptions[newPlotDistribution].layout(newPlotDistribution, true)}</div>
+        <div>          
+          {plotOptions[newPlotDistribution].layout(newPlotDistribution, true)}</div>
 	<p
          className="font-italic ml-2 small"
          style={{
@@ -892,6 +895,9 @@ export class PlotDesign extends React.Component {
           <div className="d-flex flex-column">
             <div className="form-group" style={{ width: "fit-content" }}>
               <label>Spatial distribution</label>
+              <div style={{position: "relative"}}>
+              {spatialDistributionOptions[plotDistribution].alert &&
+             <p className="alert">- {spatialDistributionOptions[plotDistribution].alert}</p>}
               <select
                 className="form-control form-control-sm"
                 onChange={(e) =>
@@ -910,11 +916,11 @@ export class PlotDesign extends React.Component {
                     {options.display}
                   </option>
                 ))}
-              </select>
+      </select>
+      </div>
             </div>
             <p className="font-italic ml-2">{`- ${spatialDistributionOptions[plotDistribution].description}`}</p>
-            {spatialDistributionOptions[plotDistribution].alert &&
-             <p className="alert">- {spatialDistributionOptions[plotDistribution].alert}</p>}
+            
           </div>
           <div>{spatialDistributionOptions[plotDistribution].layout(plotDistribution, false)}</div>
           <p

@@ -409,7 +409,7 @@
               (assoc plot :visible_id final-id)))            
           new-plots)))
 
-(defn- update-project-plots! [old_plots new_plots]
+(defn- update-project-plots! [plot-distribution old_plots new_plots]
   (let [old-plots (map (fn [point]
                          (let [[lat lon] (-> point :center tc/json->clj :coordinates)]
                            (assoc point :lat lat :lon lon))) old_plots)
@@ -418,11 +418,11 @@
                                               (re-seq #"-?\d+\.\d+")
                                               (map parse-double))]
                            (assoc point :lat lat :lon lon))) new_plots)
-        distinct-new-plots   (distinct-points old-plots new-plots)
-        ;; merged-plots (merge-unique-plots old_plots distinct-new-plots)
-        ]
-    (merge-unique-plots old_plots new_plots)
-    #_(map #(dissoc % :lat :lon) merged-plots)))
+        distinct-new-plots   (if (= plot-distribution "csv")
+                               (distinct-points old-plots new-plots)
+                               new_plots)
+        merged-plots (merge-unique-plots old_plots distinct-new-plots)]    
+    (map #(dissoc % :lat :lon) merged-plots)))
 
 (defn- create-project-plots! [project-id
                               plot-distribution
@@ -457,9 +457,8 @@
                                       aoi-features
                                       type))
         existing-project-plots (call-sql "select_limited_project_plots" project-id 100000)]
-    (println (->> plots first :plot_geom .getValue (call-sql "hex_ewkb_to_all_vertices") first))
     (insert-rows! "plots" (if (seq existing-project-plots)
-                            (update-project-plots! existing-project-plots plots)
+                            (update-project-plots! plot-distribution existing-project-plots plots)
                             plots)))
 
   ;; Boundary is only used for Planet at this point.
@@ -740,7 +739,9 @@
                                    shuffle-plots?
                                    design-settings
                                    aoi-features
-                                   type))
+                                   type)
+              
+            )
 
           :else
           (do            
