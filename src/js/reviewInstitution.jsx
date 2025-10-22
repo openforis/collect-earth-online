@@ -576,6 +576,7 @@ const ImageryList = (
     const [tfoLayers, setTfoLayers] = useState([]);
     const [messageBox, setMessageBox] = useState(null);
     const [selectedImagery, setSelectedImagery] = useState([]);
+    const visibilityOrder = { platform: 0, private: 1, public: 2 };
 
     // Fetch planet tfo layers
     useEffect(() => {
@@ -589,7 +590,7 @@ const ImageryList = (
     useEffect(() => {
       fetch(`/get-institution-imagery?institutionId=${institutionId}`)
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((data) => setImageryList(data))
+        .then((data) => setImageryList([...data].sort(sortByVisibility)))
         .catch(() => {
           setImageryList([]);
           showAlert({
@@ -611,7 +612,7 @@ const ImageryList = (
     const getImageryList = () => {
       fetch(`/get-institution-imagery?institutionId=${institutionId}`)
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((data) => setImageryList(data))
+        .then((data) => setImageryList([...data].sort(sortByVisibility)))
         .catch(() => {
           setImageryList([]);
           showAlert({
@@ -620,6 +621,9 @@ const ImageryList = (
           });
         });
     };
+
+    const sortByVisibility = (a, b) =>
+          (visibilityOrder[a.visibility] ?? 99) - (visibilityOrder[b.visibility] ?? 99);
 
     const selectAddImagery = () => setImageryToEdit({ id: -1 });
 
@@ -632,6 +636,23 @@ const ImageryList = (
           title: "Imagery Not Supported",
           body: "This imagery type is no longer supported and cannot be edited.",
         });
+      }
+    };
+
+    const nonPlatform = imageryList.filter(img => img.visibility !== "platform");
+    const nonPlatformIds = nonPlatform.map(img => img.id);
+
+    const allNonPlatformSelected =
+          nonPlatform.length > 0 &&
+          nonPlatform.every(img => selectedImagery.includes(img.id));
+
+    const handleSelectAllNonPlatform = (checked) => {
+      if (checked) {
+        setSelectedImagery(prev =>
+          Array.from(new Set([...prev, ...nonPlatformIds]))
+        );
+      } else {
+        setSelectedImagery(prev => prev.filter(id => !nonPlatformIds.includes(id)));
       }
     };
 
@@ -771,15 +792,9 @@ const ImageryList = (
               <div className="col-1" style={{ paddingLeft: "4.5%" }}>
                 <input
                   type="checkbox"
-                  checked={selectedImagery.length === imageryList.length && imageryList.length > 0}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedImagery(imageryList.map((img) => img.id));
-                    } else {
-                      setSelectedImagery([]);
-                    }
-                  }}
-                  aria-label="Select all imagery"
+                  aria-label="Select all non-platform imagery"
+                  checked={allNonPlatformSelected}
+                  onChange={(e) => handleSelectAllNonPlatform(e.target.checked)}
                 />
               </div>
               <div className="col-2 pr-0 pl-3">Visibility</div>
@@ -1267,13 +1282,23 @@ function Imagery({
           type="checkbox"
           onChange={handleCheckboxChange}
           checked={selectedImagery.includes(imageryId)}
+          className={`${visibility === "platform" ? "disabled" : ""}`}
         />
       </div>
 
       {/* Visibility Button */}
       <div className="col-2 pr-0 pl-3">
-        <div className="btn btn-sm btn-outline-lightgreen btn-block" onClick={toggleVisibility}>
-          {visibility === "private" ? "Institution" : "Public"}
+        <div
+          className={`btn btn-sm btn-outline-lightgreen btn-block ${
+                      visibility === "platform" ? "disabled" : ""}`}
+          onClick={visibility === "platform" ? undefined : toggleVisibility}
+          style={{ cursor: visibility === "platform" ? "default" : "pointer" }}
+        >
+          {visibility === "platform"
+           ? "Platform"
+           : visibility === "private"
+           ? "Institution"
+           : "Public"}
         </div>
       </div>
 
