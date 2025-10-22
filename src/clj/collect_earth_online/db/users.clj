@@ -265,7 +265,7 @@
                                     (map :email))
               email-msg       (format (str "User %s has requested the access to institution \"%s\" on %s.\n\n"
                                            "To access the institution page, simply click the following link:\n\n"
-                                           "%sreview-institution?institutionId=%s")
+                                           "%s/review-institution?institutionId=%s")
                                       user-email
                                       institution-name
                                       timestamp

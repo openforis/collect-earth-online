@@ -3,7 +3,6 @@
             [collect-earth-online.db.geodash :as geodash]
             [collect-earth-online.db.imagery :as imagery]
             [malli.core :as m]
-            [malli.util :as mu]
             [triangulum.response :refer [data-response]]
             [triangulum.type-conversion :as tc]
             [triangulum.config :refer [get-config]]
@@ -368,14 +367,3 @@
 (defmacro validate [query]
   `(fn [args#]
          (~query args#)))
-
-
-(comment
-  (->
-   (->> ~(keyword (str query))
-        (get validation-map)
-        (mu/merge request-wrapper))
-   (m/explain  args#)
-   me/humanize
-   pprint)
-  )

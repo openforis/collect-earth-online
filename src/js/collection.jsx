@@ -1364,9 +1364,6 @@ class SideBar extends React.Component {
     } else if (collectConfidence && !confidence) {
       this.setState ({modal: {alert: {alertType: "Review Mode Alert", alertMessage: "You must input the confidence before saving the interpretation."}}});
       return false;
-    } else if (userRole === 1){
-      this.setState ({modal: {alert: {alertType: "Collection Error", alertMessage: "Administrators must be in Admin Review to collect data. Please select Admin Review to collect data on this plot"}}}) ;
-      return false;
     } else {
       return true;
     }

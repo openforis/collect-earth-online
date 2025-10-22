@@ -10,8 +10,9 @@
         org.clojure/data.csv     {:mvn/version "1.0.1"}
         org.clojure/data.xml     {:mvn/version "0.0.8"}
         ring/ring                {:mvn/version "1.8.2"}        
+      
         sig-gis/triangulum       {:git/url "https://github.com/sig-gis/triangulum"
-                                  :git/sha "3d41dab63e1bc8ebe046f64db44ae3df986f5bdf"}}
+                                 :git/sha "3d41dab63e1bc8ebe046f64db44ae3df986f5bdf"}}
 
  :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
            :config           {:main-opts ["-m" "triangulum.config"]}

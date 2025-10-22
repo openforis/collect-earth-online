@@ -316,7 +316,7 @@ def filteredSentinelComposite(visParams, startDate, endDate, metadataCloudCoverM
         score = ee.Image(1).subtract(cloudScoreSentinel2(rescale)).rename('cloudscore')
         return rescale.addBands(score)
 
-    sentinel2 = ee.ImageCollection('COPERNICUS/S2')
+    sentinel2 = ee.ImageCollection('COPERNICUS/S2_HARMONIZED')
     f2017s2 = sentinel2.filterDate(startDate, endDate).filterMetadata(
         'CLOUDY_PIXEL_PERCENTAGE', 'less_than', int(metadataCloudCoverMax))
     m2017s2 = f2017s2.map(scaleAndCloudScore)
