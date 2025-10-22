@@ -358,7 +358,7 @@
                                              plot-size
                                              sample-distribution
                                              samples-per-plot
-                                             sample-resolution))]
+                                             sample-resolution))]   
     (when (seq samples) (p-insert-rows! "samples" samples))
     (if allow-drawn-samples?
       (when (#{"csv" "shp" "geojson"} sample-distribution)
@@ -400,30 +400,6 @@
 	     (let [[_ coords] (->> pgobj :plot_geom .getValue (re-find #"POINT\(([^)]+)\)"))]
 	       (map #(Double/parseDouble %) (str/split coords #" ")))) plots)))
 
-(defn- merge-unique-plots [old-plots new-plots]
-  (let [old-ids (into #{} (map :visible_id) old-plots)]
-    (mapv (fn [plot]
-            (let [final-id (->> (iterate inc (:visible_id plot))
-                                (drop-while #(contains? old-ids %))
-                                first)]
-              (assoc plot :visible_id final-id)))            
-          new-plots)))
-
-(defn- update-project-plots! [plot-distribution old_plots new_plots]
-  (let [old-plots (map (fn [point]
-                         (let [[lat lon] (-> point :center tc/json->clj :coordinates)]
-                           (assoc point :lat lat :lon lon))) old_plots)
-        new-plots (map (fn [point]
-                         (let [[lat lon] (->> point :plot_geom .getValue
-                                              (re-seq #"-?\d+\.\d+")
-                                              (map parse-double))]
-                           (assoc point :lat lat :lon lon))) new_plots)
-        distinct-new-plots   (if (= plot-distribution "csv")
-                               (distinct-points old-plots new-plots)
-                               new_plots)
-        merged-plots (merge-unique-plots old_plots distinct-new-plots)]    
-    (map #(dissoc % :lat :lon) merged-plots)))
-
 (defn- create-project-plots! [project-id
                               plot-distribution
                               num-plots
@@ -455,12 +431,11 @@
                                       plot-size
                                       shuffle-plots?
                                       aoi-features
-                                      type))
-        existing-project-plots (call-sql "select_limited_project_plots" project-id 100000)]
-    (insert-rows! "plots" (if (seq existing-project-plots)
-                            (update-project-plots! plot-distribution existing-project-plots plots)
-                            plots)))
-
+                                      type))]
+    (insert-rows! "plots" plots)
+    
+    )
+  
   ;; Boundary is only used for Planet at this point.
   (pu/try-catch-throw #(call-sql "set_boundary"
                                  project-id
@@ -468,7 +443,6 @@
                       "SQL Error: cannot create a project AOI.")
 
   (when (#{"csv" "shp" "geojson"} plot-distribution) (call-sql "boundary_to_aoi" project-id))
-
   (when-not (sql-primitive (call-sql "valid_project_boundary" project-id))
     (pu/init-throw (str "The project boundary is invalid. "
                         "This can come from improper coordinates or projection when uploading shape or csv data.")))
@@ -652,8 +626,11 @@
                                                          (tc/val->double (:latMin params))
                                                          (tc/val->double (:lonMax params))
                                                          (tc/val->double (:latMax params)))])
+        append-plots?        (:append params)
         aoi-file-name        (:aoiFileName params)
-        plot-distribution    (:plotDistribution params)
+        plot-distribution    (if append-plots?
+                               (:newPlotDistribution params)
+                               (:plotDistribution params))
         num-plots            (tc/val->int (:numPlots params))
         plot-spacing         (tc/val->float (:plotSpacing params))
         plot-shape           (:plotShape params)
@@ -668,13 +645,16 @@
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
         design-settings      (:designSettings params default-settings)
-        plot-file-name       (:plotFileName params)
-        plot-file-base64     (:plotFileBase64 params)
+        plot-file-name       (if append-plots?
+                               (:newPlotFileName params)
+                               (:plotFileName params))
+        plot-file-base64     (if append-plots?
+                               (:newPlotFileBase64 params)
+                               (:plotFileBase64 params))
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
         type                 (:type params)
-        original-project     (first (call-sql "select_project_by_id" project-id))
-        append-plots?        (:append params)]
+        original-project     (first (call-sql "select_project_by_id" project-id))]
     (if original-project
       (try
         (call-sql "update_project"
@@ -703,7 +683,6 @@
                   project-options
                   (tc/clj->jsonb design-settings)
                   type)
-
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery! project-id imagery-list))
@@ -720,7 +699,7 @@
                     (not= plot-size      (:plot_size original-project))
                     (not= plot-spacing   (:plot_spacing original-project))
                     (not= shuffle-plots? (:shuffle_plots original-project)))))
-          (do            
+          (do
             (when-not append-plots? (call-sql "delete_plots_by_project" project-id))
             (create-project-plots! project-id
                                    plot-distribution
@@ -739,12 +718,9 @@
                                    shuffle-plots?
                                    design-settings
                                    aoi-features
-                                   type)
-              
-            )
-
+                                   type))
           :else
-          (do            
+          (do
             ;; Always recreate samples or reset them
             (if (or (not= sample-distribution (:sample_distribution original-project))
                     (if (#{"csv" "shp" "geojson"} sample-distribution)

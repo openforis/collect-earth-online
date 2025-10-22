@@ -117,6 +117,7 @@ export default class ReviewChanges extends React.Component {
     designSettings: this.context.designSettings,
     numPlots: this.context.numPlots,
     plotDistribution: this.context.plotDistribution,
+    newPlotDistribution: this.context.newPlotDistribution,
     plotShape: this.context.plotShape,
     plotSize: this.context.plotSize,
     plotSpacing: this.context.plotSpacing,
@@ -128,8 +129,9 @@ export default class ReviewChanges extends React.Component {
     surveyQuestions: this.context.surveyQuestions,
     surveyRules: this.context.surveyRules,
     plotFileName: this.context.plotFileName,
+    newPlotFileName: this.context.newPlotFileName,
     plotFileBase64: this.context.plotFileBase64,
-    sampleFileName: this.context.sampleFileName,
+    newPlotFileBase64: this.context.newPlotFileBase64,
     sampleFileBase64: this.context.sampleFileBase64,
     plotSimilarityDetails: this.context.plotSimilarityDetails
   });

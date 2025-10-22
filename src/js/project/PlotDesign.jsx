@@ -52,7 +52,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         plotFileType,
         projectId,
         plotFileName: fileName,
-        plotFileBase64
+        plotFileBase64: plotFileBase64
       }),
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
@@ -66,7 +66,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
           aoiFeatures});
         setNewPlotFileName(fileName);
         setProjectDetails({
-          aoiFeatures, lonMin, latMin, lonMax, latMax, newPlotFileName: fileName, plotFileBase64: plotFileBase64, aoiFileName: fileName, newPlotDistribution: plotFileType,
+          aoiFeatures, lonMin, latMin, lonMax, latMax, newPlotFileName: fileName, newPlotFileBase64: plotFileBase64, aoiFileName: fileName, newPlotDistribution: plotFileType,
           designSettings: { ...designSettings,
                             userAssignment: data.userAssignment,
                             qaqcAssignment: data.qaqcAssignment}
@@ -89,14 +89,13 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
               accept={acceptedTypes[fileType]}
               defaultValue=""
               id="new-plot-distribution-file"
-              onChange={(e) => {
-                console.log("updooted the file!", append);
-                const file = e.target.files[0];                
+              onChange={(e) => {                
+                const file = e.target.files[0];
                 readFileAsBase64Url (file, (base64) => {                 
                   checkPlotFile(fileType, file.name, base64);                  
                   return setPlotDetails({
-                    plotFileName: file.name,
-                    PlotFileBase64: base64,
+                    newPlotFileName: file.name,
+                    newPlotFileBase64: base64,
                     append: true,
                   }); 
                 });		
