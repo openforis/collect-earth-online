@@ -10,7 +10,7 @@ DROP TYPE IF EXISTS imagery_return CASCADE;
 CREATE TYPE imagery_return AS (
     imagery_id        integer,
     institution_id    integer,
-    visibility        text,
+    visibility        visibility_type,
     title             text,
     attribution       text,
     extent            jsonb,
