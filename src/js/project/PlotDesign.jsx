@@ -383,9 +383,6 @@ export class PlotDesign extends React.Component {
               id="plot-distribution-file"
               onChange={(e) => {
                 const file = e.target.files[0];
-                this.readPlotIdsFromFile(file).then((plotIds) =>
-                  this.setState({ plotIdList: plotIds})
-                );
                 readFileAsBase64Url(file, (base64) => {
                   this.checkPlotFile(file.name, base64);
                   return this.setPlotDetails({
