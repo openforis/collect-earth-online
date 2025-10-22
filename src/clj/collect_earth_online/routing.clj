@@ -194,7 +194,7 @@
                                                 :auth-type   :collect
                                                 :auth-action :block}
    [:get  "/get-project-plots"]                {:handler     (validate plots/get-project-plots)}
-   [:post "/add-user-samples"]                 {:handler     (validate plots/add-user-samples)
+   [:post "/add-user-samples"]                 {:handler     #'plots/add-user-samples
                                                 :auth-type   :collect
                                                 :auth-action :block}
    [:post "/flag-plot"]                        {:handler     (validate plots/flag-plot)

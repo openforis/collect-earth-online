@@ -821,6 +821,7 @@ class Collection extends React.Component {
           userImages: this.state.userImages,
           newPlotSamples:
           this.state.currentProject.allowDrawnSamples && this.state.currentPlot.samples,
+          userSamples: this.state.userSamples,
           inReviewMode: this.state.inReviewMode,
           currentUserId: this.state.currentUserId,
           imageryIds: this.state.imageryIds,

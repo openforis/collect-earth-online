@@ -504,14 +504,18 @@ CREATE OR REPLACE FUNCTION update_user_plot(
     _confidence          integer,
     _confidence_comment  text,
     _collection_start    timestamp,
-   _imageryIds           jsonb
+   _imageryIds           jsonb,
+   _used_kml             boolean,
+   _used_geodash         boolean
  ) RETURNS integer AS $$
     UPDATE user_plots up
       SET confidence = _confidence,
           confidence_comment = _confidence_comment,
           collection_start = up.collection_start,
           flagged = FALSE,
-          flagged_reason = null
+          flagged_reason = null,
+          used_kml = _used_kml,
+          used_geodash = _used_geodash
     WHERE user_plot_uid = _user_plot_id
     
    RETURNING user_plot_uid
