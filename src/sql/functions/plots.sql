@@ -648,7 +648,7 @@ CREATE OR REPLACE FUNCTION get_plot_shapes(_project_id integer)
                                     END AS plot_boundary
                              FROM plot_geoms)
 
-      SELECT project_rid, plot_visible_id, ST_Transform(plot_geom, 4326) AS plot_geom
+      SELECT project_rid, plot_visible_id, ST_Transform(plot_boundaries, 4326) AS plot_geom
       FROM plot_geoms
       INNER JOIN plot_boundaries
       USING (plot_uid)
