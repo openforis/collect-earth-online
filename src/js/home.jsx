@@ -5,7 +5,7 @@ import { mercator } from "./utils/mercator";
 import { sortAlphabetically } from "./utils/generalUtils";
 import SvgIcon from "./components/svg/SvgIcon";
 import Modal from "./components/Modal";
-import { Sidebar, SidebarCard } from "./components/Sidebar"
+import { Sidebar, SidebarCard } from "./components/Sidebar.jsx"
 
 import { useAtom, useAtomValue } from'jotai';
 import { stateAtom } from './utils/constants';

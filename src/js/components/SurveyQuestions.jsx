@@ -463,6 +463,7 @@ export const SurveyQuestions = () => {
         </>
       }
       infoText="View and answer survey questions for this plot"
+      enableExpand
     >
       {currentPlot?.flagged ? (
         <>

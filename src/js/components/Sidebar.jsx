@@ -6,20 +6,36 @@ import SvgIcon from "./svg/SvgIcon";
 import '../../css/sidebar.css';
 
 
-export const Sidebar = ({ stateAtom, style, header, children, footer, processModal }) => {
+export const Sidebar = ({
+  stateAtom,
+  header = null,
+  footer = null,
+  children,
+  processModal,
+  style = {},
+}) => {
   const { modal, modalMessage } = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
+  const [expandedCardId, setExpandedCardId] = useState(null);
+
+  const handleCollapseAll = () => setExpandedCardId(null);
 
   return (
-    <div className="sidebar-container"
-         style={style}>
+    <div className="sidebar-container" style={{ ...style }}>
       {header && <div className="sidebar-header">{header}</div>}
-
-      <div className="sidebar-content">{children}</div>
-
-      {footer && (
-        <div className="sidebar-footer">{footer}</div>
-      )}
+      <div className="sidebar-content">
+        {React.Children.map(children, (child) => {
+          if (!React.isValidElement(child)) return child;
+          const id = child.props.id;
+          const isExpanded = expandedCardId === id;
+          return React.cloneElement(child, {
+            expanded: isExpanded,
+            onExpand: () => setExpandedCardId(id),
+            onCollapse: handleCollapseAll,
+          });
+        })}
+      </div>
+      {footer && <div className="sidebar-footer">{footer}</div>}
 
       {modal?.alert && (
         <Modal
@@ -34,64 +50,85 @@ export const Sidebar = ({ stateAtom, style, header, children, footer, processMod
   );
 };
 
-
 export const SidebarCard = ({
+  id,
   title,
   children,
   collapsible = false,
   defaultOpen = true,
-  infoButton = false,
-  onInfoClick,
+  enableExpand = false,
+  expanded = false,
+  onExpand = () => {},
+  onCollapse = () => {},
 }) => {
   const [open, setOpen] = useState(defaultOpen);
 
+  const toggleExpand = (e) => {
+    e.stopPropagation();
+    expanded ? onCollapse() : onExpand();
+  };
+
+  const toggleCollapse = () => {
+    if (collapsible && !expanded) setOpen((prev) => !prev);
+  };
+
   return (
-    <div className="sidebar-card">
+    <div
+      className="sidebar-card"
+      style={{
+        display: expanded ? "flex" : "block",
+        flexDirection: "column",
+        height: expanded ? "100%" : "auto",
+        overflow: expanded ? "hidden" : "visible",
+      }}
+    >
       <div
         className="sidebar-header"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          cursor: collapsible ? "pointer" : "default",
-        }}
-        onClick={collapsible ? () => setOpen(!open) : undefined}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
       >
-        <span className="sidebar-title">{title}</span>
+        <span className="sidebar-title" onClick={toggleCollapse} style={{ cursor: collapsible ? "pointer" : "default" }}>
+          {title}
+        </span>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          {infoButton && (
+          {enableExpand && (
             <button
-              className="sidebar-info-button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onInfoClick) onInfoClick();
+              className="sidebar-expand-button"
+              onClick={toggleExpand}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
               }}
             >
-              <SvgIcon icon="info" size="1rem" />
+              <SvgIcon icon={expanded ? "collapseIcon" : "expandIcon"} size="1rem" />
             </button>
           )}
           {collapsible && (
             <button
               className="sidebar-collapse-button"
+              onClick={() => setOpen((prev) => !prev)}
               style={{
                 background: "none",
                 border: "none",
-                padding: 2,
                 cursor: "pointer",
               }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpen(!open);
-              }}
             >
-              <SvgIcon icon={open ? "upCaret" : "downCaret"} size="1rem" />
+              <SvgIcon icon={open ? "upCaretIcon" : "downCaretIcon"} size="1rem" />
             </button>
           )}
         </div>
       </div>
 
-      {(!collapsible || open) && (
-        <div className="sidebar-body">{children}</div>
+      {(open || expanded) && (
+        <div
+          className="sidebar-body"
+          style={{
+            flex: 1,
+            overflowY: expanded ? "auto" : "visible",
+          }}
+        >
+          {children}
+        </div>
       )}
     </div>
   );
