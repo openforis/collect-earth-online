@@ -524,6 +524,9 @@ a:hover {
 #home-map-pane .ol-attribution {
   position: fixed;
 }
+#image-analysis-pane .ol-attribution {
+    right: 10vw;
+}
 #toggle-map-button {
   position: absolute;
   top: 50%;
