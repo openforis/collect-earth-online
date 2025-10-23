@@ -759,3 +759,11 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
     </div>
   );
 };
+
+export const BreadCrumbs = () => {
+
+  return (
+    <div id="breadcrumb-bar">
+      "Foo"
+    </div>);
+};
