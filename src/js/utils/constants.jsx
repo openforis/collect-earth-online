@@ -4,7 +4,26 @@ import { atom } from 'jotai';
   TODO: Perhaps we can enforce this to a schema as well?
   TODO: Triage some of these keys for redundancy
 */
+
 export const stateAtom = atom({
+  breadCrumbs: [
+    {display: "Homepage",
+     id: "home",
+     onClick: (e)=>{
+       console.log(e);
+     }},
+    {display: "Spatial Informatics Group",
+     id: "instutition",
+     onClick: (e)=>{
+       console.log(e);
+     }
+    },
+    {display: "Add a New Project",
+     id: "page",
+     onClick: (e)=>{
+       console.log(e);
+     }}
+  ],
   collectionStart: 0,
   currentProject: { surveyQuestions: {}, institution: "" },
   currentImagery: { id: "", sourceConfig: {} },

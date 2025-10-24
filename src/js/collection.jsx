@@ -12,7 +12,8 @@ import {
   NavigationBar,
   LearningMaterialModal,
   AcceptTermsModal,
-  ImageryLayerOptions
+  ImageryLayerOptions,
+  BreadCrumbs
 } from "./components/PageComponents";
 import SurveyCollection from "./survey/SurveyCollection";
 import {
@@ -1659,8 +1660,9 @@ function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs/>
       <Collection projectId={params.projectId} plotId={params.plotId || null} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
-    </NavigationBar>,
+      </NavigationBar>,
     document.getElementById("app")
   );
 }

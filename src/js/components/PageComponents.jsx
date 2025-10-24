@@ -1,6 +1,7 @@
 import "../../css/custom.css";
 
 import React, { useState, useEffect } from "react";
+import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import ReactMarkdown from 'react-markdown';
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
@@ -8,6 +9,7 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import SvgIcon from "./svg/SvgIcon";
 import { getLanguage, capitalizeFirst } from "../utils/generalUtils";
 import { getPreference, setPreference } from "../utils/preferences";
+import { stateAtom } from "../utils/constants";
 
 export function LogOutButton({ userName, uri }) {
   const fullUri = uri + window.location.search;
@@ -760,10 +762,38 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
   );
 };
 
-export const BreadCrumbs = () => {
-
+export const BreadCrumbs = () => {  
+  const [state, setState] = useAtom(stateAtom);
+  const {breadCrumbs} = state;
+  
+  const renderCrumb = ({display, id, onClick}, index) => {
+    return (
+      <>
+        {index ? <div> / </div> : <div></div>}
+        <div
+          className="crumb"
+          id={"crumb-" + id}
+          onClick={()=> onClick(display)}
+        >
+          {display}
+        </div>      
+      </>      
+    );
+  };
+  
   return (
-    <div id="breadcrumb-bar">
-      "Foo"
+    <div id="breadcrumb-bar"
+         className="flex-row">
+      <div
+        onClick={()=> {
+          setState((s) => (
+            {...s, breadCrumbs: breadCrumbs.slice(0, breadCrumbs.length - 1)}));
+        }}>
+        <SvgIcon
+          
+          icon="leftArrowSlim" size="2rem" />
+      </div>
+      
+        {breadCrumbs.map(renderCrumb)}
     </div>);
 };
