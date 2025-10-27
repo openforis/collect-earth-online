@@ -192,7 +192,7 @@
                                                  file-base64
                                                  folder-name
                                                  (str "project-" project-id "-" design-type))]
-      (pu/try-catch-throw #(let [[headers body] (get-file-data distribution design-type saved-file folder-name)]
+      (pu/try-catch-throw #(let [[headers body] (get-file-data distribution design-type saved-file folder-name)]                             
                              (when-not (seq body)
                                (pu/init-throw  (str "The " design-type " file contains no rows of data.")))
 

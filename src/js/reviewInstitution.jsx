@@ -910,6 +910,14 @@ class NewImagery extends React.Component {
   };
 
   uploadCustomImagery = (isNew) => {
+    console.log("uploading custom imagery",
+                isNew, //true
+                this.state.imageryTitle.length, // 10+
+                this.state.imageryAttribution.length, //0
+                this.state.selectedType, //2
+                this.props.titleIsTaken(this.state.imageryTitle, this.props.imageryToEdit.id), //false
+                
+               );
     const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.imageryParams);
     const messages = this.validateParams(this.state.selectedType, sanitizedParams);
     if (messages.length > 0) {
@@ -922,6 +930,7 @@ class NewImagery extends React.Component {
       } else if (this.props.titleIsTaken(this.state.imageryTitle, this.props.imageryToEdit.id)) {
         this.setState ({modal: {alert: {alertType: "Imagery Upload Error", alertMessage: "The title '" + this.state.imageryTitle + "' is already taken."}}});
       } else {
+        console.log("fetching at", isNew ? "/add-institution-imagery" : "/update-institution-imagery");
         fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery", {
           method: "POST",
           headers: {
@@ -1105,7 +1114,7 @@ class NewImagery extends React.Component {
     ? "Planet Labs Global Mosaic | © Planet Labs, Inc"
     : type === "SecureWatch"
     ? "SecureWatch Imagery | © Maxar Technologies Inc."
-    : ["Sentinel1", "Sentinel2"].includes(type) || type.includes("GEE")
+    : ["Sentinel1", "Sentinel2", "DynamicWorld"].includes(type) || type.includes("GEE")
     ? "Google Earth Engine | © Google LLC"
     : type.includes("MapBox")
     ? "© Mapbox"
@@ -1165,6 +1174,11 @@ class NewImagery extends React.Component {
 
     return (
       <div className="mb-2 p-4 border rounded">
+        {this.state.modal?.alert &&
+       <Modal title={this.state.modal.alert.alertType}
+              onClose={()=>{this.setState({modal: null});}}>
+         {this.state.modal.alert.alertMessage}
+       </Modal>}
         {/* Selection for imagery type */}
         <div className="mb-3">
           <label>Select Type</label>
@@ -1189,7 +1203,7 @@ class NewImagery extends React.Component {
         {/* This should be generalized into the imageryOptions */}
         {["GeoServer", "xyz"].includes(type) &&
          this.formInput("Attribution", "text", this.state.imageryAttribution, (e) =>
-           this.setState({ imageryAttribution: e.target.value })
+           this.setState(s => ({...s, imageryAttribution: e.target.value }))
          )}
         {displayParams.map((o) => this.formTemplate(o))}
         {optionalProxy &&
@@ -1688,7 +1702,7 @@ class UserList extends React.Component {
       .catch((response) => {
         this.setState({ institutionUserList: [] });
         console.log(response);
-        this.setState ({modal: {alert: {alertType: "User List Error", alertMessage: "Error retrieving the user list. See console for details."}}});
+        this.setState (s => ({... s, modal: {alert: {alertType: "User List Error", alertMessage: "Error retrieving the user list. See console for details."}}}));
       });
   };
 

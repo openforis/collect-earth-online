@@ -349,8 +349,8 @@ a:hover {
 /*****************/
 .alert {
   position: absolute;
-  top: 4rem;
-  left: 1rem;
+  top: -2rem;
+  left: 10rem;
   width: 35rem;
   border: 1px solid #009;
   padding: 1rem;
