@@ -99,7 +99,7 @@ export default class NewQuestionDesigner extends React.Component {
     const surveyQuestionsList = Object.values(surveyQuestions);
     const cardOrder = surveyQuestionsList.reduce((max, q) => q.cardOrder > max ?
                                                  q.cardOrder :
-                                                 max, surveyQuestions[0].cardOrder)
+                                                 max, surveyQuestionsList[0].cardOrder)
     const repeatedQuestions = lengthObject(
       filterObject(
         surveyQuestions,
