@@ -762,9 +762,13 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
   );
 };
 
-export const BreadCrumbs = () => {  
+export const BreadCrumbs = ({crumb}) => {  
   const [state, setState] = useAtom(stateAtom);
   const {breadCrumbs} = state;
+
+  useEffect(()=>{
+    setState((s)=>({... s, breadCrumbs: [... breadCrumbs, crumb]}));
+  }, []);
   
   const renderCrumb = ({display, id, onClick}, index) => {
     return (
@@ -785,15 +789,15 @@ export const BreadCrumbs = () => {
     <div id="breadcrumb-bar"
          className="flex-row">
       <div
+        style={{cursor: "pointer"}}
         onClick={()=> {
-          setState((s) => (
-            {...s, breadCrumbs: breadCrumbs.slice(0, breadCrumbs.length - 1)}));
-        }}>
-        <SvgIcon
-          
-          icon="leftArrowSlim" size="2rem" />
-      </div>
-      
+          const idx = breadCrumbs.length - 1;
+          const keepers = breadCrumbs.slice(0, idx);
+          setState((s) => ({...s, breadCrumbs: keepers}));
+          keepers.slice(keepers.length -1)[0].onClick();          
+        }}
+      > <SvgIcon icon="leftArrowSlim" size="2rem" />
+      </div>      
         {breadCrumbs.map(renderCrumb)}
     </div>);
 };

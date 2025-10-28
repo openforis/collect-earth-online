@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import Modal from "./components/Modal";
 
 class Register extends React.Component {
@@ -159,6 +159,13 @@ class Register extends React.Component {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={-1} userName="" version={session.versionDeployed}>
+      <BreadCrumbs
+        crumb={{display: "Registration",
+                id: "registration",
+                onClick: (e)=>{
+                  console.log("go to registration");
+                }}}
+      />
       <Register />
     </NavigationBar>,
     document.getElementById("app")

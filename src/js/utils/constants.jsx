@@ -10,18 +10,7 @@ export const stateAtom = atom({
     {display: "Homepage",
      id: "home",
      onClick: (e)=>{
-       console.log(e);
-     }},
-    {display: "Spatial Informatics Group",
-     id: "instutition",
-     onClick: (e)=>{
-       console.log(e);
-     }
-    },
-    {display: "Add a New Project",
-     id: "page",
-     onClick: (e)=>{
-       console.log(e);
+       window.location.assign("http://local.collect.earth:8080");
      }}
   ],
   collectionStart: 0,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import ReactDOM from "react-dom";
-import { LoadingModal, NavigationBar, BreadCrumbs } from "./components/PageComponents";
+import { LoadingModal, NavigationBar } from "./components/PageComponents";
 import { mercator } from "./utils/mercator";
 import { sortAlphabetically } from "./utils/generalUtils";
 import SvgIcon from "./components/svg/SvgIcon";
@@ -543,8 +543,7 @@ class ProjectPopup extends React.Component {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-      <BreadCrumbs/>
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>      
       <Home userId={session.userId || -1} userRole={session.userRole || ""} />
     </NavigationBar>,
     
