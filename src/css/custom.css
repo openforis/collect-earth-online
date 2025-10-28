@@ -518,7 +518,7 @@ a:hover {
 /* Home Page */
 /*************/
 #home-map-pane {
-  width: 100%;
+  width: 70%;
   position: fixed;
 }
 #home-map-pane .ol-attribution {

@@ -77,7 +77,7 @@ export const InstitutionSidebar = ({
   ]);
 
   return (
-    <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "25vw" }}>
+    <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "30vw", position: "fixed" }}>
       <SidebarCard title="FILTERS">
         <div className="filter-section">
           <input
@@ -454,34 +454,15 @@ class MapPanel extends React.Component {
   render() {
     return (
       <div
-        className="full-height full-width"
+        className="full-height"
         id="mapPanel"
+        style={{ marginLeft: "30vw" }}
       >
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
                 onClose={()=>{this.setState({modal: null});}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
-        {this.props.showSidePanel == null ?
-         (<div
-            className='bg-lightgray hide-toggle'
-            id="toggle-map-button"
-            onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
-          ><SvgIcon icon="rightDouble" size="1.25rem" /></div>) :
-         (<div
-            className={'bg-lightgray ' +
-                       (this.props.showSidePanel 
-                        ? 'slide-toggle-in'
-                        : 'slide-toggle-out')}
-          id="toggle-map-button"
-          onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
-        >
-          {this.props.showSidePanel ? (
-            <SvgIcon icon="leftDouble" size="1.25rem" />
-          ) : (
-            <SvgIcon icon="rightDouble" size="1.25rem" />
-          )}
-        </div>)}
         <div className="full-height full-width" id="home-map-pane" style={{ maxWidth: "inherit" }} />
         <ProjectPopup
           clusterExtent={this.state.clusterExtent}
