@@ -8,7 +8,7 @@
   flex-direction: column;
   background-color: #e6efef;
   border-left: 1px solid #c9d6d6;
-  z-index: 1000;
+  z-index: 500;
 }
 
 .sidebar-content {

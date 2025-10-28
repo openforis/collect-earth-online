@@ -54,7 +54,7 @@ class HelpSlideDialog extends React.Component {
         onClick={closeHelpMenu}
         style={{
           position: "fixed",
-          zIndex: "100",
+          zIndex: "1000",
           left: "0",
           top: "0",
           width: "100%",

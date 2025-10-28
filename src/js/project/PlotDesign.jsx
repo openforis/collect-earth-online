@@ -253,7 +253,6 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
 };
 
 
-
 export class PlotDesign extends React.Component {
   constructor(props) {
     super(props);
@@ -272,6 +271,12 @@ export class PlotDesign extends React.Component {
 
   componentDidMount() {
     this.setCoordsFromBoundary();
+    if (this.props.totalPlots &&
+        this.props.totalPlots <= 5000
+       ) {
+      const plotIds = Array.from({ length: this.props.totalPlots }, (_, i) => i + 1);
+      this.setState({ plotIdList: plotIds });
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -290,7 +295,7 @@ export class PlotDesign extends React.Component {
     }
     if (this.props.totalPlots &&
         this.props.totalPlots !== prevProps.totalPlots &&
-        Number.isFinite(Number(this.props.totalPlots))
+        this.props.totalPlots <= 5000
     ) {
       const plotIds = Array.from({ length: this.props.totalPlots }, (_, i) => i + 1);
       this.setState({ plotIdList: plotIds });

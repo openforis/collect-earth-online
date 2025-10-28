@@ -42,18 +42,42 @@ export const InstitutionSidebar = ({
 
   const visibleInstitutions = useMemo(() => {
     const list = activeTab === "affiliations" ? userInstitutions : otherInstitutions;
+
     return list.filter((inst) => {
-      const matchFn = matchBeginning
-        ? inst.name.toLowerCase().startsWith(search.toLowerCase())
-        : inst.name.toLowerCase().includes(search.toLowerCase());
-      const hasProjects = (projectsByInstitution[inst.id] || []).length > 0;
+      if (!inst || !inst.name) return false;
+
+      const projectsForInst = projectsByInstitution[inst.id] || [];
+      const hasProjects = projectsForInst.length > 0;
+
+      const matchFn =
+            filterType === "institution"
+            ? matchBeginning
+            ? inst.name.toLowerCase().startsWith(search.toLowerCase())
+            : inst.name.toLowerCase().includes(search.toLowerCase())
+            : projectsForInst.some((p) => {
+              if (!p.name) return false;
+              const name = p.name.toLowerCase();
+              return matchBeginning
+                ? name.startsWith(search.toLowerCase())
+                : name.includes(search.toLowerCase());
+            });
+
       if (!showEmpty && !hasProjects) return false;
       return matchFn;
     });
-  }, [activeTab, userInstitutions, otherInstitutions, search, matchBeginning, showEmpty, projectsByInstitution]);
+  }, [
+    activeTab,
+    userInstitutions,
+    otherInstitutions,
+    search,
+    matchBeginning,
+    showEmpty,
+    projectsByInstitution,
+    filterType,
+  ]);
 
   return (
-    <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "18vw" }}>
+    <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "25vw" }}>
       <SidebarCard title="FILTERS">
         <div className="filter-section">
           <input
