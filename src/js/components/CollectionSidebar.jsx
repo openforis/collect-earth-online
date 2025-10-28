@@ -463,19 +463,7 @@ export const SidebarFooter = ({ processModal }) => {
     const allAnswered = everyObject(
       visibleSurveyQuestions,
       ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered));
-    if (answerMode !== "question") {
-      setAppState((prev) => ({
-        ...prev,
-        modal: {
-          alert: {
-            alertType: "Collection Alert",
-            alertMessage:
-            "You must be in question mode to save the collection.",
-          },
-        },
-      }));
-      return false;
-    } else if (currentPlot.flagged) {
+    if(currentPlot.flagged) {
       return true;
     } else if (inReviewMode) {
       if (!(noneAnswered || allAnswered)) {

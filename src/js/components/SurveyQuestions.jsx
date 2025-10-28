@@ -609,7 +609,6 @@ export const DrawingTool = () => {
   const initialDrawTool = sg.polygons ? "Polygon" : sg.lines ? "LineString" : "Point";
   const [drawTool, setDrawToolState] = useState(initialDrawTool);
 
-  // helpers moved here so this card is self-contained
   const setAnswerMode = (newMode, tool) => {
     setAppState((s) => ({ ...s, answerMode: newMode }));
     if (newMode === "draw") {
