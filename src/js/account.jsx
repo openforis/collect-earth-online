@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 import { FormLayout, SectionBlock, StatsCell, StatsRow } from "./components/FormComponents";
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import Modal from "./components/Modal";
 
 function Account(props) {
@@ -216,6 +216,11 @@ class AccountForm extends React.Component {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumb={{display: "Account",
+                id:"account",
+                onClick:()=>{}}}
+      />
       <Account
         accountId={parseInt(params.accountId || session.userId)}
         userId={session.userId}

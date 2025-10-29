@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import Modal from "./components/Modal";
 
 class VerifyEmail extends React.Component {
@@ -62,6 +62,11 @@ class VerifyEmail extends React.Component {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={-1} userName="" version={session.versionDeployed}>
+      <BreadCrumbs
+        crumb={{display: "Email Verification",
+                id:"email-verify",
+                onClick:()=>{}}}
+      />
       <VerifyEmail email={params.email || ""} passwordResetKey={params.passwordResetKey || ""} />
     </NavigationBar>,
     document.getElementById("app")

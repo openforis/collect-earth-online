@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import InstitutionEditor from "./components/InstitutionEditor";
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import { KBtoBase64Length } from "./utils/generalUtils";
 import Modal from "./components/Modal";
 
@@ -104,6 +104,13 @@ class CreateInstitution extends React.Component {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumb={{display: "Create Institution",
+                id: "create-institution",
+                onClick: (e)=>{
+                  console.log("create institution");
+                }}}
+      />
       <CreateInstitution />
     </NavigationBar>,
     document.getElementById("app")

@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import SvgIcon from "./components/svg/SvgIcon";
 
 function Support() {
@@ -142,6 +142,11 @@ function Support() {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumb={{display: "Support",
+                id:"support",
+                onClick:()=>{}}}
+      />
       <Support />
     </NavigationBar>,
     document.getElementById("app")

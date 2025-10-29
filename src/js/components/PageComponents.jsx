@@ -770,15 +770,17 @@ export const BreadCrumbs = ({crumb}) => {
     setState((s)=>({... s, breadCrumbs: [... breadCrumbs, crumb]}));
   }, []);
   
-  const renderCrumb = ({display, id, onClick}, index) => {
+  const renderCrumb = ({display, id, onClick=(e)=>{console.log(e);}}, index) => {
+
     return (
       <>
         {index ? <div> / </div> : <div></div>}
         <div
           className="crumb"
           id={"crumb-" + id}
-          onClick={()=> onClick(display)}
-        >
+          {... (index < breadCrumbs.length -1 && {
+            onClick: () => onClick(id)})
+          }>
           {display}
         </div>      
       </>      

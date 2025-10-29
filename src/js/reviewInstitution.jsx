@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
 import SvgIcon from "./components/svg/SvgIcon";
-import { LoadingModal, NavigationBar, LearningMaterialModal } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, LearningMaterialModal, BreadCrumbs } from "./components/PageComponents";
 import { ProjectVisibilityPopup, DownloadPopup, ImageryVisibilityPopup } from "./components/BulkPopups";
 
 import { sortAlphabetically, capitalizeFirst, KBtoBase64Length } from "./utils/generalUtils";
@@ -1983,6 +1983,11 @@ const NewUserButtons = ({
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumb={{display: "Review Institution",
+                id:"review-institution",
+                onClick:()=>{}}}
+      />
       <ReviewInstitution
         institutionId={parseInt(params.institutionId || "-1")}
         userId={session.userId || -1}

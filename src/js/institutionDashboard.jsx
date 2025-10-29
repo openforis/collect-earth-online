@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { LoadingModal, NavigationBar } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import SvgIcon from "./components/svg/SvgIcon";
 import Modal from "./components/Modal";
 
@@ -108,6 +108,11 @@ class InstitutionDashboard extends React.Component {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumb={{display:"Institution Dashboard",
+                id: "inst-dash",
+                onClick:()=>{console.log("institution dashboard");}}}
+      />
       <InstitutionDashboard institutionId={params.institutionId || "0"} />
     </NavigationBar>,
     document.getElementById("app")

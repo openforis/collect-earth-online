@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { CollapsibleSectionBlock, ExpandableImage } from "./components/FormComponents";
-import { NavigationBar, LogoBanner } from "./components/PageComponents";
+import { NavigationBar, LogoBanner, BreadCrumbs } from "./components/PageComponents";
 import { getLanguage } from "./utils/generalUtils";
 
 class GeoDashHelp extends React.Component {
@@ -266,6 +266,11 @@ class GeoDashHelp extends React.Component {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumb={{display: "Geo-Dash",
+                id:"geodash-help",
+                onClick:()=>{}}}
+      />
       <GeoDashHelp />
     </NavigationBar>,
     document.getElementById("app")

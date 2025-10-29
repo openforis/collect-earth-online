@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 import { StatsCell, StatsRow } from "./components/FormComponents";
-import { LoadingModal, NavigationBar } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, BreadCrumbs } from "./components/PageComponents";
 
 import { mercator } from "./utils/mercator";
 
@@ -256,6 +256,11 @@ function ProjectAOI() {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumb={{display: "Project Dashboard",
+                id:"project-dash",
+                onClick:()=>{}}}
+      />
       <ProjectDashboard projectId={params.projectId || "0"} userName={session.userName} />
     </NavigationBar>,
     document.getElementById("app")

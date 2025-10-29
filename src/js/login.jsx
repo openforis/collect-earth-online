@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import Modal from "./components/Modal";
 
 class Login extends React.Component {
@@ -102,6 +102,11 @@ class Login extends React.Component {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumb={{display: "Login",
+                id:"login",
+                onClick:()=>{}}}
+      />
       <Login returnurl={params.returnurl || ""} />
     </NavigationBar>,
     document.getElementById("app")

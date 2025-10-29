@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import { CollapsibleSectionBlock } from "./components/FormComponents";
 import { lengthObject, mapObjectArray } from "./utils/sequence";
 
@@ -151,6 +151,11 @@ class UserDisagreement extends React.Component {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumb={{display: "User Disagreement",
+                id:"user-disagreement",
+                onClick:()=>{}}}
+      />
       <UserDisagreement
         plotId={params.plotId}
         projectId={params.projectId}

@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import Modal from "./components/Modal";
 
 class PasswordReset extends React.Component {
@@ -119,6 +119,11 @@ class PasswordReset extends React.Component {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={-1} userName="" version={session.versionDeployed}>
+      <BreadCrumbs
+        crumb={{display: "Password Reset",
+                id:"pass-reset",
+                onClick:()=>{}}}
+      />
       <PasswordReset email={session.email || ""} passwordResetKey={params.passwordResetKey || ""} />
     </NavigationBar>,
     document.getElementById("app")
