@@ -120,9 +120,20 @@ export const NewPlotNavigation = () => {
     setSelectedEmail(newEmail);
     const selectedPlot = userPlotList.find((p) => p.email === newEmail);
     if (selectedPlot) {
+      const newUserSamples = {};
+      for (const sample of selectedPlot.samples || []) {
+        newUserSamples[sample.id] = {};
+        for (const [qId, val] of Object.entries(sample.savedAnswers || {})) {
+          newUserSamples[sample.id][Number(qId)] = {
+            answerId: Number(val.answerId),
+            answer: val.answer,
+          };
+        }
+      }
       setAppState((s) => ({
         ...s,
         currentPlot: selectedPlot,
+        userSamples: newUserSamples,
       }));
     }
   };
@@ -413,11 +424,8 @@ export const SidebarFooter = ({ processModal }) => {
       }).then((response) => {
         if (response.ok) {
           if (inReviewMode) {
-            setAppState(s => ({...s, remainingPlotters: remainingPlotters.filter((plotter) => plotter.userId != currentUserId) }));
-            if(remainingPlotters.length > 0) {
-              setAppState(s => ({...s, modal: {alert: {alertType: "Plot Interpretation Alert", alertMessage: "There are more interpretations for this plot.\nPlease select the user from the user dropdown to review another interpretation."}}}));
-              return null;
-            }
+            setAppState(s => ({...s,
+                               remainingPlotters: remainingPlotters.filter((plotter) => plotter.userId != currentUserId) }));
           }
           if(currentProject.type !== "simplified") {
             return navToNextPlot();
