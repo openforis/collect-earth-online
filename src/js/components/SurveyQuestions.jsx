@@ -57,7 +57,6 @@ export const SurveyQuestions = () => {
   const checkSelection = (sampleIds, questionId) => {
     const q = currentProject?.surveyQuestions?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
-
     if (sampleIds.some((s) => !visibleIds.includes(s))) {
       setAppState((s) => ({
         ...s,

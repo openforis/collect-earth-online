@@ -132,8 +132,7 @@ export const NewPlotNavigation = () => {
       }
       setAppState((s) => ({
         ...s,
-        currentPlot: selectedPlot,
-        userSamples: newUserSamples,
+        userSamples: newUserSamples
       }));
     }
   };
