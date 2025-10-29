@@ -62,8 +62,27 @@ export const NewPlotNavigation = () => {
     currentPlot,
     inReviewMode,
     navigationMode,
-    newPlotId
+    newPlotId,
+    userPlotList
   } = useAtomValue(stateAtom);
+  const [selectedEmail, setSelectedEmail] = useState(currentPlot?.email || "");
+
+  useEffect(() => {
+    const currentEmail = currentPlot?.email || "";
+    const emails = Array.from(new Set(userPlotList.map((p) => p.email))).filter(Boolean);
+
+    if (!emails.includes(currentEmail)) {
+      setSelectedEmail(emails[0] || "");
+      if (emails.length > 0) {
+        const firstPlot = userPlotList.find((p) => p.email === emails[0]);
+        if (firstPlot) {
+          setAppState((s) => ({ ...s, currentPlot: firstPlot }));
+        }
+      }
+    } else {
+      setSelectedEmail(currentEmail);
+    }
+  }, [userPlotList, currentPlot]);
 
   function hasChanged () {
     return !_.isEqual(userSamples, originalUserSamples);}
@@ -93,6 +112,20 @@ export const NewPlotNavigation = () => {
       setAppState (prev => ({ ... prev, modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}}));
     }
   };
+
+  const emails = Array.from(new Set(userPlotList.map((p) => p.email))).filter(Boolean);
+
+  const handleEmailSelect = (e) => {
+    const newEmail = e.target.value;
+    setSelectedEmail(newEmail);
+    const selectedPlot = userPlotList.find((p) => p.email === newEmail);
+    if (selectedPlot) {
+      setAppState((s) => ({
+        ...s,
+        currentPlot: selectedPlot,
+      }));
+    }
+  };
   
   return (
     <SidebarCard
@@ -117,17 +150,21 @@ export const NewPlotNavigation = () => {
         <option value="similar">Similar Plots</option>
       </select>
 
-      <div className="sidebar-mode">
-        <label className="sidebar-switch">
-          <input
-            type="checkbox"
-            checked={inReviewMode}
-            onChange={() => setAppState((s) => ({ ...s, inReviewMode: !s.inReviewMode }))}
-          />
-          <span className="sidebar-slider round"></span>
-        </label>
-        <span className="mode-label">Admin Review</span>
-      </div>
+      {currentProject?.isProjectAdmin && (
+        <>
+          <div className="sidebar-mode">
+            <label className="sidebar-switch">
+              <input
+                type="checkbox"
+                checked={inReviewMode}
+                onChange={() => setAppState((s) => ({ ...s, inReviewMode: !s.inReviewMode }))}
+              />
+              <span className="sidebar-slider round"></span>
+            </label>
+            <span className="mode-label">Admin Review</span>
+          </div>
+        </>
+      )}
 
       {currentPlot?.id > 0 ? (
         <>
@@ -171,6 +208,25 @@ export const NewPlotNavigation = () => {
           >
             Go to first plot
           </button>
+        </div>
+      )}
+      {inReviewMode && emails.length > 0 && (
+        <div style={{ margin: "10px 0" }}>
+          <label className="sidebar-label">Select User:</label>
+          <select
+            className="sidebar-select"
+            onChange={handleEmailSelect}
+            value={selectedEmail}
+          >
+            <option value="" disabled>
+              Choose an email
+            </option>
+            {emails.map((email) => (
+              <option key={email} value={email}>
+                {email}
+              </option>
+            ))}
+          </select>
         </div>
       )}
     </SidebarCard>
