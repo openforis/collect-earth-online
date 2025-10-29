@@ -916,6 +916,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     flagged_reason             text,
     confidence                 integer,
     confidence_comment         text,
+    used_kml                   boolean,
+    used_geodash               boolean,
     collection_time            timestamp,
     analysis_duration          numeric,
     samples                    text,
@@ -934,6 +936,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
         flagged_reason,
         confidence,
         confidence_comment,
+        used_kml,
+        used_geodash,
         collection_time,
         ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
         FORMAT('[%s]', STRING_AGG(

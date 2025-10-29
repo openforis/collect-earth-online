@@ -870,6 +870,8 @@
                         :flagged
                         :flagged_reason
                         :confidence
+                        :used_kml
+                        :used_geodash
                         :collection_time
                         :analysis_duration
                         :common_securewatch_date

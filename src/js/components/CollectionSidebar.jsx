@@ -308,11 +308,11 @@ export const ExternalTools = () => {
   const downloadKML = () => {
     const blob = new Blob([KMLFeatures], { type: "application/vnd.google-earth.kml+xml" });
     const url = URL.createObjectURL(blob);
-
     const link = Object.assign(document.createElement("a"), {
       href: url,
       download: `ceo_projectId-${currentProject?.id}_plotId-${currentPlot?.visibleId}.kml`
     });
+    setState(s => ({...s, usedKML: true}));
 
     link.click();
     URL.revokeObjectURL(url);

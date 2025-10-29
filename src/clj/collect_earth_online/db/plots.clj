@@ -412,7 +412,7 @@
                                 (pos? current-user-id)
                                 (is-proj-admin? session-user-id project-id nil))
         confidence         (tc/val->int (:confidence params 100))
-        confidence-comment (:confidenceComment params)
+        confidence-comment (or (:confidenceComment params) "")
         collection-start   (tc/val->long (:collectionStart params))
         user-samples       (:userSamples params)
         user-images        (:userImages params)
