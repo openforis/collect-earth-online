@@ -205,7 +205,7 @@ export const NewPlotNavigation = () => {
           {navigationMode === "similar" && (
             <div className="sidebar-mode">
               <span>Reference Plot: {currentProject?.plotSimilarityDetails?.referencePlotId}</span>
-              <span>{" "}Reference Year: {currentProject?.plotSimilarityDetails?.years[0]}</span>
+              <span>{" "}Reference Year: {currentProject?.plotSimilarityDetails?.years?.[0] ?? "N/A"}</span>
             </div>
           )}
         </>
