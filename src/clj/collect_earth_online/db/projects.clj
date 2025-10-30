@@ -949,6 +949,8 @@
                           :flagged
                           :collection_time
                           :analysis_duration
+                          :used_geodash
+                          :used_kml
                           :imagery_title
                           :imagery_attributions
                           :sample_geom

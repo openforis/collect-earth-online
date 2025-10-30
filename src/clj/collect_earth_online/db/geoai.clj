@@ -42,10 +42,10 @@
 
 (defn search-plot-by-similarity
   [project-id plot-id year]
-  (let [bq-table          (->> (call-sql "get_bq_table" project-id (str year))
-                               (sql-primitive)
-                               (clojure.string/split #"\.")
-                               (last))
+  (let [bq-table          (-> (call-sql "get_bq_table" project-id year)
+                              (sql-primitive)
+                              (clojure.string/split #"\.")
+                              (last))
         req               (:body (http/get
                                   (str (get-config :gcs-integration :api-url) "/search")
                                   {:query-params {:uniqueid plot-id
