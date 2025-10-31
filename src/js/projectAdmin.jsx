@@ -154,7 +154,7 @@ export function pageInit(params, session) {
            id: "institution",
            query: ["institution", parseInt(params.institutionId) || -1],
            onClick: (e)=>{
-             console.log("go to institution page");
+             window.location.assign(`http://local.collect.earth:8080/review-institution?institutionId=${parseInt(params.institutionId)}`);
            }},
           {display: "Project Admin",
            id:"project",

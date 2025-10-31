@@ -776,8 +776,14 @@ export const BreadCrumbs = ({crumbs}) => {
     getCrumbData("Loading...", Promise.allSettled([
       fetch('/crumb-data',
             { method: "POST",
+              headers: {
+                // "Accept": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
+              },
               body: JSON.stringify(
-                breadCrumbs.concat(crumbs).map(({query})=> query).filter((x)=>x)
+                breadCrumbs.concat(crumbs).map(
+                  ({query})=> query).filter((x)=>x)
+                 .reduce((acc, curr)=> (acc[curr [0]]=curr [1], acc), {})
               )
             })
         .then((res) => (res.ok ? res.json() : Promise.reject()))

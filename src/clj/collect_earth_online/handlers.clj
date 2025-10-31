@@ -6,6 +6,7 @@
             [ring.util.codec                      :refer [url-encode]]
             [ring.util.response                   :refer [redirect]]
             [triangulum.config                    :refer [get-config]]
+            [triangulum.database                  :refer [call-sql]]
             [triangulum.response                  :refer [no-cross-traffic? data-response]]
             [triangulum.type-conversion           :refer [val->int]]))
 
@@ -37,7 +38,14 @@
                      full-url
                      "&flash_message=You must login to see "
                      full-url)))))
+
 (defn crumb-data [{:keys [params session]}]
-  (let [user-id        (:userId session -1)]
-    (data-response {:project "TEST Project"
-                    :institution "DEV Institution"})))
+  (let [user-id        (:userId session -1)
+        project        (when-let [project-id (-> params :project val->int)]
+                         (-> (call-sql "select_project_by_id" project-id)
+                             first :name))
+        institution    (when-let [inst-id (-> params :institution val->int)]
+                         (-> (call-sql "select_institution_by_id" inst-id user-id)
+                             first :name))]
+    (data-response {:project project
+                    :institution institution})))
