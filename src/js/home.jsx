@@ -231,7 +231,7 @@ export const InstitutionSidebar = ({
                     color: "#2f3e2f",
                     transition: "background 0.15s ease",
                   }}
-                onClick={() => (window.location.href = `/review-project?projectId=${project.id}institutionId=${inst.id}`)}
+                onClick={() => (window.location.href = `/review-project?projectId=${project.id}&institutionId=${inst.id}`)}
                   onMouseOver={(e) => (e.currentTarget.style.background = "#f1f5f3")}
                   onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
                 >

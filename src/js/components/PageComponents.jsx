@@ -772,12 +772,10 @@ export const BreadCrumbs = ({crumbs}) => {
   };
   
   useEffect(()=>{
-    console.log("useEffect fires!");
     getCrumbData("Loading...", Promise.allSettled([
       fetch('/crumb-data',
             { method: "POST",
               headers: {
-                // "Accept": "application/json",
                 "Content-Type": "application/json; charset=utf-8",
               },
               body: JSON.stringify(
