@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
+import { NavigationBar } from "./components/PageComponents";
 import SvgIcon from "./components/svg/SvgIcon";
 
 function NotFound() {
@@ -31,12 +31,7 @@ function NotFound() {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-      <BreadCrumbs
-        crumb={{display: "Not Found",
-                id:"not-found",
-                onClick:()=>{}}}
-      />
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>      
       <NotFound />
     </NavigationBar>,
     document.getElementById("app")

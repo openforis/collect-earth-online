@@ -629,11 +629,9 @@ export function pageInit(params, session) {
       page={(addDialog, copyDialog, closeDialogs) => (
         <>
           <BreadCrumbs
-            crumb={{display: "Widget Layout Editor",
-                    id: "widget-layout-editor",
-                    onClick: (e)=>{
-                      console.log("widget layout editor");
-                    }}}
+            crumbs={[
+              {display: "Widget Layout Editor",
+               id: "widget-layout-editor"}]}
           />
           <WidgetLayoutEditor
           addDialog={addDialog}

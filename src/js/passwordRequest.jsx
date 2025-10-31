@@ -80,9 +80,9 @@ export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={-1} userName="" version={session.versionDeployed}>
       <BreadCrumbs
-        crumb={{display: "Password Reset/Request",
-                id:"password",
-                onClick:()=>{console.log("reset password");}}}
+        crumbs={[
+          {display: "Password Reset/Request",
+           id:"password",}]}
       />
       <PasswordRequest />
     </NavigationBar>,

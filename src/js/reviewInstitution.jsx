@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
+import { useAtom, useSetAtom, useAtomValue } from 'jotai';
+
 import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
 import SvgIcon from "./components/svg/SvgIcon";
@@ -1550,7 +1552,7 @@ function Project({
         ) : (
           <a
             className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-            href={`/collection?projectId=${project.id}`}
+            href={`/collection?projectId=${project.id}&institutionId=${institutionId}`}
             style={{
               boxShadow:
               project.percentComplete === 0.0
@@ -1576,7 +1578,7 @@ function Project({
                 window.location.assign(
                   project.isDraft
                     ? `/create-project?projectDraftId=${project.id}&institutionId=${institutionId}`
-                    : `/review-project?projectId=${project.id}`
+                    : `/review-project?projectId=${project.id}&institutionId=${institutionId}}`
                 )
               }
               style={{
@@ -1980,13 +1982,18 @@ const NewUserButtons = ({
   );
 };
 
+
+
 export function pageInit(params, session) {
+  let [] = 
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <BreadCrumbs
-        crumb={{display: "Review Institution",
-                id:"review-institution",
-                onClick:()=>{}}}
+        crumbs={[
+          {display: params.institutionName || "Review Institution",
+           id:"institution",
+           query:["institution", parseInt(params.institutionId || "-1")],
+           onClick:()=>{}}]}
       />
       <ReviewInstitution
         institutionId={parseInt(params.institutionId || "-1")}

@@ -149,9 +149,18 @@ export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <BreadCrumbs
-        crumb={{display: "Project Admin",
-                id:"project-admin",
-                onClick:()=>{}}}
+        crumbs={[
+          {display: "Institution",
+           id: "institution",
+           query: ["institution", parseInt(params.institutionId) || -1],
+           onClick: (e)=>{
+             console.log("go to institution page");
+           }},
+          {display: "Project Admin",
+           id:"project",
+           query: ["project", parseInt(params.institutionId) || -1],
+           onClick:()=>{}}
+        ]}
       />
       <Project
         institutionId={parseInt(params.institutionId) || -1}

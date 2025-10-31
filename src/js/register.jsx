@@ -160,11 +160,9 @@ export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={-1} userName="" version={session.versionDeployed}>
       <BreadCrumbs
-        crumb={{display: "Registration",
-                id: "registration",
-                onClick: (e)=>{
-                  console.log("go to registration");
-                }}}
+        crumbs={[
+          {display: "Registration",
+           id: "registration"}]}
       />
       <Register />
     </NavigationBar>,

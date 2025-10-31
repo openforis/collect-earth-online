@@ -1661,11 +1661,20 @@ export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <BreadCrumbs
-        crumb={{display: "Collection",
-                id: "collection",
-                onClick: (e)=>{
-                  console.log("go to collection");
-                }}}
+        crumbs={[
+          {display: "Institution",
+           id: "institution",
+           query: ["institution", params.institutionId],
+           onClick: (e)=>{
+             console.log("go to institution page");
+           }},
+          {display: "Collection",
+           id: "project",
+           query: ["project", params.projectId],
+           onClick: (e)=>{
+             console.log("go to collection");
+           }}
+        ]}        
       />
       <Collection projectId={params.projectId} plotId={params.plotId || null} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
       </NavigationBar>,

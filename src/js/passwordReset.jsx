@@ -120,9 +120,8 @@ export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={-1} userName="" version={session.versionDeployed}>
       <BreadCrumbs
-        crumb={{display: "Password Reset",
-                id:"pass-reset",
-                onClick:()=>{}}}
+        crumbs={[{display: "Password Reset",
+                id:"pass-reset",}]}
       />
       <PasswordReset email={session.email || ""} passwordResetKey={params.passwordResetKey || ""} />
     </NavigationBar>,

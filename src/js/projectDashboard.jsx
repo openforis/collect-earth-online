@@ -257,9 +257,15 @@ export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <BreadCrumbs
-        crumb={{display: "Project Dashboard",
-                id:"project-dash",
-                onClick:()=>{}}}
+        crumbs={[
+          {display: "Institution",
+           id: "institution",
+           query: ["institution", params.institutionId],
+           onClick:()=>{}},
+          {display: "Project Dashboard",
+           id:"project",
+           query: ["project", params.projectId],
+           onClick:()=>{}}]}
       />
       <ProjectDashboard projectId={params.projectId || "0"} userName={session.userName} />
     </NavigationBar>,

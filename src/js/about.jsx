@@ -43,9 +43,9 @@ export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <BreadCrumbs
-        crumb={{display: "About",
-                id:"about",
-                onClick:()=>{}}}
+        crumbs={[
+          {display: "About",
+           id:"about"}]}
       />
       <About />
     </NavigationBar>,

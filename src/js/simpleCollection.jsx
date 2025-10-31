@@ -1161,9 +1161,16 @@ export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar version={session.versionDeployed}>
       <BreadCrumbs
-        crumb={{display: "Collection",
-                id:"simpl-coll",
-                onClick:()=>{}}}
+        crumbs={[
+          {display: "Institution",
+           id:"institution",
+           query: ["institution", params.institutionId || "-1"],
+           onClick:()=>{}},
+          {display: "Collection",
+           id:"project",
+           query: ["project", params.projectId],
+           onClick:()=>{}}
+        ]}
       />
       <SimpleCollection locale={params.locale} projectId={params.projectId} />
     </NavigationBar>,

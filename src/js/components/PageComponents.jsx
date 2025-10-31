@@ -762,15 +762,39 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
   );
 };
 
-export const BreadCrumbs = ({crumb}) => {  
+export const BreadCrumbs = ({crumbs}) => {  
   const [state, setState] = useAtom(stateAtom);
   const {breadCrumbs} = state;
-
-  useEffect(()=>{
-    setState((s)=>({... s, breadCrumbs: [... breadCrumbs, crumb]}));
-  }, []);
   
-  const renderCrumb = ({display, id, onClick=(e)=>{console.log(e);}}, index) => {
+  const getCrumbData = (message, promise) => {
+    setState((s) => ({... s, modalMessage: message}), () =>
+      promise.finally(() => setState((s) => ({... s, modalMessage: null}))));
+  };
+  
+  useEffect(()=>{
+    console.log("useEffect fires!");
+    getCrumbData("Loading...", Promise.allSettled([
+      fetch('/crumb-data',
+            { method: "POST",
+              body: JSON.stringify(
+                breadCrumbs.concat(crumbs).map(({query})=> query).filter((x)=>x)
+              )
+            })
+        .then((res) => (res.ok ? res.json() : Promise.reject()))
+        .then((data) => {
+          setState((s)=>(
+            {... s,
+             breadCrumbs: breadCrumbs.concat(
+               crumbs.map((crumb) => ({
+                 ... crumb,
+                 display: data[crumb.id],            
+               })))}));
+        })]));    
+  }, []);
+
+  const crumbClick = (e) => console.log(e);
+  
+  const renderCrumb = ({display, id, onClick=crumbClick}, index) => {
 
     return (
       <>

@@ -231,7 +231,7 @@ export const InstitutionSidebar = ({
                     color: "#2f3e2f",
                     transition: "background 0.15s ease",
                   }}
-                  onClick={() => (window.location.href = `/review-project?projectId=${project.id}`)}
+                onClick={() => (window.location.href = `/review-project?projectId=${project.id}institutionId=${inst.id}`)}
                   onMouseOver={(e) => (e.currentTarget.style.background = "#f1f5f3")}
                   onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
                 >
@@ -494,7 +494,7 @@ class ProjectPopup extends React.Component {
                     <td className="small col-6 pr-0">
                       <a
                         className="btn btn-sm btn-block btn-outline-lightgreen"
-                        href={`/collection?projectId=${feature.get("projectId")}`}
+                        href={`/collection?projectId=${feature.get("projectId")}&institutionId=${feature.get("institutionId")}`}
                         style={{
                           whiteSpace: "nowrap",
                           overflow: "hidden",

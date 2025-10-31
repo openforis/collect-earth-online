@@ -143,9 +143,9 @@ export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <BreadCrumbs
-        crumb={{display: "Support",
-                id:"support",
-                onClick:()=>{}}}
+        crumbs={[
+          {display: "Support",
+           id:"support"}]}
       />
       <Support />
     </NavigationBar>,

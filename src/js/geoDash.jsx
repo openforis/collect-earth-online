@@ -260,9 +260,9 @@ export function pageInit(params, session) {
         visiblePlotId={params.visiblePlotId ? parseInt(params.visiblePlotId) : -1}
       />
       <BreadCrumbs
-        crumb={{display: "Geo-Dash",
-                id:"geodash",
-                onClick:()=>{}}}
+        crumbs={[
+          {display: "Geo-Dash",
+           id:"geodash"}]}
       />
     </>
     ,

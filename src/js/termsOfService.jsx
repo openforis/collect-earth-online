@@ -86,9 +86,9 @@ export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <BreadCrumbs
-        crumb={{display: "Terms of Service",
-                id:"tos",
-                onClick: (e)=>{console.log("terms of service");}}}
+        crumbs={[
+          {display: "Terms of Service",
+           id:"tos",}]}
       />
       <TermsOfService />
     </NavigationBar>,

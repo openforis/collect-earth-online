@@ -63,9 +63,9 @@ export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={-1} userName="" version={session.versionDeployed}>
       <BreadCrumbs
-        crumb={{display: "Email Verification",
-                id:"email-verify",
-                onClick:()=>{}}}
+        crumbs={[
+          {display: "Email Verification",
+           id:"email-verify"}]}
       />
       <VerifyEmail email={params.email || ""} passwordResetKey={params.passwordResetKey || ""} />
     </NavigationBar>,
