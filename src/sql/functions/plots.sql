@@ -112,7 +112,9 @@ CREATE TYPE collection_return AS (
     plot_geom          text,
     extra_plot_info    json,
     user_id            integer,
-    email              text
+    email              text,
+    used_kml           boolean,
+    used_geodash       boolean
 );
 
 -- This return type is so the collection functions match return types.
@@ -148,7 +150,9 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
         pa.user_rid,
-        u.email
+        u.email,
+        up.used_kml,
+        up.used_geodash
     FROM plots
     LEFT JOIN plot_assignments pa
         ON plot_uid = pa.plot_rid
@@ -182,7 +186,9 @@ CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id i
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
         u.user_uid,
-        u.email
+        u.email,
+        up.used_kml,
+        up.used_geodash
     FROM plots
     INNER JOIN user_plots up
         ON plot_uid = plot_rid
@@ -206,7 +212,10 @@ CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id in
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
         u.user_uid,
-        u.email
+        u.email,
+        up.used_kml,
+        up.used_geodash
+
     FROM plots
     LEFT JOIN user_plots up
         ON plot_uid = plot_rid
@@ -235,7 +244,9 @@ CREATE OR REPLACE FUNCTION select_confidence_plots(
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
         u.user_uid,
-        u.email
+        u.email,
+        up.used_kml,
+        up.used_geodash
     FROM plots
     INNER JOIN user_plots up
         ON plot_uid = plot_rid
@@ -268,7 +279,9 @@ CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
         u.user_uid,
-        u.email
+        u.email,
+        up.used_kml,
+        up.used_geodash
     FROM plots
     INNER JOIN assigned_count ac
         ON plot_uid = ac.plot_rid
@@ -295,7 +308,10 @@ SELECT p.plot_uid,
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
         pa.user_rid,
-        u.email
+        u.email,
+        up.used_kml,
+        up.used_geodash
+
     FROM geoai_cache gc
     CROSS JOIN unnest (gc.similar_plots) WITH ORDINALITY AS elem(plot_uid, ord)
     JOIN plots p

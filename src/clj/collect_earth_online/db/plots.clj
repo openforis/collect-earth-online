@@ -223,6 +223,8 @@
                 confidence_comment
                 flagged_reason
                 plot_geom
+                used_kml
+                used_geodash
                 extra_plot_info
                 visible_id
                 user_id
@@ -236,6 +238,8 @@
      :confidence        confidence
      :confidenceComment confidence_comment
      :visibleId         visible_id
+     :usedKML           used_kml
+     :usedGeodash       used_geodash
      :plotGeom          plot_geom
      :extraPlotInfo     (tc/jsonb->clj extra_plot_info {})
      :samples           (if (= project-type "simplified")
