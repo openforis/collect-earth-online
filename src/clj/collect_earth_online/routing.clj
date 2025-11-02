@@ -5,7 +5,7 @@
             [collect-earth-online.sse             :as sse]
             [collect-earth-online.db.doi          :as doi]
             [collect-earth-online.db.geodash      :as geodash]
-            [collect-earth-online.db.geoai        :as geoai]
+            [collect-earth-online.db.geoai        :as geoai]          
             [collect-earth-online.db.imagery      :as imagery]
             [collect-earth-online.db.institutions :as institutions]
             [collect-earth-online.db.metrics      :as metrics]
@@ -13,6 +13,7 @@
             [collect-earth-online.db.projects     :as projects]
             [collect-earth-online.db.qaqc         :as qaqc]
             [collect-earth-online.db.users        :as users]
+            [collect-earth-online.handlers :refer [crumb-data]]
             [collect-earth-online.proxy           :as proxy]
             [triangulum.views                     :refer [render-page]]))
 
@@ -146,6 +147,10 @@
    [:post "/update-project-draft"]           {:handler     (validate projects/update-project-draft!)
                                               :auth-type   :user
                                               :auth-action :block}
+   [:post "/copy-project"]                   {:handler projects/copy-project!
+                                              :auth-type :admin
+                                              :auth-action :block}
+ 
    [:post "/close-project"]                  {:handler     (validate projects/close-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
@@ -196,7 +201,7 @@
    [:get "/doi"]          {:handler     (validate doi/get-doi-reference)}
 
    ;; Plots API
-   [:get  "/get-collection-plot"]              {:handler     #'plots/get-collection-plot
+   [:get  "/get-collection-plot"]              {:handler     (validate plots/get-collection-plot)
                                                 :auth-type   :collect
                                                 :auth-action :block}
    [:get  "/get-plot-disagreement"]            {:handler     (validate plots/get-plot-disagreement)}
@@ -290,6 +295,6 @@
                                                :auth-action :block}
    [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}
    [:post "/gcloud-listener"]                  {:handler gcloud/gcloud-handler}
-   [:get "/open-socket"]                       {:handler sse/sse-handler}   
+   [:get  "/open-socket"]                      {:handler sse/sse-handler}   
    }
   )
