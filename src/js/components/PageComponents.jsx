@@ -760,7 +760,7 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
   );
 };
 
-xport function PromptModal({title, inputs, callBack, closePrompt}) {
+export function PromptModal({title, inputs, callBack, closePrompt}) {
   const [promptState, setPromptState] = React.useState([]);
   React.useEffect(()=> setPromptState(inputs.reduce(
     (acc, {index, value}) => {

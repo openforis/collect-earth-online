@@ -555,7 +555,11 @@
           (when-not causes (log (ex-message e)))
           (data-response "Internal server error during project creation request, there may be a problem with your input." {:status 500}))))))
 
-(defn copy-project!  [{:keys [params session]}]
+(defn copy-project!
+  "{:params  {:projectId Int}
+    :session {:userId Int}
+   }"
+  [{:keys [params session]}]
   (let [user-id (:userId session -1)
 	project-id (tc/val->int (:projectId params))
 	{:keys [institution
@@ -568,7 +572,7 @@
 	 :as old-project} (build-project-by-id user-id project-id)
         project (assoc old-project
 	               :name (str name " - COPY")
-                       :surveyQuestions (tc/clj->jsonb surveyQuestions)
+                       :surveyQuestions surveyQuestions
 	               :institutionId institution
 	               :plotSize (long plotSize)
 	               :plotSpacing (long plotSpacing)
@@ -576,6 +580,7 @@
 	               :sampleResolution (long sampleResolution)
 	               :useTemplatePlots (:plots params)
 	               :useTemplateWidgets (:widgets params))]
+    project
     (create-project! {:params project})))
 
 ;;;
