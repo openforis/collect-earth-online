@@ -42,18 +42,42 @@ export const InstitutionSidebar = ({
 
   const visibleInstitutions = useMemo(() => {
     const list = activeTab === "affiliations" ? userInstitutions : otherInstitutions;
+
     return list.filter((inst) => {
-      const matchFn = matchBeginning
-        ? inst.name.toLowerCase().startsWith(search.toLowerCase())
-        : inst.name.toLowerCase().includes(search.toLowerCase());
-      const hasProjects = (projectsByInstitution[inst.id] || []).length > 0;
+      if (!inst || !inst.name) return false;
+
+      const projectsForInst = projectsByInstitution[inst.id] || [];
+      const hasProjects = projectsForInst.length > 0;
+
+      const matchFn =
+            filterType === "institution"
+            ? matchBeginning
+            ? inst.name.toLowerCase().startsWith(search.toLowerCase())
+            : inst.name.toLowerCase().includes(search.toLowerCase())
+            : projectsForInst.some((p) => {
+              if (!p.name) return false;
+              const name = p.name.toLowerCase();
+              return matchBeginning
+                ? name.startsWith(search.toLowerCase())
+                : name.includes(search.toLowerCase());
+            });
+
       if (!showEmpty && !hasProjects) return false;
       return matchFn;
     });
-  }, [activeTab, userInstitutions, otherInstitutions, search, matchBeginning, showEmpty, projectsByInstitution]);
+  }, [
+    activeTab,
+    userInstitutions,
+    otherInstitutions,
+    search,
+    matchBeginning,
+    showEmpty,
+    projectsByInstitution,
+    filterType,
+  ]);
 
   return (
-    <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "18vw" }}>
+    <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "30vw", position: "fixed" }}>
       <SidebarCard title="FILTERS">
         <div className="filter-section">
           <input
@@ -430,34 +454,15 @@ class MapPanel extends React.Component {
   render() {
     return (
       <div
-        className="full-height full-width"
+        className="full-height"
         id="mapPanel"
+        style={{ marginLeft: "30vw" }}
       >
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
                 onClose={()=>{this.setState({modal: null});}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
-        {this.props.showSidePanel == null ?
-         (<div
-            className='bg-lightgray hide-toggle'
-            id="toggle-map-button"
-            onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
-          ><SvgIcon icon="rightDouble" size="1.25rem" /></div>) :
-         (<div
-            className={'bg-lightgray ' +
-                       (this.props.showSidePanel 
-                        ? 'slide-toggle-in'
-                        : 'slide-toggle-out')}
-          id="toggle-map-button"
-          onClick={() => this.props.toggleSidebar(this.state.mapConfig)}
-        >
-          {this.props.showSidePanel ? (
-            <SvgIcon icon="leftDouble" size="1.25rem" />
-          ) : (
-            <SvgIcon icon="rightDouble" size="1.25rem" />
-          )}
-        </div>)}
         <div className="full-height full-width" id="home-map-pane" style={{ maxWidth: "inherit" }} />
         <ProjectPopup
           clusterExtent={this.state.clusterExtent}

@@ -62,8 +62,27 @@ export const NewPlotNavigation = () => {
     currentPlot,
     inReviewMode,
     navigationMode,
-    newPlotId
+    newPlotId,
+    userPlotList
   } = useAtomValue(stateAtom);
+  const [selectedEmail, setSelectedEmail] = useState(currentPlot?.email || "");
+
+  useEffect(() => {
+    const currentEmail = currentPlot?.email || "";
+    const emails = Array.from(new Set(userPlotList.map((p) => p.email))).filter(Boolean);
+
+    if (!emails.includes(currentEmail)) {
+      setSelectedEmail(emails[0] || "");
+      if (emails.length > 0) {
+        const firstPlot = userPlotList.find((p) => p.email === emails[0]);
+        if (firstPlot) {
+          setAppState((s) => ({ ...s, currentPlot: firstPlot }));
+        }
+      }
+    } else {
+      setSelectedEmail(currentEmail);
+    }
+  }, [userPlotList, currentPlot]);
 
   function hasChanged () {
     return !_.isEqual(userSamples, originalUserSamples);}
@@ -93,6 +112,30 @@ export const NewPlotNavigation = () => {
       setAppState (prev => ({ ... prev, modal: {alert: {alertType: "Plot Navigation Alert", alertMessage: "Please enter a number to go to plot."}}}));
     }
   };
+
+  const emails = Array.from(new Set(userPlotList.map((p) => p.email))).filter(Boolean);
+
+  const handleEmailSelect = (e) => {
+    const newEmail = e.target.value;
+    setSelectedEmail(newEmail);
+    const selectedPlot = userPlotList.find((p) => p.email === newEmail);
+    if (selectedPlot) {
+      const newUserSamples = {};
+      for (const sample of selectedPlot.samples || []) {
+        newUserSamples[sample.id] = {};
+        for (const [qId, val] of Object.entries(sample.savedAnswers || {})) {
+          newUserSamples[sample.id][Number(qId)] = {
+            answerId: Number(val.answerId),
+            answer: val.answer,
+          };
+        }
+      }
+      setAppState((s) => ({
+        ...s,
+        userSamples: newUserSamples
+      }));
+    }
+  };
   
   return (
     <SidebarCard
@@ -117,17 +160,21 @@ export const NewPlotNavigation = () => {
         <option value="similar">Similar Plots</option>
       </select>
 
-      <div className="sidebar-mode">
-        <label className="sidebar-switch">
-          <input
-            type="checkbox"
-            checked={inReviewMode}
-            onChange={() => setAppState((s) => ({ ...s, inReviewMode: !s.inReviewMode }))}
-          />
-          <span className="sidebar-slider round"></span>
-        </label>
-        <span className="mode-label">Admin Review</span>
-      </div>
+      {currentProject?.isProjectAdmin && (
+        <>
+          <div className="sidebar-mode">
+            <label className="sidebar-switch">
+              <input
+                type="checkbox"
+                checked={inReviewMode}
+                onChange={() => setAppState((s) => ({ ...s, inReviewMode: !s.inReviewMode }))}
+              />
+              <span className="sidebar-slider round"></span>
+            </label>
+            <span className="mode-label">Admin Review</span>
+          </div>
+        </>
+      )}
 
       {currentPlot?.id > 0 ? (
         <>
@@ -158,7 +205,7 @@ export const NewPlotNavigation = () => {
           {navigationMode === "similar" && (
             <div className="sidebar-mode">
               <span>Reference Plot: {currentProject?.plotSimilarityDetails?.referencePlotId}</span>
-              <span>{" "}Reference Year: {currentProject?.plotSimilarityDetails?.years[0]}</span>
+              <span>{" "}Reference Year: {currentProject?.plotSimilarityDetails?.years?.[0] ?? "N/A"}</span>
             </div>
           )}
         </>
@@ -171,6 +218,25 @@ export const NewPlotNavigation = () => {
           >
             Go to first plot
           </button>
+        </div>
+      )}
+      {inReviewMode && emails.length > 0 && (
+        <div style={{ margin: "10px 0" }}>
+          <label className="sidebar-label">Select User:</label>
+          <select
+            className="sidebar-select"
+            onChange={handleEmailSelect}
+            value={selectedEmail}
+          >
+            <option value="" disabled>
+              Choose an email
+            </option>
+            {emails.map((email) => (
+              <option key={email} value={email}>
+                {email}
+              </option>
+            ))}
+          </select>
         </div>
       )}
     </SidebarCard>
@@ -252,11 +318,11 @@ export const ExternalTools = () => {
   const downloadKML = () => {
     const blob = new Blob([KMLFeatures], { type: "application/vnd.google-earth.kml+xml" });
     const url = URL.createObjectURL(blob);
-
     const link = Object.assign(document.createElement("a"), {
       href: url,
       download: `ceo_projectId-${currentProject?.id}_plotId-${currentPlot?.visibleId}.kml`
     });
+    setState(s => ({...s, usedKML: true}));
 
     link.click();
     URL.revokeObjectURL(url);
@@ -357,11 +423,8 @@ export const SidebarFooter = ({ processModal }) => {
       }).then((response) => {
         if (response.ok) {
           if (inReviewMode) {
-            setAppState(s => ({...s, remainingPlotters: remainingPlotters.filter((plotter) => plotter.userId != currentUserId) }));
-            if(remainingPlotters.length > 0) {
-              setAppState(s => ({...s, modal: {alert: {alertType: "Plot Interpretation Alert", alertMessage: "There are more interpretations for this plot.\nPlease select the user from the user dropdown to review another interpretation."}}}));
-              return null;
-            }
+            setAppState(s => ({...s,
+                               remainingPlotters: remainingPlotters.filter((plotter) => plotter.userId != currentUserId) }));
           }
           if(currentProject.type !== "simplified") {
             return navToNextPlot();
@@ -463,19 +526,7 @@ export const SidebarFooter = ({ processModal }) => {
     const allAnswered = everyObject(
       visibleSurveyQuestions,
       ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered));
-    if (answerMode !== "question") {
-      setAppState((prev) => ({
-        ...prev,
-        modal: {
-          alert: {
-            alertType: "Collection Alert",
-            alertMessage:
-            "You must be in question mode to save the collection.",
-          },
-        },
-      }));
-      return false;
-    } else if (currentPlot.flagged) {
+    if(currentPlot.flagged) {
       return true;
     } else if (inReviewMode) {
       if (!(noneAnswered || allAnswered)) {

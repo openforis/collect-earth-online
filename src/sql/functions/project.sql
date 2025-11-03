@@ -916,6 +916,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     flagged_reason             text,
     confidence                 integer,
     confidence_comment         text,
+    used_kml                   boolean,
+    used_geodash               boolean,
     collection_time            timestamp,
     analysis_duration          numeric,
     samples                    text,
@@ -934,6 +936,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
         flagged_reason,
         confidence,
         confidence_comment,
+        used_kml,
+        used_geodash,
         collection_time,
         ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
         FORMAT('[%s]', STRING_AGG(
@@ -1057,6 +1061,8 @@ RETURNS TABLE (
         extra_plot_info       json,
         extra_sample_info     json,
         sample_internal_id    integer,
+        used_kml              boolean,
+        used_geodash          boolean,
         guest_usernames       jsonb
 ) AS $$
 
@@ -1081,7 +1087,9 @@ WITH guest_users AS (
         saved_answers,
         extra_plot_info,
         extra_sample_info,
-        s.sample_uid
+        s.sample_uid,
+        up.used_kml,
+        up.used_geodash
     FROM plots pl
     INNER JOIN samples s ON s.plot_rid = pl.plot_uid
     INNER JOIN user_plots up ON up.plot_rid = pl.plot_uid
@@ -1106,7 +1114,9 @@ WITH guest_users AS (
         saved_answers,
         extra_plot_info,
         extra_sample_info,
-        s.sample_uid
+        s.sample_uid,
+        up.used_kml,
+        up.used_geodash
     FROM plots pl
     LEFT JOIN samples s ON s.plot_rid = pl.plot_uid
     LEFT JOIN user_plots up ON up.plot_rid = pl.plot_uid

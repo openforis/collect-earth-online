@@ -263,6 +263,8 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
 	      answerMode: "question",
 	      inReviewMode: reviewMode || state.inReviewMode,
               newPlotId: data[0].visibleId,
+              usedKML: data[0]?.usedKML ?? false,
+              usedGeodash: data[0]?.usedGeodash ?? false,
 	    }));
           }
         })

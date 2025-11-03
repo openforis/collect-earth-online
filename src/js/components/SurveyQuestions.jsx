@@ -57,7 +57,6 @@ export const SurveyQuestions = () => {
   const checkSelection = (sampleIds, questionId) => {
     const q = currentProject?.surveyQuestions?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
-
     if (sampleIds.some((s) => !visibleIds.includes(s))) {
       setAppState((s) => ({
         ...s,
@@ -609,7 +608,6 @@ export const DrawingTool = () => {
   const initialDrawTool = sg.polygons ? "Polygon" : sg.lines ? "LineString" : "Point";
   const [drawTool, setDrawToolState] = useState(initialDrawTool);
 
-  // helpers moved here so this card is self-contained
   const setAnswerMode = (newMode, tool) => {
     setAppState((s) => ({ ...s, answerMode: newMode }));
     if (newMode === "draw") {

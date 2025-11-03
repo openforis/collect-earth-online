@@ -348,21 +348,21 @@ a:hover {
 /* Flash Message */
 /*****************/
 .alert {
-    position: absolute;
-    top: 4rem;
-    left: 1rem;
-    width: 35rem;
-    border: 1px solid #009;
-    padding: 1rem;
-    z-index: 1000;
-    font-size: 1rem;
-    font-style: italic;
-    background: white;
-    opacity: 0;
-    animation: fade-out 6s;
-    -webkit-animation: fade-out 6s;
-    -moz-animation: fade-out 6s;
-    -o-animation: fade-out 6s;
+  position: absolute;
+  top: -2rem;
+  left: 10rem;
+  width: 35rem;
+  border: 1px solid #009;
+  padding: 1rem;
+  z-index: 1000;
+  font-size: 1rem;
+  font-style: italic;
+  background: white;
+  opacity: 0;
+  animation: fade-out 6s;
+  -webkit-animation: fade-out 6s;
+  -moz-animation: fade-out 6s;
+  -o-animation: fade-out 6s;
 }
 @-webkit-keyframes fade-out {
     0% {
@@ -518,11 +518,14 @@ a:hover {
 /* Home Page */
 /*************/
 #home-map-pane {
-    width: 100%;
+    width: 75%;
     position: fixed;
 }
 #home-map-pane .ol-attribution {
     position: fixed;
+}
+#image-analysis-pane .ol-attribution {
+    right: 10vw;
 }
 #image-analysis-pane .ol-attribution {
     right: 10vw;

@@ -76,7 +76,6 @@ class UserStats extends React.Component {
               </div>
             </div>
           </div>
-
           {perProject && (
             <div className="ProjectStats__user-table">
               <strong>User Stats:</strong>
