@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 
 function TermsOfService() {
   return (
@@ -85,6 +85,11 @@ function TermsOfService() {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[
+          {display: "Terms of Service",
+           id:"tos",}]}
+      />
       <TermsOfService />
     </NavigationBar>,
     document.getElementById("app")

@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
 
-import { LoadingModal } from "./components/PageComponents";
+import { LoadingModal, BreadCrumbs } from "./components/PageComponents";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 
@@ -1160,6 +1160,19 @@ function NavigationBar({ children }) {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[
+          {display: "Institution",
+           id:"institution",
+           query: ["institution", params.institutionId || "-1"],
+           onClick:()=>{
+             window.location.assign(`http://local.collect.earth:8080/review-institution?institutionId=${params.institutionId}`);}},
+          {display: "Collection",
+           id:"project",
+           query: ["project", params.projectId],
+           onClick:()=>{}}
+        ]}
+      />
       <SimpleCollection locale={params.locale} projectId={params.projectId} />
     </NavigationBar>,
     document.getElementById("app")

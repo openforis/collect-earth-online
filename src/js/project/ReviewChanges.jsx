@@ -51,7 +51,7 @@ export default class ReviewChanges extends React.Component {
                   similarityYears: this.context.plotSimilarityDetails.years,
                 })
               });
-              window.location = `/review-project?projectId=${data[1].projectId}`;
+              window.location = `/review-project?projectId=${data[1].projectId}&institutionId=${this.context.institutionId}`;
               return Promise.resolve();
             } else {
               return Promise.reject(data[1]);

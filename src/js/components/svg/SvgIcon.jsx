@@ -16,6 +16,7 @@ import fileIcon from "./fileIcon.svg";
 import helpIcon from "./helpIcon.svg";
 import infoIcon from "./infoIcon.svg";
 import leftArrowIcon from "./leftArrowIcon.svg";
+import leftArrowSlimIcon from "./leftArrowSlimIcon.svg";
 import leftDoubleIcon from "./leftDoubleIcon.svg";
 import lineStringIcon from "./lineStringIcon.svg";
 import linkIcon from "./linkIcon.svg";
@@ -55,6 +56,7 @@ export const iconMap = {
   help: helpIcon,
   info: infoIcon,
   leftArrow: leftArrowIcon,
+  leftArrowSlim: leftArrowSlimIcon,
   leftDouble: leftDoubleIcon,
   lineString: lineStringIcon,
   link: linkIcon,
@@ -66,7 +68,7 @@ export const iconMap = {
   polygon: polygonIcon,
   question: questionIcon,
   refresh: refreshIcon,
-  rightArrow: rightArrowIcon,
+  rightArrow: rightArrowIcon,  
   rightCaret: rightCaretIcon,
   rightDouble: rightDoubleIcon,
   rule: ruleIcon,

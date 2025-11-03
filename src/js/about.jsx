@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar, LogoBanner } from "./components/PageComponents";
+import { NavigationBar, LogoBanner, BreadCrumbs } from "./components/PageComponents";
 
 function About() {
   return (
@@ -42,6 +42,11 @@ function About() {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[
+          {display: "About",
+           id:"about"}]}
+      />
       <About />
     </NavigationBar>,
     document.getElementById("app")

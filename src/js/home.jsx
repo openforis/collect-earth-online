@@ -5,7 +5,7 @@ import { mercator } from "./utils/mercator";
 import { sortAlphabetically } from "./utils/generalUtils";
 import SvgIcon from "./components/svg/SvgIcon";
 import Modal from "./components/Modal";
-import { Sidebar, SidebarCard } from "./components/Sidebar"
+import { Sidebar, SidebarCard } from "./components/Sidebar";
 
 import { useAtom, useAtomValue } from'jotai';
 import { stateAtom } from './utils/constants';
@@ -255,7 +255,7 @@ export const InstitutionSidebar = ({
                     color: "#2f3e2f",
                     transition: "background 0.15s ease",
                   }}
-                  onClick={() => (window.location.href = `/review-project?projectId=${project.id}`)}
+                onClick={() => (window.location.href = `/review-project?projectId=${project.id}&institutionId=${inst.id}`)}
                   onMouseOver={(e) => (e.currentTarget.style.background = "#f1f5f3")}
                   onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
                 >
@@ -499,7 +499,7 @@ class ProjectPopup extends React.Component {
                     <td className="small col-6 pr-0">
                       <a
                         className="btn btn-sm btn-block btn-outline-lightgreen"
-                        href={`/collection?projectId=${feature.get("projectId")}`}
+                        href={`/collection?projectId=${feature.get("projectId")}&institutionId=${feature.get("institutionId")}`}
                         style={{
                           whiteSpace: "nowrap",
                           overflow: "hidden",
@@ -548,7 +548,7 @@ class ProjectPopup extends React.Component {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>      
       <Home userId={session.userId || -1} userRole={session.userRole || ""} />
     </NavigationBar>,
     

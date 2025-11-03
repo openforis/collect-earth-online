@@ -182,16 +182,17 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_id integer)
             description,
             availability,
             COUNT(plot_uid)::int as plot_cnt,
-            round(avg(seconds)::numeric, 1) as sec_avg
+            round(avg(seconds)::numeric, 1) as sec_avg,
+            institution_rid
         FROM users_plots
-        GROUP BY project_uid, "name", description, availability
+        GROUP BY project_uid, "name", description, availability, institution_rid
         ORDER BY project_uid DESC
     ), proj_agg as (
         SELECT
             format('[%s]',
                    string_agg(
-                       format('{"id":%s, "name":"%s", "description":"%s", "availability":"%s", "plotCount":%s, "analysisAverage":%s}',
-                              project_uid, "name", description, availability, plot_cnt, sec_avg), ', ')) as per_project
+                       format('{"id":%s, "name":"%s", "description":"%s", "availability":"%s", "plotCount":%s, "analysisAverage":%s, "institutionId":%s}',
+                              project_uid, "name", description, availability, plot_cnt, sec_avg, institution_rid), ', ')) as per_project
         FROM proj_groups
     )
 

@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import { LoadingModal, NavigationBar, SuccessModal } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, SuccessModal, BreadCrumbs } from "./components/PageComponents";
 import CreateProjectWizard from "./project/CreateProjectWizard";
 import ReviewChanges from "./project/ReviewChanges";
 import ManageProject from "./project/ManageProject";
@@ -148,6 +148,20 @@ class Project extends React.Component {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[
+          {display: "Institution",
+           id: "institution",
+           query: ["institution", parseInt(params.institutionId) || -1],
+           onClick: (e)=>{
+             window.location.assign(`http://local.collect.earth:8080/review-institution?institutionId=${parseInt(params.institutionId)}`);
+           }},
+          {display: "Project Admin",
+           id:"project",
+           query: ["project", parseInt(params.institutionId) || -1],
+           onClick:()=>{}}
+        ]}
+      />
       <Project
         institutionId={parseInt(params.institutionId) || -1}
         projectId={parseInt(params.projectId) || -1}

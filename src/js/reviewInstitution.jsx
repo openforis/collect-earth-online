@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
+import { useAtom, useSetAtom, useAtomValue } from 'jotai';
+
 import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
 import SvgIcon from "./components/svg/SvgIcon";
-import { LoadingModal, NavigationBar, LearningMaterialModal } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, LearningMaterialModal, BreadCrumbs } from "./components/PageComponents";
 import { ProjectVisibilityPopup, DownloadPopup, ImageryVisibilityPopup } from "./components/BulkPopups";
 
 import { sortAlphabetically, capitalizeFirst, KBtoBase64Length } from "./utils/generalUtils";
@@ -1564,7 +1566,7 @@ function Project({
         ) : (
           <a
             className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-            href={`/collection?projectId=${project.id}`}
+            href={`/collection?projectId=${project.id}&institutionId=${institutionId}`}
             style={{
               boxShadow:
               project.percentComplete === 0.0
@@ -1590,7 +1592,7 @@ function Project({
                 window.location.assign(
                   project.isDraft
                     ? `/create-project?projectDraftId=${project.id}&institutionId=${institutionId}`
-                    : `/review-project?projectId=${project.id}`
+                    : `/review-project?projectId=${project.id}&institutionId=${institutionId}}`
                 )
               }
               style={{
@@ -1994,9 +1996,19 @@ const NewUserButtons = ({
   );
 };
 
+
+
 export function pageInit(params, session) {
+  let [] = 
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[
+          {display: params.institutionName || "Review Institution",
+           id:"institution",
+           query:["institution", parseInt(params.institutionId || "-1")],
+           onClick:()=>{}}]}
+      />
       <ReviewInstitution
         institutionId={parseInt(params.institutionId || "-1")}
         userId={session.userId || -1}

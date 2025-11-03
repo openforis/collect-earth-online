@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 import { StatsCell, StatsRow } from "./components/FormComponents";
-import { LoadingModal, NavigationBar } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, BreadCrumbs } from "./components/PageComponents";
 
 import { mercator } from "./utils/mercator";
 
@@ -256,6 +256,19 @@ function ProjectAOI() {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[
+          {display: "Institution",
+           id: "institution",
+           query: ["institution", params.institutionId],
+           onClick:()=>{
+           window.location.assign(`http://local.collect.earth:8080/review-institution?institutionId=${params.institutionId}`);  
+           }},
+          {display: "Project Dashboard",
+           id:"project",
+           query: ["project", params.projectId],
+           onClick:()=>{}}]}
+      />
       <ProjectDashboard projectId={params.projectId || "0"} userName={session.userName} />
     </NavigationBar>,
     document.getElementById("app")
