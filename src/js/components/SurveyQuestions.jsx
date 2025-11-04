@@ -408,7 +408,7 @@ export const SurveyQuestions = () => {
             type={q.dataType}
             placeholder={val}
             defaultValue={val}
-            onBlur={(e) => validateAndSetCurrentValue(q.id, 0, a.answer)}
+            onChange={(e) => validateAndSetCurrentValue(q.id, 0, a.answer)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') setCurrentValue(q.id, 0, e.currentTarget.value);
             }}
