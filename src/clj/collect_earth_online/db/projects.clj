@@ -1140,6 +1140,7 @@
       (data-response  {:userAssignment {:userMethod "none"
                                         :users      []
                                         :percents   []}
+                       :filePlotCount (count plots)
                        :fileAoi       file-aoi
                        :fileBoundary  file-bounds
                        :qaqcAssignment {:qaqcMethod "none"
