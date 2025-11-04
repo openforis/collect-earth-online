@@ -408,7 +408,7 @@ export const SurveyQuestions = () => {
             type={q.dataType}
             placeholder={val}
             defaultValue={val}
-            onChange={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value)}
+            onBlur={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') setCurrentValue(q.id, 0, e.currentTarget.value);
             }}
@@ -476,7 +476,7 @@ export const SurveyQuestions = () => {
   const checkRuleNumericRange = (surveyRule, questionIdToSet, _answerId, answerText) => {
     if (
       surveyRule.questionId === questionIdToSet &&
-      (!isNumber(answerText) || answerText < surveyRule.min || answerText > surveyRule.max)
+        (answerText < surveyRule.min || answerText > surveyRule.max)
     ) {
       return `Numeric range validation failed.\r\n\n Please select a value between ${surveyRule.min} and ${surveyRule.max}`;
     } else {
