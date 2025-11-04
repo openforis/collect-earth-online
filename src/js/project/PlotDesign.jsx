@@ -23,6 +23,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
                                               latMin: "",
                                               lonMax: "",
                                               latMax: "",});
+  const [_totalPlots, setTotalPlots] = useState(totalPlots);
   const acceptedTypes = {
       csv: "text/csv",
       shp: "application/zip",
@@ -59,6 +60,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
       .then((data) => {
         const [[lonMin, latMin], [lonMax, latMax]] = data.fileBoundary;
         const aoiFeatures = [mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)];
+        setTotalPlots(_totalPlots + data.filePlotCount);
         setPlotState({lonMin, lonMax, latMin, latMax});
         setProjectState({          
           aoiFileName: fileName,
@@ -236,13 +238,13 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
 	<p
          className="font-italic ml-2 small"
          style={{
-           color: totalPlots > plotLimit ? "#8B0000" : "#006400",
+           color: _totalPlots > plotLimit ? "#8B0000" : "#006400",
            fontSize: "1rem",
            whiteSpace: "pre-line",
          }}
 	 >
-       {totalPlots > 0 &&
-              `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
+       {_totalPlots > 0 &&
+              `This project will contain around ${formatNumberWithCommas(_totalPlots)} plots.`}
             {totalPlots > 0 &&
               totalPlots > plotLimit &&
               `\n* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(
@@ -266,6 +268,7 @@ export class PlotDesign extends React.Component {
       latMax: "",
       modal: null,
       plotIdList: [],
+      totalPlots: "",
     };
   }
   lastNumPlots = null;
@@ -278,7 +281,8 @@ export class PlotDesign extends React.Component {
         this.props.totalPlots <= 5000
        ) {
       const plotIds = Array.from({ length: this.props.totalPlots }, (_, i) => i + 1);
-      this.setState({ plotIdList: plotIds });
+      this.setState({ plotIdList: plotIds,
+                      totalPlots: plotIds.length});
     }
   }
 
@@ -699,13 +703,14 @@ export class PlotDesign extends React.Component {
       }),
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) =>
+      .then((data) => {
+        this.setState(s => ({... s, totalPlots: data.filePlotCount}));
         this.context.setProjectDetails({
           designSettings: { ...designSettings,
                             userAssignment: data.userAssignment,
                             qaqcAssignment: data.qaqcAssignment}
-        })
-      );
+        });
+      });
   }
 
   renderFileInput = (fileType, append) => {
@@ -843,7 +848,7 @@ export class PlotDesign extends React.Component {
 
   render() {
     const { plotDistribution, designSettings } = this.context;
-    const { totalPlots } = this.props;
+    const { totalPlots } = this.state;
     const plotOptions = {
       random: {
         display: "Random",
