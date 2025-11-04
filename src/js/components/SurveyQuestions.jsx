@@ -384,7 +384,7 @@ export const SurveyQuestions = () => {
               const selectedId = e.target.value;
               if (selectedId === '') return;
               const ans = q.answers[selectedId];
-              if (ans) validateAndSetCurrentValue(q.id, Number(id), ans.answer);
+              if (ans) validateAndSetCurrentValue(q.id, Number(selectedId), ans.answer);
             }}
           >
             <option value="">Select</option>
@@ -408,7 +408,7 @@ export const SurveyQuestions = () => {
             type={q.dataType}
             placeholder={val}
             defaultValue={val}
-            onChange={(e) => validateAndSetCurrentValue(q.id, 0, a.answer)}
+            onChange={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') setCurrentValue(q.id, 0, e.currentTarget.value);
             }}
