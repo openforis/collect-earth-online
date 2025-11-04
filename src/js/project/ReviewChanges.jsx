@@ -130,6 +130,7 @@ export default class ReviewChanges extends React.Component {
     surveyRules: this.context.surveyRules,
     plotFileName: this.context.plotFileName,
     newPlotFileName: this.context.newPlotFileName,
+    sampleFileName: this.context.sampleFileName,
     plotFileBase64: this.context.plotFileBase64,
     newPlotFileBase64: this.context.newPlotFileBase64,
     sampleFileBase64: this.context.sampleFileBase64,

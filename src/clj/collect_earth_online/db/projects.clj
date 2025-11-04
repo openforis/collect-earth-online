@@ -461,6 +461,7 @@
                              saved-plots)))
 
 (defn create-project! [{:keys [params]}]
+  
   (let [institution-id       (tc/val->int (:institutionId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
@@ -528,7 +529,7 @@
                                                 type))]
         ;; Proceed with other operations only if the initial call is successful
         (try
-          ;; Create or copy plots
+          ;; Create or copy plots          
           (if (and (pos? project-template) use-template-plots)
             (copy-template-plots project-id project-template design-settings)
             (create-project-plots! project-id
@@ -549,13 +550,14 @@
                                    design-settings
                                    aoi-features
                                    type))
+          
           ;; Final clean up 
           (call-sql "update_project_counts" project-id)
 
           ;; Save project imagery
           (if-let [imagery-list (:projectImageryList params)]
             (insert-project-imagery! project-id imagery-list)
-                                ;; API backwards compatibility
+            ;; API backwards compatibility
             (call-sql "add_all_institution_imagery" project-id))
           ;; Copy template widgets
           (when (and (pos? project-template) use-template-widgets)
@@ -564,7 +566,7 @@
           (data-response {:projectId project-id
                           :tokenKey  token-key})
           (catch Exception e
-          ;; Delete new project on error
+            ;; Delete new project on error
             (try
               (call-sql "delete_project" project-id)
               (catch Exception _))
@@ -573,7 +575,7 @@
               (when-not causes (log (ex-message e)))
               ;; Return error stack to user
               (data-response "Internal server error during project creation request." {:status 500})))))
-      (catch Exception e
+      (catch Exception e        
         (let [causes (:cause (ex-data e))]
           (when-not causes (log (ex-message e)))
           (data-response "Internal server error during project creation request, there may be a problem with your input." {:status 500}))))))
