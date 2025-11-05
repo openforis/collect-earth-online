@@ -26,12 +26,15 @@ import { GeoJSON, KML } from "ol/format";
 import { Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup, Graticule } from "ol/layer";
 import { BingMaps, Cluster, OSM, TileWMS, Vector as VectorSource, XYZ } from "ol/source";
 import { Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText } from "ol/style";
-import { fromLonLat, transform, transformExtent, getPointResolution } from "ol/proj";
+import { fromLonLat, transform, transformExtent, getPointResolution, get as getProjection } from "ol/proj";
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
 import { getArea, getDistance } from "ol/sphere";
 import { formatDateISO, isNumber } from "./generalUtils";
 import { mapboxAttributionText } from "../imagery/mapbox-attribution";
 import { getCenter } from 'ol/extent';
+import WMTS, { optionsFromCapabilities } from "ol/source/WMTS";
+import WMTSTileGrid from 'ol/tilegrid/WMTS.js';
+import WMTSCapabilities from 'ol/format/WMTSCapabilities.js';
 
 /** ****************************************************************************
  ***
@@ -397,6 +400,83 @@ mercator.createSource = (
       ...sourceConfig,
     };
     return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
+  } else if (type === "WMTS") {
+    const { geoserverUrl, geoserverParams = {} } = sourceConfig;
+    const { LAYERS } = geoserverParams;
+
+    const parser = new WMTSCapabilities();
+    const placeholder = new XYZ({
+      url: "img/source-loading.png",
+      attributions: attribution,
+    });
+    placeholder.set("id", imageryId);
+
+    const setSourceOnMap = (source) => {
+      const layer = mercator.currentMap
+            .getLayers()
+            .getArray()
+            .find((l) => l.get("id") === imageryId);
+      if (!layer) return;
+      layer.setSource(source);
+    };
+
+    const normalizeCapsNamespace = (text) =>
+          text
+          .replace('xmlns="https://www.opengis.net/wmts/1.0"', 'xmlns="http://www.opengis.net/wmts/1.0"')
+          .replace('xmlns:ows="https://www.opengis.net/ows/1.1"', 'xmlns:ows="http://www.opengis.net/ows/1.1"');
+
+    fetch(`${geoserverUrl}?SERVICE=WMTS&REQUEST=GetCapabilities&VERSION=1.0.0`)
+      .then((r) => r.text())
+      .then((text) => {
+        text = normalizeCapsNamespace(text);
+        const caps = parser.read(text);
+        if (!caps?.Contents?.Layer)
+          throw new Error("Invalid WMTS Capabilities: missing Contents.Layer");
+
+        const layerCaps = caps.Contents.Layer.find((l) => l.Identifier === LAYERS);
+        if (!layerCaps)
+          throw new Error(`Layer not found in capabilities: ${LAYERS}`);
+
+        const isWayback = caps?.ServiceIdentification?.Title?.includes("Wayback");
+
+        if (isWayback) {
+          const layerCaps = caps.Contents.Layer.find((l) => l.Identifier === LAYERS);
+          const resourceUrl =
+                layerCaps.ResourceURL.find((r) => r.resourceType === "tile").template
+                .replace("{TileMatrixSet}", "default028mm")
+                .replace("/MapServer/tile/20512", "/MapServer/tile/10")
+                .replace("{TileMatrix}", "{z}")
+                .replace("{TileRow}", "{y}")
+                .replace("{TileCol}", "{x}");
+
+          const source = new XYZ({
+            url: resourceUrl,
+            attributions: attribution,
+          });
+
+          setSourceOnMap(source);
+          return;
+        }
+        const matrixSet = layerCaps.TileMatrixSetLink[0].TileMatrixSet;
+        const options = optionsFromCapabilities(caps, {
+          layer: LAYERS,
+          matrixSet,
+        });
+
+        const source = new WMTS({
+          ...options,
+          attributions: attribution,
+        });
+
+        setSourceOnMap(source);
+      })
+      .catch((err) => {
+        console.error("WMTS load error:", err);
+        placeholder.setUrl("img/source-not-found.png");
+      });
+
+    return placeholder;
+    
   } else if (type === "GEEImageCollection") {
     const theJson = {
       path: "imageCollection",
@@ -727,8 +807,14 @@ mercator.setVisibleLayer = (mapConfig, layerId) => {
 };
 
 // [Pure] Returns the map layer with id === layerId or null if no such layer exists.
-mercator.getLayerById = (mapConfig, layerId) =>
-  mapConfig.layers.getArray().find((layer) => layer.get("id") === layerId);
+mercator.getLayerById = (mapConfig, layerId) => {
+  if (!mapConfig) return null;
+  const layerArray =
+    mapConfig.layers?.getArray?.() ||
+    mapConfig.map?.getLayers?.()?.getArray?.() ||
+    [];
+  return layerArray.find((layer) => layer.get("id") === layerId);
+};
 
 // [Pure] Returns the initial layerConfig for the map layer with id === layerId or null if no such layer exists.
 mercator.getLayerConfigById = (mapConfig, layerConfigId) =>
