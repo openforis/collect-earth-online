@@ -181,7 +181,10 @@ class ProjectManagement extends React.Component {
                   const url = `/copy-project?projectId=${projectId}&widgets=${prompts.widgets}&plots=${prompts.plots}`;
                   fetch(url, {method: "POST"})
 	            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-	            .then((data) => window.location.assign(`/review-project?projectId=${data.projectId}&copy-redirect`));
+	            .then((data) => console.log(data)
+                      // window.location.assign(`/review-project?projectId=${data.projectId}&copy-redirect`)
+
+                         );
                 });
   };
 

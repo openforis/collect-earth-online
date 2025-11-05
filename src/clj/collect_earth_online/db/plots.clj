@@ -5,12 +5,20 @@
             [triangulum.type-conversion       :as tc]
             [triangulum.database              :refer [call-sql sql-primitive]]
             [triangulum.utils                 :refer [filterm]]
-            [collect-earth-online.db.projects :refer [is-proj-admin?]]
             [triangulum.response              :refer [data-response]]))
 
 ;;;
 ;;; Helpers
 ;;;
+
+(defn- check-auth-common [user-id project-id token-key sql-query]
+  (or (and token-key
+           (= token-key (:token_key (first (call-sql "select_project_by_id" {:log? false} project-id)))))
+      (sql-primitive (call-sql sql-query {:log? false} user-id project-id))))
+
+(defn is-proj-admin? [user-id project-id token-key]
+  (check-auth-common user-id project-id token-key "can_user_edit_project"))
+
 
 (defn- time-plus-five-min []
   (Timestamp. (+ (System/currentTimeMillis) (* 5 60 1000))))
@@ -426,7 +434,7 @@
         used-geodash       (:usedGeodash params)
         user-id            (if review-mode? current-user-id session-user-id)
         imagery-ids        (tc/clj->jsonb (:imageryIds params))
-        ;; Samples created in the UI have IDs starting with 1. When the new sample is created
+        ;; Samples created in the UI have IDs starting with 1. When the new sample is creatednn
         ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
         id-translation     (when new-plot-samples
                              (when (= project-type "simplified")
