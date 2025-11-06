@@ -594,32 +594,43 @@
                                                (assoc coll visible_id plot_id))
                                              {}))
                 old-plots (group-by :plot_id _old-plots)]
-            (mapv (fn [{:keys [visible_id plot_id]}]                    
-                    (let [old-user-plots
-                          (->> visible_id vis-id->plot-id old-plots first :plot_id
-                               (call-sql "select_user_plots_info"))]
+            (mapv (fn [{:keys [visible_id plot_id]}]
+                    (let [old-plot-id (-> visible_id vis-id->plot-id old-plots first :plot_id)
+                          old-user-plots (call-sql "select_user_plots_info" old-plot-id)]
                       (mapv (fn [{:keys [user_id imageryIds collection_start
                                          confidence confidence_comment
                                          used_kml used_geodash]}]
-                              (let [plot-samples (call-sql "select_plot_samples" plot_id user_id)]
+                              (let [plot-samples (call-sql "get_sample_answers" old-plot-id)
+                                    sample-answers (->> plot-samples
+                                                        (map (fn [{:keys [sample_id answers]}]
+                                                             {(-> sample_id str)
+                                                              (tc/jsonb->clj answers)}))
+                                                        (apply merge))
+                                    sample-images  (->> plot-samples
+                                                        (map (fn [{:keys [sample_id images]}]
+                                                             {(-> sample_id str)
+                                                              (tc/jsonb->clj images)}))
+                                                      (apply merge))]
                                 (println "adding user samples" (count plot-samples)
                                          (first plot-samples) )
                                 (add-user-samples {:session {:userId user-id}
                                                    :params
                                                    {:projectId new-project-id
                                                     :plotId plot_id
-                                                    :currentUserId user-id
+                                                    :currentUserId user_id
                                                     :inReviewMode false
                                                     :confidence confidence
                                                     :confidenceComment confidence_comment
                                                     :collectionStart collection_start
                                                     :imageryIds imageryIds
-                                                    ;; :userSamples plot-samples
-                                                    :projectType (:type old-project)}}))
-                              
-                              ) old-user-plots)
+                                                    :userSamples sample-answers
+                                                    :userImages  {}
+                                                    :usedKml used_kml
+                                                    :usedGeodash used_geodash
+                                                    :projectType (:type old-project)}})))
+                            old-user-plots)
                       ))
-                  (take 4 new-plots))))
+                  new-plots)))
         (data-response {:projectId new-project-id}))
       (catch Exception e
         (pprint e)

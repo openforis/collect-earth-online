@@ -402,7 +402,8 @@
               imagery-ids
               used-kml
               used-geodash)))
-
+(require
+'[clojure.pprint :refer [pprint]])
 (defn add-user-samples
   "{:params {:projectId :int-str
              :plotId :int-str
@@ -455,6 +456,7 @@
                                      {}
                                      new-plot-samples))
         user-plot         (sql-primitive (call-sql "get_user_plot" plot-id user-id))]
+    (println (some seq (vals user-samples)))
     (if (some seq (vals user-samples))
       (let [user-plot-id (sql-primitive
                           (upsert-user-plots user-plot
@@ -470,6 +472,12 @@
                                              project-type
                                              used-kml
                                              used-geodash))]
+        (pprint ["upserting user samples to sql"
+                 user-plot-id plot-id
+                 user-samples
+                 (set/rename-keys user-samples id-translation)
+                 (tc/clj->jsonb (set/rename-keys user-samples id-translation))
+                 ])
         (call-sql "upsert_user_samples"
                   user-plot-id
                   plot-id
