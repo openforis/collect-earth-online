@@ -171,14 +171,18 @@ class ProjectManagement extends React.Component {
     promptModal("Do you want to copy the entire project?",
                 [{label: "Use Existing Plots",
                   index: "plots",
-                  type: "checkbox",
-                  value: true},
+                  type:  "checkbox",
+                  value:  true},
                  {label: "Use Existing Widgets",
                   index: "widgets",
-                  type: "checkbox",
-                  value:true}
+                  type:  "checkbox",
+                  value: true},
+                 {label: "Copy Answers",
+                  index: "answers",
+                  type:  "checkbox",
+                  value: true}
                 ], (prompts) => {
-                  const url = `/copy-project?projectId=${projectId}&widgets=${prompts.widgets}&plots=${prompts.plots}`;
+                  const url = `/copy-project?projectId=${projectId}&widgets=${prompts.widgets}&plots=${prompts.plots}&answers=${prompts.answers}`;
                   fetch(url, {method: "POST"})
 	            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
 	            .then((data) => console.log(data)

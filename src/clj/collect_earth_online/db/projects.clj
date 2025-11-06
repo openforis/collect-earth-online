@@ -562,7 +562,8 @@
   "{:params  {:projectId Int}
     :session {:userId Int}
    }"
-  [{:keys [params session]}]  
+  [{:keys [params session]}]
+  (pprint ["copy-project!" params])
   (let [user-id (:userId session -1)
 	project-id (tc/val->int (:projectId params))
 	{:keys [institution
@@ -582,43 +583,37 @@
 	               :projectTemplate id
 	               :sampleResolution (long sampleResolution)
 	               :useTemplatePlots (:plots params)
-	               :useTemplateWidgets (:widgets params))
-        new-project-id (-> (create-project! {:params project})
-                           :body tc/json->clj :projectId)
-        old-plots (call-sql "select_limited_project_plots" project-id 1#_00000)
-        new-plots (call-sql "select_limited_project_plots" new-project-id 1#_00000)
-        vis-id->plot-id (->> old-plots
-                             (reduce (fn [coll {:keys [visible_id plot_id]}]
-                                       (assoc coll visible_id plot_id))
-                                     {}))]
-    (if (:copy-answers? params)
-      (try
-        (let [old-plots (group-by :plot_id old-plots)]
-          (map
-           (fn [{:keys [plot_id visible_id]
-                 :as plot}]
-             (pprint ["copying plot data" plot])
-             (let [old-plot (-> visible_id vis-id->plot-id old-plots)
-                   old-user-plots (group-by :user_id (call-sql "select_user_plots_info" (:plot_id old-plot)))]
-               (map (fn [{:keys [user_id confidence confidence_comment collection_start imageryIds used_kml used_kml used_geodash]}]
-
-                      (add-user-samples {:session session
-                                         :params
-                                         {
-                                          :projectId new-project-id
-                                          :plotId plot_id
-                                          :currentUserId user-id
-                                          :inReviewMode false
-                                          :confidence confidence
-                                          :confidenceComment confidence_comment
-                                          :collectionStart collection_start
-                                          :imageryIds imageryIds
-                                          :projectType (:type old-project)}}))
-                    old-user-plots)))
-           new-plots))
-        (catch Exception e
-          (data-response "Error copying survey answers" {:status 500})))
-      (data-response {:projectId new-project-id}))))
+	               :useTemplateWidgets (:widgets params))]
+    #_(pprint ["copying new project" project])
+    (try
+      (let [new-project    (create-project! {:params project})
+            _ (pprint ["created new project" new-project
+                       (-> new-project :body tc/json->clj :projectId)])
+            new-project-id (-> new-project :body tc/json->clj :projectId)
+            old-plots (call-sql "select_limited_project_plots" project-id 100000)
+            new-plots (call-sql "select_limited_project_plots" new-project-id 100000)
+            vis-id->plot-id (->> old-plots
+                                 (reduce (fn [coll {:keys [visible_id plot_id]}]
+                                           (assoc coll visible_id plot_id))
+                                         {}))]        
+        
+        (if (-> params :answers tc/val->bool)
+          (try
+            (let [old-plots (group-by :plot_id old-plots)]              
+              (map (fn #_[{:keys [plot_id visible_id]
+                         :as plot}]
+                     [plot]
+                     (pprint ["copying plot data" (:plot_id plot)]))
+               new-plots)
+              
+              (data-response {:projectId new-project-id}))
+            (catch Exception e
+              (pprint e)
+              (data-response "Error copying survey answers" {:status 500})))
+          (data-response {:projectId new-project-id})))
+      (catch Exception e
+        (pprint e)
+        (data-response "Error copying project" {:status 500})))))
 
 ;;;
 ;;; Update project
