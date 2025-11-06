@@ -599,10 +599,11 @@
                                              {}))
                 old-plots (group-by :plot_id _old-plots)]
             (println (count new-plots) (count _old-plots))
+            (pprint (first new-plots))
             ;; this is where it stops-why???
             (map
              (fn [{:keys [visible_id plot_id]}]
-               (let [old-user-plots (->> visible_id  vis-id->plot-id old-plots :plot_id
+               (let [old-user-plots (->> visible_id vis-id->plot-id first old-plots :plot_id
                                          (call-sql "select_user_plots_info"))]
                  (map (fn [{:keys [user_id imageryIds collection_start
                                    confidence confidence_comment
@@ -610,8 +611,7 @@
                         (println "adding user samples")
                         (add-user-samples {:session {:userId 1}
                                            :params
-                                           {
-                                            :projectId new-project-id
+                                           {:projectId new-project-id
                                             :plotId plot_id
                                             :currentUserId user-id
                                             :inReviewMode false
