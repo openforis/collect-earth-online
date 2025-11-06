@@ -379,19 +379,19 @@ class ProjectManagement extends React.Component {
             />
             <input
               className="btn btn-outline-lightgreen btn-sm w-100"
-              onClick={() => window.open(`/collection?projectId=${id}`)}
+              onClick={() => window.open(`/collection?projectId=${id}&institutionId=${institution}`)}
               type="button"
               value="Collect"
             />
             <input
               className="btn btn-outline-lightgreen btn-sm w-100"
-              onClick={() => window.open(`/project-dashboard?projectId=${id}`)}
+              onClick={() => window.open(`/project-dashboard?projectId=${id}&institutionId=${institution}`)}
               type="button"
               value="Project Dashboard"
             />
             <input
               className="btn btn-outline-lightgreen btn-sm w-100"
-              onClick={() => window.open(`/project-qaqc-dashboard?projectId=${id}`)}
+              onClick={() => window.open(`/project-qaqc-dashboard?projectId=${id}&institutionId=${institution}`)}
               type="button"
               value="Project QAQC Dashboard"
             />

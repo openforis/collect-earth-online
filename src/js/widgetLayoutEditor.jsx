@@ -25,6 +25,7 @@ import { isValidJSON } from "./utils/generalUtils";
 import { getNextInSequence, last } from "./utils/sequence";
 import BasemapSelector from "./geodash/form/BasemapSelector";
 import Modal from "./components/Modal";
+import { BreadCrumbs } from "./components/PageComponents";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -626,13 +627,20 @@ export function pageInit(params, session) {
     <GeoDashNavigationBar
       editor
       page={(addDialog, copyDialog, closeDialogs) => (
-        <WidgetLayoutEditor
+        <>
+          <BreadCrumbs
+            crumbs={[
+              {display: "Widget Layout Editor",
+               id: "widget-layout-editor"}]}
+          />
+          <WidgetLayoutEditor
           addDialog={addDialog}
           closeDialogs={closeDialogs}
           copyDialog={copyDialog}
           institutionId={parseInt(params.institutionId || -1)}
           projectId={parseInt(params.projectId || -1)}
-        />
+          />
+        </>
       )}
       userName={session.userName || ""}
     />,

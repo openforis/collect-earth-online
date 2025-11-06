@@ -13,6 +13,8 @@
             [collect-earth-online.db.projects     :as projects]
             [collect-earth-online.db.qaqc         :as qaqc]
             [collect-earth-online.db.users        :as users]            
+            [collect-earth-online.db.users        :as users]
+            [collect-earth-online.handlers :refer [crumb-data]]
             [collect-earth-online.proxy           :as proxy]
             [triangulum.views                     :refer [render-page]]))
 
@@ -294,6 +296,7 @@
                                                :auth-action :block}
    [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}
    [:post "/gcloud-listener"]                  {:handler gcloud/gcloud-handler}
-   [:get  "/open-socket"]                      {:handler sse/sse-handler}   
+   [:get  "/open-socket"]                      {:handler sse/sse-handler}
+   [:post "/crumb-data"]                       {:handler crumb-data}
    }
   )

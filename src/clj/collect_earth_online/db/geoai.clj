@@ -28,12 +28,14 @@
                            (dissoc :id)))
                      plots)}))
 
-(defn- upload-json-to-gcs [project-id file-name]
+(defn- upload-json-to-gcs [project-id file-name year]
   (let [geojson  (generate-geojson project-id)
         json-str (json/write-str geojson)
-        tmp-file (java.io.File/createTempFile file-name ".geojson")]
+        tmp-file (java.io.File/createTempFile file-name ".geojson")
+        bq-tablename (format "%s_embed%s_pp" file-name year)]
     (spit tmp-file json-str)
     (st/copy-file-to-storage gcs-resource tmp-file (str gs-url file-name ".geojson"))
+    (call-sql "update_geoai_assets" (tc/val->int project-id) (tc/clj->jsonb {year bq-tablename}))
     gs-url))
 
 (defn clj->int-array-literal
@@ -65,7 +67,7 @@
         file-name         (str "ceo-" project-id "-plots_" (first similarity-years))
         plot-id           (sql-primitive (call-sql "get_plot_id_by_visible_id" project-id reference-plot-id))]
     (call-sql "update_reference_plot" project-id plot-id)
-    (upload-json-to-gcs project-id file-name)
+    (upload-json-to-gcs project-id file-name (first similarity-years))
     (data-response {:message "calculating plot similarity."})))
 
 (defn recalculate-plot-similarity [{:keys [params]}]

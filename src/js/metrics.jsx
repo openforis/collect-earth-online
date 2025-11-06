@@ -9,7 +9,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import "../css/metrics.css";
 
 const MetricsDashboard = ({userId}) => {
@@ -247,6 +247,10 @@ const MetricsDashboard = ({userId}) => {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[{display: "Metrics",
+                id:"metrics"}]}
+      />
       <MetricsDashboard userId={session.userId}/>
     </NavigationBar>,
     document.getElementById("app")

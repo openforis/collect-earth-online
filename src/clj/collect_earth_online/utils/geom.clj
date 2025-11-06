@@ -42,3 +42,33 @@
 (defn epsg3857-point-resolution
   [point]
   (/ 1 (Math/cosh (/ (second point) wsg84-radius))))
+
+(defn- close-enough
+  "compares a point's x and y values to determine if it is 
+   basically the same point as another given set of 
+   coordinates, relative to a given tolerance"
+  [{a-x :lat a-y :lon :as point-a} {b-x :lat b-y :lon :as point-b} & [tolerance]]  
+  (let [tol   (or tolerance 1e-10)
+        close (fn [a b]
+                (let [diff  (abs (- a b))
+                      scale (max 1.0 (abs a) (abs b))]
+                  (or (zero? diff)
+                      (< diff tol)
+                      (< (/ diff scale) tol))))]
+    (and (close a-x b-x) (close a-y b-y))))
+
+(defn distinct-points
+  ""
+  [old-plots new-plots & [tolerance]]  
+  (let [tol (or tolerance 1e-10)
+        old-groups (group-by (fn [point]
+                               [(long (/ (:lat point) tol)) (long (/ (:lon point) tol))])
+                             old-plots)]
+    (remove (fn [point]              
+                  (let [cell [(long (/ (:lat point) tol))
+                              (long (/ (:lon point) tol))]]
+                    (some #(close-enough point % tol)
+                          (mapcat old-groups [cell
+                                              (mapv inc cell)
+                                              (mapv dec cell)]))))
+                new-plots)))

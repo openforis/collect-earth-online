@@ -1,6 +1,7 @@
 import "../../css/custom.css";
 
 import React, { useState, useEffect } from "react";
+import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import ReactMarkdown from 'react-markdown';
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
@@ -8,6 +9,7 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import SvgIcon from "./svg/SvgIcon";
 import { getLanguage, capitalizeFirst } from "../utils/generalUtils";
 import { getPreference, setPreference } from "../utils/preferences";
+import { stateAtom } from "../utils/constants";
 
 export function LogOutButton({ userName, uri }) {
   const fullUri = uri + window.location.search;
@@ -838,3 +840,73 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
     </div>
   );
 }
+
+export const BreadCrumbs = ({crumbs}) => {  
+  const [state, setState] = useAtom(stateAtom);
+  const {breadCrumbs} = state;
+  
+  const getCrumbData = (message, promise) => {
+    setState((s) => ({... s, modalMessage: message}), () =>
+      promise.finally(() => setState((s) => ({... s, modalMessage: null}))));
+  };
+  
+  useEffect(()=>{
+    getCrumbData("Loading...", Promise.allSettled([
+      fetch('/crumb-data',
+            { method: "POST",
+              headers: {
+                "Content-Type": "application/json; charset=utf-8",
+              },
+              body: JSON.stringify(
+                breadCrumbs.concat(crumbs).map(
+                  ({query})=> query).filter((x)=>x)
+                 .reduce((acc, curr)=> (acc[curr [0]]=curr [1], acc), {})
+              )
+            })
+        .then((res) => (res.ok ? res.json() : Promise.reject()))
+        .then((data) => {
+          setState((s)=>(
+            {... s,
+             breadCrumbs: breadCrumbs.concat(
+               crumbs.map((crumb) => ({
+                 ... crumb,
+                 display: data[crumb.id],            
+               })))}));
+        })]));    
+  }, []);
+
+  const crumbClick = (e) => console.log(e);
+  
+  const renderCrumb = ({display, id, onClick=crumbClick}, index) => {
+
+    return (
+      <>
+        {index ? <div> / </div> : <div></div>}
+        <div
+          className="crumb"
+          id={"crumb-" + id}
+          {... (index < breadCrumbs.length -1 && {
+            onClick: () => onClick(id)})
+          }>
+          {display}
+        </div>      
+      </>      
+    );
+  };
+  
+  return (
+    <div id="breadcrumb-bar"
+         className="flex-row">
+      <div
+        style={{cursor: "pointer"}}
+        onClick={()=> {
+          const idx = breadCrumbs.length - 1;
+          const keepers = breadCrumbs.slice(0, idx);
+          setState((s) => ({...s, breadCrumbs: keepers}));
+          keepers.slice(keepers.length -1)[0].onClick();          
+        }}
+      > <SvgIcon icon="leftArrowSlim" size="2rem" />
+      </div>      
+        {breadCrumbs.map(renderCrumb)}
+    </div>);
+};
