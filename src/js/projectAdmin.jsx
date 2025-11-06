@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import { LoadingModal, NavigationBar, SuccessModal, BreadCrumbs } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, SuccessModal, BreadCrumbs, PromptModal } from "./components/PageComponents";
 import CreateProjectWizard from "./project/CreateProjectWizard";
 import ReviewChanges from "./project/ReviewChanges";
 import ManageProject from "./project/ManageProject";

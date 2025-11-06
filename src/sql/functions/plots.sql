@@ -510,9 +510,11 @@ CREATE OR REPLACE FUNCTION get_sample_answers(
     _plot_id integer
   ) RETURNS TABLE (
     sample_id integer,
-    answers   jsonb
+    answers   jsonb,
+    images    jsonb,
+    image_id  integer
   ) AS $$
-    SELECT sv.sample_rid, sv.saved_answers AS answers
+    SELECT sv.sample_rid, sv.saved_answers AS answers, sv.imagery_attributes AS images, sv.imagery_rid AS image_id
     FROM   sample_values sv
     JOIN   user_plots up
       ON   up.user_plot_uid = sv.user_plot_rid
