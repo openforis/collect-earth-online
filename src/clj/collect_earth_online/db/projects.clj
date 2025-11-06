@@ -563,7 +563,6 @@
     :session {:userId Int}
    }"
   [{:keys [params session]}]
-  (pprint ["copy-project!" params])
   (let [user-id (:userId session -1)
 	project-id (tc/val->int (:projectId params))
 	{:keys [institution
@@ -586,11 +585,8 @@
 	               :useTemplateWidgets (:widgets params))]    
     (try
       (let [new-project (create-project! {:params project})
-            _ (pprint ["created new project"
-                       (-> new-project :body tc/json->clj :projectId)])
             new-project-id (-> new-project :body tc/json->clj :projectId)]        
         (when (-> params :answers tc/val->bool)
-          (println "copying answers")
           (let [_old-plots (call-sql "select_limited_project_plots" project-id 100000)
                 new-plots (call-sql "select_limited_project_plots" new-project-id 100000)
                 vis-id->plot-id (->> _old-plots
@@ -598,30 +594,31 @@
                                                (assoc coll visible_id plot_id))
                                              {}))
                 old-plots (group-by :plot_id _old-plots)]
-            (println (count new-plots) (count _old-plots))
-            (pprint (first new-plots))
-            ;; this is where it stops-why???
-            (map
-             (fn [{:keys [visible_id plot_id]}]
-               (let [old-user-plots (->> visible_id vis-id->plot-id first old-plots :plot_id
-                                         (call-sql "select_user_plots_info"))]
-                 (map (fn [{:keys [user_id imageryIds collection_start
-                                   confidence confidence_comment
-                                   used_kml used_geodash]}]
-                        (println "adding user samples")
-                        (add-user-samples {:session {:userId 1}
-                                           :params
-                                           {:projectId new-project-id
-                                            :plotId plot_id
-                                            :currentUserId user-id
-                                            :inReviewMode false
-                                            :confidence confidence
-                                            :confidenceComment confidence_comment
-                                            :collectionStart collection_start
-                                            :imageryIds imageryIds
-                                            :projectType (:type old-project)}}))
-                      old-user-plots)))
-             new-plots)))
+            (mapv (fn [{:keys [visible_id plot_id]}]                    
+                    (let [old-user-plots
+                          (->> visible_id vis-id->plot-id old-plots first :plot_id
+                               (call-sql "select_user_plots_info"))]
+                      (mapv (fn [{:keys [user_id imageryIds collection_start
+                                         confidence confidence_comment
+                                         used_kml used_geodash]}]
+                              (let [[plot-samples] (call-sql "select_plot_samples" plot_id user_id)]
+                                (println "adding user samples")
+                                (add-user-samples {:session {:userId user-id}
+                                                   :params
+                                                   {:projectId new-project-id
+                                                    :plotId plot_id
+                                                    :currentUserId user-id
+                                                    :inReviewMode false
+                                                    :confidence confidence
+                                                    :confidenceComment confidence_comment
+                                                    :collectionStart collection_start
+                                                    :imageryIds imageryIds
+                                                    :userSamples plot-samples
+                                                    :projectType (:type old-project)}}))
+                              
+                              ) old-user-plots)
+                      ))
+                  (take 4 new-plots))))
         (data-response {:projectId new-project-id}))
       (catch Exception e
         (pprint e)

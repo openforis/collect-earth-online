@@ -455,6 +455,7 @@
                                      {}
                                      new-plot-samples))
         user-plot         (sql-primitive (call-sql "get_user_plot" plot-id user-id))]
+    (println "upsert user plots?" (some seq (vals user-samples)))
     (if (some seq (vals user-samples))
       (let [user-plot-id (sql-primitive
                           (upsert-user-plots user-plot
