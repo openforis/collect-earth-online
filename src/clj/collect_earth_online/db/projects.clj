@@ -601,8 +601,9 @@
                       (mapv (fn [{:keys [user_id imageryIds collection_start
                                          confidence confidence_comment
                                          used_kml used_geodash]}]
-                              (let [[plot-samples] (call-sql "select_plot_samples" plot_id user_id)]
-                                (println "adding user samples")
+                              (let [plot-samples (call-sql "select_plot_samples" plot_id user_id)]
+                                (println "adding user samples" (count plot-samples)
+                                         (first plot-samples) )
                                 (add-user-samples {:session {:userId user-id}
                                                    :params
                                                    {:projectId new-project-id
@@ -613,7 +614,7 @@
                                                     :confidenceComment confidence_comment
                                                     :collectionStart collection_start
                                                     :imageryIds imageryIds
-                                                    :userSamples plot-samples
+                                                    ;; :userSamples plot-samples
                                                     :projectType (:type old-project)}}))
                               
                               ) old-user-plots)
