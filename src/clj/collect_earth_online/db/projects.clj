@@ -600,10 +600,34 @@
         (if (-> params :answers tc/val->bool)
           (try
             (let [old-plots (group-by :plot_id old-plots)]              
-              (map (fn #_[{:keys [plot_id visible_id]
+              (map (fn [{:keys [plot_id visible_id]
                          :as plot}]
-                     [plot]
-                     (pprint ["copying plot data" (:plot_id plot)]))
+                     
+                     (pprint ["copying plot data" (:plot_id plot)])
+                     (try
+                   (let [old-plot (-> visible_id vis-id->plot-id old-plots)
+                         old-user-plots (group-by :user_id (call-sql "select_user_plots_info" (:plot_id old-plot)))]
+                     
+                     (map (fn [{:keys [user_id confidence confidence_comment collection_start imageryIds used_kml used_kml used_geodash]}]
+
+                            (try
+                              (add-user-samples {:session session
+                                                 :params
+                                                 {
+                                                  :projectId new-project-id
+                                                  :plotId plot_id
+                                                  :currentUserId user-id
+                                                  :inReviewMode false
+                                                  :confidence confidence
+                                                  :confidenceComment confidence_comment
+                                                  :collectionStart collection_start
+                                                  :imageryIds imageryIds
+                                                  :projectType (:type old-project)}})
+                              (catch Exception e
+                                (pprint e))))
+                          old-user-plots))
+                   (catch Exception e
+                     (pprint e))))
                new-plots)
               
               (data-response {:projectId new-project-id}))
