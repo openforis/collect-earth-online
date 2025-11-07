@@ -12,9 +12,9 @@ import {
   NavigationBar,
   LearningMaterialModal,
   AcceptTermsModal,
-  ImageryLayerOptions,
-  BreadCrumbs
+  ImageryLayerOptions
 } from "./components/PageComponents";
+import SurveyCollection from "./survey/SurveyCollection";
 import {
   PlanetMenu,
   PlanetDailyMenu,
@@ -58,21 +58,24 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
     (async () => {
       setState((s) => ({ ...s, modalMessage: "Loading project details" }));
       try {
-        const [projectRes, plotsRes, imageryRes, plottersRes] = await Promise.all([
+        const [projectRes, plotsRes, imageryRes, plottersRes, statsRes] = await Promise.all([
           fetch(`/get-project-by-id?projectId=${projectId}`),
           fetch(`/get-project-plots?projectId=${projectId}`),
           fetch(`/get-project-imagery?projectId=${projectId}`),
           fetch(`/get-plotters?projectId=${projectId}`),
+          fetch(`/get-project-stats?projectId=${projectId}`)
         ]);
         if (cancelled) return;
         if (!projectRes.ok) throw projectRes;
         if (!plotsRes.ok) throw plotsRes;
         if (!imageryRes.ok) throw imageryRes;
         if (!plottersRes.ok) throw plottersRes;
+        if (!statsRes.ok) throw statsRes;
         const project = await projectRes.json();
         const plotList = await plotsRes.json();
         const imageryListRaw = await imageryRes.json();
         const plotters = await plottersRes.json();
+        const stats = await statsRes.json();
         const imageryList = Array.isArray(imageryListRaw) ?
               imageryListRaw.map((image, i) => ({ ...image, visible: i === 0 })) :
               [];
@@ -125,6 +128,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
           currentImagery: defaultImagery || s.currentImagery,
           showAcceptTermsModal: !!acceptedTerms,
           modalMessage: null,
+          stats
         }));
         if (plotId) {}
       } catch (err) {
@@ -1658,27 +1662,11 @@ function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
   );
 }
 
-export function pageInit(params, session) { 
+export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-      <BreadCrumbs
-        crumbs={[
-          {display: "Institution",
-           id: "institution",
-           query: ["institution", params.institutionId],
-           onClick: (e)=>{
-             window.location.assign(`http://local.collect.earth:8080/review-institution?institutionId=${params.institutionId}`);
-           }},
-          {display: "Collection",
-           id: "project",
-           query: ["project", params.projectId],
-           onClick: (e)=>{
-             console.log("go to collection");
-           }}
-        ]}        
-      />
       <Collection projectId={params.projectId} plotId={params.plotId || null} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
-      </NavigationBar>,
+    </NavigationBar>,
     document.getElementById("app")
   );
 }

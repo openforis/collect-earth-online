@@ -1323,3 +1323,7 @@ body {
 #breadcrumb-bar :last-child {
     font-weight: bold;
 }
+
+#stats-card .stat {
+    margin: 4px 0;
+}

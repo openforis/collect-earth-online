@@ -23,12 +23,64 @@ import {
   GEEImageCollectionMenu,
 } from "../imagery/collectionMenuControls";
 
+const StatsCard = ({}) => {
+  const state = useAtomValue(stateAtom);
+  const stats = [{title: 'Total Plots', key: 'totalPlots'},
+                 {title: 'Total Contributors', key: 'totalUsers'},
+                 {title: 'Analyzed', icon: 'square', color: '⁨⁨#3019FF', key: 'analyzed'},
+                 {title: 'Flagged', icon: 'square', color: '#E32312', key: 'flagged'},
+                 {title: 'Unanalyzed', icon: 'square', color: '#F3FC4F', key: 'unanalyzed'},
+                 {title: 'Average Collection Time', key: 'averageTime'}];
+
+  function percent (part, total) {
+    return (part * 100) / total;
+  }
+  
+  function getStat (statKey) {
+    switch (statKey) {
+    case 'totalPlots': return state.stats.totalPlots;
+    case 'totalUsers': return state.stats.userStats.length;
+    case 'analyzed' :  return (state.stats.analyzedPlots +
+                               " (" + percent(state.stats.analyzedPlots, state.stats.totalPlots).toPrecision(2) + "%)");
+    case 'flagged' : return state.stats.flaggedPlots;
+    case 'unanalyzed': return (state.stats.unanalyzedPlots +
+                               ' (' + percent(state.stats.unanalyzedPlots, state.stats.totalPlots).toPrecision(2) + '%)');
+    case 'averageTime': return state.stats.collectionTime + " secs/ plot";    
+    }
+  };
+  
+  return (
+    <SidebarCard
+      title="Plot Statistics"
+    >
+      <div id="stats-card">
+        {state.stats &&
+         stats.map(({title, key, icon, color}) => {
+           return (<div className="stat">
+                     {icon && <span
+                                style={{color: color}}
+                              > ⯀ </span>}
+                     <span
+                       style={{color: 'gray'}}
+                     >{title}: </span>
+                     <span
+                   style={{fontWeight: 'bold'}}
+                     >{getStat(key)}</span>
+                  </div>
+                 );})}
+      </div>
+    
+    </SidebarCard>
+  );
+};
+
 export const CollectionSidebar = ({ processModal }) => {
   const { currentPlot, currentProject } = useAtomValue(stateAtom);
 
   const content = (
     <>
       <NewPlotNavigation />
+      <StatsCard/>
       {currentPlot.id > 0 && (
         <>
           <ExternalTools />

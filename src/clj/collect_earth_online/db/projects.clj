@@ -187,6 +187,7 @@
                     :partialPlots    (:partial_plots stats)
                     :analyzedPlots   (:analyzed_plots stats)
                     :unanalyzedPlots (:unanalyzed_plots stats)
+                    :collectionTime  (:collection_time stats)
                     :userStats       (->> (:user_stats stats)
                                           (tc/jsonb->clj)
                                           (map #(set/rename-keys % {:timed_plots :timedPlots})))})))
