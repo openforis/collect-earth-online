@@ -86,7 +86,7 @@ export function ImagerySelection() {
           )}
         </div>
         <div className="form-group">
-          <label>Public Imagery</label>
+          <label>Public Institution Imagery</label>
           {renderImageryRow(
             institutionImagery.filter((imagery) => imagery.visibility === "public"),
             imageryId,
