@@ -799,7 +799,7 @@ const ImageryList = (
                   onChange={(e) => handleSelectAllNonPlatform(e.target.checked)}
                 />
               </div>
-              <div className="col-2 pr-0 pl-3">Visibility</div>
+              <div className="col-3 pr-0 pl-3">Visibility</div>
               <div className="col pl-5">Imagery Title</div>
               <div className="col-1 pl-4">Edit</div>
               <div className="col-1 pl-4">Delete</div>
@@ -1303,7 +1303,7 @@ function Imagery({
       </div>
 
       {/* Visibility Button */}
-      <div className="col-2 pr-0 pl-3">
+      <div className="col-3 pr-0 pl-3">
         <div
           className={`btn btn-sm btn-outline-lightgreen btn-block ${
       visibility === "platform" ? "disabled" : ""
@@ -1315,7 +1315,7 @@ function Imagery({
            ? "Platform"
            : visibility === "private"
            ? "Institution"
-           : "Public"}
+           : "Public Institution Imagery"}
         </div>
       </div>
 

@@ -167,7 +167,7 @@ export function pageInit(params, session) {
            id: "institution",
            query: ["institution", parseInt(params.institutionId) || -1],
            onClick: (e)=>{
-             window.location.assign(`http://local.collect.earth:8080/review-institution?institutionId=${parseInt(params.institutionId)}`);
+             window.location.assign(`/review-institution?institutionId=${parseInt(params.institutionId)}`);
            }},
           {display: "Project Admin",
            id:"project",
