@@ -426,7 +426,7 @@
         used-geodash       (:usedGeodash params)
         user-id            (if review-mode? current-user-id session-user-id)
         imagery-ids        (tc/clj->jsonb (:imageryIds params))
-        ;; Samples created in the UI have IDs starting with 1. When the new sample is creatednn
+        ;; Samples created in the UI have IDs starting with 1. When the new sample is created
         ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
         id-translation     (when new-plot-samples
                              (when (= project-type "simplified")
@@ -446,7 +446,7 @@
                                          (assoc acc (str id) (str new-id))))
                                      {}
                                      new-plot-samples))
-        user-plot         (sql-primitive (call-sql "get_user_plot" plot-id user-id))]    
+        user-plot         (sql-primitive (call-sql "get_user_plot" plot-id user-id))]
     (if (some seq (vals user-samples))
       (let [user-plot-id (sql-primitive
                           (upsert-user-plots user-plot
@@ -466,9 +466,7 @@
                   user-plot-id
                   plot-id
                   (tc/clj->jsonb (set/rename-keys user-samples id-translation))
-                  (tc/clj->jsonb (set/rename-keys user-images id-translation)))
-        )
-
+                  (tc/clj->jsonb (set/rename-keys user-images id-translation))))
       (when (not= project-type "simplified")
         (call-sql "delete_user_plot_by_plot" plot-id user-id)))
     (unlock-plots user-id)
