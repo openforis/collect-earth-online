@@ -1166,7 +1166,7 @@ export function pageInit(params, session) {
            id:"institution",
            query: ["institution", params.institutionId || "-1"],
            onClick:()=>{
-             window.location.assign(`http://local.collect.earth:8080/review-institution?institutionId=${params.institutionId}`);}},
+             window.location.assign(`/review-institution?institutionId=${params.institutionId}`);}},
           {display: "Collection",
            id:"project",
            query: ["project", params.projectId],
