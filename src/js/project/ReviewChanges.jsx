@@ -6,6 +6,8 @@ import { ProjectContext } from "./constants";
 
 import Modal from "../components/Modal";
 
+import { PromptModal } from "../components/PageComponents";
+
 export default class ReviewChanges extends React.Component {
   constructor(props) {
     super(props);
@@ -64,41 +66,48 @@ export default class ReviewChanges extends React.Component {
     }
   };
 
+  promptModal = (modalTitle, modalInputs, modalCallBack) => {    
+    this.setState(s => ({...s, modalTitle, modalInputs, modalCallBack}));
+  }
+  
   updateProject = () => {
-    if (
-      this.context.availability !== "unpublished" ||
-      confirm(
-        "Collection data will be cleared to reset the project. Do you really want to update this project?"
-      )
-    ) {
-      this.context.processModal("Updating Project", () =>        
-        fetch("/update-project", {
-          method: "POST",
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json; charset=utf-8",
-          },
-          body: JSON.stringify({
-            append: this.context.append,
-            projectId: this.context.projectId,
-            ...this.buildProjectObject(),
-          }),
-        })
-          .then((response) => Promise.all([response.ok, response.json()]))
-          .then((data) => {
-            if (data[0] && data[1] === "") {
-              this.context.setContextState({ designMode: "manage" });
-              this.setState ({modal: {alert: {alertType: "Update Project Alert", alertMessage: "Project successfully updated!"}}});
-              return Promise.resolve();
-            } else {
-              return Promise.reject(data[1]);
-            }
+    this.promptModal(
+      "Collection data will be cleared to reset the project. Do you really want to update this project?",
+      [{label: "Overwrite existing collection data",
+        index: 'overwrite',
+        type: 'checkbox',
+        value: true}],
+      (prompts) => {
+        this.context.processModal("Updating Project", () =>        
+          fetch("/update-project", {
+            method: "POST",
+            headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/json; charset=utf-8",
+            },
+            body: JSON.stringify({
+              append: this.context.append,
+              projectId: this.context.projectId,
+              overwrite: prompts.overwrite,
+              ...this.buildProjectObject(),
+            }),
           })
-          .catch((message) => {
-            this.setState ({modal: {alert: {alertType: "Update Project Alert", alertMessage: "Error updating project:\n" + message}}});
-          })
-      );
-    }
+            .then((response) => Promise.all([response.ok, response.json()]))
+            .then((data) => {
+              if (data[0] && data[1] === "") {
+                this.context.setContextState({ designMode: "manage" });
+                this.setState ({modal: {alert: {alertType: "Update Project Alert", alertMessage: "Project successfully updated!"}}});
+                return Promise.resolve();
+              } else {
+                return Promise.reject(data[1]);
+              }
+            })
+            .catch((message) => {
+              this.setState ({modal: {alert: {alertType: "Update Project Alert", alertMessage: "Error updating project:\n" + message}}});
+            })
+        );}
+    );
+    
   };
 
   /// Helper Functions
@@ -194,6 +203,16 @@ export default class ReviewChanges extends React.Component {
   render() {
     return (
       <div className="d-flex flex-column full-height align-items-center p-3" id="changes">
+        {this.state.modalInputs &&
+         <PromptModal
+           inputs={this.state.modalInputs}
+           callBack={this.state.modalCallBack}
+           closePrompt={()=>{this.setState(s => ({... s,
+                                                  modalInputs: null,
+                                                  modalTitle: null,
+                                                  modalCallBack: null}));}}
+           title={this.state.modalTitle}
+         />}
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
                 onClose={()=>{this.setState({modal: null});}}>
