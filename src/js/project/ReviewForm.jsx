@@ -1,6 +1,6 @@
 import React from "react";
 
-import AOIMap from "./AOIMap";
+import { AOIMap } from "./AOIMap";
 import { ImageryReview } from "./ImagerySelection";
 import { OverviewReview } from "./Overview";
 import { AOIReview, PlotReview } from "./PlotDesign";

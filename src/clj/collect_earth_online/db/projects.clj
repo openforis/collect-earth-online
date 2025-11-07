@@ -7,7 +7,7 @@
             [clojure.string                                :as str]
             [collect-earth-online.generators.clj-point     :refer [generate-point-plots generate-point-samples]]
             [collect-earth-online.generators.external-file :as external-file]
-            [collect-earth-online.utils.geom               :refer [make-geo-json-polygon distinct-points]]
+            [collect-earth-online.utils.geom               :refer [make-geo-json-polygon]]
             [collect-earth-online.utils.part-utils         :as pu]
             [triangulum.response                           :refer [data-response]]
             [triangulum.database                           :refer [call-sql
@@ -347,18 +347,18 @@
   (let [plot-count (count plots)
         samples    (if (#{"csv" "shp" "geojson"} sample-distribution)
                      (external-file/generate-file-samples plots
-                                            plot-count
-                                            project-id
-                                            sample-distribution
-                                            sample-file-name
-                                            sample-file-base64)
+                                                          plot-count
+                                                          project-id
+                                                          sample-distribution
+                                                          sample-file-name
+                                                          sample-file-base64)
                      (generate-point-samples plots
                                              plot-count
                                              plot-shape
                                              plot-size
                                              sample-distribution
                                              samples-per-plot
-                                             sample-resolution))]   
+                                             sample-resolution))]
     (when (seq samples) (p-insert-rows! "samples" samples))
     (if allow-drawn-samples?
       (when (#{"csv" "shp" "geojson"} sample-distribution)
@@ -377,28 +377,6 @@
 (defn- copy-template-plots [project-id template-id design-settings]
   (call-sql "copy_template_plots" template-id project-id)
   (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id) project-id))
-
-
-(defn get-plot-points [dist plots]  
-  (case dist
-    "geojson" (reduce
-               (fn [points pgobj]
-                 (let [coord-pairs (->> pgobj :plot_geom .getValue
-                                        tc/json->clj :coordinates first)]
-                   (into points coord-pairs)))
-               [] plots)
-    "shp" (reduce
-           (fn [points pgobj]
-             (let [coord-pairs (->> pgobj :plot_geom .getValue
-                                    (call-sql "hex_ewkb_to_all_vertices")
-                                    (map (fn [{:keys [x y]}]
-                                           [x y])))]
-               (into points coord-pairs)))
-           [] plots)
-    "csv" (map
-           (fn [pgobj]
-	     (let [[_ coords] (->> pgobj :plot_geom .getValue (re-find #"POINT\(([^)]+)\)"))]
-	       (map #(Double/parseDouble %) (str/split coords #" ")))) plots)))
 
 (defn- create-project-plots! [project-id
                               plot-distribution
@@ -432,10 +410,8 @@
                                       shuffle-plots?
                                       aoi-features
                                       type))]
-    (insert-rows! "plots" plots)
-    
-    )
-  
+    (insert-rows! "plots" plots))
+
   ;; Boundary is only used for Planet at this point.
   (pu/try-catch-throw #(call-sql "set_boundary"
                                  project-id
@@ -443,6 +419,7 @@
                       "SQL Error: cannot create a project AOI.")
 
   (when (#{"csv" "shp" "geojson"} plot-distribution) (call-sql "boundary_to_aoi" project-id))
+
   (when-not (sql-primitive (call-sql "valid_project_boundary" project-id))
     (pu/init-throw (str "The project boundary is invalid. "
                         "This can come from improper coordinates or projection when uploading shape or csv data.")))
@@ -460,7 +437,7 @@
                              allow-drawn-samples?
                              saved-plots)))
 
-(defn create-project! [{:keys [params]}]  
+(defn create-project! [{:keys [params]}]
   (let [institution-id       (tc/val->int (:institutionId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
@@ -549,7 +526,6 @@
                                    design-settings
                                    aoi-features
                                    type))
-          
           ;; Final clean up 
           (call-sql "update_project_counts" project-id)
 
@@ -578,6 +554,43 @@
         (let [causes (:cause (ex-data e))]
           (when-not causes (log (ex-message e)))
           (data-response "Internal server error during project creation request, there may be a problem with your input." {:status 500}))))))
+
+(defn copy-project!
+  "{:params  {:projectId Int}
+    :session {:userId Int}
+   }"
+  [{:keys [params session]}]
+  (let [user-id (:userId session -1)
+        project-id (tc/val->int (:projectId params))
+        {:keys [institution
+                plotSize
+                plotSpacing
+                name
+                id
+                surveyQuestions
+                sampleResolution]
+         :as old-project} (build-project-by-id user-id project-id)
+        project (assoc old-project
+                  :name (str name " - COPY")
+                  :surveyQuestions surveyQuestions
+                  :institutionId institution
+                  :plotSize (long plotSize)
+                  :plotSpacing (long plotSpacing)
+                  :projectTemplate id
+                  :sampleResolution (long sampleResolution)
+                  :useTemplatePlots (:plots params)
+                  :useTemplateWidgets (:widgets params))]    
+    (try
+      (let [new-project (create-project! {:params project})
+            new-project-id (-> new-project :body tc/json->clj :projectId)]
+        
+        (when (-> params :answers tc/val->bool)
+          (call-sql "copy_user_plots" project-id new-project-id)
+          (call-sql "copy_sample_values" project-id new-project-id))
+
+        (data-response {:projectId new-project-id}))
+      (catch Exception e
+        (data-response "Error copying project" {:status 500})))))
 
 ;;;
 ;;; Update project
@@ -615,7 +628,7 @@
                                  allow-drawn-samples?
                                  (call-sql "get_plot_centers_by_project" project-id))))))
 
-(defn update-project! [{:keys [params]}]
+(defn update-project! [{:keys [params]}] 
   (let [project-id           (tc/val->int (:projectId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
@@ -627,11 +640,8 @@
                                                          (tc/val->double (:latMin params))
                                                          (tc/val->double (:lonMax params))
                                                          (tc/val->double (:latMax params)))])
-        append-plots?        (:append params)
         aoi-file-name        (:aoiFileName params)
-        plot-distribution    (if append-plots?
-                               (:newPlotDistribution params)
-                               (:plotDistribution params))
+        plot-distribution    (:plotDistribution params)
         num-plots            (tc/val->int (:numPlots params))
         plot-spacing         (tc/val->float (:plotSpacing params))
         plot-shape           (:plotShape params)
@@ -646,12 +656,8 @@
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
         design-settings      (:designSettings params default-settings)
-        plot-file-name       (if append-plots?
-                               (:newPlotFileName params)
-                               (:plotFileName params))
-        plot-file-base64     (if append-plots?
-                               (:newPlotFileBase64 params)
-                               (:plotFileBase64 params))
+        plot-file-name       (:plotFileName params)
+        plot-file-base64     (:plotFileBase64 params)
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
         type                 (:type params)
@@ -684,9 +690,11 @@
                   project-options
                   (tc/clj->jsonb design-settings)
                   type)
+
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery! project-id imagery-list))
+        
         (cond
           (#{"closed" "archived"} (:availability original-project))
           nil
@@ -700,26 +708,27 @@
                     (not= plot-size      (:plot_size original-project))
                     (not= plot-spacing   (:plot_spacing original-project))
                     (not= shuffle-plots? (:shuffle_plots original-project)))))
-          (do
-            (when-not append-plots? (call-sql "delete_plots_by_project" project-id))
-            (create-project-plots! project-id
-                                   plot-distribution
-                                   num-plots
-                                   plot-spacing
-                                   plot-shape
-                                   plot-size
-                                   plot-file-name
-                                   plot-file-base64
-                                   sample-distribution
-                                   samples-per-plot
-                                   sample-resolution
-                                   sample-file-name
-                                   sample-file-base64
-                                   allow-drawn-samples?
-                                   shuffle-plots?
-                                   design-settings
-                                   aoi-features
-                                   type))
+          (doall
+           (call-sql "delete_plots_by_project" project-id)
+           (create-project-plots! project-id
+                                  plot-distribution
+                                  num-plots
+                                  plot-spacing
+                                  plot-shape
+                                  plot-size
+                                  plot-file-name
+                                  plot-file-base64
+                                  sample-distribution
+                                  samples-per-plot
+                                  sample-resolution
+                                  sample-file-name
+                                  sample-file-base64
+                                  allow-drawn-samples?
+                                  shuffle-plots?
+                                  design-settings
+                                  aoi-features
+                                  type))
+
           :else
           (do
             ;; Always recreate samples or reset them
@@ -1075,8 +1084,28 @@
   {:userAssignment (file-user-assignment plot-data)
    :qaqcAssignment (file-qaqc-assignment plot-data)})
 
+(defn get-plot-points [dist plots]  
+  (case dist
+    "geojson" (reduce
+               (fn [points pgobj]
+                 (let [coord-pairs (->> pgobj :plot_geom .getValue
+                                        tc/json->clj :coordinates first)]
+                   (into points coord-pairs)))
+               [] plots)
+    "shp" (reduce
+           (fn [points pgobj]
+	     (let [coord-pairs (->> pgobj :plot_geom .getValue
+                                    (call-sql "hex_ewkb_to_coordinate_arrays")
+                                    (map :coord_pair))]
+               (into points coord-pairs)))
+           [] plots)
+    "csv" (map
+           (fn [pgobj]
+	     (let [[_ coords] (->> pgobj :plot_geom .getValue (re-find #"POINT\(([^)]+)\)"))]
+	       (map #(Double/parseDouble %) (str/split coords #" ")))) plots)))
+
 (defn get-plot-bounds [distribution plots]  
-  (let [points (get-plot-points distribution (take 3 plots))
+  (let [points (get-plot-points distribution plots)
 	x-points (map first points)
 	y-points (map last points)]    
     [[(apply min x-points) (apply min y-points)]
@@ -1096,8 +1125,8 @@
         project-features (call-sql "select_project_features" project-id)]
     (if (seq project-features)
       (->> project-features first 
-         :feature .getValue tc/jsonb->clj :coordinates
-         first (mapv minmaxer minmax-matrix))
+           :feature .getValue tc/jsonb->clj :coordinates
+           first (mapv minmaxer minmax-matrix))
       project-features)))
 
 (defn update-bounds-by-file [distribution project-id file-plots]
@@ -1112,20 +1141,21 @@
         project-y (map last pgeom)]    
     [[(apply min (into [x-min] project-x)) (apply min (into [y-min] project-y))]
      [(apply max (into [x-max] project-x)) (apply max (into [y-max] project-y))]]
-  ))
+    ))
 
 (defn check-plot-file
   [{:keys [params]}]
   (let [project-id       (tc/val->int (:projectId params))
         plot-file-name   (:plotFileName params)
         plot-file-base64 (:plotFileBase64 params)
-        distribution     (:plotFileType params)        
+        distribution     (:plotFileType params)
+        
         plots            (external-file/load-external-data! project-id
                                                             distribution
                                                             plot-file-name
                                                             plot-file-base64
                                                             "plot"
-                                                            [:visible_id])
+                                                            [:visible_id])        
         file-bounds      (update-bounds-by-file distribution project-id plots)
         file-aoi         (fit-aoi-to-file distribution project-id plots)
         file-assignment? (some #(:user %) plots)
@@ -1141,7 +1171,6 @@
       (data-response  {:userAssignment {:userMethod "none"
                                         :users      []
                                         :percents   []}
-                       :filePlotCount (count plots)
                        :fileAoi       file-aoi
                        :fileBoundary  file-bounds
                        :qaqcAssignment {:qaqcMethod "none"
@@ -1181,24 +1210,24 @@
           (data-response "Internal server error." {:status 500}))))))
 
 (defn create-project-draft! [{:keys [params session]}]
-                       (let [user-id             (tc/val->int (:userId session))
-                             institution-id      (tc/val->int (:institutionId params))
-                             name                (:name params)
-                             project-state  (dissoc params :userId :institutionId :name)]
-                         (try
-                           (let [project-draft-id (sql-primitive (call-sql "create_project_draft"
-                                                                           user-id
-                                                                           institution-id
-                                                                           name
-                                                                           (tc/clj->jsonb project-state)))]
-                             (if (or (nil? project-draft-id) (zero? project-draft-id))
-                               (throw (Exception. "There was an issue with the creation request."))
-                               (data-response {:projectDraftId project-draft-id}))
-                             )
-                           (catch Exception e
-                             (let [causes (:causes (ex-data e))]
-                               (when-not causes (log (ex-message e)))
-                               (data-response "Internal server error." {:status 500}))))))
+  (let [user-id             (tc/val->int (:userId session))
+        institution-id      (tc/val->int (:institutionId params))
+        name                (:name params)
+        project-state  (dissoc params :userId :institutionId :name)]
+    (try
+      (let [project-draft-id (sql-primitive (call-sql "create_project_draft"
+                                                      user-id
+                                                      institution-id
+                                                      name
+                                                      (tc/clj->jsonb project-state)))]
+        (if (or (nil? project-draft-id) (zero? project-draft-id))
+          (throw (Exception. "There was an issue with the creation request."))
+          (data-response {:projectDraftId project-draft-id}))
+        )
+      (catch Exception e
+        (let [causes (:causes (ex-data e))]
+          (when-not causes (log (ex-message e)))
+          (data-response "Internal server error." {:status 500}))))))
 
 (defn update-project-draft! [{:keys [params]}]
   (let [project-draft-id    (tc/val->int (:projectDraftId params))
