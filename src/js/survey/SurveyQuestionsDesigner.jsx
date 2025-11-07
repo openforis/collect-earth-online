@@ -13,7 +13,7 @@ export default function SurveyQuestionsDesigner() {
   return (
     <div id="survey-design">      
       <SurveyCardList editMode={editMode} />
-      {editMode === "full" || isProjectAdmin  && (
+      {(editMode === "full" || isProjectAdmin)  && (
         <NewQuestionDesigner
           setProjectDetails={setProjectDetails}
           surveyQuestions={surveyQuestions}
