@@ -142,12 +142,16 @@ class ProjectManagement extends React.Component {
   /// API Calls
 
   publishProject = () => {
-    const { availability, setProjectDetails, setContextState, processModal, projectId } =
-      this.context;
+    const {
+      availability,
+      setProjectDetails,
+      setContextState,
+      processModal,
+      projectId } = this.context;
     const unpublished = availability === "unpublished";
     const message = unpublished
-      ? "Do you want to publish this project?  This action will clear plots collected by admins to allow collecting by users."
-      : "Do you want to re-open this project?  Members will be allowed to collect plots again.";
+          ? "Do you want to publish this project?  This action will clear plots collected by admins to allow collecting by users."
+          : "Do you want to re-open this project?  Members will be allowed to collect plots again.";
     if (confirm(message)) {
       processModal("Publishing project", () =>
         fetch(`/publish-project?projectId=${projectId}&clearSaved=${unpublished}`, {
@@ -161,10 +165,8 @@ class ProjectManagement extends React.Component {
           .catch((error) => {
             console.log(error);
             this.setState ({modal: {alert: {alertType: "Publish Project Error", alertMessage: "Error publishing project. See console for details."}}});
-          })
-      );
-    }
-  };
+          }));
+    }};
 
   copyProject = () => {
     const {setProjectDetails, setContextState, processModal, promptModal, projectId} = this.context;
@@ -186,9 +188,7 @@ class ProjectManagement extends React.Component {
                   fetch(url, {method: "POST"})
 	            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
 	            .then((data) => 
-                      window.location.assign(`/review-project?projectId=${data.projectId}&institutionId=${this.context.institution}&copy-redirect`)
-
-                         );
+                      window.location.assign(`/review-project?projectId=${data.projectId}&institutionId=${this.context.institution}&copy-redirect`));
                 });
   };
 

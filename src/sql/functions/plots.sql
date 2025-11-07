@@ -473,7 +473,6 @@ $$ LANGUAGE SQL;
 --
 --  SAVING COLLECTION
 --
-
 -- Flag plot
 CREATE OR REPLACE FUNCTION flag_plot(
     _plot_id integer,
@@ -504,7 +503,6 @@ CREATE OR REPLACE FUNCTION flag_plot(
     SELECT _plot_id;
 
 $$ LANGUAGE SQL;
-
 
 CREATE OR REPLACE FUNCTION upsert_user_samples(
     _user_plot_id        integer,
