@@ -555,92 +555,39 @@
           (when-not causes (log (ex-message e)))
           (data-response "Internal server error during project creation request, there may be a problem with your input." {:status 500}))))))
 
-(require '[clojure.pprint :refer [pprint]])
 (defn copy-project!
   "{:params  {:projectId Int}
     :session {:userId Int}
    }"
   [{:keys [params session]}]
   (let [user-id (:userId session -1)
-	project-id (tc/val->int (:projectId params))
-	{:keys [institution
-		plotSize
-		plotSpacing
-		name
-		id
+        project-id (tc/val->int (:projectId params))
+        {:keys [institution
+                plotSize
+                plotSpacing
+                name
+                id
                 surveyQuestions
-		sampleResolution]
-	 :as old-project} (build-project-by-id user-id project-id)
+                sampleResolution]
+         :as old-project} (build-project-by-id user-id project-id)
         project (assoc old-project
-	               :name (str name " - COPY")
-                       :surveyQuestions surveyQuestions
-	               :institutionId institution
-	               :plotSize (long plotSize)
-	               :plotSpacing (long plotSpacing)
-	               :projectTemplate id
-	               :sampleResolution (long sampleResolution)
-	               :useTemplatePlots (:plots params)
-	               :useTemplateWidgets (:widgets params))]    
+                  :name (str name " - COPY")
+                  :surveyQuestions surveyQuestions
+                  :institutionId institution
+                  :plotSize (long plotSize)
+                  :plotSpacing (long plotSpacing)
+                  :projectTemplate id
+                  :sampleResolution (long sampleResolution)
+                  :useTemplatePlots (:plots params)
+                  :useTemplateWidgets (:widgets params))]    
     (try
       (let [new-project (create-project! {:params project})
-            new-project-id (-> new-project :body tc/json->clj :projectId)]        
+            new-project-id (-> new-project :body tc/json->clj :projectId)]
+        
         (when (-> params :answers tc/val->bool)
-          (let [_old-plots (call-sql "select_limited_project_plots" project-id 100000)
-                new-plots (call-sql "select_limited_project_plots" new-project-id 100000)
-                vis-id->plot-id (->> _old-plots
-                                     (reduce (fn [coll {:keys [visible_id plot_id]}]
-                                               (assoc coll visible_id plot_id))
-                                             {}))
-                old-plots (group-by :plot_id _old-plots)]
-            (mapv (fn [{:keys [visible_id plot_id] :as new-plot}]
-                    (let [old-plot-id (-> visible_id vis-id->plot-id old-plots first :plot_id)
-                          old-user-plots (call-sql "select_user_plots_info" old-plot-id)]
-                      (mapv (fn [{:keys [imageryIds collection_start
-                                         confidence confidence_comment
-                                         used_kml used_geodash] :as existing-user-plot}]
-                              (let [plot-samples (call-sql "get_sample_answers" old-plot-id)
-                                    sample-answers (->> plot-samples
-                                                        (map (fn [{:keys [sample_id answers]}]
-                                                               {(str sample_id)
-                                                                (tc/jsonb->clj answers)}))
-                                                        (apply merge)
-                                                        tc/clj->jsonb)
-                                    sample-images  (->> plot-samples
-                                                        (map (fn [{:keys [sample_id images image_id]}]
-                                                               {(str sample_id)
-                                                                {:id image_id
-                                                                 :attributes
-                                                                 (tc/jsonb->clj images)}}))
-                                                        (apply merge)
-                                                        tc/clj->jsonb)
-                                    user-plot-id (sql-primitive
-                                                  (try
-                                                    (call-sql "insert_user_plot"
-                                                              plot_id
-                                                              (:user_id existing-user-plot)
-                                                              confidence
-                                                              confidence_comment
-                                                              collection_start
-                                                              imageryIds
-                                                              used_kml
-                                                              used_geodash)
-                                                    (catch Exception e
-                                                      (println e))
-                                                    ))]
-                                (pprint ["upsert_user_samples"
-                                         user-plot-id
-                                         plot_id
-                                         (tc/jsonb->clj sample-answers)
-                                         (tc/jsonb->clj sample-images)])
-                                (try (call-sql "upsert_user_samples"
-                                               user-plot-id
-                                               plot_id
-                                               sample-answers
-                                               sample-images)
-                                     (catch Exception e
-                                       (println e)))))
-                            old-user-plots)))
-                  new-plots)))
+          (call-sql "copy_user_plots" project-id new-project-id)
+          (call-sql "copy_sample_values" project-id new-project-id))
+
         (data-response {:projectId new-project-id}))
       (catch Exception e
         (data-response "Error copying project" {:status 500})))))
