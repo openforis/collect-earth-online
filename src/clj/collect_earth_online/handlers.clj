@@ -39,9 +39,11 @@
                      "&flash_message=You must login to see "
                      full-url)))))
 
+
 (defn crumb-data [{:keys [params session]}]
   (let [user-id        (:userId session -1)
-        project        (when-let [project-id (-> params :project val->int)]
+        project        (:project params (:projectId params))
+        project        (when-let [project-id (val->int project)]
                          (-> (call-sql "select_project_by_id" project-id)
                              first :name))
         institution    (when-let [inst-id (-> params :institution val->int)]

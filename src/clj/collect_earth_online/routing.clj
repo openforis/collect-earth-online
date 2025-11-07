@@ -12,7 +12,7 @@
             [collect-earth-online.db.plots        :as plots]
             [collect-earth-online.db.projects     :as projects]
             [collect-earth-online.db.qaqc         :as qaqc]
-            [collect-earth-online.db.users        :as users]
+            [collect-earth-online.db.users        :as users]            
             [collect-earth-online.handlers :refer [crumb-data]]
             [collect-earth-online.proxy           :as proxy]
             [triangulum.views                     :refer [render-page]]))
