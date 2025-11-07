@@ -31,7 +31,6 @@ const StatsCard = ({}) => {
                  {title: 'Flagged', icon: 'square', color: '#E32312', key: 'flagged'},
                  {title: 'Unanalyzed', icon: 'square', color: '#F3FC4F', key: 'unanalyzed'},
                  {title: 'Average Collection Time', key: 'averageTime'}];
-
   function percent (part, total) {
     return (part * 100) / total;
   }
@@ -50,27 +49,30 @@ const StatsCard = ({}) => {
   };
   
   return (
-    <SidebarCard
-      title="Plot Statistics"
-    >
-      <div id="stats-card">
-        {state.stats &&
-         stats.map(({title, key, icon, color}) => {
-           return (<div className="stat">
-                     {icon && <span
-                                style={{color: color}}
-                              > ⯀ </span>}
-                     <span
-                       style={{color: 'gray'}}
-                     >{title}: </span>
-                     <span
-                   style={{fontWeight: 'bold'}}
-                     >{getStat(key)}</span>
-                  </div>
-                 );})}
-      </div>
-    
-    </SidebarCard>
+    <>
+      {Object.keys(state.currentPlot).length === 0 &&
+       <SidebarCard
+         title="Plot Statistics"
+       >
+         <div id="stats-card">
+           {state.stats &&
+            stats.map(({title, key, icon, color}) => {
+              return (<div className="stat">
+                        {icon &&
+                         <span
+                           style={{color: color}}
+                         > ⯀ </span>}
+                        <span
+                          style={{color: 'gray'}}
+                        > {title}: </span>
+                        <span
+                          style={{fontWeight: 'bold'}}
+                        > {getStat(key)}</span>
+                      </div>
+                     );})}
+         </div>         
+       </SidebarCard>}
+    </>
   );
 };
 
@@ -268,7 +270,7 @@ export const NewPlotNavigation = () => {
             style={{ width: "max-content" }}
             onClick={() => navToPlot("next")}
           >
-            Go to first plot
+            Start Collecting
           </button>
         </div>
       )}
@@ -648,25 +650,28 @@ export const SidebarFooter = ({ processModal }) => {
     }
   };
 
-  const toggleFlagged = () => setAppState(s => ({...s, currentPlot: {...s.currentPlot, flagged: !s.currentPlot.flagged}}))
-
+  const toggleFlagged = () => setAppState(s => ({...s, currentPlot: {...s.currentPlot, flagged: !s.currentPlot.flagged}}));
+  const collecting = Object.keys(currentPlot).length === 0;
   return (
     <div className="sidebar-footer-buttons">
-      <button className="btn outline"
+      {!collecting &&
+        <button className="btn outline"
               onClick={clearAll}>
         Clear All
-      </button>
-      <button className="btn outline"
+      </button>}
+      {!collecting &&
+       <button className="btn outline"
               onClick={toggleFlagged}>
         {currentPlot.flagged ? "Unflag Plot" : "Flag Plot"}
-      </button>
-      <button className="btn filled"
+      </button>}
+      <button className={!collecting ? "btn filled" : "btn outline"}
               onClick={() => setAppState(s => ({...s, showQuitModal: !s.showQuitModal}))}
-      >Quit</button>
-      <button className="btn filled"
+      >Exit</button>
+      {!collecting &&
+       <button className="btn filled"
               onClick={postValuesToDB}>
         Save & Continue
-      </button>
+      </button>}
     </div>
   );
 };
