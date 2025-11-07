@@ -171,7 +171,7 @@ export function pageInit(params, session) {
            }},
           {display: "Project Admin",
            id:"project",
-           query: ["project", parseInt(params.institutionId) || -1],
+           query: ["project", parseInt(params.projectId) || -1],
            onClick:()=>{}}
         ]}
       />

@@ -826,8 +826,7 @@ WITH total_samples AS (
 ), plot_flags AS (
     SELECT count(*) AS flag_count,
            p.visible_id as plot_id
-    FROM user_plot
-s up
+    FROM user_plots up
     INNER JOIN plots p ON p.plot_uid = up.plot_rid
     INNER JOIN total_samples ts ON ts.plot_id = p.visible_id
     WHERE flagged = true

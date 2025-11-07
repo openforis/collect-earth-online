@@ -2,6 +2,7 @@
   (:import java.sql.Timestamp)
   (:require [clojure.set                      :as set]
             [clojure.data.json                :refer [read-str]]
+            [collect-earth-online.db.projects :refer [is-proj-admin?]]
             [triangulum.type-conversion       :as tc]
             [triangulum.database              :refer [call-sql sql-primitive]]
             [triangulum.utils                 :refer [filterm]]
@@ -10,15 +11,6 @@
 ;;;
 ;;; Helpers
 ;;;
-
-(defn- check-auth-common [user-id project-id token-key sql-query]
-  (or (and token-key
-           (= token-key (:token_key (first (call-sql "select_project_by_id" {:log? false} project-id)))))
-      (sql-primitive (call-sql sql-query {:log? false} user-id project-id))))
-
-(defn is-proj-admin? [user-id project-id token-key]
-  (check-auth-common user-id project-id token-key "can_user_edit_project"))
-
 
 (defn- time-plus-five-min []
   (Timestamp. (+ (System/currentTimeMillis) (* 5 60 1000))))

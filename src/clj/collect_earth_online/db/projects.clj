@@ -592,12 +592,12 @@
                                                (assoc coll visible_id plot_id))
                                              {}))
                 old-plots (group-by :plot_id _old-plots)]
-            (mapv (fn [{:keys [visible_id plot_id]}]
+            (mapv (fn [{:keys [visible_id plot_id] :as new-plot}]
                     (let [old-plot-id (-> visible_id vis-id->plot-id old-plots first :plot_id)
                           old-user-plots (call-sql "select_user_plots_info" old-plot-id)]
-                      (mapv (fn [{:keys [user_id imageryIds collection_start
+                      (mapv (fn [{:keys [imageryIds collection_start
                                          confidence confidence_comment
-                                         used_kml used_geodash]}]
+                                         used_kml used_geodash] :as existing-user-plot}]
                               (let [plot-samples (call-sql "get_sample_answers" old-plot-id)
                                     sample-answers (->> plot-samples
                                                         (map (fn [{:keys [sample_id answers]}]
@@ -617,7 +617,7 @@
                                                   (try
                                                     (call-sql "insert_user_plot"
                                                               plot_id
-                                                              user-id
+                                                              (:user_id existing-user-plot)
                                                               confidence
                                                               confidence_comment
                                                               collection_start
@@ -626,16 +626,20 @@
                                                               used_geodash)
                                                     (catch Exception e
                                                       (println e))
-                                                    ))]                                
+                                                    ))]
+                                (pprint ["upsert_user_samples"
+                                         user-plot-id
+                                         plot_id
+                                         (tc/jsonb->clj sample-answers)
+                                         (tc/jsonb->clj sample-images)])
                                 (try (call-sql "upsert_user_samples"
-                                              user-plot-id
-                                              plot_id
-                                              sample-answers
-                                              sample-images)
+                                               user-plot-id
+                                               plot_id
+                                               sample-answers
+                                               sample-images)
                                      (catch Exception e
                                        (println e)))))
-                            old-user-plots)
-                      ))
+                            old-user-plots)))
                   new-plots)))
         (data-response {:projectId new-project-id}))
       (catch Exception e
