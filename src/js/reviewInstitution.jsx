@@ -1592,7 +1592,7 @@ function Project({
                 window.location.assign(
                   project.isDraft
                     ? `/create-project?projectDraftId=${project.id}&institutionId=${institutionId}`
-                    : `/review-project?projectId=${project.id}&institutionId=${institutionId}}`
+                    : `/review-project?projectId=${project.id}&institutionId=${institutionId}`
                 )
               }
               style={{
