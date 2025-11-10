@@ -9,158 +9,449 @@ import InstitutionEditor from "./components/InstitutionEditor";
 import SvgIcon from "./components/svg/SvgIcon";
 import { LoadingModal, NavigationBar, LearningMaterialModal } from "./components/PageComponents";
 import { ProjectVisibilityPopup, DownloadPopup, ImageryVisibilityPopup } from "./components/BulkPopups";
+import { ProjectsTab } from "./components/ProjectsTab";
+import { ImageryTab } from "./components/ImageryTab";
 
 import { sortAlphabetically, capitalizeFirst, KBtoBase64Length } from "./utils/generalUtils";
 import { safeLength } from "./utils/sequence";
 import { imageryOptions } from "./imagery/imageryOptions";
 
 
-export const ReviewInstitution = ({ institutionId, userId }) => {
-  const [pageState, setPageState] = useAtom(institutionPageAtom);
-  const setPage = (update) => setPageState((prev) => ({ ...prev, ...update }));
+const SidebarTabs = ({ tabs = [], activeTab, onChange }) => {
+  return (
+    <div
+      className="sidebar-tabs"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "stretch",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        height: "100vh",
+        width: "18vw",
+        background: "#f7f9f8",
+        borderRight: "1px solid #dcdedc",
+        paddingTop: "70px",
+        boxSizing: "border-box",
+      }}
+    >
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.id;
+        return (
+          <button
+            key={tab.id}
+            onClick={() => onChange(tab.id)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "0.75rem",
+              padding: "10px 16px",
+              border: "none",
+              backgroundColor: isActive ? "#e6efef" : "#f7f9f8",
+              color: "#000",
+              cursor: "pointer",
+              width: "100%",
+              transition: "background-color 0.2s ease, color 0.2s ease",
+              position: "relative",
+            }}
+          >
+            {isActive && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: "4px",
+                  backgroundColor: "#2f615e",
+                  borderTopRightRadius: "2px",
+                  borderBottomRightRadius: "2px",
+                }}
+              />
+            )}
 
-  // --- API Calls
-  const getProjectList = useCallback(() => {
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              {tab.icon && <SvgIcon icon={tab.icon} size="1.2rem" />}
+              <span
+                style={{
+                  fontSize: "14px",
+                  fontWeight: isActive ? 600 : 400,
+                }}
+              >
+                {tab.label}
+              </span>
+            </div>
+
+            {tab.badge > 0 && (
+              <span
+                style={{
+                  background: "#3D7F7A",
+                  color: "#fff",
+                  borderRadius: "10px",
+                  padding: "2px 8px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  minWidth: "24px",
+                  textAlign: "center",
+                }}
+              >
+                {tab.badge}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+export const ReviewInstitution = ({ institutionId, userId }) => {
+  const [state, setState] = useAtom(institutionPageAtom);
+
+  const setIsAdmin = (isAdmin) => setState((s) => ({ ...s, isAdmin }));
+  const setSelectedTab = (tab) => setState((s) => ({ ...s, selectedTab: tab }));
+  const setModal = (modal) => setState((s) => ({ ...s, modal }));
+  const setModalMessage = (msg) => setState((s) => ({ ...s, modalMessage: msg }));
+  const setProjectList = (projects) => setState((s) => ({ ...s, projectList: projects }));
+  const setImageryList = (imagery) => setState((s) => ({ ...s, imageryList: imagery }));
+  const setUsersList = (users) => setState((s) => ({ ...s, usersList: users }));
+  const visibilityOrder = { platform: 0, private: 1, public: 2 };
+
+  const showAlert = ({ title, body }) => {
+    setModal({ alert: { alertType: title, alertMessage: body } });
+  };
+
+  const processModal = (message, promise) => {
+    setModalMessage(message);
+    promise.finally(() => setModalMessage(null));
+  };
+
+  const sortImageryByVisibility = (a, b) =>
+        (visibilityOrder[a.visibility] ?? 99) - (visibilityOrder[b.visibility] ?? 99);
+
+  const getProjectList = () => {
     processModal(
       "Loading institution data",
       Promise.allSettled([
         fetch(`/get-institution-projects?institutionId=${institutionId}`)
-          .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-          .then((projects) => projects.map((project) => ({ ...project, isDraft: false }))),
+          .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+          .then((projects) => projects.map((p) => ({ ...p, isDraft: false }))),
         fetch(`/get-project-drafts-by-user?institutionId=${institutionId}`)
-          .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-          .then((projects) => projects.map((project) => ({ ...project, isDraft: true }))),
+          .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+          .then((projects) => projects.map((p) => ({ ...p, isDraft: true }))),
       ])
         .then((results) => {
-          const institutionProjects = results[0].status === "fulfilled" ? results[0].value : [];
-          const draftProjects = results[1].status === "fulfilled" ? results[1].value : [];
-          const combinedProjects = institutionProjects.concat(draftProjects);
-          setPage({ projectList: combinedProjects });
+          const institutionProjects =
+                results[0].status === "fulfilled" ? results[0].value : [];
+          const draftProjects =
+                results[1].status === "fulfilled" ? results[1].value : [];
+          setState((s) => ({
+            ...s,
+            projectList: institutionProjects,
+            draftProjects,
+          }));
         })
-        .catch(() =>
-          setPage({
-            modal: {
-              alert: {
-                alertType: "Project Info Error",
-                alertMessage: "Error retrieving the project info. Both requests failed.",
-              },
-            },
-          })
-        )
+        .catch(() => {
+          showAlert({
+            title: "Project Info Error",
+            body: "Error retrieving the project info. Both requests failed.",
+          });
+        })
     );
-  }, [institutionId]);
+  }
 
-  const archiveProject = useCallback(
-    (projectId) => {
-      if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
-        fetch(`/archive-project?projectId=${projectId}`, { method: "POST" }).then((response) => {
+  const getImageryList = () => {
+    fetch(`/get-institution-imagery?institutionId=${institutionId}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((data) => {
+        const sorted = [...data].sort(sortImageryByVisibility);
+        console.log(sorted);
+        setImageryList(sorted);
+      })
+      .catch((err) => {
+        console.log(err);
+        setImageryList([]);
+        showAlert({
+          title: "Error",
+          body: "Error retrieving the imagery list. See console for details.",
+        });
+      });
+  };
+
+  const getInstitutionDetails = () => {
+    fetch(`/get-institution-by-id?institutionId=${institutionId}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((data) => {
+        setState((s) => ({
+          ...s,
+          institutionDetails: data,
+          newInstitutionDetails: {
+            name: data.name,
+            imageName: data.imageName,
+            url: data.url,
+            description: data.description,
+            base64Image: "",
+          },
+        }));
+        setIsAdmin(data.institutionAdmin);
+      })
+      .catch(() => {
+        console.error("Error retrieving institution details");
+        setModal({
+          alert: {
+            alertType: "Institution Info Error",
+            alertMessage:
+            "Error retrieving the institution details. See console for details.",
+          },
+        });
+      });
+  };
+
+  const getInstitutionUserList = () => {
+    fetch(`/get-institution-users?institutionId=${institutionId}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((data) => {
+        const users = data.filter((u) => u.institutionRole !== "pending");
+        setUsersList(data);
+      })
+      .catch(() => {
+        setUsersList([]);
+        console.error("Error retrieving the user list");
+        setModal({
+          alert: {
+            alertType: "User List Error",
+            alertMessage:
+            "Error retrieving the user list. See console for details.",
+          },
+        });
+      });
+  };
+  
+  const archiveProject = (projectId) => {
+    if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
+      fetch(`/archive-project?projectId=${projectId}`, { method: "POST" }).then((response) => {
+        if (response.ok) {
+          getProjectList();
+          showAlert({
+            title: "Project Info",
+            body: `Project ${projectId} has been deleted.`,
+          });
+        } else {
+          console.error(response);
+          showAlert({
+            title: "Project Info Error",
+            body: "Error deleting project. See console for details.",
+          });
+        }
+      });
+    }
+  }
+
+  const deleteProjectDraft = (projectDraftId) => {
+    if (confirm("Do you REALLY want to delete this project draft? This operation cannot be undone.")) {
+      fetch(`/delete-project-draft?projectDraftId=${projectDraftId}`, { method: "GET" }).then(
+        (response) => {
           if (response.ok) {
             getProjectList();
-            setPage({ modal: { alert: { alertType: "Project Info", alertMessage: `Project ${projectId} has been deleted.` } } });
+            showAlert({
+              title: "Project Info",
+              body: `Project ${projectDraftId} has been deleted.`,
+            });
           } else {
             console.error(response);
-            setPage({ modal: { alert: { alertType: "Project Info Error", alertMessage: "Error deleting project. See console for details." } } });
+            showAlert({
+              title: "Project Info Error",
+              body: "Error deleting project draft. See console for details.",
+            });
           }
+        }
+      );
+    }
+  }
+
+  const deleteProjectsBulk = (projectIds) => {
+    if (confirm("Do you REALLY want to delete ALL selected projects? This operation cannot be undone.")) {
+      fetch(`/delete-projects-bulk?institutionId=${institutionId}`, {
+        method: "POST",
+        body: JSON.stringify({ projectIds }),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }).then((response) => {
+        if (response.ok) {
+          getProjectList();
+          showAlert({
+            title: "Project Info",
+            body: "Selected projects have been deleted.",
+          });
+        } else {
+          console.error(response);
+          showAlert({
+            title: "Project Info Error",
+            body: "Error deleting projects. See console for details.",
+          });
+        }
+      });
+    }
+  }
+
+  const editProjectsBulk = (projectIds, selectedVisibility) => {
+    if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
+      fetch(`/edit-projects-bulk?institutionId=${institutionId}`, {
+        method: "POST",
+        body: JSON.stringify({
+          projectIds,
+          visibility: selectedVisibility,
+        }),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }).then((response) => {
+        if (response.ok) {
+          getProjectList();
+          showAlert({
+            title: "Project Info",
+            body: `The visibility of the selected projects has been changed to ${selectedVisibility}.`,
+          });
+        } else {
+          console.error(response);
+          showAlert({
+            title: "Project Info Error",
+            body: "Error editing project visibility. See console for details.",
+          });
+        }
+      });
+    }
+  }
+
+  const deleteImageryBulk = (imageryIds, getImageryList) => {
+    fetch("/bulk-archive-institution-imagery", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        institutionId,
+        imageryIds,
+      }),
+    }).then((response) => {
+      if (response.ok) {
+        getImageryList();
+        showAlert({
+          title: "Imagery Deleted",
+          body: "Imagery has been successfully deleted.",
+        });
+      } else {
+        console.error(response);
+        showAlert({
+          title: "Error",
+          body: "Error deleting imagery. See console for details.",
         });
       }
-    },
-    [getProjectList]
-  );
+    });
+  }
 
-  const deleteProjectDraft = useCallback(
-    (projectDraftId) => {
-      if (confirm("Do you REALLY want to delete this project draft? This operation cannot be undone.")) {
-        fetch(`/delete-project-draft?projectDraftId=${projectDraftId}`).then((response) => {
-          if (response.ok) {
-            getProjectList();
-            setPage({ modal: { alert: { alertType: "Project Info", alertMessage: `Project ${projectDraftId} has been deleted.` } } });
-          } else {
-            console.error(response);
-            setPage({ modal: { alert: { alertType: "Project Info Error", alertMessage: "Error deleting project draft. See console for details." } } });
-          }
-        });
-      }
-    },
-    [getProjectList]
-  );
+  const downloadProjectsBulk = (selectedProjects, selectedOptions) => {
+    const fileTypes = Object.entries(selectedOptions)
+          .filter(([_, value]) => value)
+          .map(([key]) => key);
+    const fileTypesStr = fileTypes.join(",");
+    const projectIds = selectedProjects.join(",");
+    window.open(
+      `/download-projects-bulk?projectIds=${projectIds}&institutionId=${institutionId}&fileTypes=${fileTypesStr}`
+    );
+  }
 
-  const deleteProjectsBulk = useCallback(
-    (projectIds) => {
-      if (confirm("Do you REALLY want to delete ALL selected projects? This operation cannot be undone.")) {
-        fetch(`/delete-projects-bulk?institutionId=${institutionId}`, {
-          method: "POST",
-          headers: { Accept: "application/json", "Content-Type": "application/json" },
-          body: JSON.stringify({ projectIds }),
-        }).then((response) => {
-          if (response.ok) {
-            getProjectList();
-            setPage({ modal: { alert: { alertType: "Project Info", alertMessage: "Selected projects have been deleted." } } });
-          } else {
-            console.error(response);
-            setPage({ modal: { alert: { alertType: "Project Info Error", alertMessage: "Error deleting projects. See console for details." } } });
-          }
-        });
-      }
-    },
-    [getProjectList, institutionId]
-  );
+  const editImageryBulk = (imageryIds, selectedVisibility) => {
+    if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
+      fetch("/edit-imagery-bulk", {
+        method: "POST",
+        body: JSON.stringify({
+          imageryIds,
+          visibility: selectedVisibility,
+          institutionId,
+        }),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }).then((response) => {
+        if (response.ok) {
+          getProjectList();
+          alert(`The visibility of the selected projects has been changed to ${selectedVisibility}`);
+        } else {
+          console.error(response);
+          alert("Error editing project visibility. See console for details.");
+        }
+      });
+    }
+  }
 
-  const processModal = useCallback((message, promise) => {
-    setPage({ modalMessage: message });
-    promise.finally(() => setPage({ modalMessage: null }));
+  useEffect(() => {
+    getProjectList();
+    getImageryList();
+    getInstitutionDetails();
+    getInstitutionUserList();
   }, []);
 
-  // --- Lifecycle
-  useEffect(() => { getProjectList(); }, [getProjectList]);
-
-  // --- Helpers
   const headerTab = (name, count, index, disabled = false) => (
-    <div className="col-lg-4 col-xs-12 px-2" key={index}>
-      <div className={"px-3" + (disabled ? " disabled-group" : "")} onClick={() => !disabled && setPage({ selectedTab: index })}>
+    <div className="col-lg-4 col-xs-12 px-2">
+      <div className={"px-3" + (disabled ? "disabled-group" : "")} onClick={() => !disabled && setSelectedTab(index)}>
         <h2 className="header" style={{ borderRadius: "5px", cursor: disabled ? "not-allowed" : "pointer" }}>
           {name}
           <span className="badge badge-pill badge-light ml-2">{count}</span>
-          <span className="float-right">{index === pageState.selectedTab && <SvgIcon icon="downCaret" size="1rem" />}</span>
+          <span className="float-right">
+            {index === state.selectedTab && <SvgIcon icon="downCaret" size="1rem" />}
+          </span>
         </h2>
       </div>
     </div>
   );
 
-  // --- Render
   return (
-    <div id="review-institution">
-      {pageState.modal?.alert && (
-        <Modal title={pageState.modal.alert.alertType} onClose={() => setPage({ modal: null })}>
-          {pageState.modal.alert.alertMessage}
-        </Modal>
-      )}
-      {pageState.modalMessage && <LoadingModal message={pageState.modalMessage} />}
-
-      <InstitutionDescription institutionId={institutionId} isAdmin={pageState.isAdmin} setIsAdmin={(isAdmin) => setPage({ isAdmin })} userId={userId} />
-
-      <div className="row justify-content-center">
-        <div className="col-lg-7 col-xs-12 align-items-center mb-5">
-          <div className="row">
-            {headerTab("Projects", pageState.projectList ? pageState.projectList.length : 0, 0)}
-            {headerTab("Imagery", pageState.imageryCount, 1)}
-            {headerTab("Users", pageState.usersCount, 2, userId < 0)}
-          </div>
-
-          <ProjectList deleteProject={archiveProject} deleteProjectDraft={deleteProjectDraft} institutionId={institutionId}
-            isAdmin={pageState.isAdmin} isVisible={pageState.selectedTab === 0} projectList={pageState.projectList}
-            deleteProjectsBulk={deleteProjectsBulk} />
-
-          <ImageryList institutionId={institutionId} isAdmin={pageState.isAdmin} isVisible={pageState.selectedTab === 1}
-            setImageryCount={(imageryCount) => setPage({ imageryCount })} userId={userId} />
-
-          {userId > 0 && (
-            <UserList institutionId={institutionId} isAdmin={pageState.isAdmin} isVisible={pageState.selectedTab === 2}
-              processModal={processModal} setUsersCount={(usersCount) => setPage({ usersCount })} userId={userId} />
-          )}
-        </div>
+    <>
+      <SidebarTabs
+        tabs={[
+          { id: "projects", label: "Projects", icon: "projects", badge: state.projectList?.length || 0 },
+          { id: "imagery", label: "Imagery", icon: "imagery", badge: state.imageryList?.length || 0 },
+          { id: "users", label: "Users", icon: "users", badge: state.usersList?.length || 0 },
+        ]}
+        activeTab={state.selectedTab}
+        onChange={setSelectedTab}
+      />
+      <div id="review-institution">
+        {state.modal?.alert && (
+          <Modal title={state.modal.alert.alertType} onClose={() => setModal(null)}>
+            {state.modal.alert.alertMessage}
+          </Modal>
+        )}
+        {state.modalMessage && <LoadingModal message={state.modalMessage} />}
       </div>
-    </div>
-  );
+      {state.selectedTab === "projects" && (
+        <ProjectsTab
+          institutionId={institutionId}
+          projectList={state.projectList}
+          isAdmin={state.isAdmin}
+          deleteProjectsBulk={deleteProjectsBulk}
+          editProjectsBulk={editProjectsBulk}
+          downloadProjectsBulk={downloadProjectsBulk}
+        />
+      )}
+      {state.selectedTab === "imagery" && (
+        <ImageryTab
+          imageryList={state.imageryList}
+          editImagery={editImageryBulk}
+          deleteImagery={deleteImageryBulk}
+          isAdmin={state.isAdmin}
+        />
+      )}
+    </>
+  )
 };
 
 
@@ -472,7 +763,8 @@ const ImageryList = (
       fetch(`/get-institution-imagery?institutionId=${institutionId}`)
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
         .then((data) => setImageryList([...data].sort(sortByVisibility)))
-        .catch(() => {
+        .catch((err) => {
+          console.log(err);
           setImageryList([]);
           showAlert({
             title: "Error",

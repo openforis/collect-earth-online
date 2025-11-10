@@ -685,14 +685,20 @@ CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _instit
     name             text,
     num_plots        integer,
     privacy_level    text,
-    pct_complete     real
+    pct_complete     real,
+    availability     text,
+    type             text,
+    created_date     text
  ) AS $$
 
     SELECT project_uid,
         name,
         num_plots,
         privacy_level,
-        (SELECT project_percent_complete(project_uid))
+        (SELECT project_percent_complete(project_uid)),
+        availability,
+        type,
+        TO_CHAR(p.created_date, 'YYYY-MM-DD') AS created_date
     FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
