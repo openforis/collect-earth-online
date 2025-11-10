@@ -1,6 +1,7 @@
 import "../../css/custom.css";
 
 import React, { useState, useEffect } from "react";
+import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import ReactMarkdown from 'react-markdown';
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
@@ -8,6 +9,7 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import SvgIcon from "./svg/SvgIcon";
 import { getLanguage, capitalizeFirst } from "../utils/generalUtils";
 import { getPreference, setPreference } from "../utils/preferences";
+import { stateAtom } from "../utils/constants";
 
 export function LogOutButton({ userName, uri }) {
   const fullUri = uri + window.location.search;
@@ -54,7 +56,7 @@ class HelpSlideDialog extends React.Component {
         onClick={closeHelpMenu}
         style={{
           position: "fixed",
-          zIndex: "100",
+          zIndex: "1000",
           left: "0",
           top: "0",
           width: "100%",
@@ -758,4 +760,153 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
       </div>
     </div>
   );
+};
+
+export function PromptModal({title, inputs, callBack, closePrompt}) {
+  const [promptState, setPromptState] = React.useState([]);
+  React.useEffect(()=> setPromptState(inputs.reduce(
+    (acc, {index, value}) => {
+      return ({... acc,
+               [index]: value});
+    }, {} 
+  )), []);
+  let makeInput = ({label, type, index, value}) => {
+    return (
+      <div key={index}
+           className="input-group"
+           style={{flex: "1 100%"}}>
+
+        <label
+          style={{margin: "auto 1rem",
+                  width: "50%"}}
+        >{label}</label>
+        <input type={type}
+               checked={promptState[index]}
+               value={promptState[index]}
+               onChange= {(e)=> setPromptState({... promptState,
+                                                [index]: (e.target.checked)})}
+        ></input>
+      </div>
+    );
+  };
+
+  let  mappedInputs = inputs.map(makeInput);
+  return (
+    <div
+      style={{
+        position: "fixed",
+        zIndex: "100",
+        left: "0",
+        top: "0",
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgba(0,0,0,0.4)",
+      }}
+    >
+      <div
+        style={{
+          flexDirection: "column",
+          backgroundColor: "white",
+          border: "1.5px solid",
+          borderRadius: "5px",
+          display: "flex",
+          margin: "20% auto",
+          width: "fit-content",
+          padding: "1.25rem"
+        }}
+      >
+        <div className="container">
+          <label>{title}</label>
+        </div>
+        <div className="break"></div>
+        {mappedInputs}
+        <div
+          style={{
+            display: "flex"}}>
+          <input
+            className="btn btn-outline-red btn-sm w-100"
+            onClick={() => closePrompt()}
+            type="button"
+            value="Cancel"
+            />
+          <input
+            className="btn btn-outline-lightgreen btn-sm w-100"
+            onClick={() => callBack(promptState)}
+            type="button"
+            value="Confirm"
+            />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export const BreadCrumbs = ({crumbs}) => {  
+  const [state, setState] = useAtom(stateAtom);
+  const {breadCrumbs} = state;
+  
+  const getCrumbData = (message, promise) => {
+    setState((s) => ({... s, modalMessage: message}), () =>
+      promise.finally(() => setState((s) => ({... s, modalMessage: null}))));
+  };
+  
+  useEffect(()=>{
+    getCrumbData("Loading...", Promise.allSettled([
+      fetch('/crumb-data',
+            { method: "POST",
+              headers: {
+                "Content-Type": "application/json; charset=utf-8",
+              },
+              body: JSON.stringify(
+                breadCrumbs.concat(crumbs).map(
+                  ({query})=> query).filter((x)=>x)
+                 .reduce((acc, curr)=> (acc[curr [0]]=curr [1], acc), {})
+              )
+            })
+        .then((res) => (res.ok ? res.json() : Promise.reject()))
+        .then((data) => {
+          setState((s)=>(
+            {... s,
+             breadCrumbs: breadCrumbs.concat(
+               crumbs.map((crumb) => ({
+                 ... crumb,
+                 display: data[crumb.id],            
+               })))}));
+        })]));    
+  }, []);
+
+  const crumbClick = (e) => console.log(e);
+  
+  const renderCrumb = ({display, id, onClick=crumbClick}, index) => {
+
+    return (
+      <>
+        {index ? <div> / </div> : <div></div>}
+        <div
+          className="crumb"
+          id={"crumb-" + id}
+          {... (index < breadCrumbs.length -1 && {
+            onClick: () => onClick(id)})
+          }>
+          {display}
+        </div>      
+      </>      
+    );
+  };
+  
+  return (
+    <div id="breadcrumb-bar"
+         className="flex-row">
+      <div
+        style={{cursor: "pointer"}}
+        onClick={()=> {
+          const idx = breadCrumbs.length - 1;
+          const keepers = breadCrumbs.slice(0, idx);
+          setState((s) => ({...s, breadCrumbs: keepers}));
+          keepers.slice(keepers.length -1)[0].onClick();          
+        }}
+      > <SvgIcon icon="leftArrowSlim" size="2rem" />
+      </div>      
+        {breadCrumbs.map(renderCrumb)}
+    </div>);
 };

@@ -2,12 +2,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { useAtom } from "jotai";
 
-
 import { institutionPageAtom } from "./state/institutionPage";
 import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
 import SvgIcon from "./components/svg/SvgIcon";
-import { LoadingModal, NavigationBar, LearningMaterialModal } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, LearningMaterialModal, BreadCrumbs } from "./components/PageComponents";
 import { ProjectVisibilityPopup, DownloadPopup, ImageryVisibilityPopup } from "./components/BulkPopups";
 import { ProjectsTab } from "./components/ProjectsTab";
 import { ImageryTab } from "./components/ImageryTab";
@@ -948,7 +947,7 @@ const ImageryList = (
                   onChange={(e) => handleSelectAllNonPlatform(e.target.checked)}
                 />
               </div>
-              <div className="col-2 pr-0 pl-3">Visibility</div>
+              <div className="col-3 pr-0 pl-3">Visibility</div>
               <div className="col pl-5">Imagery Title</div>
               <div className="col-1 pl-4">Edit</div>
               <div className="col-1 pl-4">Delete</div>
@@ -1061,6 +1060,14 @@ class NewImagery extends React.Component {
   };
 
   uploadCustomImagery = (isNew) => {
+    console.log("uploading custom imagery",
+                isNew, //true
+                this.state.imageryTitle.length, // 10+
+                this.state.imageryAttribution.length, //0
+                this.state.selectedType, //2
+                this.props.titleIsTaken(this.state.imageryTitle, this.props.imageryToEdit.id), //false
+                
+               );
     const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.imageryParams);
     const messages = this.validateParams(this.state.selectedType, sanitizedParams);
     if (messages.length > 0) {
@@ -1073,6 +1080,7 @@ class NewImagery extends React.Component {
       } else if (this.props.titleIsTaken(this.state.imageryTitle, this.props.imageryToEdit.id)) {
         this.setState ({modal: {alert: {alertType: "Imagery Upload Error", alertMessage: "The title '" + this.state.imageryTitle + "' is already taken."}}});
       } else {
+        console.log("fetching at", isNew ? "/add-institution-imagery" : "/update-institution-imagery");
         fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery", {
           method: "POST",
           headers: {
@@ -1256,7 +1264,7 @@ class NewImagery extends React.Component {
     ? "Planet Labs Global Mosaic | © Planet Labs, Inc"
     : type === "SecureWatch"
     ? "SecureWatch Imagery | © Maxar Technologies Inc."
-    : ["Sentinel1", "Sentinel2"].includes(type) || type.includes("GEE")
+    : ["Sentinel1", "Sentinel2", "DynamicWorld"].includes(type) || type.includes("GEE")
     ? "Google Earth Engine | © Google LLC"
     : type.includes("MapBox")
     ? "© Mapbox"
@@ -1316,6 +1324,11 @@ class NewImagery extends React.Component {
 
     return (
       <div className="mb-2 p-4 border rounded">
+        {this.state.modal?.alert &&
+       <Modal title={this.state.modal.alert.alertType}
+              onClose={()=>{this.setState({modal: null});}}>
+         {this.state.modal.alert.alertMessage}
+       </Modal>}
         {/* Selection for imagery type */}
         <div className="mb-3">
           <label>Select Type</label>
@@ -1340,7 +1353,7 @@ class NewImagery extends React.Component {
         {/* This should be generalized into the imageryOptions */}
         {["GeoServer", "xyz"].includes(type) &&
          this.formInput("Attribution", "text", this.state.imageryAttribution, (e) =>
-           this.setState({ imageryAttribution: e.target.value })
+           this.setState(s => ({...s, imageryAttribution: e.target.value }))
          )}
         {displayParams.map((o) => this.formTemplate(o))}
         {optionalProxy &&
@@ -1438,7 +1451,7 @@ function Imagery({
       </div>
 
       {/* Visibility Button */}
-      <div className="col-2 pr-0 pl-3">
+      <div className="col-3 pr-0 pl-3">
         <div
           className={`btn btn-sm btn-outline-lightgreen btn-block ${
       visibility === "platform" ? "disabled" : ""
@@ -1450,7 +1463,7 @@ function Imagery({
            ? "Platform"
            : visibility === "private"
            ? "Institution"
-           : "Public"}
+           : "Public Institution Imagery"}
         </div>
       </div>
 
@@ -1701,7 +1714,7 @@ function Project({
         ) : (
           <a
             className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-            href={`/collection?projectId=${project.id}`}
+            href={`/collection?projectId=${project.id}&institutionId=${institutionId}`}
             style={{
               boxShadow:
               project.percentComplete === 0.0
@@ -1727,7 +1740,7 @@ function Project({
                 window.location.assign(
                   project.isDraft
                     ? `/create-project?projectDraftId=${project.id}&institutionId=${institutionId}`
-                    : `/review-project?projectId=${project.id}`
+                    : `/review-project?projectId=${project.id}&institutionId=${institutionId}`
                 )
               }
               style={{
@@ -1839,7 +1852,7 @@ class UserList extends React.Component {
       .catch((response) => {
         this.setState({ institutionUserList: [] });
         console.log(response);
-        this.setState ({modal: {alert: {alertType: "User List Error", alertMessage: "Error retrieving the user list. See console for details."}}});
+        this.setState (s => ({... s, modal: {alert: {alertType: "User List Error", alertMessage: "Error retrieving the user list. See console for details."}}}));
       });
   };
 
@@ -2131,9 +2144,19 @@ const NewUserButtons = ({
   );
 };
 
+
+
 export function pageInit(params, session) {
+  let [] = 
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[
+          {display: params.institutionName || "Review Institution",
+           id:"institution",
+           query:["institution", parseInt(params.institutionId || "-1")],
+           onClick:()=>{}}]}
+      />
       <ReviewInstitution
         institutionId={parseInt(params.institutionId || "-1")}
         userId={session.userId || -1}

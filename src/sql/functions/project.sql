@@ -259,8 +259,8 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
     )
 
     UPDATE projects
-    SET num_plots = plots,
-        samples_per_plot = samples
+    SET num_plots = stats.plots,
+        samples_per_plot = stats.samples
     FROM (
         SELECT COUNT(DISTINCT plot_uid) AS plots,
             (CASE WHEN COUNT(DISTINCT plot_uid) = 0 THEN
@@ -269,7 +269,7 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
                 COUNT(sample_uid) / COUNT(DISTINCT plot_uid)
             END) AS samples
         FROM project_plots
-    )
+    ) As stats
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
@@ -922,6 +922,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     flagged_reason             text,
     confidence                 integer,
     confidence_comment         text,
+    used_kml                   boolean,
+    used_geodash               boolean,
     collection_time            timestamp,
     analysis_duration          numeric,
     samples                    text,
@@ -940,6 +942,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
         flagged_reason,
         confidence,
         confidence_comment,
+        used_kml,
+        used_geodash,
         collection_time,
         ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
         FORMAT('[%s]', STRING_AGG(
@@ -1063,6 +1067,8 @@ RETURNS TABLE (
         extra_plot_info       json,
         extra_sample_info     json,
         sample_internal_id    integer,
+        used_kml              boolean,
+        used_geodash          boolean,
         guest_usernames       jsonb
 ) AS $$
 
@@ -1087,7 +1093,9 @@ WITH guest_users AS (
         saved_answers,
         extra_plot_info,
         extra_sample_info,
-        s.sample_uid
+        s.sample_uid,
+        up.used_kml,
+        up.used_geodash
     FROM plots pl
     INNER JOIN samples s ON s.plot_rid = pl.plot_uid
     INNER JOIN user_plots up ON up.plot_rid = pl.plot_uid
@@ -1112,7 +1120,9 @@ WITH guest_users AS (
         saved_answers,
         extra_plot_info,
         extra_sample_info,
-        s.sample_uid
+        s.sample_uid,
+        up.used_kml,
+        up.used_geodash
     FROM plots pl
     LEFT JOIN samples s ON s.plot_rid = pl.plot_uid
     LEFT JOIN user_plots up ON up.plot_rid = pl.plot_uid
@@ -1420,5 +1430,57 @@ BEGIN
     RETURN QUERY
     SELECT ST_X((dp).geom) AS x, ST_Y((dp).geom) AS y
     FROM ST_DumpPoints(geom) AS dp;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION copy_user_plots(_old_project_id INT, _new_project_id INT)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO user_plots (
+    user_rid, plot_rid, collection_start, confidence,
+    confidence_comment, imagery_ids, used_kml, used_geodash
+  )
+  SELECT up.user_rid, new_pl.plot_uid, up.collection_start, up.confidence,
+         up.confidence_comment, up.imagery_ids, up.used_kml, up.used_geodash
+  FROM plots old_pl
+  JOIN plots new_pl
+    ON old_pl.visible_id = new_pl.visible_id
+   AND old_pl.project_rid = _old_project_id
+   AND new_pl.project_rid = _new_project_id
+  JOIN user_plots up
+    ON up.plot_rid = old_pl.plot_uid;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION copy_sample_values(_old_project_id INT, _new_project_id INT)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO sample_values (
+    user_plot_rid, sample_rid, saved_answers, imagery_attributes, imagery_rid
+  )
+  SELECT new_up.user_plot_uid, new_s.sample_uid, sv.saved_answers, sv.imagery_attributes, sv.imagery_rid
+  FROM plots old_pl
+  JOIN plots new_pl
+    ON old_pl.visible_id = new_pl.visible_id
+   AND old_pl.project_rid = _old_project_id
+   AND new_pl.project_rid = _new_project_id
+
+  JOIN samples old_s
+    ON old_s.plot_rid = old_pl.plot_uid
+
+  JOIN samples new_s
+    ON new_s.visible_id = old_s.visible_id
+   AND new_s.plot_rid = new_pl.plot_uid
+
+  JOIN user_plots old_up
+    ON old_up.plot_rid = old_pl.plot_uid
+
+  JOIN user_plots new_up
+    ON new_up.plot_rid = new_pl.plot_uid
+   AND new_up.user_rid = old_up.user_rid
+
+  JOIN sample_values sv
+    ON sv.sample_rid = old_s.sample_uid
+   AND sv.user_plot_rid = old_up.user_plot_uid;
 END;
 $$ LANGUAGE plpgsql;

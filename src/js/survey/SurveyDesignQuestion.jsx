@@ -18,7 +18,7 @@ import { ProjectContext } from "../project/constants";
 import Modal from "../components/Modal";
 
 export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQuestionId, question }) {
-  const { setProjectDetails, surveyQuestions, surveyRules } = useContext(ProjectContext);
+  const { setProjectDetails, surveyQuestions, surveyRules, isProjectAdmin } = useContext(ProjectContext);
 
   const surveyQuestion = question;
   const parentQuestion = surveyQuestions[surveyQuestion.parentQuestionId];
@@ -387,7 +387,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
                 surveyQuestionId={surveyQuestionId}
               />
             ))}
-            {editMode === "full" && !maxAnswers(surveyQuestion) && (
+            {(editMode === "full" || isProjectAdmin) && !maxAnswers(surveyQuestion) && (
               <AnswerDesigner
                 editMode={editMode}
                 surveyQuestion={question}

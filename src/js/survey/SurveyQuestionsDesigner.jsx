@@ -6,14 +6,13 @@ import NewQuestionDesigner from "./NewQuestionDesigner";
 import { ProjectContext } from "../project/constants";
 
 export default function SurveyQuestionsDesigner() {
-  const { setProjectDetails, surveyQuestions, surveyRules, projectId, originalProject, type } =
+  const { setProjectDetails, surveyQuestions, surveyRules, projectId, originalProject, type , isProjectAdmin} =
         useContext(ProjectContext);
-  const editMode =
-    projectId === -1 || originalProject.availability === "unpublished" ? "full" : "partial";
+  const editMode = projectId === -1 || originalProject.availability === "unpublished" ? "full" : "partial";
   return (
-    <div id="survey-design">
+    <div id="survey-design">      
       <SurveyCardList editMode={editMode} />
-      {editMode === "full" && (
+      {(editMode === "full" || isProjectAdmin)  && (
         <NewQuestionDesigner
           setProjectDetails={setProjectDetails}
           surveyQuestions={surveyQuestions}

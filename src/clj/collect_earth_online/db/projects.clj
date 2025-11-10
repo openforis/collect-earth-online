@@ -350,11 +350,11 @@
   (let [plot-count (count plots)
         samples    (if (#{"csv" "shp" "geojson"} sample-distribution)
                      (external-file/generate-file-samples plots
-                                            plot-count
-                                            project-id
-                                            sample-distribution
-                                            sample-file-name
-                                            sample-file-base64)
+                                                          plot-count
+                                                          project-id
+                                                          sample-distribution
+                                                          sample-file-name
+                                                          sample-file-base64)
                      (generate-point-samples plots
                                              plot-count
                                              plot-shape
@@ -535,7 +535,7 @@
           ;; Save project imagery
           (if-let [imagery-list (:projectImageryList params)]
             (insert-project-imagery! project-id imagery-list)
-                                ;; API backwards compatibility
+            ;; API backwards compatibility
             (call-sql "add_all_institution_imagery" project-id))
           ;; Copy template widgets
           (when (and (pos? project-template) use-template-widgets)
@@ -544,7 +544,7 @@
           (data-response {:projectId project-id
                           :tokenKey  token-key})
           (catch Exception e
-          ;; Delete new project on error
+            ;; Delete new project on error
             (try
               (call-sql "delete_project" project-id)
               (catch Exception _))
@@ -557,6 +557,43 @@
         (let [causes (:cause (ex-data e))]
           (when-not causes (log (ex-message e)))
           (data-response "Internal server error during project creation request, there may be a problem with your input." {:status 500}))))))
+
+(defn copy-project!
+  "{:params  {:projectId Int}
+    :session {:userId Int}
+   }"
+  [{:keys [params session]}]
+  (let [user-id (:userId session -1)
+        project-id (tc/val->int (:projectId params))
+        {:keys [institution
+                plotSize
+                plotSpacing
+                name
+                id
+                surveyQuestions
+                sampleResolution]
+         :as old-project} (build-project-by-id user-id project-id)
+        project (assoc old-project
+                  :name (str name " - COPY")
+                  :surveyQuestions surveyQuestions
+                  :institutionId institution
+                  :plotSize (long plotSize)
+                  :plotSpacing (long plotSpacing)
+                  :projectTemplate id
+                  :sampleResolution (long sampleResolution)
+                  :useTemplatePlots (:plots params)
+                  :useTemplateWidgets (:widgets params))]    
+    (try
+      (let [new-project (create-project! {:params project})
+            new-project-id (-> new-project :body tc/json->clj :projectId)]
+        
+        (when (-> params :answers tc/val->bool)
+          (call-sql "copy_user_plots" project-id new-project-id)
+          (call-sql "copy_sample_values" project-id new-project-id))
+
+        (data-response {:projectId new-project-id}))
+      (catch Exception e
+        (data-response "Error copying project" {:status 500})))))
 
 ;;;
 ;;; Update project
@@ -873,6 +910,8 @@
                         :flagged
                         :flagged_reason
                         :confidence
+                        :used_kml
+                        :used_geodash
                         :collection_time
                         :analysis_duration
                         :common_securewatch_date
@@ -950,6 +989,8 @@
                           :flagged
                           :collection_time
                           :analysis_duration
+                          :used_geodash
+                          :used_kml
                           :imagery_title
                           :imagery_attributions
                           :sample_geom
@@ -1087,8 +1128,8 @@
         project-features (call-sql "select_project_features" project-id)]
     (if (seq project-features)
       (->> project-features first 
-         :feature .getValue tc/jsonb->clj :coordinates
-         first (mapv minmaxer minmax-matrix))
+           :feature .getValue tc/jsonb->clj :coordinates
+           first (mapv minmaxer minmax-matrix))
       project-features)))
 
 (defn update-bounds-by-file [distribution project-id file-plots]
@@ -1103,7 +1144,7 @@
         project-y (map last pgeom)]    
     [[(apply min (into [x-min] project-x)) (apply min (into [y-min] project-y))]
      [(apply max (into [x-max] project-x)) (apply max (into [y-max] project-y))]]
-  ))
+    ))
 
 (defn check-plot-file
   [{:keys [params]}]
@@ -1172,24 +1213,24 @@
           (data-response "Internal server error." {:status 500}))))))
 
 (defn create-project-draft! [{:keys [params session]}]
-                       (let [user-id             (tc/val->int (:userId session))
-                             institution-id      (tc/val->int (:institutionId params))
-                             name                (:name params)
-                             project-state  (dissoc params :userId :institutionId :name)]
-                         (try
-                           (let [project-draft-id (sql-primitive (call-sql "create_project_draft"
-                                                                           user-id
-                                                                           institution-id
-                                                                           name
-                                                                           (tc/clj->jsonb project-state)))]
-                             (if (or (nil? project-draft-id) (zero? project-draft-id))
-                               (throw (Exception. "There was an issue with the creation request."))
-                               (data-response {:projectDraftId project-draft-id}))
-                             )
-                           (catch Exception e
-                             (let [causes (:causes (ex-data e))]
-                               (when-not causes (log (ex-message e)))
-                               (data-response "Internal server error." {:status 500}))))))
+  (let [user-id             (tc/val->int (:userId session))
+        institution-id      (tc/val->int (:institutionId params))
+        name                (:name params)
+        project-state  (dissoc params :userId :institutionId :name)]
+    (try
+      (let [project-draft-id (sql-primitive (call-sql "create_project_draft"
+                                                      user-id
+                                                      institution-id
+                                                      name
+                                                      (tc/clj->jsonb project-state)))]
+        (if (or (nil? project-draft-id) (zero? project-draft-id))
+          (throw (Exception. "There was an issue with the creation request."))
+          (data-response {:projectDraftId project-draft-id}))
+        )
+      (catch Exception e
+        (let [causes (:causes (ex-data e))]
+          (when-not causes (log (ex-message e)))
+          (data-response "Internal server error." {:status 500}))))))
 
 (defn update-project-draft! [{:keys [params]}]
   (let [project-draft-id    (tc/val->int (:projectDraftId params))

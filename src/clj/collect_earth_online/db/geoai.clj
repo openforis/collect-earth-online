@@ -28,12 +28,14 @@
                            (dissoc :id)))
                      plots)}))
 
-(defn- upload-json-to-gcs [project-id file-name]
+(defn- upload-json-to-gcs [project-id file-name year]
   (let [geojson  (generate-geojson project-id)
         json-str (json/write-str geojson)
-        tmp-file (java.io.File/createTempFile file-name ".geojson")]
+        tmp-file (java.io.File/createTempFile file-name ".geojson")
+        bq-tablename (format "%s_embed%s_pp" file-name year)]
     (spit tmp-file json-str)
     (st/copy-file-to-storage gcs-resource tmp-file (str gs-url file-name ".geojson"))
+    (call-sql "update_geoai_assets" (tc/val->int project-id) (tc/clj->jsonb {year bq-tablename}))
     gs-url))
 
 (defn clj->int-array-literal
@@ -42,7 +44,10 @@
 
 (defn search-plot-by-similarity
   [project-id plot-id year]
-  (let [bq-table          (sql-primitive (call-sql "get_bq_table" project-id (str year)))
+  (let [bq-table          (-> (call-sql "get_bq_table" project-id year)
+                              (sql-primitive)
+                              (clojure.string/split #"\.")
+                              (last))
         req               (:body (http/get
                                   (str (get-config :gcs-integration :api-url) "/search")
                                   {:query-params {:uniqueid plot-id
@@ -59,15 +64,17 @@
   (let [project-id        (:projectId params)
         reference-plot-id (tc/val->int (:referencePlotId params))
         similarity-years  (:similarityYears params)
-        file-name         (str "ceo-" project-id "-plots_" (first similarity-years))]
-    (upload-json-to-gcs project-id file-name)
+        file-name         (str "ceo-" project-id "-plots_" (first similarity-years))
+        plot-id           (sql-primitive (call-sql "get_plot_id_by_visible_id" project-id reference-plot-id))]
+    (call-sql "update_reference_plot" project-id plot-id)
+    (upload-json-to-gcs project-id file-name (first similarity-years))
     (data-response {:message "calculating plot similarity."})))
 
 (defn recalculate-plot-similarity [{:keys [params]}]
   (let [project-id        (:projectId params)
         reference-plot-id (tc/val->int (:referencePlotId params))
         similarity-years  (:similarityYears params)
-        file-name         (str "ceo-" project-id "-plots")
+        file-name         (str "ceo-" project-id "-plots_" (first similarity-years))
         plot-id           (sql-primitive (call-sql "get_plot_id_by_visible_id" project-id reference-plot-id))]
     (try
       (search-plot-by-similarity project-id plot-id (first similarity-years))

@@ -84,7 +84,7 @@ class ProjectDashboardQaqc extends React.Component {
   
   /// API Calls
   getProjectDetails = () => {
-    const { projectId } = this.props;
+    const { projectId, institutionId } = this.props;
     return Promise.all([
       this.getProjectById(projectId),
       this.getProjectStats(projectId),
@@ -239,6 +239,7 @@ class ProjectDashboardQaqc extends React.Component {
                 <PlotStats
                   projectId={this.props.projectId}
                   plotId={this.state.plotId || this.state.projectStats.plots[0]?.plot_id}
+                  institutionId={this.props.institutionId}
                   setPlotInfo={this.setPlotInfo}
                   showProjectMap={this.showProjectMap}
                   projectPlots={this.state.projectStats.plots}
@@ -333,7 +334,7 @@ function ProjectStats({ projectDetails, stats }) {
   );
 }
 
-const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, projectPlots, plotInfo }) => {
+const PlotStats = ({ institutionId, projectId, plotId, activeTab, setPlotInfo, showProjectMap, projectPlots, plotInfo }) => {
   const [newPlotId, setNewPlotId] = useState(plotId);
   const [inputPlotId, setInputPlotId] = useState(plotId);
   const [plots, setPlots] = useState(projectPlots);
@@ -481,7 +482,7 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
             style={{ height: "38px" }}
             onClick={() => {
               console.log(window.location.origin);
-              const path = `/collection?projectId=${projectId}&plotId=${plotId}`;
+              const path = `/collection?projectId=${projectId}&plotId=${plotId}&institutionId=${institutionId}`;
               window.open(window.location.origin + path, "_blank");
             }}
           >
@@ -768,7 +769,7 @@ const Tab = ({ label, children }) => {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-      <ProjectDashboardQaqc projectId={params.projectId || "0"} userName={session.userName} />
+      <ProjectDashboardQaqc institutionId={params.institutionId || "0"} projectId={params.projectId || "0"} userName={session.userName} />
     </NavigationBar>,
     document.getElementById("app")
   );

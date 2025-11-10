@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
+import _ from "lodash";
 import { stateAtom } from '../utils/constants';
 import { mercator } from '../utils/mercator';
+import { SidebarCard } from "./Sidebar";
 import SvgIcon from "./svg/SvgIcon";
 import {
   lengthObject,
   filterObject,
   mapObjectArray,
+  intersection,
 } from '../utils/sequence';
 import { LearningMaterialModal } from "./PageComponents";
 
@@ -56,7 +59,6 @@ export const SurveyQuestions = () => {
   const checkSelection = (sampleIds, questionId) => {
     const q = currentProject?.surveyQuestions?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
-
     if (sampleIds.some((s) => !visibleIds.includes(s))) {
       setAppState((s) => ({
         ...s,
@@ -339,7 +341,7 @@ export const SurveyQuestions = () => {
                   borderWidth: isActive ? '5px' : '2px',
                 }}
                 className={`sq-pill ${isActive ? 'active' : ''}`}
-                onClick={() => setCurrentValue(q.id, Number(id), a.answer)}
+                onClick={() => validateAndSetCurrentValue(q.id, Number(id), a.answer)}
               >
                 <span className="dot" style={{ background: a.color }} />
                 {String(a.answer)}
@@ -360,7 +362,7 @@ export const SurveyQuestions = () => {
                 type="radio"
                 name={`q-${q.id}`}
                 checked={current ? Number(current.answerId) === Number(id) : false}
-                onChange={() => setCurrentValue(q.id, Number(id), a.answer)}
+                onChange={() => validateAndSetCurrentValue(q.id, Number(id), a.answer)}
               />
               <span>{String(a.answer)}</span>
             </label>
@@ -382,7 +384,7 @@ export const SurveyQuestions = () => {
               const selectedId = e.target.value;
               if (selectedId === '') return;
               const ans = q.answers[selectedId];
-              if (ans) setCurrentValue(q.id, Number(selectedId), ans.answer);
+              if (ans) validateAndSetCurrentValue(q.id, Number(selectedId), ans.answer);
             }}
           >
             <option value="">Select</option>
@@ -406,7 +408,7 @@ export const SurveyQuestions = () => {
             type={q.dataType}
             placeholder={val}
             defaultValue={val}
-            onBlur={(e) => setCurrentValue(q.id, 0, e.target.value)}
+            onBlur={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') setCurrentValue(q.id, 0, e.currentTarget.value);
             }}
@@ -450,23 +452,278 @@ export const SurveyQuestions = () => {
     return { validatedCount: validated, totalTop: total };
   }, [parents, currentProject?.surveyQuestions, userSamples]);
 
+
+  // SURVEY RULES
+  const getSurveyQuestionText = (questionId) => {
+    const { surveyQuestions } = currentProject;
+    const visibleSurveyQuestions = filterObject(surveyQuestions, ([_id, val]) => val.hideQuestion != true);
+    return _.get(visibleSurveyQuestions, [questionId, "question"], "");
+  };
+
+  const getSurveyAnswerText = (questionId, answerId) => {
+    const { surveyQuestions } = currentProject;
+    return _.get(surveyQuestions, [questionId, "answered", answerId, "answerText"], "");
+  };
+
+  const checkRuleTextMatch = (surveyRule, questionIdToSet, _answerId, answerText) => {
+    if (surveyRule.questionId === questionIdToSet && !RegExp(surveyRule.regex).test(answerText)) {
+      return `Text match validation failed.\r\n\nPlease enter an answer that matches the expression: ${surveyRule.regex}`;
+    } else {
+      return null;
+    }
+  };
+
+  const checkRuleNumericRange = (surveyRule, questionIdToSet, _answerId, answerText) => {
+    if (
+      surveyRule.questionId === questionIdToSet &&
+        (answerText < surveyRule.min || answerText > surveyRule.max)
+    ) {
+      return `Numeric range validation failed.\r\n\n Please select a value between ${surveyRule.min} and ${surveyRule.max}`;
+    } else {
+      return null;
+    }
+  };
+
+  const sumAnsweredQuestionsPerSample = (answeredQuestions, sampleId) =>
+    Object.entries(answeredQuestions).reduce((acc, [qId, aq]) => {
+      const answer = aq.answered.find((ans) => ans.sampleId === sampleId);
+      const answeredVal = Number(answer.answerText || aq.answers[answer.answerId].answer || 0);
+      return acc + answeredVal;
+    }, 0);
+
+  const getAnsweredQuestions = (ruleQuestions, questionIdToSet) =>
+    filterObject(currentProject?.surveyQuestions, ([sqId, sq]) => {
+      const numSqId = Number(sqId);
+      return (
+        ruleQuestions.includes(numSqId) && sq.answered.length > 0 && numSqId !== questionIdToSet
+      );
+    });
+
+  const getAnsweredSampleIds = (answeredQuestions) =>
+    mapObjectArray(answeredQuestions, ([_sqId, aq]) => aq.answered.map((a) => a.sampleId));
+
+  const checkRuleSumOfAnswers = (surveyRule, questionIdToSet, answerId, answerText) => {
+    const answerVal = !isNaN(Number(answerText)) ?
+          Number(answerText) : Number(getSurveyAnswerText(questionIdToSet, answerId));
+    if (surveyRule.questionIds.includes(questionIdToSet)) {
+      const answeredQuestions = getAnsweredQuestions(surveyRule.questionIds, questionIdToSet);
+      if (surveyRule.questionIds.length === lengthObject(answeredQuestions) + 1) {
+        const sampleIds = getSelectedSampleIds(questionIdToSet);
+        const answeredSampleIds = getAnsweredSampleIds(answeredQuestions);
+        const commonSampleIds = answeredSampleIds.reduce(intersection, sampleIds);
+        if (commonSampleIds.length > 0) {
+          const invalidSum = commonSampleIds
+            .map((sampleId) => sumAnsweredQuestionsPerSample(answeredQuestions, sampleId))
+            .find((s) => s + answerVal !== surveyRule.validSum);
+          if (invalidSum || invalidSum === 0) {
+            const { question } = currentProject?.surveyQuestions[questionIdToSet];
+            return `Sum of answers validation failed.\r\n\nSum for questions [${surveyRule.questionIds
+              .map((q) => getSurveyQuestionText(q))
+              .toString()}] must be ${surveyRule.validSum.toString()}.\r\n\nAn acceptable answer for "${question}" is ${(
+              surveyRule.validSum - invalidSum
+            ).toString()}.`;
+          } else {
+            return null;
+          }
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  };
+
+  const checkRuleMatchingSums = (surveyRule, questionIdToSet, answerId, answerText) => {
+    const answerVal =
+      Number(answerText) || Number(getSurveyAnswerText(questionIdToSet, answerId));
+    if (surveyRule.questionIds1.concat(surveyRule.questionIds2).includes(questionIdToSet)) {
+      const answeredQuestions1 = getAnsweredQuestions(
+        surveyRule.questionIds1,
+        questionIdToSet
+      );
+      const answeredQuestions2 = getAnsweredQuestions(
+        surveyRule.questionIds2,
+        questionIdToSet
+      );
+      const ansLen1 = lengthObject(answeredQuestions1);
+      const ansLen2 = lengthObject(answeredQuestions2);
+      const ruleLen1 = lengthObject(surveyRule.questionIds1);
+      const ruleLen2 = lengthObject(surveyRule.questionIds2);
+      const ready = (al1, rl1, al2, rl2) => al1 > 1 && rl1 === al1 && rl2 === al2 + 1;
+      if (
+        ready(ansLen1, ruleLen1, ansLen2, ruleLen2) ||
+        ready(ansLen2, ruleLen2, ansLen1, ruleLen1)
+      ) {
+        const sampleIds = getSelectedSampleIds(questionIdToSet);
+        const answeredSampleIds1 = getAnsweredSampleIds(answeredQuestions1);
+        const commonSampleIds1 = answeredSampleIds1.reduce(intersection, sampleIds);
+        const answeredSampleIds2 = getAnsweredSampleIds(answeredQuestions2);
+        const commonSampleIds2 = answeredSampleIds2.reduce(intersection, sampleIds);
+        const commonSampleIds = intersection(commonSampleIds1, commonSampleIds2);
+        if (commonSampleIds.length > 0) {
+          const q1Value = surveyRule.questionIds1.includes(questionIdToSet) ? answerVal : 0;
+          const q2Value = surveyRule.questionIds2.includes(questionIdToSet) ? answerVal : 0;
+          const invalidSum = commonSampleIds
+            .map((sampleId) => {
+              const sum1 = sumAnsweredQuestionsPerSample(answeredQuestions1, sampleId);
+              const sum2 = sumAnsweredQuestionsPerSample(answeredQuestions2, sampleId);
+              return [sum1, sum2];
+            })
+            .find((sums) => sums[0] + q1Value !== sums[1] + q2Value);
+          if (invalidSum) {
+            const { question } = currentProject?.surveyQuestions[questionIdToSet];
+            return (
+              "Matching sums validation failed.\r\n\n" +
+              `Totals of the question sets [${surveyRule.questionIds1
+                .map((q) => getSurveyQuestionText(q))
+                .toString()}] and [${surveyRule.questionIds2
+                .map((q) => getSurveyQuestionText(q))
+                .toString()}] do not match.\r\n\n` +
+              `An acceptable answer for "${question}" is ${Math.abs(
+                invalidSum[0] - invalidSum[1]
+              )}.`
+            );
+          } else {
+            return null;
+          }
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  };
+
+  const checkRuleIncompatibleAnswers = (surveyRule, questionIdToSet, answerId, _answerText) => {
+    if (surveyRule.questionId1 === questionIdToSet && surveyRule.answerId1 === answerId) {
+      const ques2 = currentProject?.surveyQuestions[surveyRule.questionId2];
+      if (ques2.answered.some((ans) => ans.answerId === surveyRule.answerId2)) {
+        const ques1Ids = getSelectedSampleIds(questionIdToSet);
+        const ques2Ids = ques2.answered
+          .filter((ans) => ans.answerId === surveyRule.answerId2)
+          .map((a) => a.sampleId);
+        const commonSampleIds = intersection(ques1Ids, ques2Ids);
+        if (commonSampleIds.length > 0) {
+          return `Incompatible answers validation failed.\r\n\nAnswer "${getSurveyAnswerText(
+            surveyRule.questionId1,
+            surveyRule.answerId1
+          )}" from question "${getSurveyQuestionText(
+            surveyRule.questionId1
+          )}" is incompatible with\r\n answer "${getSurveyAnswerText(
+            surveyRule.questionId2,
+            surveyRule.answerId2
+          )}" from question "${getSurveyQuestionText(surveyRule.questionId2)}".\r\n\n`;
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    } else if (surveyRule.questionId2 === questionIdToSet && surveyRule.answerId2 === answerId) {
+      const ques1 = currentProject?.surveyQuestions[surveyRule.questionId1];
+      if (ques1.answered.some((ans) => ans.answerId === surveyRule.answerId1)) {
+        const ques2Ids = getSelectedSampleIds(questionIdToSet);
+        const ques1Ids = ques1.answered
+          .filter((ans) => ans.answerId === surveyRule.answerId1)
+          .map((a) => a.sampleId);
+        const commonSampleIds = intersection(ques1Ids, ques2Ids);
+        if (commonSampleIds.length > 0) {
+          return `Incompatible answers validation failed.\r\n\nAnswer "${getSurveyAnswerText(
+            surveyRule.questionId2,
+            surveyRule.answerId2
+          )}" from question "${getSurveyQuestionText(
+            surveyRule.questionId2
+          )}" is incompatible with\r\nanswer "${getSurveyAnswerText(
+            surveyRule.questionId1,
+            surveyRule.answerId1
+          )}" from question "${getSurveyQuestionText(surveyRule.questionId1)}".\r\n\n`;
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  };
+
+  const formatErrorText = (answerList) =>
+    answerList.map((ans, idx, arr) => `answer "${getSurveyAnswerText(ans[0], ans[1])}" for question "${getSurveyQuestionText(ans[0])}"`);
+
+  const checkRuleMultipleIncompatibleAnswers = (surveyRule, questionIdToSet, answerId, _answerText) => {
+    const surveyQuestions = currentProject?.surveyQuestions;
+    const { answers, incompatQuestionId, incompatAnswerId } = surveyRule;
+    const ruleAnswerList = Object.entries(answers);
+
+    const answeredQuestionsList = ruleAnswerList.filter((answer) => {
+      const question = surveyQuestions[answer[0]];
+      return question.answered.some((a) => a.answerId == answer[1])
+    });
+    const incompatQuestion = surveyQuestions[incompatQuestionId];
+    const incompatAnswer = (incompatQuestion.answered.some((a) => a.answerId == incompatAnswerId) ||
+                            (incompatQuestionId == questionIdToSet && incompatAnswerId == answerId));
+
+    if (ruleAnswerList.length === answeredQuestionsList.length && incompatAnswer) {
+      const answerText = surveyQuestions[questionIdToSet].answers[answerId].answer;
+      const questionText = getSurveyQuestionText(questionIdToSet);
+      const answerTextList = formatErrorText(ruleAnswerList);
+      return `Answer "${answerText}" for question "${questionText}" is incompatible in case ${answerTextList} are selected.`
+    } else {
+      return null;
+    }
+  }
+
+  const rulesViolated = (questionIdToSet, answerId, answerText) => {
+    const ruleFunctions = {
+      "text-match": checkRuleTextMatch,
+      "numeric-range": checkRuleNumericRange,
+      "sum-of-answers": checkRuleSumOfAnswers,
+      "matching-sums": checkRuleMatchingSums,
+      "incompatible-answers": checkRuleIncompatibleAnswers,
+      "multiple-incompatible-answers": checkRuleMultipleIncompatibleAnswers,
+    };
+    return (
+      currentProject?.surveyRules &&
+      currentProject?.surveyRules
+        .map((surveyRule) =>
+          ruleFunctions[surveyRule.ruleType](surveyRule, questionIdToSet, answerId, answerText)
+        )
+        .find((msg) => msg)
+    );
+  };
+
+  const validateAndSetCurrentValue = (questionIdToSet, answerId, answerText = null, previousAnswer = null) => {
+    const ruleError = rulesViolated(questionIdToSet, answerId, answerText);
+    if (ruleError) {
+      setCurrentValue(questionIdToSet, answerId, previousAnswer);
+      setAppState((s) => ({
+        ...s,
+        modal: {alert: {alertType: "Collection Error", alertMessage: ruleError}}
+      }));
+    } else {
+      setCurrentValue(questionIdToSet, answerId, answerText);
+    }
+  };
   
   return (
-    <div className="collection-sidebar-card">
-      <div className="collection-sidebar-header">
-        <div className="sq-title-row">
-          <span className="collection-sidebar-title">
-            SURVEY{" "}
-            <span className="sq-subtitle">
-              {`${validatedCount}/${totalTop} questions answered`}
-            </span>
+    <SidebarCard
+      title={
+        <>
+          SURVEY{" "}
+          <span className="sq-subtitle">
+            {`${validatedCount}/${totalTop} questions answered`}
           </span>
-        </div>
-        <button className="collection-sidebar-info-button"
-                aria-label="Info"
-                onClick={toggleLearningMaterial}>i</button>
-      </div>
-
+        </>
+      }
+      infoText="View and answer survey questions for this plot"
+    >
       {currentPlot?.flagged ? (
         <>
           <h2 style={{ color: "red" }}>
@@ -506,7 +763,7 @@ export const SurveyQuestions = () => {
           onClose={toggleLearningMaterial}
         />
       )}
-    </div>
+    </SidebarCard>
   );
 };
 
@@ -612,7 +869,6 @@ export const DrawingTool = () => {
   const initialDrawTool = sg.polygons ? "Polygon" : sg.lines ? "LineString" : "Point";
   const [drawTool, setDrawToolState] = useState(initialDrawTool);
 
-  // helpers moved here so this card is self-contained
   const setAnswerMode = (newMode, tool) => {
     setAppState((s) => ({ ...s, answerMode: newMode }));
     if (newMode === "draw") {
@@ -794,16 +1050,14 @@ export const DrawingTool = () => {
   );
 
   return (
-    <div className="sq-card">
-      <div className="sq-header">
-        <div className="sq-title-row">
-          <span className="sq-title">SAMPLE DRAWING TOOL</span>
-        </div>
-      </div>
-
+    <SidebarCard
+      title="Sample Drawing Tool"
+      collapsible
+      defaultOpen={true}
+      infoText="Draw or edit samples directly on the map"
+    >
       <div className="sq-draw-body">
         <RenderDrawTools />
-
         <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
           <button
             className="btn btn-outline-lightgreen"
@@ -821,6 +1075,6 @@ export const DrawingTool = () => {
           </button>
         </div>
       </div>
-    </div>
+    </SidebarCard>
   );
 };

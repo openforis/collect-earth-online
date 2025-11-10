@@ -23,6 +23,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
                                               latMin: "",
                                               lonMax: "",
                                               latMax: "",});
+  const [_totalPlots, setTotalPlots] = useState(totalPlots);
   const acceptedTypes = {
       csv: "text/csv",
       shp: "application/zip",
@@ -37,7 +38,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         latMax: "",
       });
     setProjectDetails(
-      Object.assign(newDetail, { plots: [] }, { aoiFeatures: [], aoiFileName: "" })
+      Object.assign(newDetail, { plots: [] }, { aoiFeatures: [], aoiFileName: "" },)
     ); 
   };
 
@@ -52,13 +53,14 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         plotFileType,
         projectId,
         plotFileName: fileName,
-        plotFileBase64
+        plotFileBase64: plotFileBase64
       }),
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         const [[lonMin, latMin], [lonMax, latMax]] = data.fileBoundary;
         const aoiFeatures = [mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)];
+        setTotalPlots(_totalPlots + data.filePlotCount);
         setPlotState({lonMin, lonMax, latMin, latMax});
         setProjectState({          
           aoiFileName: fileName,
@@ -74,7 +76,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
       );
   };
 
-  const renderFileInput = (fileType) => {
+  const renderFileInput = (fileType, append) => {    
     return(
       <div className="mb-3">
         <div style={{display: "flex"}}>
@@ -89,13 +91,14 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
               accept={acceptedTypes[fileType]}
               defaultValue=""
               id="new-plot-distribution-file"
-              onChange={(e) => {
-                const file = e.target.files[0];                
+              onChange={(e) => {                
+                const file = e.target.files[0];
                 readFileAsBase64Url (file, (base64) => {                 
                   checkPlotFile(fileType, file.name, base64);                  
                   return setPlotDetails({
-                    plotFileName: file.name,
-                    PlotFileBase64: base64
+                    newPlotFileName: file.name,
+                    newPlotFileBase64: base64,
+                    append: true,
                   }); 
                 });		
               }}
@@ -167,11 +170,11 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
   );
 
 
-  const renderCSV = () => {    
+  const renderCSV = (fileType, append) => {
     const plotUnits = newPlotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {renderFileInput("csv")}
+        {renderFileInput("csv", append)}
         <div style={{ display: "flex" }}>
           <span className="mr-3">{renderPlotShape()}</span>
           {renderLabeledInput(plotUnits, "plotSize")}
@@ -185,61 +188,63 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         display: "CSV File",
         description:
           "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
-        layout: renderCSV(),
+        layout: renderCSV,
       },
       shp: {
         display: "SHP File",
-        alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
+        alert: "Please ensure your shapefile does not include duplicate plots.",
         description:
           "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
-        layout: renderFileInput("shp"),
+        layout: renderFileInput,
       },
       geojson: {
         display: "GeoJSON File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
-        layout: renderFileInput("geojson"),
+        layout: renderFileInput,
       },
     };
   
 
   return (
     <div id="new-plot-design">
-      <h3 className="mb-3">Add New Plot</h3>
+      <h3 className="mb-3">Add New Plot(s)</h3>
       <div className="ml-3">
         <div className="d-flex flex-column">
           <div className="form-group" style={{width:"fit-content"}}>
             <label>Spatial Distribution</label>
-            <select
-              className="form-control form-control-sm"
-              onChange={(e)=>
-                setPlotDetails({ newPlotDistribution: e.target.value})
-		}
-              value={newPlotDistribution}
-            >
-              {Object.entries (plotOptions).map (([key, options]) => (
-                <option key={key} value={key}>
-                  {options.display}
-                </option>
-              ))}
-            </select>
+            <div style={{ position: "relative" }}>
+              {plotOptions[newPlotDistribution].alert &&
+               <p className="alert"> {plotOptions[newPlotDistribution].alert}</p>}
+              <select
+                className="form-control form-control-sm"
+                onChange={(e)=>{
+                  setPlotDetails({ newPlotDistribution: e.target.value});}
+		         }
+                value={newPlotDistribution}>
+                {Object.entries (plotOptions).map (([key, options]) => (
+                  <option key={key} value={key}>
+                    {options.display}
+                  </option>
+                ))}
+              </select>
+            </div>            
           </div>
-          <p className="font-italic ml-2">{`- ${plotOptions[newPlotDistribution].description}`}</p>
-          {plotOptions[newPlotDistribution].alert &&
-           <p className="alert">- {plotOptions[newPlotDistribution].alert}</p>}
+          <p className="font-italic ml-2">{`- ${plotOptions[newPlotDistribution].description}`}</p>          
         </div>
-        <div>{plotOptions[newPlotDistribution].layout}</div>
+        <div>          
+          {plotOptions[newPlotDistribution].layout(newPlotDistribution, true)}</div>
 	<p
          className="font-italic ml-2 small"
          style={{
-           color: totalPlots > plotLimit ? "#8B0000" : "#006400",
+           color: _totalPlots > plotLimit ? "#8B0000" : "#006400",
            fontSize: "1rem",
            whiteSpace: "pre-line",
          }}
 	 >
-       {totalPlots > 0 &&
-              `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
+       {_totalPlots > 0 &&
+              `This project will contain around ${formatNumberWithCommas(_totalPlots)} plots.`}
             {totalPlots > 0 &&
               totalPlots > plotLimit &&
               `\n* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(
@@ -253,7 +258,6 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
 };
 
 
-
 export class PlotDesign extends React.Component {
   constructor(props) {
     super(props);
@@ -264,6 +268,7 @@ export class PlotDesign extends React.Component {
       latMax: "",
       modal: null,
       plotIdList: [],
+      totalPlots: "",
     };
   }
   lastNumPlots = null;
@@ -272,6 +277,13 @@ export class PlotDesign extends React.Component {
 
   componentDidMount() {
     this.setCoordsFromBoundary();
+    if (this.props.totalPlots &&
+        this.props.totalPlots <= 5000
+       ) {
+      const plotIds = Array.from({ length: this.props.totalPlots }, (_, i) => i + 1);
+      this.setState({ plotIdList: plotIds,
+                      totalPlots: plotIds.length});
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -290,7 +302,7 @@ export class PlotDesign extends React.Component {
     }
     if (this.props.totalPlots &&
         this.props.totalPlots !== prevProps.totalPlots &&
-        Number.isFinite(Number(this.props.totalPlots))
+        this.props.totalPlots <= 5000
     ) {
       const plotIds = Array.from({ length: this.props.totalPlots }, (_, i) => i + 1);
       this.setState({ plotIdList: plotIds });
@@ -691,16 +703,17 @@ export class PlotDesign extends React.Component {
       }),
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) =>
+      .then((data) => {
+        this.setState(s => ({... s, totalPlots: data.filePlotCount}));
         this.context.setProjectDetails({
           designSettings: { ...designSettings,
                             userAssignment: data.userAssignment,
                             qaqcAssignment: data.qaqcAssignment}
-        })
-      );
+        });
+      });
   }
 
-  renderFileInput = (fileType) => {
+  renderFileInput = (fileType, append) => {
     const acceptedTypes = {
       csv: "text/csv",
       shp: "application/zip",
@@ -731,6 +744,7 @@ export class PlotDesign extends React.Component {
                   return this.setPlotDetails({
                     plotFileName: file.name,
                     plotFileBase64: base64,
+                    append: false
                   });
                 });
               }}
@@ -754,12 +768,12 @@ export class PlotDesign extends React.Component {
     );
   }
   
-  renderCSV = () => {
+  renderCSV = (fileType, append) => {
     const { plotShape } = this.context;
     const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {this.renderFileInput("csv")}
+        {this.renderFileInput("csv", append)}
         <div style={{ display: "flex" }}>
           <span className="mr-3">{this.renderPlotShape()}</span>
           {this.renderLabeledInput(plotUnits, "plotSize")}
@@ -834,38 +848,38 @@ export class PlotDesign extends React.Component {
 
   render() {
     const { plotDistribution, designSettings } = this.context;
-    const { totalPlots } = this.props;
+    const { totalPlots } = this.state;
     const plotOptions = {
       random: {
         display: "Random",
         description: "Plot centers will be randomly distributed within the project boundary.",
-        layout: this.renderRandom(),
+        layout: this.renderRandom,
       },
       gridded: {
         display: "Gridded",
         description:
           "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.",
-        layout: this.renderGridded(),
+        layout: this.renderGridded,
       },
       csv: {
         display: "CSV File",
         description:
           "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
-        layout: this.renderCSV(),
+        layout: this.renderCSV,
       },
       shp: {
         display: "SHP File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
-        layout: this.renderFileInput("shp"),
+        layout: this.renderFileInput,
       },
       geojson: {
         display: "GeoJSON File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
           "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
-        layout: this.renderFileInput("geojson"),
+        layout: this.renderFileInput,
       },
     };
 
@@ -890,6 +904,9 @@ export class PlotDesign extends React.Component {
           <div className="d-flex flex-column">
             <div className="form-group" style={{ width: "fit-content" }}>
               <label>Spatial distribution</label>
+              <div style={{position: "relative"}}>
+              {spatialDistributionOptions[plotDistribution].alert &&
+             <p className="alert">- {spatialDistributionOptions[plotDistribution].alert}</p>}
               <select
                 className="form-control form-control-sm"
                 onChange={(e) =>
@@ -908,13 +925,13 @@ export class PlotDesign extends React.Component {
                     {options.display}
                   </option>
                 ))}
-              </select>
+      </select>
+      </div>
             </div>
             <p className="font-italic ml-2">{`- ${spatialDistributionOptions[plotDistribution].description}`}</p>
-            {spatialDistributionOptions[plotDistribution].alert &&
-             <p className="alert">- {spatialDistributionOptions[plotDistribution].alert}</p>}
+            
           </div>
-          <div>{spatialDistributionOptions[plotDistribution].layout}</div>
+          <div>{spatialDistributionOptions[plotDistribution].layout(plotDistribution, false)}</div>
           <p
             className="font-italic ml-2 small"
             style={{

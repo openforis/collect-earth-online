@@ -7,3 +7,6 @@ CREATE TABLE geoai_cache (
   similar_plots integer[],
   metadata jsonb
 );
+
+ALTER TABLE geoai_cache
+ADD CONSTRAINT geoai_cache_project_plot_unique UNIQUE (project_rid, plot_rid);

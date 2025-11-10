@@ -13,10 +13,13 @@
 
 (defn respond [msg]
   (try
-    (let [response            (tc/json->clj msg)
+    (let [response            msg
           [_ project-id year] (re-find #"ceo-(\d+)-plots_(\d+)\.geojson" (:source_file response))
           table-name          (:processed_table response)
-          plot-id             (:reference_plot_rid (call-sql "select_project_by_id" (tc/val->int project-id)))]
+          plot-id             (-> (call-sql "select_project_by_id" (tc/val->int project-id))
+                                  (first)
+                                  (:reference_plot_rid))]
+      (println (str "PLOT-ID: " plot-id))
       (call-sql "update_geoai_assets" (tc/val->int project-id) (tc/clj->jsonb {year table-name}))
       (search-plot-by-similarity (tc/val->int project-id) plot-id year)
       (broadcast! {:status msg})
@@ -47,7 +50,7 @@
       (gcloud-listener
        (get-config :gcs-integration :project-name)
        (get-config :gcs-integration :topic-name))
-      (swap! listener-state assoc :active? true))    
+      (swap! listener-state assoc :active? true))
     (data-response {:message "Listener started"})
     (catch Exception e 
       (println e)
