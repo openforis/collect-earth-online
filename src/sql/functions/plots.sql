@@ -83,18 +83,28 @@ CREATE OR REPLACE FUNCTION select_plotters(_project_id integer, _plot_id integer
 $$ LANGUAGE SQL;
 
 -- Get user plots for a plot
+
 CREATE OR REPLACE FUNCTION select_user_plots_info( _plot_id integer)
  RETURNS table (
     user_id            integer,
     flagged            boolean,
     confidence         integer,
-    confidence_comment text
+    confidence_comment text,
+    collection_start   timestamp,
+    imageryIds         jsonb,
+    used_kml           boolean,
+    used_geodash       boolean
+    
  ) AS $$
 
     SELECT user_rid,
-        flagged,
-        confidence,
-        confidence_comment
+           flagged,
+           confidence,
+           confidence_comment,
+           collection_start,
+           imagery_ids,
+           used_kml,
+           used_geodash
     FROM user_plots
     WHERE plot_rid = _plot_id
 
@@ -463,7 +473,6 @@ $$ LANGUAGE SQL;
 --
 --  SAVING COLLECTION
 --
-
 -- Flag plot
 CREATE OR REPLACE FUNCTION flag_plot(
     _plot_id integer,
@@ -494,7 +503,6 @@ CREATE OR REPLACE FUNCTION flag_plot(
     SELECT _plot_id;
 
 $$ LANGUAGE SQL;
-
 
 CREATE OR REPLACE FUNCTION upsert_user_samples(
     _user_plot_id        integer,
@@ -532,14 +540,14 @@ CREATE OR REPLACE FUNCTION upsert_user_samples(
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION insert_user_plot(
-    _plot_id             integer,
-    _user_id             integer,
-    _confidence          integer,
-    _confidence_comment  text,
-    _collection_start    timestamp,
-   _imageryIds           jsonb,
-   _used_kml             boolean,
-   _used_geodash         boolean
+   _plot_id             integer,
+   _user_id             integer,
+   _confidence          integer,
+   _confidence_comment  text,
+   _collection_start    timestamp,
+   _imageryIds          jsonb,
+   _used_kml            boolean,
+   _used_geodash        boolean
  ) RETURNS integer AS $$
     INSERT INTO user_plots AS up
         (user_rid, plot_rid, confidence, confidence_comment, collection_start, collection_time, imagery_ids, used_kml, used_geodash)

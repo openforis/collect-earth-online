@@ -1665,6 +1665,22 @@ function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[
+          {display: "Institution",
+           id: "institution",
+           query: ["institution", params.institutionId],
+           onClick: (e)=>{
+             window.location.assign(`/review-institution?institutionId=${params.institutionId}`);
+           }},
+          {display: "Collection",
+           id: "project",
+           query: ["project", params.projectId],
+           onClick: (e)=>{
+             console.log("go to collection");
+           }}
+        ]}        
+      />
       <Collection projectId={params.projectId} plotId={params.plotId || null} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
     </NavigationBar>,
     document.getElementById("app")

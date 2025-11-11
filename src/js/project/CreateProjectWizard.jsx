@@ -1,7 +1,7 @@
 import React from "react";
 import _ from "lodash";
 
-import AOIMap from "./AOIMap";
+import { AOIMap } from "./AOIMap";
 import SurveyQuestionsDesigner from "../survey/SurveyQuestionsDesigner";
 import SurveyCollectionPreview from "../survey/SurveyCollectionPreview";
 import SurveyRulesDesigner from "../survey/SurveyRulesDesigner";

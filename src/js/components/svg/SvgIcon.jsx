@@ -38,6 +38,9 @@ import trashIcon from "./trashIcon.svg";
 import upArrowIcon from "./upArrowIcon.svg";
 import upCaretIcon from "./upCaretIcon.svg";
 import zoomInIcon from "./zoomInIcon.svg";
+import personIcon from "./personIcon.svg";
+import landscapeIcon from "./landscapeIcon.svg";
+import mapIcon from './mapIcon.svg';
 
 export const iconMap = {
   alert: alertIcon,
@@ -78,6 +81,9 @@ export const iconMap = {
   upArrow: upArrowIcon,
   upCaret: upCaretIcon,
   zoomIn: zoomInIcon,
+  users: personIcon,
+  projects: landscapeIcon,
+  imagery: mapIcon,
 };
 
 function SvgIcon({ icon, color, cursor, size, verticalAlign, transform }) {

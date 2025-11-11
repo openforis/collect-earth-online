@@ -2,10 +2,10 @@
   (:import java.sql.Timestamp)
   (:require [clojure.set                      :as set]
             [clojure.data.json                :refer [read-str]]
+            [collect-earth-online.db.projects :refer [is-proj-admin?]]
             [triangulum.type-conversion       :as tc]
             [triangulum.database              :refer [call-sql sql-primitive]]
             [triangulum.utils                 :refer [filterm]]
-            [collect-earth-online.db.projects :refer [is-proj-admin?]]
             [triangulum.response              :refer [data-response]]))
 
 ;;;
@@ -467,7 +467,6 @@
                   plot-id
                   (tc/clj->jsonb (set/rename-keys user-samples id-translation))
                   (tc/clj->jsonb (set/rename-keys user-images id-translation))))
-
       (when (not= project-type "simplified")
         (call-sql "delete_user_plot_by_plot" plot-id user-id)))
     (unlock-plots user-id)

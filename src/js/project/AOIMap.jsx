@@ -1,85 +1,47 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { mercator } from "../utils/mercator";
 import { detectMacOS } from "../utils/generalUtils";
 
-export default class AOIMap extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      mapConfig: null,
-    };
-  }
+export const AOIMap = ({ canDrag, context, imagery }) => {
+  const mapRef = useRef(null);
+  const [mapConfig, setMapConfig] = useState(null);
 
-  componentDidMount() {
-    if (this.props.context.institutionImagery.length > 0) this.initProjectMap();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (
-      this.props.context.institutionImagery.length > 0 &&
-      this.props.context.institutionImagery !== prevProps.context.institutionImagery
-    ) {
-      this.initProjectMap();
+  // initialize map
+  const initProjectMap = () => {
+    if (mapRef.current) {
+      mapRef.current.innerHTML = "";
     }
 
-    if (this.state.mapConfig) {
-      if (prevProps.context.aoiFeatures !== this.props.context.aoiFeatures) {
-        this.updateAOIAreas();
-      }
+    const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, imagery);
+    setMapConfig(newMapConfig);
 
-      if (prevProps.context.selectedStrata !== this.props.context.selectedStrata) {
-        this.updateSelectedStrata();
-      }
-
-      if (prevProps.canDrag !== this.props.canDrag) {
-        if (this.props.canDrag) {
-          this.showDragBoxDraw();
-        } else {
-          this.hideDragBoxDraw();
-        }
-      }
-
-      if (prevProps.context.plots !== this.props.context.plots) {
-        if (this.props.context.plots.length > 0) {
-          this.showPlots();
-        } else {
-          this.hidePlots();
-        }
-      }
-    }
-  }
-
-  initProjectMap = () => {
-    const newMapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, this.props.imagery);
-    this.setState({ mapConfig: newMapConfig }, () => {
-      mercator.setVisibleLayer(this.state.mapConfig, this.props.imagery[0]?.id);
-      if (this.props.context.aoiFeatures) this.updateAOIAreas();
-      if (this.props.canDrag) this.showDragBoxDraw();
-      if (this.props.context.plots.length > 0) this.showPlots();
-    });
+    mercator.setVisibleLayer(newMapConfig, imagery[0]?.id);
+    if (context.aoiFeatures) updateAOIAreas(newMapConfig);
+    if (canDrag) showDragBoxDraw(newMapConfig);
+    if (context.plots.length > 0) showPlots(newMapConfig);
   };
 
-  updateAOIAreas = () => {
-    // Display a bounding box with the project's AOI on the map and zoom to it
-    mercator.removeLayerById(this.state.mapConfig, "currentAOI");
-    if (this.props.context.aoiFeatures) {
+  // helper functions
+  const updateAOIAreas = (config = mapConfig) => {
+    mercator.removeLayerById(config, "currentAOI");
+    if (context.aoiFeatures) {
       mercator.addVectorLayer(
-        this.state.mapConfig,
+        config,
         "currentAOI",
-        mercator.geomArrayToVectorSource(this.props.context.aoiFeatures),
+        mercator.geomArrayToVectorSource(context.aoiFeatures),
         mercator.ceoMapStyles("geom", "yellow")
       );
-      mercator.zoomMapToLayer(this.state.mapConfig, "currentAOI");
+      mercator.zoomMapToLayer(config, "currentAOI");
     }
   };
 
-  updateSelectedStrata = () => {
-    const { selectedStrata, aoiFeatures } = this.props.context;
-    mercator.removeLayerById(this.state.mapConfig, "selectedStrata");
+  const updateSelectedStrata = (config = mapConfig) => {
+    const { selectedStrata, aoiFeatures } = context;
+    mercator.removeLayerById(config, "selectedStrata");
     if (selectedStrata > -1) {
       mercator.addVectorLayer(
-        this.state.mapConfig,
+        config,
         "selectedStrata",
         mercator.geomArrayToVectorSource([aoiFeatures[selectedStrata]]),
         mercator.ceoMapStyles("geom", "blue")
@@ -87,58 +49,90 @@ export default class AOIMap extends React.Component {
     }
   };
 
-  showDragBoxDraw = () => {
+  const showDragBoxDraw = (config = mapConfig) => {
     const displayDragBoxBounds = (dragBox) => {
-      mercator.removeLayerById(this.state.mapConfig, "currentAOI");
+      mercator.removeLayerById(config, "currentAOI");
       const drawnBox = JSON.parse(
         mercator.geometryToGeoJSON(dragBox.getGeometry().clone(), "EPSG:4326", "EPSG:3857")
       );
-      this.props.context.setProjectDetails({
+      context.setProjectDetails({
         aoiFeatures: [drawnBox],
         aoiFileName: "",
         plots: [],
       });
     };
-    mercator.enableDragBoxDraw(this.state.mapConfig, displayDragBoxBounds);
+    mercator.enableDragBoxDraw(config, displayDragBoxBounds);
   };
 
-  hideDragBoxDraw = () => {
-    mercator.disableDragBoxDraw(this.state.mapConfig);
+  const hideDragBoxDraw = (config = mapConfig) => {
+    mercator.disableDragBoxDraw(config);
   };
 
-  hidePlots = () => {
-    mercator.removeLayerById(this.state.mapConfig, "projectPlots");
-    mercator.removeLayerById(this.state.mapConfig, "flaggedPlots");
-    mercator.removeLayerById(this.state.mapConfig, "analyzedPlots");
-    mercator.removeLayerById(this.state.mapConfig, "unanalyzedPlots");
+  const hidePlots = (config = mapConfig) => {
+    mercator.removeLayerById(config, "projectPlots");
+    mercator.removeLayerById(config, "flaggedPlots");
+    mercator.removeLayerById(config, "analyzedPlots");
+    mercator.removeLayerById(config, "unanalyzedPlots");
   };
 
-  showPlots = () => {
-    this.hidePlots();
-    if (this.props.context.projectId > 0) {
-      mercator.addPlotOverviewLayers(this.state.mapConfig, this.props.context.plots);
+  const showPlots = (config = mapConfig) => {
+    hidePlots(config);
+    if (context.projectId > 0) {
+      mercator.addPlotOverviewLayers(config, context.plots);
     } else {
       mercator.addVectorLayer(
-        this.state.mapConfig,
+        config,
         "projectPlots",
-        mercator.plotsToVectorSource(this.props.context.plots),
+        mercator.plotsToVectorSource(context.plots),
         mercator.ceoMapStyles("overview", { color: "yellow", border: "black" })
       );
     }
   };
 
-  render() {
-    return (
-      <div style={{ height: "25rem", width: "100%" }}>
-        <div id="project-map" style={{ height: "25rem", width: "100%" }} />
-        {this.props.canDrag && (
-          <label className="col text-center mt-4 mb-2">
-            {`Hold ${
-              detectMacOS() ? "CMD ⌘" : "CTRL"
-            } and click-and-drag a bounding box on the map`}
-          </label>
-        )}
-      </div>
-    );
-  }
-}
+  useEffect(() => {
+    if (context.institutionImagery.length > 0) {
+      initProjectMap();
+    }
+    // cleanup function
+    return () => {
+      if (mapRef.current) mapRef.current.innerHTML = "";
+    };
+  }, [imagery?.[0]?.id]);
+
+  useEffect(() => {
+    if (!mapConfig) return;
+    updateAOIAreas();
+  }, [context.aoiFeatures]);
+
+  useEffect(() => {
+    if (!mapConfig) return;
+    updateSelectedStrata();
+  }, [context.selectedStrata]);
+
+  useEffect(() => {
+    if (!mapConfig) return;
+    if (canDrag) showDragBoxDraw();
+    else hideDragBoxDraw();
+  }, [canDrag]);
+
+  useEffect(() => {
+    if (!mapConfig) return;
+    if (context.plots.length > 0) showPlots();
+    else hidePlots();
+  }, [context.plots]);
+
+  return (
+    <div style={{ height: "25rem", width: "100%" }}>
+      <div
+        id="project-map"
+        ref={mapRef}
+        style={{ height: "25rem", width: "100%" }}
+      />
+      {canDrag && (
+        <label className="col text-center mt-4 mb-2">
+          {`Hold ${detectMacOS() ? "CMD ⌘" : "CTRL"} and click-and-drag a bounding box on the map`}
+        </label>
+      )}
+    </div>
+  );
+};

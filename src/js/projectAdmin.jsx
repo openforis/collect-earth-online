@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import { LoadingModal, NavigationBar, SuccessModal, BreadCrumbs } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, SuccessModal, BreadCrumbs, PromptModal } from "./components/PageComponents";
 import CreateProjectWizard from "./project/CreateProjectWizard";
 import ReviewChanges from "./project/ReviewChanges";
 import ManageProject from "./project/ManageProject";
@@ -38,6 +38,7 @@ class Project extends React.Component {
   /// Lifecycle Methods
 
   componentDidMount() {
+    this.props.copied && this.setContextState({designMode: "wizard", wizardStep: "questions"});
     this.getDoiPath(this.props.projectId);
     if (this.props.institutionId > 0) {
       this.getInstitutionImagery(this.props.institutionId);
@@ -109,6 +110,10 @@ class Project extends React.Component {
     );
   };
 
+  promptModal = (title, inputs, callBack) => {
+    this.setState({modalInputs: inputs, modalTitle: title, modalCallBack: callBack});
+  }
+
   render() {
     const CurrentComponent = this.modes[this.state.designMode];
     return (
@@ -128,8 +133,16 @@ class Project extends React.Component {
           processModal: this.processModal,
           wizardStep: this.state.wizardStep,
           doiPath: this.state.doiPath,
+          promptModal: this.promptModal
         }}
       >
+        {this.state.modalInputs &&
+         <PromptModal inputs={this.state.modalInputs}
+                      callBack={this.state.modalCallBack}
+                      closePrompt={()=>{this.setState({modalInputs: null,
+                                                       modalTitle: null,
+                                                       modalCallBack:null});}}
+                      title={this.state.modalTitle}/>}
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
                 onClose={()=>{this.setState({modal: null});}}>
@@ -154,11 +167,11 @@ export function pageInit(params, session) {
            id: "institution",
            query: ["institution", parseInt(params.institutionId) || -1],
            onClick: (e)=>{
-             window.location.assign(`http://local.collect.earth:8080/review-institution?institutionId=${parseInt(params.institutionId)}`);
+             window.location.assign(`/review-institution?institutionId=${parseInt(params.institutionId)}`);
            }},
           {display: "Project Admin",
            id:"project",
-           query: ["project", parseInt(params.institutionId) || -1],
+           query: ["project", parseInt(params.projectId) || -1],
            onClick:()=>{}}
         ]}
       />
@@ -166,6 +179,7 @@ export function pageInit(params, session) {
         institutionId={parseInt(params.institutionId) || -1}
         projectId={parseInt(params.projectId) || -1}
         projectDraftId={parseInt(params.projectDraftId) || -1}
+        copied={('copy-redirect' in params)}
       />
     </NavigationBar>,
     document.getElementById("app")

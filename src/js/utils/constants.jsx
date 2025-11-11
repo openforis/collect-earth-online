@@ -10,7 +10,7 @@ export const stateAtom = atom({
     {display: "Homepage",
      id: "home",
      onClick: (e)=>{
-       window.location.assign("http://local.collect.earth:8080");
+       window.location.assign("/home");
      }}
   ],
   collectionStart: 0,
