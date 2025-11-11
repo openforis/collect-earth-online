@@ -147,6 +147,10 @@
    [:post "/update-project-draft"]           {:handler     (validate projects/update-project-draft!)
                                               :auth-type   :user
                                               :auth-action :block}
+   [:post "/copy-project"]                   {:handler projects/copy-project!
+                                              :auth-type :admin
+                                              :auth-action :block}
+ 
    [:post "/close-project"]                  {:handler     (validate projects/close-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
@@ -197,7 +201,7 @@
    [:get "/doi"]          {:handler     (validate doi/get-doi-reference)}
 
    ;; Plots API
-   [:get  "/get-collection-plot"]              {:handler     #'plots/get-collection-plot
+   [:get  "/get-collection-plot"]              {:handler     (validate plots/get-collection-plot)
                                                 :auth-type   :collect
                                                 :auth-action :block}
    [:get  "/get-plot-disagreement"]            {:handler     (validate plots/get-plot-disagreement)}

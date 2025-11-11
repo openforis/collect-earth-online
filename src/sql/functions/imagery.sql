@@ -181,7 +181,18 @@ CREATE OR REPLACE FUNCTION select_imagery_by_institution(
   _institution_id integer,
   _user_id integer
 )
-RETURNS SETOF imagery_return AS $$
+RETURNS TABLE (
+    imagery_id        integer,
+    institution_id    integer,
+    visibility        visibility_type,
+    title             text,
+    attribution       text,
+    extent            jsonb,
+    is_proxied        boolean,
+    source_config     jsonb,
+    created_date      text
+
+)  AS $$
   SELECT imagery_uid,
          institution_rid,
          visibility,
@@ -189,7 +200,8 @@ RETURNS SETOF imagery_return AS $$
          attribution,
          extent,
          is_proxied,
-         source_config
+         source_config,
+         TO_CHAR(created_date, 'YYYY-MM-DD') AS created_date
   FROM imagery
   WHERE archived = FALSE
     AND (

@@ -16,7 +16,7 @@ export function LogOutButton({ userName, uri }) {
   const loggedOut = !userName || userName === "guest";
 
   const logout = () =>
-    fetch("/logout", { method: "POST" }).then(() => window.location.assign("/home"));
+        fetch("/logout", { method: "POST" }).then(() => window.location.assign("/home"));
 
   return loggedOut ? (
     <button
@@ -252,7 +252,7 @@ export class NavigationBar extends React.Component {
                     {page}
                   </a>
                 </li>
-             ))}
+              ))}
               {!loggedOut && (
                 <li className={"nav-item" + (uri === "/account" && " active")}>
                   <a className="nav-link" href={"/account?accountId=" + userId}>
@@ -299,13 +299,13 @@ export function Logo({ size, url, name, id, src }) {
     padding: ".5rem",
     margin: "1rem",
     ...(logoSize === "large"
-      ? {
+        ? {
           maxWidth: "180px",
           maxHeight: "180px",
           height: "180px",
           width: "180px",
         }
-      : {
+        : {
           maxWidth: "150px",
           maxHeight: "150px",
           height: "150px",
@@ -449,7 +449,7 @@ export function LoadingModal({ message }) {
 }
 
 export const LearningMaterialModal = ({ learningMaterial, onClose }) => {
-    return (
+  return (
     <div
       className="modal fade show"
       id="quitModal"
@@ -524,12 +524,12 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
             },
           }).then((response) => {
             if (response.ok) {
-              window.location.assign(`/collection?projectId=${projectId}`)
+              window.location.assign(`/collection?projectId=${projectId}&institutionId=${institutionId}`);
             } else {
               console.log(response);
             }
           });
-  }
+  };
   return (
     <div
       className="modal fade show"
@@ -597,164 +597,164 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
   );
 }
 
- export const ImageryLayerOptions = ({
-   imageryList,
-   setImageryList,
-   onDragEnd,
-   onToggleLayer,
-   onChangeOpacity,
-   onReset,
-   isImageryLayersExpanded,
- }) => {
-   const [expandedSections, setExpandedSections] = useState({
-     imagery: true,
-     polygon: true,
-   });
-   
-   const imageryLayers = imageryList.filter((image) => image.sourceConfig.type !== "FeatureCollection");
-   const polygonLayers = imageryList.filter((image) => image.sourceConfig.type === "FeatureCollection");
+export const ImageryLayerOptions = ({
+  imageryList,
+  setImageryList,
+  onDragEnd,
+  onToggleLayer,
+  onChangeOpacity,
+  onReset,
+  isImageryLayersExpanded,
+}) => {
+  const [expandedSections, setExpandedSections] = useState({
+    imagery: true,
+    polygon: true,
+  });
+  
+  const imageryLayers = imageryList.filter((image) => image.sourceConfig.type !== "FeatureCollection");
+  const polygonLayers = imageryList.filter((image) => image.sourceConfig.type === "FeatureCollection");
 
-   const toggleSection = (section) => {
-     setExpandedSections((prev) => ({
-       ...prev,
-       [section]: !prev[section],
-     }));
-   };
+  const toggleSection = (section) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
-   return (
-     <div className="sidebar-wrapper" style={{ overflowX: "hidden", overflowY: "auto" }}>
-       <div className={`sidebar-container ${isImageryLayersExpanded ? "" : "collapsed"}`}>
-         {isImageryLayersExpanded && (
-           <div className="sidebar-content">
-             <div className="sidebar-header">
-               <h3>Imagery Layer Options</h3>
-             </div>
-             <hr />
-             <DragDropContext onDragEnd={(result) => onDragEnd(result, imageryList, setImageryList)}>
-               {/* Imagery Layers */}
-               <div className="sidebar-section">
-                 <div className="section-header" onClick={() => toggleSection("imagery")}>
-                   <strong>Imagery Layers</strong>
-                   {expandedSections.imagery ? <FaChevronUp /> : <FaChevronDown />}
-                 </div>
-                 {expandedSections.imagery && (
-                   <Droppable droppableId="imageryLayers">
-                     {(provided, snapshot) => (
-                       <div
-                         className={`layers-list ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
-                         ref={provided.innerRef}
-                         {...provided.droppableProps}
-                       >
-                         {imageryLayers.map((layer, index) => (
-                           <Draggable key={layer.id} draggableId={layer.id.toString()} index={index}>
-                             {(provided, snapshot) => {
-                               const ensureHex = (color) =>
-                                     /^[0-9a-f]{6}$/i.test(color) ? `#${color}` : color;
-                               const visParams = layer.sourceConfig?.visParams
-                                     ? JSON.parse(layer.sourceConfig.visParams)
-                                     : null;
-                               const palette = Array.isArray(visParams?.palette)
-                                     ? visParams.palette
-                                     : [];
-                               const sliderStyle =
-                                     palette.length === 2
-                                     ? {
-                                       '--first-slider-color': ensureHex(palette[0]),
-                                       '--slider-color': ensureHex(palette[1]),
-                                     }
-                                     : palette.length
-                                     ? {
-                                       '--slider-color': ensureHex(palette[0]),
-                                     }
-                                     : {
-                                       '--first-slider-color': '#d1d5db',
-                                       '--slider-color': '#3b82f6',
-                                     };
-                               return (
-                                 <div
-                                   className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
-                                   ref={provided.innerRef}
-                                   {...provided.draggableProps}
-                                   {...provided.dragHandleProps}
-                                 >
-                                   <input
-                                     type="checkbox"
-                                     checked={layer.visible}
-                                     onChange={() => onToggleLayer(layer.id, imageryList)}
-                                   />
-                                   <span className="layer-title"> {" "} {layer.title}</span>
-                                   <input
-                                     type="range"
-                                     min="0"
-                                     max="1"
-                                     step="0.01"
-                                     className="layer-range"
-                                     value={layer.opacity || 1}
-                                     onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
-                                     style={{ sliderStyle }}
-                                   />
-                                 </div>
-                               )}}
-                           </Draggable>
-                         ))}
-                         {provided.placeholder && <div className="placeholder"></div>}
-                       </div>
-                     )}
-                   </Droppable>
-                 )}
-               </div>
-               {/* Polygon Layers */}
-               <div className="sidebar-section">
-                 <div className="section-header" onClick={() => toggleSection("polygon")}>
-                   <strong>Polygon Layers</strong>
-                   {expandedSections.polygon ? <FaChevronUp /> : <FaChevronDown />}
-                 </div>
-                 {expandedSections.polygon && (
-                   <Droppable droppableId="polygonLayers">
-                     {(provided, snapshot) => (
-                       <div
-                         className={`layers-list ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
-                         ref={provided.innerRef}
-                         {...provided.droppableProps}
-                       >
-                         {polygonLayers.map((layer, index) => (
-                           <Draggable key={layer.id} draggableId={layer.id.toString()} index={index}>
-                             {(provided, snapshot) => (
-                               <div
-                                 className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
-                                 ref={provided.innerRef}
-                                 {...provided.draggableProps}
-                                 {...provided.dragHandleProps}
-                               >
-                                 <input
-                                   type="checkbox"
-                                   checked={layer.visible}
-                                   onChange={() => onToggleLayer(layer.id, imageryList)}
-                                 />
-                                 <span className="layer-title">  {layer.title}</span>
-                                 <input
-                                   type="range"
-                                   min="0"
-                                   max="1"
-                                   step="0.01"
-                                   className="layer-range"
-                                   value={layer.opacity || 1}
-                                   onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
-                                 />
-                               </div>
-                             )}
-                           </Draggable>
-                         ))}
-                         {provided.placeholder && <div className="placeholder"></div>}
-                       </div>
-                     )}
-                   </Droppable>
-                 )}
-               </div>
-             </DragDropContext>
-             <button className="reset-button" onClick={onReset}>
-               Reset All Layers
-             </button>
+  return (
+    <div className="sidebar-wrapper" style={{ overflowX: "hidden", overflowY: "auto" }}>
+      <div className={`sidebar-container ${isImageryLayersExpanded ? "" : "collapsed"}`}>
+        {isImageryLayersExpanded && (
+          <div className="sidebar-content">
+            <div className="sidebar-header">
+              <h3>Imagery Layer Options</h3>
+            </div>
+            <hr />
+            <DragDropContext onDragEnd={(result) => onDragEnd(result, imageryList, setImageryList)}>
+              {/* Imagery Layers */}
+              <div className="sidebar-section">
+                <div className="section-header" onClick={() => toggleSection("imagery")}>
+                  <strong>Imagery Layers</strong>
+                  {expandedSections.imagery ? <FaChevronUp /> : <FaChevronDown />}
+                </div>
+                {expandedSections.imagery && (
+                  <Droppable droppableId="imageryLayers">
+                    {(provided, snapshot) => (
+                      <div
+                        className={`layers-list ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                      >
+                        {imageryLayers.map((layer, index) => (
+                          <Draggable key={layer.id} draggableId={layer.id.toString()} index={index}>
+                            {(provided, snapshot) => {
+                              const ensureHex = (color) =>
+                                    /^[0-9a-f]{6}$/i.test(color) ? `#${color}` : color;
+                              const visParams = layer.sourceConfig?.visParams
+                                    ? JSON.parse(layer.sourceConfig.visParams)
+                                    : null;
+                              const palette = Array.isArray(visParams?.palette)
+                                    ? visParams.palette
+                                    : [];
+                              const sliderStyle =
+                                    palette.length === 2
+                                    ? {
+                                      '--first-slider-color': ensureHex(palette[0]),
+                                      '--slider-color': ensureHex(palette[1]),
+                                    }
+                                    : palette.length
+                                    ? {
+                                      '--slider-color': ensureHex(palette[0]),
+                                    }
+                                    : {
+                                      '--first-slider-color': '#d1d5db',
+                                      '--slider-color': '#3b82f6',
+                                    };
+                              return (
+                                <div
+                                  className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={layer.visible}
+                                    onChange={() => onToggleLayer(layer.id, imageryList)}
+                                  />
+                                  <span className="layer-title"> {" "} {layer.title}</span>
+                                  <input
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.01"
+                                    className="layer-range"
+                                    value={layer.opacity || 1}
+                                    onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
+                                    style={{ sliderStyle }}
+                                  />
+                                </div>
+                              )}}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder && <div className="placeholder"></div>}
+                      </div>
+                    )}
+                  </Droppable>
+                )}
+              </div>
+              {/* Polygon Layers */}
+              <div className="sidebar-section">
+                <div className="section-header" onClick={() => toggleSection("polygon")}>
+                  <strong>Polygon Layers</strong>
+                  {expandedSections.polygon ? <FaChevronUp /> : <FaChevronDown />}
+                </div>
+                {expandedSections.polygon && (
+                  <Droppable droppableId="polygonLayers">
+                    {(provided, snapshot) => (
+                      <div
+                        className={`layers-list ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                      >
+                        {polygonLayers.map((layer, index) => (
+                          <Draggable key={layer.id} draggableId={layer.id.toString()} index={index}>
+                            {(provided, snapshot) => (
+                              <div
+                                className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={layer.visible}
+                                  onChange={() => onToggleLayer(layer.id, imageryList)}
+                                />
+                                <span className="layer-title">  {layer.title}</span>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="1"
+                                  step="0.01"
+                                  className="layer-range"
+                                  value={layer.opacity || 1}
+                                  onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder && <div className="placeholder"></div>}
+                      </div>
+                    )}
+                  </Droppable>
+                )}
+              </div>
+            </DragDropContext>
+            <button className="reset-button" onClick={onReset}>
+              Reset All Layers
+            </button>
           </div>
         )}
       </div>
@@ -841,6 +841,85 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
   );
 }
 
+export function PromptModal({title, inputs, callBack, closePrompt}) {
+  const [promptState, setPromptState] = React.useState([]);
+  React.useEffect(()=> setPromptState(inputs.reduce(
+    (acc, {index, value}) => {
+      return ({... acc,
+               [index]: value});
+    }, {} 
+  )), []);
+  let makeInput = ({label, type, index, value}) => {
+    return (
+      <div key={index}
+           className="input-group"
+           style={{flex: "1 100%"}}>
+
+        <label
+          style={{margin: "auto 1rem",
+                  width: "50%"}}
+        >{label}</label>
+        <input type={type}
+               checked={promptState[index]}
+               value={promptState[index]}
+               onChange= {(e)=> setPromptState({... promptState,
+                                                [index]: (e.target.checked)})}
+        ></input>
+      </div>
+    );
+  };
+
+  let  mappedInputs = inputs.map(makeInput);
+  return (
+    <div
+      style={{
+        position: "fixed",
+        zIndex: "100",
+        left: "0",
+        top: "0",
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgba(0,0,0,0.4)",
+      }}
+    >
+      <div
+        style={{
+          flexDirection: "column",
+          backgroundColor: "white",
+          border: "1.5px solid",
+          borderRadius: "5px",
+          display: "flex",
+          margin: "20% auto",
+          width: "fit-content",
+          padding: "1.25rem"
+        }}
+      >
+        <div className="container">
+          <label>{title}</label>
+        </div>
+        <div className="break"></div>
+        {mappedInputs}
+        <div
+          style={{
+            display: "flex"}}>
+          <input
+            className="btn btn-outline-red btn-sm w-100"
+            onClick={() => closePrompt()}
+            type="button"
+            value="Cancel"
+          />
+          <input
+            className="btn btn-outline-lightgreen btn-sm w-100"
+            onClick={() => callBack(promptState)}
+            type="button"
+            value="Confirm"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const BreadCrumbs = ({crumbs}) => {  
   const [state, setState] = useAtom(stateAtom);
   const {breadCrumbs} = state;
@@ -860,7 +939,7 @@ export const BreadCrumbs = ({crumbs}) => {
               body: JSON.stringify(
                 breadCrumbs.concat(crumbs).map(
                   ({query})=> query).filter((x)=>x)
-                 .reduce((acc, curr)=> (acc[curr [0]]=curr [1], acc), {})
+                  .reduce((acc, curr)=> (acc[curr [0]]=curr [1], acc), {})
               )
             })
         .then((res) => (res.ok ? res.json() : Promise.reject()))
@@ -907,6 +986,6 @@ export const BreadCrumbs = ({crumbs}) => {
         }}
       > <SvgIcon icon="leftArrowSlim" size="2rem" />
       </div>      
-        {breadCrumbs.map(renderCrumb)}
+      {breadCrumbs.map(renderCrumb)}
     </div>);
 };

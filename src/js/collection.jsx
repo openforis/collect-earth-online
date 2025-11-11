@@ -15,6 +15,7 @@ import {
   ImageryLayerOptions,
   BreadCrumbs
 } from "./components/PageComponents";
+import SurveyCollection from "./survey/SurveyCollection";
 import {
   PlanetMenu,
   PlanetDailyMenu,
@@ -58,21 +59,24 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
     (async () => {
       setState((s) => ({ ...s, modalMessage: "Loading project details" }));
       try {
-        const [projectRes, plotsRes, imageryRes, plottersRes] = await Promise.all([
+        const [projectRes, plotsRes, imageryRes, plottersRes, statsRes] = await Promise.all([
           fetch(`/get-project-by-id?projectId=${projectId}`),
           fetch(`/get-project-plots?projectId=${projectId}`),
           fetch(`/get-project-imagery?projectId=${projectId}`),
           fetch(`/get-plotters?projectId=${projectId}`),
+          fetch(`/get-project-stats?projectId=${projectId}`)
         ]);
         if (cancelled) return;
         if (!projectRes.ok) throw projectRes;
         if (!plotsRes.ok) throw plotsRes;
         if (!imageryRes.ok) throw imageryRes;
         if (!plottersRes.ok) throw plottersRes;
+        if (!statsRes.ok) throw statsRes;
         const project = await projectRes.json();
         const plotList = await plotsRes.json();
         const imageryListRaw = await imageryRes.json();
         const plotters = await plottersRes.json();
+        const stats = await statsRes.json();
         const imageryList = Array.isArray(imageryListRaw) ?
               imageryListRaw.map((image, i) => ({ ...image, visible: i === 0 })) :
               [];
@@ -125,6 +129,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
           currentImagery: defaultImagery || s.currentImagery,
           showAcceptTermsModal: !!acceptedTerms,
           modalMessage: null,
+          stats
         }));
         if (plotId) {}
       } catch (err) {
@@ -227,56 +232,6 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
       setState((s)=> ({ ...s, referencePlotId: state.currentProject.referencePlotId}));
   }, [state.navigationMode]);
 
-  // API CALLS
-  const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {       
-    processModal("Getting plot", () => {
-      return fetch(
-        "/get-collection-plot?" +
-          getQueryString({
-            visibleId,            
-            projectId,
-            navigationMode: forcedNavMode || state.navigationMode,
-            direction,
-            inReviewMode: reviewMode || state.inReviewMode,
-            threshold: state.threshold,
-            currentUserId: state.currentUserId,
-            projectType: state.currentProject.type,
-            referencePlotId: state.referencePlotId || 0
-          })
-      )
-        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((data) => {
-          if (data === "not-found") {
-            const err = (direction === "id" ? "Plot not" : "No more plots") +
-                  " found for this navigation mode.";
-            const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
-            setState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Error", alertMessage: state.inReviewMode ? err + reviewModeWarning : err}}}));
-          } else {
-            setState (prev=> ({
-              ... prev,
-	      userPlotList: data,
-	      remainingPlotters: data,
-	      currentPlot: data[0],
-	      currentUserId: data[0].userId,
-	      ...newPlotValues(data[0]),
-	      answerMode: "question",
-	      inReviewMode: reviewMode || state.inReviewMode,
-              newPlotId: data[0].visibleId,
-              usedKML: data[0]?.usedKML ?? false,
-              usedGeodash: data[0]?.usedGeodash ?? false,
-	    }));
-          }
-        })
-        .catch((response) => {
-          console.error(response);
-          setState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Retrieval Error", alertMessage: "Error retrieving plot data. See console for details."}}}));
-        });}
-    );
-  };
-  
-
-  // Functions
-
   const newPlotValues = (newPlot, copyValues = true) => ({	
     newPlotInput: newPlot.visibleId,	
     userSamples: newPlot.samples	
@@ -300,11 +255,62 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
       findObject(	
         state.currentProject.surveyQuestions,	
         ([_id, sq]) => sq.parentQuestionId === -1	
-      )[0]	
+      )	
     ),	
     collectionStart: Date.now(),	
     unansweredColor: "black",	
   });
+ 
+
+  // API CALLS
+  const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {       
+    processModal("Getting plot", () => {
+      return fetch(
+        "/get-collection-plot?" +
+          getQueryString({
+            visibleId,            
+            projectId,
+            navigationMode: forcedNavMode || state.navigationMode,
+            direction,
+            inReviewMode: reviewMode || state.inReviewMode,
+            threshold: state.threshold,
+            currentUserId: state.currentUserId,
+            projectType: state.currentProject.type,
+            referencePlotId: state.referencePlotId || 0
+          })
+      )
+        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+        .then((data) => {
+          console.log(data[0]);          
+          if (data === "not-found") {
+            const err = (direction === "id" ? "Plot not" : "No more plots") +
+                  " found for this navigation mode.";
+            const reviewModeWarning = "\n If you have just changed navigation modes, please click the “Next” or “Back” arrows in order to see the plots for this navigation mode.";
+            setState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Error", alertMessage: state.inReviewMode ? err + reviewModeWarning : err}}}));
+          } else {
+            setState (prev=> ({              
+              ... prev,
+	      userPlotList: data,
+	      remainingPlotters: data,
+	      currentPlot: data[0],
+	      currentUserId: data[0].userId,
+	      ...newPlotValues(data[0]),
+	      answerMode: "question",
+	      inReviewMode: reviewMode || state.inReviewMode,
+              newPlotId: data[0].visibleId,
+              usedKML: data[0]?.usedKML ?? false,
+              usedGeodash: data[0]?.usedGeodash ?? false,
+	    }));
+          }
+        })
+        .catch((response) => {
+          console.error(response);
+          setState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Retrieval Error", alertMessage: "Error retrieving plot data. See console for details."}}}));
+        });}
+    );
+  };
+  
+  // Functions
 
   const processModal = (message, callBack) => {
      setState(prev => ({ ... prev, modalMessage: message }));
@@ -681,8 +687,8 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
             className="d-flex flex-column position-absolute full-height"
             style={{
               top: 0,
-              left: state.isImageryLayersExpanded ? "0px" : "-550px",
-              width: "550px",
+              left: state.isImageryLayersExpanded ? "0px" : "-236.183px",
+              width: "236.183px",
               height: "100%",
               backgroundColor: "#fff",
               boxShadow: "2px 0 5px rgba(0,0,0,.2)",
@@ -769,7 +775,7 @@ function ImageAnalysisPane({}) {
       
       <div className="map-controls"
            style={{position: 'absolute',
-                   bottom: '2em',
+                   bottom: '3.5em',
                    right: '10vw',
                    zIndex: 1}}>
         <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '1rem' }}>
@@ -1658,7 +1664,7 @@ function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
   );
 }
 
-export function pageInit(params, session) { 
+export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <BreadCrumbs
@@ -1678,7 +1684,7 @@ export function pageInit(params, session) {
         ]}        
       />
       <Collection projectId={params.projectId} plotId={params.plotId || null} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
-      </NavigationBar>,
+    </NavigationBar>,
     document.getElementById("app")
   );
 }

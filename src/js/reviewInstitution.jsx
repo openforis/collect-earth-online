@@ -1,147 +1,333 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
+import { useAtom } from "jotai";
 
-import { useAtom, useSetAtom, useAtomValue } from 'jotai';
-
+import { institutionPageAtom } from "./state/institutionPage";
 import Modal from "./components/Modal";
 import InstitutionEditor from "./components/InstitutionEditor";
 import SvgIcon from "./components/svg/SvgIcon";
 import { LoadingModal, NavigationBar, LearningMaterialModal, BreadCrumbs } from "./components/PageComponents";
 import { ProjectVisibilityPopup, DownloadPopup, ImageryVisibilityPopup } from "./components/BulkPopups";
+import { ProjectsTab } from "./components/ProjectsTab";
+import { ImageryTab } from "./components/ImageryTab";
 
 import { sortAlphabetically, capitalizeFirst, KBtoBase64Length } from "./utils/generalUtils";
 import { safeLength } from "./utils/sequence";
 import { imageryOptions } from "./imagery/imageryOptions";
 
-class ReviewInstitution extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      imageryCount: 0,
-      usersCount: 0,
-      projectList: null,
-      isAdmin: false,
-      selectedTab: 0,
-      modalMessage: null,
-      selectedProject: [],
-      selectedImagery: [],
-      modal: null,
-    };
-  }
 
-  /// Lifecycle
+const SidebarTabs = ({ tabs = [], activeTab, onChange }) => {
+  return (
+    <div
+      className="sidebar-tabs"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "stretch",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        height: "100vh",
+        width: "18vw",
+        background: "#f7f9f8",
+        borderRight: "1px solid #dcdedc",
+        paddingTop: "70px",
+        boxSizing: "border-box",
+      }}
+    >
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.id;
+        return (
+          <button
+            key={tab.id}
+            onClick={() => onChange(tab.id)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "0.75rem",
+              padding: "10px 16px",
+              border: "none",
+              backgroundColor: isActive ? "#e6efef" : "#f7f9f8",
+              color: "#000",
+              cursor: "pointer",
+              width: "100%",
+              transition: "background-color 0.2s ease, color 0.2s ease",
+              position: "relative",
+            }}
+          >
+            {isActive && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: "4px",
+                  backgroundColor: "#2f615e",
+                  borderTopRightRadius: "2px",
+                  borderBottomRightRadius: "2px",
+                }}
+              />
+            )}
 
-  componentDidMount() {
-    // Load the projectList
-    this.getProjectList();
-  }
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              {tab.icon && <SvgIcon icon={tab.icon} size="1.2rem" />}
+              <span
+                style={{
+                  fontSize: "14px",
+                  fontWeight: isActive ? 600 : 400,
+                }}
+              >
+                {tab.label}
+              </span>
+            </div>
 
-  /// API Calls
+            {tab.badge > 0 && (
+              <span
+                style={{
+                  background: "#3D7F7A",
+                  color: "#fff",
+                  borderRadius: "10px",
+                  padding: "2px 8px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  minWidth: "24px",
+                  textAlign: "center",
+                }}
+              >
+                {tab.badge}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
-  getProjectList = () => {
-    this.processModal(
+export const ReviewInstitution = ({ institutionId, userId }) => {
+  const [state, setState] = useAtom(institutionPageAtom);
+
+  const setIsAdmin = (isAdmin) => setState((s) => ({ ...s, isAdmin }));
+  const setSelectedTab = (tab) => setState((s) => ({ ...s, selectedTab: tab }));
+  const setModal = (modal) => setState((s) => ({ ...s, modal }));
+  const setModalMessage = (msg) => setState((s) => ({ ...s, modalMessage: msg }));
+  const setProjectList = (projects) => setState((s) => ({ ...s, projectList: projects }));
+  const setImageryList = (imagery) => setState((s) => ({ ...s, imageryList: imagery }));
+  const setUsersList = (users) => setState((s) => ({ ...s, usersList: users }));
+  const visibilityOrder = { platform: 0, private: 1, public: 2 };
+
+  const showAlert = ({ title, body }) => {
+    setModal({ alert: { alertType: title, alertMessage: body } });
+  };
+
+  const processModal = (message, promise) => {
+    setModalMessage(message);
+    promise.finally(() => setModalMessage(null));
+  };
+
+  const sortImageryByVisibility = (a, b) =>
+        (visibilityOrder[a.visibility] ?? 99) - (visibilityOrder[b.visibility] ?? 99);
+
+  const getProjectList = () => {
+    processModal(
       "Loading institution data",
       Promise.allSettled([
-        fetch(`/get-institution-projects?institutionId=${this.props.institutionId}`)
-          .then(response => response.ok ? response.json() : Promise.reject(response))
-          .then(projects => projects.map(project => ({ ...project, isDraft: false }))), // Add isDraft: false to each project
-        fetch(`/get-project-drafts-by-user?institutionId=${this.props.institutionId}`)
-          .then(response => response.ok ? response.json() : Promise.reject(response))
-          .then(projects => projects.map(project => ({ ...project, isDraft: true }))) // Add isDraft: true to each draft project
+        fetch(`/get-institution-projects?institutionId=${institutionId}`)
+          .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+          .then((projects) => projects.map((p) => ({ ...p, isDraft: false }))),
+        fetch(`/get-project-drafts-by-user?institutionId=${institutionId}`)
+          .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+          .then((projects) => projects.map((p) => ({ ...p, isDraft: true }))),
       ])
-        .then(results => {
+        .then((results) => {
           const institutionProjects =
                 results[0].status === "fulfilled" ? results[0].value : [];
           const draftProjects =
                 results[1].status === "fulfilled" ? results[1].value : [];
-
-          const combinedProjects = institutionProjects.concat(draftProjects);
-          this.setState({ projectList: combinedProjects });
+          setState((s) => ({
+            ...s,
+            projectList: institutionProjects,
+            draftProjects,
+          }));
         })
-        .catch(error => {
-          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error retrieving the project info. Both Requests failed."}}});
-
+        .catch(() => {
+          showAlert({
+            title: "Project Info Error",
+            body: "Error retrieving the project info. Both requests failed.",
+          });
         })
     );
+  }
+
+  const getImageryList = () => {
+    fetch(`/get-institution-imagery?institutionId=${institutionId}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((data) => {
+        const sorted = [...data].sort(sortImageryByVisibility);
+        console.log(sorted);
+        setImageryList(sorted);
+      })
+      .catch((err) => {
+        console.log(err);
+        setImageryList([]);
+        showAlert({
+          title: "Error",
+          body: "Error retrieving the imagery list. See console for details.",
+        });
+      });
   };
-  archiveProject = (projectId) => {
+
+  const getInstitutionDetails = () => {
+    fetch(`/get-institution-by-id?institutionId=${institutionId}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((data) => {
+        setState((s) => ({
+          ...s,
+          institutionDetails: data,
+          newInstitutionDetails: {
+            name: data.name,
+            imageName: data.imageName,
+            url: data.url,
+            description: data.description,
+            base64Image: "",
+          },
+        }));
+        setIsAdmin(data.institutionAdmin);
+      })
+      .catch(() => {
+        console.error("Error retrieving institution details");
+        setModal({
+          alert: {
+            alertType: "Institution Info Error",
+            alertMessage:
+            "Error retrieving the institution details. See console for details.",
+          },
+        });
+      });
+  };
+
+  const getInstitutionUserList = () => {
+    fetch(`/get-institution-users?institutionId=${institutionId}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((data) => {
+        const users = data.filter((u) => u.institutionRole !== "pending");
+        setUsersList(data);
+      })
+      .catch(() => {
+        setUsersList([]);
+        console.error("Error retrieving the user list");
+        setModal({
+          alert: {
+            alertType: "User List Error",
+            alertMessage:
+            "Error retrieving the user list. See console for details.",
+          },
+        });
+      });
+  };
+  
+  const archiveProject = (projectId) => {
     if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
       fetch(`/archive-project?projectId=${projectId}`, { method: "POST" }).then((response) => {
         if (response.ok) {
-          this.getProjectList();
-          this.setState ({modal: {alert: {alertType: "Project Info", alertMessage: "Project " + projectId + " has been deleted."}}});
+          getProjectList();
+          showAlert({
+            title: "Project Info",
+            body: `Project ${projectId} has been deleted.`,
+          });
         } else {
-          console.log(response);
-          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error deleting project. See console for details."}}});
+          console.error(response);
+          showAlert({
+            title: "Project Info Error",
+            body: "Error deleting project. See console for details.",
+          });
         }
       });
     }
-  };
+  }
 
-  deleteProjectDraft = (projectDraftId) => {
+  const deleteProjectDraft = (projectDraftId) => {
     if (confirm("Do you REALLY want to delete this project draft? This operation cannot be undone.")) {
-      fetch(`/delete-project-draft?projectDraftId=${projectDraftId}`, { method: "GET" }).then((response) => {
+      fetch(`/delete-project-draft?projectDraftId=${projectDraftId}`, { method: "GET" }).then(
+        (response) => {
+          if (response.ok) {
+            getProjectList();
+            showAlert({
+              title: "Project Info",
+              body: `Project ${projectDraftId} has been deleted.`,
+            });
+          } else {
+            console.error(response);
+            showAlert({
+              title: "Project Info Error",
+              body: "Error deleting project draft. See console for details.",
+            });
+          }
+        }
+      );
+    }
+  }
+
+  const deleteProjectsBulk = (projectIds) => {
+    if (confirm("Do you REALLY want to delete ALL selected projects? This operation cannot be undone.")) {
+      fetch(`/delete-projects-bulk?institutionId=${institutionId}`, {
+        method: "POST",
+        body: JSON.stringify({ projectIds }),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }).then((response) => {
         if (response.ok) {
-          this.getProjectList();
-          this.setState ({modal: {alert: {alertType: "Project Info", alertMessage: "Project " + projectDraftId + " has been deleted."}}});
+          getProjectList();
+          showAlert({
+            title: "Project Info",
+            body: "Selected projects have been deleted.",
+          });
         } else {
-          console.log(response);
-          this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error deleting project. See console for details."}}});
+          console.error(response);
+          showAlert({
+            title: "Project Info Error",
+            body: "Error deleting projects. See console for details.",
+          });
         }
       });
     }
-  };
+  }
 
-  deleteProjectsBulk = (projectIds) => {
-    if (confirm("Do you REALLY want to delete ALL selected projects? This operation cannot be undone.")) {
-      fetch(`/delete-projects-bulk?institutionId=${this.props.institutionId}`,
-            {
-              method: "POST",
-              body: JSON.stringify({ "projectIds": projectIds }),
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-            })
-        .then((response) => {
-          if (response.ok) {
-            this.getProjectList();
-            this.setState ({modal: {alert: {alertType: "Project Info", alertMessage: "Selected projects have been deleted."}}});
-          } else {
-            console.log(response);
-            this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error deleting projects. See console for details."}}});
-          }
-        });
-    }
-  };
-
-  editProjectsBulk = (projectIds, selectedVisibility) => {
+  const editProjectsBulk = (projectIds, selectedVisibility) => {
     if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
-      fetch(`/edit-projects-bulk?institutionId=${this.props.institutionId}`,
-            {
-              method: "POST",
-              body: JSON.stringify({
-                "projectIds": projectIds,
-                "visibility": selectedVisibility
-              }),
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-            })
-        .then((response) => {
-          if (response.ok) {
-            this.getProjectList();
-            this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: `The visibility of the selected projects have been changed to ${selectedVisibility}`}}});
-          } else {
-            console.log(response);
-            this.setState ({modal: {alert: {alertType: "Project Info Error", alertMessage: "Error editing project visibility. See console for details."}}});
-          }
-        });
+      fetch(`/edit-projects-bulk?institutionId=${institutionId}`, {
+        method: "POST",
+        body: JSON.stringify({
+          projectIds,
+          visibility: selectedVisibility,
+        }),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }).then((response) => {
+        if (response.ok) {
+          getProjectList();
+          showAlert({
+            title: "Project Info",
+            body: `The visibility of the selected projects has been changed to ${selectedVisibility}.`,
+          });
+        } else {
+          console.error(response);
+          showAlert({
+            title: "Project Info Error",
+            body: "Error editing project visibility. See console for details.",
+          });
+        }
+      });
     }
-  };
+  }
 
-  deleteImageryBulk = (imageryIds, getImageryList) => {
+  const deleteImageryBulk = (imageryIds, getImageryList) => {
     fetch("/bulk-archive-institution-imagery", {
       method: "POST",
       headers: {
@@ -149,7 +335,7 @@ class ReviewInstitution extends React.Component {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        institutionId: this.props.institutionId,
+        institutionId,
         imageryIds,
       }),
     }).then((response) => {
@@ -167,671 +353,109 @@ class ReviewInstitution extends React.Component {
         });
       }
     });
-  };
+  }
 
-  downloadProjectsBulk = (selectedProjects, selectedOptions) => {
+  const downloadProjectsBulk = (selectedProjects, selectedOptions) => {
     const fileTypes = Object.entries(selectedOptions)
           .filter(([_, value]) => value)
           .map(([key]) => key);
-    const fileTypesStr = fileTypes.join(',');
-    const projectIds = selectedProjects.join(',');
+    const fileTypesStr = fileTypes.join(",");
+    const projectIds = selectedProjects.join(",");
     window.open(
-      `/download-projects-bulk?projectIds=${projectIds}&institutionId=${this.props.institutionId}&fileTypes=${fileTypesStr}`
+      `/download-projects-bulk?projectIds=${projectIds}&institutionId=${institutionId}&fileTypes=${fileTypesStr}`
     );
   }
 
-  editImageryBulk = (imageryIds, selectedVisibility) => {
+  const editImageryBulk = (imageryIds, selectedVisibility) => {
     if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
-      fetch("/edit-imagery-bulk",
-            {
-              method: "POST",
-              body: JSON.stringify({
-                imageryIds: imageryIds,
-                visibility: selectedVisibility,
-                institutionId: this.props.institutionId
-              }),
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-            })
-        .then((response) => {
-          if (response.ok) {
-            this.getProjectList();
-            alert(`The visibility of the selected projects have been changed to ${selectedVisibility}`);
-          } else {
-            console.log(response);
-            alert("Error editing project visibility. See console for details.");
-          }
-        });
+      fetch("/edit-imagery-bulk", {
+        method: "POST",
+        body: JSON.stringify({
+          imageryIds,
+          visibility: selectedVisibility,
+          institutionId,
+        }),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }).then((response) => {
+        if (response.ok) {
+          getProjectList();
+          alert(`The visibility of the selected projects has been changed to ${selectedVisibility}`);
+        } else {
+          console.error(response);
+          alert("Error editing project visibility. See console for details.");
+        }
+      });
     }
-  };
+  }
 
-  /// Set State
+  useEffect(() => {
+    getProjectList();
+    getImageryList();
+    getInstitutionDetails();
+    getInstitutionUserList();
+  }, []);
 
-  setImageryCount = (newCount) => this.setState({ imageryCount: newCount });
-
-  setUsersCount = (newCount) => this.setState({ usersCount: newCount });
-
-  setIsAdmin = (isAdmin) => this.setState({ isAdmin });
-
-  /// Helpers
-
-  processModal = (message, promise) =>
-  this.setState({ modalMessage: message }, () =>
-    promise.finally(() => this.setState({ modalMessage: null }))
-  );
-
-  /// Render Function
-
-  headerTab = (name, count, index, disabled = false) => (
+  const headerTab = (name, count, index, disabled = false) => (
     <div className="col-lg-4 col-xs-12 px-2">
-      <div
-        className={"px-3" + (disabled ? "disabled-group" : "")}
-        onClick={() => this.setState({ selectedTab: index })}
-      >
-        <h2
-          className="header"
-          style={{ borderRadius: "5px", cursor: disabled ? "not-allowed" : "pointer" }}
-        >
+      <div className={"px-3" + (disabled ? "disabled-group" : "")} onClick={() => !disabled && setSelectedTab(index)}>
+        <h2 className="header" style={{ borderRadius: "5px", cursor: disabled ? "not-allowed" : "pointer" }}>
           {name}
           <span className="badge badge-pill badge-light ml-2">{count}</span>
           <span className="float-right">
-            {index === this.state.selectedTab && <SvgIcon icon="downCaret" size="1rem" />}
+            {index === state.selectedTab && <SvgIcon icon="downCaret" size="1rem" />}
           </span>
         </h2>
       </div>
     </div>
   );
 
-  render() {
-    return (
+  return (
+    <>
+      <SidebarTabs
+        tabs={[
+          { id: "projects", label: "Projects", icon: "projects", badge: state.projectList?.length || 0 },
+          { id: "imagery", label: "Imagery", icon: "imagery", badge: state.imageryList?.length || 0 },
+          { id: "users", label: "Users", icon: "users", badge: state.usersList?.length || 0 },
+        ]}
+        activeTab={state.selectedTab}
+        onChange={setSelectedTab}
+      />
       <div id="review-institution">
-        {this.state.modal?.alert &&
-         <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
-           {this.state.modal.alert.alertMessage}
-         </Modal>}
-        {this.state.modalMessage && <LoadingModal message={this.state.modalMessage} />}
-        <InstitutionDescription
-          institutionId={this.props.institutionId}
-          isAdmin={this.state.isAdmin}
-          setIsAdmin={this.setIsAdmin}
-          userId={this.props.userId}
-        />
-        <div className="row justify-content-center">
-          <div className="col-lg-7 col-xs-12 align-items-center mb-5">
-            <div className="row">
-              {this.headerTab(
-                "Projects",
-                this.state.projectList ? this.state.projectList.length : 0,
-                0
-              )}
-              {this.headerTab("Imagery", this.state.imageryCount, 1)}
-              {this.headerTab("Users", this.state.usersCount, 2, this.props.userId < 0)}
-            </div>
-            <ProjectList
-              deleteProject={this.archiveProject}
-              deleteProjectDraft={this.deleteProjectDraft}
-              institutionId={this.props.institutionId}
-              isAdmin={this.state.isAdmin}
-              isVisible={this.state.selectedTab === 0}
-              projectList={this.state.projectList}
-              deleteProjectsBulk={this.deleteProjectsBulk}
-              editProjectsBulk={this.editProjectsBulk}
-              downloadProjectsBulk={this.downloadProjectsBulk}
-            />
-            <ImageryList
-              institutionId={this.props.institutionId}
-              isAdmin={this.state.isAdmin}
-              isVisible={this.state.selectedTab === 1}
-              setImageryCount={this.setImageryCount}
-              userId={this.props.userId}
-              deleteImageryBulk={this.deleteImageryBulk}
-              editImageryBulk={this.editImageryBulk}
-            />
-            {this.props.userId > 0 && (
-              <UserList
-                institutionId={this.props.institutionId}
-                isAdmin={this.state.isAdmin}
-                isVisible={this.state.selectedTab === 2}
-                processModal={this.processModal}
-                setUsersCount={this.setUsersCount}
-                userId={this.props.userId}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-}
-
-class InstitutionDescription extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      institutionDetails: {
-        name: "",
-        base64Image: "",
-        imageName: "",
-        url: "",
-        description: "",
-        institutionAdmin: false,
-      },
-      newInstitutionDetails: {
-        name: "",
-        base64Image: "",
-        imageName: "",
-        url: "",
-        description: "",
-      },
-      editMode: false,
-    };
-  }
-
-  componentDidMount() {
-    this.getInstitutionDetails();
-  }
-
-  getInstitutionDetails = () => {
-    fetch(`/get-institution-by-id?institutionId=${this.props.institutionId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.setState({
-          institutionDetails: data,
-          newInstitutionDetails: {
-            name: data.name,
-            imageName: data.imageName,
-            url: data.url,
-            description: data.description,
-            base64Image: "",
-          },
-        });
-        this.props.setIsAdmin(data.institutionAdmin);
-      })
-      .catch((response) => {
-        console.log(response);
-        this.setState ({modal: {alert: {alertType: "Institution Info Error", alertMessage: "Error retrieving the institution details. See console for details."}}});
-      });
-  };
-
-  updateInstitution = () => {
-    if (this.state.newInstitutionDetails.base64Image.length > KBtoBase64Length(500)) {
-      this.setState ({modal: {alert: {alertType: "Institution Info Error", alertMessage: "Institution logos must be smaller than 500kb"}}});
-    } else if (this.state.newInstitutionDetails.name.length === 0) {
-      this.setState ({modal: {alert: {alertType: "Institution Info Error", alertMessage: "Institution must have a name."}}});
-    } else if (this.state.newInstitutionDetails.description.length === 0) {
-      this.setState ({modal: {alert: {alertType: "Institution Info Error", alertMessage: "Institution must have a description."}}});
-    } else {
-      fetch(`/update-institution?institutionId=${this.props.institutionId}`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          institutionId: this.props.institutionId,
-          name: this.state.newInstitutionDetails.name,
-          imageName: this.state.newInstitutionDetails.imageName,
-          base64Image: this.state.newInstitutionDetails.base64Image,
-          url: this.state.newInstitutionDetails.url,
-          description: this.state.newInstitutionDetails.description,
-        }),
-      })
-        .then((response) => Promise.all([response.ok, response.json()]))
-        .then((data) => {
-          if (data[0] && data[1] === "") {
-            this.getInstitutionDetails();
-            this.setState({ editMode: false });
-          } else {
-            this.setState ({modal: {alert: {alertType: "Institution Info", alertMessage: data[1]}}});
-          }
-        })
-        .catch(() =>this.setState ({modal: {alert: {alertType: "Institution Info Error", alertMessage: "Error updating institution details."}}}));
-    }
-  };
-
-  toggleEditMode = () => this.setState({ editMode: !this.state.editMode });
-
-  updateNewInstitutionDetails = (key, newValue) =>
-  this.setState({
-    newInstitutionDetails: {
-      ...this.state.newInstitutionDetails,
-      [key]: newValue,
-    },
-  });
-
-  deleteInstitution = () => {
-    if (
-      confirm(
-        "This action will also delete all of the projects associated with this institution.\n\n" +
-          "This action is irreversible.\n\n" +
-          "Do you REALLY want to delete this institution?"
-      )
-    ) {
-      fetch(`/archive-institution?institutionId=${this.props.institutionId}`, {
-        method: "POST",
-      }).then((response) => {
-        if (response.ok) {
-          this.setState ({modal: {alert: {alertType: "Institution Update",
-                                          onClose: ()=>{window.location = "/home";},
-                                          alertMessage: "Institution " + this.state.institutionDetails.name + " has been deleted."}}});
-        } else {
-          console.log(response);
-          this.setState ({modal: {alert: {alertType: "Institution Update Error", alertMessage: "Error deleting institution. See console for details."}}});
-        }
-      });
-    }
-  };
-
-  gotoInstitutionDashboard = () => {
-    window.open(`/institution-dashboard?institutionId=${this.props.institutionId}`);
-  };
-
-  renderEditButtonGroup = () => (
-    <div className="row">
-      <div className="col-4">
-        <button
-          className="btn btn-sm btn-red btn-block mt-0"
-          id="delete-institution"
-          onClick={this.deleteInstitution}
-          style={{
-            alignItems: "center",
-            display: "flex",
-            justifyContent: "center",
-          }}
-          type="button"
-        >
-          <SvgIcon icon="trash" size="1rem" />
-          <span style={{ marginLeft: "0.4rem" }}>Delete Institution</span>
-        </button>
-      </div>
-      <div className="col-4">
-        <button
-          className="btn btn-sm btn-outline-red btn-block mt-0"
-          onClick={this.toggleEditMode}
-          style={{
-            alignItems: "center",
-            display: "flex",
-            justifyContent: "center",
-          }}
-          type="button"
-        >
-          <SvgIcon icon="cancel" size="1rem" />
-          <span style={{ marginLeft: "0.4rem" }}>Cancel Changes</span>
-        </button>
-      </div>
-      <div className="col-4">
-        <button
-          className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-          onClick={this.updateInstitution}
-          style={{
-            alignItems: "center",
-            display: "flex",
-            justifyContent: "center",
-          }}
-          type="button"
-        >
-          <SvgIcon icon="save" size="1rem" />
-          <span style={{ marginLeft: "0.4rem" }}>Save Changes</span>
-        </button>
-      </div>
-    </div>
-  );
-
-  httpAddress = (url) => (url.includes("://") ? url : "https://" + url);
-
-  render() {
-    return this.state.editMode ? (
-      <InstitutionEditor
-        buttonGroup={this.renderEditButtonGroup}
-        description={this.state.newInstitutionDetails.description}
-        imageName={this.state.newInstitutionDetails.imageName}
-        name={this.state.newInstitutionDetails.name}
-        setInstitutionDetails={this.updateNewInstitutionDetails}
-        title="Edit Institution"
-        url={this.state.newInstitutionDetails.url}
-      />
-    ) : (
-      <div className="row justify-content-center mt-3" id="institution-details">
-        <div className="col-8" id="institution-view">
-          <div className="row mb-4">
-            <div className="col-md-3" id="institution-logo-container">
-              <a
-                href={
-                  this.state.institutionDetails.url === ""
-                    ? "/"
-                    : this.httpAddress(this.state.institutionDetails.url)
-                }
-                rel="noreferrer"
-                target="_blank"
-              >
-                <img
-                  alt={this.state.institutionDetails.name}
-                  src={
-                    safeLength(this.state.institutionDetails.base64Image) > 1
-                      ? `data:*/*;base64,${this.state.institutionDetails.base64Image}`
-                      : "/img/ceo-logo.png"
-                  }
-                  style={{ maxWidth: "100%" }}
-                />
-              </a>
-            </div>
-            <div className="col-md-8">
-              <h1>
-                <a href={this.state.institutionDetails.url}>{this.state.institutionDetails.name}</a>
-              </h1>
-              <hr />
-              <p className="pt-2" style={{ textIndent: "25px" }}>
-                {this.state.institutionDetails.description}
-              </p>
-            </div>
-          </div>
-          {this.props.isAdmin && (
-            <div className="row justify-content-center mb-2" id="institution-controls">
-              <div className="col-4">
-                <button
-                  className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                  id="edit-institution"
-                  onClick={this.toggleEditMode}
-                  style={{
-                    alignItems: "center",
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                  type="button"
-                >
-                  <SvgIcon icon="edit" size="1rem" />
-                  <span style={{ marginLeft: "0.4rem" }}>Edit Institution</span>
-                </button>
-              </div>
-              <div className="col-4">
-                <button
-                  className="btn btn-sm btn-outline-lightgreen btn-block mt-0"
-                  id="institution-dashboard"
-                  onClick={this.gotoInstitutionDashboard}
-                  type="button"
-                >
-                  Go to Dashboard
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-}
-
-const ImageryList = (
-  { isVisible,
-    institutionId,
-    isAdmin,
-    setImageryCount,
-    userId,
-    deleteImageryBulk,
-    editImageryBulk,
-  }) => {
-    const [imageryToEdit, setImageryToEdit] = useState(null);
-    const [imageryList, setImageryList] = useState([]);
-    const [tfoLayers, setTfoLayers] = useState([]);
-    const [messageBox, setMessageBox] = useState(null);
-    const [selectedImagery, setSelectedImagery] = useState([]);
-    const visibilityOrder = { platform: 0, private: 1, public: 2 };
-
-    // Fetch planet tfo layers
-    useEffect(() => {
-      fetch("/get-tfo-dates")
-        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((layers) => setTfoLayers(layers))
-        .catch((error) => console.error(error));
-    }, []);
-
-    // Fetch imagery list
-    useEffect(() => {
-      fetch(`/get-institution-imagery?institutionId=${institutionId}`)
-        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((data) => setImageryList([...data].sort(sortByVisibility)))
-        .catch(() => {
-          setImageryList([]);
-          showAlert({
-            title: "Error",
-            body: "Error retrieving the imagery list. See console for details.",
-          });
-        });
-    }, [institutionId]);
-
-    // Update imagery count
-    useEffect(() => {
-      setImageryCount(imageryList.length);
-    }, [imageryList, setImageryCount]);
-
-    const showAlert = ({ title, body, closeText }) => {
-      setMessageBox({ body, closeText, title, type: "alert" });
-    };
-
-    const getImageryList = () => {
-      fetch(`/get-institution-imagery?institutionId=${institutionId}`)
-        .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((data) => setImageryList([...data].sort(sortByVisibility)))
-        .catch(() => {
-          setImageryList([]);
-          showAlert({
-            title: "Error",
-            body: "Error retrieving the imagery list. See console for details.",
-          });
-        });
-    };
-
-    const sortByVisibility = (a, b) =>
-          (visibilityOrder[a.visibility] ?? 99) - (visibilityOrder[b.visibility] ?? 99);
-
-    const selectAddImagery = () => setImageryToEdit({ id: -1 });
-
-    const selectEditImagery = (imageryId) => {
-      const imagery = imageryList.find((i) => i.id === imageryId);
-      if (imagery && imageryOptions.find((io) => io.type === imagery.sourceConfig.type)) {
-        setImageryToEdit(imagery);
-      } else {
-        showAlert({
-          title: "Imagery Not Supported",
-          body: "This imagery type is no longer supported and cannot be edited.",
-        });
-      }
-    };
-
-    const nonPlatform = imageryList.filter(img => img.visibility !== "platform");
-    const nonPlatformIds = nonPlatform.map(img => img.id);
-
-    const allNonPlatformSelected =
-          nonPlatform.length > 0 &&
-          nonPlatform.every(img => selectedImagery.includes(img.id));
-
-    const handleSelectAllNonPlatform = (checked) => {
-      if (checked) {
-        setSelectedImagery(prev =>
-          Array.from(new Set([...prev, ...nonPlatformIds]))
-        );
-      } else {
-        setSelectedImagery(prev => prev.filter(id => !nonPlatformIds.includes(id)));
-      }
-    };
-
-    const deleteImagery = (imageryId) => {
-      setMessageBox(null);
-      fetch("/archive-institution-imagery", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          institutionId,
-          imageryId,
-        }),
-      }).then((response) => {
-        if (response.ok) {
-          getImageryList();
-          showAlert({
-            title: "Imagery Deleted",
-            body: "Imagery has been successfully deleted.",
-          });
-        } else {
-          console.error(response);
-          showAlert({
-            title: "Error",
-            body: "Error deleting imagery. See console for details.",
-          });
-        }
-      });
-    };
-
-    const toggleVisibility = (imageryId, currentVisibility) => {
-      const toVisibility = currentVisibility === "private" ? "public" : "private";
-      if (
-        userId === 1 &&
-          window.confirm(
-            `Do you want to change the visibility from ${currentVisibility} to ${toVisibility}?` +
-              `${toVisibility === "private" &&
-        "  This will remove the imagery from other institutions' projects."
-        }`
-          )
-      ) {
-        fetch("/update-imagery-visibility", {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            institutionId,
-            visibility: toVisibility,
-            imageryId,
-          }),
-        }).then((response) => {
-          if (response.ok) {
-            getImageryList();
-            showAlert({
-              title: "Imagery Updated",
-              body: "Imagery visibility has been successfully updated.",
-            });
-          } else {
-            console.error(response);
-            showAlert({
-              title: "Error",
-              body: "Error updating imagery visibility. See console for details.",
-            });
-          }
-        });
-      }
-    };
-
-    const titleIsTaken = (newTitle, idToExclude) =>
-          imageryList.some((i) => i.title === newTitle && i.id !== idToExclude);
-
-    const hideEditMode = () => setImageryToEdit(null);
-
-    if (!isVisible) return null;
-
-    return imageryToEdit ? (
-      <NewImagery
-        getImageryList={getImageryList}
-        hideEditMode={hideEditMode}
-        imageryToEdit={imageryToEdit}
-        institutionId={institutionId}
-        tfoLayers={tfoLayers}
-        titleIsTaken={titleIsTaken}
-      />
-    ) : (
-      <>
-        <div className="mb-3">
-          This is a list of available imagery for this institution. For each project you can select
-          to use some or all of these imagery.
-        </div>
-        {isAdmin && (
-          <>
-            <div className="row">
-              <div className="col-lg-12 mb-3">
-                <button
-                  className="btn btn-sm btn-block btn-lightgreen py-2 font-weight-bold"
-                  id="add-imagery-button"
-                  onClick={selectAddImagery}
-                  style={{
-                    alignItems: "center",
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                  type="button"
-                >
-                  <SvgIcon icon="plus" size="1rem" />
-                  <span style={{ marginLeft: "0.4rem" }}>Add New Imagery</span>
-                </button>
-              </div>
-            </div>
-            <div className="row mb-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", gap: "10px" }}>
-                <ImageryVisibilityPopup selectedImagery={selectedImagery} editImageryBulk={editImageryBulk} />
-                <button
-                  className="delete-button"
-                  style={{ height: "38px" }}
-                  onClick={() => deleteImageryBulk(selectedImagery, getImageryList)}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    height="16"
-                    width="16"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M3 6h18v2H3V6zm2 3h14v12H5V9zm6-7h2v2h-2V2zm-1 5h4v2h-4V7z" />
-                  </svg>
-                  Delete Selected
-                </button>
-              </div>
-            </div>
-            <hr />
-            <div className="row mb-1 d-flex font-weight-bold text-muted" style={{ alignItems: "center" }}>
-              <div className="col-1" style={{ paddingLeft: "4.5%" }}>
-                <input
-                  type="checkbox"
-                  aria-label="Select all non-platform imagery"
-                  checked={allNonPlatformSelected}
-                  onChange={(e) => handleSelectAllNonPlatform(e.target.checked)}
-                />
-              </div>
-              <div className="col-3 pr-0 pl-3">Visibility</div>
-              <div className="col pl-5">Imagery Title</div>
-              <div className="col-1 pl-4">Edit</div>
-              <div className="col-1 pl-4">Delete</div>
-            </div>
-          </>
-        )}
-        {imageryList.length === 0 ? (
-          <h3>Loading imagery...</h3>
-        ) : (
-          imageryList.map(({ id, title, institution, visibility }) => (
-            <Imagery
-              key={id}
-              imageryId={id}
-              canEdit={isAdmin && institutionId === institution}
-              deleteImagery={() => deleteImagery(id)}
-              selectEditImagery={() => selectEditImagery(id)}
-              title={title}
-              toggleVisibility={() => toggleVisibility(id, visibility)}
-              visibility={visibility}
-              selectedImagery={selectedImagery}
-              setSelectedImagery={setSelectedImagery}
-            />
-          ))
-        )}
-        {messageBox && (
-          <Modal {...messageBox} onClose={() => setMessageBox(null)}>
-            <p>{messageBox.body}</p>
+        {state.modal?.alert && (
+          <Modal title={state.modal.alert.alertType} onClose={() => setModal(null)}>
+            {state.modal.alert.alertMessage}
           </Modal>
         )}
-      </>
-    );
-  };
+        {state.modalMessage && <LoadingModal message={state.modalMessage} />}
+      </div>
+      {state.selectedTab === "projects" && (
+        <ProjectsTab
+          institutionId={institutionId}
+          projectList={state.projectList}
+          isAdmin={state.isAdmin}
+          deleteProjectsBulk={deleteProjectsBulk}
+          editProjectsBulk={editProjectsBulk}
+          downloadProjectsBulk={downloadProjectsBulk}
+        />
+      )}
+      {state.selectedTab === "imagery" && (
+        <ImageryTab
+          imageryList={state.imageryList}
+          editImagery={editImageryBulk}
+          deleteImagery={deleteImageryBulk}
+          isAdmin={state.isAdmin}
+        />
+      )}
+      {state.selectedTab === "users" && (
+        <UsersTab
+          usersList={usersList} />
+      )}
+    </>
+  )
+};
 
 class NewImagery extends React.Component {
   constructor(props) {
@@ -1270,418 +894,6 @@ class NewImagery extends React.Component {
   }
 }
 
-function Imagery({
-  imageryId,
-  title,
-  canEdit,
-  visibility,
-  toggleVisibility,
-  selectEditImagery,
-  deleteImagery,
-  selectedImagery,
-  setSelectedImagery
-}) {
-
-  const handleCheckboxChange = (event) => {
-    const { checked } = event.target;
-    setSelectedImagery((prev) =>
-      checked ? [...prev, imageryId] : prev.filter((item) => item !== imageryId)
-    );
-  };
-
-  return (
-    <div className="row mb-1 d-flex">
-      {/* Checkbox for selection */}
-      <div className="col-1"
-           style={{ paddingLeft: "4.5%" }}>
-        <input
-          type="checkbox"
-          onChange={handleCheckboxChange}
-          checked={selectedImagery.includes(imageryId)}
-          className={`${visibility === "platform" ? "disabled" : ""}`}
-        />
-      </div>
-
-      {/* Visibility Button */}
-      <div className="col-3 pr-0 pl-3">
-        <div
-          className={`btn btn-sm btn-outline-lightgreen btn-block ${
-      visibility === "platform" ? "disabled" : ""
-    }`}
-          onClick={visibility === "platform" ? undefined : toggleVisibility}
-          style={{ cursor: visibility === "platform" ? "default" : "pointer" }}
-        >
-          {visibility === "platform"
-           ? "Platform"
-           : visibility === "private"
-           ? "Institution"
-           : "Public Institution Imagery"}
-        </div>
-      </div>
-
-      {/* Title */}
-      <div className="col overflow-hidden pl-5">
-        <button
-          className="btn btn-outline-lightgreen btn-sm btn-block text-truncate"
-          title={title}
-          type="button"
-        >
-          {title}
-        </button>
-      </div>
-
-      {canEdit && (
-        <>
-          {/* Edit Button */}
-          <div className="col-1 pl-4">
-            <button
-              className="btn btn-outline-yellow btn-sm btn-block"
-              id="edit-imagery"
-              onClick={selectEditImagery}
-              style={{
-                alignItems: "center",
-                display: "flex",
-                height: "100%",
-                justifyContent: "center",
-              }}
-              type="button"
-            >
-              <SvgIcon icon="edit" size="1rem" />
-            </button>
-          </div>
-
-          {/* Delete Button */}
-          <div className="col-1 pl-4">
-            <button
-              className="btn btn-outline-red btn-sm btn-block"
-              id="delete-imagery"
-              onClick={deleteImagery}
-              style={{
-                alignItems: "center",
-                display: "flex",
-                height: "100%",
-                justifyContent: "center",
-              }}
-              type="button"
-            >
-              <SvgIcon icon="trash" size="1rem" />
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function ProjectList({
-  isAdmin,
-  institutionId,
-  projectList,
-  isVisible,
-  deleteProject,
-  deleteProjectDraft,
-  deleteProjectsBulk,
-  editProjectsBulk,
-  downloadProjectsBulk
-}) {
-  const [selectedProjects, setSelectedProjects] = useState([]);
-
-  const noProjects = (msg) => (
-    <div style={{ display: "flex" }}>
-      <SvgIcon icon="alert" size="1.2rem" />
-      <p style={{ marginLeft: "0.4rem" }}>{msg}</p>
-    </div>
-  );
-
-  const renderProjects = () => {
-    if (projectList === null) {
-      return <h3>Loading projects...</h3>;
-    } else if (projectList.length === 0 && isAdmin) {
-      return noProjects("There are no projects yet. Click 'Create New Project' to get started.");
-    } else if (projectList.length === 0) {
-      return noProjects("There are no public projects.");
-    } else {
-      return projectList.map((project, uid) => (
-          <Project
-            key={uid} // eslint-disable-line react/no-array-index-key
-            deleteProject={deleteProject}
-            deleteProjectDraft={deleteProjectDraft}
-            isAdmin={isAdmin}
-            project={project}
-            institutionId={institutionId}
-            selectedProjects={selectedProjects}
-            setSelectedProjects={setSelectedProjects}
-          />
-      ));
-    }
-  };
-
-  return (
-    <div style={!isVisible ? { display: "none" } : {}}>
-      <div className="mb-3">
-        This is a list of all institution projects. The color around the name shows its progress.
-        Red indicates that it has no plots collected, yellow indicates that some plots have been
-        collected, and green indicates that all plots have been selected.
-      </div>
-      {isAdmin && (
-        <>
-          <div className="row mb-3">
-            <div className="col">
-              <button
-                className="btn btn-sm btn-block btn-lightgreen py-2 font-weight-bold"
-                id="create-project"
-                onClick={() =>
-                  window.location.assign(`/create-project?institutionId=${institutionId}`)
-                }
-                style={{
-                  alignItems: "center",
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-                type="button"
-              >
-                <SvgIcon icon="plus" size="1rem" />
-                <span style={{ marginLeft: "0.4rem" }}>Create New Project</span>
-              </button>
-            </div>
-          </div>
-          <div className="row mb-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <ProjectVisibilityPopup
-                selectedProjects={selectedProjects}
-                editProjectsBulk={editProjectsBulk}
-              />
-              <button
-                className="delete-button"
-                style={{ height: "38px" }}
-                onClick={() => deleteProjectsBulk(selectedProjects)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  height="16"
-                  width="16"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M3 6h18v2H3V6zm2 3h14v12H5V9zm6-7h2v2h-2V2zm-1 5h4v2h-4V7z" />
-                </svg>
-                Delete Selected
-              </button>
-            </div>
-            <div>
-              <DownloadPopup
-                downloadProjectsBulk={downloadProjectsBulk}
-                selectedProjects={selectedProjects}
-              />
-            </div>
-          </div>
-          <hr/>
-          <div className="row mb-1 d-flex font-weight-bold text-muted" style={{ alignItems: "center" }}>
-            <div className="col-1" style={{ paddingLeft: "4.5%" }}>
-              <input
-                type="checkbox"
-                checked={selectedProjects?.length === projectList?.length && projectList?.length > 0}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedProjects(projectList.map((p) => p.id));
-                  } else {
-                    setSelectedProjects([]);
-                  }
-                }}
-                aria-label="Select all projects"
-              />
-            </div>
-            <div className="col-2 pr-0">Visibility</div>
-            <div className="col">Project Name</div>
-            {isAdmin && (
-              <>
-                <div className="col-1 pl-0">Edit Project</div>
-                <div className="col-1 pl-0">Delete Project</div>
-                <div className="col-1 pl-0">Download Plots</div>
-                <div className="col-1 pl-0">Download Samples</div>
-                <div className="col-1 pl-0">Learning Material</div>
-              </>
-            )}
-          </div>
-          <hr/>
-        </>
-      )}
-      {renderProjects()}
-    </div>
-  );
-}
-
-function Project({
-  project,
-  isAdmin,
-  deleteProject,
-  deleteProjectDraft,
-  institutionId,
-  selectedProjects,
-  setSelectedProjects
-}) {
-  const [learningMaterialOpen, setLearningMaterialOpen] = useState(false);
-
-  const toggleLearningMaterial = () => {
-    setLearningMaterialOpen(!learningMaterialOpen);
-  };
-
-  const handleCheckboxChange = (event) => {
-    const { checked } = event.target;
-    setSelectedProjects((prev) =>
-      checked ? [...prev, project.id] : prev.filter((id) => id !== project.id)
-    );
-  };
-
-  return (
-    <div className="row mb-1 d-flex">
-      {/* Checkbox for project selection */}
-      <div className="col-1"
-           style={{ paddingLeft: "4.5%" }}>
-        <input
-          type="checkbox"
-          onChange={handleCheckboxChange}
-          checked={selectedProjects.includes(project.id)}
-        />
-      </div>
-
-      {/* Project Privacy Level / Draft Status */}
-      <div className="col-2 pr-0">
-        <div className="btn btn-sm btn-outline-lightgreen btn-block">
-          {project.isDraft ? "Draft" : capitalizeFirst(project.privacyLevel)}
-        </div>
-      </div>
-
-      {/* Project Name with Status-based Styling */}
-      <div className="col overflow-hidden">
-        {project.isDraft ? (
-          <span
-            className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-            style={{
-              boxShadow: "0px 0px 6px 1px grey inset",
-              cursor: "default",
-            }}
-          >
-            {project.name}
-          </span>
-        ) : (
-          <a
-            className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-            href={`/collection?projectId=${project.id}&institutionId=${institutionId}`}
-            style={{
-              boxShadow:
-              project.percentComplete === 0.0
-                ? "0px 0px 6px 1px red inset"
-                : project.percentComplete >= 100.0
-                ? "0px 0px 6px 2px #3bb9d6 inset"
-                : "0px 0px 6px 1px yellow inset",
-            }}
-          >
-            {project.name}
-          </a>
-        )}
-      </div>
-
-      {/* Admin Actions */}
-      {isAdmin && (
-        <>
-          {/* Edit Project */}
-          <div className="col-1 pl-0">
-            <button
-              className="btn btn-sm btn-outline-yellow btn-block"
-              onClick={() =>
-                window.location.assign(
-                  project.isDraft
-                    ? `/create-project?projectDraftId=${project.id}&institutionId=${institutionId}`
-                    : `/review-project?projectId=${project.id}&institutionId=${institutionId}`
-                )
-              }
-              style={{
-                alignItems: "center",
-                display: "flex",
-                height: "100%",
-                justifyContent: "center",
-              }}
-              title="Edit Project"
-              type="button"
-            >
-              <SvgIcon icon="edit" size="1rem" />
-            </button>
-          </div>
-
-          {/* Delete Project */}
-          <div className="col-1 pl-0">
-            <button
-              className="btn btn-sm btn-outline-red btn-block"
-              onClick={() =>
-                project.isDraft
-                  ? deleteProjectDraft(project.id)
-                  : deleteProject(project.id)
-              }
-              style={{
-                alignItems: "center",
-                display: "flex",
-                height: "100%",
-                justifyContent: "center",
-              }}
-              title="Delete Project"
-              type="button"
-            >
-              <SvgIcon icon="trash" size="1rem" />
-            </button>
-          </div>
-
-          {/* Download Plot Data */}
-          <div className="col-1 pl-0">
-            <button
-              className="btn btn-sm btn-outline-lightgreen btn-block"
-              onClick={() =>
-                window.open(`/dump-project-aggregate-data?projectId=${project.id}`, "_blank")
-              }
-              title="Download Plot Data"
-              type="button"
-            >
-              P
-            </button>
-          </div>
-
-          {/* Download Sample Data */}
-          <div className="col-1 pl-0">
-            <button
-              className="btn btn-sm btn-outline-lightgreen btn-block"
-              onClick={() =>
-                window.location.assign(`/dump-project-raw-data?projectId=${project.id}`, "_blank")
-              }
-              title="Download Sample Data"
-              type="button"
-            >
-              S
-            </button>
-          </div>
-
-          {/* Learning Material */}
-          <div className="col-1 pl-0">
-            <button
-              className="btn btn-sm btn-outline-lightgreen btn-block"
-              onClick={toggleLearningMaterial}
-              title="Display Learning Material"
-              type="button"
-            >
-              M
-            </button>
-          </div>
-
-          {learningMaterialOpen && (
-            <LearningMaterialModal
-              learningMaterial={project.learningMaterial}
-              onClose={toggleLearningMaterial}
-            />
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
 class UserList extends React.Component {
   constructor(props) {
     super(props);
@@ -1811,109 +1023,6 @@ class UserList extends React.Component {
       )
     );
   }
-}
-
-function User({ isAdmin, updateUserInstitutionRole, user }) {
-  const [userRole, setUserRole] = useState(user.institutionRole);
-  const [selectedUsers, setSelectedUsers] = useState([]); // State for selected users
-  const [state, setState] = useState({modal: null});
-  const handleCheckboxChange = (event) => {
-    const { checked } = event.target;
-    setSelectedUsers((prev) =>
-      checked ? [...prev, user.id] : prev.filter((id) => id !== user.id)
-    );
-  };
-
-  const handleUpdateRole = () => {
-    if (userRole === user.institutionRole) {
-      setState ({modal: {alert: {alertType: "Update User Error", alertMessage: "You must change the role of a user in order to update it."}}});
-    } else {
-      const confirmBox = window.confirm(
-        "Do you really want to update the role of this user?"
-      );
-      if (confirmBox) updateUserInstitutionRole(user.id, null, userRole);
-    }
-  };
-
-  const handleRemoveUser = () => {
-    const confirmBox = window.confirm(
-      "Do you really want to remove this user from the institution?"
-    );
-    if (confirmBox) updateUserInstitutionRole(user.id, null, "not-member");
-  };
-
-  return (
-    <div className="row">
-      {/* Checkbox for selection */}
-      {state.modal?.alert &&
-       <Modal title={state.modal.alert.alertType}
-              onClose={()=>{setState({modal: null});}}>
-         {state.modal.alert.alertMessage}
-       </Modal>}
-      <div className="col-1 mb-1"
-           style={{ paddingLeft: "4.5%" }}>
-        <input
-          type="checkbox"
-          onChange={handleCheckboxChange}
-          checked={selectedUsers.includes(user.id)}
-        />
-      </div>
-
-      {!isAdmin && (
-        <div className="col-2 mb-1 pr-0">
-          <div className="btn btn-sm btn-outline-lightgreen btn-block">
-            {capitalizeFirst(user.institutionRole)}
-          </div>
-        </div>
-      )}
-
-      <div className="col mb-1 overflow-hidden pl-5">
-        <button
-          className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-          onClick={() => window.location.assign(`/account?accountId=${user.id}`)}
-          title={user.email}
-          type="button"
-        >
-          {user.email}
-        </button>
-      </div>
-
-      {isAdmin && (
-        <>
-          <div className="col-2 mb-1 pl-4">
-            <select
-              className="custom-select custom-select-sm"
-              onChange={(e) => setUserRole(e.target.value)}
-              size="1"
-              value={userRole}
-            >
-              {userRole === "pending" && <option value="pending">Pending</option>}
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <div className="col-2 mb-1 pl-4">
-            <button
-              className="btn btn-sm btn-outline-yellow btn-block"
-              onClick={handleUpdateRole}
-              type="button"
-            >
-              Update
-            </button>
-          </div>
-          <div className="col-2 mb-1 pl-4">
-            <button
-              className="btn btn-sm btn-outline-red btn-block"
-              onClick={handleRemoveUser}
-              type="button"
-            >
-              Remove
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
 }
 
 const NewUserButtons = ({
