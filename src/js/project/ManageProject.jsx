@@ -165,6 +165,30 @@ class ProjectManagement extends React.Component {
     }
   };
 
+  copyProject = () => {
+    const {setProjectDetails, setContextState, processModal, promptModal, projectId} = this.context;
+    promptModal("Do you want to copy the entire project?",
+                [{label: "Use Existing Plots",
+                  index: "plots",
+                  type:  "checkbox",
+                  value:  true},
+                 {label: "Use Existing Widgets",
+                  index: "widgets",
+                  type:  "checkbox",
+                  value: true},
+                 {label: "Copy Answers",
+                  index: "answers",
+                  type:  "checkbox",
+                  value: true}
+                ], (prompts) => {
+                  const url = `/copy-project?projectId=${projectId}&widgets=${prompts.widgets}&plots=${prompts.plots}&answers=${prompts.answers}`;
+                  fetch(url, {method: "POST"})
+	            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+	            .then((data) => 
+                      window.location.assign(`/review-project?projectId=${data.projectId}&institutionId=${this.context.institution}&copy-redirect`));
+                });
+  }
+
   closeProject = () => {
     const { setProjectDetails, setContextState, processModal, projectId } = this.context;
     if (confirm("Do you want to close this project?")) {
@@ -390,6 +414,12 @@ class ProjectManagement extends React.Component {
               onClick={() => window.open(`/create-shape-files?projectId=${id}`, "_blank")}
               type="button"
               value="Download Shape Files"
+            />
+            <input
+              className="btn btn-outline-lightgreen btn-sm w-100"
+              onClick={() => this.copyProject()}
+              type="button"
+              value="Copy Entire Project"
             />
             <label className="my-2"> Digital Object Identifier </label>
               <input className="btn btn-outline-lightgreen btn-sm w-100"

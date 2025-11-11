@@ -1393,3 +1393,56 @@ RETURNS int AS $$
     WHERE p.project_uid = _project_id
       AND iu.user_rid = _user_id;
 $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION copy_user_plots(_old_project_id INT, _new_project_id INT)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO user_plots (
+    user_rid, plot_rid, collection_start, confidence,
+    confidence_comment, imagery_ids, used_kml, used_geodash
+  )
+  SELECT up.user_rid, new_pl.plot_uid, up.collection_start, up.confidence,
+         up.confidence_comment, up.imagery_ids, up.used_kml, up.used_geodash
+  FROM plots old_pl
+  JOIN plots new_pl
+    ON old_pl.visible_id = new_pl.visible_id
+   AND old_pl.project_rid = _old_project_id
+   AND new_pl.project_rid = _new_project_id
+  JOIN user_plots up
+    ON up.plot_rid = old_pl.plot_uid;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION copy_sample_values(_old_project_id INT, _new_project_id INT)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO sample_values (
+    user_plot_rid, sample_rid, saved_answers, imagery_attributes, imagery_rid
+  )
+  SELECT new_up.user_plot_uid, new_s.sample_uid, sv.saved_answers, sv.imagery_attributes, sv.imagery_rid
+  FROM plots old_pl
+  JOIN plots new_pl
+    ON old_pl.visible_id = new_pl.visible_id
+   AND old_pl.project_rid = _old_project_id
+   AND new_pl.project_rid = _new_project_id
+
+  JOIN samples old_s
+    ON old_s.plot_rid = old_pl.plot_uid
+
+  JOIN samples new_s
+    ON new_s.visible_id = old_s.visible_id
+   AND new_s.plot_rid = new_pl.plot_uid
+
+  JOIN user_plots old_up
+    ON old_up.plot_rid = old_pl.plot_uid
+
+  JOIN user_plots new_up
+    ON new_up.plot_rid = new_pl.plot_uid
+   AND new_up.user_rid = old_up.user_rid
+
+  JOIN sample_values sv
+    ON sv.sample_rid = old_s.sample_uid
+   AND sv.user_plot_rid = old_up.user_plot_uid;
+END;
+$$ LANGUAGE plpgsql;
