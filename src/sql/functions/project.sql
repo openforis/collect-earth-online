@@ -687,7 +687,7 @@ CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _instit
     privacy_level    text,
     pct_complete     real,
     availability     text,
-    type             text,
+    type             project_type,
     created_date     text
  ) AS $$
 
