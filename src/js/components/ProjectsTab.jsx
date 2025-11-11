@@ -35,7 +35,7 @@ export const ProjectsTab = ({
         cell: (row) => (
           <a
             href={
-              isAdmin ? `/collection?projectId={row.id}&institutionId={institutionId}`: `/review-project?projectId=${row.id}`}
+              isAdmin ? `/collection?projectId=${row.id}&institutionId=${institutionId}`: `/review-project?projectId=${row.id}&institutionId=${institutionId}`}
             style={{
               color: "#2f615e",
               textDecoration: "none",
