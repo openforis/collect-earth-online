@@ -824,7 +824,8 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
     plot_assignments    integer,
     users_assigned      integer,
     user_stats          jsonb,
-    average_confidence  integer
+    average_confidence  integer,
+    collection_time     integer
  ) AS $$
 
     WITH user_plot_times AS (
@@ -878,6 +879,17 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
             AND (pa.user_rid = up.user_rid OR (SELECT users_assigned FROM users_count) = 0)
         GROUP BY plot_uid
         HAVING project_rid = _project_id
+    ), collection_times AS (
+        SELECT
+          SUM(CASE WHEN collection_time IS NOT NULL AND collection_start IS NOT NULL
+              THEN EXTRACT(EPOCH FROM (collection_time - collection_start))
+              ELSE 0 END)::int AS total_collection_seconds,
+          COUNT(CASE WHEN collection_time IS NOT NULL AND collection_start IS NOT NULL
+              THEN 1 END)::int AS timed_plots_count
+        FROM  plots pl
+        LEFT JOIN user_plots up ON up.plot_rid = pl.plot_uid
+        WHERE pl.project_rid = _project_id
+
     ), project_sum AS (
         SELECT count(*)::int AS total_plots,
             sum(ps.flagged::int)::int AS flagged_plots,
@@ -900,7 +912,12 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
           WHEN analyzed_plots = 0 THEN 0
           ELSE confidence_sum / analyzed_plots
         END as average_confidence
-    FROM projects, project_sum, users_count, user_agg, plot_sum
+        ,
+        CASE
+          WHEN ct.timed_plots_count = 0 THEN 0
+          ELSE ct.total_collection_seconds / ct.timed_plots_count
+        END as collection_time
+    FROM projects, project_sum, users_count, user_agg, plot_sum, collection_times ct
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
