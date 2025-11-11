@@ -665,7 +665,19 @@
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
         type                 (:type params)
-        original-project     (first (call-sql "select_project_by_id" project-id))]
+        original-project     (first (call-sql "select_project_by_id" project-id))
+        original-questions   (-> original-project :survey_questions tc/jsonb->clj)
+        new-questions        (tc/clj->jsonb
+                              (assoc original-questions
+                                     (-> original-questions count inc str)
+                                     {:dataType "text",
+                                      :question "?",
+                                      :cardOrder (inc (count original-questions)),
+                                      :hideQuestion false,
+                                      :componentType "button",
+                                      :parentAnswerIds [],
+                                      :parentQuestionId -1
+                                      :answers {"0" {:hide false, :color "#00ff4c", :answer "!"}}}))]    
     (if original-project
       (try
         (call-sql "update_project"
@@ -736,25 +748,26 @@
           :else
           (do
             ;; Always recreate samples or reset them
-            (if (or (not= sample-distribution (:sample_distribution original-project))
-                    (if (#{"csv" "shp" "geojson"} sample-distribution)
-                      sample-file-base64
-                      (or (not= samples-per-plot (:samples_per_plot original-project))
-                          (not= sample-resolution (:sample_resolution original-project)))))
-              (do
-                (call-sql "delete_user_plots_by_project" project-id)
-                (call-sql "delete_all_samples_by_project" project-id)
-                (create-project-samples! project-id
-                                         plot-shape
-                                         plot-size
-                                         sample-distribution
-                                         samples-per-plot
-                                         sample-resolution
-                                         sample-file-name
-                                         sample-file-base64
-                                         allow-drawn-samples?
-                                         (call-sql "get_plot_centers_by_project" project-id)))
-              (reset-collected-samples! project-id))
+            (when (:overwrite params)
+              (if (or (not= sample-distribution (:sample_distribution original-project))
+                      (if (#{"csv" "shp" "geojson"} sample-distribution)
+                        sample-file-base64
+                        (or (not= samples-per-plot (:samples_per_plot original-project))
+                            (not= sample-resolution (:sample_resolution original-project)))))
+                (do
+                  (call-sql "delete_user_plots_by_project" project-id)
+                  (call-sql "delete_all_samples_by_project" project-id)
+                  (create-project-samples! project-id
+                                           plot-shape
+                                           plot-size
+                                           sample-distribution
+                                           samples-per-plot
+                                           sample-resolution
+                                           sample-file-name
+                                           sample-file-base64
+                                           allow-drawn-samples?
+                                           (call-sql "get_plot_centers_by_project" project-id)))
+                #_(reset-collected-samples! project-id)))
             ;; Redo assignments if they changed
             (when (not= design-settings (tc/jsonb->clj (:design_settings original-project)))
               (call-sql "delete_plot_assignments_by_project" project-id)
