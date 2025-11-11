@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
-import { format } from "date-fns";
 import SvgIcon from "./svg/SvgIcon";
-import { BulkActions } from "./BulkActions"
+import { BulkActions } from "./BulkActions";
 
 export const ProjectsTab = ({
   institutionId,

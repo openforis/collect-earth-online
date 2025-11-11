@@ -293,10 +293,10 @@ export class PlotDesign extends React.Component {
 
     if (
       this.context.type === "simplified" &&
-        (lonMin !== prevState.lonMin ||
-         latMin !== prevState.latMin ||
-         lonMax !== prevState.lonMax ||
-         latMax !== prevState.latMax)
+        (this.state.lonMin !== prevState.lonMin ||
+         this.state.latMin !== prevState.latMin ||
+         this.state.lonMax !== prevState.lonMax ||
+         this.state.latMax !== prevState.latMax)
     ) {
       this.setSimplifiedProjectDetails();
     }
@@ -891,7 +891,7 @@ export class PlotDesign extends React.Component {
       simplified: {
         display: "Simplified AOI",
         description: "Use the map preview or the coordinate inputs to create the project plot",
-        layout: this.renderSimplifiedSelector(),
+        layout: this.renderSimplifiedSelector,
       },
     };
 
