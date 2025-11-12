@@ -10,6 +10,7 @@ import { LoadingModal, NavigationBar, BreadCrumbs } from "./components/PageCompo
 import { KBtoBase64Length } from "./utils/generalUtils";
 import { ProjectsTab } from "./components/ProjectsTab";
 import { ImageryTab } from "./components/ImageryTab";
+import { UsersTab } from "./components/UsersTab";
 
 import { safeLength } from "./utils/sequence";
 
@@ -556,7 +557,8 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
       )}
       {state.selectedTab === "users" && (
         <UsersTab
-          usersList={usersList} />
+          isAdmin={state.isAdmin}
+          usersList={state.usersList} />
       )}
     </>
   )
