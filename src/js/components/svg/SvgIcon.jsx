@@ -41,6 +41,8 @@ import zoomInIcon from "./zoomInIcon.svg";
 import personIcon from "./personIcon.svg";
 import landscapeIcon from "./landscapeIcon.svg";
 import mapIcon from './mapIcon.svg';
+import folderIcon from './folderIcon.svg';
+import morevertIcon from './morevertIcon.svg';
 
 export const iconMap = {
   alert: alertIcon,
@@ -84,6 +86,9 @@ export const iconMap = {
   users: personIcon,
   projects: landscapeIcon,
   imagery: mapIcon,
+  folder: folderIcon,
+  moreVert: morevertIcon,
+
 };
 
 function SvgIcon({ icon, color, cursor, size, verticalAlign, transform }) {

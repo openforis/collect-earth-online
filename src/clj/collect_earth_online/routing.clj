@@ -240,10 +240,10 @@
                                                 :auth-type   :collect
                                                 :auth-action :block}
    [:get  "/get-public-imagery"]               {:handler     imagery/get-public-imagery}
-   [:post "/add-institution-imagery"]          {:handler     (validate imagery/add-institution-imagery)
+   [:post "/add-institution-imagery"]          {:handler     imagery/add-institution-imagery
                                                 :auth-type   :admin
                                                 :auth-action :block}
-   [:post "/update-institution-imagery"]       {:handler     (validate imagery/update-institution-imagery)
+   [:post "/update-institution-imagery"]       {:handler     imagery/update-institution-imagery
                                                 :auth-type   :admin
                                                 :auth-action :block}
    [:post "/update-imagery-visibility"]        {:handler     (validate imagery/update-imagery-visibility)

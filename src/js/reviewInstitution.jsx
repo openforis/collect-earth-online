@@ -4,19 +4,45 @@ import { useAtom } from "jotai";
 
 import { institutionPageAtom } from "./state/institutionPage";
 import Modal from "./components/Modal";
-import InstitutionEditor from "./components/InstitutionEditor";
 import SvgIcon from "./components/svg/SvgIcon";
-import { LoadingModal, NavigationBar, LearningMaterialModal, BreadCrumbs } from "./components/PageComponents";
-import { ProjectVisibilityPopup, DownloadPopup, ImageryVisibilityPopup } from "./components/BulkPopups";
+import { LoadingModal, NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import { ProjectsTab } from "./components/ProjectsTab";
 import { ImageryTab } from "./components/ImageryTab";
 
-import { sortAlphabetically, capitalizeFirst, KBtoBase64Length } from "./utils/generalUtils";
 import { safeLength } from "./utils/sequence";
-import { imageryOptions } from "./imagery/imageryOptions";
 
+export const SidebarTabs = ({
+  tabs,
+  activeTab,
+  onChange,
+  institutionName,
+  onEditInstitution,
+  onViewDashboard,
+}) => {
+  const [showMenu, setShowMenu] = useState(false);
 
-const SidebarTabs = ({ tabs = [], activeTab, onChange }) => {
+  const menuItemStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "8px 12px",
+    width: "100%",
+    background: "white",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "14px",
+    textAlign: "left",
+    color: "#1a1a1a",
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".menu-container")) setShowMenu(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div
       className="sidebar-tabs"
@@ -25,16 +51,82 @@ const SidebarTabs = ({ tabs = [], activeTab, onChange }) => {
         flexDirection: "column",
         alignItems: "stretch",
         position: "fixed",
-        top: 0,
+        top: "120px",
         left: 0,
-        height: "100vh",
-        width: "18vw",
+        height: "calc(100vh - 80px)",
+        width: "22vw",
         background: "#f7f9f8",
         borderRight: "1px solid #dcdedc",
-        paddingTop: "70px",
         boxSizing: "border-box",
       }}
     >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "16px",
+          borderBottom: "1px solid #dcdedc",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <SvgIcon icon="folder" size="1.2rem" />
+          <span style={{ fontWeight: 600, fontSize: "15px" }}>{institutionName}</span>
+        </div>
+
+        <div style={{ position: "relative" }} className="menu-container">
+          <button
+            onClick={() => setShowMenu((v) => !v)}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "4px",
+            }}
+          >
+            <SvgIcon icon="moreVert" size="1.2rem" />
+          </button>
+
+          {showMenu && (
+            <div
+              style={{
+                position: "absolute",
+                top: "28px",
+                right: 0,
+                background: "#fff",
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                width: "190px",
+                zIndex: 50,
+              }}
+            >
+              <button
+                style={menuItemStyle}
+                onClick={() => {
+                  setShowMenu(false);
+                  onEditInstitution();
+                }}
+              >
+                <SvgIcon icon="edit" size="1rem" />
+                Edit Institution
+              </button>
+
+              <button
+                style={menuItemStyle}
+                onClick={() => {
+                  setShowMenu(false);
+                  onViewDashboard();
+                }}
+              >
+                <SvgIcon icon="folder" size="1rem" />
+                View Project Dashboard
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
@@ -70,7 +162,6 @@ const SidebarTabs = ({ tabs = [], activeTab, onChange }) => {
                 }}
               />
             )}
-
             <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
               {tab.icon && <SvgIcon icon={tab.icon} size="1.2rem" />}
               <span
@@ -82,7 +173,6 @@ const SidebarTabs = ({ tabs = [], activeTab, onChange }) => {
                 {tab.label}
               </span>
             </div>
-
             {tab.badge > 0 && (
               <span
                 style={{
@@ -113,7 +203,6 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   const setSelectedTab = (tab) => setState((s) => ({ ...s, selectedTab: tab }));
   const setModal = (modal) => setState((s) => ({ ...s, modal }));
   const setModalMessage = (msg) => setState((s) => ({ ...s, modalMessage: msg }));
-  const setProjectList = (projects) => setState((s) => ({ ...s, projectList: projects }));
   const setImageryList = (imagery) => setState((s) => ({ ...s, imageryList: imagery }));
   const setUsersList = (users) => setState((s) => ({ ...s, usersList: users }));
   const visibilityOrder = { platform: 0, private: 1, public: 2 };
@@ -185,14 +274,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
       .then((data) => {
         setState((s) => ({
           ...s,
-          institutionDetails: data,
-          newInstitutionDetails: {
-            name: data.name,
-            imageName: data.imageName,
-            url: data.url,
-            description: data.description,
-            base64Image: "",
-          },
+          institutionDetails: data
         }));
         setIsAdmin(data.institutionAdmin);
       })
@@ -398,28 +480,15 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
     getInstitutionUserList();
   }, []);
 
-  const headerTab = (name, count, index, disabled = false) => (
-    <div className="col-lg-4 col-xs-12 px-2">
-      <div className={"px-3" + (disabled ? "disabled-group" : "")} onClick={() => !disabled && setSelectedTab(index)}>
-        <h2 className="header" style={{ borderRadius: "5px", cursor: disabled ? "not-allowed" : "pointer" }}>
-          {name}
-          <span className="badge badge-pill badge-light ml-2">{count}</span>
-          <span className="float-right">
-            {index === state.selectedTab && <SvgIcon icon="downCaret" size="1rem" />}
-          </span>
-        </h2>
-      </div>
-    </div>
-  );
-
   return (
     <>
       <SidebarTabs
         tabs={[
-          { id: "projects", label: "Projects", icon: "projects", badge: state.projectList?.length || 0 },
-          { id: "imagery", label: "Imagery", icon: "imagery", badge: state.imageryList?.length || 0 },
-          { id: "users", label: "Users", icon: "users", badge: state.usersList?.length || 0 },
+          { id: "projects", label: "Projects", icon: "projects", badge: safeLength(state.projectList) || 0 },
+          { id: "imagery", label: "Imagery", icon: "imagery", badge: safeLength(state.imageryList) || 0 },
+          { id: "users", label: "Users", icon: "users", badge: safeLength(state.usersList) || 0 },
         ]}
+        institutionName={state.institutionDetails.name}
         activeTab={state.selectedTab}
         onChange={setSelectedTab}
       />
@@ -431,6 +500,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
         )}
         {state.modalMessage && <LoadingModal message={state.modalMessage} />}
       </div>
+      <InstitutionDescription />
       {state.selectedTab === "projects" && (
         <ProjectsTab
           institutionId={institutionId}
@@ -443,10 +513,12 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
       )}
       {state.selectedTab === "imagery" && (
         <ImageryTab
+          institutionId={institutionId}
           imageryList={state.imageryList}
           editImagery={editImageryBulk}
           deleteImagery={deleteImageryBulk}
           isAdmin={state.isAdmin}
+          getImageryList={getImageryList}
         />
       )}
       {state.selectedTab === "users" && (
@@ -457,573 +529,86 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   )
 };
 
-class NewImagery extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedType: 0,
-      imageryTitle: "",
-      imageryAttribution: "",
-      imageryParams: {},
-      isProxied: false,
-      addToAllProjects: false,
-    };
-  }
+export const InstitutionDescription = () => {
+  const [state] = useAtom(institutionPageAtom);
+  const institution = state?.institutionDetails || {};
 
-  componentDidMount() {
-    const { id } = this.props.imageryToEdit;
-    if (id !== -1) {
-      this.setImageryToEdit();
-    } else {
-      this.imageryTypeChangeHandler(0);
-    }
-  }
+  if (!institution?.description) return null;
 
-  getImageryParams = (type, imageryParams) => {
-    // TODO, this should be made generic based on parent / child relationship
-    // SecureWatch is not defined in imageryOptions in a way that will facilitate this.
-    if (type === "GeoServer") {
-      const {
-        geoserverUrl,
-        geoserverParams: { LAYERS, ...cleanGeoserverParams },
-      } = imageryParams;
-      return {
-        geoserverUrl,
-        LAYERS,
-        geoserverParams: JSON.stringify(cleanGeoserverParams),
-      };
-    } else if (type === "SecureWatch") {
-      const {
-        geoserverParams: { CONNECTID },
-        startDate,
-        endDate,
-        baseUrl,
-      } = imageryParams;
-      return {
-        connectid: CONNECTID,
-        startDate,
-        endDate,
-        baseUrl,
-      };
-    } else {
-      return imageryParams;
-    }
-  };
-
-  //    Remote Calls    //
-
-  sanitizeParams = (type, imageryParams) => {
-    const sanitizedParams = { ...imageryParams };
-    imageryOptions[type].params.forEach((param) => {
-      if (param.sanitizer) {
-        sanitizedParams[param.key] = param.sanitizer(sanitizedParams[param.key]);
-      }
-    });
-    return sanitizedParams;
-  };
-
-  validateParams = (type, imageryParams) => {
-    const parameterErrors = imageryOptions[type].params.map(
-      (param) =>
-      (param.required !== false &&
-       (!imageryParams[param.key] || imageryParams[param.key].length === 0) &&
-       `${param.display} is required.`) ||
-        (param.validator && param.validator(imageryParams[param.key]))
-    );
-    const imageryError =
-          imageryOptions[type].validator && imageryOptions[type].validator(imageryParams);
-    return [...parameterErrors, imageryError].filter((error) => error);
-  };
-
-  uploadCustomImagery = (isNew) => {
-    console.log("uploading custom imagery",
-                isNew, //true
-                this.state.imageryTitle.length, // 10+
-                this.state.imageryAttribution.length, //0
-                this.state.selectedType, //2
-                this.props.titleIsTaken(this.state.imageryTitle, this.props.imageryToEdit.id), //false
-                
-               );
-    const sanitizedParams = this.sanitizeParams(this.state.selectedType, this.state.imageryParams);
-    const messages = this.validateParams(this.state.selectedType, sanitizedParams);
-    if (messages.length > 0) {
-      this.setState ({modal: {alert: {alertType: "Imagery Upload", alertMessage: messages.join(", ")}}});
-    } else {
-      const sourceConfig = this.buildSecureWatch(this.stackParams(sanitizedParams)); // TODO define SecureWatch so stack params works correctly.
-      if (this.state.imageryTitle.length === 0 ||
-          (this.state.imageryAttribution.length === 0 && this.state.selectedType !== "14")) {
-        this.setState ({modal: {alert: {alertType: "Imagery Upload Error", alertMessage: "You must include a title and attribution."}}});
-      } else if (this.props.titleIsTaken(this.state.imageryTitle, this.props.imageryToEdit.id)) {
-        this.setState ({modal: {alert: {alertType: "Imagery Upload Error", alertMessage: "The title '" + this.state.imageryTitle + "' is already taken."}}});
-      } else {
-        console.log("fetching at", isNew ? "/add-institution-imagery" : "/update-institution-imagery");
-        fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery", {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            institutionId: this.props.institutionId,
-            imageryId: this.props.imageryToEdit.id,
-            imageryTitle: this.state.imageryTitle,
-            imageryAttribution: this.state.imageryAttribution,
-            isProxied: this.state.isProxied,
-            addToAllProjects: this.state.addToAllProjects,
-            sourceConfig,
-          }),
-        }).then((response) => {
-          if (response.ok) {
-            this.props.getImageryList();
-            this.props.hideEditMode();
-          } else {
-            console.log(response);
-            this.setState ({modal: {alert: {alertType: "Imagery Upload Error", alertMessage: "Error uploading imagery data. See console for details."}}});
-          }
-        });
-      }
-    }
-  };
-
-  //    Helper Functions    //
-
-  stackParams = (params) => {
-    try {
-      const imageryParams = imageryOptions[this.state.selectedType].params;
-      return Object.keys(params)
-        .sort((a) => (imageryParams.find((p) => p.key === a).parent ? 1 : -1)) // Sort params that require a parent to the bottom
-        .reduce(
-          (a, c) => {
-            const parentStr = imageryParams.find((p) => p.key === c).parent;
-            if (parentStr) {
-              const parentObj = JSON.parse(a[parentStr] || "{}");
-              return { ...a, [parentStr]: { ...parentObj, [c]: params[c] } };
-            } else {
-              return { ...a, [c]: params[c] };
-            }
-          },
-          { type: imageryOptions[this.state.selectedType].type }
-        );
-    } catch (e) {
-      return {};
-    }
-  };
-
-  // TODO this shouldn't be needed if SecureWatch is defined correctly in imageryOptions
-  buildSecureWatch = (sourceConfig) => {
-    if (sourceConfig.type === "SecureWatch") {
-      sourceConfig.geoserverUrl = `${sourceConfig.baseUrl}/mapservice/wmsaccess`;
-      const geoserverParams = {
-        VERSION: "1.1.1",
-        STYLES: "",
-        LAYERS: "DigitalGlobe:Imagery",
-        CONNECTID: sourceConfig.connectid,
-      };
-      sourceConfig.geoserverParams = geoserverParams;
-      delete sourceConfig.connectid;
-      return sourceConfig;
-    } else {
-      return sourceConfig;
-    }
-  };
-
-  //    Render Functions    //
-
-  formInput = (title, type, value, callback, link = null, options = {}) => (
-    <div key={title} className="mb-3">
-      <label>{title}</label> {link}
-      <input
-        autoComplete="off"
-        className="form-control"
-        onChange={(e) => callback(e)}
-        type={type}
-        value={value || ""}
-        {...options}
-      />
-    </div>
-  );
-
-  formSelect = (title, value, callback, options, link = null) => (
-    <div key={title} className="mb-3">
-      <label>{title}</label> {link}
-      <select className="form-control" onChange={(e) => callback(e)} value={value}>
-        {options}
-      </select>
-    </div>
-  );
-
-  formCheck = (title, checked, callback) => (
-    <div key={title} className="mb-0">
-      <label>
-        <input checked={checked} className="mr-2" onChange={callback} type="checkbox" />
-        {title}
-      </label>
-    </div>
-  );
-
-  formTextArea = (title, value, callback, link = null, options = {}) => (
-    <div key={title} className="mb-3">
-      <label>{title}</label> {link}
-      <textarea
-        className="form-control"
-        onChange={(e) => callback(e)}
-        value={value || ""}
-        {...options}
-      />
-    </div>
-  );
-
-  accessTokenLink = (url, key) =>
-  url && key === "accessToken" ? (
-    <a
-      href={imageryOptions[this.state.selectedType].url}
-      rel="noreferrer noopener"
-      target="_blank"
+  return (
+    <div
+      style={{
+        marginLeft: "22vw",
+        padding: "2rem 2rem 0 2rem",
+        boxSizing: "border-box",
+      }}
     >
-      Click here for help.
-    </a>
-  ) : null;
-
-  formTemplate = (o) =>
-  o.type === "select"
-    ? this.formSelect(
-      o.display,
-      this.state.imageryParams[o.key],
-      (e) =>
-      this.setState({
-        imageryParams: {
-          ...this.state.imageryParams,
-          [o.key]: e.target.value,
-        },
-        imageryAttribution:
-        imageryOptions[this.state.selectedType].type === "BingMaps"
-          ? "Bing Maps API: " + e.target.value + " | © Microsoft Corporation"
-          : this.state.imageryAttribution,
-      }),
-      o.options.map((el) => (
-        <option key={el.value} value={el.value}>
-          {el.label}
-        </option>
-      )),
-      this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key)
-    )
-    : ["textarea", "JSON"].includes(o.type)
-    ? this.formTextArea(
-      o.display,
-      this.state.imageryParams[o.key],
-      (e) =>
-      this.setState({
-        imageryParams: { ...this.state.imageryParams, [o.key]: e.target.value },
-      }),
-      this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
-      o.options ? o.options : {}
-    )
-    : this.formInput(
-      o.display,
-      o.type || "text",
-      this.state.imageryParams[o.key],
-      (e) =>
-      this.setState({
-        imageryParams: { ...this.state.imageryParams, [o.key]: e.target.value },
-      }),
-      this.accessTokenLink(imageryOptions[this.state.selectedType].url, o.key),
-      o.options ? o.options : {}
-    );
-
-  // Imagery Type Change Handler //
-
-  // TODO, this can be generalized back into imageryOptions
-  getImageryAttribution = (type) =>
-  type === "BingMaps"
-    ? "Bing Maps API: Aerial | © Microsoft Corporation"
-    : type.includes("Planet")
-    ? "Planet Labs Global Mosaic | © Planet Labs, Inc"
-    : type === "SecureWatch"
-    ? "SecureWatch Imagery | © Maxar Technologies Inc."
-    : ["Sentinel1", "Sentinel2", "DynamicWorld"].includes(type) || type.includes("GEE")
-    ? "Google Earth Engine | © Google LLC"
-    : type.includes("MapBox")
-    ? "© Mapbox"
-    : type === "OSM"
-    ? "Open Street Map"
-    : "";
-
-  setImageryToEdit = () => {
-    const { title, attribution, isProxied, sourceConfig } = this.props.imageryToEdit;
-    const { type, ...imageryParams } = sourceConfig;
-    const selectedType = imageryOptions.findIndex((io) => io.type === type);
-    this.setState({
-      selectedType,
-      imageryTitle: title,
-      imageryAttribution: attribution,
-      isProxied,
-      imageryParams: this.getImageryParams(type, imageryParams),
-    });
-  };
-
-  imageryTypeChangeHandler = (val) => {
-    const { type, params, defaultProxy } = imageryOptions[val];
-    const defaultState = params.reduce(
-      (acc, cur) => ({
-        ...acc,
-        [cur.key]: cur.type === "select" ? cur.options[0].value : "",
-      }),
-      {}
-    );
-    this.setState({
-      selectedType: val,
-      imageryAttribution: this.getImageryAttribution(type),
-      isProxied: defaultProxy,
-      imageryParams: defaultState,
-    });
-  };
-
-  render() {
-    const { tfoLayers, imageryToEdit } = this.props;
-    const isNewImagery = imageryToEdit.id === -1;
-    const { type, params, optionalProxy } = imageryOptions[this.state.selectedType];
-    // This is annoyingly hard coded.
-    const displayParams =
-          type === "PlanetTFO"
-          ? [
-            params[0],
-            {
-              ...params[1],
-              options: [
-                ...params[1].options,
-                ...tfoLayers.map((l) => ({ label: l.slice(34, l.length - 7), value: l })),
-              ],
-            },
-            params[2],
-          ]
-          : params;
-
-    return (
-      <div className="mb-2 p-4 border rounded">
-        {this.state.modal?.alert &&
-       <Modal title={this.state.modal.alert.alertType}
-              onClose={()=>{this.setState({modal: null});}}>
-         {this.state.modal.alert.alertMessage}
-       </Modal>}
-        {/* Selection for imagery type */}
-        <div className="mb-3">
-          <label>Select Type</label>
-          <select
-            className="form-control"
-            disabled={!isNewImagery}
-            onChange={(e) => this.imageryTypeChangeHandler(e.target.value)}
-            value={this.state.selectedType}
+      <div
+        style={{
+          border: "1px solid #cce0dc",
+          borderRadius: "6px",
+          background: "#f9fcfb",
+          padding: "1.5rem 2rem",
+          fontFamily: "inherit",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            fontWeight: 600,
+            color: "#1a3c36",
+            marginBottom: "0.75rem",
+          }}
+        >
+          <span
+            style={{
+              color: "#2f615e",
+              transform: "rotate(90deg)",
+              fontSize: "1.2rem",
+              marginTop: "-0.2rem",
+            }}
           >
-            {/* eslint-disable-next-line react/no-array-index-key */}
-            {imageryOptions.map((o, i) => (
-              <option key={i} value={i}>
-                {o.label || o.type}
-              </option>
-            ))}
-          </select>
+            ▲
+          </span>
+          <span>Institution Description</span>
         </div>
-        {/* Add fields. Include same for all and unique to selected type. */}
-        {this.formInput("Title", "text", this.state.imageryTitle, (e) =>
-          this.setState({ imageryTitle: e.target.value })
+        {institution.base64Image && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <img
+              src={`data:image/png;base64,${institution.base64Image}`}
+              alt="Institution logo"
+              style={{
+                width: "160px",
+                height: "auto",
+                objectFit: "contain",
+                borderRadius: "8px",
+              }}
+            />
+          </div>
         )}
-        {/* This should be generalized into the imageryOptions */}
-        {["GeoServer", "xyz"].includes(type) &&
-         this.formInput("Attribution", "text", this.state.imageryAttribution, (e) =>
-           this.setState(s => ({...s, imageryAttribution: e.target.value }))
-         )}
-        {displayParams.map((o) => this.formTemplate(o))}
-        {optionalProxy &&
-         this.formCheck("Proxy Imagery", this.state.isProxied, () =>
-           this.setState({ isProxied: !this.state.isProxied })
-         )}
-        {/* Add Imagery to All Projects checkbox */}
-        <div className="mb-3">
-          <input
-            checked={this.state.addToAllProjects}
-            className="mr-2"
-            id="add-to-all"
-            onChange={() => this.setState({ addToAllProjects: !this.state.addToAllProjects })}
-            type="checkbox"
-          />
-          <label htmlFor="add-to-all">Add Imagery to All Projects When Saving</label>
-        </div>
-        <div className="row">
-          <div className="col-6">
-            <button
-              className="btn btn-sm btn-block btn-outline-lightgreen btn-group py-2 font-weight-bold"
-              id="add-imagery-button"
-              onClick={() => this.uploadCustomImagery(isNewImagery)}
-              style={{
-                alignItems: "center",
-                display: "flex",
-                justifyContent: "center",
-              }}
-              type="button"
-            >
-              {isNewImagery ? (
-                <>
-                  <SvgIcon icon="plus" size="1rem" />
-                  <span style={{ marginLeft: "0.4rem" }}>Add New Imagery</span>
-                </>
-              ) : (
-                <>
-                  <SvgIcon icon="save" size="1rem" />
-                  <span style={{ marginLeft: "0.4rem" }}>Save Imagery Changes</span>
-                </>
-              )}
-            </button>
-          </div>
-          <div className="col-6">
-            <button
-              className="btn btn-sm btn-block btn-outline-red btn-group py-2 font-weight-bold"
-              onClick={this.props.hideEditMode}
-              style={{
-                alignItems: "center",
-                display: "flex",
-                justifyContent: "center",
-              }}
-              type="button"
-            >
-              <SvgIcon icon="cancel" size="1rem" />
-              <span style={{ marginLeft: "0.4rem" }}>Cancel Changes</span>
-            </button>
-          </div>
-        </div>
+
+        <p
+          style={{
+            color: "#4a4a4a",
+            fontSize: "1rem",
+            lineHeight: "1.6",
+            margin: 0,
+          }}
+        >
+          {institution.description}
+        </p>
       </div>
-    );
-  }
-}
-
-class UserList extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      institutionUserList: [],
-    };
-  }
-
-  componentDidMount() {
-    this.getInstitutionUserList();
-  }
-
-  getInstitutionUserList = () => {
-    fetch(`/get-institution-users?institutionId=${this.props.institutionId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.props.setUsersCount(data.filter((user) => user.institutionRole !== "pending").length);
-        this.setState({ institutionUserList: data });
-      })
-      .catch((response) => {
-        this.setState({ institutionUserList: [] });
-        console.log(response);
-        this.setState (s => ({... s, modal: {alert: {alertType: "User List Error", alertMessage: "Error retrieving the user list. See console for details."}}}));
-      });
-  };
-
-  updateUserInstitutionRole = (accountId, newUserEmail, newInstitutionRole) => {
-    const existingRole = (this.state.institutionUserList.find((u) => u.id === accountId) || {})
-          .institutionRole;
-    const lowerCaseNewUserEmail = newUserEmail?.toLowerCase();
-    const adminCount = this.state.institutionUserList.filter(
-      (user) => user.institutionRole === "admin"
-    ).length;
-    if (existingRole === "admin" && adminCount === 1) {
-      this.setState ({modal: {alert: {alertType: "Update User Institution Role Error", alertMessage: "You cannot modify the last admin of an institution."}}});
-    } else {
-      this.props.processModal(
-        "Updating user",
-        fetch("/update-user-institution-role", {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            accountId,
-            newUserEmail: lowerCaseNewUserEmail,
-            institutionId: this.props.institutionId,
-            institutionRole: newInstitutionRole,
-          }),
-        })
-          .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-          .then((message) => {
-            this.setState ({modal: {alert: {alertType: "Institution Users Error", alertMessage: message}}});
-            this.getInstitutionUserList();
-          })
-          .catch((response) => {
-            console.log(response);
-            this.setState ({modal: {alert: {alertType: "Institution Users Error", alertMessage: "Error updating institution details. See console for details."}}});
-          })
-      );
-    }
-  };
-
-  requestMembership = () => {
-    fetch("/request-institution-membership", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        institutionId: this.props.institutionId,
-      }),
-    })
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((message) => {
-        this.setState ({modal: {alert: {alertType: "Membership Request Error", alertMessage: message}}});
-        this.getInstitutionUserList();
-      })
-      .catch((response) => {
-        console.log(response);
-        this.setState ({modal: {alert: {alertType: "Membership Request Error", alertMessage: "Error requesting institution membership. See console for details."}}});
-      });
-  };
-
-  currentIsInstitutionMember = () =>
-  this.props.userId === 1 ||
-    this.state.institutionUserList.some((iu) => iu.id === this.props.userId);
-
-  isInstitutionMember = (userEmail) =>
-  this.state.institutionUserList.some((iu) => iu.email === userEmail);
-
-  render() {
-    return (
-      this.props.isVisible && (
-        <>
-          <div className="mb-3">
-            This is a list of all institution users. An institution admin can create and update
-            projects and imagery for the institution. Members can view projects with the visibility
-            Institution or higher.
-          </div>
-          <NewUserButtons
-            currentIsInstitutionMember={this.currentIsInstitutionMember()}
-            isAdmin={this.props.isAdmin}
-            isInstitutionMember={this.isInstitutionMember}
-            requestMembership={this.requestMembership}
-            updateUserInstitutionRole={this.updateUserInstitutionRole}
-            userId={this.props.userId}
-          />
-          {this.state.institutionUserList
-           .filter(
-             (iu) =>
-             iu.id === this.props.userId || this.props.isAdmin || iu.institutionRole === "admin"
-           )
-           .sort((a, b) => sortAlphabetically(a.email, b.email))
-           .sort((a, b) => sortAlphabetically(a.institutionRole, b.institutionRole))
-           .map((iu) => (
-             <User
-               key={iu.email}
-               isAdmin={this.props.isAdmin}
-               updateUserInstitutionRole={this.updateUserInstitutionRole}
-               user={iu}
-             />
-           ))}
-        </>
-      )
-    );
-  }
-}
+    </div>
+  );
+};
 
 const NewUserButtons = ({
   isAdmin,

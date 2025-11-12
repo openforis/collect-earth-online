@@ -114,7 +114,7 @@ export const ProjectsTab = ({
   return (
     <div
       style={{
-        marginLeft: "18vw",
+        marginLeft: "22vw",
         padding: "2rem",
       }}
     >

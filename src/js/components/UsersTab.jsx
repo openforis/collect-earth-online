@@ -89,7 +89,7 @@ export const UsersTab = ({
   };
 
   return (
-    <div style={{ marginLeft: "18vw", padding: "2rem" }}>
+    <div style={{ marginLeft: "22vw", padding: "2rem" }}>
       <div
         style={{
           display: "flex",
