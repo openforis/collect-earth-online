@@ -149,8 +149,10 @@
    [:post "/publish-project"]                {:handler     (validate projects/publish-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
-
-   [:post "/check-plot-csv"]                 {:handler     (validate projects/check-plot-csv)
+   [:post "/copy-project"]                   {:handler     projects/copy-project!
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:post "/check-plot-csv"]                 {:handler     projects/check-plot-csv
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/import-ce-project"]              {:handler     (validate #'ce-project/import-ce-project)
@@ -161,7 +163,7 @@
    [:get "/project-stats"]                   {:handler     #'qaqc/get-project-stats
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/sot-disagreement"]               {:handler    #'qaqc/disagreement-by-sot
+   [:post "/sot-disagreement"]               {:handler     #'qaqc/disagreement-by-sot
                                               :auth-type   :admin
                                               :auth-action :block}
    [:get "/qaqc-plot"]                       {:handler     #'qaqc/get-qaqc-plot
