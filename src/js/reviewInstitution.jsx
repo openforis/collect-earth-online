@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
+import { createPortal } from "react-dom";
 import { useAtom } from "jotai";
 
 import { institutionPageAtom } from "./state/institutionPage";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 import { LoadingModal, NavigationBar, BreadCrumbs } from "./components/PageComponents";
+import { KBtoBase64Length } from "./utils/generalUtils";
 import { ProjectsTab } from "./components/ProjectsTab";
 import { ImageryTab } from "./components/ImageryTab";
 
@@ -16,10 +18,11 @@ export const SidebarTabs = ({
   activeTab,
   onChange,
   institutionName,
-  onEditInstitution,
   onViewDashboard,
+  onUpdateInstitution,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [showUpdateInstitution, setShowUpdateInstitution] = useState(false);
 
   const menuItemStyle = {
     display: "flex",
@@ -42,6 +45,11 @@ export const SidebarTabs = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const onSaveInstitution = (params) => {
+    onUpdateInstitution(params);
+    setShowUpdateInstitution(false);
+  }
 
   return (
     <div
@@ -105,7 +113,7 @@ export const SidebarTabs = ({
                 style={menuItemStyle}
                 onClick={() => {
                   setShowMenu(false);
-                  onEditInstitution();
+                  setShowUpdateInstitution(true);
                 }}
               >
                 <SvgIcon icon="edit" size="1rem" />
@@ -192,13 +200,19 @@ export const SidebarTabs = ({
           </button>
         );
       })}
+      {showUpdateInstitution && createPortal(
+        <EditInstitutionModal
+          onClose={setShowUpdateInstitution}
+          onSave={onSaveInstitution}
+        />,
+        document.body
+      )}
     </div>
   );
 };
 
 export const ReviewInstitution = ({ institutionId, userId }) => {
   const [state, setState] = useAtom(institutionPageAtom);
-
   const setIsAdmin = (isAdmin) => setState((s) => ({ ...s, isAdmin }));
   const setSelectedTab = (tab) => setState((s) => ({ ...s, selectedTab: tab }));
   const setModal = (modal) => setState((s) => ({ ...s, modal }));
@@ -309,48 +323,6 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
         });
       });
   };
-  
-  const archiveProject = (projectId) => {
-    if (confirm("Do you REALLY want to delete this project? This operation cannot be undone.")) {
-      fetch(`/archive-project?projectId=${projectId}`, { method: "POST" }).then((response) => {
-        if (response.ok) {
-          getProjectList();
-          showAlert({
-            title: "Project Info",
-            body: `Project ${projectId} has been deleted.`,
-          });
-        } else {
-          console.error(response);
-          showAlert({
-            title: "Project Info Error",
-            body: "Error deleting project. See console for details.",
-          });
-        }
-      });
-    }
-  }
-
-  const deleteProjectDraft = (projectDraftId) => {
-    if (confirm("Do you REALLY want to delete this project draft? This operation cannot be undone.")) {
-      fetch(`/delete-project-draft?projectDraftId=${projectDraftId}`, { method: "GET" }).then(
-        (response) => {
-          if (response.ok) {
-            getProjectList();
-            showAlert({
-              title: "Project Info",
-              body: `Project ${projectDraftId} has been deleted.`,
-            });
-          } else {
-            console.error(response);
-            showAlert({
-              title: "Project Info Error",
-              body: "Error deleting project draft. See console for details.",
-            });
-          }
-        }
-      );
-    }
-  }
 
   const deleteProjectsBulk = (projectIds) => {
     if (confirm("Do you REALLY want to delete ALL selected projects? This operation cannot be undone.")) {
@@ -473,6 +445,66 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
     }
   }
 
+  const updateInstitution = (params) => {
+    const { base64Image, name, description, imageName, url } = params;
+
+    if (base64Image?.length > KBtoBase64Length(500)) {
+      setModal({
+        alert: {
+          alertType: "Institution Info Error",
+          alertMessage: "Institution logos must be smaller than 500kb",
+        },
+      });
+    } else if (!name?.trim()) {
+      setModal({
+        alert: {
+          alertType: "Institution Info Error",
+          alertMessage: "Institution must have a name.",
+        },
+      });
+    } else if (!description?.trim()) {
+      setModal({
+        alert: {
+          alertType: "Institution Info Error",
+          alertMessage: "Institution must have a description.",
+        },
+      });
+    } else {
+      fetch(`/update-institution?institutionId=${institutionId}`, {
+        method: "POST",
+        body: JSON.stringify({
+          institutionId,
+          ...params
+        }),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => Promise.all([response.ok, response.json()]))
+        .then(([ok, data]) => {
+          if (ok && data === "") {
+            getInstitutionDetails();
+          } else {
+            setModal({
+              alert: {
+                alertType: "Institution Info",
+                alertMessage: data || "Unexpected response from server.",
+              },
+            });
+          }
+        })
+        .catch(() => {
+          setModal({
+            alert: {
+              alertType: "Institution Info Error",
+              alertMessage: "Error updating institution details.",
+            },
+          });
+        });
+    }
+  };
+
   useEffect(() => {
     getProjectList();
     getImageryList();
@@ -488,6 +520,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
           { id: "imagery", label: "Imagery", icon: "imagery", badge: safeLength(state.imageryList) || 0 },
           { id: "users", label: "Users", icon: "users", badge: safeLength(state.usersList) || 0 },
         ]}
+        onUpdateInstitution={updateInstitution}
         institutionName={state.institutionDetails.name}
         activeTab={state.selectedTab}
         onChange={setSelectedTab}
@@ -610,7 +643,7 @@ export const InstitutionDescription = () => {
   );
 };
 
-export const EditInstitutionModal = ({ onClose, onSave }) => {
+export const EditInstitutionModal = ({ onClose, onSave}) => {
   const [state] = useAtom(institutionPageAtom);
   const institution = state?.institutionDetails || {};
   const [name, setName] = useState(institution.name || "");
@@ -630,14 +663,12 @@ export const EditInstitutionModal = ({ onClose, onSave }) => {
 
   const handleSave = () => {
     const payload = {
-      ...institution,
       name,
       url,
       description,
       imageName: logoName,
       base64Image,
     };
-
     onSave(payload);
   };
 
@@ -708,88 +739,6 @@ export const EditInstitutionModal = ({ onClose, onSave }) => {
     </Modal>
   );
 };
-
-const NewUserButtons = ({
-  isAdmin,
-  isInstitutionMember,
-  updateUserInstitutionRole,
-  userId,
-  currentIsInstitutionMember,
-  requestMembership,
-}) => {
-  const [newUserEmail, setNewUserEmail] = useState([]);
-
-  const checkUserEmail = () => {
-    if (newUserEmail.length === 0) {
-      this.setState ({modal: {alert: {alertType: "Update User Error", alertMessage: "Please enter an existing user's email address."}}});
-      return false;
-    } else if (isInstitutionMember(newUserEmail)) {
-      this.setState ({modal: {alert: {alertType: "Update User Error", alertMessage: this.state.newUserEmail + " is already a member of this institution."}}});
-      return false;
-    } else {
-      return true;
-    }
-  };
-
-  const addUser = () => {
-    updateUserInstitutionRole(null, newUserEmail, "member");
-  };
-
-  return (
-    <>
-      {isAdmin && (
-        <div className="row mb-3">
-          <div className="col-8">
-            <input
-              autoComplete="off"
-              className="form-control form-control-sm py-2"
-              onChange={(e) => setNewUserEmail(e.target.value)}
-              placeholder="Email"
-              style={{ height: "100%" }}
-              type="email"
-              value={newUserEmail}
-            />
-          </div>
-          <div className="col-4 pl-0">
-            <button
-              className="btn btn-sm btn-lightgreen btn-block py-2 font-weight-bold"
-              onClick={() => checkUserEmail() && addUser()}
-              style={{
-                alignItems: "center",
-                display: "flex",
-                justifyContent: "center",
-              }}
-              type="button"
-            >
-              <SvgIcon icon="plus" size="1rem" />
-              <span style={{ marginLeft: "0.4rem" }}>Add User</span>
-            </button>
-          </div>
-        </div>
-      )}
-      {userId > 0 && !currentIsInstitutionMember && (
-        <div>
-          <button
-            className="btn btn-sm btn-lightgreen btn-block mb-3"
-            id="request-membership-button"
-            onClick={requestMembership}
-            style={{
-              alignItems: "center",
-              display: "flex",
-              justifyContent: "center",
-            }}
-            type="button"
-          >
-            <SvgIcon icon="plus" size="1rem" />
-            <span style={{ marginLeft: "0.4rem" }}>Request Membership</span>
-          </button>
-        </div>
-      )}
-    </>
-  );
-};
-
-
 
 export function pageInit(params, session) {
   let [] = 
