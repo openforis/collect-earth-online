@@ -640,8 +640,6 @@ h2.header {
     overflow-y: auto;
 }
 .modal-header {
-    color: white;
-    background: var(--lightgreen);
     padding: 1rem;
     min-height: 57px;
 }
@@ -655,7 +653,7 @@ h2.header {
     font-size: 1rem;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
 		 sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    color: white;
+    color: black;
 }
 .modal-footer {
     min-height: 71px;

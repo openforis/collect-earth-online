@@ -610,6 +610,105 @@ export const InstitutionDescription = () => {
   );
 };
 
+export const EditInstitutionModal = ({ onClose, onSave }) => {
+  const [state] = useAtom(institutionPageAtom);
+  const institution = state?.institutionDetails || {};
+  const [name, setName] = useState(institution.name || "");
+  const [url, setUrl] = useState(institution.url || "");
+  const [logoName, setLogoName] = useState(institution.imageName || "");
+  const [description, setDescription] = useState(institution.description || "");
+  const [base64Image, setBase64Image] = useState(institution.base64Image || "");
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setLogoName(file.name);
+    const reader = new FileReader();
+    reader.onloadend = () => setBase64Image(reader.result.split(",")[1]);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = () => {
+    const payload = {
+      ...institution,
+      name,
+      url,
+      description,
+      imageName: logoName,
+      base64Image,
+    };
+
+    onSave(payload);
+  };
+
+  return (
+    <Modal
+      title="Edit Institution"
+      closeText="Cancel"
+      confirmText="Save Changes"
+      onClose={onClose}
+      onConfirm={handleSave}
+    >
+      <div className="p-2">
+        <div className="mb-3">
+          <label className="form-label">
+            Name <span style={{ color: "red" }}>*</span>
+          </label>
+          <input
+            type="text"
+            className="form-control"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Institution Name"
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">URL</label>
+          <input
+            type="text"
+            className="form-control"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="http://example.com"
+          />
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Logo</label>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <input type="text" className="form-control" value={logoName} readOnly />
+            <label
+              className="btn btn-outline-secondary mb-0"
+              style={{ whiteSpace: "nowrap" }}
+            >
+              Browse
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleFileChange}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">
+            Description <span style={{ color: "red" }}>*</span>
+          </label>
+          <textarea
+            className="form-control"
+            rows="4"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
 const NewUserButtons = ({
   isAdmin,
   isInstitutionMember,

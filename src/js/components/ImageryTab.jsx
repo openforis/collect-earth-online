@@ -3,6 +3,7 @@ import DataTable from "react-data-table-component";
 import { BulkActions } from "./BulkActions";
 import SvgIcon from "./svg/SvgIcon";
 import { imageryOptions } from "../imagery/imageryOptions";
+import Modal from "./Modal";
 
 export const ImageryTab = ({
   imageryList = [],
@@ -70,7 +71,7 @@ export const ImageryTab = ({
                     cursor: "pointer",
                     fontWeight: 500,
                   }}
-                  onClick={() => handleOpenNewImagery(row)} // ✅ open edit modal
+                  onClick={() => handleOpenNewImagery(row)}
                 >
                   Edit
                 </button>
@@ -249,13 +250,13 @@ export const NewImagery = ({
   const validateParams = (typeIndex, params) => {
     const paramErrors = imageryOptions[typeIndex].params.map(
       (p) =>
-        (p.required !== false &&
-          (!params[p.key] || params[p.key].length === 0) &&
-          `${p.display} is required.`) ||
+      (p.required !== false &&
+       (!params[p.key] || params[p.key].length === 0) &&
+       `${p.display} is required.`) ||
         (p.validator && p.validator(params[p.key]))
     );
     const imageryError =
-      imageryOptions[typeIndex].validator && imageryOptions[typeIndex].validator(params);
+          imageryOptions[typeIndex].validator && imageryOptions[typeIndex].validator(params);
     return [...paramErrors, imageryError].filter(Boolean);
   };
 
@@ -296,19 +297,19 @@ export const NewImagery = ({
   };
 
   const getImageryAttribution = (type) =>
-    type === "BingMaps"
-      ? "Bing Maps API: Aerial | © Microsoft Corporation"
-      : type.includes("Planet")
-      ? "Planet Labs Global Mosaic | © Planet Labs, Inc"
-      : type === "SecureWatch"
-      ? "SecureWatch Imagery | © Maxar Technologies Inc."
-      : ["Sentinel1", "Sentinel2", "DynamicWorld"].includes(type) || type.includes("GEE")
-      ? "Google Earth Engine | © Google LLC"
-      : type.includes("MapBox")
-      ? "© Mapbox"
-      : type === "OSM"
-      ? "Open Street Map"
-      : "";
+        type === "BingMaps"
+        ? "Bing Maps API: Aerial | © Microsoft Corporation"
+        : type.includes("Planet")
+        ? "Planet Labs Global Mosaic | © Planet Labs, Inc"
+        : type === "SecureWatch"
+        ? "SecureWatch Imagery | © Maxar Technologies Inc."
+        : ["Sentinel1", "Sentinel2", "DynamicWorld"].includes(type) || type.includes("GEE")
+        ? "Google Earth Engine | © Google LLC"
+        : type.includes("MapBox")
+        ? "© Mapbox"
+        : type === "OSM"
+        ? "Open Street Map"
+        : "";
 
   const imageryTypeChangeHandler = (val) => {
     const { type, params, defaultProxy } = imageryOptions[val];
@@ -448,8 +449,8 @@ export const NewImagery = ({
 
   const { type, params, optionalProxy } = imageryOptions[selectedType];
   const displayParams =
-    type === "PlanetTFO"
-      ? [
+        type === "PlanetTFO"
+        ? [
           params[0],
           {
             ...params[1],
@@ -463,103 +464,70 @@ export const NewImagery = ({
           },
           params[2],
         ]
-      : params;
+        : params;
 
   return (
-    <div
-      className="modal fade show"
-      style={{
-        display: "block",
-        backgroundColor: "rgba(0, 0, 0, 0.4)",
-        zIndex: 1050,
-        overflowY: "auto",
-      }}
-      onClick={onClose}
+    <Modal
+      title={isNewImagery ? "Add New Imagery" : "Edit Imagery"}
+      closeText="Cancel"
+      confirmText={isNewImagery ? "Add Imagery" : "Save Changes"}
+      onClose={onClose}
+      onConfirm={() => uploadCustomImagery(isNewImagery)}
     >
-      <div className="modal-dialog modal-dialog-centered modal-lg" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-content p-4">
-          <h3 className="mb-4 font-weight-bold">
-            {isNewImagery ? "Add New Imagery" : "Edit Imagery"}
-          </h3>
-          <hr/>
+      <div className="p-2">
+        <div className="mb-3">
+          <label className="form-label">
+            Select Type <span style={{ color: "red" }}>*</span>
+          </label>
+          <select
+            className="form-control"
+            disabled={!isNewImagery}
+            onChange={(e) => imageryTypeChangeHandler(parseInt(e.target.value))}
+            value={selectedType}
+          >
+            {imageryOptions.map((o, i) => (
+              <option key={i} value={i}>
+                {o.label || o.type}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          <div className="mb-3">
-            <label className="form-label">
-              Select Type <span style={{ color: "red" }}>*</span>
-            </label>
-            <select
-              className="form-control"
-              disabled={!isNewImagery}
-              onChange={(e) => imageryTypeChangeHandler(parseInt(e.target.value))}
-              value={selectedType}
-            >
-              {imageryOptions.map((o, i) => (
-                <option key={i} value={i}>
-                  {o.label || o.type}
-                </option>
-              ))}
-            </select>
-          </div>
+        {formInput("Title", "text", imageryTitle, setImageryTitle, true)}
 
-          {formInput("Title", "text", imageryTitle, setImageryTitle, true)}
+        {["GeoServer", "xyz"].includes(type) &&
+         formInput("Attribution", "text", imageryAttribution, setImageryAttribution, true)}
 
-          {["GeoServer", "xyz"].includes(type) &&
-            formInput("Attribution", "text", imageryAttribution, setImageryAttribution, true)}
+        {displayParams.map((o) => formTemplate(o))}
 
-          {displayParams.map((o) => formTemplate(o))}
-
-          {optionalProxy && (
-            <div className="form-check mb-3">
-              <input
-                type="checkbox"
-                className="form-check-input"
-                id="proxy"
-                checked={isProxied}
-                onChange={() => setIsProxied(!isProxied)}
-              />
-              <label htmlFor="proxy" className="form-check-label">
-                Proxy Imagery
-              </label>
-            </div>
-          )}
-
+        {optionalProxy && (
           <div className="form-check mb-3">
             <input
               type="checkbox"
               className="form-check-input"
-              id="addToAll"
-              checked={addToAllProjects}
-              onChange={() => setAddToAllProjects(!addToAllProjects)}
+              id="proxy"
+              checked={isProxied}
+              onChange={() => setIsProxied(!isProxied)}
             />
-            <label htmlFor="addToAll" className="form-check-label">
-              Add Imagery to All Projects When Saving
+            <label htmlFor="proxy" className="form-check-label">
+              Proxy Imagery
             </label>
           </div>
-          <hr/>
+        )}
 
-          <div className="d-flex justify-content-end mt-4"
-               style={{ gap: "0.75rem" }}>
-            <button className="btn btn-outline-secondary" onClick={onClose}>
-              Cancel
-            </button>
-            <button className="btn"
-                    style={{
-                      background: "#2f615e",
-                      color: "white",
-                      border: "none",
-                      padding: "8px 16px",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                    onClick={() => uploadCustomImagery(isNewImagery)}>
-              {isNewImagery ? "Add Imagery" : "Save Changes"}
-            </button>
-          </div>
+        <div className="form-check mb-3">
+          <input
+            type="checkbox"
+            className="form-check-input"
+            id="addToAll"
+            checked={addToAllProjects}
+            onChange={() => setAddToAllProjects(!addToAllProjects)}
+          />
+          <label htmlFor="addToAll" className="form-check-label">
+            Add Imagery to All Projects When Saving
+          </label>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
