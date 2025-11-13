@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { LoadingModal } from "./PageComponents";
+import { stateAtom } from "../utils/constants";
+import { LoadingModal, StatsModal } from "./PageComponents";
 import Modal from "./Modal";
 import SvgIcon from "./svg/SvgIcon";
 import '../../css/sidebar.css';
@@ -41,25 +42,25 @@ export const SidebarCard = ({
   collapsible = false,
   defaultOpen = true,
   infoButton = false,
-  onInfoClick,
+  onInfoClick,  
 }) => {
   const [open, setOpen] = useState(defaultOpen);
+  const {showInfoModal} = useAtomValue(stateAtom);
 
   return (
     <div className="sidebar-card">
+      {showInfoModal && <StatsModal/>}
       <div
         className="sidebar-header"
         style={{
           display: "flex",
-          justifyContent: "space-between",
+          /* justifyContent: "space-between", */
           alignItems: "center",
           cursor: collapsible ? "pointer" : "default",
         }}
         onClick={collapsible ? () => setOpen(!open) : undefined}
       >
-        <span className="sidebar-title">{title}</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          {infoButton && (
+        {infoButton && (
             <button
               className="sidebar-info-button"
               onClick={(e) => {
@@ -67,9 +68,12 @@ export const SidebarCard = ({
                 if (onInfoClick) onInfoClick();
               }}
             >
-              <SvgIcon icon="info" size="1rem" />
+          <SvgIcon icon="info" size="1rem" style={{marginBottom: "3.5px"}}/>
             </button>
           )}
+        <span className="sidebar-title">{title}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          
           {collapsible && (
             <button
               className="sidebar-collapse-button"

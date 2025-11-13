@@ -190,11 +190,14 @@ export const NewPlotNavigation = () => {
       }));
     }
   };
-  
+
+ 
   return (
     <SidebarCard
+      infoButton={true}
+      onInfoClick={()=>{setAppState((s) => ({... s, showInfoModal: !s.showInfoModal}));}}
       title={
-        <>
+        <>         
           {currentProject?.name}
           <span className="sidebar-subtitle"> ({currentProject?.numPlots} Plots)</span>
         </>

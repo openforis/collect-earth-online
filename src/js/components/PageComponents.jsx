@@ -415,6 +415,38 @@ export function LogoBanner() {
   );
 }
 
+export function StatsModal() {
+  const {showInfoModal} = useAtomValue(stateAtom);
+  const setState = useSetAtom(stateAtom);
+  
+  return (
+    <div
+      style={{
+        position: "fixed",
+        zIndex: "100",
+        left: "0",
+        top: "0",
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgba(0,0,0,0.4)",
+      }}
+    >
+      <label className="m-0 mr-3">These are Stats</label>
+      <div className="modal-footer">            
+            <button
+              className="btn btn-danger btn-sm"
+              id="quit-button"
+              onClick={() =>
+                setState((s) => ({... s, showInfoModal: !showInfoModal}))
+              }
+              type="button"
+            >
+              X
+            </button>
+          </div>
+    </div>);
+};
+
 export function LoadingModal({ message }) {
   return (
     <div
