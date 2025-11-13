@@ -290,7 +290,6 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
     })
   }
 
-
   const updateInstitution = (params) => {
     const { base64Image, name, description, imageName, url } = params;
 

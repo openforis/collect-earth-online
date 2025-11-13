@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 import { BulkActions } from "./BulkActions";
 import SvgIcon from "./svg/SvgIcon";
+import Modal from "./Modal";
 
 export const UsersTab = ({
   usersList = [],
@@ -11,6 +12,7 @@ export const UsersTab = ({
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [filterText, setFilterText] = useState("");
+  const [showAddUsers, setShowAddUsers] = useState(false);
 
   const filteredUsers = useMemo(() => {
     const lower = filterText.toLowerCase();
@@ -115,7 +117,7 @@ export const UsersTab = ({
               alignItems: "center",
               gap: "6px",
             }}
-            onClick={() => window.location.assign("/add-user")}
+            onClick={() => setShowAddUsers(true)}
           >
             <SvgIcon icon="plus" size="1rem" />
             Add User
@@ -169,6 +171,127 @@ export const UsersTab = ({
         noDataComponent="No users found."
         sortIcon={<SvgIcon icon="downCaret" size="0.9rem" />}
       />
+      {showAddUsers &&
+       <AddUsersModal
+         onClose={() => setShowAddUsers(false)}
+         onAdd={(rows) => addUsersBulk(rows)}
+       />
+      }
     </div>
+  );
+};
+
+export const AddUsersModal = ({ onClose, onAdd }) => {
+  const [rows, setRows] = useState([
+    { email: "", role: "admin" },
+  ]);
+
+  const addRow = () =>
+    setRows((prev) => [...prev, { email: "", role: "admin" }]);
+
+  const updateRow = (index, key, value) =>
+    setRows((prev) =>
+      prev.map((row, i) =>
+        i === index ? { ...row, [key]: value } : row
+      )
+    );
+
+  const deleteRow = (index) =>
+    setRows((prev) => prev.filter((_, i) => i !== index));
+
+  const handleConfirm = () => {
+    onAdd(rows);
+    onClose();
+  };
+
+  return (
+    <Modal
+      title="Add Users"
+      closeText="Cancel"
+      confirmText="Add Users"
+      onClose={onClose}
+      onConfirm={handleConfirm}
+    >
+      <div className="p-2">
+
+        {rows.map((row, i) => (
+          <div
+            key={i}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr auto",
+              gap: "1rem",
+              alignItems: "end",
+              marginBottom: "1rem",
+            }}
+          >
+            <div>
+              <label className="form-label">
+                Email Address <span style={{ color: "red" }}>*</span>
+              </label>
+              <input
+                type="email"
+                className="form-control"
+                placeholder="Enter"
+                value={row.email}
+                onChange={(e) => updateRow(i, "email", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="form-label">
+                Role <span style={{ color: "red" }}>*</span>
+              </label>
+              <select
+                className="form-control"
+                value={row.role}
+                onChange={(e) => updateRow(i, "role", e.target.value)}
+              >
+                <option value="admin">Admin</option>
+                <option value="member">Member</option>
+              </select>
+            </div>
+
+            {rows.length > 1 && (
+              <button
+                onClick={() => deleteRow(i)}
+                style={{
+                  border: "1px solid #C62828",
+                  background: "white",
+                  padding: "6px 10px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  height: "38px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <SvgIcon icon="trash" size="1rem" color="#C62828" />
+              </button>
+            )}
+          </div>
+        ))}
+
+        <button
+          onClick={addRow}
+          style={{
+            background: "#2f615e",
+            color: "white",
+            border: "none",
+            padding: "10px 16px",
+            borderRadius: "6px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            marginTop: "0.5rem",
+          }}
+        >
+          <SvgIcon icon="plus" size="1rem" />
+          Add User
+        </button>
+      </div>
+    </Modal>
   );
 };
