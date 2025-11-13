@@ -242,7 +242,7 @@ export function ImageryVisibilityPopup({ selectedImagery, editImageryBulk }) {
               value="public"
               onChange={handleVisibilityChange}
             />
-            <label htmlFor="public">Institutuion Public Imagery</label>
+            <label htmlFor="public">Institution Public Imagery</label>
           </div>
           <div className="popup-option">
             <input
