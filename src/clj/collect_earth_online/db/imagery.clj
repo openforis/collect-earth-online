@@ -107,7 +107,7 @@
 
 (defn bulk-archive-institution-imagery [{:keys [params]}]
   (let [imagery-ids (cstr/join "," (:imageryIds params))
-        institution-id (:insitutionId params)]
+        institution-id (:institutionId params)]
     (call-sql "archive_imagery_bulk" imagery-ids institution-id)
     (data-response "")))
 

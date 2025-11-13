@@ -53,7 +53,7 @@ export const UsersTab = ({
               fontWeight: 500,
             }}
             onClick={() =>
-              window.location.assign(`/user-stats?userId=${row.id}`)
+              window.location.assign(`/account?accountId=${row.id}`)
             }
           >
             View User Stats

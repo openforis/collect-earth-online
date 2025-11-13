@@ -1,5 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
+
+
 import { BulkActions } from "./BulkActions";
 import SvgIcon from "./svg/SvgIcon";
 import { imageryOptions } from "../imagery/imageryOptions";
@@ -434,7 +436,7 @@ export const NewImagery = ({
     }).then((response) => {
       if (response.ok) {
         getImageryList();
-        onClose(); // ✅ close on success
+        onClose();
       } else {
         console.error(response);
         setModal({

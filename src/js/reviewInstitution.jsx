@@ -14,203 +14,6 @@ import { UsersTab } from "./components/UsersTab";
 
 import { safeLength } from "./utils/sequence";
 
-export const SidebarTabs = ({
-  tabs,
-  activeTab,
-  onChange,
-  institutionName,
-  onViewDashboard,
-  onUpdateInstitution,
-}) => {
-  const [showMenu, setShowMenu] = useState(false);
-  const [showUpdateInstitution, setShowUpdateInstitution] = useState(false);
-
-  const menuItemStyle = {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    padding: "8px 12px",
-    width: "100%",
-    background: "white",
-    border: "none",
-    cursor: "pointer",
-    fontSize: "14px",
-    textAlign: "left",
-    color: "#1a1a1a",
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (!e.target.closest(".menu-container")) setShowMenu(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const onSaveInstitution = (params) => {
-    onUpdateInstitution(params);
-    setShowUpdateInstitution(false);
-  }
-
-  return (
-    <div
-      className="sidebar-tabs"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "stretch",
-        position: "fixed",
-        top: "120px",
-        left: 0,
-        height: "calc(100vh - 80px)",
-        width: "22vw",
-        background: "#f7f9f8",
-        borderRight: "1px solid #dcdedc",
-        boxSizing: "border-box",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "16px",
-          borderBottom: "1px solid #dcdedc",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <SvgIcon icon="folder" size="1.2rem" />
-          <span style={{ fontWeight: 600, fontSize: "15px" }}>{institutionName}</span>
-        </div>
-
-        <div style={{ position: "relative" }} className="menu-container">
-          <button
-            onClick={() => setShowMenu((v) => !v)}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px",
-            }}
-          >
-            <SvgIcon icon="moreVert" size="1.2rem" />
-          </button>
-
-          {showMenu && (
-            <div
-              style={{
-                position: "absolute",
-                top: "28px",
-                right: 0,
-                background: "#fff",
-                border: "1px solid #ddd",
-                borderRadius: "8px",
-                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                width: "190px",
-                zIndex: 50,
-              }}
-            >
-              <button
-                style={menuItemStyle}
-                onClick={() => {
-                  setShowMenu(false);
-                  setShowUpdateInstitution(true);
-                }}
-              >
-                <SvgIcon icon="edit" size="1rem" />
-                Edit Institution
-              </button>
-
-              <button
-                style={menuItemStyle}
-                onClick={() => {
-                  setShowMenu(false);
-                  onViewDashboard();
-                }}
-              >
-                <SvgIcon icon="folder" size="1rem" />
-                View Project Dashboard
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab.id;
-        return (
-          <button
-            key={tab.id}
-            onClick={() => onChange(tab.id)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "0.75rem",
-              padding: "10px 16px",
-              border: "none",
-              backgroundColor: isActive ? "#e6efef" : "#f7f9f8",
-              color: "#000",
-              cursor: "pointer",
-              width: "100%",
-              transition: "background-color 0.2s ease, color 0.2s ease",
-              position: "relative",
-            }}
-          >
-            {isActive && (
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: "4px",
-                  backgroundColor: "#2f615e",
-                  borderTopRightRadius: "2px",
-                  borderBottomRightRadius: "2px",
-                }}
-              />
-            )}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-              {tab.icon && <SvgIcon icon={tab.icon} size="1.2rem" />}
-              <span
-                style={{
-                  fontSize: "14px",
-                  fontWeight: isActive ? 600 : 400,
-                }}
-              >
-                {tab.label}
-              </span>
-            </div>
-            {tab.badge > 0 && (
-              <span
-                style={{
-                  background: "#3D7F7A",
-                  color: "#fff",
-                  borderRadius: "10px",
-                  padding: "2px 8px",
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  minWidth: "24px",
-                  textAlign: "center",
-                }}
-              >
-                {tab.badge}
-              </span>
-            )}
-          </button>
-        );
-      })}
-      {showUpdateInstitution && createPortal(
-        <EditInstitutionModal
-          onClose={setShowUpdateInstitution}
-          onSave={onSaveInstitution}
-        />,
-        document.body
-      )}
-    </div>
-  );
-};
 
 export const ReviewInstitution = ({ institutionId, userId }) => {
   const [state, setState] = useAtom(institutionPageAtom);
@@ -382,7 +185,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
     }
   }
 
-  const deleteImageryBulk = (imageryIds, getImageryList) => {
+  const deleteImageryBulk = (imageryIds) => {
     fetch("/bulk-archive-institution-imagery", {
       method: "POST",
       headers: {
@@ -411,10 +214,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   }
 
   const downloadProjectsBulk = (selectedProjects, selectedOptions) => {
-    const fileTypes = Object.entries(selectedOptions)
-          .filter(([_, value]) => value)
-          .map(([key]) => key);
-    const fileTypesStr = fileTypes.join(",");
+    const fileTypesStr = selectedOptions.join(",");
     const projectIds = selectedProjects.join(",");
     window.open(
       `/download-projects-bulk?projectIds=${projectIds}&institutionId=${institutionId}&fileTypes=${fileTypesStr}`
@@ -506,6 +306,12 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
     }
   };
 
+  const editUsersBulk = () => {
+  }
+
+  const removeUsersBulk = () => {
+  }
+
   useEffect(() => {
     getProjectList();
     getImageryList();
@@ -525,6 +331,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
         institutionName={state.institutionDetails.name}
         activeTab={state.selectedTab}
         onChange={setSelectedTab}
+        institutionId={institutionId}
       />
       <div id="review-institution">
         {state.modal?.alert && (
@@ -641,6 +448,209 @@ export const InstitutionDescription = () => {
           {institution.description}
         </p>
       </div>
+    </div>
+  );
+};
+
+export const SidebarTabs = ({
+  institutionId,
+  tabs,
+  activeTab,
+  onChange,
+  institutionName,
+  onUpdateInstitution,
+}) => {
+  const [showMenu, setShowMenu] = useState(false);
+  const [showUpdateInstitution, setShowUpdateInstitution] = useState(false);
+
+  const menuItemStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "8px 12px",
+    width: "100%",
+    background: "white",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "14px",
+    textAlign: "left",
+    color: "#1a1a1a",
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".menu-container")) setShowMenu(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const onSaveInstitution = (params) => {
+    onUpdateInstitution(params);
+    setShowUpdateInstitution(false);
+  }
+
+  const onCloseEditInstitution = () => {
+    setShowUpdateInstitution(false);
+  }
+
+  return (
+    <div
+      className="sidebar-tabs"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "stretch",
+        position: "fixed",
+        top: "120px",
+        left: 0,
+        height: "calc(100vh - 80px)",
+        width: "22vw",
+        background: "#f7f9f8",
+        borderRight: "1px solid #dcdedc",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "16px",
+          borderBottom: "1px solid #dcdedc",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <SvgIcon icon="folder" size="1.2rem" />
+          <span style={{ fontWeight: 600, fontSize: "15px" }}>{institutionName}</span>
+        </div>
+
+        <div style={{ position: "relative" }} className="menu-container">
+          <button
+            onClick={() => setShowMenu((v) => !v)}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "4px",
+            }}
+          >
+            <SvgIcon icon="moreVert" size="1.2rem" />
+          </button>
+
+          {showMenu && (
+            <div
+              style={{
+                position: "absolute",
+                top: "28px",
+                right: 0,
+                background: "#fff",
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                width: "190px",
+                zIndex: 50,
+              }}
+            >
+              <button
+                style={menuItemStyle}
+                onClick={() => {
+                  setShowMenu(false);
+                  setShowUpdateInstitution(true);
+                }}
+              >
+                <SvgIcon icon="edit" size="1rem" />
+                Edit Institution
+              </button>
+
+              <button
+                style={menuItemStyle}
+                onClick={() => {
+                  setShowMenu(false);
+                  window.open(
+                    `/institution-dashboard?institutionId=${institutionId}`);
+                }}
+              >
+                <SvgIcon icon="folder" size="1rem" />
+                View Institution Dashboard
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.id;
+        return (
+          <button
+            key={tab.id}
+            onClick={() => onChange(tab.id)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "0.75rem",
+              padding: "10px 16px",
+              border: "none",
+              backgroundColor: isActive ? "#e6efef" : "#f7f9f8",
+              color: "#000",
+              cursor: "pointer",
+              width: "100%",
+              transition: "background-color 0.2s ease, color 0.2s ease",
+              position: "relative",
+            }}
+          >
+            {isActive && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: "4px",
+                  backgroundColor: "#2f615e",
+                  borderTopRightRadius: "2px",
+                  borderBottomRightRadius: "2px",
+                }}
+              />
+            )}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              {tab.icon && <SvgIcon icon={tab.icon} size="1.2rem" />}
+              <span
+                style={{
+                  fontSize: "14px",
+                  fontWeight: isActive ? 600 : 400,
+                }}
+              >
+                {tab.label}
+              </span>
+            </div>
+            {tab.badge > 0 && (
+              <span
+                style={{
+                  background: "#3D7F7A",
+                  color: "#fff",
+                  borderRadius: "10px",
+                  padding: "2px 8px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  minWidth: "24px",
+                  textAlign: "center",
+                }}
+              >
+                {tab.badge}
+              </span>
+            )}
+          </button>
+        );
+      })}
+      {showUpdateInstitution && createPortal(
+        <EditInstitutionModal
+          onClose={onCloseEditInstitution}
+          onSave={onSaveInstitution}
+        />,
+        document.body
+      )}
     </div>
   );
 };
