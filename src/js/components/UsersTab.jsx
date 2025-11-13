@@ -5,8 +5,8 @@ import SvgIcon from "./svg/SvgIcon";
 
 export const UsersTab = ({
   usersList = [],
-  editUserRolesBulk,
-  removeUsersBulk,
+  editUsersBulk,
+  addUsersBulk,
   isAdmin,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
@@ -85,7 +85,7 @@ export const UsersTab = ({
 
   const handleRemove = () => {
     if (selectedRows.length === 0) return;
-    removeUsersBulk(selectedRows.map((r) => r.id));
+    editUsersBulk(selectedRows.map((r) => r.id), "not-member");
   };
 
   return (
@@ -149,10 +149,8 @@ export const UsersTab = ({
         <BulkActions
           isAdmin={isAdmin}
           showDownload={false}
-          visibilityOptions={["admin", "member", "pending"]}
-          onChangeVisibility={(ids, selectedRole) =>
-            editUserRolesBulk(ids, selectedRole)
-          }
+          visibilityOptions={["admin", "member"]}
+          onChangeVisibility={editUsersBulk}
           onDelete={handleRemove}
           selectedRows={selectedRows}
         />

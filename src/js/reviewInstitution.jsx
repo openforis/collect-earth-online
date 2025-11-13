@@ -246,6 +246,51 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
     }
   }
 
+  const editUsersBulk = (users, role) => {
+    fetch("/update-user-institution-role", {
+      method: "POST",
+      body: JSON.stringify({
+        accountIds: users,
+        institutionRole: role,
+        institutionId: institutionId
+      }),
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+    }).then((response) => {
+      if(response.ok) {
+        getInstitutionUserList();
+        console.log(response);
+      } else {
+        console.log(response);
+      }
+    })
+  }
+
+  const addUsersBulk = (users) => {
+    fetch("/update-user-institution-role", {
+      method: "POST",
+      body: JSON.stringify({
+        newUserEmails: users,
+        institutionRole: "member",
+        institutionId: institutionId
+      }),
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+    }).then((response) => {
+      if(response.ok) {
+        getInstitutionUserList();
+        console.log(response);
+      } else {
+        console.log(response);
+      }
+    })
+  }
+
+
   const updateInstitution = (params) => {
     const { base64Image, name, description, imageName, url } = params;
 
@@ -306,11 +351,6 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
     }
   };
 
-  const editUsersBulk = () => {
-  }
-
-  const removeUsersBulk = () => {
-  }
 
   useEffect(() => {
     getProjectList();
@@ -365,6 +405,8 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
       {state.selectedTab === "users" && (
         <UsersTab
           isAdmin={state.isAdmin}
+          editUsersBulk={editUsersBulk}
+          addUsersBulk={addUsersBulk}
           usersList={state.usersList} />
       )}
     </>

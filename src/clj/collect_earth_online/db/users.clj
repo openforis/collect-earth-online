@@ -209,46 +209,45 @@
       (data-response []))))
 
 (defn update-institution-role [{:keys [params]}]
-  (let [new-user-email   (:newUserEmail params)
-        account-id       (if-let [id (:accountId params)]
-                           (tc/val->int id)
-                           (-> (call-sql "get_user_by_email" new-user-email)
-                               (first)
-                               (:user_id -1)))
+  (let [new-user-emails  (vec (or (:newUserEmails params) []))
+        account-ids      (mapv tc/val->int (or (:accountIds params) []))
         institution-id   (tc/val->int (:institutionId params))
         institution-role (:institutionRole params)
-        email            (:email (first (call-sql "get_user_by_id" account-id)))]
+        assign!          (fn [account-id role]
+                           (let [email (:email (first (call-sql "get_user_by_id" account-id)))]
+                             (if (nil? email)
+                               (str "User with id " account-id " not found.")
+                               (let [updated? (sql-primitive (call-sql "update_institution_user_role"
+                                                                       institution-id account-id role))]
+                                 (when-not updated?
+                                   (call-sql "add_institution_user" institution-id account-id role))
+                                 (str email " has been assigned role " role ".")))))]
     (cond
-      (nil? email)
-      (data-response (str "User " new-user-email " not found."))
-
       (= institution-role "not-member")
-      (do
-        (call-sql "remove_institution_user_role" institution-id account-id)
-        (data-response (str "User " email " has been removed.")))
+      (data-response
+       (mapv (fn [aid]
+               (let [email (:email (first (call-sql "get_user_by_id" aid)))]
+                 (if (nil? email)
+                   (str "User with id " aid " not found.")
+                   (do
+                     (call-sql "remove_institution_user_role" institution-id aid)
+                     (str "User " email " has been removed.")))))
+             account-ids))
+
+      (seq new-user-emails)
+      (data-response
+       (mapv (fn [e]
+               (let [uid (-> (call-sql "get_user_by_email" e) first (:user_id -1))]
+                 (if (neg? uid)
+                   (str "User " e " not found.")
+                   (assign! uid institution-role))))
+             new-user-emails))
+
+      (seq account-ids)
+      (data-response (mapv #(assign! % institution-role) account-ids))
 
       :else
-      (let [institution-name (:name (first (call-sql "select_institution_by_id" institution-id -1)))
-            timestamp        (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
-                                 (.format (LocalDateTime/now)))
-            inst-user-id     (sql-primitive (call-sql "update_institution_user_role"
-                                                      institution-id
-                                                      account-id
-                                                      institution-role))
-            email-msg        (format (str "Dear %s,\n\n"
-                                          "You have been assigned the role of %s for %s on %s.\n\n"
-                                          "Kind Regards,\n"
-                                          "  The CEO Team")
-                                     email institution-role institution-name timestamp)]
-        (when-not inst-user-id (call-sql "add_institution_user" institution-id account-id institution-role))
-        (try
-          (send-mail email nil nil "User Role Assignment" email-msg :text)
-          (data-response (str email " has been assigned role " institution-role "."))
-          (catch Exception _
-            (data-response (str email
-                                " has been assigned role "
-                                institution-role
-                                ", but the email notification has failed."))))))))
+      (data-response "No newUserEmails or accountIds were provided."))))
 
 (defn request-institution-membership [{:keys [params session]}]
   (let [user-id        (:userId session -1)
