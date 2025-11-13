@@ -42,14 +42,15 @@ export const SidebarCard = ({
   collapsible = false,
   defaultOpen = true,
   infoButton = false,
-  onInfoClick,  
+  onInfoClick,
+  statsInfo
 }) => {
   const [open, setOpen] = useState(defaultOpen);
   const {showInfoModal} = useAtomValue(stateAtom);
 
   return (
-    <div className="sidebar-card">
-      {showInfoModal && <StatsModal/>}
+    <div className="sidebar-card" style={{position: "relative"}}>
+      {(statsInfo && showInfoModal) && <StatsModal/>}
       <div
         className="sidebar-header"
         style={{

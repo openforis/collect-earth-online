@@ -416,34 +416,71 @@ export function LogoBanner() {
 }
 
 export function StatsModal() {
-  const {showInfoModal} = useAtomValue(stateAtom);
-  const setState = useSetAtom(stateAtom);
-  
+  const { stats, } = useAtomValue(stateAtom);
+  const { totalPlots,
+          analyzedPlots,
+          unanalyzedPlots,
+          flaggedPlots,
+          userStats,
+          collectionTime,
+          userAnalyzedPlots,
+          userFlaggedPlots,
+          userAverageTime
+        } = stats;
   return (
     <div
+      className="stats-modal"
       style={{
-        position: "fixed",
+        position: "absolute",
         zIndex: "100",
-        left: "0",
-        top: "0",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "rgba(0,0,0,0.4)",
+        width: "19vw",
+        height: "fit-content",
+        backgroundColor: "#c9d6d6",
+        borderRadius: "8px",
+        padding: "16px",
+        top: "45px"
       }}
     >
-      <label className="m-0 mr-3">These are Stats</label>
-      <div className="modal-footer">            
-            <button
-              className="btn btn-danger btn-sm"
-              id="quit-button"
-              onClick={() =>
-                setState((s) => ({... s, showInfoModal: !showInfoModal}))
-              }
-              type="button"
-            >
-              X
-            </button>
-          </div>
+      <label className="stats-header m-0 mr-3">Project Statistics</label>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Total</label>
+        <span>{totalPlots}</span>
+      </div>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Analyzed</label>
+        <span>{analyzedPlots}</span>
+      </div>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Unanalyzed</label>
+        <span>{unanalyzedPlots}</span>
+      </div>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Flagged</label>
+        <span>{flaggedPlots}</span>
+      </div>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Total Contributors</label>
+        <span>{userStats.length}</span>
+      </div>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Average Collection Time</label>
+        <span>{collectionTime}</span>
+      </div>
+      <label className="stats-header m-0 mr-3">My Statistics</label>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Analyzed</label>
+        <span>{"User Analyzed Plots"}</span>
+      </div>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Flagged</label>
+        <span>{"User Flagged Plots"}</span>
+      </div>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--My Average Time</label>
+        <span>{"User Avg. Coll. Time"}</span>
+      </div>
+      
+      
     </div>);
 };
 

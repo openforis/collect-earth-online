@@ -1327,3 +1327,16 @@ body {
 #stats-card .stat {
     margin: 4px 0;
 }
+
+.stats-row{
+    display: flex;
+    justify-content: space-between;
+    margin: auto 2%;
+    
+}
+
+.stats-header{
+    font-weight: bold;
+}
+
+

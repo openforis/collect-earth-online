@@ -194,6 +194,7 @@ export const NewPlotNavigation = () => {
  
   return (
     <SidebarCard
+      statsInfo={true}
       infoButton={true}
       onInfoClick={()=>{setAppState((s) => ({... s, showInfoModal: !s.showInfoModal}));}}
       title={
