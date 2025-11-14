@@ -416,17 +416,16 @@ export function LogoBanner() {
 }
 
 export function StatsModal() {
-  const { stats, } = useAtomValue(stateAtom);
+  const { stats, userEmail } = useAtomValue(stateAtom);
   const { totalPlots,
           analyzedPlots,
           unanalyzedPlots,
           flaggedPlots,
           userStats,
           collectionTime,
-          userAnalyzedPlots,
-          userFlaggedPlots,
-          userAverageTime
         } = stats;
+  const currentUserStats = userStats.filter(({email}) => email === userEmail)[0];
+  const userAverageTime = ({seconds, timedPlots }) => seconds / timedPlots;
   return (
     <div
       className="stats-modal"
@@ -464,20 +463,20 @@ export function StatsModal() {
       </div>
       <div className="stats-row">
         <label className="m-0 mr-3">--Average Collection Time</label>
-        <span>{collectionTime}</span>
+        <span>{collectionTime / (totalPlots - unanalyzedPlots)}</span>
       </div>
       <label className="stats-header m-0 mr-3">My Statistics</label>
       <div className="stats-row">
         <label className="m-0 mr-3">--Analyzed</label>
-        <span>{"User Analyzed Plots"}</span>
+        <span>{currentUserStats.analyzed}</span>
       </div>
       <div className="stats-row">
         <label className="m-0 mr-3">--Flagged</label>
-        <span>{"User Flagged Plots"}</span>
+        <span>{currentUserStats.flagged}</span>
       </div>
       <div className="stats-row">
         <label className="m-0 mr-3">--My Average Time</label>
-        <span>{"User Avg. Coll. Time"}</span>
+        <span>{userAverageTime(currentUserStats)}</span>
       </div>
       
       
