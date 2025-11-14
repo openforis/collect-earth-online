@@ -209,8 +209,7 @@
       (data-response []))))
 
 (defn update-institution-role [{:keys [params]}]
-  (let [new-user-emails  (vec (or (:newUserEmails params) []))
-        account-ids      (mapv tc/val->int (or (:accountIds params) []))
+  (let [account-ids      (mapv tc/val->int (or (:accountIds params) []))
         institution-id   (tc/val->int (:institutionId params))
         institution-role (:institutionRole params)
         assign!          (fn [account-id role]
@@ -233,21 +232,26 @@
                      (call-sql "remove_institution_user_role" institution-id aid)
                      (str "User " email " has been removed.")))))
              account-ids))
-
-      (seq new-user-emails)
-      (data-response
-       (mapv (fn [e]
-               (let [uid (-> (call-sql "get_user_by_email" e) first (:user_id -1))]
-                 (if (neg? uid)
-                   (str "User " e " not found.")
-                   (assign! uid institution-role))))
-             new-user-emails))
-
       (seq account-ids)
       (data-response (mapv #(assign! % institution-role) account-ids))
 
       :else
-      (data-response "No newUserEmails or accountIds were provided."))))
+      (data-response "No accountIds were provided."))))
+
+(defn add-user-to-institution [{:keys [params]}]
+  (let [new-users      (:newUsers params)
+        institution-id (:institutionId params)]
+    (try
+    (when (seq new-users)
+      (doseq [user new-users]
+        (let [email        (:email user)
+              role         (get user :role "member")
+              user-id      (:user_id (first (call-sql "get_user_by_email" email)))]
+          (when user-id
+            (call-sql "add_institution_user" institution-id user-id role)))))
+      (data-response "Users added to the institution")
+      (catch Exception e
+        (data-response "One or more users don't exist in CEO")))))
 
 (defn request-institution-membership [{:keys [params session]}]
   (let [user-id        (:userId session -1)

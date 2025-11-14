@@ -89,6 +89,9 @@
    [:post "/update-user-institution-role"]   {:handler     users/update-institution-role
                                               :auth-type   :admin
                                               :auth-action :block}
+   [:post "/add-user-to-institution"]        {:handler     #'users/add-user-to-institution
+                                              :auth-type   :admin
+                                              :auth-action :block}
    [:post "/request-institution-membership"] {:handler     users/request-institution-membership
                                               :auth-type   :user
                                               :auth-action :block}

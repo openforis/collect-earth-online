@@ -269,11 +269,10 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   }
 
   const addUsersBulk = (users) => {
-    fetch("/update-user-institution-role", {
+    fetch("/add-user-to-institution", {
       method: "POST",
       body: JSON.stringify({
-        newUserEmails: users,
-        institutionRole: "member",
+        newUsers: users,
         institutionId: institutionId
       }),
       headers: {
