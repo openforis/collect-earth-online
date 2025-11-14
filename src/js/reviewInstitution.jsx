@@ -370,6 +370,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
         activeTab={state.selectedTab}
         onChange={setSelectedTab}
         institutionId={institutionId}
+        isAdmin={state.isAdmin}
       />
       <div id="review-institution">
         {state.modal?.alert && (
@@ -499,6 +500,7 @@ export const SidebarTabs = ({
   onChange,
   institutionName,
   onUpdateInstitution,
+  isAdmin,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showUpdateInstitution, setShowUpdateInstitution] = useState(false);
@@ -564,59 +566,60 @@ export const SidebarTabs = ({
           <SvgIcon icon="folder" size="1.2rem" />
           <span style={{ fontWeight: 600, fontSize: "15px" }}>{institutionName}</span>
         </div>
-
-        <div style={{ position: "relative" }} className="menu-container">
-          <button
-            onClick={() => setShowMenu((v) => !v)}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px",
-            }}
-          >
-            <SvgIcon icon="moreVert" size="1.2rem" />
-          </button>
-
-          {showMenu && (
-            <div
+        {isAdmin && (
+          <div style={{ position: "relative" }} className="menu-container">
+            <button
+              onClick={() => setShowMenu((v) => !v)}
               style={{
-                position: "absolute",
-                top: "28px",
-                right: 0,
-                background: "#fff",
-                border: "1px solid #ddd",
-                borderRadius: "8px",
-                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                width: "190px",
-                zIndex: 50,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "4px",
               }}
             >
-              <button
-                style={menuItemStyle}
-                onClick={() => {
-                  setShowMenu(false);
-                  setShowUpdateInstitution(true);
-                }}
-              >
-                <SvgIcon icon="edit" size="1rem" />
-                Edit Institution
-              </button>
+              <SvgIcon icon="moreVert" size="1.2rem" />
+            </button>
 
-              <button
-                style={menuItemStyle}
-                onClick={() => {
-                  setShowMenu(false);
-                  window.open(
-                    `/institution-dashboard?institutionId=${institutionId}`);
+            {showMenu && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "28px",
+                  right: 0,
+                  background: "#fff",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                  width: "190px",
+                  zIndex: 50,
                 }}
               >
-                <SvgIcon icon="folder" size="1rem" />
-                View Institution Dashboard
-              </button>
-            </div>
-          )}
-        </div>
+                <button
+                  style={menuItemStyle}
+                  onClick={() => {
+                    setShowMenu(false);
+                    setShowUpdateInstitution(true);
+                  }}
+                >
+                  <SvgIcon icon="edit" size="1rem" />
+                  Edit Institution
+                </button>
+
+                <button
+                  style={menuItemStyle}
+                  onClick={() => {
+                    setShowMenu(false);
+                    window.open(
+                      `/institution-dashboard?institutionId=${institutionId}`);
+                  }}
+                >
+                  <SvgIcon icon="folder" size="1rem" />
+                  View Institution Dashboard
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {tabs.map((tab) => {
