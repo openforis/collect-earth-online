@@ -34,14 +34,9 @@ export const ProjectsTab = ({
         sortable: true,
         cell: (row) => (
           <a
+            className="projects-table-name"
             href={
-              isAdmin ? `/collection?projectId=${row.id}&institutionId=${institutionId}`: `/review-project?projectId=${row.id}&institutionId=${institutionId}`}
-            style={{
-              color: "#2f615e",
-              textDecoration: "none",
-              fontWeight: 600,
-            }}
-          >
+              isAdmin ? `/collection?projectId=${row.id}&institutionId=${institutionId}`: `/review-project?projectId=${row.id}&institutionId=${institutionId}`}>
             {row.name}
           </a>
         ),
@@ -115,61 +110,39 @@ export const ProjectsTab = ({
     { // Simplified: Blue
       when: row => row.type === "simplified",
       style: {
-        borderLeft: '4px solid blue',
+        borderLeft: '4px solid #9286D3',
       },
     },
     { // No Plots Collected: Red
       when: row => row.type !== "simplified" && row.percentComplete == 0,
       style: {
-        borderLeft: '4px solid red',      
+        borderLeft: '4px solid #D98EB2',
       },
     },
     { // Some Plots Collected: Yellow
       when: row => row.type !== "simplified" && (100 > row.percentComplete && row.percentComplete > 0),
       style: {
-        borderLeft: '4px solid yellow',      
+        borderLeft: '4px solid #FEBD5B',
       },
     },
     { // All Plots Collected: Green
       when: row => row.type !== "simplified" &&  row.percentComplete == 100,
       style: {
-        borderLeft: '4px solid green',      
+        borderLeft: '4px solid #84D0AC',
       },
     },  
   ];
   
   return (
-    <div
-      style={{
-        marginLeft: "18vw",
-        padding: "2rem",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1rem",
-        }}
-      >
-        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#2f615e" }}>
+    <div id="projects-tab">
+      <div className="projects-count">
+        <h2>
           Projects ({projectList.length})
         </h2>
 
         {isAdmin ?
          <button
-           style={{
-             background: "#2f615e",
-             color: "white",
-             border: "none",
-             padding: "8px 16px",
-             borderRadius: "4px",
-             cursor: "pointer",
-             display: "flex",
-             alignItems: "center",
-             gap: "6px",
-           }}
+           id="new-project-button"
            onClick={() => window.location.assign(`/create-project?institutionId=${institutionId}`)}
          >
            <SvgIcon icon="plus" size="1rem" />
@@ -178,26 +151,26 @@ export const ProjectsTab = ({
          : null}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "1rem",
-          marginBottom: "1rem",
-        }}
-      >
+      <div className="projects-filter">
         <input
           type="text"
           placeholder="Search by name"
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          style={{
-            flex: 1,
-            padding: "6px 10px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-          }}
         />
+        <div className="projects-legend">
+          {[["No Plots collected"  , "#D98EB2"],
+            ["Some Plots collected", "#FEBD5B"],
+            ["All Plots collected" , "#84D0AC"],
+            ["Simplified", "#9286D3"]
+           ].map(([title, color]) => {
+             return (<div>
+                      <span style={{color}}>⯀</span>
+                      <span>: {title}</span>
+                    </div>);
+          })}
+
+        </div>
       </div>
       {isAdmin &&
        <BulkActions
