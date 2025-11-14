@@ -111,6 +111,33 @@ export const ProjectsTab = ({
     downloadProjectsBulk(selectedRows.map((r) => r.id), { csv: true });
   };
 
+  const conditionalRowStyles = [
+    { // Simplified: Blue
+      when: row => row.type === "simplified",
+      style: {
+        borderLeft: '4px solid blue',
+      },
+    },
+    { // No Plots Collected: Red
+      when: row => row.type !== "simplified" && row.percentComplete == 0,
+      style: {
+        borderLeft: '4px solid red',      
+      },
+    },
+    { // Some Plots Collected: Yellow
+      when: row => row.type !== "simplified" && (100 > row.percentComplete && row.percentComplete > 0),
+      style: {
+        borderLeft: '4px solid yellow',      
+      },
+    },
+    { // All Plots Collected: Green
+      when: row => row.type !== "simplified" &&  row.percentComplete == 100,
+      style: {
+        borderLeft: '4px solid green',      
+      },
+    },  
+  ];
+  
   return (
     <div
       style={{
@@ -192,6 +219,7 @@ export const ProjectsTab = ({
         paginationPerPage={100}
         paginationRowsPerPageOptions={[25, 50, 100, 250]}
         highlightOnHover
+        conditionalRowStyles={conditionalRowStyles}
         customStyles={customStyles}
         noDataComponent="No projects found."
         sortIcon={<SvgIcon icon="downCaret" size="0.9rem" />}
