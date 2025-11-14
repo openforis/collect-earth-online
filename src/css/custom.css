@@ -1327,3 +1327,62 @@ body {
 #stats-card .stat {
     margin: 4px 0;
 }
+
+.projects-legend {
+    display: inline-flex;
+}
+
+.projects-legend div {
+    margin-left: 16px;
+}
+
+
+#projects-tab {
+    margin-left: 18vw;
+    padding: 2rem;
+}
+
+#projects-tab .projects-count {
+    display: flex;
+    justify-content: space-between;
+    alignItems: center;
+    margin-bottom: 1rem;
+}
+
+#projects-tab .projects-count h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2f615e;
+}
+
+#projects-tab .projects-count #new-project-button {
+    background: #2f615e;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#projects-tab .projects-filter {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+#projects-tab .projects-filter input {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.projects-table-name {
+    color: #2f615e;
+    text-decoration: none;
+    font-weight: 600;
+}
