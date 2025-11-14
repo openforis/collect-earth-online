@@ -5,12 +5,11 @@ import { stateAtom } from "./utils/constants";
 import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import Modal from "./components/Modal";
 
-export function Login () {
+export function Login ({returnurl}) {
   const [loginAtom, setLoginAtom] = useState ({email: "",
                                                password: "",
                                                modal: null});
   const setAppState = useSetAtom (stateAtom);
-
   const requestLogin = () => {
     fetch("/login", {
       method: "POST",
@@ -23,7 +22,7 @@ export function Login () {
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && data[1] === "") {
-          window.location = this.props.returnurl === "" ? "/home" : this.props.returnurl;
+          window.location = returnurl === "" ? "/home" : returnurl;
         } else {
           setAppState ((s) => ({... s, userEmail: loginAtom.email}));
           setLoginAtom ((s) => ({...s , modal: {alert: {alertType: "Login Error", alertMessage: data[1]}}}));
@@ -54,7 +53,10 @@ export function Login () {
                 <input
                   className="form-control"
                   id="email"
-                  onChange={(e) => setLoginAtom ((s) => ({...s,  email: e.target.value }))}
+                  onChange={(e) => {
+                    e.persist ();
+                    setLoginAtom((s) => ({...s,  email: e.target.value }));
+		  }}
                   placeholder="Enter email"
                   type="email"
                   value={loginAtom.email}
@@ -65,7 +67,10 @@ export function Login () {
                 <input
                   className="form-control"
                   id="password"
-                  onChange={(e) => setLoginAtom ((s) => ({...s,  password: e.target.value }))}
+                  onChange={(e) =>{
+                    e.persist();		    
+		    setLoginAtom ((s) => ({...s,  password: e.target.value }));
+		  }}
                   placeholder="Password"
                   type="password"
                   value={loginAtom.password}
