@@ -415,8 +415,8 @@ export function LogoBanner() {
   );
 }
 
-export function StatsModal() {
-  const { stats, userEmail } = useAtomValue(stateAtom);
+export function StatsModal({userEmail}) {
+  const { stats, } = useAtomValue(stateAtom);
   const { totalPlots,
           analyzedPlots,
           unanalyzedPlots,
@@ -427,7 +427,7 @@ export function StatsModal() {
   const currentUserStats = userStats.filter(({email}) => email === userEmail)[0];
   const userAverageTime = (currentUser) => {
     const { seconds, timedPlots } = currentUser;
-    return (seconds / timedPlots);
+    return (seconds / timedPlots).toFixed(2);
   };
 
   return (
@@ -468,8 +468,8 @@ export function StatsModal() {
       </div>      
       {collectionTime &&
        <div className="stats-row">
-         <label className="m-0 mr-3">--Average Collection Time</label>
-         <span>{collectionTime / (totalPlots - unanalyzedPlots)}</span>
+         <label className="m-0 mr-3">--Average Collection Time (seconds)</label>
+         <span>{(collectionTime / (totalPlots - unanalyzedPlots)).toFixed(2)}</span>
        </div>}
       {currentUserStats &&
        <>

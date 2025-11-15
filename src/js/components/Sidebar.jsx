@@ -7,7 +7,7 @@ import SvgIcon from "./svg/SvgIcon";
 import '../../css/sidebar.css';
 
 
-export const Sidebar = ({ stateAtom, style, header, children, footer, processModal }) => {
+export const Sidebar = ({ stateAtom, style, header, children, footer, processModal, userEmail }) => {
   const { modal, modalMessage } = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
 
@@ -43,14 +43,15 @@ export const SidebarCard = ({
   defaultOpen = true,
   infoButton = false,
   onInfoClick,
-  statsInfo
+  statsInfo,
+  userEmail
 }) => {
   const [open, setOpen] = useState(defaultOpen);
   const {showInfoModal} = useAtomValue(stateAtom);
 
   return (
     <div className="sidebar-card" style={{position: "relative"}}>
-      {(statsInfo && showInfoModal) && <StatsModal/>}
+      {(statsInfo && showInfoModal) && <StatsModal userEmail={userEmail}/>}
       <div
         className="sidebar-header"
         style={{

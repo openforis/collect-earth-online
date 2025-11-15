@@ -76,12 +76,12 @@ const StatsCard = ({}) => {
   );
 };
 
-export const CollectionSidebar = ({ processModal }) => {
+export const CollectionSidebar = ({ processModal, userEmail }) => {
   const { currentPlot, currentProject } = useAtomValue(stateAtom);
 
   const content = (
     <>
-      <NewPlotNavigation />
+      <NewPlotNavigation userEmail={userEmail}/>
       <StatsCard/>
       {currentPlot.id > 0 && (
         <>
@@ -97,7 +97,7 @@ export const CollectionSidebar = ({ processModal }) => {
   const footer = <SidebarFooter processModal={processModal} />;
 
   return (
-    <Sidebar
+    <Sidebar      
       stateAtom={stateAtom}
       processModal={processModal}
       children={content}
@@ -107,7 +107,7 @@ export const CollectionSidebar = ({ processModal }) => {
   );
 };
 
-export const NewPlotNavigation = () => {
+export const NewPlotNavigation = ({userEmail}) => {
   const setAppState = useSetAtom(stateAtom);
   const {
     currentProject,
@@ -194,6 +194,7 @@ export const NewPlotNavigation = () => {
  
   return (
     <SidebarCard
+      userEmail={userEmail}
       statsInfo={true}
       infoButton={true}
       onInfoClick={()=>{setAppState((s) => ({... s, showInfoModal: !s.showInfoModal}));}}

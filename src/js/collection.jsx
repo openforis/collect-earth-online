@@ -46,7 +46,7 @@ import {
 import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
-export const Collection = ({ projectId, acceptedTerms, plotId }) => {
+export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
   const [state, setState] = useAtom(stateAtom);
 
   // INIT COLLECTION EFFECT
@@ -717,7 +717,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId }) => {
           <ImageAnalysisPane />
         </div>
         <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
-          <CollectionSidebar processModal={processModal}>
+          <CollectionSidebar processModal={processModal} userEmail={userEmail}>
           </CollectionSidebar>
         </div>
         {state.messageBox && (
@@ -1683,7 +1683,12 @@ export function pageInit(params, session) {
            }}
         ]}        
       />
-      <Collection projectId={params.projectId} plotId={params.plotId || null} userName={session.userName || "guest"} acceptedTerms={session.acceptedTerms || false} />
+      <Collection
+        userEmail={session.userName}
+        projectId={params.projectId}
+        plotId={params.plotId || null}
+        userName={session.userName || "guest"}
+        acceptedTerms={session.acceptedTerms || false} />
     </NavigationBar>,
     document.getElementById("app")
   );
