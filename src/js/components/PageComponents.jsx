@@ -415,6 +415,83 @@ export function LogoBanner() {
   );
 }
 
+export function StatsModal({userEmail}) {
+  const { stats, } = useAtomValue(stateAtom);
+  const { totalPlots,
+          analyzedPlots,
+          unanalyzedPlots,
+          flaggedPlots,
+          userStats,
+          collectionTime,
+        } = stats;
+  const currentUserStats = userStats.filter(({email}) => email === userEmail)[0];
+  const userAverageTime = (currentUser) => {
+    const { seconds, timedPlots } = currentUser;
+    return (seconds / timedPlots).toFixed(2);
+  };
+
+  return (
+    <div
+      className="stats-modal"
+      style={{
+        position: "absolute",
+        zIndex: "100",
+        width: "19vw",
+        height: "fit-content",
+        backgroundColor: "lightgray",
+        borderRadius: "8px",
+        padding: "16px",
+        top: "45px",
+        border: "1px solid #c9d6d6"
+      }}
+    >
+      <label className="stats-header m-0 mr-3">Project Statistics</label>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Total</label>
+        <span>{totalPlots}</span>
+      </div>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Analyzed</label>
+        <span>{analyzedPlots}</span>
+      </div>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Unanalyzed</label>
+        <span>{unanalyzedPlots}</span>
+      </div>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Flagged</label>
+        <span>{flaggedPlots}</span>
+      </div>
+      <div className="stats-row">
+        <label className="m-0 mr-3">--Total Contributors</label>
+        <span>{userStats.length}</span>
+      </div>      
+      {collectionTime &&
+       <div className="stats-row">
+         <label className="m-0 mr-3">--Average Collection Time (seconds)</label>
+         <span>{(collectionTime / (totalPlots - unanalyzedPlots)).toFixed(2)}</span>
+       </div>}
+      {currentUserStats &&
+       <>
+         <label className="stats-header m-0 mr-3">My Statistics</label>
+         <div className="stats-row">
+           <label className="m-0 mr-3">--Analyzed</label>
+           <span>{currentUserStats.analyzed}</span>
+         </div>
+         <div className="stats-row">
+           <label className="m-0 mr-3">--Flagged</label>
+           <span>{currentUserStats.flagged}</span>
+         </div>
+         <div className="stats-row">
+           <label className="m-0 mr-3">--My Average Time</label>
+           <span>{userAverageTime(currentUserStats)}</span>
+         </div>
+       </>}
+      
+      
+    </div>);
+};
+
 export function LoadingModal({ message }) {
   return (
     <div
@@ -760,7 +837,7 @@ export const ImageryLayerOptions = ({
       </div>
     </div>
   );
- };
+};
 
 export function PromptModal({title, inputs, callBack, closePrompt}) {
   const [promptState, setPromptState] = React.useState([]);
@@ -828,13 +905,13 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
             onClick={() => closePrompt()}
             type="button"
             value="Cancel"
-            />
+          />
           <input
             className="btn btn-outline-lightgreen btn-sm w-100"
             onClick={() => callBack(promptState)}
             type="button"
             value="Confirm"
-            />
+          />
         </div>
       </div>
     </div>

@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { LoadingModal } from "./PageComponents";
+import { stateAtom } from "../utils/constants";
+import { LoadingModal, StatsModal } from "./PageComponents";
 import Modal from "./Modal";
 import SvgIcon from "./svg/SvgIcon";
 import '../../css/sidebar.css';
 
 
-export const Sidebar = ({ stateAtom, style, header, children, footer, processModal }) => {
+export const Sidebar = ({ stateAtom, style, header, children, footer, processModal, userEmail }) => {
   const { modal, modalMessage } = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
 
@@ -42,24 +43,26 @@ export const SidebarCard = ({
   defaultOpen = true,
   infoButton = false,
   onInfoClick,
+  statsInfo,
+  userEmail
 }) => {
   const [open, setOpen] = useState(defaultOpen);
+  const {showInfoModal} = useAtomValue(stateAtom);
 
   return (
-    <div className="sidebar-card">
+    <div className="sidebar-card" style={{position: "relative"}}>
+      {(statsInfo && showInfoModal) && <StatsModal userEmail={userEmail}/>}
       <div
         className="sidebar-header"
         style={{
           display: "flex",
-          justifyContent: "space-between",
+          /* justifyContent: "space-between", */
           alignItems: "center",
           cursor: collapsible ? "pointer" : "default",
         }}
         onClick={collapsible ? () => setOpen(!open) : undefined}
       >
-        <span className="sidebar-title">{title}</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          {infoButton && (
+        {infoButton && (
             <button
               className="sidebar-info-button"
               onClick={(e) => {
@@ -67,9 +70,12 @@ export const SidebarCard = ({
                 if (onInfoClick) onInfoClick();
               }}
             >
-              <SvgIcon icon="info" size="1rem" />
+          <SvgIcon icon="info" size="1rem" style={{marginBottom: "3.5px"}}/>
             </button>
           )}
+        <span className="sidebar-title">{title}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          
           {collapsible && (
             <button
               className="sidebar-collapse-button"

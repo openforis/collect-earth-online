@@ -42,7 +42,7 @@
 .sidebar-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* justify-content: space-between; */
   margin-bottom: 16px;
 }
 
@@ -202,7 +202,7 @@
 }
 
 .sidebar-info-button {
-  border: 1px solid #000;
+  border: 1px solid #fff;
   width: 28px;
   height: 28px;
   border-radius: 50%;
