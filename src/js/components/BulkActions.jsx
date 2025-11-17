@@ -12,11 +12,8 @@ export const BulkActions = ({
   const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [selectedVisibility, setSelectedVisibility] = useState(null);
-  const [selectedDownloads, setSelectedDownloads] = useState({
-    plot: false,
-    sample: false,
-    shapefile: false,
-  });
+  const [selectedDownloads, setSelectedDownloads] = useState([]);
+
 
   const visibilityRef = useRef(null);
   const downloadRef = useRef(null);
@@ -184,9 +181,9 @@ export const BulkActions = ({
               }}
             >
               {[
-                { key: "plot", label: "Plot Data: .CSV" },
-                { key: "sample", label: "Sample Data: .CSV" },
-                { key: "shapefile", label: "Shapefile: .SHP" },
+                { key: "plots", label: "Plot Data: .CSV" },
+                { key: "samples", label: "Sample Data: .CSV" },
+                { key: "shape", label: "Shapefile: .SHP" },
               ].map(({ key, label }) => (
                 <div
                   key={key}
@@ -195,9 +192,13 @@ export const BulkActions = ({
                   <input
                     type="checkbox"
                     id={key}
-                    checked={selectedDownloads[key]}
+                    checked={selectedDownloads.includes(key)}
                     onChange={() =>
-                      setSelectedDownloads((prev) => ({ ...prev, [key]: !prev[key] }))
+                      setSelectedDownloads((prev) =>
+                        prev.includes(key)
+                          ? prev.filter((k) => k !== key)
+                          : [...prev, key]
+                      )
                     }
                   />
                   <label htmlFor={key} style={{ marginLeft: "0.5rem" }}>
@@ -205,6 +206,7 @@ export const BulkActions = ({
                   </label>
                 </div>
               ))}
+
               <div
                 style={{
                   display: "flex",
@@ -216,6 +218,7 @@ export const BulkActions = ({
                 <button style={grayButton} onClick={() => setShowDownloadMenu(false)}>
                   Cancel
                 </button>
+
                 <button
                   style={filledGreenButton}
                   onClick={() => {

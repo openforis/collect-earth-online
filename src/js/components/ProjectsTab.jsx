@@ -106,15 +106,15 @@ export const ProjectsTab = ({
     deleteProjectsBulk(selectedRows.map((r) => r.id));
   };
 
-  const handleDownload = () => {
+  const handleDownload = (selectedFiles) => {
     if (selectedRows.length === 0) return;
-    downloadProjectsBulk(selectedRows.map((r) => r.id), { csv: true });
+    downloadProjectsBulk(selectedRows.map((r) => r.id), selectedFiles);
   };
 
   return (
     <div
       style={{
-        marginLeft: "18vw",
+        marginLeft: "22vw",
         padding: "2rem",
       }}
     >

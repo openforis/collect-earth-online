@@ -107,13 +107,13 @@
 
 (defn bulk-archive-institution-imagery [{:keys [params]}]
   (let [imagery-ids (cstr/join "," (:imageryIds params))
-        institution-id (tc/val->int (:insitutionId params))]
+        institution-id (:institutionId params)]
     (call-sql "archive_imagery_bulk" imagery-ids institution-id)
     (data-response "")))
 
 (defn bulk-update-imagery-visibility [{:keys [params]}]
   (let [imagery-id     (cstr/join "," (:imageryIds params))
         visibility     (:visibility params)
-        institution-id (tc/val->int (:institutionId params))]
+        institution-id (:institutionId params)]
     (call-sql "update_imagery_visibility_bulk" imagery-id visibility institution-id)
     (data-response "")))

@@ -89,6 +89,9 @@
    [:post "/update-user-institution-role"]   {:handler     users/update-institution-role
                                               :auth-type   :admin
                                               :auth-action :block}
+   [:post "/add-user-to-institution"]        {:handler     #'users/add-user-to-institution
+                                              :auth-type   :admin
+                                              :auth-action :block}
    [:post "/request-institution-membership"] {:handler     users/request-institution-membership
                                               :auth-type   :user
                                               :auth-action :block}
@@ -240,10 +243,10 @@
                                                 :auth-type   :collect
                                                 :auth-action :block}
    [:get  "/get-public-imagery"]               {:handler     imagery/get-public-imagery}
-   [:post "/add-institution-imagery"]          {:handler     (validate imagery/add-institution-imagery)
+   [:post "/add-institution-imagery"]          {:handler     imagery/add-institution-imagery
                                                 :auth-type   :admin
                                                 :auth-action :block}
-   [:post "/update-institution-imagery"]       {:handler     (validate imagery/update-institution-imagery)
+   [:post "/update-institution-imagery"]       {:handler     imagery/update-institution-imagery
                                                 :auth-type   :admin
                                                 :auth-action :block}
    [:post "/update-imagery-visibility"]        {:handler     (validate imagery/update-imagery-visibility)

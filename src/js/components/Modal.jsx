@@ -48,7 +48,9 @@ export default function Modal({
             </button>
             {typeof onConfirm === "function" && (
               <button
-                className={`btn btn-sm ${danger ? "btn-danger" : "btn-success"}`}
+                className={`btn btn-sm ${danger ? "btn-danger" : ""}`}
+                style={{backgroundColor: "#2d6f74",
+                        color: "#fff"}}
                 onClick={onConfirm}
                 type="button"
               >
