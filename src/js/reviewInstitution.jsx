@@ -444,17 +444,7 @@ export const InstitutionDescription = () => {
             color: "#1a3c36",
             marginBottom: "0.75rem",
           }}
-        >
-          <span
-            style={{
-              color: "#2f615e",
-              transform: "rotate(90deg)",
-              fontSize: "1.2rem",
-              marginTop: "-0.2rem",
-            }}
-          >
-            ▲
-          </span>
+        >          
           <span>Institution Description</span>
         </div>
         {institution.base64Image && (
