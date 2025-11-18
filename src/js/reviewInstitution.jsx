@@ -66,14 +66,13 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
           });
         })
     );
-  }
+  };
 
   const getImageryList = () => {
     fetch(`/get-institution-imagery?institutionId=${institutionId}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((data) => {
         const sorted = [...data].sort(sortImageryByVisibility);
-        console.log(sorted);
         setImageryList(sorted);
       })
       .catch((err) => {
