@@ -717,8 +717,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
           <ImageAnalysisPane />
         </div>
         <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
-          <CollectionSidebar processModal={processModal} userEmail={userEmail}>
-          </CollectionSidebar>
+          <CollectionSidebar processModal={processModal} userEmail={userEmail}></CollectionSidebar>
         </div>
         {state.messageBox && (
           <Modal {...state.messageBox} onClose={() => setState((s) => ({ ...s, messageBox: null }))}>
