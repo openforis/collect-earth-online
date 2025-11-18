@@ -76,6 +76,13 @@ export const ProjectsTab = ({
         selector: (row) => row.availability ?? "Unpublished",
         sortable: true,
       },
+      {cell: (row)=> <input
+                    className="btn btn-outline-lightgreen btn-sm w-100"
+                    onClick={() => window.open(`/collection?projectId=${row.id}&institutionId=${institutionId}`)
+                            }
+                    type="button"
+                    value="Collect"
+                  />}
     ],
     []
   );
