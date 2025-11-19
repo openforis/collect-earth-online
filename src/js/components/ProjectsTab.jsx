@@ -3,6 +3,8 @@ import DataTable from "react-data-table-component";
 import SvgIcon from "./svg/SvgIcon";
 import { BulkActions } from "./BulkActions";
 
+import '../../css/institution.css';
+
 export const ProjectsTab = ({
   institutionId,
   projectList = [],
@@ -66,27 +68,21 @@ export const ProjectsTab = ({
         right: true,
       },
       {
-        name: "Project Type",
-        selector: (row) => row.type ?? 'regular',
-        sortable: true,
-        center: true,
-      },
-      {
         name: "Publication",
         selector: (row) => row.availability ?? "Unpublished",
         sortable: true,
       },
       {cell: (row)=> <input
-                    className="btn btn-outline-lightgreen btn-sm w-100"
-                    onClick={() => window.open(`/collection?projectId=${row.id}&institutionId=${institutionId}`)
-                            }
-                    type="button"
-                    value="Collect"
+                       className="btn btn-outline-lightgreen btn-sm w-100"
+                       onClick={() => window.open(`/collection?projectId=${row.id}&institutionId=${institutionId}`)
+                               }
+                       type="button"
+                       value="Collect"
                   />}
     ],
     []
   );
-
+  
   const customStyles = {
     headCells: {
       style: {
@@ -108,9 +104,9 @@ export const ProjectsTab = ({
     deleteProjectsBulk(selectedRows.map((r) => r.id));
   };
 
-  const handleDownload = () => {
+  const handleDownload = (selectedFiles) => {
     if (selectedRows.length === 0) return;
-    downloadProjectsBulk(selectedRows.map((r) => r.id), { csv: true });
+    downloadProjectsBulk(selectedRows.map((r) => r.id), selectedFiles);
   };
 
   const conditionalRowStyles = [
@@ -141,55 +137,61 @@ export const ProjectsTab = ({
   ];
   
   return (
-    <div id="projects-tab">
-      <div className="projects-count">
-        <h2>
+    <div className="tab-container">
+      <div className="tab-header">
+        <h2 className="tab-title">
           Projects ({projectList.length})
         </h2>
 
-        {isAdmin ?
-         <button
-           id="new-project-button"
-           onClick={() => window.location.assign(`/create-project?institutionId=${institutionId}`)}
-         >
-           <SvgIcon icon="plus" size="1rem" />
-           Add New Project
-         </button>
-         : null}
+        {isAdmin && (
+          <button
+            id="new-project-button"
+            className="filled-button"
+            onClick={() =>
+              window.location.assign(`/create-project?institutionId=${institutionId}`)
+            }
+          >
+            <SvgIcon icon="plus" size="1rem" />
+            Add New Project
+          </button>
+        )}
       </div>
 
-      <div className="projects-filter">
+      <div className="tab-filter">
         <input
           type="text"
           placeholder="Search by name"
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
         />
-        <div className="projects-legend">
-          {[["No Plots collected"  , "#D98EB2"],
-            ["Some Plots collected", "#FEBD5B"],
-            ["All Plots collected" , "#84D0AC"],
-            ["Simplified", "#9286D3"]
-           ].map(([title, color]) => {
-             return (<div>
-                      <span style={{color}}>⯀</span>
-                      <span>: {title}</span>
-                    </div>);
-          })}
-
-        </div>
       </div>
-      {isAdmin &&
-       <BulkActions
-         isAdmin={isAdmin}
-         visibilityOptions={["public", "users", "institution", "private"]}
-         showDownload={true}
-         onChangeVisibility={editProjectsBulk}
-         onDownload={handleDownload}
-         onDelete={handleDelete}
-         selectedRows={selectedRows}
-       />
-      }
+      
+        <div className="projects-legend">
+          {[
+            ["No Plots collected", "#D98EB2"],
+            ["Some Plots collected", "#FEBD5B"],
+            ["All Plots collected", "#84D0AC"],
+            ["Simplified", "#9286D3"]
+          ].map(([title, color]) => (
+            <div key={title} className="projects-legend-item">
+              <span className="projects-legend-symbol" style={{ color }}>⯀</span>
+              <span className="projects-legend-label">: {title}</span>
+            </div>
+          ))}
+        </div>
+
+      {isAdmin && (
+        <BulkActions
+          isAdmin={isAdmin}
+          visibilityOptions={["public", "users", "institution", "private"]}
+          showDownload={true}
+          onChangeVisibility={editProjectsBulk}
+          onDownload={handleDownload}
+          onDelete={handleDelete}
+          selectedRows={selectedRows}
+        />
+      )}
+
       <DataTable
         columns={columns}
         data={filteredProjects}

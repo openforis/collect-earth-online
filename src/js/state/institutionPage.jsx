@@ -8,4 +8,5 @@ export const institutionPageAtom = atom({
   selectedTab: "projects",
   modalMessage: null,
   modal: null,
+  institutionDetails: {}
 });

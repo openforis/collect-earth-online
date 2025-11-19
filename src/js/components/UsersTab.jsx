@@ -2,15 +2,19 @@ import React, { useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 import { BulkActions } from "./BulkActions";
 import SvgIcon from "./svg/SvgIcon";
+import Modal from "./Modal";
+
+import "../../css/institution.css";
 
 export const UsersTab = ({
   usersList = [],
-  editUserRolesBulk,
-  removeUsersBulk,
+  editUsersBulk,
+  addUsersBulk,
   isAdmin,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [filterText, setFilterText] = useState("");
+  const [showAddUsers, setShowAddUsers] = useState(false);
 
   const filteredUsers = useMemo(() => {
     const lower = filterText.toLowerCase();
@@ -43,17 +47,9 @@ export const UsersTab = ({
         name: "Actions",
         cell: (row) => (
           <button
-            style={{
-              border: "1px solid #3D7F7A",
-              color: "#3D7F7A",
-              background: "white",
-              borderRadius: "4px",
-              padding: "4px 10px",
-              cursor: "pointer",
-              fontWeight: 500,
-            }}
+            className="outlined-btn"
             onClick={() =>
-              window.location.assign(`/user-stats?userId=${row.id}`)
+              window.location.assign(`/account?accountId=${row.id}`)
             }
           >
             View User Stats
@@ -85,37 +81,20 @@ export const UsersTab = ({
 
   const handleRemove = () => {
     if (selectedRows.length === 0) return;
-    removeUsersBulk(selectedRows.map((r) => r.id));
+    editUsersBulk(selectedRows.map((r) => r.id), "not-member");
   };
 
   return (
-    <div style={{ marginLeft: "18vw", padding: "2rem" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1rem",
-        }}
-      >
-        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#2f615e" }}>
+    <div className="tab-container">
+      <div className="tab-header">
+        <h2 classname="tab-title">
           Users ({usersList.length})
         </h2>
 
         {isAdmin && (
           <button
-            style={{
-              background: "#2f615e",
-              color: "white",
-              border: "none",
-              padding: "8px 16px",
-              borderRadius: "4px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-            onClick={() => window.location.assign("/add-user")}
+            className="filled-button"
+            onClick={() => setShowAddUsers(true)}
           >
             <SvgIcon icon="plus" size="1rem" />
             Add User
@@ -123,25 +102,12 @@ export const UsersTab = ({
         )}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "1rem",
-          marginBottom: "1rem",
-        }}
-      >
+      <div className="tab-filter">
         <input
           type="text"
           placeholder="Search by email"
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          style={{
-            flex: 1,
-            padding: "6px 10px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-          }}
         />
       </div>
 
@@ -149,10 +115,8 @@ export const UsersTab = ({
         <BulkActions
           isAdmin={isAdmin}
           showDownload={false}
-          visibilityOptions={["admin", "member", "pending"]}
-          onChangeVisibility={(ids, selectedRole) =>
-            editUserRolesBulk(ids, selectedRole)
-          }
+          visibilityOptions={["admin", "member"]}
+          onChangeVisibility={editUsersBulk}
           onDelete={handleRemove}
           selectedRows={selectedRows}
         />
@@ -171,6 +135,95 @@ export const UsersTab = ({
         noDataComponent="No users found."
         sortIcon={<SvgIcon icon="downCaret" size="0.9rem" />}
       />
+      {showAddUsers &&
+       <AddUsersModal
+         onClose={() => setShowAddUsers(false)}
+         onAdd={(rows) => addUsersBulk(rows)}
+       />
+      }
     </div>
+  );
+};
+
+export const AddUsersModal = ({ onClose, onAdd }) => {
+  const [rows, setRows] = useState([
+    { email: "", role: "admin" },
+  ]);
+
+  const addRow = () =>
+    setRows((prev) => [...prev, { email: "", role: "admin" }]);
+
+  const updateRow = (index, key, value) =>
+    setRows((prev) =>
+      prev.map((row, i) =>
+        i === index ? { ...row, [key]: value } : row
+      )
+    );
+
+  const deleteRow = (index) =>
+    setRows((prev) => prev.filter((_, i) => i !== index));
+
+  const handleConfirm = () => {
+    onAdd(rows);
+    onClose();
+  };
+
+  return (
+    <Modal
+      title="Add Users"
+      closeText="Cancel"
+      confirmText="Add Users"
+      onClose={onClose}
+      onConfirm={handleConfirm}
+    >
+      <div className="add-users-container">
+
+        {rows.map((row, i) => (
+          <div key={i} className="add-users-row">
+            <div>
+              <label className="form-label">
+                Email Address <span className="required">*</span>
+              </label>
+              <input
+                type="email"
+                className="form-control"
+                placeholder="Enter"
+                value={row.email}
+                onChange={(e) => updateRow(i, "email", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="form-label">
+                Role <span className="required">*</span>
+              </label>
+              <select
+                className="form-control"
+                value={row.role}
+                onChange={(e) => updateRow(i, "role", e.target.value)}
+              >
+                <option value="admin">Admin</option>
+                <option value="member">Member</option>
+              </select>
+            </div>
+
+            {rows.length > 1 && (
+              <button
+                className="remove-user-btn"
+                onClick={() => deleteRow(i)}
+              >
+                <SvgIcon icon="trash" size="1rem" color="#C62828" />
+              </button>
+            )}
+          </div>
+        ))}
+
+        <button className="add-user-btn" onClick={addRow}>
+          <SvgIcon icon="plus" size="1rem" />
+          Add User
+        </button>
+      </div>
+    </Modal>
+
   );
 };
