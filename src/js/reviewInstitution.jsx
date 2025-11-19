@@ -361,9 +361,9 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
     <>
       <SidebarTabs
         tabs={[
-          { id: "projects", label: "Projects", icon: "projects", badge: safeLength(state.projectList) || 0 },
-          { id: "imagery", label: "Imagery", icon: "imagery", badge: safeLength(state.imageryList) || 0 },
-          { id: "users", label: "Users", icon: "users", badge: safeLength(state.usersList) || 0 },
+          { id: "projects", label: "Projects", icon: "projects", badge: safeLength(state.projectList) },
+          { id: "imagery", label: "Imagery", icon: "imagery", badge: safeLength(state.imageryList) },
+          { id: "users", label: "Users", icon: "users", badge: safeLength(state.usersList) },
         ]}
         onUpdateInstitution={updateInstitution}
         institutionName={state.institutionDetails.name}
