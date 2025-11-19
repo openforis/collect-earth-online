@@ -100,7 +100,6 @@ class Collection extends React.Component {
     this.setState({ showAcceptedTermsModal: this.props.acceptedTerrms });
     if(this.props.plotId) {
       this.setReviewMode(true, this.navToPlot(this.props.plotId, true));
-
     }
   }
 
@@ -249,6 +248,7 @@ class Collection extends React.Component {
       this.getPlotters(),
     ])
       .then(() => {
+        this.reprocessPlotSimilarity();
         const reviewWarning = this.state.inReviewMode
               ? "You are currently in 'Review Mode.'"
               : "";
@@ -301,6 +301,28 @@ class Collection extends React.Component {
         );
       }
     });
+
+   reprocessPlotSimilarity = () => {
+    fetch(`/recalculate-plot-similarity`, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        projectId: this.state.currentProject.id,
+        referencePlotId: this.state.currentProject.plotSimilarityDetails.referencePlotId,
+        similarityYears: this.state.currentProject.plotSimilarityDetails.years,
+      })
+    })
+      .then((response) => {
+        if (response.ok) {
+          null;
+        } else {
+          this.setState({modal: {alert: {alertType: "Recalculate Similarity Error", alertMessage: "Error recalculating plot similarity. See console for details."}}});
+        }
+      }
+  )};
 
   // TODO, this can easily be a part of get-project-by-id
   getProjectPlots = () =>
@@ -1610,6 +1632,7 @@ class PlotNavigation extends React.Component {
               <option value="unanalyzed">Unanalyzed plots</option>
               <option value="analyzed">Analyzed plots</option>
               <option value="flagged">Flagged plots</option>
+              <option value="similar">Similar Plots</option>
               {collectConfidence && <option value="confidence">Low Confidence</option>}
               {inReviewMode && <option value="user">By User</option>}
               {inReviewMode && isQAQCEnabled && <option value="qaqc">Disagreement</option>}

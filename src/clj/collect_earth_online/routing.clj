@@ -2,6 +2,7 @@
   (:require [collect-earth-online.api :refer [validate]]
             [collect-earth-online.generators.ce-project :as ce-project]
             [collect-earth-online.db.doi          :as doi]
+            [collect-earth-online.db.geoai        :as geoai]
             [collect-earth-online.db.geodash      :as geodash]
             [collect-earth-online.db.imagery      :as imagery]
             [collect-earth-online.db.institutions :as institutions]
@@ -157,6 +158,12 @@
                                               :auth-action :block}
    [:post "/import-ce-project"]              {:handler     (validate #'ce-project/import-ce-project)
                                               :auth-type   :user
+                                              :auth-action :block}
+   [:post "/start-plot-similarity"]          {:handler     #'geoai/start-plot-similarity!
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:post "/recalculate-plot-similarity"]    {:handler     #'geoai/recalculate-plot-similarity
+                                              :auth-type   :admin
                                               :auth-action :block}
 
    ;; QAQC API

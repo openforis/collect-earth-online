@@ -42,6 +42,18 @@ export default class ReviewChanges extends React.Component {
           .then((response) => Promise.all([response.ok, response.json()]))
           .then((data) => {
             if (data[0] && Number.isInteger(data[1].projectId)) {
+              fetch("/start-plot-similarity", {
+                method: "POST",
+                headers: {
+                  Accept: "application/json",
+                  "Content-Type": "application/json; charset=utf-8",
+                },
+                body: JSON.stringify({
+                  projectId: data[1].projectId,
+                  referencePlotId: this.context.plotSimilarityDetails.referencePlotId,
+                  similarityYears: this.context.plotSimilarityDetails.years,
+                })
+              });
               window.location = `/review-project?projectId=${data[1].projectId}`;
               return Promise.resolve();
             } else {

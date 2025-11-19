@@ -563,7 +563,10 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
     closed_date            date,
     has_geo_dash           boolean,
     token_key              text,
-    type                   text
+    type                   text,
+    similar_plots          int[],
+    reference_plot_rid     integer,
+    plot_similarity_years  jsonb
  ) AS $$
 
     SELECT project_uid,
@@ -598,15 +601,21 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
         closed_date,
         count(widget_uid) > 0,
         token_key,
-        type::TEXT
+        type::TEXT,
+        gc.similar_plots,
+        reference_plot_rid,
+        (SELECT jsonb_agg(key) FROM jsonb_object_keys(geoai_assets) AS key) AS plot_similarity_years
     FROM projects
     LEFT JOIN project_widgets
         ON project_rid = project_uid
+    LEFT JOIN geoai_cache gc
+        ON gc.project_rid = project_uid
     WHERE project_uid = _project_id
         AND availability <> 'archived'
-    GROUP BY project_uid
+    GROUP BY project_uid, gc.similar_plots
 
 $$ LANGUAGE SQL;
+
 
 CREATE OR REPLACE FUNCTION user_project(_user_id integer, _role_id integer, _privacy_level text, _availability text)
  RETURNS boolean AS $$

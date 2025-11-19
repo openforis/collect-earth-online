@@ -1049,3 +1049,54 @@ CREATE OR REPLACE FUNCTION convert_geojson_to_geom(_geojson TEXT)
 RETURNS GEOMETRY AS $$
     SELECT ST_GeomFromGeoJSON(_geojson);
 $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_plot_id_by_visible_id(_project_id INTEGER, _visible_id INTEGER)
+RETURNS INTEGER AS $$
+  SELECT plot_uid
+  FROM PLOTS
+  WHERE project_rid = _project_id
+    AND visible_id = _visible_id
+
+$$ LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION get_plot_visible_id_by_id(_project_id INTEGER, _id INTEGER)
+RETURNS INTEGER AS $$
+  SELECT visible_id
+  FROM PLOTS
+  WHERE project_rid = _project_id
+    AND plot_uid = _id
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION select_plots_by_similarity (_project_id integer, _ref_plot_id integer)
+ RETURNS setOf collection_return  AS $$
+  
+    SELECT p.plot_uid,
+           flagged,
+           flagged_reason,
+           confidence,
+           confidence_comment,
+           visible_id,
+           ST_AsGeoJSON(plot_geom) as plot_geom,
+           extra_plot_info,
+           pa.user_rid,
+           u.email
+       FROM geoai_cache gc
+       CROSS JOIN unnest (gc.similar_plots) WITH ORDINALITY AS elem(plot_uid, ord)
+       JOIN plots p
+           ON p.plot_uid = elem.plot_uid
+       LEFT JOIN plot_assignments pa
+           ON p.plot_uid = pa.plot_rid
+       LEFT JOIN user_plots up
+           ON p.plot_uid = up.plot_rid
+           AND (pa.user_rid = up.user_rid OR NOT (SELECT project_has_assigned(_project_id)))
+       LEFT JOIN plot_locks pl
+           ON p.plot_uid = pl.plot_rid
+       LEFT JOIN users u
+             ON pa.user_rid = u.user_uid
+    
+   WHERE gc.plot_rid = _ref_plot_id
+   AND   gc.project_rid = _project_id
+   ORDER BY elem.ord
+$$ LANGUAGE SQL;

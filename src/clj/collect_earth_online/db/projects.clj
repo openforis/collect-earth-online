@@ -140,7 +140,11 @@
      :hasGeoDash         (:has_geo_dash project)
      :isProjectAdmin     (is-proj-admin? user-id project-id nil)
      :userRole           user-role
-     :type               (:type project)}))
+     :type               (:type project)
+     :plotSimilarityDetails {:years (tc/jsonb->clj (:plot_similarity_years project))
+                             :referencePlotId (sql-primitive (call-sql "get_plot_visible_id_by_id"
+                                                                       (:project_id project)
+                                                                       (:reference_plot_rid project)))}}))
 
 (defn get-project-by-id [{:keys [params session]}]
   (let [user-id    (:userId session -1)

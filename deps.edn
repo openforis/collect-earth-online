@@ -8,11 +8,12 @@
         org.flatland/ordered     {:mvn/version "1.15.11"}
         org.clojure/data.json    {:mvn/version "1.0.0"}
         org.clojure/data.csv     {:mvn/version "1.0.1"}
+        com.oscaro/clj-gcloud-storage {:mvn/version "0.240-2.0"}
+        jonotin/jonotin          {:mvn/version "0.5.0"}
         org.clojure/data.xml     {:mvn/version "0.0.8"}
         ring/ring                {:mvn/version "1.8.2"}        
-      
         sig-gis/triangulum       {:git/url "https://github.com/sig-gis/triangulum"
-                                 :git/sha "3d41dab63e1bc8ebe046f64db44ae3df986f5bdf"}}
+                                  :git/sha "3d41dab63e1bc8ebe046f64db44ae3df986f5bdf"}}
 
  :aliases {:build-db         {:main-opts ["-m" "triangulum.build-db"]}
            :config           {:main-opts ["-m" "triangulum.config"]}
@@ -24,8 +25,8 @@
            :production       {:jvm-opts ["-XX:MaxRAMPercentage=90" "-XX:+PrintFlagsFinal"]}
            :test             {:extra-paths ["test"]
                               :extra-deps {com.cognitect/test-runner
-                                         {:git/url "https://github.com/cognitect-labs/test-runner.git"
-                                          :sha     "7284cda41fb9edc0f3bc6b6185cfb7138fc8a023"}}
+                                           {:git/url "https://github.com/cognitect-labs/test-runner.git"
+                                            :sha     "7284cda41fb9edc0f3bc6b6185cfb7138fc8a023"}}
                               :main-opts   ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
                                             "-m" "cognitect.test-runner"
                                             "--exclude" ":db"]

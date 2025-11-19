@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import shp from "shpjs";
+import DatePicker from 'react-datepicker';
 
 import {
   formatNumberWithCommas,
@@ -43,6 +44,13 @@ export class PlotDesign extends React.Component {
     ) {
       this.setSimplifiedProjectDetails();
     }
+    if (this.props.totalPlots &&
+        this.props.totalPlots !== prevProps.totalPlots &&
+        this.props.totalPlots <= 5000
+       ) {
+      const plotIds = Array.from({ length: this.props.totalPlots }, (_, i) => i + 1);
+      this.setState({ plotIdList: plotIds });
+    }
   }
 
   setCoordsFromBoundary = () => {
@@ -66,7 +74,7 @@ export class PlotDesign extends React.Component {
   };
 
   validBoundary = (latMin, latMax, lonMin, lonMax) =>
-    isNumber(latMin) &&
+  isNumber(latMin) &&
     isNumber(latMax) &&
     isNumber(lonMin) &&
     isNumber(lonMax) &&
@@ -114,6 +122,118 @@ export class PlotDesign extends React.Component {
       designSettings: {
         ...designSettings,
         sampleGeometries: {"lines": true, "points": true, "polygons": true}} })
+  }
+  readFileAsArrayBuffer = (file) =>
+    new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsArrayBuffer(file);
+    });
+
+  readFileAsText = (file) =>
+    new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+            r.readAsText(file);
+    });
+
+  getPlotIdFromProps = (props = {}) => {
+    if (!props) return undefined;
+    const keys = Object.keys(props);
+    const k = keys.find((key) =>
+      ["plotid","plot_id","PlotID","plotId","PLOTID"].includes(key)
+    );
+    return k ? props[k] : undefined;
+  };
+
+  // SHP file
+  parseZipShapefileToIds = async (file) => {
+    const geojson = await shp(file);
+    const features = geojson?.type === "FeatureCollection" ? geojson.features : [];
+    return features
+      .map((f) => this.getPlotIdFromProps(f?.properties))
+      .filter((v) => v != null);
+  };
+
+  // GeoJSON / JSON
+  parseGeoJSONToIds = (text) => {
+    const data = JSON.parse(text);
+    const features = data?.type === "FeatureCollection" ? data.features : [];
+    return features
+      .map((f) => this.getPlotIdFromProps(f?.properties))
+      .filter((v) => v != null);
+  };
+
+  // CSV (first column = plotid)
+  parseCsvToIds = (text) => {
+    const lines = text
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0);
+
+    if (lines.length === 0) return [];
+
+    const firstRow = lines[0].split(/,(.+)?/)[0].trim();
+    const hasHeader =
+          /^[A-Za-z_]+$/.test(firstRow) || firstRow.toLowerCase() === "plotid";
+
+    const startIdx = hasHeader ? 1 : 0;
+
+    const ids = [];
+    for (let i = startIdx; i < lines.length; i++) {
+      const firstCell = lines[i].split(/,(.+)?/)[0].trim();
+      if (firstCell !== "") ids.push(firstCell);
+    }
+    return ids;
+  };
+
+  readPlotIdsFromFile = async (file) => {
+    const name = (file?.name || "").toLowerCase();
+
+    if (name.endsWith(".zip")) {
+      const ab = await this.readFileAsArrayBuffer(file);
+      return await this.parseZipShapefileToIds(ab);
+    }
+
+    if (name.endsWith(".geojson") || name.endsWith(".json")) {
+      const text = await this.readFileAsText(file);
+      return this.parseGeoJSONToIds(text);
+    }
+
+    if (name.endsWith(".csv")) {
+      const text = await this.readFileAsText(file);
+      return this.parseCsvToIds(text);
+    }
+
+    throw new Error("Unsupported file type. Please upload .zip (shp), .geojson/.json, or .csv.");
+  };
+
+  checkPlotFile = (plotFileType, plotFileName, plotFileBase64) => {
+    const { projectId, designSettings } = this.context;
+    fetch("/check-plot-file", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        plotFileType,
+        projectId,
+        plotFileName,
+        plotFileBase64
+      }),
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        this.setState(s => ({... s, totalPlots: data.filePlotCount}));
+        this.context.setProjectDetails({
+          designSettings: { ...designSettings,
+                            userAssignment: data.userAssignment,
+                            qaqcAssignment: data.qaqcAssignment}
+        });
+      });
   }
 
   /// Render Functions
@@ -259,20 +379,6 @@ export class PlotDesign extends React.Component {
     );
   };
 
-  loadGeoJson = (shpFile) => {
-    try {
-      shp(shpFile).then((g) => {
-        this.context.setProjectDetails({
-          aoiDataDebug: g.features,
-          aoiFeatures: g.features.map((f) => f.geometry),
-          aoiFileName: g.fileName,
-        });
-      });
-    } catch {
-      this.setState ({modal: {alert: {alertType: "ShapeFile Error", alertMessage: "Unknown error loading shape file."}}});
-    }
-  };
-
   renderBoundaryFileInput = () => {
     const { aoiFileName } = this.context;
     return (
@@ -336,31 +442,7 @@ export class PlotDesign extends React.Component {
     );
   };
 
-  checkPlotFile = (plotFileName, plotFileBase64) => {
-    const { projectId, designSettings } = this.context;
-    fetch("/check-plot-csv", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        projectId,
-        plotFileName,
-        plotFileBase64
-      }),
-    })
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) =>
-        this.context.setProjectDetails({
-          designSettings: { ...designSettings,
-                            userAssignment: data.userAssignment,
-                            qaqcAssignment: data.qaqcAssignment}
-        })
-      );
-  }
-
-  renderFileInput = (fileType) => {
+  renderFileInput = (fileType, append) => {
     const acceptedTypes = {
       csv: "text/csv",
       shp: "application/zip",
@@ -383,12 +465,16 @@ export class PlotDesign extends React.Component {
               id="plot-distribution-file"
               onChange={(e) => {
                 const file = e.target.files[0];
+                this.readPlotIdsFromFile(file).then((plotIds) =>
+                  this.setState({ plotIdList: plotIds})
+                );
                 readFileAsBase64Url(file, (base64) => {
-                  this.checkPlotFile(file.name, base64);
+                  this.checkPlotFile(fileType, file.name, base64);
                   return this.setPlotDetails({
                     plotFileName: file.name,
                     plotFileBase64: base64,
-                  })
+                    append: false
+                  });
                 });
               }}
               style={{ display: "none" }}
@@ -501,27 +587,27 @@ export class PlotDesign extends React.Component {
       gridded: {
         display: "Gridded",
         description:
-          "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.",
+        "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.",
         layout: this.renderGridded(),
       },
       csv: {
         display: "CSV File",
         description:
-          "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
+        "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
         layout: this.renderCSV(),
       },
       shp: {
         display: "SHP File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
-          "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
+        "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
         layout: this.renderFileInput("shp"),
       },
       geojson: {
         display: "GeoJSON File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
-          "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
+        "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
         layout: this.renderFileInput("geojson"),
       },
     };
@@ -569,7 +655,7 @@ export class PlotDesign extends React.Component {
             </div>
             <p className="font-italic ml-2">{`- ${spatialDistributionOptions[plotDistribution].description}`}</p>
             {spatialDistributionOptions[plotDistribution].alert &&
-              <p className="alert">- {spatialDistributionOptions[plotDistribution].alert}</p>}
+             <p className="alert">- {spatialDistributionOptions[plotDistribution].alert}</p>}
           </div>
           <div>{spatialDistributionOptions[plotDistribution].layout}</div>
           <p
@@ -581,13 +667,84 @@ export class PlotDesign extends React.Component {
             }}
           >
             {totalPlots > 0 &&
-              `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
+             `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
             {totalPlots > 0 &&
-              totalPlots > plotLimit &&
-              `\n* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(
+             totalPlots > plotLimit &&
+             `\n* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(
                 plotLimit
               )}.`}
           </p>
+          {(this.context.type != "simplified") ? (
+            <>
+              <h3 className="mb-3">Plot Similarity Configuration</h3>
+              <div className="form-check">
+                <input
+                  checked={this.context.projectOptions.plotSimilarity}
+                  className="form-check-input"
+                  id="similarPlots"
+                  onChange={() =>
+                    this.context.setProjectDetails({
+                      projectOptions: { ...this.context.projectOptions, plotSimilarity: !this.context.projectOptions.plotSimilarity },
+                    })
+                  }
+                  type="checkbox"
+                />
+                <label className="form-check-label" htmlFor="similarPlots">
+                  Enable navigation by similarity
+                </label>
+                {this.context.projectOptions.plotSimilarity ? (
+                  <>
+                    <div className="form-group">
+                      <label htmlFor="referencePlotId"> Reference plot ID: {"  "}</label>
+                      <select
+                        id="referencePlotId"
+                        value={this.context.plotSimilarityDetails?.referencePlotId || ""}
+                        onChange={(e) =>
+                          this.context.setProjectDetails({
+                            plotSimilarityDetails: {
+                              ...this.context.plotSimilarityDetails,
+                              referencePlotId: e.target.value,
+                            },
+                          })
+                        }
+                      >
+                        <option value="" disabled>
+                          Select a plot ID
+                        </option>
+                        {this.state.plotIdList?.map((id) => (
+                          <option key={id} value={id}>
+                            {id}
+                          </option>
+                        ))}
+                      </select>
+                      <br/>
+                      <label htmlFor="year"> Year for comparison: {"  "} </label>
+                      <DatePicker
+                        selected={
+                          this.context.plotSimilarityDetails?.years?.[0]
+                            ? new Date(this.context.plotSimilarityDetails.years[0], 0, 1)
+                            : new Date()
+                        }
+                        onChange={(d) => {
+                          const year = d.getFullYear();
+
+                          this.context.setProjectDetails({
+                            plotSimilarityDetails: {
+                              ...this.context.plotSimilarityDetails,
+                              years: [year]
+                            },
+                          });
+                        }}
+                        className="form-control"
+                        showYearPicker
+                        dateFormat="yyyy"
+                      />
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            </>
+          ) : null}
         </div>
       </div>
     );
