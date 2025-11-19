@@ -41,6 +41,7 @@ export const stateAtom = atom({
   selectedSampleId: -1,
   userSamples: {},
   originalUserSamples: {},
+  userEmail: "",
   userImages: {},
   userInstitutions: [],
   storedInterval: null,

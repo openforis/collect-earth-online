@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { createPortal } from "react-dom";
 import { useAtom } from "jotai";
@@ -11,8 +11,9 @@ import { KBtoBase64Length } from "./utils/generalUtils";
 import { ProjectsTab } from "./components/ProjectsTab";
 import { ImageryTab } from "./components/ImageryTab";
 import { UsersTab } from "./components/UsersTab";
-
 import { safeLength } from "./utils/sequence";
+
+import '../css/institution.css';
 
 
 export const ReviewInstitution = ({ institutionId, userId }) => {
@@ -360,9 +361,9 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
     <>
       <SidebarTabs
         tabs={[
-          { id: "projects", label: "Projects", icon: "projects", badge: safeLength(state.projectList) || 0 },
-          { id: "imagery", label: "Imagery", icon: "imagery", badge: safeLength(state.imageryList) || 0 },
-          { id: "users", label: "Users", icon: "users", badge: safeLength(state.usersList) || 0 },
+          { id: "projects", label: "Projects", icon: "projects", badge: safeLength(state.projectList) },
+          { id: "imagery", label: "Imagery", icon: "imagery", badge: safeLength(state.imageryList) },
+          { id: "users", label: "Users", icon: "users", badge: safeLength(state.usersList) },
         ]}
         onUpdateInstitution={updateInstitution}
         institutionName={state.institutionDetails.name}
@@ -418,75 +419,22 @@ export const InstitutionDescription = () => {
   if (!institution?.description) return null;
 
   return (
-    <div
-      style={{
-        marginLeft: "22vw",
-        padding: "2rem 2rem 0 2rem",
-        boxSizing: "border-box",
-      }}
-    >
-      <div
-        style={{
-          border: "1px solid #cce0dc",
-          borderRadius: "6px",
-          background: "#f9fcfb",
-          padding: "1.5rem 2rem",
-          fontFamily: "inherit",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            fontWeight: 600,
-            color: "#1a3c36",
-            marginBottom: "0.75rem",
-          }}
-        >
-          <span
-            style={{
-              color: "#2f615e",
-              transform: "rotate(90deg)",
-              fontSize: "1.2rem",
-              marginTop: "-0.2rem",
-            }}
-          >
-            ▲
-          </span>
+    <div className="inst-desc-container">
+      <div className="inst-desc-box">
+        <div className="inst-desc-title">
           <span>Institution Description</span>
         </div>
+
         {institution.base64Image && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginBottom: "1.5rem",
-            }}
-          >
+          <div className="inst-desc-logo-wrapper">
             <img
               src={`data:image/png;base64,${institution.base64Image}`}
               alt="Institution logo"
-              style={{
-                width: "160px",
-                height: "auto",
-                objectFit: "contain",
-                borderRadius: "8px",
-              }}
+              className="inst-desc-logo"
             />
           </div>
         )}
-
-        <p
-          style={{
-            color: "#4a4a4a",
-            fontSize: "1rem",
-            lineHeight: "1.6",
-            margin: 0,
-          }}
-        >
-          {institution.description}
-        </p>
+        <p className="inst-desc-text">{institution.description}</p>
       </div>
     </div>
   );
@@ -503,20 +451,6 @@ export const SidebarTabs = ({
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showUpdateInstitution, setShowUpdateInstitution] = useState(false);
-
-  const menuItemStyle = {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    padding: "8px 12px",
-    width: "100%",
-    background: "white",
-    border: "none",
-    cursor: "pointer",
-    fontSize: "14px",
-    textAlign: "left",
-    color: "#1a1a1a",
-  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -536,65 +470,26 @@ export const SidebarTabs = ({
   }
 
   return (
-    <div
-      className="sidebar-tabs"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "stretch",
-        position: "fixed",
-        top: "120px",
-        left: 0,
-        height: "calc(100vh - 80px)",
-        width: "22vw",
-        background: "#f7f9f8",
-        borderRight: "1px solid #dcdedc",
-        boxSizing: "border-box",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "16px",
-          borderBottom: "1px solid #dcdedc",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <div className="sidebar-tabs">
+      <div className="sidebar-header">
+        <div className="sidebar-header-left">
           <SvgIcon icon="folder" size="1.2rem" />
-          <span style={{ fontWeight: 600, fontSize: "15px" }}>{institutionName}</span>
+          <span className="sidebar-title">{institutionName}</span>
         </div>
+
         {isAdmin && (
-          <div style={{ position: "relative" }} className="menu-container">
+          <div className="menu-container">
             <button
               onClick={() => setShowMenu((v) => !v)}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "4px",
-              }}
+              className="icon-button"
             >
               <SvgIcon icon="moreVert" size="1.2rem" />
             </button>
 
             {showMenu && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "28px",
-                  right: 0,
-                  background: "#fff",
-                  border: "1px solid #ddd",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                  width: "190px",
-                  zIndex: 50,
-                }}
-              >
+              <div className="menu-dropdown">
                 <button
-                  style={menuItemStyle}
+                  className="menu-item"
                   onClick={() => {
                     setShowMenu(false);
                     setShowUpdateInstitution(true);
@@ -605,11 +500,12 @@ export const SidebarTabs = ({
                 </button>
 
                 <button
-                  style={menuItemStyle}
+                  className="menu-item"
                   onClick={() => {
                     setShowMenu(false);
                     window.open(
-                      `/institution-dashboard?institutionId=${institutionId}`);
+                      `/institution-dashboard?institutionId=${institutionId}`
+                    );
                   }}
                 >
                   <SvgIcon icon="folder" size="1rem" />
@@ -626,74 +522,35 @@ export const SidebarTabs = ({
         return (
           <button
             key={tab.id}
+            className={`sidebar-tab ${isActive ? "active" : ""}`}
             onClick={() => onChange(tab.id)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "0.75rem",
-              padding: "10px 16px",
-              border: "none",
-              backgroundColor: isActive ? "#e6efef" : "#f7f9f8",
-              color: "#000",
-              cursor: "pointer",
-              width: "100%",
-              transition: "background-color 0.2s ease, color 0.2s ease",
-              position: "relative",
-            }}
           >
-            {isActive && (
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: "4px",
-                  backgroundColor: "#2f615e",
-                  borderTopRightRadius: "2px",
-                  borderBottomRightRadius: "2px",
-                }}
-              />
-            )}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            {isActive && <div className="sidebar-tab-indicator" />}
+
+            <div className="sidebar-tab-left">
               {tab.icon && <SvgIcon icon={tab.icon} size="1.2rem" />}
-              <span
-                style={{
-                  fontSize: "14px",
-                  fontWeight: isActive ? 600 : 400,
-                }}
-              >
+              <span className={`sidebar-tab-label ${isActive ? "bold" : ""}`}>
                 {tab.label}
               </span>
             </div>
+
             {tab.badge > 0 && (
-              <span
-                style={{
-                  background: "#3D7F7A",
-                  color: "#fff",
-                  borderRadius: "10px",
-                  padding: "2px 8px",
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  minWidth: "24px",
-                  textAlign: "center",
-                }}
-              >
-                {tab.badge}
-              </span>
+              <span className="sidebar-badge">{tab.badge}</span>
             )}
           </button>
         );
       })}
-      {showUpdateInstitution && createPortal(
-        <EditInstitutionModal
-          onClose={onCloseEditInstitution}
-          onSave={onSaveInstitution}
-        />,
-        document.body
-      )}
+      
+      {showUpdateInstitution &&
+       createPortal(
+         <EditInstitutionModal
+           onClose={onCloseEditInstitution}
+           onSave={onSaveInstitution}
+         />,
+         document.body
+       )}
     </div>
+
   );
 };
 

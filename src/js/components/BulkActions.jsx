@@ -31,117 +31,48 @@ export const BulkActions = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const greenBorderButton = {
-    border: "1px solid #3D7F7A",
-    background: "#fff",
-    color: "#3D7F7A",
-    fontWeight: 500,
-    padding: "6px 14px",
-    borderRadius: "6px",
-    cursor: "pointer",
-    transition: "background 0.2s ease, color 0.2s ease",
-  };
-
-  const redBorderButton = {
-    border: "1px solid #C62828",
-    background: "#fff",
-    color: "#C62828",
-    fontWeight: 500,
-    padding: "6px 14px",
-    borderRadius: "6px",
-    cursor: "pointer",
-    transition: "background 0.2s ease, color 0.2s ease",
-  };
-
-  const filledGreenButton = {
-    background: "#3D7F7A",
-    color: "#fff",
-    border: "1px solid #3D7F7A",
-    fontWeight: 500,
-    padding: "6px 14px",
-    borderRadius: "6px",
-    cursor: "pointer",
-  };
-
-  const grayButton = {
-    border: "1px solid #c4c7c5",
-    background: "#fff",
-    color: "#1a1a1a",
-    fontWeight: 500,
-    padding: "6px 14px",
-    borderRadius: "6px",
-    cursor: "pointer",
-  };
-
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.75rem",
-        margin: "1rem 0",
-        position: "relative",
-      }}
-    >
-      <div style={{ position: "relative" }} ref={visibilityRef}>
+    <div className="bulk-actions">
+      <div className="bulk-actions-group" ref={visibilityRef}>
         <button
-          style={{
-            ...greenBorderButton,
-            ...(showVisibilityMenu && { background: "#f2f5f4" }),
-          }}
+          className={`btn-outlined-green bulk-actions-trigger ${
+        showVisibilityMenu ? "active" : ""
+      }`}
           onClick={() => setShowVisibilityMenu((v) => !v)}
         >
           Change Visibility ▾
         </button>
 
         {showVisibilityMenu && (
-          <div
-            style={{
-              position: "absolute",
-              top: "110%",
-              left: 0,
-              background: "#fff",
-              border: "1px solid #dcdedc",
-              borderRadius: "8px",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-              padding: "0.75rem 1rem",
-              zIndex: 10,
-              width: "220px",
-            }}
-          >
+          <div className="bulk-actions-dropdown">
             {(visibilityOptions.length > 0
               ? visibilityOptions
               : ["Private", "Public", "Platform"]
-            ).map((option) => (
-              <div
-                key={option}
-                style={{ display: "flex", alignItems: "center", marginBottom: "0.4rem" }}
+             ).map((option) => (
+               <div key={option} className="bulk-actions-row">
+                 <input
+                   type="radio"
+                   id={option}
+                   name="visibility"
+                   checked={selectedVisibility === option}
+                   onChange={() => setSelectedVisibility(option)}
+                 />
+                 <label htmlFor={option} className="bulk-actions-label">
+                   {option ? option.charAt(0).toUpperCase() + option.slice(1) : ""}
+                 </label>
+               </div>
+             ))}
+
+            <div className="bulk-actions-footer">
+              <button
+                className="btn-outlined-gray"
+                onClick={() => setShowVisibilityMenu(false)}
               >
-                <input
-                  type="radio"
-                  id={option}
-                  name="visibility"
-                  checked={selectedVisibility === option}
-                  onChange={() => setSelectedVisibility(option)}
-                />
-                <label htmlFor={option} style={{ marginLeft: "0.5rem" }}>
-                  {option ? option.charAt(0).toUpperCase() + option.slice(1) : ""}
-                </label>
-              </div>
-            ))}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: "0.5rem",
-                marginTop: "0.75rem",
-              }}
-            >
-              <button style={grayButton} onClick={() => setShowVisibilityMenu(false)}>
                 Cancel
               </button>
+
               <button
-                style={filledGreenButton}
+                className="btn-filled-green"
                 onClick={() => {
                   onChangeVisibility(selectedRows.map((r) => r.id), selectedVisibility);
                   setShowVisibilityMenu(false);
@@ -153,42 +84,26 @@ export const BulkActions = ({
           </div>
         )}
       </div>
+
       {showDownload && (
-        <div style={{ position: "relative" }} ref={downloadRef}>
+        <div className="bulk-actions-group" ref={downloadRef}>
           <button
-            style={{
-              ...greenBorderButton,
-              ...(showDownloadMenu && { background: "#f2f5f4" }),
-            }}
+            className={`btn-outlined-green bulk-actions-trigger ${
+          showDownloadMenu ? "active" : ""
+        }`}
             onClick={() => setShowDownloadMenu((v) => !v)}
           >
             Download ▾
           </button>
 
           {showDownloadMenu && (
-            <div
-              style={{
-                position: "absolute",
-                top: "110%",
-                left: 0,
-                background: "#fff",
-                border: "1px solid #dcdedc",
-                borderRadius: "8px",
-                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                padding: "0.75rem 1rem",
-                zIndex: 10,
-                width: "250px",
-              }}
-            >
+            <div className="bulk-actions-dropdown wide">
               {[
                 { key: "plots", label: "Plot Data: .CSV" },
                 { key: "samples", label: "Sample Data: .CSV" },
                 { key: "shape", label: "Shapefile: .SHP" },
               ].map(({ key, label }) => (
-                <div
-                  key={key}
-                  style={{ display: "flex", alignItems: "center", marginBottom: "0.4rem" }}
-                >
+                <div key={key} className="bulk-actions-row">
                   <input
                     type="checkbox"
                     id={key}
@@ -201,26 +116,22 @@ export const BulkActions = ({
                       )
                     }
                   />
-                  <label htmlFor={key} style={{ marginLeft: "0.5rem" }}>
+                  <label htmlFor={key} className="bulk-actions-label">
                     {label}
                   </label>
                 </div>
               ))}
 
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: "0.5rem",
-                  marginTop: "0.75rem",
-                }}
-              >
-                <button style={grayButton} onClick={() => setShowDownloadMenu(false)}>
+              <div className="bulk-actions-footer">
+                <button
+                  className="btn-outlined-gray"
+                  onClick={() => setShowDownloadMenu(false)}
+                >
                   Cancel
                 </button>
 
                 <button
-                  style={filledGreenButton}
+                  className="btn-filled-green"
                   onClick={() => {
                     onDownload(selectedDownloads);
                     setShowDownloadMenu(false);
@@ -233,7 +144,8 @@ export const BulkActions = ({
           )}
         </div>
       )}
-      <button style={redBorderButton} onClick={onDelete}>
+
+      <button className="btn-outlined-red" onClick={onDelete}>
         Delete
       </button>
     </div>

@@ -4,6 +4,8 @@ import { BulkActions } from "./BulkActions";
 import SvgIcon from "./svg/SvgIcon";
 import Modal from "./Modal";
 
+import "../../css/institution.css";
+
 export const UsersTab = ({
   usersList = [],
   editUsersBulk,
@@ -45,15 +47,7 @@ export const UsersTab = ({
         name: "Actions",
         cell: (row) => (
           <button
-            style={{
-              border: "1px solid #3D7F7A",
-              color: "#3D7F7A",
-              background: "white",
-              borderRadius: "4px",
-              padding: "4px 10px",
-              cursor: "pointer",
-              fontWeight: 500,
-            }}
+            className="outlined-btn"
             onClick={() =>
               window.location.assign(`/account?accountId=${row.id}`)
             }
@@ -91,32 +85,15 @@ export const UsersTab = ({
   };
 
   return (
-    <div style={{ marginLeft: "22vw", padding: "2rem" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1rem",
-        }}
-      >
-        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#2f615e" }}>
+    <div className="tab-container">
+      <div className="tab-header">
+        <h2 classname="tab-title">
           Users ({usersList.length})
         </h2>
 
         {isAdmin && (
           <button
-            style={{
-              background: "#2f615e",
-              color: "white",
-              border: "none",
-              padding: "8px 16px",
-              borderRadius: "4px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
+            className="filled-button"
             onClick={() => setShowAddUsers(true)}
           >
             <SvgIcon icon="plus" size="1rem" />
@@ -125,25 +102,12 @@ export const UsersTab = ({
         )}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "1rem",
-          marginBottom: "1rem",
-        }}
-      >
+      <div className="tab-filter">
         <input
           type="text"
           placeholder="Search by email"
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          style={{
-            flex: 1,
-            padding: "6px 10px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-          }}
         />
       </div>
 
@@ -212,22 +176,13 @@ export const AddUsersModal = ({ onClose, onAdd }) => {
       onClose={onClose}
       onConfirm={handleConfirm}
     >
-      <div className="p-2">
+      <div className="add-users-container">
 
         {rows.map((row, i) => (
-          <div
-            key={i}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr auto",
-              gap: "1rem",
-              alignItems: "end",
-              marginBottom: "1rem",
-            }}
-          >
+          <div key={i} className="add-users-row">
             <div>
               <label className="form-label">
-                Email Address <span style={{ color: "red" }}>*</span>
+                Email Address <span className="required">*</span>
               </label>
               <input
                 type="email"
@@ -240,7 +195,7 @@ export const AddUsersModal = ({ onClose, onAdd }) => {
 
             <div>
               <label className="form-label">
-                Role <span style={{ color: "red" }}>*</span>
+                Role <span className="required">*</span>
               </label>
               <select
                 className="form-control"
@@ -254,18 +209,8 @@ export const AddUsersModal = ({ onClose, onAdd }) => {
 
             {rows.length > 1 && (
               <button
+                className="remove-user-btn"
                 onClick={() => deleteRow(i)}
-                style={{
-                  border: "1px solid #C62828",
-                  background: "white",
-                  padding: "6px 10px",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  height: "38px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
               >
                 <SvgIcon icon="trash" size="1rem" color="#C62828" />
               </button>
@@ -273,25 +218,12 @@ export const AddUsersModal = ({ onClose, onAdd }) => {
           </div>
         ))}
 
-        <button
-          onClick={addRow}
-          style={{
-            background: "#2f615e",
-            color: "white",
-            border: "none",
-            padding: "10px 16px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            marginTop: "0.5rem",
-          }}
-        >
+        <button className="add-user-btn" onClick={addRow}>
           <SvgIcon icon="plus" size="1rem" />
           Add User
         </button>
       </div>
     </Modal>
+
   );
 };

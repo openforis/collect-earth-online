@@ -1,11 +1,12 @@
 import React, { useMemo, useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 
-
 import { BulkActions } from "./BulkActions";
 import SvgIcon from "./svg/SvgIcon";
 import { imageryOptions } from "../imagery/imageryOptions";
 import Modal from "./Modal";
+
+import "../../css/institution.css";
 
 export const ImageryTab = ({
   imageryList = [],
@@ -110,32 +111,17 @@ export const ImageryTab = ({
   };
 
   return (
-    <div style={{ marginLeft: "22vw", padding: "2rem" }}>
+    <div className="tab-container">
       <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1rem",
-        }}
+        className="tab-header"
       >
-        <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#2f615e" }}>
+        <h2 className="tab-title">
           Imagery ({imageryList.length})
         </h2>
 
         {isAdmin && (
           <button
-            style={{
-              background: "#2f615e",
-              color: "white",
-              border: "none",
-              padding: "8px 16px",
-              borderRadius: "4px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
+            className="filled-button"
             onClick={() => handleOpenNewImagery()}
           >
             <SvgIcon icon="plus" size="1rem" />
@@ -144,25 +130,12 @@ export const ImageryTab = ({
         )}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "1rem",
-          marginBottom: "1rem",
-        }}
-      >
+      <div className="tab-filter">
         <input
           type="text"
           placeholder="Search imagery"
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          style={{
-            flex: 1,
-            padding: "6px 10px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-          }}
         />
       </div>
 
