@@ -35,15 +35,15 @@ export const ProjectsTab = ({
         selector: (row) => row.name,
         sortable: true,
         cell: (row) => (
-          <a
-            className="projects-table-name"
-            href={
-              isAdmin ?
-                `/review-project?projectId=${row.id}&institutionId=${institutionId}` 
-	        : `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
-            {row.name}
-          </a>
-        ),
+			<a
+			className="projects-table-name"
+			href={
+			  isAdmin ?
+			    `/review-project?projectId=${row.id}&institutionId=${institutionId}` 
+			    : `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
+			{row.name}
+			</a>
+			),
       },
       {
         name: "Date Created",
