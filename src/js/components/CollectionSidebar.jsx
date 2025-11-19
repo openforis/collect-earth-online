@@ -76,12 +76,11 @@ const StatsCard = ({}) => {
   );
 };
 
-export const CollectionSidebar = ({ processModal }) => {
+export const CollectionSidebar = ({ processModal, userEmail }) => {
   const { currentPlot, currentProject } = useAtomValue(stateAtom);
-
   const content = (
     <>
-      <NewPlotNavigation />
+      <NewPlotNavigation userEmail={userEmail}/>
       <StatsCard/>
       {currentPlot.id > 0 && (
         <>
@@ -97,7 +96,7 @@ export const CollectionSidebar = ({ processModal }) => {
   const footer = <SidebarFooter processModal={processModal} />;
 
   return (
-    <Sidebar
+    <Sidebar      
       stateAtom={stateAtom}
       processModal={processModal}
       children={content}
@@ -107,7 +106,7 @@ export const CollectionSidebar = ({ processModal }) => {
   );
 };
 
-export const NewPlotNavigation = () => {
+export const NewPlotNavigation = ({userEmail}) => {
   const setAppState = useSetAtom(stateAtom);
   const {
     currentProject,
@@ -190,11 +189,85 @@ export const NewPlotNavigation = () => {
       }));
     }
   };
-  
+
+  const ProjectStats = () => {
+    const { stats, } = useAtomValue(stateAtom);
+    const { totalPlots,
+            analyzedPlots,
+            unanalyzedPlots,
+            flaggedPlots,
+            userStats,
+            collectionTime,
+          } = stats;
+    const currentUserStats = userStats.filter(({email}) => email === userEmail)[0];
+    const userAverageTime = (currentUser) => {
+      const { seconds, timedPlots } = currentUser;
+      return (seconds / timedPlots).toFixed(2);
+    };
+    
+    return (
+      <div
+        style={{
+          position: "absolute", 
+          zIndex: "1",
+          top: "45px",
+          width: "100%",
+          paddingRight: "2rem"
+        }}>
+        <SidebarCard
+          showHeader={false}>
+          <label className="stats-header m-0 mr-3">Project Statistics</label>
+          <div className="stats-row">
+            <label className="m-0 mr-3">--Total</label>
+            <span>{totalPlots}</span>
+          </div>
+          <div className="stats-row">
+            <label className="m-0 mr-3">--Analyzed</label>
+            <span>{analyzedPlots}</span>
+          </div>
+          <div className="stats-row">
+            <label className="m-0 mr-3">--Unanalyzed</label>
+            <span>{unanalyzedPlots}</span>
+          </div>
+          <div className="stats-row">
+            <label className="m-0 mr-3">--Flagged</label>
+            <span>{flaggedPlots}</span>
+          </div>
+          <div className="stats-row">
+            <label className="m-0 mr-3">--Total Contributors</label>
+            <span>{userStats.length}</span>
+          </div>      
+          {collectionTime &&
+           <div className="stats-row">
+             <label className="m-0 mr-3">--Average Collection Time</label>
+             <span>{(collectionTime / (totalPlots - unanalyzedPlots)).toFixed(2)}s</span>
+           </div>}
+          {currentUserStats &&
+           <>
+             <label className="stats-header m-0 mr-3">My Statistics</label>
+             <div className="stats-row">
+               <label className="m-0 mr-3">--Analyzed</label>
+               <span>{currentUserStats.analyzed}</span>
+             </div>
+             <div className="stats-row">
+               <label className="m-0 mr-3">--Flagged</label>
+               <span>{currentUserStats.flagged}</span>
+             </div>
+             <div className="stats-row">
+               <label className="m-0 mr-3">--My Average Time</label>
+               <span>{userAverageTime(currentUserStats)}s</span>
+             </div>
+           </>}
+        </SidebarCard>
+      </div>);};
+
   return (
-    <SidebarCard
+    <SidebarCard      
+      infoButton={true}
+      infoPopup={<ProjectStats />}
+      onInfoClick={()=>{setAppState((s) => ({... s, showInfoModal: !s.showInfoModal}));}}
       title={
-        <>
+        <>         
           {currentProject?.name}
           <span className="sidebar-subtitle"> ({currentProject?.numPlots} Plots)</span>
         </>
@@ -310,23 +383,23 @@ export const ExternalTools = () => {
     let urlParams="";
     if(currentPlot?.plotGeom){
       urlParams = currentPlot?.plotGeom?.includes("Point")
-            ? currentProject?.plotShape === "circle"
-            ? "center=[" +
-            mercator.parseGeoJson(currentPlot?.plotGeom).getCoordinates() +
-            "];radius=" +
-            currentProject?.plotSize / 2
-            : "geoJson=" +
-            mercator.geometryToGeoJSON(
-              mercator.getPlotPolygon(
-                currentPlot?.plotGeom,
-                currentProject?.plotSize,
-                currentProject?.plotShape
-              ),
-              "EPSG:4326",
-              "EPSG:3857",
-              5
-            )
-            : "geoJson=" + currentPlot?.plotGeom;
+        ? currentProject?.plotShape === "circle"
+        ? "center=[" +
+        mercator.parseGeoJson(currentPlot?.plotGeom).getCoordinates() +
+        "];radius=" +
+        currentProject?.plotSize / 2
+        : "geoJson=" +
+        mercator.geometryToGeoJSON(
+          mercator.getPlotPolygon(
+            currentPlot?.plotGeom,
+            currentProject?.plotSize,
+            currentProject?.plotShape
+          ),
+          "EPSG:4326",
+          "EPSG:3857",
+          5
+        )
+      : "geoJson=" + currentPlot?.plotGeom;
     }
     if (auxWindow) auxWindow.close();
     const win = window.open(
@@ -655,23 +728,23 @@ export const SidebarFooter = ({ processModal }) => {
   return (
     <div className="sidebar-footer-buttons">
       {!collecting &&
-        <button className="btn outline"
-              onClick={clearAll}>
-        Clear All
-      </button>}
+       <button className="btn outline"
+               onClick={clearAll}>
+         Clear All
+       </button>}
       {!collecting &&
        <button className="btn outline"
-              onClick={toggleFlagged}>
-        {currentPlot.flagged ? "Unflag Plot" : "Flag Plot"}
-      </button>}
+               onClick={toggleFlagged}>
+         {currentPlot.flagged ? "Unflag Plot" : "Flag Plot"}
+       </button>}
       <button className={!collecting ? "btn filled" : "btn outline"}
               onClick={() => setAppState(s => ({...s, showQuitModal: !s.showQuitModal}))}
       >Exit</button>
       {!collecting &&
        <button className="btn filled"
-              onClick={postValuesToDB}>
-        Save & Continue
-      </button>}
+               onClick={postValuesToDB}>
+         Save & Continue
+       </button>}
     </div>
   );
 };

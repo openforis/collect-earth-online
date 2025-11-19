@@ -760,7 +760,7 @@ export const ImageryLayerOptions = ({
       </div>
     </div>
   );
- };
+};
 
 export function PromptModal({title, inputs, callBack, closePrompt}) {
   const [promptState, setPromptState] = React.useState([]);
@@ -828,13 +828,13 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
             onClick={() => closePrompt()}
             type="button"
             value="Cancel"
-            />
+          />
           <input
             className="btn btn-outline-lightgreen btn-sm w-100"
             onClick={() => callBack(promptState)}
             type="button"
             value="Confirm"
-            />
+          />
         </div>
       </div>
     </div>
