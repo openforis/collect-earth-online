@@ -905,28 +905,28 @@ export class PlotDesign extends React.Component {
             <div className="form-group" style={{ width: "fit-content" }}>
               <label>Spatial distribution</label>
               <div style={{position: "relative"}}>
-              {spatialDistributionOptions[plotDistribution].alert &&
-             <p className="alert">- {spatialDistributionOptions[plotDistribution].alert}</p>}
-              <select
-                className="form-control form-control-sm"
-                onChange={(e) =>
-                  designSettings?.userAssignment?.userMethod === "file" ?
-                    this.setPlotDetails({
-                      plotDistribution: e.target.value,
-                      designSettings: { ...designSettings,
-                                        userAssignment: {userMethod: "none", users: [], percents: []},
-                                        qaqcAssignment: {qaqcMethod: "none", smes: [], overlap: 0}}})
-                    : this.setPlotDetails({ plotDistribution: e.target.value })
-                }
-                value={plotDistribution}
-              >
-                {Object.entries(spatialDistributionOptions).map(([key, options]) => (
-                  <option key={key} value={key}>
-                    {options.display}
-                  </option>
-                ))}
-      </select>
-      </div>
+                {spatialDistributionOptions[plotDistribution].alert &&
+                 <p className="alert">- {spatialDistributionOptions[plotDistribution].alert}</p>}
+                <select
+                  className="form-control form-control-sm"
+                  onChange={(e) =>
+                    designSettings?.userAssignment?.userMethod === "file" ?
+                      this.setPlotDetails({
+                        plotDistribution: e.target.value,
+                        designSettings: { ...designSettings,
+                                          userAssignment: {userMethod: "none", users: [], percents: []},
+                                          qaqcAssignment: {qaqcMethod: "none", smes: [], overlap: 0}}})
+                      : this.setPlotDetails({ plotDistribution: e.target.value })
+                  }
+                  value={plotDistribution}
+                >
+                  {Object.entries(spatialDistributionOptions).map(([key, options]) => (
+                    <option key={key} value={key}>
+                      {options.display}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <p className="font-italic ml-2">{`- ${spatialDistributionOptions[plotDistribution].description}`}</p>
             
@@ -948,73 +948,77 @@ export class PlotDesign extends React.Component {
                 plotLimit
               )}.`}
           </p>
-          <h3 className="mb-3">Plot Similarity Configuration</h3>
-          <div className="form-check">
-            <input
-              checked={this.context.projectOptions.plotSimilarity}
-              className="form-check-input"
-              id="similarPlots"
-              onChange={() =>
-                this.context.setProjectDetails({
-                  projectOptions: { ...this.context.projectOptions, plotSimilarity: !this.context.projectOptions.plotSimilarity },
-                })
-              }
-              type="checkbox"
-            />
-            <label className="form-check-label" htmlFor="similarPlots">
-              Enable navigation by similarity
-            </label>
-            {this.context.projectOptions.plotSimilarity ? (
-              <>
-                <div className="form-group">
-                  <label htmlFor="referencePlotId"> Reference plot ID: {"  "}</label>
-                  <select
-                    id="referencePlotId"
-                    value={this.context.plotSimilarityDetails?.referencePlotId || ""}
-                    onChange={(e) =>
-                      this.context.setProjectDetails({
-                        plotSimilarityDetails: {
-                          ...this.context.plotSimilarityDetails,
-                          referencePlotId: e.target.value,
-                        },
-                      })
-                    }
-                  >
-                    <option value="" disabled>
-                      Select a plot ID
-                    </option>
-                    {this.state.plotIdList?.map((id) => (
-                      <option key={id} value={id}>
-                        {id}
-                      </option>
-                    ))}
-                  </select>
-                  <br/>
-                  <label htmlFor="year"> Year for comparison: {"  "} </label>
-                  <DatePicker
-                    selected={
-                      this.context.plotSimilarityDetails?.years?.[0]
-                        ? new Date(this.context.plotSimilarityDetails.years[0], 0, 1)
-                        : new Date()
-                    }
-                    onChange={(d) => {
-                      const year = d.getFullYear();
+          {(this.context.type != "simplified") ? (
+            <>
+              <h3 className="mb-3">Plot Similarity Configuration</h3>
+              <div className="form-check">
+                <input
+                  checked={this.context.projectOptions.plotSimilarity}
+                  className="form-check-input"
+                  id="similarPlots"
+                  onChange={() =>
+                    this.context.setProjectDetails({
+                      projectOptions: { ...this.context.projectOptions, plotSimilarity: !this.context.projectOptions.plotSimilarity },
+                    })
+                  }
+                  type="checkbox"
+                />
+                <label className="form-check-label" htmlFor="similarPlots">
+                  Enable navigation by similarity
+                </label>
+                {this.context.projectOptions.plotSimilarity ? (
+                  <>
+                    <div className="form-group">
+                      <label htmlFor="referencePlotId"> Reference plot ID: {"  "}</label>
+                      <select
+                        id="referencePlotId"
+                        value={this.context.plotSimilarityDetails?.referencePlotId || ""}
+                        onChange={(e) =>
+                          this.context.setProjectDetails({
+                            plotSimilarityDetails: {
+                              ...this.context.plotSimilarityDetails,
+                              referencePlotId: e.target.value,
+                            },
+                          })
+                        }
+                      >
+                        <option value="" disabled>
+                          Select a plot ID
+                        </option>
+                        {this.state.plotIdList?.map((id) => (
+                          <option key={id} value={id}>
+                            {id}
+                          </option>
+                        ))}
+                      </select>
+                      <br/>
+                      <label htmlFor="year"> Year for comparison: {"  "} </label>
+                      <DatePicker
+                        selected={
+                          this.context.plotSimilarityDetails?.years?.[0]
+                            ? new Date(this.context.plotSimilarityDetails.years[0], 0, 1)
+                            : new Date()
+                        }
+                        onChange={(d) => {
+                          const year = d.getFullYear();
 
-                      this.context.setProjectDetails({
-                        plotSimilarityDetails: {
-                          ...this.context.plotSimilarityDetails,
-                          years: [year]
-                        },
-                      });
-                    }}
-                    className="form-control"
-                    showYearPicker
-                    dateFormat="yyyy"
-                  />
-                </div>
-              </>
-            ) : null}
-          </div>
+                          this.context.setProjectDetails({
+                            plotSimilarityDetails: {
+                              ...this.context.plotSimilarityDetails,
+                              years: [year]
+                            },
+                          });
+                        }}
+                        className="form-control"
+                        showYearPicker
+                        dateFormat="yyyy"
+                      />
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            </>
+          ) : null}
         </div>
         <hr/>
       </div>
