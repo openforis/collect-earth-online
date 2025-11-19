@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import SvgIcon from "./svg/SvgIcon";
 import { BulkActions } from "./BulkActions";
@@ -15,15 +15,15 @@ export const ProjectsTab = ({
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [filterText, setFilterText] = useState("");
-
+  
   const filteredProjects = useMemo(() => {
     const lower = filterText.toLowerCase();
     return projectList.filter((p) => p.name?.toLowerCase().includes(lower));
   }, [projectList, filterText]);
 
-
   const columns = useMemo(
     () => [
+      
       {
         name: "Visibility",
         selector: (row) => row.privacyLevel || "—",
@@ -38,7 +38,9 @@ export const ProjectsTab = ({
           <a
             className="projects-table-name"
             href={
-              isAdmin ? `/collection?projectId=${row.id}&institutionId=${institutionId}`: `/review-project?projectId=${row.id}&institutionId=${institutionId}`}>
+              isAdmin ?
+                `/review-project?projectId=${row.id}&institutionId=${institutionId}` 
+	        : `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
             {row.name}
           </a>
         ),
@@ -72,15 +74,28 @@ export const ProjectsTab = ({
         selector: (row) => row.availability ?? "Unpublished",
         sortable: true,
       },
+      
+      {omit: !isAdmin,
+       grow: .2,
+       cell: (row)=> <div
+                       className="btn-red"
+                       style={{borderRadius:".5rem"}}
+                       onClick={()=> {
+				      window.open(`/review-project?projectId=${row.id}&institutionId=${institutionId}`);
+				      }}
+                     >
+                       <SvgIcon icon="edit" size="2rem"/>
+                     </div>
+      },
       {cell: (row)=> <input
                        className="btn btn-outline-lightgreen btn-sm w-100"
                        onClick={() => window.open(`/collection?projectId=${row.id}&institutionId=${institutionId}`)
                                }
                        type="button"
                        value="Collect"
-                  />}
+                     />}
     ],
-    []
+    [isAdmin]
   );
   
   const customStyles = {
