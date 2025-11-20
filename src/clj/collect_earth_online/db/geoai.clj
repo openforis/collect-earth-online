@@ -48,6 +48,7 @@
                      sql-primitive
                      (clojure.string/split #"\.")
                      last)
+        _ (println "bq table exists")
         base-url (get-config :gcs-integration :api-url)
         search-url (str base-url "/search")
         try-plot (fn [pid]
