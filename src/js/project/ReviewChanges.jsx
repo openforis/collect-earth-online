@@ -50,8 +50,8 @@ export default class ReviewChanges extends React.Component {
                 },
                 body: JSON.stringify({
                   projectId: data[1].projectId,
-                  referencePlotId: this.context.plotSimilarityDetails.referencePlotId,
-                  similarityYears: this.context.plotSimilarityDetails.years,
+                  referencePlotId: this.context.plotSimilarityDetails?.referencePlotId,
+                  similarityYears: this.context.plotSimilarityDetails?.years,
                 })
               });
               window.location = `/review-project?projectId=${data[1].projectId}`;

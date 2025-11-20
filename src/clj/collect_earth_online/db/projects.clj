@@ -174,7 +174,12 @@
                     :surveyQuestions            (tc/jsonb->clj (:survey_questions project) [])
                     :surveyRules                (tc/jsonb->clj (:survey_rules project) [])
                     :projectOptions             (merge default-options (tc/jsonb->clj (:options project)))
-                    :designSettings             (merge default-settings (tc/jsonb->clj (:design_settings project)))})))
+                    :designSettings             (merge default-settings (tc/jsonb->clj (:design_settings project)))
+                    :type                       (:type project)
+                    :plotSimilarityDetails      {:years (tc/jsonb->clj (:plot_similarity_years project))
+                                                 :referencePlotId (sql-primitive (call-sql "get_plot_visible_id_by_id"
+                                                                                           (:project_id project)
+                                                                                           (:reference_plot_rid project)))}})))
 
 (defn get-project-stats [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
