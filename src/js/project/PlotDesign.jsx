@@ -28,6 +28,10 @@ export class PlotDesign extends React.Component {
 
   componentDidMount() {
     this.setCoordsFromBoundary();
+    if (this.context.numPlots) {
+      const plotIds = Array.from({ length: this.context.numPlots }, (_, i) => i + 1);
+      this.setState({ plotIdList: plotIds });
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
