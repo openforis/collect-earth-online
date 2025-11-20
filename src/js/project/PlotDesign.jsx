@@ -948,7 +948,7 @@ export class PlotDesign extends React.Component {
                 plotLimit
               )}.`}
           </p>
-          {(this.context.type != "simplified") ? (
+          {(this.context.type != "simplified") && (
             <>
               <h3 className="mb-3">Plot Similarity Configuration</h3>
               <div className="form-check">
@@ -966,7 +966,7 @@ export class PlotDesign extends React.Component {
                 <label className="form-check-label" htmlFor="similarPlots">
                   Enable navigation by similarity
                 </label>
-                {this.context.projectOptions.plotSimilarity ? (
+                {this.context.projectOptions.plotSimilarity && (
                   <>
                     <div className="form-group">
                       <label htmlFor="referencePlotId"> Reference plot ID: {"  "}</label>
@@ -1015,10 +1015,10 @@ export class PlotDesign extends React.Component {
                       />
                     </div>
                   </>
-                ) : null}
+                )}
               </div>
             </>
-          ) : null}
+          )}
         </div>
         <hr/>
       </div>
