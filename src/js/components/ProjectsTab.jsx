@@ -34,6 +34,7 @@ export const ProjectsTab = ({
         name: "Project Name",
         selector: (row) => row.name,
         sortable: true,
+        grow: 2,
         cell: (row) => (
           <a
             className="projects-table-name"
@@ -47,7 +48,6 @@ export const ProjectsTab = ({
         name: "Date Created",
         selector: (row) => row.createdDate,
         sortable: true,
-        grow: 1.2,
         cell: (row) =>
           row.createdDate
             ? row.createdDate
