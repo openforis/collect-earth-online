@@ -1100,3 +1100,14 @@ CREATE OR REPLACE FUNCTION select_plots_by_similarity (_project_id integer, _ref
    AND   gc.project_rid = _project_id
    ORDER BY elem.ord
 $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION select_plots_by_project(_project_id INTEGER)
+ RETURNS TABLE (
+   plot_uid   INTEGER,
+   visible_id INTEGER
+ ) AS $$
+   SELECT plot_uid, visible_id
+   FROM plots
+   WHERE project_rid=_project_id
+   ORDER BY visible_id
+$$ LANGUAGE SQL;
