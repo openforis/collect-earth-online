@@ -1781,8 +1781,8 @@ export const ExternalTools = ({
         "data:earth.kml+xml application/vnd.google-earth.kmz," +
           encodeURIComponent(KMLFeatures)
       }
-    >
       onClick={() => setUsedKML(true)}
+    >
       Download Plot KML
     </a>
   );
