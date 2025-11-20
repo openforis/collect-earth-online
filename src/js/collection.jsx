@@ -447,7 +447,7 @@ class Collection extends React.Component {
 
   getPlotData = (visibleId, direction, forcedNavMode = null, reviewMode = null) => {
     const { currentUserId, navigationMode, inReviewMode, threshold } = this.state;
-    const { type } = this.state.currentProject;
+    const { type, plotSimilarityDetails } = this.state.currentProject;
     const { projectId } = this.props;
     this.processModal("Getting plot", () =>
       fetch(
@@ -461,6 +461,7 @@ class Collection extends React.Component {
             threshold,
             currentUserId,
             projectType: type,
+            referencePlotId: plotSimilarityDetails.referencePlotId
           })
       )
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
@@ -1258,6 +1259,7 @@ class Collection extends React.Component {
                 setThreshold={this.setThreshold}
                 threshold={this.state.threshold}
                 projectType={this.state.currentProject?.type}
+                plotSimilarityDetails={this.state.currentProject.plotSimilarityDetails}
               />
               <ExternalTools
                 currentPlot={this.state.currentPlot}
@@ -1604,6 +1606,7 @@ class PlotNavigation extends React.Component {
       setThreshold,
       threshold,
       projectType,
+      plotSimilarityDetails
     } = this.props;
     return (
       <div className="mt-2">
@@ -1643,6 +1646,18 @@ class PlotNavigation extends React.Component {
            this.thresholdSlider("Confidence", threshold, setThreshold)}
           {navigationMode === "qaqc" &&
            this.thresholdSlider("Disagreement", threshold, setThreshold)}
+          {navigationMode === "similar" && plotSimilarityDetails && (
+              <div
+                style={{
+                display: "flex",
+                  justifyContent: "flex-end",
+                  padding: ".5rem",
+                  width: "100%",
+              }}
+              >
+                Reference plot ID: {plotSimilarityDetails.referencePlotId} | Selected Year: {plotSimilarityDetails.years}
+            </div>
+          )}
           {navigationMode === "qaqc" && currentPlot.id && (
             <div
               style={{

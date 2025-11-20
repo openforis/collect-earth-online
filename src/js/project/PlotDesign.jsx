@@ -738,6 +738,8 @@ export class PlotDesign extends React.Component {
                         className="form-control"
                         showYearPicker
                         dateFormat="yyyy"
+                        minDate={new Date(2000, 0, 1)}
+                        maxDate={new Date(new Date().getFullYear() - 1, 0, 1)}
                       />
                     </div>
                   </>

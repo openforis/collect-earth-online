@@ -66,7 +66,8 @@
                   project-id
                   plot-id
                   (clj->int-array-literal similar-ids)
-                  (tc/clj->jsonb resp)))
+                  (tc/clj->jsonb resp))
+        (call-sql "update_reference_plot" project-id plot-id))
       (throw (ex-info "❌ No non-empty results found after retries" {:project-id project-id})))))
 
 (defn start-plot-similarity! [{:keys [params]}]
