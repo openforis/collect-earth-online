@@ -482,7 +482,7 @@ class ProjectPopup extends React.Component {
       mercator.getOverlayByTitle(this.props.mapConfig, "projectPopup").setPosition(undefined);
     };
   }
-
+  
   render() {
     return (
       <div className="d-flex flex-column" id="projectPopUp" style={{ maxHeight: "40vh" }}>
