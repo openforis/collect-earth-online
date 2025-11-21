@@ -34,6 +34,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Need to edit to include other GEE entry points, Geo-Dash use
+
 CREATE OR REPLACE FUNCTION get_projects_with_gee(start_date_param TEXT, end_date_param TEXT)
 RETURNS TABLE (
     show_gee_script BOOLEAN,
@@ -60,6 +62,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- This function counts distinct project ID
+-- Need to add collected plot and collected sample metrics, not just plots and samples created
+
 CREATE OR REPLACE FUNCTION get_sample_plot_counts(start_date_param TEXT, end_date_param TEXT)
 RETURNS TABLE (
     user_plot_count BIGINT,
@@ -72,8 +77,8 @@ BEGIN
     RETURN QUERY
     SELECT 
         COUNT(up.user_plot_uid) AS user_plot_count,
-        COUNT(DISTINCT p.project_rid) AS distinct_project_count,
         COALESCE(SUM(s.sample_count)::BIGINT, 0) AS total_sample_count,
+        COUNT(DISTINCT p.project_rid) AS distinct_project_count,
         start_date_param AS start_date,
         end_date_param AS end_date
     FROM 
@@ -93,6 +98,9 @@ BEGIN
         up.collection_start BETWEEN start_date_param::DATE AND end_date_param::DATE;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Need consistency in using COUNT(*) or COUNT(DISTINCT...)
+-- Ideally break down into total and by month
 
 CREATE OR REPLACE FUNCTION get_project_count(start_date_param TEXT, end_date_param TEXT)
 RETURNS TABLE (
