@@ -1650,7 +1650,7 @@ class PlotNavigation extends React.Component {
               <div
                 style={{
                 display: "flex",
-                  justifyContent: "flex-end",
+                  justifyContent: "center",
                   padding: ".5rem",
                   width: "100%",
               }}
