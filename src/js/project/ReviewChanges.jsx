@@ -92,6 +92,18 @@ export default class ReviewChanges extends React.Component {
             .then((response) => Promise.all([response.ok, response.json()]))
             .then((data) => {
               if (data[0] && data[1] === "") {
+                fetch("/start-plot-similarity", {
+                  method: "POST",
+                  headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json; charset=utf-8",
+                  },
+                  body: JSON.stringify({
+                    projectId: data[1].projectId,
+                    referencePlotId: this.context.plotSimilarityDetails?.referencePlotId || 1,
+                    similarityYears: this.context.plotSimilarityDetails?.years || ["2024"]
+                  })
+                });
                 this.context.setContextState({ designMode: "manage" });
                 this.setState ({modal: {alert: {alertType: "Update Project Alert", alertMessage: "Project successfully updated!"}}});
                 return Promise.resolve();
