@@ -33,6 +33,7 @@ CREATE OR REPLACE FUNCTION get_plots_as_geojson(_project_id INTEGER)
   FROM plots p
   JOIN projects pr ON pr.project_uid = p.project_rid
   WHERE project_rid = _project_id
+  ORDER BY p.plot_uid ASC
 $$ LANGUAGE SQL;
 
 
@@ -86,3 +87,14 @@ CREATE OR REPLACE FUNCTION get_bq_table(_project_id INTEGER, _year text)
     WHERE project_uid = _project_id
 
   $$ LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION get_plot_similarity_year(_project_id INTEGER)
+RETURNS TEXT AS $$
+    SELECT key
+    FROM jsonb_each_text(
+        (SELECT geoai_assets FROM projects WHERE project_uid = _project_id)
+    )
+    ORDER BY key::int
+    LIMIT 1;
+$$ LANGUAGE SQL;

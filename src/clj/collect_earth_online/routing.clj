@@ -165,6 +165,9 @@
    [:post "/recalculate-plot-similarity"]    {:handler     #'geoai/recalculate-plot-similarity
                                               :auth-type   :admin
                                               :auth-action :block}
+   [:post "/update-plot-similarity"]         {:handler     #'geoai/update-plot-similarity!
+                                              :auth-type   :admin
+                                              :auth-action :block}
 
    ;; QAQC API
    [:get "/project-stats"]                   {:handler     #'qaqc/get-project-stats

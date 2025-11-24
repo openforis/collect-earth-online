@@ -81,6 +81,22 @@
     (upload-json-to-gcs project-id file-name (first similarity-years))
     (data-response {:message "calculating plot similarity."})))
 
+(defn update-plot-similarity! [{:keys [params]}]
+  (let [project-id        (:projectId params)
+        reference-plot-id (tc/val->int (:referencePlotId params))
+        plot-id           (sql-primitive (call-sql "get_plot_id_by_visible_id" project-id reference-plot-id))
+        similarity-year   (tc/val->int (first (:similarityYears params)))
+        file-name         (str "ceo-" project-id "-plots_" similarity-year)
+        current-year      (tc/val->int (sql-primitive (call-sql"get_plot_similarity_year" project-id)))]
+    (if (not= similarity-year current-year)
+      (do
+        (upload-json-to-gcs project-id file-name similarity-year)
+        (call-sql "update_reference_plot" project-id plot-id)
+        (data-response {:message "recalculating plot similarity for newly selected year."}))
+      (do
+        (call-sql "update_reference_plot" project-id plot-id)
+        (data-response {:message "recalculating plot similarity."})))))
+
 (defn recalculate-plot-similarity [{:keys [params]}]
   (let [project-id        (:projectId params)
         reference-plot-id (tc/val->int (:referencePlotId params))

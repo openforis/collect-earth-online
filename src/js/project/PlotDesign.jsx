@@ -727,7 +727,7 @@ export class PlotDesign extends React.Component {
                         selected={
                           this.context.plotSimilarityDetails?.years?.[0]
                             ? new Date(this.context.plotSimilarityDetails.years[0], 0, 1)
-                            : new Date()
+                            : new Date(new Date().getFullYear() - 1, 0, 1)
                         }
                         onChange={(d) => {
                           const year = d.getFullYear();
