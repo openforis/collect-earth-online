@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import shp from "shpjs";
 import DatePicker from 'react-datepicker';
 
@@ -13,6 +13,235 @@ import { ProjectContext, plotLimit } from "./constants";
 import { mercator } from "../utils/mercator";
 import Modal from "../components/Modal";
 
+
+export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, projecType}){
+  const context = useContext(ProjectContext);
+  const {projectId, designSettings, newPlotShape, newPlotFileName, newPlotDistribution, setProjectDetails} = context;
+  const [_newPlotFileName, setNewPlotFileName] = useState(newPlotFileName);
+  const [projectState, setProjectState] = useState(context);
+  const [newPlotSize, setNewPlotSize] = useState("");
+  const [plotState, setPlotState] = useState({lonMin: "",
+                                              latMin: "",
+                                              lonMax: "",
+                                              latMax: "",});
+  const acceptedTypes = {
+      csv: "text/csv",
+      shp: "application/zip",
+      geojson: "application/json",
+    };
+
+  const checkPlotFile = (plotFileType, fileName, plotFileBase64) => {
+    fetch("/check-plot-file", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        plotFileType,
+        projectId,
+        plotFileName: fileName,
+        plotFileBase64: plotFileBase64
+      }),
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        const [[lonMin, latMin], [lonMax, latMax]] = data.fileBoundary;
+        const aoiFeatures = [mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)];
+        setPlotState({lonMin, lonMax, latMin, latMax});
+        setProjectState({
+          aoiFileName: fileName,
+          boundary: data.fileBoundary,
+          aoiFeatures});
+        setNewPlotFileName(fileName);
+        setProjectDetails({
+          aoiFeatures, lonMin, latMin, lonMax, latMax, newPlotFileName: fileName, newPlotFileBase64: plotFileBase64, aoiFileName: fileName, newPlotDistribution: plotFileType,
+          designSettings: { ...designSettings,
+                            userAssignment: data.userAssignment,
+                            qaqcAssignment: data.qaqcAssignment}
+        });}
+      );
+  };
+
+  const renderFileInput = (fileType, append) => {
+    return(
+      <div className="mb-3">
+        <div style={{display: "flex"}}>
+          <label
+            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+            htmlFor="new-plot-distribution-file"
+            id="custom-upload"
+            style={{ display: "flex", alignItems: "center", width: "fit-content" }}
+          >
+            Upload plot file
+            <input
+              accept={acceptedTypes[fileType]}
+              defaultValue=""
+              id="new-plot-distribution-file"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                readFileAsBase64Url (file, (base64) => {
+                  checkPlotFile(fileType, file.name, base64);
+                  return setProjectDetails({
+                    newPlotFileName: file.name,
+                    newPlotFileBase64: base64,
+                    append: true,
+                  });
+                });
+              }}
+              style={{ display: "none" }}
+              type="file"
+            />
+          </label>
+          <label className="ml-3 text-nowrap">
+            File:{" "}
+            {_newPlotFileName || (projectId > 0 ? "Use existing data" : "None")}
+          </label>
+            </div>
+      </div>
+    );
+  };
+
+  const renderPlotShape = () => {
+    return (
+      <div className="form-group" style={{ display: "flex", flexDirection: "column" }}>
+        <label>Plot shape</label>
+        <div>
+          <div className="form-check form-check-inline">
+            <input
+              checked={newPlotShape === "circle"}
+              className="form-check-input"
+              id="plot-shape-circle"
+              onChange={() => {setProjectDetails({ newPlotShape: "circle" });}}
+              type="radio"
+            />
+            <label className="form-check-label" htmlFor="plot-shape-circle">
+              Circle
+            </label>
+          </div>
+          <div className="form-check form-check-inline">
+            <input
+              checked={newPlotShape === "square"}
+              className="form-check-input"
+              id="plot-shape-square"
+              onChange={() => {setProjectDetails({ newPlotShape: "square"});}}
+              type="radio"
+            />
+            <label className="form-check-label" htmlFor="plot-shape-square">
+              Square
+            </label>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+
+  const renderLabeledInput = (label, property, disabled = false) => (
+    <div className="form-group" style={{ width: "fit-content" }}>
+      <label htmlFor={property}>{label}</label>
+      <input
+        className="form-control form-control-sm"
+        id={property}
+        min="0"
+        onChange={(e) =>{
+          setNewPlotSize(e.target.value);
+          setProjectDetails({ [property]: Number(e.target.value) });}}
+        step="1"
+        type="number"
+        value={newPlotSize}
+        disabled = {disabled}
+      />
+    </div>
+  );
+
+
+  const renderCSV = (fileType, append) => {
+    const plotUnits = newPlotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
+    return (
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {renderFileInput("csv", append)}
+        <div style={{ display: "flex" }}>
+          <span className="mr-3">{renderPlotShape()}</span>
+          {renderLabeledInput(plotUnits, "newPlotSize")}
+        </div>
+      </div>
+    );
+  };
+
+  const plotOptions = {
+      csv: {
+        display: "CSV File",
+        description:
+          "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
+        layout: renderCSV,
+      },
+      shp: {
+        display: "SHP File",
+        alert: "Please ensure your shapefile does not include duplicate plots.",
+        description:
+          "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
+        layout: renderFileInput,
+      },
+      geojson: {
+        display: "GeoJSON File",
+        alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
+        description:
+          "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
+        layout: renderFileInput,
+      },
+    };
+
+  return (
+    <div id="new-plot-design">
+      <h3 className="mb-3">Add New Plot(s)</h3>
+      <div className="ml-3">
+        <div className="d-flex flex-column">
+          <div className="form-group" style={{width:"fit-content"}}>
+            <label>Spatial Distribution</label>
+            <div style={{ position: "relative" }}>
+              {plotOptions[newPlotDistribution]?.alert &&
+               <p className="alert"> {plotOptions[newPlotDistribution]?.alert}</p>}
+              <select
+                className="form-control form-control-sm"
+                onChange={(e)=>{
+                  setProjectDetails({ newPlotDistribution: e.target.value});}
+		         }
+                value={newPlotDistribution}>
+                {Object.entries (plotOptions).map (([key, options]) => (
+                  <option key={key} value={key}>
+                    {options.display}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <p className="font-italic ml-2">{`- ${plotOptions[newPlotDistribution]?.description}`}</p>
+        </div>
+        <div>
+          {plotOptions[newPlotDistribution]?.layout(newPlotDistribution, true)}</div>
+	<p
+         className="font-italic ml-2 small"
+         style={{
+           color: totalPlots > plotLimit ? "#8B0000" : "#006400",
+           fontSize: "1rem",
+           whiteSpace: "pre-line",
+         }}
+	 >
+       {totalPlots > 0 &&
+              `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
+            {totalPlots > 0 &&
+              totalPlots > plotLimit &&
+              `\n* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(
+                plotLimit
+              )}.`}
+       </p>
+      </div>
+    </div>
+  );
+};
+
+
 export class PlotDesign extends React.Component {
   constructor(props) {
     super(props);
@@ -25,6 +254,9 @@ export class PlotDesign extends React.Component {
       plotIdList: [],
     };
   }
+  lastNumPlots = null;
+  lastCalculatedPlots = null;
+  lastCalcInputs = {};
 
   componentDidMount() {
     this.setCoordsFromBoundary();
@@ -38,7 +270,7 @@ export class PlotDesign extends React.Component {
     if (this.props.aoiFeatures && prevProps.aoiFeatures !== this.props.aoiFeatures) {
       this.setCoordsFromBoundary();
     }
-    const { lonMin, latMin, lonMax, latMax } = this.state;
+
     if (
       this.context.type === "simplified" &&
         (lonMin !== prevState.lonMin ||
@@ -51,7 +283,7 @@ export class PlotDesign extends React.Component {
     if (this.props.totalPlots &&
         this.props.totalPlots !== prevProps.totalPlots &&
         this.props.totalPlots <= 5000
-       ) {
+    ) {
       const plotIds = Array.from({ length: this.props.totalPlots }, (_, i) => i + 1);
       this.setState({ plotIdList: plotIds });
     }
@@ -78,7 +310,7 @@ export class PlotDesign extends React.Component {
   };
 
   validBoundary = (latMin, latMax, lonMin, lonMax) =>
-  isNumber(latMin) &&
+    isNumber(latMin) &&
     isNumber(latMax) &&
     isNumber(lonMin) &&
     isNumber(lonMax) &&
@@ -125,8 +357,241 @@ export class PlotDesign extends React.Component {
       plotDistribution: "simplified",
       designSettings: {
         ...designSettings,
-        sampleGeometries: {"lines": true, "points": true, "polygons": true}} })
+        sampleGeometries: {"lines": true, "points": true, "polygons": true}} });
   }
+
+  /// Render Functions
+
+  renderLabeledInput = (label, property, disabled = false) => {
+    const { availability } = this.context;
+    return (
+      <div className="form-group" style={{ width: "fit-content" }}>
+        <label htmlFor={property}>{label}</label>
+        <input
+          className="form-control form-control-sm"
+          id={property}
+          min="0"
+          onChange={(e) => this.setPlotDetails({ [property]: Number(e.target.value) })}
+          step="1"
+          type="number"
+          value={this.context[property] || ""}
+          disabled = { (availability==="published") || disabled }
+        />
+      </div>
+    );
+  }
+
+  renderShufflePlots = () => {
+    const { shufflePlots, availability } = this.context;
+    return (
+      <div className="form-check">
+        <input
+          checked={shufflePlots}
+          className="form-check-input"
+          id="shufflePlots"
+          onChange={() => this.setPlotDetails({ shufflePlots: !shufflePlots })}
+          type="checkbox"
+          disabled={availability==="published"}
+        />
+        <label className="form-check-label" htmlFor="shufflePlots">
+          Shuffle plot order
+        </label>
+      </div>
+    );
+  };
+
+  renderPlotShape = () => {
+    const { plotShape, availability } = this.context;
+    return (
+      <div className="form-group" style={{ display: "flex", flexDirection: "column" }}>
+        <label>Plot shape</label>
+        <div>
+          <div className="form-check form-check-inline">
+            <input
+              checked={plotShape === "circle"}
+              className="form-check-input"
+              id="plot-shape-circle"
+              onChange={() => this.setPlotDetails({ plotShape: "circle" })}
+              type="radio"
+              disabled={availability==="published"}
+            />
+            <label className="form-check-label" htmlFor="plot-shape-circle">
+              Circle
+            </label>
+          </div>
+          <div className="form-check form-check-inline">
+            <input
+              checked={plotShape === "square"}
+              className="form-check-input"
+              id="plot-shape-square"
+              onChange={() => this.setPlotDetails({ plotShape: "square" })}
+              type="radio"
+              disabled={availability==="published"}
+            />
+            <label className="form-check-label" htmlFor="plot-shape-square">
+              Square
+            </label>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  renderAOICoords = () => {
+    const { latMax, lonMin, lonMax, latMin, availability } = this.state;
+    return (
+      <div style={{ width: "20rem" }}>
+        <div className="form-group ml-3">
+          <div className="row">
+            <div className="col-md-6 offset-md-3">
+              <input
+                className="form-control form-control-sm"
+                max="90.0"
+                min="-90.0"
+                onChange={(e) =>
+                  this.updateBoundaryFromCoords({ latMax: parseFloat(e.target.value) })
+                }
+                placeholder="North"
+                step="any"
+                type="number"
+                value={latMax}
+                disabled={availability==="published"}
+              />
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-6">
+              <input
+                className="form-control form-control-sm"
+                max="180.0"
+                min="-180.0"
+                onChange={(e) =>
+                  this.updateBoundaryFromCoords({ lonMin: parseFloat(e.target.value) })
+                }
+                placeholder="West"
+                step="any"
+                type="number"
+                value={lonMin}
+                disabled={availability==="published"}
+              />
+            </div>
+            <div className="col-md-6">
+              <input
+                className="form-control form-control-sm"
+                max="180.0"
+                min="-180.0"
+                onChange={(e) =>
+                  this.updateBoundaryFromCoords({ lonMax: parseFloat(e.target.value) })
+                }
+                placeholder="East"
+                step="any"
+                type="number"
+                value={lonMax}
+                disabled={availability==="published"}
+              />
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-6 offset-md-3">
+              <input
+                className="form-control form-control-sm"
+                max="90.0"
+                min="-90.0"
+                onChange={(e) =>
+                  this.updateBoundaryFromCoords({ latMin: parseFloat(e.target.value) })
+                }
+                placeholder="South"
+                step="any"
+                type="number"
+                value={latMin}
+                disabled={availability==="published"}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  loadGeoJson = (shpFile) => {
+    try {
+      shp(shpFile).then((g) => {
+        this.context.setProjectDetails({
+          aoiDataDebug: g.features,
+          aoiFeatures: g.features.map((f) => f.geometry),
+          aoiFileName: g.fileName,
+        });
+      });
+    } catch {
+      this.setState ({modal: {alert: {alertType: "ShapeFile Error", alertMessage: "Unknown error loading shape file."}}});
+    }
+  };
+
+  renderBoundaryFileInput = () => {
+    const { aoiFileName, availability } = this.context;
+    return (
+      <div className="d-flex flex-column">
+        {this.state.modal?.alert &&
+         <Modal title={this.state.modal.alert.alertType}
+                onClose={()=>{this.setState({modal: null});}}>
+           {this.state.modal.alert.alertMessage}
+         </Modal>}
+
+        <div className="d-flex">
+          <label
+            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
+            htmlFor="project-boundary-file"
+            id="custom-upload"
+            style={{ display: "flex", alignItems: "center", width: "fit-content" }}
+          >
+            Upload shp file (zip)
+            <input
+              accept="application/zip"
+              defaultValue=""
+              id="project-boundary-file"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                readFileAsArrayBuffer(file, this.loadGeoJson);
+              }}
+              style={{ display: "none" }}
+              type="file"
+              disabled={availability==="published"}
+            />
+          </label>
+          <label className="ml-3 text-nowrap">File: {aoiFileName}</label>
+        </div>
+      </div>
+    );
+  };
+
+  renderAOISelector = () => {
+    const { boundaryType, type, availability } = this.context;
+    const boundaryOptions = [
+      { value: "manual", label: "Input coordinates" },
+      { value: "file", label: "Upload shp file" },
+    ];
+    return (
+      <>
+        <div className="form-group" style={{ width: "fit-content" }}>
+          <label>Boundary type</label>
+          <select
+            className="form-control form-control-sm"
+            onChange={(e) => this.setPlotDetails({ boundaryType: e.target.value })}
+            value={boundaryType}
+            disabled={availability==="published"}
+          >
+            {boundaryOptions.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+        {boundaryType === "manual" ? this.renderAOICoords() : this.renderBoundaryFileInput()}
+      </>
+    );
+  };
+
   readFileAsArrayBuffer = (file) =>
     new Promise((res, rej) => {
       const r = new FileReader();
@@ -230,223 +695,17 @@ export class PlotDesign extends React.Component {
       }),
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.setState(s => ({... s, totalPlots: data.filePlotCount}));
+      .then((data) =>
         this.context.setProjectDetails({
           designSettings: { ...designSettings,
                             userAssignment: data.userAssignment,
                             qaqcAssignment: data.qaqcAssignment}
-        });
-      });
+        })
+      );
   }
 
-  /// Render Functions
-
-  renderLabeledInput = (label, property, disabled = false) => (
-    <div className="form-group" style={{ width: "fit-content" }}>
-      <label htmlFor={property}>{label}</label>
-      <input
-        className="form-control form-control-sm"
-        id={property}
-        min="0"
-        onChange={(e) => this.setPlotDetails({ [property]: Number(e.target.value) })}
-        step="1"
-        type="number"
-        value={this.context[property] || ""}
-        disabled = {disabled}
-      />
-    </div>
-  );
-
-  renderShufflePlots = () => {
-    const { shufflePlots } = this.context;
-    return (
-      <div className="form-check">
-        <input
-          checked={shufflePlots}
-          className="form-check-input"
-          id="shufflePlots"
-          onChange={() => this.setPlotDetails({ shufflePlots: !shufflePlots })}
-          type="checkbox"
-        />
-        <label className="form-check-label" htmlFor="shufflePlots">
-          Shuffle plot order
-        </label>
-      </div>
-    );
-  };
-
-  renderPlotShape = () => {
-    const { plotShape } = this.context;
-    return (
-      <div className="form-group" style={{ display: "flex", flexDirection: "column" }}>
-        <label>Plot shape</label>
-        <div>
-          <div className="form-check form-check-inline">
-            <input
-              checked={plotShape === "circle"}
-              className="form-check-input"
-              id="plot-shape-circle"
-              onChange={() => this.setPlotDetails({ plotShape: "circle" })}
-              type="radio"
-            />
-            <label className="form-check-label" htmlFor="plot-shape-circle">
-              Circle
-            </label>
-          </div>
-          <div className="form-check form-check-inline">
-            <input
-              checked={plotShape === "square"}
-              className="form-check-input"
-              id="plot-shape-square"
-              onChange={() => this.setPlotDetails({ plotShape: "square" })}
-              type="radio"
-            />
-            <label className="form-check-label" htmlFor="plot-shape-square">
-              Square
-            </label>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  renderAOICoords = () => {
-    const { latMax, lonMin, lonMax, latMin } = this.state;
-    return (
-      <div style={{ width: "20rem" }}>
-        <div className="form-group ml-3">
-          <div className="row">
-            <div className="col-md-6 offset-md-3">
-              <input
-                className="form-control form-control-sm"
-                max="90.0"
-                min="-90.0"
-                onChange={(e) =>
-                  this.updateBoundaryFromCoords({ latMax: parseFloat(e.target.value) })
-                }
-                placeholder="North"
-                step="any"
-                type="number"
-                value={latMax}
-              />
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-md-6">
-              <input
-                className="form-control form-control-sm"
-                max="180.0"
-                min="-180.0"
-                onChange={(e) =>
-                  this.updateBoundaryFromCoords({ lonMin: parseFloat(e.target.value) })
-                }
-                placeholder="West"
-                step="any"
-                type="number"
-                value={lonMin}
-              />
-            </div>
-            <div className="col-md-6">
-              <input
-                className="form-control form-control-sm"
-                max="180.0"
-                min="-180.0"
-                onChange={(e) =>
-                  this.updateBoundaryFromCoords({ lonMax: parseFloat(e.target.value) })
-                }
-                placeholder="East"
-                step="any"
-                type="number"
-                value={lonMax}
-              />
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-md-6 offset-md-3">
-              <input
-                className="form-control form-control-sm"
-                max="90.0"
-                min="-90.0"
-                onChange={(e) =>
-                  this.updateBoundaryFromCoords({ latMin: parseFloat(e.target.value) })
-                }
-                placeholder="South"
-                step="any"
-                type="number"
-                value={latMin}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  renderBoundaryFileInput = () => {
-    const { aoiFileName } = this.context;
-    return (
-      <div className="d-flex flex-column">
-        {this.state.modal?.alert &&
-         <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
-           {this.state.modal.alert.alertMessage}
-         </Modal>}
-
-        <div className="d-flex">
-          <label
-            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
-            htmlFor="project-boundary-file"
-            id="custom-upload"
-            style={{ display: "flex", alignItems: "center", width: "fit-content" }}
-          >
-            Upload shp file (zip)
-            <input
-              accept="application/zip"
-              defaultValue=""
-              id="project-boundary-file"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                readFileAsArrayBuffer(file, this.loadGeoJson);
-              }}
-              style={{ display: "none" }}
-              type="file"
-            />
-          </label>
-          <label className="ml-3 text-nowrap">File: {aoiFileName}</label>
-        </div>
-      </div>
-    );
-  };
-
-  renderAOISelector = () => {
-    const { boundaryType, type } = this.context;
-    const boundaryOptions = [
-      { value: "manual", label: "Input coordinates" },
-      { value: "file", label: "Upload shp file" },
-    ];
-    return (
-      <>
-        <div className="form-group" style={{ width: "fit-content" }}>
-          <label>Boundary type</label>
-          <select
-            className="form-control form-control-sm"
-            onChange={(e) => this.setPlotDetails({ boundaryType: e.target.value })}
-            value={boundaryType}
-          >
-            {boundaryOptions.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-        {boundaryType === "manual" ? this.renderAOICoords() : this.renderBoundaryFileInput()}
-      </>
-    );
-  };
-
   renderFileInput = (fileType, append) => {
+    const { availability } = this.context;
     const acceptedTypes = {
       csv: "text/csv",
       shp: "application/zip",
@@ -483,6 +742,7 @@ export class PlotDesign extends React.Component {
               }}
               style={{ display: "none" }}
               type="file"
+              disabled={availability==="published"}
             />
           </label>
           <label className="ml-3 text-nowrap">
@@ -501,12 +761,12 @@ export class PlotDesign extends React.Component {
     );
   }
   
-  renderCSV = () => {
+  renderCSV = (fileType, append) => {
     const { plotShape } = this.context;
     const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
-        {this.renderFileInput("csv")}
+        {this.renderFileInput("csv", append)}
         <div style={{ display: "flex" }}>
           <span className="mr-3">{this.renderPlotShape()}</span>
           {this.renderLabeledInput(plotUnits, "plotSize")}
@@ -586,33 +846,33 @@ export class PlotDesign extends React.Component {
       random: {
         display: "Random",
         description: "Plot centers will be randomly distributed within the project boundary.",
-        layout: this.renderRandom(),
+        layout: this.renderRandom,
       },
       gridded: {
         display: "Gridded",
         description:
-        "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.",
-        layout: this.renderGridded(),
+          "Plot centers will be arranged on a grid within the AOI using the plot spacing selected below.",
+        layout: this.renderGridded,
       },
       csv: {
         display: "CSV File",
         description:
-        "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
-        layout: this.renderCSV(),
+          "Specify your own plot centers by uploading a CSV with these fields: LON,LAT,PLOTID. Each plot center must have a unique PLOTID value.",
+        layout: this.renderCSV,
       },
       shp: {
         display: "SHP File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
-        "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
-        layout: this.renderFileInput("shp"),
+          "Specify your own plot boundaries by uploading a zipped Shapefile (containing SHP, SHX, DBF, and PRJ files) of polygon features. Each feature must have a unique PLOTID value.",
+        layout: this.renderFileInput,
       },
       geojson: {
         display: "GeoJSON File",
         alert: "CEO may overestimate the number of project plots when using a ShapeFile.",
         description:
-        "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
-        layout: this.renderFileInput("geojson"),
+          "Specify your own plot boundaries by uploading a GeoJSON file of polygon features. Each feature must have a unique PLOTID value in the properties map.",
+        layout: this.renderFileInput,
       },
     };
 
@@ -637,6 +897,9 @@ export class PlotDesign extends React.Component {
           <div className="d-flex flex-column">
             <div className="form-group" style={{ width: "fit-content" }}>
               <label>Spatial distribution</label>
+              <div style={{position: "relative"}}>
+              {spatialDistributionOptions[plotDistribution]?.alert &&
+             <p className="alert">- {spatialDistributionOptions[plotDistribution]?.alert}</p>}
               <select
                 className="form-control form-control-sm"
                 onChange={(e) =>
@@ -649,19 +912,19 @@ export class PlotDesign extends React.Component {
                     : this.setPlotDetails({ plotDistribution: e.target.value })
                 }
                 value={plotDistribution}
+                disabled={this.context?.availability==="published"}
               >
                 {Object.entries(spatialDistributionOptions).map(([key, options]) => (
                   <option key={key} value={key}>
                     {options.display}
                   </option>
                 ))}
-              </select>
+      </select>
+      </div>
             </div>
-            <p className="font-italic ml-2">{`- ${spatialDistributionOptions[plotDistribution].description}`}</p>
-            {spatialDistributionOptions[plotDistribution].alert &&
-             <p className="alert">- {spatialDistributionOptions[plotDistribution].alert}</p>}
+            <p className="font-italic ml-2">{`- ${spatialDistributionOptions[plotDistribution]?.description}`}</p>
           </div>
-          <div>{spatialDistributionOptions[plotDistribution].layout}</div>
+          <div>{spatialDistributionOptions[plotDistribution]?.layout(plotDistribution, false)}</div>
           <p
             className="font-italic ml-2 small"
             style={{
@@ -678,80 +941,77 @@ export class PlotDesign extends React.Component {
                 plotLimit
               )}.`}
           </p>
-          {(this.context.type != "simplified") ? (
-            <>
-              <h3 className="mb-3">Plot Similarity Configuration</h3>
-              <div className="form-check">
-                <input
-                  checked={this.context.projectOptions.plotSimilarity}
-                  className="form-check-input"
-                  id="similarPlots"
-                  onChange={() =>
-                    this.context.setProjectDetails({
-                      projectOptions: { ...this.context.projectOptions, plotSimilarity: !this.context.projectOptions.plotSimilarity },
-                    })
-                  }
-                  type="checkbox"
-                />
-                <label className="form-check-label" htmlFor="similarPlots">
-                  Enable navigation by similarity
-                </label>
-                {this.context.projectOptions.plotSimilarity ? (
-                  <>
-                    <div className="form-group">
-                      <label htmlFor="referencePlotId"> Reference plot ID: {"  "}</label>
-                      <select
-                        id="referencePlotId"
-                        value={this.context.plotSimilarityDetails?.referencePlotId || ""}
-                        onChange={(e) =>
-                          this.context.setProjectDetails({
-                            plotSimilarityDetails: {
-                              ...this.context.plotSimilarityDetails,
-                              referencePlotId: e.target.value,
-                            },
-                          })
-                        }
-                      >
-                        <option value="" disabled>
-                          Select a plot ID
-                        </option>
-                        {this.state.plotIdList?.map((id) => (
-                          <option key={id} value={id}>
-                            {id}
-                          </option>
-                        ))}
-                      </select>
-                      <br/>
-                      <label htmlFor="year"> Year for comparison: {"  "} </label>
-                      <DatePicker
-                        selected={
-                          this.context.plotSimilarityDetails?.years?.[0]
-                            ? new Date(this.context.plotSimilarityDetails.years[0], 0, 1)
-                            : new Date(new Date().getFullYear() - 1, 0, 1)
-                        }
-                        onChange={(d) => {
-                          const year = d.getFullYear();
+          <h3 className="mb-3">Plot Similarity Configuration</h3>
+          <div className="form-check">
+            <input
+              checked={this.context.projectOptions.plotSimilarity}
+              className="form-check-input"
+              id="similarPlots"
+              onChange={() =>
+                this.context.setProjectDetails({
+                  projectOptions: { ...this.context.projectOptions, plotSimilarity: !this.context.projectOptions.plotSimilarity },
+                })
+              }
+              type="checkbox"
+            />
+            <label className="form-check-label" htmlFor="similarPlots">
+              Enable navigation by similarity
+            </label>
+            {this.context.projectOptions.plotSimilarity ? (
+              <>
+                <div className="form-group">
+                  <label htmlFor="referencePlotId"> Reference plot ID: {"  "}</label>
+                  <select
+                    id="referencePlotId"
+                    value={this.context.plotSimilarityDetails?.referencePlotId || ""}
+                    onChange={(e) =>
+                      this.context.setProjectDetails({
+                        plotSimilarityDetails: {
+                          ...this.context.plotSimilarityDetails,
+                          referencePlotId: e.target.value,
+                        },
+                      })
+                    }
+                  >
+                    <option value="" disabled>
+                      Select a plot ID
+                    </option>
+                    {this.state.plotIdList?.map((id) => (
+                      <option key={id} value={id}>
+                        {id}
+                      </option>
+                    ))}
+                  </select>
+                  <br/>
+                  <label htmlFor="year"> Year for comparison: {"  "} </label>
+                  <DatePicker
+                    selected={
+                      this.context.plotSimilarityDetails?.years?.[0]
+                        ? new Date(this.context.plotSimilarityDetails.years[0], 0, 1)
+                        : new Date(new Date().getFullYear() - 1, 0, 1)
+                    }
+                    onChange={(d) => {
+                      const year = d.getFullYear();
 
-                          this.context.setProjectDetails({
-                            plotSimilarityDetails: {
-                              ...this.context.plotSimilarityDetails,
-                              years: [year]
-                            },
-                          });
-                        }}
-                        className="form-control"
-                        showYearPicker
-                        dateFormat="yyyy"
-                        minDate={new Date(2000, 0, 1)}
-                        maxDate={new Date(new Date().getFullYear() - 1, 0, 1)}
-                      />
-                    </div>
-                  </>
-                ) : null}
-              </div>
-            </>
-          ) : null}
+                      this.context.setProjectDetails({
+                        plotSimilarityDetails: {
+                          ...this.context.plotSimilarityDetails,
+                          years: [year]
+                        },
+                      });
+                    }}
+                    className="form-control"
+                    showYearPicker
+                    dateFormat="yyyy"
+                    minDate={new Date(2000, 0, 1)}
+                    maxDate={new Date(new Date().getFullYear() - 1, 0, 1)}
+                  />
+                </div>
+              </>
+            ) : null}
+          </div>
         </div>
+        <hr/>
       </div>
     );
   }

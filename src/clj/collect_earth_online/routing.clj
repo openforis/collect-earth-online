@@ -153,7 +153,7 @@
    [:post "/copy-project"]                   {:handler     projects/copy-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/check-plot-csv"]                 {:handler     projects/check-plot-csv
+   [:post "/check-plot-file"]                {:handler     projects/check-plot-file
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/import-ce-project"]              {:handler     (validate #'ce-project/import-ce-project)
