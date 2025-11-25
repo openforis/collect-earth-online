@@ -44,29 +44,30 @@
 
 (defn search-plot-by-similarity
   [project-id plot-id year plots]
-  (let [bq-table (-> (call-sql "get_bq_table" project-id year)
-                     sql-primitive
-                     (clojure.string/split #"\.")
-                     last)
-        _ (println "bq table exists")
-        base-url (get-config :gcs-integration :api-url)
+  (let [bq-table   (-> (call-sql "get_bq_table" project-id year)
+                       sql-primitive
+                       (clojure.string/split #"\.")
+                       last)
+        base-url   (get-config :gcs-integration :api-url)
         search-url (str base-url "/search")
-        try-plot (fn [pid]
-                   (let [resp (http/get search-url
-                                        {:query-params {:uniqueid pid
-                                                        :table    bq-table
-                                                        :matches  50}
-                                         :throw-exceptions false})
-                         parsed (tc/json->clj (:body resp))]
-                     (when (seq parsed) {:plot-id pid :resp parsed})))]
+        plot-ids   (map :plot_uid plots)
+        try-plot   (fn [pid]
+                     (let [resp (http/get search-url
+                                          {:query-params {:uniqueid pid
+                                                          :table    bq-table
+                                                          :matches  500}
+                                           :throw-exceptions false})
+                           parsed (tc/json->clj (:body resp))]
+                       (when (seq parsed) {:plot-id pid :resp parsed})))]
 
     (if-let [{:keys [plot-id resp]} (or (try-plot plot-id)
-                                        (some try-plot (map :plot_uid (take 10 plots))))]
-      (let [similar-ids (map #(get % :base_plotid) resp)]
+                                        (some try-plot (take 15 plot-ids)))]
+      (let [similar-ids        (map #(get % :base_plotid) resp)
+            remaining-plot-ids (clojure.set/difference (set similar-ids) (set plot-ids))]
         (call-sql "insert_geoai_cache"
                   project-id
                   plot-id
-                  (clj->int-array-literal similar-ids)
+                  (clj->int-array-literal (concat similar-ids (vec remaining-plot-ids)))
                   (tc/clj->jsonb resp))
         (call-sql "update_reference_plot" project-id plot-id))
       (throw (ex-info "❌ No non-empty results found after retries" {:project-id project-id})))))
