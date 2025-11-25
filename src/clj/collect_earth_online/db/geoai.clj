@@ -67,7 +67,7 @@
         (call-sql "insert_geoai_cache"
                   project-id
                   plot-id
-                  (clj->int-array-literal (concat similar-ids (vec remaining-plot-ids)))
+                  (clj->int-array-literal (concat [plot-id] similar-ids (vec remaining-plot-ids)))
                   (tc/clj->jsonb resp))
         (call-sql "update_reference_plot" project-id plot-id))
       (throw (ex-info "❌ No non-empty results found after retries" {:project-id project-id})))))
