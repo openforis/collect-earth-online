@@ -1635,7 +1635,9 @@ class PlotNavigation extends React.Component {
               <option value="unanalyzed">Unanalyzed plots</option>
               <option value="analyzed">Analyzed plots</option>
               <option value="flagged">Flagged plots</option>
-              <option value="similar">Similar Plots</option>
+              {plotSimilarityDetails?.similarityYears && (
+                <option value="similar">Similar Plots</option>
+              )}
               {collectConfidence && <option value="confidence">Low Confidence</option>}
               {inReviewMode && <option value="user">By User</option>}
               {inReviewMode && isQAQCEnabled && <option value="qaqc">Disagreement</option>}
