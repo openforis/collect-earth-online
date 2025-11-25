@@ -521,6 +521,10 @@ class Collection extends React.Component {
   }
 
   navToFirstPlot = () => {
+    const { referencePlotId } = this.state.currentProject?.plotSimilarityDetails;
+    if(referencePlotId && this.state.navigationMode === "similar" ) {
+      this.getPlotData(referencePlotId, "id", 'unanalyzed');
+    }
     this.getPlotData(-10000000, "next", this.state.navigationMode === "natural" && "unanalyzed");
     /*
       this.state.currentProject?.userRole === 2 ?
