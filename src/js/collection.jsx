@@ -302,28 +302,30 @@ class Collection extends React.Component {
       }
     });
 
-   reprocessPlotSimilarity = () => {
-    fetch(`/recalculate-plot-similarity`, {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json; charset=utf-8",
-      },
-      body: JSON.stringify({
-        projectId: this.state.currentProject.id,
-        referencePlotId: this.state.currentProject.plotSimilarityDetails.referencePlotId,
-        similarityYears: this.state.currentProject.plotSimilarityDetails.years,
+  reprocessPlotSimilarity = () => {
+    if(this.state.currentProject?.plotSimilarityDetails?.referencePlotId) {
+      fetch(`/recalculate-plot-similarity`, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json; charset=utf-8",
+        },
+        body: JSON.stringify({
+          projectId: this.state.currentProject.id,
+          referencePlotId: this.state.currentProject.plotSimilarityDetails.referencePlotId,
+          similarityYears: this.state.currentProject.plotSimilarityDetails.years,
+        })
       })
-    })
-      .then((response) => {
-        if (response.ok) {
-          null;
-        } else {
-          this.setState({modal: {alert: {alertType: "Recalculate Similarity Error", alertMessage: "Error recalculating plot similarity. See console for details."}}});
-        }
-      }
-  )};
-
+        .then((response) => {
+          if (response.ok) {
+            null;
+          } else {
+            this.setState({modal: {alert: {alertType: "Recalculate Similarity Error", alertMessage: "Error recalculating plot similarity. See console for details."}}});
+          }
+        })
+    }
+  };
+  
   // TODO, this can easily be a part of get-project-by-id
   getProjectPlots = () =>
   fetch(`/get-project-plots?projectId=${this.props.projectId}`)

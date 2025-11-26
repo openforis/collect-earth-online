@@ -232,7 +232,7 @@ export function ImageryVisibilityPopup({ selectedImagery, editImageryBulk }) {
       {isPopupOpen && (
         <div className="popup-container">
           <div className="popup-header">
-            **Public imagery will be available for any project in CEO to use them, and private imagery will only be available to projects from this institution.
+            Public Institution Imagery is visible to all CEO users who can view the project. Private Institution Imagery is visible only to institution members, regardless of project visibility.
           </div>
           <div className="popup-option">
             <input
@@ -242,7 +242,7 @@ export function ImageryVisibilityPopup({ selectedImagery, editImageryBulk }) {
               value="public"
               onChange={handleVisibilityChange}
             />
-            <label htmlFor="public">Institution Public Imagery</label>
+            <label htmlFor="public">Public Institution Imagery</label>
           </div>
           <div className="popup-option">
             <input
@@ -252,7 +252,7 @@ export function ImageryVisibilityPopup({ selectedImagery, editImageryBulk }) {
               value="private"
               onChange={handleVisibilityChange}
             />
-            <label htmlFor="private">Private</label>
+            <label htmlFor="private">Private Institution Imagery</label>
           </div>
 
           <button className="popup-button" onClick={handleSave}>
