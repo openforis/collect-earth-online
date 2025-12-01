@@ -1,11 +1,8 @@
 import React from "react";
 
 import ReviewForm from "./ReviewForm";
-
 import { ProjectContext } from "./constants";
-
 import Modal from "../components/Modal";
-
 import { PromptModal } from "../components/PageComponents";
 
 export default class ReviewChanges extends React.Component {
@@ -15,6 +12,10 @@ export default class ReviewChanges extends React.Component {
       acceptTOS: false,
       modal: null,
     };
+  }
+
+  promptModal = (modalTitle, modalInputs, modalCallBack) => {
+    this.setState(s => ({...s, modalTitle, modalInputs, modalCallBack}));
   }
 
   /// API Functions
@@ -49,11 +50,12 @@ export default class ReviewChanges extends React.Component {
                 },
                 body: JSON.stringify({
                   projectId: data[1].projectId,
-                  referencePlotId: this.context.plotSimilarityDetails.referencePlotId,
-                  similarityYears: this.context.plotSimilarityDetails.years,
+
+                  referencePlotId: this.context.plotSimilarityDetails?.referencePlotId,
+                  similarityYears: this.context.plotSimilarityDetails?.years,
                 })
               });
-              window.location = `/review-project?projectId=${data[1].projectId}&institutionId=${this.context.institutionId}`;
+              window.location = `/review-project?projectId=${data[1].projectId}&institutionId=${this.context.InstitutionId}`;
               return Promise.resolve();
             } else {
               return Promise.reject(data[1]);
@@ -95,6 +97,18 @@ export default class ReviewChanges extends React.Component {
             .then((response) => Promise.all([response.ok, response.json()]))
             .then((data) => {
               if (data[0] && data[1] === "") {
+                fetch("/update-plot-similarity", {
+                  method: "POST",
+                  headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json; charset=utf-8",
+                  },
+                  body: JSON.stringify({
+                    projectId: this.context.projectId,
+                    referencePlotId: this.context.plotSimilarityDetails?.referencePlotId || 1,
+                    similarityYears: this.context.plotSimilarityDetails?.years || ["2024"]
+                  })
+                });
                 this.context.setContextState({ designMode: "manage" });
                 this.setState ({modal: {alert: {alertType: "Update Project Alert", alertMessage: "Project successfully updated!"}}});
                 return Promise.resolve();
@@ -107,7 +121,6 @@ export default class ReviewChanges extends React.Component {
             })
         );}
     );
-    
   };
 
   /// Helper Functions
@@ -134,6 +147,9 @@ export default class ReviewChanges extends React.Component {
     sampleDistribution: this.context.sampleDistribution,
     samplesPerPlot: this.context.samplesPerPlot,
     sampleResolution: this.context.sampleResolution,
+    newPlotFileBase64: this.context.newPlotFileBase64,
+    newPlotFileName: this.context.newPlotFileName,
+    newPlotDistribution: this.context.newPlotDistribution,
     allowDrawnSamples: this.context.allowDrawnSamples,
     surveyQuestions: this.context.surveyQuestions,
     surveyRules: this.context.surveyRules,

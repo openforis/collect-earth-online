@@ -178,7 +178,12 @@
                     :surveyQuestions            (tc/jsonb->clj (:survey_questions project) [])
                     :surveyRules                (tc/jsonb->clj (:survey_rules project) [])
                     :projectOptions             (merge default-options (tc/jsonb->clj (:options project)))
-                    :designSettings             (merge default-settings (tc/jsonb->clj (:design_settings project)))})))
+                    :designSettings             (merge default-settings (tc/jsonb->clj (:design_settings project)))
+                    :type                       (:type project)
+                    :plotSimilarityDetails      {:years (tc/jsonb->clj (:plot_similarity_years project))
+                                                 :referencePlotId (sql-primitive (call-sql "get_plot_visible_id_by_id"
+                                                                                           (:project_id project)
+                                                                                           (:reference_plot_rid project)))}})))
 
 (defn get-project-stats [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
@@ -381,6 +386,27 @@
 (defn- copy-template-plots [project-id template-id design-settings]
   (call-sql "copy_template_plots" template-id project-id)
   (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id) project-id))
+
+(defn get-plot-points [dist plots]
+  (case dist
+    "geojson" (reduce
+               (fn [points pgobj]
+                 (let [coord-pairs (->> pgobj :plot_geom .getValue
+                                        tc/json->clj :coordinates first)]
+                   (into points coord-pairs)))
+               [] plots)
+    "shp" (reduce
+           (fn [points pgobj]
+             (let [coord-pairs (->> pgobj :plot_geom .getValue
+                                    (call-sql "hex_ewkb_to_all_vertices")
+                                    (map (fn [{:keys [x y]}]
+                                           [x y])))]
+               (into points coord-pairs)))
+           [] plots)
+    "csv" (map
+           (fn [pgobj]
+	     (let [[_ coords] (->> pgobj :plot_geom .getValue (re-find #"POINT\(([^)]+)\)"))]
+	       (map #(Double/parseDouble %) (str/split coords #" ")))) plots)))
 
 (defn- create-project-plots! [project-id
                               plot-distribution
@@ -645,7 +671,10 @@
                                                          (tc/val->double (:lonMax params))
                                                          (tc/val->double (:latMax params)))])
         aoi-file-name        (:aoiFileName params)
-        plot-distribution    (:plotDistribution params)
+        append-plots?        (:append params)
+        plot-distribution    (if append-plots?
+                               (:newPlotDistribution params)
+                               (:plotDistribution params))
         num-plots            (tc/val->int (:numPlots params))
         plot-spacing         (tc/val->float (:plotSpacing params))
         plot-shape           (:plotShape params)
@@ -660,8 +689,12 @@
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
         design-settings      (:designSettings params default-settings)
-        plot-file-name       (:plotFileName params)
-        plot-file-base64     (:plotFileBase64 params)
+        plot-file-name       (if append-plots?
+                               (:newPlotFileName params)
+                               (:plotFileName params))
+        plot-file-base64     (if append-plots?
+                               (:newPlotFileBase64 params)
+                               (:plotFileBase64 params))
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
         type                 (:type params)
@@ -677,7 +710,7 @@
                                       :componentType "button",
                                       :parentAnswerIds [],
                                       :parentQuestionId -1
-                                      :answers {"0" {:hide false, :color "#00ff4c", :answer "!"}}}))]    
+                                      :answers {"0" {:hide false, :color "#00ff4c", :answer "!"}}}))]
     (if original-project
       (try
         (call-sql "update_project"
@@ -710,7 +743,6 @@
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery! project-id imagery-list))
-        
         (cond
           (#{"closed" "archived"} (:availability original-project))
           nil
@@ -725,7 +757,7 @@
                     (not= plot-spacing   (:plot_spacing original-project))
                     (not= shuffle-plots? (:shuffle_plots original-project)))))
           (doall
-           (call-sql "delete_plots_by_project" project-id)
+           (when-not append-plots? (call-sql "delete_plots_by_project" project-id))
            (create-project-plots! project-id
                                   plot-distribution
                                   num-plots
@@ -1129,14 +1161,14 @@
      [(apply max x-points) (apply max y-points)]]))
 
 (defn fit-aoi-to-file [distribution project-id file-plots]
-  (let [[[x-min y-min] 
+  (let [[[x-min y-min]
          [x-max y-max]] (get-plot-bounds distribution file-plots)
         minmax-matrix [[min max]
                        [min min]
                        [max min]
                        [max max]
                        [min max]]
-        minmaxer (fn [[xfn yfn] [aoix aoiy]] 
+        minmaxer (fn [[xfn yfn] [aoix aoiy]]
                    [(apply xfn [aoix (if (= xfn min) x-min x-max)])
                     (apply yfn [aoiy (if (= yfn min) y-min y-max)])])
         project-features (call-sql "select_project_features" project-id)]
@@ -1148,6 +1180,7 @@
 
 (defn update-bounds-by-file [distribution project-id file-plots]
   (let [[[x-min y-min] 
+
          [x-max y-max]] (get-plot-bounds distribution file-plots)
         project-features (call-sql "select_project_features" project-id)
         pgeom (if (seq project-features)
@@ -1155,10 +1188,10 @@
                      .getValue tc/jsonb->clj :coordinates first)
                 project-features)
         project-x (map first pgeom )
-        project-y (map last pgeom)]    
+
+        project-y (map last pgeom)]
     [[(apply min (into [x-min] project-x)) (apply min (into [y-min] project-y))]
-     [(apply max (into [x-max] project-x)) (apply max (into [y-max] project-y))]]
-    ))
+     [(apply max (into [x-max] project-x)) (apply max (into [y-max] project-y))]]))
 
 (defn check-plot-file
   [{:keys [params]}]
@@ -1166,13 +1199,12 @@
         plot-file-name   (:plotFileName params)
         plot-file-base64 (:plotFileBase64 params)
         distribution     (:plotFileType params)
-        
         plots            (external-file/load-external-data! project-id
                                                             distribution
                                                             plot-file-name
                                                             plot-file-base64
                                                             "plot"
-                                                            [:visible_id])        
+                                                            [:visible_id])
         file-bounds      (update-bounds-by-file distribution project-id plots)
         file-aoi         (fit-aoi-to-file distribution project-id plots)
         file-assignment? (some #(:user %) plots)
@@ -1239,8 +1271,7 @@
                                                       (tc/clj->jsonb project-state)))]
         (if (or (nil? project-draft-id) (zero? project-draft-id))
           (throw (Exception. "There was an issue with the creation request."))
-          (data-response {:projectDraftId project-draft-id}))
-        )
+          (data-response {:projectDraftId project-draft-id})))
       (catch Exception e
         (let [causes (:causes (ex-data e))]
           (when-not causes (log (ex-message e)))
@@ -1332,3 +1363,40 @@
        :status  200}
       {:status 500
        :body   "Error generating shape files."})))
+
+(defn copy-project!
+  "{:params  {:projectId Int}
+    :session {:userId Int}
+   }"
+  [{:keys [params session]}]
+  (let [user-id (:userId session -1)
+        project-id (tc/val->int (:projectId params))
+        {:keys [institution
+                plotSize
+                plotSpacing
+                name
+                id
+                surveyQuestions
+                sampleResolution]
+         :as old-project} (build-project-by-id user-id project-id)
+        project (assoc old-project
+                  :name (str name " - COPY")
+                  :surveyQuestions surveyQuestions
+                  :institutionId institution
+                  :plotSize (long plotSize)
+                  :plotSpacing (long plotSpacing)
+                  :projectTemplate id
+                  :sampleResolution (long sampleResolution)
+                  :useTemplatePlots (:plots params)
+                  :useTemplateWidgets (:widgets params))]    
+    (try
+      (let [new-project (create-project! {:params project})
+            new-project-id (-> new-project :body tc/json->clj :projectId)]
+
+        (when (-> params :answers tc/val->bool)
+          (call-sql "copy_user_plots" project-id new-project-id)
+          (call-sql "copy_sample_values" project-id new-project-id))
+
+        (data-response {:projectId new-project-id}))
+      (catch Exception e
+        (data-response "Error copying project" {:status 500})))))

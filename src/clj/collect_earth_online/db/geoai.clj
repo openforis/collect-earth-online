@@ -9,7 +9,11 @@
 
 (defonce gcs-resource
   (st/init
+<<<<<<< HEAD
    #_{:project-id  (get-config :gcs-integration :project-name)
+=======
+   {:project-id  (get-config :gcs-integration :project-name)
+>>>>>>> release/plot-similarity
     :credentials (get-config :gcs-integration :credentials)}))
 
 
@@ -43,6 +47,7 @@
   (str "{" (clojure.string/join "," (map int arr)) "}"))
 
 (defn search-plot-by-similarity
+<<<<<<< HEAD
   [project-id plot-id year]
   (let [bq-table          (-> (call-sql "get_bq_table" project-id year)
                               (sql-primitive)
@@ -59,6 +64,36 @@
               plot-id
               (clj->int-array-literal similar-plots-arr)
               (tc/clj->jsonb req))))
+=======
+  [project-id plot-id year plots]
+  (let [bq-table   (-> (call-sql "get_bq_table" project-id year)
+                       sql-primitive
+                       (clojure.string/split #"\.")
+                       last)
+        base-url   (get-config :gcs-integration :api-url)
+        search-url (str base-url "/search")
+        plot-ids   (map :plot_uid plots)
+        try-plot   (fn [pid]
+                     (let [resp (http/get search-url
+                                          {:query-params {:uniqueid pid
+                                                          :table    bq-table
+                                                          :matches  500}
+                                           :throw-exceptions false})
+                           parsed (tc/json->clj (:body resp))]
+                       (when (seq parsed) {:plot-id pid :resp parsed})))]
+
+    (if-let [{:keys [plot-id resp]} (or (try-plot plot-id)
+                                        (some try-plot (take 15 plot-ids)))]
+      (let [similar-ids        (map #(get % :base_plotid) resp)
+            remaining-plot-ids (clojure.set/difference (set similar-ids) (set plot-ids))]
+        (call-sql "insert_geoai_cache"
+                  project-id
+                  plot-id
+                  (clj->int-array-literal (concat [plot-id] similar-ids (vec remaining-plot-ids)))
+                  (tc/clj->jsonb resp))
+        (call-sql "update_reference_plot" project-id plot-id))
+      (throw (ex-info "❌ No non-empty results found after retries" {:project-id project-id})))))
+>>>>>>> release/plot-similarity
 
 (defn start-plot-similarity! [{:keys [params]}]
   (let [project-id        (:projectId params)
@@ -70,14 +105,40 @@
     (upload-json-to-gcs project-id file-name (first similarity-years))
     (data-response {:message "calculating plot similarity."})))
 
+<<<<<<< HEAD
+=======
+(defn update-plot-similarity! [{:keys [params]}]
+  (let [project-id        (:projectId params)
+        reference-plot-id (tc/val->int (:referencePlotId params))
+        plot-id           (sql-primitive (call-sql "get_plot_id_by_visible_id" project-id reference-plot-id))
+        similarity-year   (tc/val->int (first (:similarityYears params)))
+        file-name         (str "ceo-" project-id "-plots_" similarity-year)
+        current-year      (tc/val->int (sql-primitive (call-sql"get_plot_similarity_year" project-id)))]
+    (if (not= similarity-year current-year)
+      (do
+        (upload-json-to-gcs project-id file-name similarity-year)
+        (call-sql "update_reference_plot" project-id plot-id)
+        (data-response {:message "recalculating plot similarity for newly selected year."}))
+      (do
+        (call-sql "update_reference_plot" project-id plot-id)
+        (data-response {:message "recalculating plot similarity."})))))
+
+>>>>>>> release/plot-similarity
 (defn recalculate-plot-similarity [{:keys [params]}]
   (let [project-id        (:projectId params)
         reference-plot-id (tc/val->int (:referencePlotId params))
         similarity-years  (:similarityYears params)
         file-name         (str "ceo-" project-id "-plots_" (first similarity-years))
+<<<<<<< HEAD
         plot-id           (sql-primitive (call-sql "get_plot_id_by_visible_id" project-id reference-plot-id))]
     (try
       (search-plot-by-similarity project-id plot-id (first similarity-years))
+=======
+        plot-id           (sql-primitive (call-sql "get_plot_id_by_visible_id" project-id reference-plot-id))
+        plots             (call-sql "select_plots_by_project" project-id)]
+    (try
+      (search-plot-by-similarity project-id plot-id (first similarity-years) plots)
+>>>>>>> release/plot-similarity
       (data-response {:message "successfully reprocessed plot similarity"})
       (catch Exception ex
         (data-response {:message "error recalculating plot similarity"})))))

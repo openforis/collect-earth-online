@@ -113,4 +113,3 @@
         vis-params (tc/json->clj (:visParams params))
         vis-errors (utils/validateJSON img-path vis-params)]
     (data-response "" {:status 200})))
-

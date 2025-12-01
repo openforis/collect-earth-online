@@ -243,8 +243,9 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
           alert("Error editing project visibility. See console for details.");
         }
       });
+
     }
-  }
+  };
 
   const editUsersBulk = (users, role) => {
     fetch("/update-user-institution-role", {

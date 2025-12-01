@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
+
 import shp from "shpjs";
 import DatePicker from 'react-datepicker';
 
@@ -24,6 +25,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
                                               lonMax: "",
                                               latMax: "",});
   const [_totalPlots, setTotalPlots] = useState(totalPlots);
+
   const acceptedTypes = {
       csv: "text/csv",
       shp: "application/zip",
@@ -41,7 +43,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
       Object.assign(newDetail, { plots: [] }, { aoiFeatures: [], aoiFileName: "" },)
     ); 
   };
-
+v
   const checkPlotFile = (plotFileType, fileName, plotFileBase64) => {
     fetch("/check-plot-file", {
       method: "POST",
@@ -112,10 +114,9 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
           </label>
             </div>
       </div>
-    );
-    
+    );  
   };
-
+  
   const renderPlotShape = () => {    
     return (
       <div className="form-group" style={{ display: "flex", flexDirection: "column" }}>
@@ -164,7 +165,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         step="1"
         type="number"
         value={newPlotSize}
-        disabled = {disabled}
+        disabled = {(context.availability === "published") || disabled}
       />
     </div>
   );
@@ -205,7 +206,6 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         layout: renderFileInput,
       },
     };
-  
 
   return (
     <div id="new-plot-design">
@@ -220,8 +220,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
               <select
                 className="form-control form-control-sm"
                 onChange={(e)=>{
-                  setPlotDetails({ newPlotDistribution: e.target.value});}
-		         }
+                  setPlotDetails({ newPlotDistribution: e.target.value});}}
                 value={newPlotDistribution}>
                 {Object.entries (plotOptions).map (([key, options]) => (
                   <option key={key} value={key}>
@@ -254,7 +253,6 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
       </div>
     </div>
   );
-
 };
 
 export function PlotDesign ({totalPlots, aoiFeatures}) {
@@ -349,8 +347,8 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
   };
 
 
-  useEffect(()=> {
-  //  setCoordsFromBoundary();
+  useEffect(()=> {    
+    setCoordsFromBoundary();
     if (totalPlots &&
         totalPlots <= 5000
        ) {
@@ -386,6 +384,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
           id="shufflePlots"
           onChange={() => setPlotDetails({ shufflePlots: !shufflePlots })}
           type="checkbox"
+          disabled={context.availability==="published"}
         />
         <label className="form-check-label" htmlFor="shufflePlots">
           Shuffle plot order
@@ -407,6 +406,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
               id="plot-shape-circle"
               onChange={() => setPlotDetails({ plotShape: "circle" })}
               type="radio"
+              disabled={context.availability==="published"}
             />
             <label className="form-check-label" htmlFor="plot-shape-circle">
               Circle
@@ -419,6 +419,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
               id="plot-shape-square"
               onChange={() => setPlotDetails({ plotShape: "square" })}
               type="radio"
+              disabled={context.availability==="published"}
             />
             <label className="form-check-label" htmlFor="plot-shape-square">
               Square
@@ -430,7 +431,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
   };
 
   const renderAOICoords = () => {
-    const { latMax, lonMin, lonMax, latMin } = state;
+    const { latMax, lonMin, lonMax, latMin , availability} = state;
     return (
       <div style={{ width: "20rem" }}>
         <div className="form-group ml-3">
@@ -447,6 +448,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
                 step="any"
                 type="number"
                 value={latMax}
+                disabled={availability==="published"}
               />
             </div>
           </div>
@@ -463,6 +465,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
                 step="any"
                 type="number"
                 value={lonMin}
+                disabled={availability==="published"}
               />
             </div>
             <div className="col-md-6">
@@ -477,6 +480,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
                 step="any"
                 type="number"
                 value={lonMax}
+                disabled={availability==="published"}
               />
             </div>
           </div>
@@ -493,6 +497,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
                 step="any"
                 type="number"
                 value={latMin}
+                disabled={availability==="published"}
               />
             </div>
           </div>
@@ -516,7 +521,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
   };
 
   const renderBoundaryFileInput = () => {
-    const { aoiFileName } = context;
+    const { aoiFileName, availability } = context;
     return (
       <div className="d-flex flex-column">
         {state.modal?.alert &&
@@ -543,6 +548,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
               }}
               style={{ display: "none" }}
               type="file"
+              disabled={availability==="published"}
             />
           </label>
           <label className="ml-3 text-nowrap">File: {aoiFileName}</label>
@@ -552,7 +558,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
   };
 
   const renderAOISelector = () => {
-    const { boundaryType, type } = context;
+    const { boundaryType, type, availability } = context;
     const boundaryOptions = [
       { value: "manual", label: "Input coordinates" },
       { value: "file", label: "Upload shp file" },
@@ -565,6 +571,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
             className="form-control form-control-sm"
             onChange={(e) => setPlotDetails({ boundaryType: e.target.value })}
             value={boundaryType}
+            disabled={availability==="published"}
           >
             {boundaryOptions.map(({ value, label }) => (
               <option key={value} value={value}>
@@ -893,7 +900,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
                       designSettings: { ...designSettings,
                                         userAssignment: {userMethod: "none", users: [], percents: []},
                                         qaqcAssignment: {qaqcMethod: "none", smes: [], overlap: 0}}})
-                    : this.setPlotDetails({ plotDistribution: e.target.value })
+                    : setPlotDetails({ plotDistribution: e.target.value })
                 }
                 value={plotDistribution}
               >
@@ -1002,727 +1009,7 @@ export function PlotDesign ({totalPlots, aoiFeatures}) {
   );
 };
 
-/*
-export class PlotDesign extends React.Component {
-constructor(props) {
-    super(props);
-    this.state = {
-      lonMin: "",
-      latMin: "",
-      lonMax: "",
-      latMax: "",
-      modal: null,
-      plotIdList: [],
-      totalPlots: "",
-    };
-  }
-  lastNumPlots = null;
-  lastCalculatedPlots = null;
-  lastCalcInputs = {};
 
-  componentDidMount() {
-    this.setCoordsFromBoundary();
-    if (this.props.totalPlots &&
-        this.props.totalPlots <= 5000
-       ) {
-      const plotIds = Array.from({ length: this.props.totalPlots }, (_, i) => i + 1);
-      this.setState({ plotIdList: plotIds,
-                      totalPlots: plotIds.length});
-    }
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (this.props.aoiFeatures && prevProps.aoiFeatures !== this.props.aoiFeatures) {
-      this.setCoordsFromBoundary();
-    }
-
-    if (
-      this.context.type === "simplified" &&
-        (this.state.lonMin !== prevState.lonMin ||
-         this.state.latMin !== prevState.latMin ||
-         this.state.lonMax !== prevState.lonMax ||
-         this.state.latMax !== prevState.latMax)
-    ) {
-      this.setSimplifiedProjectDetails();
-    }
-    if (this.props.totalPlots &&
-        this.props.totalPlots !== prevProps.totalPlots &&
-        this.props.totalPlots <= 5000
-    ) {
-      const plotIds = Array.from({ length: this.props.totalPlots }, (_, i) => i + 1);
-      this.setState({ plotIdList: plotIds });
-    }
-  }
-
-  setCoordsFromBoundary = () => {
-    const { aoiFeatures } = this.props;
-    if (aoiFeatures?.length === 1) {
-      const boundaryExtent = mercator.parseGeoJson(aoiFeatures[0], false).getExtent();
-      this.setState({
-        lonMin: boundaryExtent[0],
-        latMin: boundaryExtent[1],
-        lonMax: boundaryExtent[2],
-        latMax: boundaryExtent[3],
-      });
-    } else {
-      this.setState({
-        lonMin: "",
-        latMin: "",
-        lonMax: "",
-        latMax: "",
-      });
-    }
-  };
-
-  validBoundary = (latMin, latMax, lonMin, lonMax) =>
-    isNumber(latMin) &&
-    isNumber(latMax) &&
-    isNumber(lonMin) &&
-    isNumber(lonMax) &&
-    latMax > latMin &&
-    lonMax > lonMin;
-
-  updateBoundaryFromCoords = (newCoord) => {
-    this.setState(newCoord, () => {
-      const { latMin, latMax, lonMin, lonMax } = this.state;
-      if (this.validBoundary(latMin, latMax, lonMin, lonMax)) {
-        this.setPlotDetails({
-          aoiFeatures: [mercator.generateGeoJSON(latMin, latMax, lonMin, lonMax)],
-        });
-      }
-    });
-  };
-
-  setPlotDetails = (newDetail) => {
-    const resetAOI = ["csv", "shp", "geojson"].includes(newDetail.plotDistribution);
-    if (resetAOI) {
-    this.setState({
-      lonMin: "",
-        latMin: "",
-        lonMax: "",
-        latMax: "",
-      });
-    }
-    this.context.setProjectDetails(
-      Object.assign(newDetail, { plots: [] }, resetAOI ? { aoiFeatures: [], aoiFileName: "" } : {})
-    );
-  };
-
-  setSimplifiedProjectDetails = () => {
-    const { lonMin, lonMax, latMin } = this.state;
-    const plotWidth = mercator.calculatePlotWidth(latMin, lonMin, lonMax);
-    const designSettings = this.context.designSettings;
-
-    this.context.setProjectDetails({
-      ...this.context,
-      sampleDistribution: "center",
-      numPlots: 1,
-      plotSize: Math.floor(plotWidth / 2),
-      allowDrawnSamples: true,
-      plotDistribution: "simplified",
-      designSettings: {
-        ...designSettings,
-        sampleGeometries: {"lines": true, "points": true, "polygons": true}} });
-  }
-
-  /// Render Functions
-
-  renderLabeledInput = (label, property, disabled = false) => (
-    <div className="form-group" style={{ width: "fit-content" }}>
-      <label htmlFor={property}>{label}</label>
-      <input
-        className="form-control form-control-sm"
-        id={property}
-        min="0"
-        onChange={(e) => this.setPlotDetails({ [property]: Number(e.target.value) })}
-        step="1"
-        type="number"
-        value={this.context[property] || ""}
-        disabled = {disabled}
-      />
-    </div>
-  );
-
-  renderShufflePlots = () => {
-    const { shufflePlots } = this.context;
-    return (
-      <div className="form-check">
-        <input
-          checked={shufflePlots}
-          className="form-check-input"
-          id="shufflePlots"
-          onChange={() => this.setPlotDetails({ shufflePlots: !shufflePlots })}
-          type="checkbox"
-        />
-        <label className="form-check-label" htmlFor="shufflePlots">
-          Shuffle plot order
-        </label>
-      </div>
-    );
-  };
-
-  renderPlotShape = () => {
-    const { plotShape } = this.context;
-    return (
-      <div className="form-group" style={{ display: "flex", flexDirection: "column" }}>
-        <label>Plot shape</label>
-        <div>
-          <div className="form-check form-check-inline">
-            <input
-              checked={plotShape === "circle"}
-              className="form-check-input"
-              id="plot-shape-circle"
-              onChange={() => this.setPlotDetails({ plotShape: "circle" })}
-              type="radio"
-            />
-            <label className="form-check-label" htmlFor="plot-shape-circle">
-              Circle
-            </label>
-          </div>
-          <div className="form-check form-check-inline">
-            <input
-              checked={plotShape === "square"}
-              className="form-check-input"
-              id="plot-shape-square"
-              onChange={() => this.setPlotDetails({ plotShape: "square" })}
-              type="radio"
-            />
-            <label className="form-check-label" htmlFor="plot-shape-square">
-              Square
-            </label>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  renderAOICoords = () => {
-    const { latMax, lonMin, lonMax, latMin } = this.state;
-    return (
-      <div style={{ width: "20rem" }}>
-        <div className="form-group ml-3">
-          <div className="row">
-            <div className="col-md-6 offset-md-3">
-              <input
-                className="form-control form-control-sm"
-                max="90.0"
-                min="-90.0"
-                onChange={(e) =>
-                  this.updateBoundaryFromCoords({ latMax: parseFloat(e.target.value) })
-                }
-                placeholder="North"
-                step="any"
-                type="number"
-                value={latMax}
-              />
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-md-6">
-              <input
-                className="form-control form-control-sm"
-                max="180.0"
-                min="-180.0"
-                onChange={(e) =>
-                  this.updateBoundaryFromCoords({ lonMin: parseFloat(e.target.value) })
-                }
-                placeholder="West"
-                step="any"
-                type="number"
-                value={lonMin}
-              />
-            </div>
-            <div className="col-md-6">
-              <input
-                className="form-control form-control-sm"
-                max="180.0"
-                min="-180.0"
-                onChange={(e) =>
-                  this.updateBoundaryFromCoords({ lonMax: parseFloat(e.target.value) })
-                }
-                placeholder="East"
-                step="any"
-                type="number"
-                value={lonMax}
-              />
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-md-6 offset-md-3">
-              <input
-                className="form-control form-control-sm"
-                max="90.0"
-                min="-90.0"
-                onChange={(e) =>
-                  this.updateBoundaryFromCoords({ latMin: parseFloat(e.target.value) })
-                }
-                placeholder="South"
-                step="any"
-                type="number"
-                value={latMin}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  loadGeoJson = (shpFile) => {
-    try {
-      shp(shpFile).then((g) => {
-        this.context.setProjectDetails({
-          aoiDataDebug: g.features,
-          aoiFeatures: g.features.map((f) => f.geometry),
-          aoiFileName: g.fileName,
-        });
-      });
-    } catch {
-      this.setState ({modal: {alert: {alertType: "ShapeFile Error", alertMessage: "Unknown error loading shape file."}}});
-    }
-  };
-
-  renderBoundaryFileInput = () => {
-    const { aoiFileName } = this.context;
-    return (
-      <div className="d-flex flex-column">
-        {this.state.modal?.alert &&
-         <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
-           {this.state.modal.alert.alertMessage}
-         </Modal>}
-
-        <div className="d-flex">
-          <label
-            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
-            htmlFor="project-boundary-file"
-            id="custom-upload"
-            style={{ display: "flex", alignItems: "center", width: "fit-content" }}
-          >
-            Upload shp file (zip)
-            <input
-              accept="application/zip"
-              defaultValue=""
-              id="project-boundary-file"
-              onChange={(e) => {
-                const file = e.target.files[0];
-  p              readFileAsArrayBuffer(file, this.loadGeoJson);
-              }}
-              style={{ display: "none" }}
-              type="file"
-            />
-          </label>
-          <label className="ml-3 text-nowrap">File: {aoiFileName}</label>
-        </div>
-      </div>
-    );
-  };
-
-  renderAOISelector = () => {
-    const { boundaryType, type } = this.context;
-    const boundaryOptions = [
-      { value: "manual", label: "Input coordinates" },
-      { value: "file", label: "Upload shp file" },
-    ];
-    return (
-      <>
-        <div className="form-group" style={{ width: "fit-content" }}>
-          <label>Boundary type</label>
-          <select
-            className="form-control form-control-sm"
-            onChange={(e) => this.setPlotDetails({ boundaryType: e.target.value })}
-            value={boundaryType}
-          >
-            {boundaryOptions.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-        {boundaryType === "manual" ? this.renderAOICoords() : this.renderBoundaryFileInput()}
-      </>
-    );
-  };
-
-  readFileAsArrayBuffer = (file) =>
-    new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result);
-      r.onerror = rej;
-      r.readAsArrayBuffer(file);
-    });
-
-  readFileAsText = (file) =>
-    new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result);
-      r.onerror = rej;
-            r.readAsText(file);
-    });
-
-  getPlotIdFromProps = (props = {}) => {
-    if (!props) return undefined;
-    const keys = Object.keys(props);
-    const k = keys.find((key) =>
-      ["plotid","plot_id","PlotID","plotId","PLOTID"].includes(key)
-    );
-    return k ? props[k] : undefined;
-  };
-
-  // SHP file
-  parseZipShapefileToIds = async (file) => {
-    const geojson = await shp(file);
-    const features = geojson?.type === "FeatureCollection" ? geojson.features : [];
-    return features
-      .map((f) => this.getPlotIdFromProps(f?.properties))
-      .filter((v) => v != null);
-  };
-
-  // GeoJSON / JSON
-  parseGeoJSONToIds = (text) => {
-    const data = JSON.parse(text);
-    const features = data?.type === "FeatureCollection" ? data.features : [];
-    return features
-      .map((f) => this.getPlotIdFromProps(f?.properties))
-      .filter((v) => v != null);
-  };
-
-  // CSV (first column = plotid)
-  parseCsvToIds = (text) => {
-    const lines = text
-          .split(/\r?\n/)
-          .map((l) => l.trim())
-          .filter((l) => l.length > 0);
-
-    if (lines.length === 0) return [];
-
-    const firstRow = lines[0].split(/,(.+)?/)[0].trim();
-    const hasHeader =
-          /^[A-Za-z_]+$/.test(firstRow) || firstRow.toLowerCase() === "plotid";
-
-    const startIdx = hasHeader ? 1 : 0;
-
-    const ids = [];
-    for (let i = startIdx; i < lines.length; i++) {
-      const firstCell = lines[i].split(/,(.+)?/)[0].trim();
-      if (firstCell !== "") ids.push(firstCell);
-    }
-    return ids;
-  };
-
-  readPlotIdsFromFile = async (file) => {
-    const name = (file?.name || "").toLowerCase();
-
-    if (name.endsWith(".zip")) {
-      const ab = await this.readFileAsArrayBuffer(file);
-      return await this.parseZipShapefileToIds(ab);
-    }
-
-    if (name.endsWith(".geojson") || name.endsWith(".json")) {
-      const text = await this.readFileAsText(file);
-      return this.parseGeoJSONToIds(text);
-    }
-
-    if (name.endsWith(".csv")) {
-      const text = await this.readFileAsText(file);
-      return this.parseCsvToIds(text);
-    }
-
-    throw new Error("Unsupported file type. Please upload .zip (shp), .geojson/.json, or .csv.");
-  };
-
-  checkPlotFile = (plotFileType, plotFileName, plotFileBase64) => {
-    const { projectId, designSettings } = this.context;
-    fetch("/check-plot-file", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        plotFileType,
-        projectId,
-        plotFileName,
-        plotFileBase64
-      }),
-    })
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.setState(s => ({... s, totalPlots: data.filePlotCount}));
-        this.context.setProjectDetails({
-          designSettings: { ...designSettings,
-                            userAssignment: data.userAssignment,
-                            qaqcAssignment: data.qaqcAssignment}
-        });
-      });
-  }
-
-  renderFileInput = (fileType, append) => {
-    const acceptedTypes = {
-      csv: "text/csv",
-      shp: "application/zip",
-      geojson: "application/json",
-    };
-    const exampleFileType = fileType === "shp" ? "shape" : fileType;
-    return (
-      <div className="mb-3">
-        <div style={{ display: "flex" }}>
-          <label
-            className="btn btn-sm btn-block btn-outline-lightgreen btn-file py-0 text-nowrap"
-            htmlFor="plot-distribution-file"
-            id="custom-upload"
-            style={{ display: "flex", alignItems: "center", width: "fit-content" }}
-          >
-            Upload plot file
-            <input
-              accept={acceptedTypes[fileType]}
-              defaultValue=""
-              id="plot-distribution-file"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                this.readPlotIdsFromFile(file).then((plotIds) =>
-                  this.setState({ plotIdList: plotIds})
-                );
-                readFileAsBase64Url(file, (base64) => {
-                  this.checkPlotFile(fileType, file.name, base64);
-                  return this.setPlotDetails({
-                    plotFileName: file.name,
-                    plotFileBase64: base64,
-                    append: false
-                  });
-                });
-              }}
-              style={{ display: "none" }}
-              type="file"
-            />
-          </label>
-          <label className="ml-3 text-nowrap">
-            File:{" "}
-            {this.context.plotFileName || (this.context.projectId > 0 ? "Use existing data" : "None")}
-          </label>
-        </div>
-        <a
-          href={
-            `test_data/sample-${exampleFileType}-example.${fileType === "shp" ? "zip" : fileType}`
-          }
-        >
-          Download example plot {fileType} file
-        </a>
-      </div>
-    );
-  }
-  
-  renderCSV = (fileType, append) => {
-    const { plotShape } = this.context;
-    const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
-    return (
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        {this.renderFileInput("csv", append)}
-        <div style={{ display: "flex" }}>
-          <span className="mr-3">{this.renderPlotShape()}</span>
-          {this.renderLabeledInput(plotUnits, "plotSize")}
-        </div>
-      </div>
-    );
-  };
-
-  renderStrataRow = (feature, idx) => (
-    <div
-      key={idx}
-      onMouseEnter={() => this.setPlotDetails({ selectedStrata: idx })}
-      onMouseLeave={() => this.setPlotDetails({ selectedStrata: -1 })}
-      style={{
-        background: "rgba(255,255,255,0.5)",
-        border: "1px solid black",
-        borderRadius: "3px",
-        display: "flex",
-        minWidth: "50%",
-        padding: ".5rem",
-        marginBottom: ".25rem",
-      }}
-    >
-      {`Strata ${idx + 1}: Area ${Math.round(mercator.calculateGeoJsonArea(feature))} ha`}
-    </div>
-  );
-
-  renderRandom = () => {
-    const { aoiFeatures, plotShape, type } = this.context;
-    const disabled = type === "simplified";
-    const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
-    return (
-      <div>
-        {this.renderAOISelector()}
-        <label>Plot properties</label>
-        {aoiFeatures.map(this.renderStrataRow)}
-        <div className="d-flex">
-          {this.renderLabeledInput("Number of plots", "numPlots", disabled)}
-          <span className="mx-3">{this.renderPlotShape()}</span>
-          {this.renderLabeledInput(plotUnits, "plotSize")}
-        </div>
-      </div>
-    );
-  };
-
-  renderGridded = () => {
-    const { aoiFeatures, plotShape } = this.context;
-    const plotUnits = plotShape === "circle" ? "Plot diameter (m)" : "Plot width (m)";
-    return (
-      <div>
-        {this.renderAOISelector()}
-        {aoiFeatures.map(this.renderStrataRow)}
-        <div className="d-flex">
-          {this.renderLabeledInput("Plot spacing (m)", "plotSpacing")}
-          <span className="mx-3">{this.renderPlotShape()}</span>
-          {this.renderLabeledInput(plotUnits, "plotSize")}
-        </div>
-        {this.renderShufflePlots()}
-      </div>
-    );
-  };
-
-  renderSimplifiedSelector = () => {
-    const { aoiFeatures } = this.context;
-    return (
-      <div>
-        {this.renderAOISelector()}
-        {aoiFeatures.map(this.renderStrataRow)}
-      </div>
-    );
-  };
-
-  render() {
-  
-    return (
-    <div id="plot-design">
-        <h3 className="mb-3">Plot Generation</h3>
-        <div className="ml-3">
-          <div className="d-flex flex-column">
-            <div className="form-group" style={{ width: "fit-content" }}>
-              <label>Spatial distribution</label>
-              <div style={{position: "relative"}}>
-                {spatialDistributionOptions[plotDistribution].alert &&
-                 <p className="alert">- {spatialDistributionOptions[plotDistribution].alert}</p>}
-                <select
-                  className="form-control form-control-sm"
-                  onChange={(e) =>
-                    designSettings?.userAssignment?.userMethod === "file" ?
-                      this.setPlotDetails({
-                        plotDistribution: e.target.value,
-                        designSettings: { ...designSettings,
-                                          userAssignment: {userMethod: "none", users: [], percents: []},
-                                          qaqcAssignment: {qaqcMethod: "none", smes: [], overlap: 0}}})
-                      : this.setPlotDetails({ plotDistribution: e.target.value })
-                  }
-                  value={plotDistribution}
-                >
-                  {Object.entries(spatialDistributionOptions).map(([key, options]) => (
-                    <option key={key} value={key}>
-                      {options.display}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <p className="font-italic ml-2">{`- ${spatialDistributionOptions[plotDistribution].description}`}</p>
-            
-          </div>
-          <div>{spatialDistributionOptions[plotDistribution].layout(plotDistribution, false)}</div>
-          <p
-            className="font-italic ml-2 small"
-            style={{
-              color: totalPlots > plotLimit ? "#8B0000" : "#006400",
-              fontSize: "1rem",
-              whiteSpace: "pre-line",
-            }}
-          >
-            {totalPlots > 0 &&
-             `This project will contain around ${formatNumberWithCommas(totalPlots)} plots.`}
-            {totalPlots > 0 &&
-             totalPlots > plotLimit &&
-             `\n* The maximum allowed number for the selected plot distribution is ${formatNumberWithCommas(
-                plotLimit
-              )}.`}
-          </p>
-          {(this.context.type != "simplified") && (
-            <>
-              <h3 className="mb-3">Plot Similarity Configuration</h3>
-              <div className="form-check">
-                <input
-                  checked={this.context.projectOptions.plotSimilarity}
-                  className="form-check-input"
-                  id="similarPlots"
-                  onChange={() =>
-                    this.context.setProjectDetails({
-                      projectOptions: { ...this.context.projectOptions, plotSimilarity: !this.context.projectOptions.plotSimilarity },
-                    })
-                  }
-                  type="checkbox"
-                />
-                <label className="form-check-label" htmlFor="similarPlots">
-                  Enable navigation by similarity
-                </label>
-                {this.context.projectOptions.plotSimilarity && (
-                  <>
-                    <div className="form-group">
-                      <label htmlFor="referencePlotId"> Reference plot ID: {"  "}</label>
-                      <select
-                        id="referencePlotId"
-                        value={this.context.plotSimilarityDetails?.referencePlotId || ""}
-                        onChange={(e) =>
-                          this.context.setProjectDetails({
-                            plotSimilarityDetails: {
-                              ...this.context.plotSimilarityDetails,
-                              referencePlotId: e.target.value,
-                            },
-                          })
-                        }
-                      >
-                        <option value="" disabled>
-                          Select a plot ID
-                        </option>
-                        {this.state.plotIdList?.map((id) => (
-                          <option key={id} value={id}>
-                            {id}
-                          </option>
-                        ))}
-                      </select>
-                      <br/>
-                      <label htmlFor="year"> Year for comparison: {"  "} </label>
-                      <DatePicker
-                        selected={
-                          this.context.plotSimilarityDetails?.years?.[0]
-                            ? new Date(this.context.plotSimilarityDetails.years[0], 0, 1)
-                            : new Date()
-                        }
-                        onChange={(d) => {
-                          const year = d.getFullYear();
-
-                          this.context.setProjectDetails({
-                            plotSimilarityDetails: {
-                              ...this.context.plotSimilarityDetails,
-                              years: [year]
-                            },
-                          });
-                        }}
-                        className="form-control"
-                        showYearPicker
-                        dateFormat="yyyy"
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-        <hr/>
-      </div>
-    );
-  }
-}
-PlotDesign.contextType = ProjectContext;
-*/
 export function PlotDesignReview() {
   const { institutionImagery } = useContext(ProjectContext);
   return (

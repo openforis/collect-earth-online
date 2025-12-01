@@ -618,6 +618,7 @@ CREATE OR REPLACE FUNCTION select_project_by_id(_project_id integer)
 
 $$ LANGUAGE SQL;
 
+
 CREATE OR REPLACE FUNCTION user_project(_user_id integer, _role_id integer, _privacy_level text, _availability text)
  RETURNS boolean AS $$
 

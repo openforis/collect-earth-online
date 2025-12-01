@@ -58,8 +58,6 @@
         (when (seq foll)
               (recur (into [this] foll)))))))
 
-
-
 ;;;
 ;;; Project Level
 ;;;
@@ -280,7 +278,7 @@
              :inReviewMode   :bool?}
    :session {:userId         :int-str?}}
 
-"
+  "
   [{:keys [params session]}]
   (let [navigation-mode (:navigationMode params "unanalyzed")
         direction       (:direction params "next")
@@ -306,44 +304,44 @@
                           "qaqc" (sort-by first (filter-plot-disagreement project-id grouped-plots threshold))
                           "similar"
 			  (if (some #(= (:visible_id %) old-visible-id) proj-plots)
-			      (filter-pred-idx #(= (:visible_id %) old-visible-id) proj-plots)
-			      (take 3 (into [nil nil] proj-plots)))
+			    (filter-pred-idx #(= (:visible_id %) old-visible-id) proj-plots)
+			    (take 3 (into [nil nil] proj-plots)))
                           (sort-by first grouped-plots))
         plots-info      (case direction
                           "next"     (case navigation-mode "similar"
-                                           (->> sorted-plots
-                                                (take-last 1)
-                                                (remove nil?)
-                                                seq)					   
-					   (or
-					    (->> sorted-plots
-						 (some (fn [[visible-id plots]]
-							 (and (> visible-id old-visible-id)
-							      plots))))
-					    (-> sorted-plots first second)))
+                                       (->> sorted-plots
+                                            (take-last 1)
+                                            (remove nil?)
+                                            seq)					   
+				       (or
+					(->> sorted-plots
+					     (some (fn [[visible-id plots]]
+						     (and (> visible-id old-visible-id)
+							  plots))))
+					(-> sorted-plots first second)))
                           "previous" (case navigation-mode "similar"
-                                           (->> sorted-plots
-                                                (take 1)
-                                                (remove nil?)
-                                                seq)
-					   (or
-					    (->> sorted-plots
-						 (sort-by first #(compare %2 %1))
-						 (some (fn [[visible-id plots]]
-							 (and (< visible-id old-visible-id)
-							      plots))))
-                                            (->> sorted-plots
-						 (last)
-						 (second))))
+                                       (->> sorted-plots
+                                            (take 1)
+                                            (remove nil?)
+                                            seq)
+				       (or
+					(->> sorted-plots
+					     (sort-by first #(compare %2 %1))
+					     (some (fn [[visible-id plots]]
+						     (and (< visible-id old-visible-id)
+							  plots))))
+                                        (->> sorted-plots
+					     (last)
+					     (second))))
                           "id"       (case navigation-mode "similar"
-					   (->> sorted-plots
-                                                (take-last 2)
-                                                (remove nil?)
-                                                seq)					   
-                                           (some (fn [[visible-id plots]]
-                                                   (and (= visible-id old-visible-id)
-                                                        plots))
-                                                 sorted-plots)))]
+				       (->> sorted-plots
+                                            (take-last 2)
+                                            (remove nil?)
+                                            seq)					   
+                                       (some (fn [[visible-id plots]]
+                                               (and (= visible-id old-visible-id)
+                                                    plots))
+                                             sorted-plots)))]
     (if plots-info
       (try
         (when (not= project-type "simplified")

@@ -4,6 +4,7 @@
             [collect-earth-online.gcloud          :as gcloud]
             [collect-earth-online.sse             :as sse]
             [collect-earth-online.db.doi          :as doi]
+            [collect-earth-online.db.geoai        :as geoai]
             [collect-earth-online.db.geodash      :as geodash]
             [collect-earth-online.db.geoai        :as geoai]          
             [collect-earth-online.db.imagery      :as imagery]
@@ -160,12 +161,23 @@
    [:post "/publish-project"]                {:handler     (validate projects/publish-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
-
-   [:post "/check-plot-file"]                {:handler     (validate projects/check-plot-file)
+   [:post "/copy-project"]                   {:handler     projects/copy-project!
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:post "/check-plot-file"]                {:handler     projects/check-plot-file
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/import-ce-project"]              {:handler     (validate #'ce-project/import-ce-project)
                                               :auth-type   :user
+                                              :auth-action :block}
+   [:post "/start-plot-similarity"]          {:handler     #'geoai/start-plot-similarity!
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:post "/recalculate-plot-similarity"]    {:handler     #'geoai/recalculate-plot-similarity
+                                              :auth-type   :admin
+                                              :auth-action :block}
+   [:post "/update-plot-similarity"]         {:handler     #'geoai/update-plot-similarity!
+                                              :auth-type   :admin
                                               :auth-action :block}
 
    [:post "/start-plot-similarity"]          {:handler     #'geoai/start-plot-similarity!
@@ -180,7 +192,7 @@
    [:get "/project-stats"]                   {:handler     #'qaqc/get-project-stats
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/sot-disagreement"]               {:handler    #'qaqc/disagreement-by-sot
+   [:post "/sot-disagreement"]               {:handler     #'qaqc/disagreement-by-sot
                                               :auth-type   :admin
                                               :auth-action :block}
    [:get "/qaqc-plot"]                       {:handler     #'qaqc/get-qaqc-plot
@@ -213,7 +225,7 @@
                                                 :auth-type   :collect
                                                 :auth-action :block}
    [:get  "/get-project-plots"]                {:handler     (validate plots/get-project-plots)}
-   [:post "/add-user-samples"]                 {:handler     (validate plots/add-user-samples)
+   [:post "/add-user-samples"]                 {:handler     #'plots/add-user-samples
                                                 :auth-type   :collect
                                                 :auth-action :block}
    [:post "/flag-plot"]                        {:handler     (validate plots/flag-plot)

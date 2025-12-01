@@ -548,6 +548,7 @@ CREATE OR REPLACE FUNCTION insert_user_plot(
    _imageryIds          jsonb,
    _used_kml            boolean,
    _used_geodash        boolean
+
  ) RETURNS integer AS $$
     INSERT INTO user_plots AS up
         (user_rid, plot_rid, confidence, confidence_comment, collection_start, collection_time, imagery_ids, used_kml, used_geodash)
@@ -705,7 +706,7 @@ CREATE OR REPLACE FUNCTION get_plot_shapes(_project_id integer)
                                     END AS plot_boundary
                              FROM plot_geoms)
 
-      SELECT project_rid, plot_visible_id, ST_Transform(plot_geom, 4326) AS plot_geom
+      SELECT project_rid, plot_visible_id, ST_Transform(plot_boundaries.plot_boundary, 4326) AS plot_geom
       FROM plot_geoms
       INNER JOIN plot_boundaries
       USING (plot_uid)
@@ -742,8 +743,134 @@ CREATE OR REPLACE FUNCTION get_sample_shapes(_project_id integer)
        INNER JOIN plots pl
        ON pl.plot_uid = s.plot_rid
        WHERE pl.project_rid = _project_id)
+$$ LANGUAGE SQL;
+
+-- Get sample shapes for specific geom types
+CREATE OR REPLACE FUNCTION get_sample_shapes_points(_project_id integer)
+ RETURNS TABLE (
+   project_id         integer,
+   plot_id            integer,
+   sample_id          integer,
+   sample_internal_id integer,
+   sample_geom        geometry(Point, 4326)
+ ) AS $$
+
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'POINT')
+   UNION
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM ext_samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'POINT')
 
 $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_sample_shapes_lines(_project_id integer)
+ RETURNS TABLE (
+   project_id         integer,
+   plot_id            integer,
+   sample_id          integer,
+   sample_internal_id integer,
+   sample_geom        geometry(LineString, 4326)
+ ) AS $$
+
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'LINESTRING')
+   UNION
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM ext_samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'LINESTRING')
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_sample_shapes_polygons(_project_id integer)
+ RETURNS TABLE (
+   project_id         integer,
+   plot_id            integer,
+   sample_id          integer,
+   sample_internal_id integer,
+   sample_geom        geometry(Polygon, 4326)
+ ) AS $$
+
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'POLYGON')
+   UNION
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM ext_samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'POLYGON')
+
+$$ LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION get_sample_shapes_multipolygons(_project_id integer)
+ RETURNS TABLE (
+   project_id         integer,
+   plot_id            integer,
+   sample_id          integer,
+   sample_internal_id integer,
+   sample_geom        geometry(MultiPolygon, 4326)
+ ) AS $$
+
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'MULTIPOLYGON')
+   UNION
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM ext_samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'MULTIPOLYGON')
+
+$$ LANGUAGE SQL;
+
 
 -- Returns plots by a list of visible_ids
 
@@ -1000,4 +1127,44 @@ RETURNS INTEGER AS $$
   WHERE project_rid = _project_id
     AND plot_uid = _id
 
+$$ LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION select_plots_by_similarity (_project_id integer, _ref_plot_id integer)
+RETURNS setof collection_return AS $$
+    SELECT
+        p.plot_uid,
+        flagged,
+        flagged_reason,
+        confidence,
+        confidence_comment,
+        p.visible_id,
+        ST_AsGeoJSON(p.plot_geom) as plot_geom,
+        p.extra_plot_info,
+        pa.user_rid,
+        u.email
+    FROM geoai_cache gc
+    JOIN plots ref_plot ON ref_plot.visible_id = _ref_plot_id AND ref_plot.project_rid = _project_id
+    CROSS JOIN unnest(gc.similar_plots) WITH ORDINALITY AS elem(plot_uid, ord)
+    JOIN plots p ON p.plot_uid = elem.plot_uid
+    LEFT JOIN plot_assignments pa ON p.plot_uid = pa.plot_rid
+    LEFT JOIN user_plots up
+        ON p.plot_uid = up.plot_rid
+        AND (pa.user_rid = up.user_rid OR NOT (SELECT project_has_assigned(_project_id)))
+    LEFT JOIN plot_locks pl ON p.plot_uid = pl.plot_rid
+    LEFT JOIN users u ON pa.user_rid = u.user_uid
+    WHERE gc.plot_rid = ref_plot.plot_uid
+      AND gc.project_rid = _project_id
+    ORDER BY elem.ord
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION select_plots_by_project(_project_id INTEGER)
+ RETURNS TABLE (
+   plot_uid   INTEGER,
+   visible_id INTEGER
+ ) AS $$
+   SELECT plot_uid, visible_id
+   FROM plots
+   WHERE project_rid=_project_id
+   ORDER BY visible_id
 $$ LANGUAGE SQL;

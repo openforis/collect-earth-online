@@ -621,140 +621,142 @@ export const ImageryLayerOptions = ({
     }));
   };
 
-  return (
-    <div className="sidebar-wrapper" style={{ overflowX: "hidden", overflowY: "auto" }}>
-      <div className={`sidebar-container ${isImageryLayersExpanded ? "" : "collapsed"}`}>
-        {isImageryLayersExpanded && (
-          <div className="sidebar-content">
-            <div className="sidebar-header">
-              <h3>Imagery Layer Options</h3>
-            </div>
-            <hr />
-            <DragDropContext onDragEnd={(result) => onDragEnd(result, imageryList, setImageryList)}>
-              {/* Imagery Layers */}
-              <div className="sidebar-section">
-                <div className="section-header" onClick={() => toggleSection("imagery")}>
-                  <strong>Imagery Layers</strong>
-                  {expandedSections.imagery ? <FaChevronUp /> : <FaChevronDown />}
-                </div>
-                {expandedSections.imagery && (
-                  <Droppable droppableId="imageryLayers">
-                    {(provided, snapshot) => (
-                      <div
-                        className={`layers-list ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                      >
-                        {imageryLayers.map((layer, index) => (
-                          <Draggable key={layer.id} draggableId={layer.id.toString()} index={index}>
-                            {(provided, snapshot) => {
-                              const ensureHex = (color) =>
-                                    /^[0-9a-f]{6}$/i.test(color) ? `#${color}` : color;
-                              const visParams = layer.sourceConfig?.visParams
-                                    ? JSON.parse(layer.sourceConfig.visParams)
-                                    : null;
+   return (
+     <div className="sidebar-wrapper" style={{ overflowX: "hidden", overflowY: "auto" }}>
+       <div className={`sidebar-container ${isImageryLayersExpanded ? "" : "collapsed"}`}>
+         {isImageryLayersExpanded && (
+           <div className="sidebar-content">
+             <div className="sidebar-header">
+               <h3>Imagery Layer Options</h3>
+             </div>
+             <hr />
+
+             <DragDropContext onDragEnd={(result) => onDragEnd(result, imageryList, setImageryList)}>
+               {/* Imagery Layers */}
+               <div className="sidebar-section">
+                 <div className="section-header" onClick={() => toggleSection("imagery")}>
+                   <strong>Imagery Layers</strong>
+                   {expandedSections.imagery ? <FaChevronUp /> : <FaChevronDown />}
+                 </div>
+                 {expandedSections.imagery && (
+                   <Droppable droppableId="imageryLayers">
+                     {(provided, snapshot) => (
+                       <div
+                         className={`layers-list ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
+                         ref={provided.innerRef}
+                         {...provided.droppableProps}
+                       >
+                         {imageryLayers.map((layer, index) => (
+                           <Draggable key={layer.id} draggableId={layer.id.toString()} index={index}>
+                             {(provided, snapshot) => {
+                               const ensureHex = (color) =>
+                                     /^[0-9a-f]{6}$/i.test(color) ? `#${color}` : color;
+                                const visParams = layer.sourceConfig?.visParams
+                                      ? JSON.parse(layer.sourceConfig.visParams)
+                                      : null;
                               const palette = Array.isArray(visParams?.palette)
-                                    ? visParams.palette
+                                     ? visParams.palette
                                     : [];
                               const sliderStyle =
-                                    palette.length === 2
-                                    ? {
-                                      '--first-slider-color': ensureHex(palette[0]),
-                                      '--slider-color': ensureHex(palette[1]),
-                                    }
-                                    : palette.length
-                                    ? {
-                                      '--slider-color': ensureHex(palette[0]),
-                                    }
-                                    : {
-                                      '--first-slider-color': '#d1d5db',
-                                      '--slider-color': '#3b82f6',
-                                    };
-                              return (
-                                <div
-                                  className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={layer.visible}
-                                    onChange={() => onToggleLayer(layer.id, imageryList)}
-                                  />
-                                  <span className="layer-title"> {" "} {layer.title}</span>
-                                  <input
-                                    type="range"
-                                    min="0"
-                                    max="1"
-                                    step="0.01"
-                                    className="layer-range"
-                                    value={layer.opacity || 1}
-                                    onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
-                                    style={{ sliderStyle }}
-                                  />
-                                </div>
-                              )}}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder && <div className="placeholder"></div>}
-                      </div>
-                    )}
-                  </Droppable>
-                )}
-              </div>
-              {/* Polygon Layers */}
-              <div className="sidebar-section">
-                <div className="section-header" onClick={() => toggleSection("polygon")}>
-                  <strong>Polygon Layers</strong>
-                  {expandedSections.polygon ? <FaChevronUp /> : <FaChevronDown />}
-                </div>
-                {expandedSections.polygon && (
-                  <Droppable droppableId="polygonLayers">
-                    {(provided, snapshot) => (
-                      <div
-                        className={`layers-list ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                      >
-                        {polygonLayers.map((layer, index) => (
-                          <Draggable key={layer.id} draggableId={layer.id.toString()} index={index}>
-                            {(provided, snapshot) => (
-                              <div
-                                className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={layer.visible}
-                                  onChange={() => onToggleLayer(layer.id, imageryList)}
-                                />
-                                <span className="layer-title">  {layer.title}</span>
-                                <input
-                                  type="range"
-                                  min="0"
-                                  max="1"
-                                  step="0.01"
-                                  className="layer-range"
-                                  value={layer.opacity || 1}
-                                  onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
-                                />
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder && <div className="placeholder"></div>}
-                      </div>
-                    )}
-                  </Droppable>
-                )}
-              </div>
-            </DragDropContext>
-            <button className="reset-button" onClick={onReset}>
-              Reset All Layers
-            </button>
+                                     palette.length === 2
+                                     ? {
+                                       '--first-slider-color': ensureHex(palette[0]),
+                                       '--slider-color': ensureHex(palette[1]),
+                                     }
+                                     : palette.length
+                                     ? {
+                                       '--slider-color': ensureHex(palette[0]),
+                                     }
+                                     : {
+                                       '--first-slider-color': '#d1d5db',
+                                       '--slider-color': '#3b82f6',
+                                     };
+                               return (
+                                 <div
+                                   className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
+                                   ref={provided.innerRef}
+                                   {...provided.draggableProps}
+                                   {...provided.dragHandleProps}
+                                 >
+                                   <input
+                                     type="checkbox"
+                                     checked={layer.visible}
+                                     onChange={() => onToggleLayer(layer.id, imageryList)}
+                                   />
+                                   <span className="layer-title">  {layer.title}</span>
+                                   <input
+                                     type="range"
+                                     min="0"
+                                     max="1"
+                                     step="0.01"
+                                     className="layer-range"
+                                     value={layer.opacity || 1}
+                                     onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
+                                     style={{sliderStyle}}
+                                   />
+                                 </div>
+                               )}}
+                              </Draggable>
+                             ))}
+                         {provided.placeholder && <div className="placeholder"></div>}
+                       </div>
+                     )}
+                   </Droppable>
+                 )}
+               </div>
+
+               {/* Polygon Layers */}
+               <div className="sidebar-section">
+                 <div className="section-header" onClick={() => toggleSection("polygon")}>
+                   <strong>Polygon Layers</strong>
+                   {expandedSections.polygon ? <FaChevronUp /> : <FaChevronDown />}
+                 </div>
+                 {expandedSections.polygon && (
+                   <Droppable droppableId="polygonLayers">
+                     {(provided, snapshot) => (
+                       <div
+                         className={`layers-list ${snapshot.isDraggingOver ? "dragging-over" : ""}`}
+                         ref={provided.innerRef}
+                         {...provided.droppableProps}
+                       >
+                         {polygonLayers.map((layer, index) => (
+                           <Draggable key={layer.id} draggableId={layer.id.toString()} index={index}>
+                             {(provided, snapshot) => (
+                               <div
+                                 className={`layer-item ${snapshot.isDragging ? "dragging" : ""}`}
+                                 ref={provided.innerRef}
+                                 {...provided.draggableProps}
+                                 {...provided.dragHandleProps}
+                               >
+                                 <input
+                                   type="checkbox"
+                                   checked={layer.visible}
+                                   onChange={() => onToggleLayer(layer.id, imageryList)}
+                                 />
+                                 <span className="layer-title">  {layer.title}</span>
+                                 <input
+                                   type="range"
+                                   min="0"
+                                   max="1"
+                                   step="0.01"
+                                   className="layer-range"
+                                   value={layer.opacity || 1}
+                                   onChange={(e) => onChangeOpacity(layer.id, parseFloat(e.target.value))}
+                                 />
+                               </div>
+                             )}
+                           </Draggable>
+                         ))}
+                         {provided.placeholder && <div className="placeholder"></div>}
+                       </div>
+                     )}
+                   </Droppable>
+                 )}
+               </div>
+             </DragDropContext>
+             <button className="reset-button" onClick={onReset}>
+               Reset All Layers
+             </button>
           </div>
         )}
       </div>

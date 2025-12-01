@@ -99,7 +99,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
           );
           mercator.zoomMapToLayer(mapConf, "currentAOI", 48);
         }
-
+        
         // select Imagery and make it render on the map
         const defaultImagery =
               (project?.imageryId && imageryList.find(im => im.id === project.imageryId)) ||
@@ -261,7 +261,6 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
     unansweredColor: "black",	
   });
  
-
   // API CALLS
   const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {       
     processModal("Getting plot", () => {
@@ -673,7 +672,6 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
     setImageryList(reordered);
   };
 
-  // RENDER
   return (
     <div className="container-fluid collection-page">
       <div className="row no-gutters">
@@ -849,9 +847,6 @@ class SideBar extends React.Component {
       return false;
     } else if (collectConfidence && !confidence) {
       this.setState ({modal: {alert: {alertType: "Review Mode Alert", alertMessage: "You must input the confidence before saving the interpretation."}}});
-      return false;
-    } else if (userRole === 1){
-      this.setState ({modal: {alert: {alertType: "Collection Error", alertMessage: "Administrators must be in Admin Review to collect data. Please select Admin Review to collect data on this plot"}}}) ;
       return false;
     } else {
       return true;
@@ -1062,6 +1057,7 @@ class PlotNavigation extends React.Component {
       setThreshold,
       threshold,
       projectType,
+      plotSimilarityDetails
     } = this.props;
     return (
       <div className="mt-2">
@@ -1090,6 +1086,9 @@ class PlotNavigation extends React.Component {
               <option value="unanalyzed">Unanalyzed plots</option>
               <option value="analyzed">Analyzed plots</option>
               <option value="flagged">Flagged plots</option>
+              {plotSimilarityDetails?.years && (
+                <option value="similar">Similar Plots</option>
+              )}
               {collectConfidence && <option value="confidence">Low Confidence</option>}
               {inReviewMode && <option value="user">By User</option>}
               {inReviewMode && isQAQCEnabled && <option value="qaqc">Disagreement</option>}
@@ -1100,6 +1099,18 @@ class PlotNavigation extends React.Component {
            this.thresholdSlider("Confidence", threshold, setThreshold)}
           {navigationMode === "qaqc" &&
            this.thresholdSlider("Disagreement", threshold, setThreshold)}
+          {navigationMode === "similar" && plotSimilarityDetails && (
+              <div
+                style={{
+                display: "flex",
+                  justifyContent: "center",
+                  padding: ".5rem",
+                  width: "100%",
+              }}
+              >
+                Reference plot ID: {plotSimilarityDetails.referencePlotId} | Selected Year: {plotSimilarityDetails.years}
+            </div>
+          )}
           {navigationMode === "qaqc" && currentPlot.id && (
             <div
               style={{
@@ -1238,6 +1249,7 @@ export const ExternalTools = ({
         "data:earth.kml+xml application/vnd.google-earth.kmz," +
           encodeURIComponent(KMLFeatures)
       }
+      onClick={() => setUsedKML(true)}
     >
       onClick={() => setUsedKML(true)}
       Download Plot KML

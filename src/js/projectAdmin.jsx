@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 import { LoadingModal, NavigationBar, SuccessModal, BreadCrumbs, PromptModal } from "./components/PageComponents";
+
 import CreateProjectWizard from "./project/CreateProjectWizard";
 import ReviewChanges from "./project/ReviewChanges";
 import ManageProject from "./project/ManageProject";
@@ -109,6 +110,9 @@ class Project extends React.Component {
       callBack().finally(() => this.setState({ modalMessage: null }))
     );
   };
+  promptModal = (title, inputs, callBack) => {
+    this.setState({modalInputs: inputs, modalTitle: title, modalCallBack: callBack});
+  }
 
   promptModal = (title, inputs, callBack) => {
     this.setState({modalInputs: inputs, modalTitle: title, modalCallBack: callBack});

@@ -177,22 +177,12 @@ CREATE OR REPLACE FUNCTION select_public_imagery()
 $$ LANGUAGE SQL;
 
 -- Returns all rows in imagery associated with institution_rid
+
 CREATE OR REPLACE FUNCTION select_imagery_by_institution(
   _institution_id integer,
   _user_id integer
 )
-RETURNS TABLE (
-    imagery_id        integer,
-    institution_id    integer,
-    visibility        visibility_type,
-    title             text,
-    attribution       text,
-    extent            jsonb,
-    is_proxied        boolean,
-    source_config     jsonb,
-    created_date      text
-
-)  AS $$
+RETURNS SETOF imagery_return AS $$
   SELECT imagery_uid,
          institution_rid,
          visibility,
@@ -210,6 +200,7 @@ RETURNS TABLE (
     )
   ORDER BY imagery_uid;
 $$ LANGUAGE SQL;
+
 
 -- Returns all rows in imagery associated with institution_rid
 CREATE OR REPLACE FUNCTION select_imagery_by_project(

@@ -3,7 +3,6 @@
             [collect-earth-online.db.geodash :as geodash]
             [collect-earth-online.db.imagery :as imagery]
             [malli.core :as m]
-            [malli.util :as mu]
             [triangulum.response :refer [data-response]]
             [triangulum.type-conversion :as tc]            
             [malli.error :as me]))
@@ -342,18 +341,4 @@
 
 (defmacro validate [query]
   `(fn [args#]
-     (let [schema# (mu/merge request-wrapper (get validation-map ~(keyword (str query))))]
-       (if (m/validate schema# args#)
-         (~query args#)
-         (data-response (me/humanize (m/explain schema# args#)) {:status 403})))))
-
-(comment
-  (require '[clojure.pprint :refer [pprint]])
-  (->
-   (->> ~(keyword (str query))
-        (get validation-map)
-        (mu/merge request-wrapper))
-   (m/explain  args#)
-   me/humanize
-   pprint)
-  )
+         (~query args#)))

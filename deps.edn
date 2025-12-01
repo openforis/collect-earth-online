@@ -9,7 +9,6 @@
         org.clojure/data.json    {:mvn/version "1.0.0"}
         org.clojure/data.csv     {:mvn/version "1.0.1"}
         com.oscaro/clj-gcloud-storage {:mvn/version "0.240-2.0"}
-        ;; com.google.cloud/google-cloud-pubsub {:mvn/version "1.141.4"}
         jonotin/jonotin          {:mvn/version "0.5.0"}
         org.clojure/data.xml     {:mvn/version "0.0.8"}
         ring/ring                {:mvn/version "1.8.2"}        
@@ -26,8 +25,8 @@
            :production       {:jvm-opts ["-XX:MaxRAMPercentage=90" "-XX:+PrintFlagsFinal"]}
            :test             {:extra-paths ["test"]
                               :extra-deps {com.cognitect/test-runner
-                                         {:git/url "https://github.com/cognitect-labs/test-runner.git"
-                                          :sha     "7284cda41fb9edc0f3bc6b6185cfb7138fc8a023"}}
+                                           {:git/url "https://github.com/cognitect-labs/test-runner.git"
+                                            :sha     "7284cda41fb9edc0f3bc6b6185cfb7138fc8a023"}}
                               :main-opts   ["-e" "(do,(set!,*warn-on-reflection*,true),nil)"
                                             "-m" "cognitect.test-runner"
                                             "--exclude" ":db"]
