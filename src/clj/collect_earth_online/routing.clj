@@ -151,10 +151,6 @@
    [:post "/update-project-draft"]           {:handler     (validate projects/update-project-draft!)
                                               :auth-type   :user
                                               :auth-action :block}
-   [:post "/copy-project"]                   {:handler projects/copy-project!
-                                              :auth-type :admin
-                                              :auth-action :block}
- 
    [:post "/close-project"]                  {:handler     (validate projects/close-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
@@ -178,16 +174,7 @@
                                               :auth-action :block}
    [:post "/update-plot-similarity"]         {:handler     #'geoai/update-plot-similarity!
                                               :auth-type   :admin
-                                              :auth-action :block}
-
-   [:post "/start-plot-similarity"]          {:handler     #'geoai/start-plot-similarity!
-                                              :auth-type   :admin
-                                              :auth-action :block}
-   [:post "/recalculate-plot-similarity"]    {:handler     #'geoai/recalculate-plot-similarity
-                                              :auth-type   :admin
-                                              :auth-action :block}
-
-
+                                              :auth-action :block}  
    ;; QAQC API
    [:get "/project-stats"]                   {:handler     #'qaqc/get-project-stats
                                               :auth-type   :admin

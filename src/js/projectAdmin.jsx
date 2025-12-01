@@ -110,10 +110,7 @@ class Project extends React.Component {
       callBack().finally(() => this.setState({ modalMessage: null }))
     );
   };
-  promptModal = (title, inputs, callBack) => {
-    this.setState({modalInputs: inputs, modalTitle: title, modalCallBack: callBack});
-  }
-
+  
   promptModal = (title, inputs, callBack) => {
     this.setState({modalInputs: inputs, modalTitle: title, modalCallBack: callBack});
   }

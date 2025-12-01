@@ -9,12 +9,9 @@
 
 (defonce gcs-resource
   (st/init
-<<<<<<< HEAD
-   #_{:project-id  (get-config :gcs-integration :project-name)
-=======
-   {:project-id  (get-config :gcs-integration :project-name)
->>>>>>> release/plot-similarity
-    :credentials (get-config :gcs-integration :credentials)}))
+   #_{:project-id  (get-config :gcs-integration :project-name) 
+    :credentials (get-config :gcs-integration :credentials)}
+      ))
 
 
 (defonce gs-url (get-config :gcs-integration :bucket-url))
@@ -47,24 +44,6 @@
   (str "{" (clojure.string/join "," (map int arr)) "}"))
 
 (defn search-plot-by-similarity
-<<<<<<< HEAD
-  [project-id plot-id year]
-  (let [bq-table          (-> (call-sql "get_bq_table" project-id year)
-                              (sql-primitive)
-                              (clojure.string/split #"\.")
-                              (last))
-        req               (:body (http/get
-                                  (str (get-config :gcs-integration :api-url) "/search")
-                                  {:query-params {:uniqueid plot-id
-                                                  :table    bq-table
-                                                  :matches  50}}))
-        similar-plots-arr (map #(get % :base_plotid) (tc/json->clj req))]
-    (call-sql "insert_geoai_cache"
-              project-id
-              plot-id
-              (clj->int-array-literal similar-plots-arr)
-              (tc/clj->jsonb req))))
-=======
   [project-id plot-id year plots]
   (let [bq-table   (-> (call-sql "get_bq_table" project-id year)
                        sql-primitive
@@ -93,7 +72,6 @@
                   (tc/clj->jsonb resp))
         (call-sql "update_reference_plot" project-id plot-id))
       (throw (ex-info "❌ No non-empty results found after retries" {:project-id project-id})))))
->>>>>>> release/plot-similarity
 
 (defn start-plot-similarity! [{:keys [params]}]
   (let [project-id        (:projectId params)
@@ -105,8 +83,6 @@
     (upload-json-to-gcs project-id file-name (first similarity-years))
     (data-response {:message "calculating plot similarity."})))
 
-<<<<<<< HEAD
-=======
 (defn update-plot-similarity! [{:keys [params]}]
   (let [project-id        (:projectId params)
         reference-plot-id (tc/val->int (:referencePlotId params))
@@ -123,22 +99,15 @@
         (call-sql "update_reference_plot" project-id plot-id)
         (data-response {:message "recalculating plot similarity."})))))
 
->>>>>>> release/plot-similarity
 (defn recalculate-plot-similarity [{:keys [params]}]
   (let [project-id        (:projectId params)
         reference-plot-id (tc/val->int (:referencePlotId params))
         similarity-years  (:similarityYears params)
         file-name         (str "ceo-" project-id "-plots_" (first similarity-years))
-<<<<<<< HEAD
-        plot-id           (sql-primitive (call-sql "get_plot_id_by_visible_id" project-id reference-plot-id))]
-    (try
-      (search-plot-by-similarity project-id plot-id (first similarity-years))
-=======
         plot-id           (sql-primitive (call-sql "get_plot_id_by_visible_id" project-id reference-plot-id))
         plots             (call-sql "select_plots_by_project" project-id)]
     (try
       (search-plot-by-similarity project-id plot-id (first similarity-years) plots)
->>>>>>> release/plot-similarity
       (data-response {:message "successfully reprocessed plot similarity"})
       (catch Exception ex
         (data-response {:message "error recalculating plot similarity"})))))
