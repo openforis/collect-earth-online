@@ -9,10 +9,10 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import "../css/metrics.css";
 
-const MetricsDashboard = () => {
+const MetricsDashboard = ({userId}) => {
   const [metric, setMetric] = useState('Select a Metric');
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -24,7 +24,7 @@ const MetricsDashboard = () => {
   const metricsRoutes = {
     getImageryAccess: {
       displayName: "Imagery Access Metrics",
-      route: "/metrics/get-imagery-access"
+      route: "/metrics/get-imagery-counts"
     },
     getProjectsWithGEE: {
       displayName: "Projects with GEE Metrics",
@@ -37,7 +37,11 @@ const MetricsDashboard = () => {
     getProjectCount: {
       displayName: "Project Count Metrics",
       route: "/metrics/get-project-count"
-    }
+    },
+    getPlotImagery: {
+      displayName: "Insitution Imagery by Plot",
+      route: "/metrics/get-plot-imagery-counts"
+    },
   };
 
   const buildUrl = (baseUrl, startDate, endDate) => {
@@ -52,7 +56,9 @@ const MetricsDashboard = () => {
       const formattedEndDate = endDate.toISOString().split('T')[0]; // 'YYYY-MM-DD'
       url.searchParams.append('endDate', formattedEndDate);
     }
-
+    if (metric === "Insitution Imagery by Plot") {
+      url.searchParams.append('userId', userId);
+    }
     return url.toString();
   };
 
@@ -241,7 +247,11 @@ const MetricsDashboard = () => {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-      <MetricsDashboard />
+      <BreadCrumbs
+        crumbs={[{display: "Metrics",
+                id:"metrics"}]}
+      />
+      <MetricsDashboard userId={session.userId}/>
     </NavigationBar>,
     document.getElementById("app")
   );

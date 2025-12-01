@@ -18,7 +18,7 @@ export default function PlotStep({ getTotalPlots, projectType }) {
           institutionUserList={institutionUserList}
           totalPlots={totalPlots}
           projectType={projectType}
-        />
+        />                    
       )}
       {availability === "published" &&
        <NewPlotDesign

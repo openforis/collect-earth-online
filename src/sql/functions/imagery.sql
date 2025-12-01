@@ -190,7 +190,8 @@ RETURNS SETOF imagery_return AS $$
          attribution,
          extent,
          is_proxied,
-         source_config
+         source_config,
+         TO_CHAR(created_date, 'YYYY-MM-DD') AS created_date
   FROM imagery
   WHERE archived = FALSE
     AND (

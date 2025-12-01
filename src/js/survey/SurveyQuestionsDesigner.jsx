@@ -8,10 +8,10 @@ import { ProjectContext } from "../project/constants";
 export default function SurveyQuestionsDesigner() {
   const { setProjectDetails, surveyQuestions, surveyRules, projectId, originalProject, type, isProjectAdmin } =
         useContext(ProjectContext);
-  const editMode =
-    projectId === -1 || originalProject.availability === "unpublished" ? "full" : "partial";
+  const editMode = projectId === -1 || originalProject.availability === "unpublished" ? "full" : "partial";
+  console.log("should we see it?", editMode === "full" || isProjectAdmin, (editMode === "full" || isProjectAdmin));
   return (
-    <div id="survey-design">
+    <div id="survey-design">      
       <SurveyCardList editMode={editMode} />
       {(editMode === "full" || isProjectAdmin) && (
         <NewQuestionDesigner

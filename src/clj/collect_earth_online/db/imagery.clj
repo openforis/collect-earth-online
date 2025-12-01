@@ -12,7 +12,7 @@
       (#{"Planet" "PlanetTFO"}      image-type) (dissoc source-config :accessToken))))
 
 (defn- prepare-imagery [imagery inst-admin?]
-  (mapv (fn [{:keys [imagery_id institution_id visibility title attribution extent is_proxied source_config]}]
+  (mapv (fn [{:keys [imagery_id institution_id visibility title attribution extent is_proxied source_config created_date]}]
           (let [source-config (tc/jsonb->clj source_config)]
             {:id           imagery_id
              :institution  institution_id ; FIXME, legacy variable name, update to institutionId
@@ -23,7 +23,8 @@
              :isProxied    is_proxied
              :sourceConfig (if (or inst-admin? (not is_proxied))
                              source-config
-                             (clean-source source-config))}))
+                             (clean-source source-config))
+             :createdDate  created_date}))
         imagery))
 
 (defn get-institution-imagery [{:keys [params session]}]
@@ -106,13 +107,13 @@
 
 (defn bulk-archive-institution-imagery [{:keys [params]}]
   (let [imagery-ids (cstr/join "," (:imageryIds params))
-        institution-id (tc/val->int (:insitutionId params))]
+        institution-id (:institutionId params)]
     (call-sql "archive_imagery_bulk" imagery-ids institution-id)
     (data-response "")))
 
 (defn bulk-update-imagery-visibility [{:keys [params]}]
   (let [imagery-id     (cstr/join "," (:imageryIds params))
         visibility     (:visibility params)
-        institution-id (tc/val->int (:institutionId params))]
+        institution-id (:institutionId params)]
     (call-sql "update_imagery_visibility_bulk" imagery-id visibility institution-id)
     (data-response "")))

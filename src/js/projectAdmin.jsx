@@ -1,7 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import { LoadingModal, NavigationBar, SuccessModal, PromptModal } from "./components/PageComponents";
+import { LoadingModal, NavigationBar, SuccessModal, BreadCrumbs, PromptModal } from "./components/PageComponents";
+
 import CreateProjectWizard from "./project/CreateProjectWizard";
 import ReviewChanges from "./project/ReviewChanges";
 import ManageProject from "./project/ManageProject";
@@ -109,6 +110,7 @@ class Project extends React.Component {
       callBack().finally(() => this.setState({ modalMessage: null }))
     );
   };
+  
   promptModal = (title, inputs, callBack) => {
     this.setState({modalInputs: inputs, modalTitle: title, modalCallBack: callBack});
   }
@@ -160,6 +162,20 @@ class Project extends React.Component {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[
+          {display: "Institution",
+           id: "institution",
+           query: ["institution", parseInt(params.institutionId) || -1],
+           onClick: (e)=>{
+             window.location.assign(`/review-institution?institutionId=${parseInt(params.institutionId)}`);
+           }},
+          {display: "Project Admin",
+           id:"project",
+           query: ["project", parseInt(params.projectId) || -1],
+           onClick:()=>{}}
+        ]}
+      />
       <Project
         institutionId={parseInt(params.institutionId) || -1}
         projectId={parseInt(params.projectId) || -1}

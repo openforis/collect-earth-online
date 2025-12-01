@@ -52,7 +52,8 @@
    "imageCollection"        gee/imageCollection
    "imageCollectionByIndex" gee/imageCollectionByIndex
    "statistics"             gee/statistics
-   "timeSeriesByIndex"      gee/timeSeriesByIndex})
+   "timeSeriesByIndex"      gee/timeSeriesByIndex
+   "dynamicWorld"           gee/dynamicWorld})
 
 (defn gateway-request [{:keys [params json-params]}]
   (check-initialized)
@@ -107,4 +108,8 @@
     (data-response (return-widgets project-id))))
 
 (defn validate-vis-params [{:keys [params]}]
-  (data-response ""))
+  (check-initialized)
+  (let [img-path (:imgPath params)
+        vis-params (tc/json->clj (:visParams params))
+        vis-errors (utils/validateJSON img-path vis-params)]
+    (data-response "" {:status 200})))

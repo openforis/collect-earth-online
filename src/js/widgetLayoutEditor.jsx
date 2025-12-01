@@ -9,6 +9,7 @@ import RGL, { WidthProvider } from "react-grid-layout";
 import CopyDialog from "./geodash/CopyDialog";
 import DegradationDesigner from "./geodash/DegradationDesigner";
 import DualImageryDesigner from "./geodash/DualImageryDesigner";
+import DynamicWorldDesigner from "./geodash/DynamicWorldDesigner";
 import GeoDashModal from "./geodash/GeoDashModal";
 import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
 import ImageAssetDesigner from "./geodash/ImageAssetDesigner";
@@ -24,6 +25,7 @@ import { isValidJSON } from "./utils/generalUtils";
 import { getNextInSequence, last } from "./utils/sequence";
 import BasemapSelector from "./geodash/form/BasemapSelector";
 import Modal from "./components/Modal";
+import { BreadCrumbs } from "./components/PageComponents";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -47,9 +49,16 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     this.widgetTypes = {
+      dynamicWorld: {
+        title: "Dynamic World",
+        blankWidget: {startDate: "2013-01-01",
+                      endDate:    today,
+                      basemapId: "-1"},
+        WidgetDesigner: DynamicWorldDesigner
+      },
       degradationTool: {
         title: "Degradation Tool",
-        blankWidget: { basemapId: "-1", band: "NDFI", endDate: today, startDate: "2013-01-01" },
+        blankWidget: { basemapId: "-1", band: "NDFI", endDate: today, startDate: "2013-01-01"},
         WidgetDesigner: DegradationDesigner,
       },
       dualImagery: {
@@ -273,7 +282,7 @@ class WidgetLayoutEditor extends React.PureComponent {
   getNextLayout = (width = 3, height = 1) => {
     const { widgets } = this.state;
     const layouts = widgets.map((w) => w.layout);
-    const nextY = getNextInSequence(layouts.map((l) => l.y || 0));
+    const nextY = getNextInSequence(layouts.map((l) => l?.y || 0));
 
     if (height === 1) {
       const emptyXY = _.range(nextY)
@@ -281,7 +290,7 @@ class WidgetLayoutEditor extends React.PureComponent {
           const row = layouts.filter((l) => l.y === y);
           const emptyX = _.range(10).filter((x) =>
             row.every(
-              (l) => (x < l.x && x + width <= l.x) || (x >= l.x + l.w && x + width >= l.x + l.w)
+              (l) => (x < l?.x && x + width <= l?.x) || (x >= l?.x + l?.w && x + width >= l?.x + l?.w)
             )
           );
           return { x: _.first(emptyX), y };
@@ -379,16 +388,16 @@ class WidgetLayoutEditor extends React.PureComponent {
   };
 
   sameLayout = (layout1, layout2) =>
-    layout1.x === layout2.x &&
-    layout1.y === layout2.y &&
-    layout1.h === layout2.h &&
-    layout1.w === layout2.w;
+    layout1?.x === layout2?.x &&
+    layout1?.y === layout2?.y &&
+    layout1?.h === layout2?.h &&
+    layout1?.w === layout2?.w;
 
   onLayoutChange = (layout) => {
     const { widgets } = this.state;
     widgets.forEach((stateWidget) => {
-      const thisLayout = layout.find((l) => Number(l.i) === stateWidget.id);
-      if (!this.sameLayout(stateWidget.layout, thisLayout)) {
+      const thisLayout = layout.find((l) => Number(l?.i) === stateWidget?.id);
+      if (!this.sameLayout(stateWidget?.layout, thisLayout)) {
         const { x, y, h, w } = thisLayout;
         this.widgetAPIWrapper("update-widget", { ...stateWidget, layout: { x, y, h, w } });
       }
@@ -618,13 +627,20 @@ export function pageInit(params, session) {
     <GeoDashNavigationBar
       editor
       page={(addDialog, copyDialog, closeDialogs) => (
-        <WidgetLayoutEditor
+        <>
+          <BreadCrumbs
+            crumbs={[
+              {display: "Widget Layout Editor",
+               id: "widget-layout-editor"}]}
+          />
+          <WidgetLayoutEditor
           addDialog={addDialog}
           closeDialogs={closeDialogs}
           copyDialog={copyDialog}
           institutionId={parseInt(params.institutionId || -1)}
           projectId={parseInt(params.projectId || -1)}
-        />
+          />
+        </>
       )}
       userName={session.userName || ""}
     />,

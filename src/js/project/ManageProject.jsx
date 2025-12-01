@@ -4,6 +4,7 @@ import ReviewForm from "./ReviewForm";
 
 import { ProjectContext } from "./constants";
 import Modal from  "../components/Modal";
+import { PromptModal } from "../components/PageComponents";
 
 export default class ManageProject extends React.Component {
   constructor(props){
@@ -141,12 +142,16 @@ class ProjectManagement extends React.Component {
   /// API Calls
 
   publishProject = () => {
-    const { availability, setProjectDetails, setContextState, processModal, projectId } =
-      this.context;
+    const {
+      availability,
+      setProjectDetails,
+      setContextState,
+      processModal,
+      projectId } = this.context;
     const unpublished = availability === "unpublished";
     const message = unpublished
-      ? "Do you want to publish this project?  This action will clear plots collected by admins to allow collecting by users."
-      : "Do you want to re-open this project?  Members will be allowed to collect plots again.";
+          ? "Do you want to publish this project?  This action will clear plots collected by admins to allow collecting by users."
+          : "Do you want to re-open this project?  Members will be allowed to collect plots again.";
     if (confirm(message)) {
       processModal("Publishing project", () =>
         fetch(`/publish-project?projectId=${projectId}&clearSaved=${unpublished}`, {
@@ -160,9 +165,31 @@ class ProjectManagement extends React.Component {
           .catch((error) => {
             console.log(error);
             this.setState ({modal: {alert: {alertType: "Publish Project Error", alertMessage: "Error publishing project. See console for details."}}});
-          })
-      );
-    }
+          }));
+    }};
+
+  copyProject = () => {
+    const {setProjectDetails, setContextState, processModal, promptModal, projectId} = this.context;
+    promptModal("Do you want to copy the entire project?",
+                [{label: "Use Existing Plots",
+                  index: "plots",
+                  type:  "checkbox",
+                  value:  true},
+                 {label: "Use Existing Widgets",
+                  index: "widgets",
+                  type:  "checkbox",
+                  value: true},
+                 {label: "Copy Answers",
+                  index: "answers",
+                  type:  "checkbox",
+                  value: true}
+                ], (prompts) => {
+                  const url = `/copy-project?projectId=${projectId}&widgets=${prompts.widgets}&plots=${prompts.plots}&answers=${prompts.answers}`;
+                  fetch(url, {method: "POST"})
+	            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+	            .then((data) => 
+                      window.location.assign(`/review-project?projectId=${data.projectId}&institutionId=${this.context.institution}`));
+                });
   };
 
   copyProject = () => {
@@ -208,7 +235,6 @@ class ProjectManagement extends React.Component {
   };
 
   deleteProject = () => {
-    console.log(this.context);
     if (confirm("Do you want to delete this project? This operation cannot be undone.")) {
       this.context.processModal("Deleting project", () =>
         fetch(`/archive-project?projectId=${this.context.id}`, { method: "POST" }).then(
@@ -356,6 +382,16 @@ class ProjectManagement extends React.Component {
               type="button"
               value="Delete Project"
             />
+            {this.context.projectOptions?.plotSimilarity ? (
+              <>
+                <input
+                  className="btn btn-outline-red btn-sm w-100"
+                  onClick={this.reprocessPlotSimilarity}
+                  type="button"
+                  value="Reprocess Plot Similarity"
+                />
+              </>
+            ) : null}
             <label className="my-2">External Links</label>
             <input
               className="btn btn-outline-lightgreen btn-sm w-100"
@@ -367,19 +403,19 @@ class ProjectManagement extends React.Component {
             />
             <input
               className="btn btn-outline-lightgreen btn-sm w-100"
-              onClick={() => window.open(`/collection?projectId=${id}`)}
+              onClick={() => window.open(`/collection?projectId=${id}&institutionId=${institution}`)}
               type="button"
               value="Collect"
             />
             <input
               className="btn btn-outline-lightgreen btn-sm w-100"
-              onClick={() => window.open(`/project-dashboard?projectId=${id}`)}
+              onClick={() => window.open(`/project-dashboard?projectId=${id}&institutionId=${institution}`)}
               type="button"
               value="Project Dashboard"
             />
             <input
               className="btn btn-outline-lightgreen btn-sm w-100"
-              onClick={() => window.open(`/project-qaqc-dashboard?projectId=${id}`)}
+              onClick={() => window.open(`/project-qaqc-dashboard?projectId=${id}&institutionId=${institution}`)}
               type="button"
               value="Project QAQC Dashboard"
             />

@@ -21,10 +21,10 @@ export default function SurveyCardList({ editMode }) {
     return (
     <SurveyCard
       key={nodeId}
-      cardNumber={idx + 1} // card order saved in the DB isn't necessarily sequential
+      cardNumber={idx + 1}
       editMode={editMode}
       surveyQuestionId={nodeId}
-      topLevelNodeIds={topLevelNodes}
-    />
-  );});
+     topLevelNodeIds={topLevelNodes} />
+    );
+  });
 }

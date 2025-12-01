@@ -2,10 +2,10 @@
   (:import java.sql.Timestamp)
   (:require [clojure.set                      :as set]
             [clojure.data.json                :refer [read-str]]
+            [collect-earth-online.db.projects :refer [is-proj-admin?]]
             [triangulum.type-conversion       :as tc]
             [triangulum.database              :refer [call-sql sql-primitive]]
             [triangulum.utils                 :refer [filterm]]
-            [collect-earth-online.db.projects :refer [is-proj-admin?]]
             [triangulum.response              :refer [data-response]]))
 
 ;;;
@@ -214,26 +214,30 @@
            :visibleId    visible_id})
         (call-sql "select_plot_samples" {:log? false} plot-id user-id)))
 
-(defn- build-collection-plot [plot-info user-id review-mode? project-type]
+(defn- build-collection-plot [plot-info user-uid review-mode? project-type]
   (let [{:keys [plot_id
                 flagged
                 confidence
                 confidence_comment
                 flagged_reason
                 plot_geom
+                used_kml
+                used_geodash
                 extra_plot_info
                 visible_id
                 user_id
                 email]} plot-info
-        samples (prepare-samples-array plot_id (if (and review-mode? (pos? user_id))
+        samples (prepare-samples-array plot_id (if (and review-mode? user_id (pos? user_id))
                                                  user_id
-                                                 user-id))]
+                                                 user-uid))]
     {:id                plot_id
      :flagged           flagged
      :flaggedReason     (or flagged_reason "")
      :confidence        confidence
      :confidenceComment confidence_comment
      :visibleId         visible_id
+     :usedKML           used_kml
+     :usedGeodash       used_geodash
      :plotGeom          plot_geom
      :extraPlotInfo     (tc/jsonb->clj extra_plot_info {})
      :samples           (if (= project-type "simplified")
@@ -410,7 +414,7 @@
                                 (pos? current-user-id)
                                 (is-proj-admin? session-user-id project-id nil))
         confidence         (tc/val->int (:confidence params 100))
-        confidence-comment (:confidenceComment params)
+        confidence-comment (or (:confidenceComment params) "")
         collection-start   (tc/val->long (:collectionStart params))
         user-samples       (:userSamples params)
         user-images        (:userImages params)
@@ -461,7 +465,6 @@
                   plot-id
                   (tc/clj->jsonb (set/rename-keys user-samples id-translation))
                   (tc/clj->jsonb (set/rename-keys user-images id-translation))))
-
       (when (not= project-type "simplified")
         (call-sql "delete_user_plot_by_plot" plot-id user-id)))
     (unlock-plots user-id)
@@ -492,3 +495,5 @@
               flagged-reason)
     (unlock-plots user-id)
     (data-response "")))
+
+

@@ -1,0 +1,40 @@
+{:plot_spacing nil,
+  :description
+  "This project is a default project for development testing.",
+  :sample_distribution "random",
+  :survey_rules ""
+#_  #object[org.postgresql.util.PGobject 0x18430c86 "[{\"id\": 0, \"ruleType\": \"incompatible-answers\", \"answerId1\": 2, \"answerId2\": 0, \"questionId1\": 1, \"questionId2\": 5}]"],
+  :aoi_file_name "",
+  :availability "published",
+  :samples_per_plot 10,
+  :plot_shape "circle",
+  :closed_date nil,
+  :shuffle_plots nil,
+  :institution_id 1,
+  :published_date #inst "2025-07-07T04:00:00.000-00:00",
+  :aoi_features "" #_
+  #object[org.postgresql.util.PGobject 0x4709d5aa "[{\"type\": \"Polygon\", \"coordinates\": [[[95, 10.5], [95, 22.5], [107, 22.5], [107, 10.5], [95, 10.5]]]}]"],
+  :learning_material nil,
+  :survey_questions "" #_
+  #object[org.postgresql.util.PGobject 0x3135e6c6 "{\"1\": {\"answers\": {\"1\": {\"color\": \"#1527f6\", \"answer\": \"water\"}, \"2\": {\"color\": \"#3b8736\", \"answer\": \"forest\"}, \"3\": {\"color\": \"#f6132a\", \"answer\": \"developed\"}, \"4\": {\"color\": \"#f6ef13\", \"answer\": \"grassland\"}, \"5\": {\"color\": \"#d6b824\", \"answer\": \"agriculture\"}}, \"dataType\": \"text\", \"question\": \"Land cover\", \"cardOrder\": 1, \"componentType\": \"button\", \"parentAnswerIds\": [], \"parentQuestionId\": -1}, \"2\": {\"answers\": {\"1\": {\"color\": \"#f613e3\", \"answer\": \"Yes\"}, \"2\": {\"color\": \"#66676b\", \"answer\": \"No\"}}, \"dataType\": \"text\", \"question\": \"land cover change?\", \"cardOrder\": 2, \"componentType\": \"button\", \"parentAnswerIds\": [], \"parentQuestionId\": -1}, \"3\": {\"answers\": {\"1\": {\"color\": \"#1527f6\", \"answer\": \"2000\"}, \"2\": {\"color\": \"#4f5ce8\", \"answer\": \"2001\"}, \"3\": {\"color\": \"#a5abee\", \"answer\": \"2002\"}, \"4\": {\"color\": \"#e7e8f9\", \"answer\": \"2003\"}, \"5\": {\"color\": \"#fcfcfd\", \"answer\": \"2004\"}, \"6\": {\"color\": \"#dbf5de\", \"answer\": \"2005\"}, \"7\": {\"color\": \"#b8f5bf\", \"answer\": \"2006\"}, \"8\": {\"color\": \"#6ef772\", \"answer\": \"2007\"}, \"9\": {\"color\": \"#30ad2e\", \"answer\": \"2008\"}, \"10\": {\"color\": \"#136728\", \"answer\": \"2009\"}, \"11\": {\"color\": \"#040620\", \"answer\": \"2010\"}}, \"dataType\": \"text\", \"question\": \"Year of change\", \"componentType\": \"button\", \"parentAnswerIds\": [1], \"parentQuestionId\": 2}, \"4\": {\"answers\": {\"1\": {\"color\": \"#1527f6\", \"answer\": \"water\"}, \"2\": {\"color\": \"#1c7d2c\", \"answer\": \"forest\"}, \"3\": {\"color\": \"#b82350\", \"answer\": \"developed\"}, \"4\": {\"color\": \"#e7f613\", \"answer\": \"grassland\"}, \"5\": {\"color\": \"#f6ae13\", \"answer\": \"agriculture\"}}, \"dataType\": \"text\", \"question\": \"Transition from:\", \"componentType\": \"button\", \"parentAnswerIds\": [1], \"parentQuestionId\": 2}, \"5\": {\"answers\": {\"0\": {\"hide\": false, \"color\": \"#00ff4c\", \"answer\": \"yes\"}, \"1\": {\"hide\": false, \"color\": \"#f61313\", \"answer\": \"no\"}}, \"dataType\": \"text\", \"question\": \"Is it desert?\", \"cardOrder\": 3, \"hideQuestion\": false, \"componentType\": \"button\", \"parentAnswerIds\": [], \"parentQuestionId\": -1}}"],
+  :name "Test Project",
+  :imagery_id 1,
+  :plot_size 200.0,
+  :sample_file_name nil,
+  :created_date #inst "2025-07-07T04:00:00.000-00:00",
+  :type "regular",
+  :plot_file_name nil,
+  :boundary
+  "{\"type\":\"Polygon\",\"coordinates\":[[[95,10.5],[95,22.5],[107,22.5],[107,10.5],[95,10.5]]]}",
+  :privacy_level "public",
+  :token_key nil,
+  :num_plots 3,
+  :has_geo_dash true,
+  :allow_drawn_samples false,
+  :plot_distribution "random",
+  :sample_resolution nil,
+  :options "" #_
+  #object[org.postgresql.util.PGobject 0x48b4d7c7 "{\"showGEEScript\": false, \"autoLaunchGeoDash\": false, \"collectConfidence\": true, \"showPlotInformation\": false}"],
+  :project_id 1,
+  :design_settings "" #_
+  #object[org.postgresql.util.PGobject 0x3aff95fc "{}"]}

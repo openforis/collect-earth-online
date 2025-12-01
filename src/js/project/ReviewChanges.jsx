@@ -50,11 +50,12 @@ export default class ReviewChanges extends React.Component {
                 },
                 body: JSON.stringify({
                   projectId: data[1].projectId,
+
                   referencePlotId: this.context.plotSimilarityDetails?.referencePlotId,
                   similarityYears: this.context.plotSimilarityDetails?.years,
                 })
               });
-              window.location = `/review-project?projectId=${data[1].projectId}`;
+              window.location = `/review-project?projectId=${data[1].projectId}&institutionId=${this.context.InstitutionId}`;
               return Promise.resolve();
             } else {
               return Promise.reject(data[1]);
@@ -67,6 +68,10 @@ export default class ReviewChanges extends React.Component {
     }
   };
 
+  promptModal = (modalTitle, modalInputs, modalCallBack) => {    
+    this.setState(s => ({...s, modalTitle, modalInputs, modalCallBack}));
+  }
+  
   updateProject = () => {
     this.promptModal(
       "Collection data will be cleared to reset the project. Do you really want to update this project?",
@@ -134,6 +139,7 @@ export default class ReviewChanges extends React.Component {
     designSettings: this.context.designSettings,
     numPlots: this.context.numPlots,
     plotDistribution: this.context.plotDistribution,
+    newPlotDistribution: this.context.newPlotDistribution,
     plotShape: this.context.plotShape,
     plotSize: this.context.plotSize,
     plotSpacing: this.context.plotSpacing,
@@ -148,9 +154,12 @@ export default class ReviewChanges extends React.Component {
     surveyQuestions: this.context.surveyQuestions,
     surveyRules: this.context.surveyRules,
     plotFileName: this.context.plotFileName,
-    plotFileBase64: this.context.plotFileBase64,
+    newPlotFileName: this.context.newPlotFileName,
     sampleFileName: this.context.sampleFileName,
+    plotFileBase64: this.context.plotFileBase64,
+    newPlotFileBase64: this.context.newPlotFileBase64,
     sampleFileBase64: this.context.sampleFileBase64,
+    plotSimilarityDetails: this.context.plotSimilarityDetails
   });
 
   /// Render Functions

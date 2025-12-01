@@ -67,12 +67,15 @@
 (defn get-institution-projects [{:keys [params session]}]
   (let [user-id        (:userId session -1)
         institution-id (tc/val->int (:institutionId params))]
-    (data-response (mapv (fn [{:keys [project_id name privacy_level pct_complete num_plots learning_material]}]
-                           {:id              project_id
-                            :name            name
-                            :numPlots        num_plots
-                            :privacyLevel    privacy_level
-                            :percentComplete pct_complete
+    (data-response (mapv (fn [{:keys [project_id name privacy_level pct_complete num_plots learning_material availability type created_date]}]
+                           {:id               project_id
+                            :name             name
+                            :numPlots         num_plots
+                            :privacyLevel     privacy_level
+                            :percentComplete  pct_complete
+                            :availability     availability
+                            :type             type
+                            :createdDate      created_date
                             :learningMaterial learning_material})
                          (call-sql "select_institution_projects" user-id institution-id)))))
 
@@ -140,6 +143,7 @@
      :hasGeoDash         (:has_geo_dash project)
      :isProjectAdmin     (is-proj-admin? user-id project-id nil)
      :userRole           user-role
+     :referencePlotId    (:reference_plot_rid project)
      :type               (:type project)
      :plotSimilarityDetails {:years (tc/jsonb->clj (:plot_similarity_years project))
                              :referencePlotId (sql-primitive (call-sql "get_plot_visible_id_by_id"
@@ -191,6 +195,7 @@
                     :partialPlots    (:partial_plots stats)
                     :analyzedPlots   (:analyzed_plots stats)
                     :unanalyzedPlots (:unanalyzed_plots stats)
+                    :collectionTime  (:collection_time stats)
                     :userStats       (->> (:user_stats stats)
                                           (tc/jsonb->clj)
                                           (map #(set/rename-keys % {:timed_plots :timedPlots})))})))
@@ -351,11 +356,11 @@
   (let [plot-count (count plots)
         samples    (if (#{"csv" "shp" "geojson"} sample-distribution)
                      (external-file/generate-file-samples plots
-                                            plot-count
-                                            project-id
-                                            sample-distribution
-                                            sample-file-name
-                                            sample-file-base64)
+                                                          plot-count
+                                                          project-id
+                                                          sample-distribution
+                                                          sample-file-name
+                                                          sample-file-base64)
                      (generate-point-samples plots
                                              plot-count
                                              plot-shape
@@ -498,7 +503,8 @@
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
         type                 (:type params)
-        token-key            (str (UUID/randomUUID))]
+        token-key            (str (UUID/randomUUID))
+        reference-plot-id    (-> params :plotSimilarityDetails :referencePlotId)]
     (try
       (let [project-id (sql-primitive (call-sql "create_project"
                                                 institution-id
@@ -556,7 +562,7 @@
           ;; Save project imagery
           (if-let [imagery-list (:projectImageryList params)]
             (insert-project-imagery! project-id imagery-list)
-                                ;; API backwards compatibility
+            ;; API backwards compatibility
             (call-sql "add_all_institution_imagery" project-id))
           ;; Copy template widgets
           (when (and (pos? project-template) use-template-widgets)
@@ -565,7 +571,7 @@
           (data-response {:projectId project-id
                           :tokenKey  token-key})
           (catch Exception e
-          ;; Delete new project on error
+            ;; Delete new project on error
             (try
               (call-sql "delete_project" project-id)
               (catch Exception _))
@@ -578,6 +584,43 @@
         (let [causes (:cause (ex-data e))]
           (when-not causes (log (ex-message e)))
           (data-response "Internal server error during project creation request, there may be a problem with your input." {:status 500}))))))
+
+(defn copy-project!
+  "{:params  {:projectId Int}
+    :session {:userId Int}
+   }"
+  [{:keys [params session]}]
+  (let [user-id (:userId session -1)
+        project-id (tc/val->int (:projectId params))
+        {:keys [institution
+                plotSize
+                plotSpacing
+                name
+                id
+                surveyQuestions
+                sampleResolution]
+         :as old-project} (build-project-by-id user-id project-id)
+        project (assoc old-project
+                  :name (str name " - COPY")
+                  :surveyQuestions surveyQuestions
+                  :institutionId institution
+                  :plotSize (long plotSize)
+                  :plotSpacing (long plotSpacing)
+                  :projectTemplate id
+                  :sampleResolution (long sampleResolution)
+                  :useTemplatePlots (:plots params)
+                  :useTemplateWidgets (:widgets params))]    
+    (try
+      (let [new-project (create-project! {:params project})
+            new-project-id (-> new-project :body tc/json->clj :projectId)]
+        
+        (when (-> params :answers tc/val->bool)
+          (call-sql "copy_user_plots" project-id new-project-id)
+          (call-sql "copy_sample_values" project-id new-project-id))
+
+        (data-response {:projectId new-project-id}))
+      (catch Exception e
+        (data-response "Error copying project" {:status 500})))))
 
 ;;;
 ;;; Update project
@@ -615,7 +658,7 @@
                                  allow-drawn-samples?
                                  (call-sql "get_plot_centers_by_project" project-id))))))
 
-(defn update-project! [{:keys [params]}]
+(defn update-project! [{:keys [params]}] 
   (let [project-id           (tc/val->int (:projectId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
@@ -913,6 +956,8 @@
                         :flagged
                         :flagged_reason
                         :confidence
+                        :used_kml
+                        :used_geodash
                         :collection_time
                         :analysis_duration
                         :common_securewatch_date
@@ -990,6 +1035,8 @@
                           :flagged
                           :collection_time
                           :analysis_duration
+                          :used_geodash
+                          :used_kml
                           :imagery_title
                           :imagery_attributions
                           :sample_geom
@@ -1086,10 +1133,30 @@
   {:userAssignment (file-user-assignment plot-data)
    :qaqcAssignment (file-qaqc-assignment plot-data)})
 
-(defn get-plot-bounds [distribution plots]
-  (let [points (get-plot-points distribution (take 3 plots))
+(defn get-plot-points [dist plots]  
+  (case dist
+    "geojson" (reduce
+               (fn [points pgobj]
+                 (let [coord-pairs (->> pgobj :plot_geom .getValue
+                                        tc/json->clj :coordinates first)]
+                   (into points coord-pairs)))
+               [] plots)
+    "shp" (reduce
+           (fn [points pgobj]
+	     (let [coord-pairs (->> pgobj :plot_geom .getValue
+                                    (call-sql "hex_ewkb_to_coordinate_arrays")
+                                    (map :coord_pair))]
+               (into points coord-pairs)))
+           [] plots)
+    "csv" (map
+           (fn [pgobj]
+	     (let [[_ coords] (->> pgobj :plot_geom .getValue (re-find #"POINT\(([^)]+)\)"))]
+	       (map #(Double/parseDouble %) (str/split coords #" ")))) plots)))
+
+(defn get-plot-bounds [distribution plots]  
+  (let [points (get-plot-points distribution plots)
 	x-points (map first points)
-	y-points (map last points)]
+	y-points (map last points)]    
     [[(apply min x-points) (apply min y-points)]
      [(apply max x-points) (apply max y-points)]]))
 
@@ -1106,13 +1173,14 @@
                     (apply yfn [aoiy (if (= yfn min) y-min y-max)])])
         project-features (call-sql "select_project_features" project-id)]
     (if (seq project-features)
-      (->> project-features first
-         :feature .getValue tc/jsonb->clj :coordinates
-         first (mapv minmaxer minmax-matrix))
+      (->> project-features first 
+           :feature .getValue tc/jsonb->clj :coordinates
+           first (mapv minmaxer minmax-matrix))
       project-features)))
 
 (defn update-bounds-by-file [distribution project-id file-plots]
-  (let [[[x-min y-min]
+  (let [[[x-min y-min] 
+
          [x-max y-max]] (get-plot-bounds distribution file-plots)
         project-features (call-sql "select_project_features" project-id)
         pgeom (if (seq project-features)
@@ -1120,6 +1188,7 @@
                      .getValue tc/jsonb->clj :coordinates first)
                 project-features)
         project-x (map first pgeom )
+
         project-y (map last pgeom)]
     [[(apply min (into [x-min] project-x)) (apply min (into [y-min] project-y))]
      [(apply max (into [x-max] project-x)) (apply max (into [y-max] project-y))]]))
@@ -1146,8 +1215,8 @@
                               plots)]
     (if file-assignment?
       (data-response (-> updated-plots create-design-settings-from-file
-                                       (assoc :fileAoi file-aoi
-                                              :fileBoundary file-bounds)))
+                         (assoc :fileAoi file-aoi
+                                :fileBoundary file-bounds)))
       (data-response  {:userAssignment {:userMethod "none"
                                         :users      []
                                         :percents   []}

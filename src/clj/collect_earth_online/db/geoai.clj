@@ -9,8 +9,9 @@
 
 (defonce gcs-resource
   (st/init
-   {:project-id  (get-config :gcs-integration :project-name)
-    :credentials (get-config :gcs-integration :credentials)}))
+   #_{:project-id  (get-config :gcs-integration :project-name) 
+    :credentials (get-config :gcs-integration :credentials)}
+      ))
 
 
 (defonce gs-url (get-config :gcs-integration :bucket-url))

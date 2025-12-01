@@ -65,10 +65,11 @@ class ProjectDashboardQaqc extends React.Component {
 
   initializeMap() {
     const { imageryId, aoiFeatures } = this.state.projectDetails;
-    const singleImagery = this.state.imageryList.find((i) => i.id === imageryId);
+    const singleImagery = this.state.imageryList[0] ||
+          this.state.imageryList.find((i) => i.id === 1317);
     // Initialize the basemap
     const mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, [singleImagery]);
-    mercator.setVisibleLayer(mapConfig, imageryId);
+    mercator.setVisibleLayer(mapConfig, 1317);
     mercator.removeLayerById(mapConfig, "currentPlot");
     mercator.addVectorLayer(
       mapConfig,
@@ -83,7 +84,7 @@ class ProjectDashboardQaqc extends React.Component {
   
   /// API Calls
   getProjectDetails = () => {
-    const { projectId } = this.props;
+    const { projectId, institutionId } = this.props;
     return Promise.all([
       this.getProjectById(projectId),
       this.getProjectStats(projectId),
@@ -238,6 +239,7 @@ class ProjectDashboardQaqc extends React.Component {
                 <PlotStats
                   projectId={this.props.projectId}
                   plotId={this.state.plotId || this.state.projectStats.plots[0]?.plot_id}
+                  institutionId={this.props.institutionId}
                   setPlotInfo={this.setPlotInfo}
                   showProjectMap={this.showProjectMap}
                   projectPlots={this.state.projectStats.plots}
@@ -323,7 +325,6 @@ function ProjectStats({ projectDetails, stats }) {
           columns={projectStatsColumns}
           data={plots}
           fixedHeader={true}
-          fixedHeaderScrollHeight={"200px"}
           conditionalRowStyles={plotConditionalRowStyles}
           customStyles={customStyles}
           pagination
@@ -333,7 +334,7 @@ function ProjectStats({ projectDetails, stats }) {
   );
 }
 
-const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, projectPlots, plotInfo }) => {
+const PlotStats = ({ institutionId, projectId, plotId, activeTab, setPlotInfo, showProjectMap, projectPlots, plotInfo }) => {
   const [newPlotId, setNewPlotId] = useState(plotId);
   const [inputPlotId, setInputPlotId] = useState(plotId);
   const [plots, setPlots] = useState(projectPlots);
@@ -468,7 +469,6 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
 	    columns={plotStatsColumns}
             data={setTableData()}
 	    fixedHeader={true}
-	    fixedHeaderScrollHeight={'200px'}
             conditionalRowStyles={plotConditionalRowStyles}
             customStyles={customStyles}
             pagination
@@ -482,7 +482,7 @@ const PlotStats = ({ projectId, plotId, activeTab, setPlotInfo, showProjectMap, 
             style={{ height: "38px" }}
             onClick={() => {
               console.log(window.location.origin);
-              const path = `/collection?projectId=${projectId}&plotId=${plotId}`;
+              const path = `/collection?projectId=${projectId}&plotId=${plotId}&institutionId=${institutionId}`;
               window.open(window.location.origin + path, "_blank");
             }}
           >
@@ -583,7 +583,6 @@ const UserStats = ({ userStats, analyzedPlots, isProjectAdmin, userName, plots, 
 	      columns={userStatsColumns}
               data={mergedUserStats()}
 	      fixedHeader={true}
-	      fixedHeaderScrollHeight={'200px'}
               customStyles={customStyles}
               selectableRows
               onSelectedRowsChange={handleSelectedChange}
@@ -770,7 +769,7 @@ const Tab = ({ label, children }) => {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
-      <ProjectDashboardQaqc projectId={params.projectId || "0"} userName={session.userName} />
+      <ProjectDashboardQaqc institutionId={params.institutionId || "0"} projectId={params.projectId || "0"} userName={session.userName} />
     </NavigationBar>,
     document.getElementById("app")
   );

@@ -43,6 +43,7 @@ CREATE OR REPLACE FUNCTION create_project(
     _options                jsonb,
     _design_settings        jsonb,
     _type                   text
+
  ) RETURNS integer AS $$
 
     INSERT INTO projects (
@@ -211,6 +212,7 @@ CREATE OR REPLACE FUNCTION update_project(
     _options                jsonb,
     _design_settings        jsonb,
     _type                   text
+
  ) RETURNS void AS $$
 
     UPDATE projects
@@ -257,8 +259,8 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
     )
 
     UPDATE projects
-    SET num_plots = plots,
-        samples_per_plot = samples
+    SET num_plots = stats.plots,
+        samples_per_plot = stats.samples
     FROM (
         SELECT COUNT(DISTINCT plot_uid) AS plots,
             (CASE WHEN COUNT(DISTINCT plot_uid) = 0 THEN
@@ -267,7 +269,7 @@ CREATE OR REPLACE FUNCTION update_project_counts(_project_id integer)
                 COUNT(sample_uid) / COUNT(DISTINCT plot_uid)
             END) AS samples
         FROM project_plots
-    ) a
+    ) As stats
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
@@ -684,14 +686,20 @@ CREATE OR REPLACE FUNCTION select_institution_projects(_user_id integer, _instit
     name             text,
     num_plots        integer,
     privacy_level    text,
-    pct_complete     real
+    pct_complete     real,
+    availability     text,
+    type             project_type,
+    created_date     text
  ) AS $$
 
     SELECT project_uid,
         name,
         num_plots,
         privacy_level,
-        (SELECT project_percent_complete(project_uid))
+        (SELECT project_percent_complete(project_uid)),
+        availability,
+        type,
+        TO_CHAR(p.created_date, 'YYYY-MM-DD') AS created_date
     FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
@@ -817,7 +825,8 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
     plot_assignments    integer,
     users_assigned      integer,
     user_stats          jsonb,
-    average_confidence  integer
+    average_confidence  integer,
+    collection_time     integer
  ) AS $$
 
     WITH user_plot_times AS (
@@ -871,6 +880,17 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
             AND (pa.user_rid = up.user_rid OR (SELECT users_assigned FROM users_count) = 0)
         GROUP BY plot_uid
         HAVING project_rid = _project_id
+    ), collection_times AS (
+        SELECT
+          SUM(CASE WHEN collection_time IS NOT NULL AND collection_start IS NOT NULL
+              THEN EXTRACT(EPOCH FROM (collection_time - collection_start))
+              ELSE 0 END)::int AS total_collection_seconds,
+          COUNT(CASE WHEN collection_time IS NOT NULL AND collection_start IS NOT NULL
+              THEN 1 END)::int AS timed_plots_count
+        FROM  plots pl
+        LEFT JOIN user_plots up ON up.plot_rid = pl.plot_uid
+        WHERE pl.project_rid = _project_id
+
     ), project_sum AS (
         SELECT count(*)::int AS total_plots,
             sum(ps.flagged::int)::int AS flagged_plots,
@@ -893,7 +913,12 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
           WHEN analyzed_plots = 0 THEN 0
           ELSE confidence_sum / analyzed_plots
         END as average_confidence
-    FROM projects, project_sum, users_count, user_agg, plot_sum
+        ,
+        CASE
+          WHEN ct.timed_plots_count = 0 THEN 0
+          ELSE ct.total_collection_seconds / ct.timed_plots_count
+        END as collection_time
+    FROM projects, project_sum, users_count, user_agg, plot_sum, collection_times ct
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;
@@ -915,6 +940,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
     flagged_reason             text,
     confidence                 integer,
     confidence_comment         text,
+    used_kml                   boolean,
+    used_geodash               boolean,
     collection_time            timestamp,
     analysis_duration          numeric,
     samples                    text,
@@ -933,6 +960,8 @@ CREATE OR REPLACE FUNCTION dump_project_plot_data(_project_id integer)
         flagged_reason,
         confidence,
         confidence_comment,
+        used_kml,
+        used_geodash,
         collection_time,
         ROUND(EXTRACT(EPOCH FROM (collection_time - collection_start))::numeric, 1) AS analysis_duration,
         FORMAT('[%s]', STRING_AGG(
@@ -1056,6 +1085,8 @@ RETURNS TABLE (
         extra_plot_info       json,
         extra_sample_info     json,
         sample_internal_id    integer,
+        used_kml              boolean,
+        used_geodash          boolean,
         guest_usernames       jsonb
 ) AS $$
 
@@ -1080,7 +1111,9 @@ WITH guest_users AS (
         saved_answers,
         extra_plot_info,
         extra_sample_info,
-        s.sample_uid
+        s.sample_uid,
+        up.used_kml,
+        up.used_geodash
     FROM plots pl
     INNER JOIN samples s ON s.plot_rid = pl.plot_uid
     INNER JOIN user_plots up ON up.plot_rid = pl.plot_uid
@@ -1105,7 +1138,9 @@ WITH guest_users AS (
         saved_answers,
         extra_plot_info,
         extra_sample_info,
-        s.sample_uid
+        s.sample_uid,
+        up.used_kml,
+        up.used_geodash
     FROM plots pl
     LEFT JOIN samples s ON s.plot_rid = pl.plot_uid
     LEFT JOIN user_plots up ON up.plot_rid = pl.plot_uid
@@ -1403,6 +1438,19 @@ RETURNS int AS $$
       AND iu.user_rid = _user_id;
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION hex_ewkb_to_all_vertices(hex_ewkb text)
+RETURNS TABLE(x float, y float) AS $$
+DECLARE
+    geom geometry;
+BEGIN
+    geom := ST_GeomFromEWKB(decode(hex_ewkb, 'hex'));
+    
+    RETURN QUERY
+    SELECT ST_X((dp).geom) AS x, ST_Y((dp).geom) AS y
+    FROM ST_DumpPoints(geom) AS dp;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION copy_user_plots(_old_project_id INT, _new_project_id INT)
 RETURNS VOID AS $$
 BEGIN
@@ -1421,7 +1469,6 @@ BEGIN
     ON up.plot_rid = old_pl.plot_uid;
 END;
 $$ LANGUAGE plpgsql;
-
 
 CREATE OR REPLACE FUNCTION copy_sample_values(_old_project_id INT, _new_project_id INT)
 RETURNS VOID AS $$

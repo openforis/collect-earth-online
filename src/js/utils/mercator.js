@@ -698,7 +698,6 @@ mercator.createMap = (divName, centerCoords, zoomLevel, layerConfigs, projectBou
     const controls = [
       new ScaleLine(),
       new Attribution({ collapsed: false }),
-      new Zoom(),
       new Rotate(),
     ];
 
@@ -868,6 +867,13 @@ mercator.updateLayerWmsParams = (mapConfig, layerId, newParams, url = null) => {
     const mergedParams = { ...layer.getSource().getParams(), ...newParams };
     layer.getSource().updateParams(mergedParams);
   }
+  return mapConfig;
+};
+
+mercator.setMapZoom = (mapConfig, zoom) => {
+  const view = mapConfig.map.getView();
+  const _zoom = view.getZoom();
+  view.animate({zoom: zoom + _zoom})
   return mapConfig;
 };
 

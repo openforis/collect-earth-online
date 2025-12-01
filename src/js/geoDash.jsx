@@ -18,6 +18,7 @@ import { isArray, isNumber } from "./utils/generalUtils";
 import { gridRowHeight } from "./geodash/constants";
 
 import Modal from "./components/Modal";
+import {BreadCrumbs} from "./components/PageComponents";
 
 class Geodash extends React.Component {
   constructor(props) {
@@ -252,11 +253,19 @@ class Geodash extends React.Component {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <GeoDashNavigationBar
-      page={() => <Geodash {...params} />}
-      userName={session.userName || "guest"}
-      visiblePlotId={params.visiblePlotId ? parseInt(params.visiblePlotId) : -1}
-    />,
+    <>
+      <GeoDashNavigationBar
+        page={() => <Geodash {...params} />}
+        userName={session.userName || "guest"}
+        visiblePlotId={params.visiblePlotId ? parseInt(params.visiblePlotId) : -1}
+      />
+      <BreadCrumbs
+        crumbs={[
+          {display: "Geo-Dash",
+           id:"geodash"}]}
+      />
+    </>
+    ,
     document.getElementById("app")
   );
 }

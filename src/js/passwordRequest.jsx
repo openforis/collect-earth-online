@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import Modal from "./components/Modal";
 
 class PasswordRequest extends React.Component {
@@ -79,6 +79,11 @@ class PasswordRequest extends React.Component {
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={-1} userName="" version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[
+          {display: "Password Reset/Request",
+           id:"password",}]}
+      />
       <PasswordRequest />
     </NavigationBar>,
     document.getElementById("app")

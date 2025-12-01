@@ -1,45 +1,42 @@
-import React from "react";
+import { useState } from "react";
 import ReactDOM from "react-dom";
-import { NavigationBar } from "./components/PageComponents";
+import { useSetAtom, useAtomValue } from "jotai";
+import { stateAtom } from "./utils/constants";
+import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import Modal from "./components/Modal";
 
-class Login extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      email: "",
-      password: "",
-      modal: null,
-    };
-  }
-
-  requestLogin = () => {
+export function Login ({returnurl}) {
+  const [loginAtom, setLoginAtom] = useState ({email: "",
+                                               password: "",
+                                               modal: null});
+  const setAppState = useSetAtom (stateAtom);
+  const requestLogin = () => {
     fetch("/login", {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(this.state),
+      body: JSON.stringify(loginAtom),
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && data[1] === "") {
-          window.location = this.props.returnurl === "" ? "/home" : this.props.returnurl;
+          window.location = returnurl === "" ? "/home" : returnurl;
         } else {
-          this.setState ({modal: {alert: {alertType: "Login Error", alertMessage: data[1]}}});
+          setAppState ((s) => ({... s, userEmail: loginAtom.email}));
+          setLoginAtom ((s) => ({...s , modal: {alert: {alertType: "Login Error", alertMessage: data[1]}}}));
         }
       })
       .catch((err) => console.log(err));
   };
 
-  render() {
-    return (
+  return (
       <div className="d-flex justify-content-center">
-        {this.state.modal?.alert &&
-         <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
-           {this.state.modal.alert.alertMessage}
+        {loginAtom.modal?.alert &&
+         <Modal title={loginAtom.modal.alert.alertType}
+                onClose={()=>{setLoginAtom ((s) => ({...s, modal: null}));}}>
+           {loginAtom.modal.alert.alertMessage}
          </Modal>}
 
         <div className="card card-lightgreen">
@@ -48,7 +45,7 @@ class Login extends React.Component {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                this.requestLogin();
+                requestLogin();
               }}
             >
               <div className="form-group">
@@ -56,10 +53,13 @@ class Login extends React.Component {
                 <input
                   className="form-control"
                   id="email"
-                  onChange={(e) => this.setState({ email: e.target.value })}
+                  onChange={(e) => {
+                    e.persist ();
+                    setLoginAtom((s) => ({...s,  email: e.target.value }));
+		  }}
                   placeholder="Enter email"
                   type="email"
-                  value={this.state.email}
+                  value={loginAtom.email}
                 />
               </div>
               <div className="form-group">
@@ -67,10 +67,13 @@ class Login extends React.Component {
                 <input
                   className="form-control"
                   id="password"
-                  onChange={(e) => this.setState({ password: e.target.value })}
+                  onChange={(e) =>{
+                    e.persist();		    
+		    setLoginAtom ((s) => ({...s,  password: e.target.value }));
+		  }}
                   placeholder="Password"
                   type="password"
-                  value={this.state.password}
+                  value={loginAtom.password}
                 />
               </div>
               <div className="d-flex justify-content-between align-items-center">
@@ -95,13 +98,19 @@ class Login extends React.Component {
           </div>
         </div>
       </div>
-    );
-  }
-}
+    );  
+};
+
+
 
 export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[
+          {display: "Login",
+           id:"login",}]}
+      />
       <Login returnurl={params.returnurl || ""} />
     </NavigationBar>,
     document.getElementById("app")

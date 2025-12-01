@@ -124,11 +124,11 @@ export default class WidgetGridItem extends React.Component {
       <>
         {isFullScreen && <div className="full-screen-background" />}
         <div
-          className={`grid-item ${widget.layout.h} ${isFullScreen && "full-widget"}`}
-          id={"widget_" + widget.id}
+          className={`grid-item ${widget?.layout?.h} ${isFullScreen && "full-widget"}`}
+          id={"widget_" + widget?.id}
           style={{
-            gridColumn: this.generateGridColumn(widget.layout.x, widget.layout.w),
-            gridRow: this.generateGridRow(widget.layout.y, widget.layout.h),
+            gridColumn: this.generateGridColumn(widget?.layout?.x, widget?.layout?.w),
+            gridRow: this.generateGridRow(widget?.layout?.y, widget?.layout?.h),
           }}
         >
           <WidgetContainer title={widget.name} titleButtons={this.getTitleButtons()}>

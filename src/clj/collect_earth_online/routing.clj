@@ -1,16 +1,20 @@
 (ns collect-earth-online.routing
   (:require [collect-earth-online.api :refer [validate]]
             [collect-earth-online.generators.ce-project :as ce-project]
+            [collect-earth-online.gcloud          :as gcloud]
+            [collect-earth-online.sse             :as sse]
             [collect-earth-online.db.doi          :as doi]
             [collect-earth-online.db.geoai        :as geoai]
             [collect-earth-online.db.geodash      :as geodash]
+            [collect-earth-online.db.geoai        :as geoai]          
             [collect-earth-online.db.imagery      :as imagery]
             [collect-earth-online.db.institutions :as institutions]
             [collect-earth-online.db.metrics      :as metrics]
             [collect-earth-online.db.plots        :as plots]
             [collect-earth-online.db.projects     :as projects]
             [collect-earth-online.db.qaqc         :as qaqc]
-            [collect-earth-online.db.users        :as users]
+            [collect-earth-online.db.users        :as users]            
+            [collect-earth-online.handlers :refer [crumb-data]]
             [collect-earth-online.proxy           :as proxy]
             [triangulum.views                     :refer [render-page]]))
 
@@ -86,6 +90,9 @@
    [:post "/update-user-institution-role"]   {:handler     users/update-institution-role
                                               :auth-type   :admin
                                               :auth-action :block}
+   [:post "/add-user-to-institution"]        {:handler     #'users/add-user-to-institution
+                                              :auth-type   :admin
+                                              :auth-action :block}
    [:post "/request-institution-membership"] {:handler     users/request-institution-membership
                                               :auth-type   :user
                                               :auth-action :block}
@@ -123,10 +130,10 @@
    [:post "/archive-project"]                {:handler     (validate projects/archive-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/create-project"]                 {:handler     (validate projects/create-project!)
+   [:post "/create-project"]                 {:handler     projects/create-project!
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/update-project"]                 {:handler     (validate projects/update-project!)
+   [:post "/update-project"]                 {:handler     projects/update-project!
                                               :auth-type   :admin
                                               :auth-action :block}
    [:get "/delete-project-draft"]            {:handler     (validate projects/delete-project-draft!)
@@ -167,8 +174,7 @@
                                               :auth-action :block}
    [:post "/update-plot-similarity"]         {:handler     #'geoai/update-plot-similarity!
                                               :auth-type   :admin
-                                              :auth-action :block}
-
+                                              :auth-action :block}  
    ;; QAQC API
    [:get "/project-stats"]                   {:handler     #'qaqc/get-project-stats
                                               :auth-type   :admin
@@ -235,11 +241,11 @@
    [:get  "/get-project-imagery"]              {:handler     (validate imagery/get-project-imagery)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-public-imagery"]               {:handler     (validate imagery/get-public-imagery)}
-   [:post "/add-institution-imagery"]          {:handler     (validate imagery/add-institution-imagery)
+   [:get  "/get-public-imagery"]               {:handler     imagery/get-public-imagery}
+   [:post "/add-institution-imagery"]          {:handler     imagery/add-institution-imagery
                                                 :auth-type   :admin
                                                 :auth-action :block}
-   [:post "/update-institution-imagery"]       {:handler     (validate imagery/update-institution-imagery)
+   [:post "/update-institution-imagery"]       {:handler     imagery/update-institution-imagery
                                                 :auth-type   :admin
                                                 :auth-action :block}
    [:post "/update-imagery-visibility"]        {:handler     (validate imagery/update-imagery-visibility)
@@ -279,13 +285,19 @@
                                              :auth-action :block}
 
    ;; Metrics
-   [:get  "/metrics/get-imagery-access"]      {:handler     (validate metrics/get-imagery-counts)
+   [:get  "/metrics/get-imagery-counts"]      {:handler     (validate metrics/get-imagery-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
+   ;; [:get  "/metrics/get-plot-imagery-counts"] {:handler (validate metrics/get-plot-imagery-counts)}
    [:get  "/metrics/get-projects-with-gee"]   {:handler     (validate metrics/get-projects-with-gee)
                                                :auth-type   :metrics
                                                :auth-action :block}
    [:get  "/metrics/get-sample-plot-counts"]  {:handler     (validate metrics/get-sample-plot-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}})
+   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}
+   [:post "/gcloud-listener"]                  {:handler gcloud/gcloud-handler}
+   [:get  "/open-socket"]                      {:handler sse/sse-handler}
+   [:post "/crumb-data"]                       {:handler crumb-data}
+   }
+  )

@@ -83,18 +83,28 @@ CREATE OR REPLACE FUNCTION select_plotters(_project_id integer, _plot_id integer
 $$ LANGUAGE SQL;
 
 -- Get user plots for a plot
+
 CREATE OR REPLACE FUNCTION select_user_plots_info( _plot_id integer)
  RETURNS table (
     user_id            integer,
     flagged            boolean,
     confidence         integer,
-    confidence_comment text
+    confidence_comment text,
+    collection_start   timestamp,
+    imageryIds         jsonb,
+    used_kml           boolean,
+    used_geodash       boolean
+    
  ) AS $$
 
     SELECT user_rid,
-        flagged,
-        confidence,
-        confidence_comment
+           flagged,
+           confidence,
+           confidence_comment,
+           collection_start,
+           imagery_ids,
+           used_kml,
+           used_geodash
     FROM user_plots
     WHERE plot_rid = _plot_id
 
@@ -112,7 +122,9 @@ CREATE TYPE collection_return AS (
     plot_geom          text,
     extra_plot_info    json,
     user_id            integer,
-    email              text
+    email              text,
+    used_kml           boolean,
+    used_geodash       boolean
 );
 
 -- This return type is so the collection functions match return types.
@@ -148,7 +160,9 @@ CREATE OR REPLACE FUNCTION select_unanalyzed_plots(_project_id integer, _user_id
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
         pa.user_rid,
-        u.email
+        u.email,
+        up.used_kml,
+        up.used_geodash
     FROM plots
     LEFT JOIN plot_assignments pa
         ON plot_uid = pa.plot_rid
@@ -182,7 +196,9 @@ CREATE OR REPLACE FUNCTION select_analyzed_plots(_project_id integer, _user_id i
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
         u.user_uid,
-        u.email
+        u.email,
+        up.used_kml,
+        up.used_geodash
     FROM plots
     INNER JOIN user_plots up
         ON plot_uid = plot_rid
@@ -206,7 +222,10 @@ CREATE OR REPLACE FUNCTION select_flagged_plots(_project_id integer, _user_id in
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
         u.user_uid,
-        u.email
+        u.email,
+        up.used_kml,
+        up.used_geodash
+
     FROM plots
     LEFT JOIN user_plots up
         ON plot_uid = plot_rid
@@ -235,7 +254,9 @@ CREATE OR REPLACE FUNCTION select_confidence_plots(
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
         u.user_uid,
-        u.email
+        u.email,
+        up.used_kml,
+        up.used_geodash
     FROM plots
     INNER JOIN user_plots up
         ON plot_uid = plot_rid
@@ -268,7 +289,9 @@ CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
         ST_AsGeoJSON(plot_geom) as plot_geom,
         extra_plot_info,
         u.user_uid,
-        u.email
+        u.email,
+        up.used_kml,
+        up.used_geodash
     FROM plots
     INNER JOIN assigned_count ac
         ON plot_uid = ac.plot_rid
@@ -280,6 +303,42 @@ CREATE OR REPLACE FUNCTION select_qaqc_plots(_project_id integer)
         AND ac.users > 1
     ORDER BY visible_id ASC
 
+$$ LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION select_plots_by_similarity (_project_id integer, _ref_plot_id integer)
+RETURNS setOf collection_return  AS $$
+  
+SELECT p.plot_uid,
+        flagged,
+        flagged_reason,
+        confidence,
+        confidence_comment,
+        visible_id,
+        ST_AsGeoJSON(plot_geom) as plot_geom,
+        extra_plot_info,
+        pa.user_rid,
+        u.email,
+        up.used_kml,
+        up.used_geodash
+
+    FROM geoai_cache gc
+    CROSS JOIN unnest (gc.similar_plots) WITH ORDINALITY AS elem(plot_uid, ord)
+    JOIN plots p
+        ON p.plot_uid = elem.plot_uid
+    LEFT JOIN plot_assignments pa
+        ON p.plot_uid = pa.plot_rid
+    LEFT JOIN user_plots up
+        ON p.plot_uid = up.plot_rid
+        AND (pa.user_rid = up.user_rid OR NOT (SELECT project_has_assigned(_project_id)))
+    LEFT JOIN plot_locks pl
+        ON p.plot_uid = pl.plot_rid
+    LEFT JOIN users u
+        ON pa.user_rid = u.user_uid
+    
+WHERE gc.plot_rid = _ref_plot_id
+AND   gc.project_rid = _project_id
+ORDER BY elem.ord
 $$ LANGUAGE SQL;
 
 
@@ -414,7 +473,6 @@ $$ LANGUAGE SQL;
 --
 --  SAVING COLLECTION
 --
-
 -- Flag plot
 CREATE OR REPLACE FUNCTION flag_plot(
     _plot_id integer,
@@ -445,7 +503,6 @@ CREATE OR REPLACE FUNCTION flag_plot(
     SELECT _plot_id;
 
 $$ LANGUAGE SQL;
-
 
 CREATE OR REPLACE FUNCTION upsert_user_samples(
     _user_plot_id        integer,
@@ -483,14 +540,15 @@ CREATE OR REPLACE FUNCTION upsert_user_samples(
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION insert_user_plot(
-    _plot_id             integer,
-    _user_id             integer,
-    _confidence          integer,
-    _confidence_comment  text,
-    _collection_start    timestamp,
-   _imageryIds           jsonb,
-   _used_kml             boolean,
-   _used_geodash         boolean
+   _plot_id             integer,
+   _user_id             integer,
+   _confidence          integer,
+   _confidence_comment  text,
+   _collection_start    timestamp,
+   _imageryIds          jsonb,
+   _used_kml            boolean,
+   _used_geodash        boolean
+
  ) RETURNS integer AS $$
     INSERT INTO user_plots AS up
         (user_rid, plot_rid, confidence, confidence_comment, collection_start, collection_time, imagery_ids, used_kml, used_geodash)
@@ -1052,6 +1110,7 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_plot_id_by_visible_id(_project_id INTEGER, _visible_id INTEGER)
 RETURNS INTEGER AS $$
+
   SELECT plot_uid
   FROM PLOTS
   WHERE project_rid = _project_id
@@ -1062,12 +1121,14 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_plot_visible_id_by_id(_project_id INTEGER, _id INTEGER)
 RETURNS INTEGER AS $$
+
   SELECT visible_id
   FROM PLOTS
   WHERE project_rid = _project_id
     AND plot_uid = _id
 
 $$ LANGUAGE SQL;
+
 
 CREATE OR REPLACE FUNCTION select_plots_by_similarity (_project_id integer, _ref_plot_id integer)
 RETURNS setof collection_return AS $$

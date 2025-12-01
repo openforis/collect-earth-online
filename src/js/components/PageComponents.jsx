@@ -1,6 +1,7 @@
 import "../../css/custom.css";
 
 import React, { useState, useEffect } from "react";
+import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import ReactMarkdown from 'react-markdown';
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
@@ -8,13 +9,14 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import SvgIcon from "./svg/SvgIcon";
 import { getLanguage, capitalizeFirst } from "../utils/generalUtils";
 import { getPreference, setPreference } from "../utils/preferences";
+import { stateAtom } from "../utils/constants";
 
 export function LogOutButton({ userName, uri }) {
   const fullUri = uri + window.location.search;
   const loggedOut = !userName || userName === "guest";
 
   const logout = () =>
-    fetch("/logout", { method: "POST" }).then(() => window.location.assign("/home"));
+        fetch("/logout", { method: "POST" }).then(() => window.location.assign("/home"));
 
   return loggedOut ? (
     <button
@@ -54,7 +56,7 @@ class HelpSlideDialog extends React.Component {
         onClick={closeHelpMenu}
         style={{
           position: "fixed",
-          zIndex: "100",
+          zIndex: "1000",
           left: "0",
           top: "0",
           width: "100%",
@@ -250,7 +252,7 @@ export class NavigationBar extends React.Component {
                     {page}
                   </a>
                 </li>
-             ))}
+              ))}
               {!loggedOut && (
                 <li className={"nav-item" + (uri === "/account" && " active")}>
                   <a className="nav-link" href={"/account?accountId=" + userId}>
@@ -297,13 +299,13 @@ export function Logo({ size, url, name, id, src }) {
     padding: ".5rem",
     margin: "1rem",
     ...(logoSize === "large"
-      ? {
+        ? {
           maxWidth: "180px",
           maxHeight: "180px",
           height: "180px",
           width: "180px",
         }
-      : {
+        : {
           maxWidth: "150px",
           maxHeight: "150px",
           height: "150px",
@@ -447,7 +449,7 @@ export function LoadingModal({ message }) {
 }
 
 export const LearningMaterialModal = ({ learningMaterial, onClose }) => {
-    return (
+  return (
     <div
       className="modal fade show"
       id="quitModal"
@@ -522,12 +524,12 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
             },
           }).then((response) => {
             if (response.ok) {
-              window.location.assign(`/collection?projectId=${projectId}`)
+              window.location.assign(`/collection?projectId=${projectId}&institutionId=${institutionId}`);
             } else {
               console.log(response);
             }
           });
-  }
+  };
   return (
     <div
       className="modal fade show"
@@ -595,29 +597,29 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
   );
 }
 
- export const ImageryLayerOptions = ({
-   imageryList,
-   setImageryList,
-   onDragEnd,
-   onToggleLayer,
-   onChangeOpacity,
-   onReset,
-   isImageryLayersExpanded,
- }) => {
-   const [expandedSections, setExpandedSections] = useState({
-     imagery: true,
-     polygon: true,
-   });
-   
-   const imageryLayers = imageryList.filter((image) => image.sourceConfig.type !== "FeatureCollection");
-   const polygonLayers = imageryList.filter((image) => image.sourceConfig.type === "FeatureCollection");
+export const ImageryLayerOptions = ({
+  imageryList,
+  setImageryList,
+  onDragEnd,
+  onToggleLayer,
+  onChangeOpacity,
+  onReset,
+  isImageryLayersExpanded,
+}) => {
+  const [expandedSections, setExpandedSections] = useState({
+    imagery: true,
+    polygon: true,
+  });
+  
+  const imageryLayers = imageryList.filter((image) => image.sourceConfig.type !== "FeatureCollection");
+  const polygonLayers = imageryList.filter((image) => image.sourceConfig.type === "FeatureCollection");
 
-   const toggleSection = (section) => {
-     setExpandedSections((prev) => ({
-       ...prev,
-       [section]: !prev[section],
-     }));
-   };
+  const toggleSection = (section) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
    return (
      <div className="sidebar-wrapper" style={{ overflowX: "hidden", overflowY: "auto" }}>
@@ -828,15 +830,85 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
             onClick={() => closePrompt()}
             type="button"
             value="Cancel"
-            />
+          />
           <input
             className="btn btn-outline-lightgreen btn-sm w-100"
             onClick={() => callBack(promptState)}
             type="button"
             value="Confirm"
-            />
+          />
         </div>
       </div>
     </div>
   );
 }
+
+export const BreadCrumbs = ({crumbs}) => {  
+  const [state, setState] = useAtom(stateAtom);
+  const {breadCrumbs} = state;
+  
+  const getCrumbData = (message, promise) => {
+    setState((s) => ({... s, modalMessage: message}), () =>
+      promise.finally(() => setState((s) => ({... s, modalMessage: null}))));
+  };
+  
+  useEffect(()=>{
+    getCrumbData("Loading...", Promise.allSettled([
+      fetch('/crumb-data',
+            { method: "POST",
+              headers: {
+                "Content-Type": "application/json; charset=utf-8",
+              },
+              body: JSON.stringify(
+                breadCrumbs.concat(crumbs).map(
+                  ({query})=> query).filter((x)=>x)
+                  .reduce((acc, curr)=> (acc[curr [0]]=curr [1], acc), {})
+              )
+            })
+        .then((res) => (res.ok ? res.json() : Promise.reject()))
+        .then((data) => {
+          setState((s)=>(
+            {... s,
+             breadCrumbs: breadCrumbs.concat(
+               crumbs.map((crumb) => ({
+                 ... crumb,
+                 display: data[crumb.id],            
+               })))}));
+        })]));    
+  }, []);
+
+  const crumbClick = (e) => console.log(e);
+  
+  const renderCrumb = ({display, id, onClick=crumbClick}, index) => {
+
+    return (
+      <>
+        {index ? <div> / </div> : <div></div>}
+        <div
+          className="crumb"
+          id={"crumb-" + id}
+          {... (index < breadCrumbs.length -1 && {
+            onClick: () => onClick(id)})
+          }>
+          {display}
+        </div>      
+      </>      
+    );
+  };
+  
+  return (
+    <div id="breadcrumb-bar"
+         className="flex-row">
+      <div
+        style={{cursor: "pointer"}}
+        onClick={()=> {
+          const idx = breadCrumbs.length - 1;
+          const keepers = breadCrumbs.slice(0, idx);
+          setState((s) => ({...s, breadCrumbs: keepers}));
+          keepers.slice(keepers.length -1)[0].onClick();          
+        }}
+      > <SvgIcon icon="leftArrowSlim" size="2rem" />
+      </div>      
+      {breadCrumbs.map(renderCrumb)}
+    </div>);
+};

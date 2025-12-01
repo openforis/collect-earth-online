@@ -65,10 +65,10 @@
                                [(long (/ (:lat point) tol)) (long (/ (:lon point) tol))])
                              old-plots)]
     (remove (fn [point]
-                  (let [cell [(long (/ (:lat point) tol))
-                              (long (/ (:lon point) tol))]]
-                    (some #(close-enough point % tol)
-                          (mapcat old-groups [cell
-                                              (mapv inc cell)
-                                              (mapv dec cell)]))))
-                new-plots)))
+              (let [cell [(long (/ (:lat point) tol))
+                          (long (/ (:lon point) tol))]]
+                (some #(close-enough point % tol)
+                      (mapcat old-groups [cell
+                                          (mapv inc cell)
+                                          (mapv dec cell)]))))
+            new-plots)))
