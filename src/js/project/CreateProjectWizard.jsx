@@ -62,6 +62,7 @@ export default class CreateProjectWizard extends React.Component {
         title: "Plot Design",
         description: "Area of interest and plot generation for collection",
         StepComponent: () => <PlotStep
+                               templatePlots={this.state.templatePlots}
                                getTotalPlots={this.getTotalPlots}
                                steps={this.state.steps}
                                projectType={this.state.type}

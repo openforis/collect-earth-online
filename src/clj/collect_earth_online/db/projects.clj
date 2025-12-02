@@ -178,7 +178,8 @@
                     :surveyQuestions            (tc/jsonb->clj (:survey_questions project) [])
                     :surveyRules                (tc/jsonb->clj (:survey_rules project) [])
                     :projectOptions             (merge default-options (tc/jsonb->clj (:options project)))
-                    :designSettings             (merge default-settings (tc/jsonb->clj (:design_settings project)))})))
+                    :designSettings             (merge default-settings (tc/jsonb->clj (:design_settings project)))
+                    :referencePlot              (:reference_plot_rid project)})))
 
 (defn get-project-stats [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
