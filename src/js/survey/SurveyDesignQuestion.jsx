@@ -386,14 +386,14 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
                 surveyQuestion={question}
                 surveyQuestionId={surveyQuestionId}
               />
-            ))}
-            {(editMode === "full" || isProjectAdmin) && !maxAnswers(surveyQuestion) && (
+            ))}            
+            {editMode !== "review" && (editMode === "full" || isProjectAdmin) && !maxAnswers(surveyQuestion) && (
               <AnswerDesigner
                 editMode={editMode}
                 surveyQuestion={question}
                 surveyQuestionId={surveyQuestionId}
               />
-            )}
+              )}
             {editMode === "full" && surveyQuestion.componentType !== "input" && (
               <button
                 className="btn btn-sm btn-lightgreen"
