@@ -1,4 +1,5 @@
 import React, { useContext, useState } from "react";
+import { useAtomValue } from 'jotai';
 import shp from "shpjs";
 import DatePicker from 'react-datepicker';
 
@@ -1027,12 +1028,12 @@ export class PlotDesign extends React.Component {
 }
 PlotDesign.contextType = ProjectContext;
 
-export function PlotDesignReview() {
+export function PlotDesignReview({ templatePlots }) {
   const { institutionImagery } = useContext(ProjectContext);
   return (
     <div className="d-flex">
       <div className="col-6">
-        <PlotReview />
+        <PlotReview templatePlots={templatePlots}/>
       </div>
       <div className="col-6">
         <AOIReview
@@ -1043,7 +1044,7 @@ export function PlotDesignReview() {
   );
 }
 
-export function PlotReview() {
+export function PlotReview({ templatePlots }) {
   const {
     numPlots,
     plotDistribution,
@@ -1052,7 +1053,8 @@ export function PlotReview() {
     plotSize,
     plotSpacing,
     useTemplatePlots,
-  } = useContext(ProjectContext);
+    referencePlot,
+  } = useContext(ProjectContext);  
   return (
     <div id="plot-review">
       {useTemplatePlots && <h3 className="mb-3">Plots will be copied from template project</h3>}
@@ -1095,6 +1097,14 @@ export function PlotReview() {
                     </td>
                   </tr>
                 </>
+              )}
+              {referencePlot && (
+                <tr>
+                  <td className="w-80">Plot Similarity</td>
+                  <td className="w-20 text-center">
+                    <span className="badge badge-pill bg-lightgreen"> Plot {templatePlots.filter(({ plotId }) => plotId === referencePlot)[0].id} </span>
+                  </td>
+                </tr>
               )}
               {["shp", "csv"].includes(plotDistribution) && (
                 <tr>

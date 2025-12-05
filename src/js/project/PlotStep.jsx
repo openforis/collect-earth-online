@@ -5,13 +5,13 @@ import AssignPlots from "./AssignPlots";
 import QualityControl from "./QualityControl";
 import { PlotDesign, PlotDesignReview, NewPlotDesign} from "./PlotDesign";
 
-export default function PlotStep({ getTotalPlots, projectType }) {
+export default function PlotStep({ getTotalPlots, projectType, templatePlots = [] }) {
   const { institutionUserList, aoiFeatures, useTemplatePlots, availability } = useContext(ProjectContext);  
   const totalPlots = getTotalPlots();
   return (
     <>
       {useTemplatePlots ? (
-        <PlotDesignReview />
+        <PlotDesignReview templatePlots={templatePlots}/>
       ) : (
         <PlotDesign
           aoiFeatures={aoiFeatures}
