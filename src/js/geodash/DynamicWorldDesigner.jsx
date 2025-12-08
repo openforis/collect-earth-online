@@ -1,10 +1,9 @@
 import React, { useContext, useState } from "react";
 import _ from "lodash";
 
+import BasemapSelector from "./form/BasemapSelector";
 import GDDateRange from "./form/GDDateRange";
-import GDInput from "./form/GDInput";
 import GDTextArea from "./form/GDTextArea";
-import GDSelect from "./form/GDSelect";
 import ImageCollectionAssetDesigner from "./ImageCollectionAssetDesigner";
 
 
@@ -19,6 +18,7 @@ export default function DynamicWorldDesigner({prefixPath = ""}) {
         title="Image Parameters (JSON format)"
       />
       <GDDateRange prefixPath={prefixPath} />
+      <BasemapSelector />
     </>
   );
 }
