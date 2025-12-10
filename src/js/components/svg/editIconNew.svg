@@ -1,0 +1,14 @@
+<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+  <rect width="44" height="44" fill="white"/>
+
+  <rect x="0.5" y="0.5" width="43" height="43" rx="3.5"
+        fill="white" stroke="#f1c00f" stroke-width="1"/>
+
+  <path d="M14 28H26M28.5 16.5L20 25L17 26L18 23L26.5 14.5C26.7761 14.2239 27.1022 14 27.5 14C27.8978 14 28.2239 14.2239 28.5 14.5C28.7761 14.7761 29 15.1022 29 15.5C29 15.8978 28.7761 16.2239 28.5 16.5Z"
+        fill="none" stroke="#f1c00f" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Dots -->
+  <circle cx="29" cy="28" r="1.1" fill="#f1c00f"/>
+  <circle cx="25" cy="28" r="1.1" fill="#f1c00f"/>
+</svg>
