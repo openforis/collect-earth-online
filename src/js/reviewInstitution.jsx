@@ -109,7 +109,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   };
   
   const getInstitutionUserList = () => {
-    if(userId){
+    if(userId > 0) {
       fetch(`/get-institution-users?institutionId=${institutionId}`)
         .then((r) => (r.ok ? r.json() : Promise.reject(r)))
         .then((data) => {
