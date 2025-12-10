@@ -107,25 +107,28 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
         });
       });
   };
-
+  
   const getInstitutionUserList = () => {
-    fetch(`/get-institution-users?institutionId=${institutionId}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data) => {
-        const users = data.filter((u) => u.institutionRole !== "pending");
-        setUsersList(data);
-      })
-      .catch(() => {
-        setUsersList([]);
-        console.error("Error retrieving the user list");
-        setModal({
-          alert: {
-            alertType: "User List Error",
-            alertMessage:
-            "Error retrieving the user list. See console for details.",
-          },
+    if(userId > 0) {
+      fetch(`/get-institution-users?institutionId=${institutionId}`)
+        .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+        .then((data) => {
+          const users = data.filter((u) => u.institutionRole !== "pending");
+          const usersData = isAdmin ? data : users;
+          setUsersList(usersData);
+        })
+        .catch(() => {
+          setUsersList([]);
+          console.error("Error retrieving the user list");
+          setModal({
+            alert: {
+              alertType: "User List Error",
+              alertMessage:
+              "Error retrieving the user list. See console for details.",
+            },
+          });
         });
-      });
+    }
   };
 
   const deleteProjectsBulk = (projectIds) => {

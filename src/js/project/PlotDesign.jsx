@@ -39,7 +39,7 @@ export function NewPlotDesign ({aoiFeatures, institutionUserList, totalPlots, pr
         latMax: "",
       });
     setProjectDetails(
-      Object.assign(newDetail, { plots: [] }, { aoiFeatures: [], aoiFileName: "" },)
+      Object.assign(newDetail)
     ); 
   };
 
