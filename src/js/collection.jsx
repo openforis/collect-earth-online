@@ -463,7 +463,7 @@ class Collection extends React.Component {
             threshold,
             currentUserId,
             projectType: type,
-            referencePlotId: plotSimilarityDetails.referencePlotId
+            referencePlotId: plotSimilarityDetails?.referencePlotId || null
           })
       )
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
