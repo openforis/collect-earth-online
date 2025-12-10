@@ -11,8 +11,10 @@ import downCaretIcon from "./downCaretIcon.svg";
 import downRightArrowIcon from "./downRightArrowIcon.svg";
 import drawIcon from "./drawIcon.svg";
 import editIcon from "./editIcon.svg";
+import editIconNew from "./editIconNew.svg";
 import expandIcon from "./expandIcon.svg";
 import fileIcon from "./fileIcon.svg";
+import folderIcon from './folderIcon.svg';
 import helpIcon from "./helpIcon.svg";
 import infoIcon from "./infoIcon.svg";
 import leftArrowIcon from "./leftArrowIcon.svg";
@@ -20,9 +22,13 @@ import leftArrowSlimIcon from "./leftArrowSlimIcon.svg";
 import leftDoubleIcon from "./leftDoubleIcon.svg";
 import lineStringIcon from "./lineStringIcon.svg";
 import linkIcon from "./linkIcon.svg";
+import landscapeIcon from "./landscapeIcon.svg";
+import mapIcon from './mapIcon.svg';
 import minusIcon from "./minus.svg";
+import morevertIcon from './morevertIcon.svg';
 import overlayIcon from "./overlayIcon.svg";
 import opacityIcon from "./opacityIcon.svg";
+import personIcon from "./personIcon.svg";
 import plusIcon from "./plus.svg";
 import pointIcon from "./pointIcon.svg";
 import polygonIcon from "./polygonIcon.svg";
@@ -38,11 +44,6 @@ import trashIcon from "./trashIcon.svg";
 import upArrowIcon from "./upArrowIcon.svg";
 import upCaretIcon from "./upCaretIcon.svg";
 import zoomInIcon from "./zoomInIcon.svg";
-import personIcon from "./personIcon.svg";
-import landscapeIcon from "./landscapeIcon.svg";
-import mapIcon from './mapIcon.svg';
-import folderIcon from './folderIcon.svg';
-import morevertIcon from './morevertIcon.svg';
 
 export const iconMap = {
   alert: alertIcon,
@@ -56,21 +57,25 @@ export const iconMap = {
   downRightArrow: downRightArrowIcon,
   draw: drawIcon,
   edit: editIcon,
+  editIconNew: editIconNew,
   expand: expandIcon,
   file: fileIcon,
   help: helpIcon,
   info: infoIcon,
+  imagery: mapIcon,
   leftArrow: leftArrowIcon,
   leftArrowSlim: leftArrowSlimIcon,
   leftDouble: leftDoubleIcon,
   lineString: lineStringIcon,
   link: linkIcon,
   minus: minusIcon,
+  moreVert: morevertIcon,
   opacity: opacityIcon,
   overlay: overlayIcon,
   plus: plusIcon,
   point: pointIcon,
   polygon: polygonIcon,
+  projects: landscapeIcon,
   question: questionIcon,
   refresh: refreshIcon,
   rightArrow: rightArrowIcon,  
@@ -82,12 +87,9 @@ export const iconMap = {
   trash: trashIcon,
   upArrow: upArrowIcon,
   upCaret: upCaretIcon,
-  zoomIn: zoomInIcon,
   users: personIcon,
-  projects: landscapeIcon,
-  imagery: mapIcon,
+  zoomIn: zoomInIcon,
   folder: folderIcon,
-  moreVert: morevertIcon,
 
 };
 

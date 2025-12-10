@@ -78,13 +78,11 @@ export const ProjectsTab = ({
       {omit: !isAdmin,
        grow: .2,
        cell: (row)=> <div
-                       className="btn-red"
-                       style={{borderRadius:".5rem"}}
                        onClick={()=> {
 				      window.open(`/review-project?projectId=${row.id}&institutionId=${institutionId}`);
 				      }}
                      >
-                       <SvgIcon icon="edit" size="2rem"/>
+                       <SvgIcon icon="editIconNew" size="2rem"/>
                      </div>
       },
       {cell: (row)=> <input
