@@ -9,6 +9,7 @@ import RGL, { WidthProvider } from "react-grid-layout";
 import CopyDialog from "./geodash/CopyDialog";
 import DegradationDesigner from "./geodash/DegradationDesigner";
 import DualImageryDesigner from "./geodash/DualImageryDesigner";
+import DynamicWorldDesigner from "./geodash/DynamicWorldDesigner";
 import GeoDashModal from "./geodash/GeoDashModal";
 import GeoDashNavigationBar from "./geodash/GeoDashNavigationBar";
 import ImageAssetDesigner from "./geodash/ImageAssetDesigner";
@@ -47,6 +48,13 @@ class WidgetLayoutEditor extends React.PureComponent {
     };
 
     this.widgetTypes = {
+      dynamicWorld: {
+        title: "Dynamic World",
+        blankWidget: {startDate: "2013-01-01",
+                      endDate:    today,
+                      basemapId: "-1"},
+        WidgetDesigner: DynamicWorldDesigner
+      },
       degradationTool: {
         title: "Degradation Tool",
         blankWidget: { basemapId: "-1", band: "NDFI", endDate: today, startDate: "2013-01-01" },

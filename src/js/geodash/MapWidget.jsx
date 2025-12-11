@@ -85,9 +85,10 @@ export default class MapWidget extends React.Component {
   /// Get widget URL
 
   getPostObject = (widget) => {
-    if (widget.type === "imageAsset") {
+    switch(widget.type) {
+    case "imageAsset":
       return { path: "image", ...widget };
-    } else if (widget.type === "degradationTool") {
+    case "degradationTool":
       const { stretch, imageDate, degDataType, plotExtentPolygon } = this.props;
       return {
         path: "degradationTileUrl",
@@ -97,22 +98,22 @@ export default class MapWidget extends React.Component {
         imageDate,
         ...widget,
       };
-    } else if (widget.type === "polygonCompare") {
+    case "polygonCompare":
       const { visiblePlotId } = this.props;
       return { path: "featureCollection", matchID: visiblePlotId, ...widget };
-    } else if (widget.type === "preImageCollection") {
+    case "preImageCollection":
       const { sourceName, sourceType } = widget;
       const sourceNameToPath = {
         Landsat: "filteredLandsat",
         Sentinel2: "filteredSentinel2",
       };
-      const path =
-        (sourceType === "Composite" && sourceNameToPath[sourceName]) || "imageCollectionByIndex";
-
+      const path = (sourceType === "Composite" && sourceNameToPath[sourceName]) || "imageCollectionByIndex";
       return { path, ...widget };
-    } else if (widget.type === "imageCollectionAsset") {
+    case "imageCollectionAsset":
       return { path: "imageCollection", ...widget };
-    } else {
+    case "dynamicWorld":
+      return { path: "dynamicWorld", ...widget};
+    default:
       return {};
     }
   };
@@ -354,10 +355,10 @@ export default class MapWidget extends React.Component {
   renderSliderControls = () => {
     const { overlayValue, opacityValue } = this.state;
     const { widget } = this.props;
-
+    
     return (
       <div className="d-flex">
-        {widget.type === "dualImagery" ? (
+        {(widget.type === "dualImagery") ? (
           <>
             {this.renderSlider(opacityValue, this.updateOpacity, "opacity", "Opacity")}
             {this.renderSlider(overlayValue, this.updateOverlay, "overlay", "Overlay Layers")}
