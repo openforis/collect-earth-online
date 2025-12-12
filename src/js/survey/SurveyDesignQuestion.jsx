@@ -257,7 +257,7 @@ export default function SurveyDesignQuestion({ indentLevel, editMode, surveyQues
               <h3 className="font-weight-bold">{removeEnumerator(surveyQuestion.question)}</h3>
             ) : (
               <>
-                {editMode === "full" && (
+                {(editMode === "full" || isProjectAdmin) && (
                   <button
                     className="btn btn-outline-red py-0 px-2 mr-1"
                     onClick={removeQuestion}
