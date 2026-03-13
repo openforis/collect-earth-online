@@ -1105,7 +1105,7 @@ class NewImagery extends React.Component {
     ? "Planet Labs Global Mosaic | © Planet Labs, Inc"
     : type === "SecureWatch"
     ? "SecureWatch Imagery | © Maxar Technologies Inc."
-    : ["Sentinel1", "Sentinel2"].includes(type) || type.includes("GEE")
+    : ["Sentinel1", "Sentinel2", "DynamicWorld"].includes(type) || type.includes("GEE")
     ? "Google Earth Engine | © Google LLC"
     : type.includes("MapBox")
     ? "© Mapbox"
