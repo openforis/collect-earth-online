@@ -81,6 +81,14 @@ export const imageryOptions = [
     ],
     // FIXME, add url if help document is created.
   },
+  {type: "DynamicWorld",
+   label: "Dynamic World",
+   optionalProxy: false,
+   defaultProxy: false,
+   params: [
+     { key: "startDate", display: "Start Date", type: "date" },
+     { key: "endDate", display: "End Date", type: "date" }
+   ]},
   {
     type: "xyz",
     label: "XYZ Imagery",
