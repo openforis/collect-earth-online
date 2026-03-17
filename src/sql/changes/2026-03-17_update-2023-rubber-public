@@ -1,0 +1,5 @@
+UPDATE imagery
+SET visibility = 'public'
+WHERE
+title LIKE '%2023 Rubber Probability%'
+ 
