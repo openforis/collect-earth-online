@@ -1043,6 +1043,7 @@ export function PlotReview() {
     plotSize,
     plotSpacing,
     useTemplatePlots,
+    plotSimilarityDetails,
   } = useContext(ProjectContext);
   return (
     <div id="plot-review">
@@ -1105,7 +1106,20 @@ export function PlotReview() {
                   </td>
                 </tr>
               )}
-            </tbody>
+              {plotSimilarityDetails && plotSimilarityDetails.referencePlotId && (
+                <tr>
+                  <td className="w-80">Plot Similarity Reference Plot Id</td>
+                  <td className="w-20 text-center">
+                    <span
+                      className="badge badge-pill bg-lightgreen tooltip_wrapper"
+                      style={{ color: "white" }}
+                    >
+                      {plotSimilarityDetails.referencePlotId}                      
+                    </span>
+                  </td>
+                 </tr>
+              )}
+              </tbody>
           </table>
         </div>
       </div>
