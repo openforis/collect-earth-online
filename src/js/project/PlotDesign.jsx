@@ -1106,7 +1106,7 @@ export function PlotReview() {
                   </td>
                 </tr>
               )}
-              {plotSimilarityDetails.referencePlotId && (
+              {plotSimilarityDetails && plotSimilarityDetails.referencePlotId && (
                 <tr>
                   <td className="w-80">Plot Similarity Reference Plot Id</td>
                   <td className="w-20 text-center">
