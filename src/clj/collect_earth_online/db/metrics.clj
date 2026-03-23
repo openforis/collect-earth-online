@@ -73,13 +73,15 @@
     (if (:valid validation)
       (try
         (let [start-date (:startDate params)
-              end-date   (:endDate params)]
+              end-date   (:endDate params)
+              {:keys [project_count]} (first (call-sql "get_project_count" start-date end-date))]
           (->> (call-sql "get_sample_plot_counts" start-date end-date)
                (mapv (fn [{:keys [user_plot_count total_sample_count distinct_project_count start_date end_date]}]
                        {:userPlots          user_plot_count
+                        :assignedProjects   distinct_project_count
+                        :totalProjects      project_count
                         :totalSamples       total_sample_count
-                        :distinctProjects   distinct_project_count
-                        :startDate          start_date 
+                        :startDate          start_date
                         :endDate            end_date}))
                (data-response)))
         (catch Exception e

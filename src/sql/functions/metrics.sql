@@ -62,9 +62,9 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION get_sample_plot_counts(start_date_param TEXT, end_date_param TEXT)
 RETURNS TABLE (
-    user_plot_count BIGINT,
-    total_sample_count BIGINT,
+    user_plot_count BIGINT,    
     distinct_project_count BIGINT,
+    total_sample_count BIGINT,
     start_date TEXT,
     end_date TEXT
 ) AS $$

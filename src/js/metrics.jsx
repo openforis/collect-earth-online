@@ -68,8 +68,7 @@ const MetricsDashboard = () => {
       const ceoUrl = buildUrl(handlerUrl, startDate, endDate);
       const response = await fetch(ceoUrl);
       const result = await response.json();
-
-      if (result.length === 0) {
+      if (result.length === 0) {        
         setAlertMessage("🚫 No data found for the selected filters.");
         setData([]); // Clear previous data
         setColumns([]); // Clear previous columns
