@@ -38,12 +38,18 @@
         (let [start-date (:startDate params)
               end-date   (:endDate params)]
           (->> (call-sql "get_imagery_counts" start-date end-date)
-               (mapv (fn [{:keys [imagery_id imagery_name user_plot_count start_date end_date]}]
+               (mapv (fn [{:keys [imagery_id
+                                  imagery_name
+                                  user_plot_count
+                                  start_date
+                                  end_date
+                                  project_name]}]
                        {:imageryId   imagery_id
                         :imageryName imagery_name
                         :plots       user_plot_count
                         :startDate   start_date 
-                        :endDate     end_date}))
+                        :endDate     end_date
+                        :project     project_name}))
                (data-response)))
         (catch Exception e
           (log (ex-message e))

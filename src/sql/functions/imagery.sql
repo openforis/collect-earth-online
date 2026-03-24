@@ -158,7 +158,7 @@ CREATE OR REPLACE FUNCTION archive_imagery(_imagery_id integer)
 $$ LANGUAGE SQL;
 
 -- FIXME, source config wont need to be stripped if the function is updated
--- Returns all rows in imagery for which visibility = "public"
+-- Returns all rows in imagery for which visibility = "platform"
 CREATE OR REPLACE FUNCTION select_public_imagery()
  RETURNS setOf imagery_return AS $$
 
