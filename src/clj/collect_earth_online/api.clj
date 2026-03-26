@@ -242,7 +242,11 @@
                                            [:params [:map
                                                      [:startDate Date]
                                                      [:endDate Date]]]]
-   :metrics/get-plots-collected         [:map
+   :metrics/get-collected-plots         [:map
+                                         [:params [:map
+                                                   [:startDate Date]
+                                                   [:endDate   Date]]]]
+   :metrics/get-collected-samples       [:map
                                          [:params [:map
                                                    [:startDate Date]
                                                    [:endDate   Date]]]]
