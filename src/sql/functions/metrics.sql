@@ -123,3 +123,19 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_collected_plots (_start_date TEXT, _end_date TEXT)
+ RETURNS TABLE (
+    collected   integer,
+    uncollected integer,
+ ) AS $$
+ SELECT
+     sum((up.user_rid IS NOT NULL)::int) AS collected,
+     sum((up.user_rid IS NULL)::int) AS collected,
+     count(pl.*) AS total
+ FROM plots pl
+ LEFT JOIN plot_assignments AS pa
+        ON pa.plot_rid = pl.plot_uid
+ LEFT JOIN user_plots up
+        ON up.plot_rid = pl.plot_uid         
+; $$ LANGUAGE SQL;

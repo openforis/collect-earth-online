@@ -109,10 +109,7 @@
     (if valid
       (try
         (let [{:keys [startDate endDate]} params]          
-          (->>
-           "get_plots_collected"
-           #_(call-sql "get_plots_collected" startDate endDate)
-           data-response))
+          (data-response (call-sql "get_collected_plots" startDate endDate)))
         (catch Exception e
           (log (ex-message e))
           (data-response "Internal server error!" {:status 500})))
