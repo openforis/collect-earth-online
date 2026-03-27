@@ -914,9 +914,7 @@
                         :flagged_reason
                         :confidence
                         :collection_time
-                        :analysis_duration
-                        :common_securewatch_date
-                        :total_securewatch_dates])
+                        :analysis_duration])
 
 (defn plots->csv-response [project-info plots filename]
   (let [survey-questions (tc/jsonb->clj (:survey_questions project-info))
@@ -994,32 +992,33 @@
                           :imagery_attributions
                           :sample_geom
                           :confidence
-                          :confidence_comment])
+                          :confidence_comment
+                          :guest_usernames])
 
 (defn dump-project-raw-data! [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))]
     (if-let [project-info (first (call-sql "select_project_by_id" project-id))]
       (let [samples            (call-sql "dump_project_sample_data" project-id (:type project-info))
             survey-questions   (tc/jsonb->clj (:survey_questions project-info))
-            text-headers       (concat sample-base-headers
+            csv-headers        (if (= "simplified" (:type project-info))
+                                 sample-base-headers
+                                 (remove #(= % :guest_usernames) sample-base-headers))
+            text-headers       (concat csv-headers
                                        (get-ext-headers samples :extra_plot_info "pl_")
                                        (get-ext-headers samples :extra_sample_info "smpl_")
                                        (->> survey-questions
                                             (sort-questions)
                                             (map (fn [[_ {:keys [question]}]] (or question "not-found")))))
-            headers-out        (str
-                                (->> text-headers
-                                     (map #(-> % name csv-quotes))
-                                     (str/join ",")
-                                     (str "\uFEFF"))
-                                ", Guest Interpreters") ; Prefix headers with a UTF-8 tag
+            headers-out        (->> text-headers
+                                    (map #(-> % name csv-quotes))
+                                    (str/join ",")
+                                    (str "\uFEFF")) ; Prefix headers with a UTF-8 tag
             data-rows          (map (fn [row]
                                       (let [saved-answers     (tc/jsonb->clj (:saved_answers row))
                                             extra-plot-info   (tc/jsonb->clj (:extra_plot_info row))
                                             extra-sample-info (tc/jsonb->clj (:extra_sample_info row))
                                             guest-users       (when (= "simplified" (:type project-info))
                                                                 (tc/jsonb->clj (:guest_usernames row)))]
-                                        (str
                                          (str/join ","
                                                    (map->csv (merge (-> row
                                                                         (update :collection_time format-time)
@@ -1028,8 +1027,7 @@
                                                                     (prefix-keys "smpl_" extra-sample-info)
                                                                     (extract-answers survey-questions saved-answers))
                                                              text-headers
-                                                             ""))
-                                         "," guest-users)))
+                                                             ""))))
                                     samples)]
         {:headers {"Content-Type"        "text/csv"
                    "Content-Disposition" (str "attachment; filename="
