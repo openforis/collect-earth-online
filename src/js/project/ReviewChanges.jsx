@@ -69,11 +69,18 @@ export default class ReviewChanges extends React.Component {
 
   updateProject = () => {
     this.promptModal(
-      "Collection data will be cleared to reset the project. Do you really want to update this project?",
-      [{label: "Overwrite existing collection data",
-        index: 'overwrite',
-        type: 'checkbox',
-        value: true}],
+      "Would you like to clear data that has been collected?",
+      [{label: "Yes",
+        index: "overwrite",
+        type: "radio",
+        value: true,
+        checked: true
+       },
+       {label: "No",
+        index: "overwrite",
+        type: "radio",
+        value: false
+    }],
       (prompts) => {
         this.context.processModal("Updating Project", () =>        
           fetch("/update-project", {
