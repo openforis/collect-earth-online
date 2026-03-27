@@ -763,35 +763,74 @@ export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsMo
 };
 
 
-export function PromptModal({title, inputs, callBack, closePrompt}) {
-  const [promptState, setPromptState] = React.useState([]);
-  React.useEffect(()=> setPromptState(inputs.reduce(
-    (acc, {index, value}) => {
-      return ({... acc,
-               [index]: value});
-    }, {} 
-  )), []);
-  let makeInput = ({label, type, index, value}) => {
-    return (
-      <div key={index}
-           className="input-group"
-           style={{flex: "1 100%"}}>
+export function PromptModal({ title, inputs, callBack, closePrompt }) {
+  const [promptState, setPromptState] = React.useState({});
 
+  React.useEffect(() => {
+    setPromptState(
+      inputs.reduce((acc, { index, value, type, checked }) => {
+        if (type === "radio") {
+          if (checked) {
+            return {
+              ...acc,
+              [index]: value,
+            };
+          }
+
+          if (acc[index] === undefined) {
+            return {
+              ...acc,
+              [index]: value,
+            };
+          }
+
+          return acc;
+        }
+
+        return {
+          ...acc,
+          [index]: value,
+        };
+      }, {})
+    );
+  }, [inputs]);
+
+  let makeInput = ({ label, type, index, value }) => {
+    const isRadio = type === "radio";
+
+    return (
+      <div
+        key={isRadio ? `${index}-${String(value)}` : index}
+        className="input-group"
+        style={{ flex: "1 100%" }}
+      >
         <label
-          style={{margin: "auto 1rem",
-                  width: "50%"}}
-        >{label}</label>
-        <input type={type}
-               checked={promptState[index]}
-               value={promptState[index]}
-               onChange= {(e)=> setPromptState({... promptState,
-                                                [index]: (e.target.checked)})}
-        ></input>
+          style={{
+            margin: "auto 1rem",
+            width: "50%",
+          }}
+        >
+          {label}
+        </label>
+
+        <input
+          type={type}
+          name={isRadio ? index : undefined}
+          checked={isRadio ? promptState[index] === value : !!promptState[index]}
+          value={isRadio ? value : promptState[index]}
+          onChange={(e) =>
+            setPromptState({
+              ...promptState,
+              [index]: isRadio ? value : e.target.checked,
+            })
+          }
+        />
       </div>
     );
   };
 
-  let  mappedInputs = inputs.map(makeInput);
+  let mappedInputs = inputs.map(makeInput);
+
   return (
     <div
       style={{
@@ -813,7 +852,7 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
           display: "flex",
           margin: "20% auto",
           width: "fit-content",
-          padding: "1.25rem"
+          padding: "1.25rem",
         }}
       >
         <div className="container">
@@ -823,19 +862,21 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
         {mappedInputs}
         <div
           style={{
-            display: "flex"}}>
+            display: "flex",
+          }}
+        >
           <input
             className="btn btn-outline-red btn-sm w-100"
             onClick={() => closePrompt()}
             type="button"
             value="Cancel"
-            />
+          />
           <input
             className="btn btn-outline-lightgreen btn-sm w-100"
             onClick={() => callBack(promptState)}
             type="button"
             value="Confirm"
-            />
+          />
         </div>
       </div>
     </div>

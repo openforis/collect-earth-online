@@ -756,7 +756,7 @@
                                            sample-file-base64
                                            allow-drawn-samples?
                                            (call-sql "get_plot_centers_by_project" project-id)))
-                #_(reset-collected-samples! project-id)))
+                (reset-collected-samples! project-id)))
             ;; Redo assignments if they changed
             (when (not= design-settings (tc/jsonb->clj (:design_settings original-project)))
               (call-sql "delete_plot_assignments_by_project" project-id)
