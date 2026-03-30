@@ -3,33 +3,34 @@
 
 CREATE OR REPLACE FUNCTION get_imagery_counts(start_date_param TEXT, end_date_param TEXT)
 RETURNS TABLE (
-    imagery_id INT,
-    imagery_name TEXT,
-    user_plot_count BIGINT,
-    start_date TEXT,
-    end_date TEXT
+     imagery_id INT,
+     imagery_name TEXT,
+     user_plot_count BIGINT,
+     start_date TEXT,
+     end_date TEXT,
+     project_name TEXT
 ) AS $$
 BEGIN
     RETURN QUERY
     SELECT 
-        i.imagery_uid AS imagery_id,
-        i.title AS imagery_name,
-        COUNT(up.user_plot_uid) AS user_plot_count,
-        start_date_param AS start_date,
-        end_date_param AS end_date
+         i.imagery_uid AS imagery_id,
+         i.title AS imagery_name,
+         COUNT(up.user_plot_uid) AS user_plot_count,
+         start_date_param AS start_date,
+         end_date_param AS end_date,
+         proj.name AS project_name,
     FROM 
-        user_plots up
+        imagery i
+    JOIN project_imagery pi on pi.imagery_rid = i.imagery_uid
     JOIN 
-        plots p ON up.plot_rid = p.plot_uid
-    JOIN 
-        projects proj ON p.project_rid = proj.project_uid
-    LEFT JOIN 
-        imagery i ON proj.imagery_rid = i.imagery_uid
+        projects proj ON pi.project_rid = proj.project_uid
+    JOIN plots p ON p.project_rid = proj.project_uid 
+    JOIN user_plots up ON up.plot_rid = p.plot_uid
     WHERE 
         up.collection_start BETWEEN start_date_param::DATE AND end_date_param::DATE
     GROUP BY 
         i.imagery_uid, i.title
-    ORDER BY 
+    ORDER BY
         user_plot_count DESC;
 END;
 $$ LANGUAGE plpgsql;
@@ -62,9 +63,9 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION get_sample_plot_counts(start_date_param TEXT, end_date_param TEXT)
 RETURNS TABLE (
-    user_plot_count BIGINT,
-    total_sample_count BIGINT,
+    user_plot_count BIGINT,    
     distinct_project_count BIGINT,
+    total_sample_count BIGINT,
     start_date TEXT,
     end_date TEXT
 ) AS $$

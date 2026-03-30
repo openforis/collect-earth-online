@@ -38,12 +38,18 @@
         (let [start-date (:startDate params)
               end-date   (:endDate params)]
           (->> (call-sql "get_imagery_counts" start-date end-date)
-               (mapv (fn [{:keys [imagery_id imagery_name user_plot_count start_date end_date]}]
+               (mapv (fn [{:keys [imagery_id
+                                  imagery_name
+                                  user_plot_count
+                                  start_date
+                                  end_date
+                                  project_name]}]
                        {:imageryId   imagery_id
                         :imageryName imagery_name
                         :plots       user_plot_count
                         :startDate   start_date 
-                        :endDate     end_date}))
+                        :endDate     end_date
+                        :project     project_name}))
                (data-response)))
         (catch Exception e
           (log (ex-message e))
@@ -73,13 +79,15 @@
     (if (:valid validation)
       (try
         (let [start-date (:startDate params)
-              end-date   (:endDate params)]
+              end-date   (:endDate params)
+              {:keys [project_count]} (first (call-sql "get_project_count" start-date end-date))]
           (->> (call-sql "get_sample_plot_counts" start-date end-date)
                (mapv (fn [{:keys [user_plot_count total_sample_count distinct_project_count start_date end_date]}]
                        {:userPlots          user_plot_count
+                        :assignedProjects   distinct_project_count
+                        :totalProjects      project_count
                         :totalSamples       total_sample_count
-                        :distinctProjects   distinct_project_count
-                        :startDate          start_date 
+                        :startDate          start_date
                         :endDate            end_date}))
                (data-response)))
         (catch Exception e
