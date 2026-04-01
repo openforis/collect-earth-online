@@ -99,9 +99,9 @@
 
         :else nil))
 
-(defn update-account [{:keys [params]}]
+(defn update-account [{:keys [params session]}]
   (let [user-id               (:userId params -1)
-        current-email         (:userName params)
+        current-email         (:userName session)
         current-password      (:currentPassword params)
         new-email             (:email params)
         password              (:password params)
