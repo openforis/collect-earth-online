@@ -551,7 +551,7 @@ export class PlotDesign extends React.Component {
               id="project-boundary-file"
               onChange={(e) => {
                 const file = e.target.files[0];
-                readFileAsArrayBuffer(file, this.loadGeoJson);
+                this.readFileAsArrayBuffer(file, this.loadGeoJson);
               }}
               style={{ display: "none" }}
               type="file"
