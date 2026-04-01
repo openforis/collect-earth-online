@@ -1502,6 +1502,7 @@ function Project({
   selectedProjects,
   setSelectedProjects
 }) {
+
   const [learningMaterialOpen, setLearningMaterialOpen] = useState(false);
 
   const toggleLearningMaterial = () => {
@@ -1513,6 +1514,14 @@ function Project({
     setSelectedProjects((prev) =>
       checked ? [...prev, project.id] : prev.filter((id) => id !== project.id)
     );
+  };
+
+  const projectNameTarget = () => {
+    return isAdmin ?
+      project.isDraft
+        ? `/create-project?projectDraftId=${project.id}&institutionId=${institutionId}`
+        : `/review-project?projectId=${project.id}`
+      : `/collection?projectId=${project.id}`; 
   };
 
   return (
@@ -1549,7 +1558,7 @@ function Project({
         ) : (
           <a
             className="btn btn-sm btn-outline-lightgreen btn-block text-truncate"
-            href={`/collection?projectId=${project.id}`}
+            href={ projectNameTarget() }
             style={{
               boxShadow:
               project.percentComplete === 0.0
