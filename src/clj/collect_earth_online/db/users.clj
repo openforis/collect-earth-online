@@ -101,9 +101,9 @@
 
 (defn update-account [{:keys [params session]}]
   (let [user-id               (:userId params -1)
-        current-email         (:userName session)
+        current-email         (str/lower-case (:userName session))
         current-password      (:currentPassword params)
-        new-email             (:email params)
+        new-email             (str/lower-case (:email params))
         password              (:password params)
         password-confirmation (:passwordConfirmation params)]
     (if-let [error-msg (get-update-account-errors user-id current-email current-password
