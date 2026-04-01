@@ -85,7 +85,7 @@ CREATE OR REPLACE FUNCTION get_user_by_email(_email text)
 
     SELECT user_uid, administrator, reset_key
     FROM users
-    WHERE email = _email
+    WHERE LOWER(email) = LOWER(_email)
 
 $$ LANGUAGE SQL;
 
@@ -134,7 +134,7 @@ CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
 
     SELECT user_uid, administrator, verified, accepted_terms
     FROM users
-    WHERE email = _email
+    WHERE LOWER(email) = LOWER(_email)
         AND password = crypt(_password, password)
 
 $$ LANGUAGE SQL;
@@ -143,7 +143,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION email_taken(_email text, _user_id_to_ignore integer)
  RETURNS boolean AS $$
 
-    SELECT EXISTS(SELECT 1 FROM users WHERE email = _email AND user_uid <> _user_id_to_ignore)
+    SELECT EXISTS(SELECT 1 FROM users WHERE LOWER(email) = LOWER(_email) AND user_uid <> _user_id_to_ignore)
 
 $$ LANGUAGE SQL;
 
@@ -214,8 +214,8 @@ CREATE OR REPLACE FUNCTION set_user_email(_email text, _new_email text)
  RETURNS text AS $$
 
     UPDATE users
-    SET email = _new_email
-    WHERE email = _email
+    SET email = LOWER(_new_email)
+    WHERE LOWER(email) = LOWER(_email)
     RETURNING email
 
 $$ LANGUAGE SQL;
@@ -226,7 +226,7 @@ CREATE OR REPLACE FUNCTION set_password_reset_key(_email text, _reset_key text)
 
     UPDATE users
     SET reset_key = _reset_key
-    WHERE email = _email
+    WHERE LOWER(email) = LOWER(_email)
     RETURNING email
 
 $$ LANGUAGE SQL;
@@ -239,7 +239,7 @@ CREATE OR REPLACE FUNCTION update_password(_email text, _password text)
     SET password = crypt(_password, gen_salt('bf')),
         reset_key = NULL,
         verified = TRUE
-    WHERE email = _email
+    WHERE LOWER(email) = LOWER(_email)
 
 $$ LANGUAGE SQL;
 
