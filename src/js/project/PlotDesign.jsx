@@ -6,6 +6,7 @@ import {
   formatNumberWithCommas,
   isNumber,
   readFileAsBase64Url,
+  readFileAsArrayBuffer,
 } from "../utils/generalUtils";
 
 import { filterObject } from "../utils/sequence";
@@ -551,7 +552,7 @@ export class PlotDesign extends React.Component {
               id="project-boundary-file"
               onChange={(e) => {
                 const file = e.target.files[0];
-                this.readFileAsArrayBuffer(file, this.loadGeoJson);
+                readFileAsArrayBuffer(file, this.loadGeoJson);
               }}
               style={{ display: "none" }}
               type="file"
@@ -592,7 +593,7 @@ export class PlotDesign extends React.Component {
     );
   };
 
-  readFileAsArrayBuffer = (file) =>
+  readFileAsBuffer = (file) =>
     new Promise((res, rej) => {
       const r = new FileReader();
       r.onload = () => res(r.result);
@@ -662,7 +663,7 @@ export class PlotDesign extends React.Component {
     const name = (file?.name || "").toLowerCase();
 
     if (name.endsWith(".zip")) {
-      const ab = await this.readFileAsArrayBuffer(file);
+      const ab = await this.readFileAsBuffer(file);
       return await this.parseZipShapefileToIds(ab);
     }
 
