@@ -112,3 +112,25 @@
           (data-response "Internal server error." {:status 500})))
       (validation-error-response (:message validation)))))
 
+(defn get-collected-plots [{:keys [params session]}]
+  (let [{:keys [valid message]} (validate-dates params)]
+    (if valid
+      (try
+        (let [{:keys [startDate endDate]} params]          
+          (data-response (call-sql "get_collected_plots" startDate endDate)))
+        (catch Exception e
+          (log (ex-message e))
+          (data-response "Internal server error!" {:status 500})))
+      (validation-error-response message))))
+
+
+(defn get-collected-samples [{:keys [params session]}]
+  (let [{:keys [valid message]} (validate-dates params)]
+    (if valid
+      (try
+        (let [{:keys [startDate endDate]} params]          
+          (data-response (call-sql "get_collected_samples" startDate endDate)))
+        (catch Exception e
+          (log (ex-message e))
+          (data-response "Internal server error!" {:status 500})))
+      (validation-error-response message))))

@@ -242,6 +242,14 @@
                                            [:params [:map
                                                      [:startDate Date]
                                                      [:endDate Date]]]]
+   :metrics/get-collected-plots         [:map
+                                         [:params [:map
+                                                   [:startDate Date]
+                                                   [:endDate   Date]]]]
+   :metrics/get-collected-samples       [:map
+                                         [:params [:map
+                                                   [:startDate Date]
+                                                   [:endDate   Date]]]]
    :plots/get-collection-plot [:map
                                [:request-method [:= :get]]
                                [:uri [:= "/get-collection-plot"]]
@@ -257,8 +265,8 @@
                                          [:currentUserId [:maybe [:or :int :string]]]
                                          [:projectType  {:optional true} :string]
                                          [:inReviewMode {:optional true} Bool]]]
-                                 [:session [:map
-                                            [:userId {:optional true} Int]]]]
+                               [:session [:map
+                                          [:userId {:optional true} Int]]]]
    :plots/get-plot-disagreement [:map
                                  [:request-method [:= :get]]
                                  [:uri [:= "/get-plot-disagreement"]]

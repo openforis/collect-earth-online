@@ -37,6 +37,14 @@ const MetricsDashboard = () => {
     getProjectCount: {
       displayName: "Project Count Metrics",
       route: "/metrics/get-project-count"
+    },
+    getCollectedPlots: {
+      displayName: "Plots Collected",
+      route: "/metrics/get-collected-plots"
+    },
+    getCollectedSamples: {
+      displayName: "Samples Collected",
+      route: "/metrics/get-collected-samples"
     }
   };
 

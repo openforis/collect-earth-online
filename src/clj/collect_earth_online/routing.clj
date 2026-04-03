@@ -288,4 +288,9 @@
    [:get  "/metrics/get-sample-plot-counts"]  {:handler     (validate metrics/get-sample-plot-counts)
                                                :auth-type   :metrics
                                                :auth-action :block}
-   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}})
+   [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)
+                                               :auth-action :block}
+   [:get  "/metrics/get-collected-plots"]     {:handler     (validate metrics/get-collected-plots)
+                                               :auth-action :block}
+   [:get  "/metrics/get-collected-samples"]   {:hanlder     (validate metrics/get-collected-samples)
+                                               :auth-action :block}})
