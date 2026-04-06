@@ -63,6 +63,9 @@ export function ImagerySelection() {
       <div className="ml-3">
         <div className="form-group">
           <label>Platform Imagery</label>
+          <p className="font-italic ml-1" style={{ marginTop: "-.5rem" }}>
+            * Platform imagery is always available to all users, whether or not they are logged in or part of an institution.
+          </p>
           {renderImageryRow(
             institutionImagery.filter((imagery) => imagery.visibility ==="platform"),
             imageryId,
@@ -87,6 +90,9 @@ export function ImagerySelection() {
         </div>
         <div className="form-group">
           <label>Public Institution Imagery</label>
+          <p className="font-italic ml-1" style={{ marginTop: "-.5rem" }}>
+            * Public Institution Imagery is available to anyone collecting data on your projects in CEO, while remaining managed within your institution.
+          </p>
           {renderImageryRow(
             institutionImagery.filter((imagery) => imagery.visibility === "public"),
             imageryId,
