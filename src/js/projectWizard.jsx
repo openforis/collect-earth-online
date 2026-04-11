@@ -11,7 +11,7 @@ import { projectWizardAtom } from "./state/projectWizard";
 import "../css/project-wizard.css";
 
 
-const ProjectWizard = ({}) => {
+const ProjectWizard = () => {
   const { createProject,
           overview,
           imagery,
@@ -25,8 +25,7 @@ const ProjectWizard = ({}) => {
   const setProjectWizardState = useSetAtom(projectWizardAtom);
   const projectTypeRef = useRef(null);
 
-  
-  const NewProjectModal = ({}) => {
+  const NewProjectModal = () => {
     const newProjectOptions = {
       newProject: ['Create a new project',
                    'Generate a new project from scratch by customizing all steps.'],
@@ -35,8 +34,8 @@ const ProjectWizard = ({}) => {
       importProject: ['Import Collect Earth Project',
                       'Need Description']};
     
+
     const [selected, setSelected] = useState('');
-    
     useEffect(()=>{
       projectTypeRef.current = selected;
     }, [selected]);
@@ -45,9 +44,12 @@ const ProjectWizard = ({}) => {
               {Object.entries(newProjectOptions).map(([id, [title, description]]) => {
                 return (
                   <div
-                    key={id}
-                    onClick={()=> {setSelected(id);}}>
-                    <span>{ selected == id ? '⬤' : '◯' }</span>
+                    key={id}                    
+                    onClick={()=> {
+                      setSelected(id);}}
+                  >
+                    <span>{ selected == id
+                            ? '⬤' : '◯' }</span>
                     <p>{ title  }</p>
                     <span>{ description }</span>
                   </div>);
@@ -57,11 +59,20 @@ const ProjectWizard = ({}) => {
 
   const handleNewProject = () => {
     projectTypeRef.current && setProjectWizardState((s)=>({...s, createProject: projectTypeRef.current,
-                                                           modal: null}));
+                                                           modal: null
+                                                          }));
+  };
+
+  const NewProjectModalOpts = {
+    title: 'Project Setup',
+    closeText: '',
+    confirmText: 'Get Started',
+    onConfirm: handleNewProject,
+    children: (<NewProjectModal />)
   };
   
   const ProjectWizardModal = () => {
-    // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
+    // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"    
     return (<Modal
               title={modal.title}
               closeText={modal.closeText}
@@ -77,13 +88,9 @@ const ProjectWizard = ({}) => {
 
   useEffect(() => {
     createProject === null &&
-      setProjectWizardState((s) => ({ ... s, modal: {title: 'Project Setup',
-                                                     closeText: '',
-                                                     confirmText: 'Get Started',
-                                                     onConfirm: handleNewProject,
-                                                     children: (<NewProjectModal />)}}));
+      setProjectWizardState((s) => ({ ... s, modal: NewProjectModalOpts}));
   }, []);
-  
+
   return (<>
             {modal && <ProjectWizardModal/>}
           </>);
