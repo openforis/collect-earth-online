@@ -162,9 +162,7 @@ export const ProjectsTab = ({
           <button
             id="new-project-button"
             className="filled-button"
-            onClick={() =>
-              window.location.assign(`/create-project?institutionId=${institutionId}`)
-            }
+            onClick={() => window.location.assign(`/project-wizard?institutionId=${institutionId}`)}
           >
             <SvgIcon icon="plus" size="1rem" />
             Add New Project

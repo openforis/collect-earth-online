@@ -850,7 +850,7 @@ export const BreadCrumbs = ({crumbs}) => {
       promise.finally(() => setState((s) => ({... s, modalMessage: null}))));
   };
   
-  useEffect(()=>{
+  useEffect(()=>{    
     getCrumbData("Loading...", Promise.allSettled([
       fetch('/crumb-data',
             { method: "POST",
@@ -870,7 +870,7 @@ export const BreadCrumbs = ({crumbs}) => {
              breadCrumbs: breadCrumbs.concat(
                crumbs.map((crumb) => ({
                  ... crumb,
-                 display: data[crumb.id],            
+                 display: (data[crumb.id] || crumb.display),
                })))}));
         })]));    
   }, []);
@@ -878,7 +878,6 @@ export const BreadCrumbs = ({crumbs}) => {
   const crumbClick = (e) => console.log(e);
   
   const renderCrumb = ({display, id, onClick=crumbClick}, index) => {
-
     return (
       <>
         {index ? <div> / </div> : <div></div>}
