@@ -110,7 +110,7 @@ const ProjectWizard = () => {
   }, []);
 
   return (<>
-            {modal && <ProjectWizardModal createProject={createProject}/>}
+            {modal && <ProjectWizardModal/>}
           </>);
 };
 
