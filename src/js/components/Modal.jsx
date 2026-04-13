@@ -18,7 +18,8 @@ export default function Modal({
   closeText,
   confirmText,
   onClose,
-  onConfirm
+  onConfirm,
+  confirmDisabled
 }) {
   return (
     <div
@@ -52,9 +53,9 @@ export default function Modal({
                 className={`btn btn-sm ${danger ? "btn-danger" : ""}`}
                 style={{backgroundColor: "#2d6f74",
                         color: "#fff"}}
-                onClick={onConfirm}          
-                type="button"
-              >
+                onClick={onConfirm}
+                disabled={confirmDisabled}
+                type="button">
                 {confirmText}
               </button>
             )}

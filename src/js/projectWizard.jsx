@@ -25,7 +25,7 @@ const ProjectWizard = () => {
   const setProjectWizardState = useSetAtom(projectWizardAtom);
   const projectTypeRef = useRef(null);
 
-  const NewProjectModal = () => {
+  const NewProjectModal = ({selected, setSelected}) => {
     const newProjectOptions = {
       newProject: ['Create a new project',
                    'Generate a new project from scratch by customizing all steps.'],
@@ -33,9 +33,9 @@ const ProjectWizard = () => {
                         'Select a template and prefill all the steps. You can edit and customize it.'],
       importProject: ['Import Collect Earth Project',
                       'Need Description']};
-    
 
-    const [selected, setSelected] = useState('');
+
+//    const [selected, setSelected] = useState('');
     useEffect(()=>{
       projectTypeRef.current = selected;
     }, [selected]);
@@ -44,9 +44,10 @@ const ProjectWizard = () => {
               {Object.entries(newProjectOptions).map(([id, [title, description]]) => {
                 return (
                   <div
-                    key={id}                    
+                    key={id}
                     onClick={()=> {
-                      setSelected(id);}}
+                      setSelected(id);
+                    }}
                   >
                     <span>{ selected == id
                             ? '⬤' : '◯' }</span>
@@ -68,31 +69,37 @@ const ProjectWizard = () => {
     closeText: '',
     confirmText: 'Get Started',
     onConfirm: handleNewProject,
-    children: (<NewProjectModal />)
+    children: (<NewProjectModal/>)
   };
   
   const ProjectWizardModal = () => {
-    // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"    
+    // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
+    const [state, setState]= useState(null);
     return (<Modal
               title={modal.title}
               closeText={modal.closeText}
               confirmText={modal.confirmText}
               onConfirm={modal.onConfirm && modal.onConfirm}
+              confirmDisabled={state === null}
               onClose={()=>{
                 modal.onClose ? modal.onClose()
                   : setProjectWizardState((s) => ({... s, modal: null}));
               }}>
-              {modal.children}
+              {//modal.children
+                (<NewProjectModal
+                   setSelected={setState}
+                   selected={state}/>)
+              }
             </Modal>);
   };
 
   useEffect(() => {
-    createProject === null &&
+//    createProject === null &&
       setProjectWizardState((s) => ({ ... s, modal: NewProjectModalOpts}));
   }, []);
 
   return (<>
-            {modal && <ProjectWizardModal/>}
+            {modal && <ProjectWizardModal createProject={createProject}/>}
           </>);
 };
 
