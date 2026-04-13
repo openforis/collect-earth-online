@@ -34,8 +34,6 @@ const ProjectWizard = () => {
       importProject: ['Import Collect Earth Project',
                       'Need Description']};
 
-
-//    const [selected, setSelected] = useState('');
     useEffect(()=>{
       projectTypeRef.current = selected;
     }, [selected]);
@@ -69,32 +67,45 @@ const ProjectWizard = () => {
     closeText: '',
     confirmText: 'Get Started',
     onConfirm: handleNewProject,
+    id: 'newProject',
     children: (<NewProjectModal/>)
   };
   
   const ProjectWizardModal = () => {
     // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
-    const [state, setState]= useState(null);
+    const [modalState, setModalState]= useState(null);
+    const children = () => {
+      switch (modal.id) {
+      case 'newProject'
+        : return   (<NewProjectModal
+                      setSelected={setModalState}
+                      selected={modalState}/>);
+      default : break;
+      }};
+    const confirmDisabled = () => {
+      switch (modal.id) {
+      case 'newProject'
+        : return modalState === null;
+      default: return false;
+      }};
+
+
     return (<Modal
               title={modal.title}
               closeText={modal.closeText}
               confirmText={modal.confirmText}
               onConfirm={modal.onConfirm && modal.onConfirm}
-              confirmDisabled={state === null}
+              confirmDisabled={confirmDisabled()}
               onClose={()=>{
                 modal.onClose ? modal.onClose()
                   : setProjectWizardState((s) => ({... s, modal: null}));
               }}>
-              {//modal.children
-                (<NewProjectModal
-                   setSelected={setState}
-                   selected={state}/>)
-              }
+              {children()}
             </Modal>);
   };
 
   useEffect(() => {
-//    createProject === null &&
+    createProject === null &&
       setProjectWizardState((s) => ({ ... s, modal: NewProjectModalOpts}));
   }, []);
 
