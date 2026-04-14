@@ -13,7 +13,13 @@ import "../css/project-wizard.css";
 
 
 const ProjectWizard = ({userId, userName, version, institutionId}) => {
+
+  // -------------------
+  // VARS & CONSTANTS
+  // ------------------
+  
   const { createProject,
+          currentStep,
           overview,
           imagery,
           boundary,
@@ -25,7 +31,69 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
         } = useAtomValue(projectWizardAtom);
   const setProjectWizardState = useSetAtom(projectWizardAtom);
   const projectTypeRef = useRef(null);
+  const projectSteps =
+          [{id: 'overview',
+            label: 'Project Overview'},
+           {id: 'imagery',
+            label: 'Imagery Selection'},
+           {id: 'boundary',
+            label: 'Project Boundary'},
+           {id: 'plots',
+            label: 'Plot Generation'},
+           {id: 'samples',
+            label: 'Sample Design'},
+           {id: 'questions',
+            label: 'Survey Questions'},
+           {id: 'rules',
+            label: 'Survey Rules'},
+           {id: 'review',
+            label: 'Review & Publish'}];
+          
 
+
+ 
+  // -------------------
+  // HANDLERS
+  // ------------------
+  
+  const handleNewProject = () => {
+    setProjectWizardState((s)=>({...s, createProject: projectTypeRef.current,
+                                 modal: null,
+                                 currentStep: 'overview'}));
+    };
+  
+  const  continueHandler = () => {
+    const currentIdx = projectSteps.findIndex(({id})=>{return (id == currentStep);});
+    
+    currentIdx + 1 < projectSteps.length
+      ? setProjectWizardState((s)=>({...s, currentStep: projectSteps[currentIdx + 1].id}))
+      : setProjectWizardState((s)=>({...s, modal: {title: "Confirm & Submit"}}));
+  };
+
+    const changeStep = (step) => {
+    setProjectWizardState((s)=>({...s, currentStep: step}));
+  };
+
+
+  // -------------------
+  // HOOKS
+  // ------------------
+  
+  useEffect(() => {
+    createProject === null &&
+      setProjectWizardState((s) => ({ ... s, modal: {title: 'Project Setup',
+                               closeText: '',
+                               confirmText: 'Get Started',
+                               onConfirm: handleNewProject,
+                               id: 'newProject',
+                               children: (<NewProjectModal/>)}}));
+  }, []);
+
+  
+  // -------------------
+  // RENDER FUNCTIONS
+  // ------------------
+  
   const NewProjectModal = ({selected, setSelected}) => {
     const newProjectOptions = {
       newProject: ['Create a new project',
@@ -40,36 +108,21 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
     }, [selected]);
     
     return (<div>
-              {Object.entries(newProjectOptions).map(([id, [title, description]]) => {
-                return (
-                  <div
-                    key={id}
-                    onClick={()=> {
-                      setSelected(id);
-                    }}
-                  >
-                    <span>{ selected == id
-                            ? '⬤' : '◯' }</span>
-                    <p>{ title  }</p>
-                    <span>{ description }</span>
-                  </div>);
-              })}
-            </div>);
-  };
-
-  const handleNewProject = () => {
-    projectTypeRef.current && setProjectWizardState((s)=>({...s, createProject: projectTypeRef.current,
-                                                           modal: null
-                                                          }));
-  };
-
-  const NewProjectModalOpts = {
-    title: 'Project Setup',
-    closeText: '',
-    confirmText: 'Get Started',
-    onConfirm: handleNewProject,
-    id: 'newProject',
-    children: (<NewProjectModal/>)
+                {Object.entries(newProjectOptions).map(([id, [title, description]]) => {
+                  return (
+                    <div
+                      key={id}
+                      onClick={()=> {
+                        setSelected(id);
+                      }}
+                    >
+                      <span>{ selected == id
+                              ? '⬤' : '◯' }</span>
+                      <p>{ title  }</p>
+                      <span>{ description }</span>
+                    </div>);
+                })}
+              </div>);
   };
   
   const ProjectWizardModal = () => {
@@ -80,8 +133,8 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
       switch (modal.id) {
       case 'newProject'
         : return   (<NewProjectModal
-                      setSelected={setModalState}
-                      selected={modalState}/>);
+        setSelected={setModalState}
+        selected={modalState}/>);
       default : break;
       }};
     
@@ -93,7 +146,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
       }};
     
     return (<Modal
-v              title={modal.title}
+              title={modal.title}
               closeText={modal.closeText}
               confirmText={modal.confirmText}
               onConfirm={modal.onConfirm && modal.onConfirm}
@@ -121,14 +174,14 @@ v              title={modal.title}
               <div>
                 {Object.entries(projectTypeOptions).map(([id, label]) => {
                   return (<div
-                    key={id}
-                    onClick={()=> {
-                      setSelected(id);
-                    }}>
-                    <span>{ selected == id
-                            ? '⬤' : '◯' }</span>
+                            key={id}
+                            onClick={()=> {
+                              setSelected(id);
+                            }}>
+                            <span>{ selected == id
+                                    ? '⬤' : '◯' }</span>
                             <p>{ label  }</p>
-                  </div>);                  
+                          </div>);                  
                 })}
                 <div>
                   <label>Project Name<span style={{color: "red"}}>*</span></label>
@@ -170,12 +223,12 @@ v              title={modal.title}
         <SvgIcon icon="info" size="1.2rem" />
         {Object.entries(visibilityOptions).map(([id, label])=>{
 	  return (<div
-                    onClick={()=>{setVisibility(id);}}
-                    key={id}>
-                    <span>{ visibility == id
-                            ? '⬤' : '◯' }</span>
-                    <p>{ label  }</p>
-                  </div>);
+                       onClick={()=>{setVisibility(id);}}
+                       key={id}>
+                     <span>{ visibility == id
+                             ? '⬤' : '◯' }</span>
+                     <p>{ label  }</p>
+                   </div>);
         })}
       </div>
     );
@@ -191,28 +244,119 @@ v              title={modal.title}
                                               plotConfidence: false,
                                               autoGeo: false});
     return(<div>
-             <p>Project Options</p>
-             {Object.entries(projectOptions).map(([id, label])=> {
-	       return (
-		 <div>
-		   <span
-		     onClick={() => {setSelected((s)=>({... s, [id]: !selected[id]}));}}
-		   >
-		     {selected[id] ? "▣" :"▢"}
-		   </span>
-		   <p>{label}</p>
-		 </div>
-	       ) ;
-	     })}
+           <p>Project Options</p>
+           {Object.entries(projectOptions).map(([id, label])=> {
+	     return (
+	       <div>
+		 <span
+		   onClick={() => {setSelected((s)=>({... s, [id]: !selected[id]}));
+                                  }}>
+		   {selected[id] ? "▣" :"▢"}
+		 </span>
+		 <p>{label}</p>
+	       </div>
+	     ) ;
+	   })}
 
-           </div>);
+         </div>);
   };
 
-  useEffect(() => {
-    createProject === null &&
-      setProjectWizardState((s) => ({ ... s, modal: NewProjectModalOpts}));
-  }, []);
+  const OverviewStep = () => {
+    return (<div className="project-wizard"
+                 style={{background: "#A0CAC6"}}>
+              <GeneralInformationCard/>
+              <VisibilityCard/>
+              <ProjectOptionsCard/>    
+            </div>);
+  };
 
+  const ImageryStep  = () => {
+    return (<div>
+            </div>);
+  };
+
+  const BoundaryStep  = () => {
+    return (<div>
+            </div>);
+  };
+
+  const PlotStep  = () => {
+    return (<div>
+            </div>);
+  };
+
+  const SamplesStep  = () => {
+    return (<div>
+            </div>);
+  };
+
+  const QuestionsStep  = () => {
+    return (<div>
+            </div>);
+  };
+
+  const RulesStep  = () => {
+    return (<div>
+            </div>);
+  };
+
+  const ReviewStep  = () => {
+    return (<div>
+            </div>);
+  };
+
+  const CurrentStep = () => {
+    switch (currentStep) {
+    case 'overview'   : return (<OverviewStep/>);
+    case 'imagery'    : return (<ImageryStep/>);
+    case 'boundary'   : return (<BoundaryStep/>);
+    case 'plots'      : return (<PlotStep/>);
+    case 'samples'    : return (<SamplesStep/>);
+    case 'questions'  : return (<QuestionsStep/>);
+    case 'rules'      : return (<RulesStep/>);
+    case 'review'     : return (<ReviewStep/>);
+    default           : return (<div></div>);
+    }};
+
+  const ProjectStepWizard = () => {        
+    return (<div>
+              {projectSteps.map(({id, label}, index)=>{
+                return(<>
+                       <div
+                         style={{
+                           cursor: 'pointer',
+                           fontWeight: currentStep === id ? 'bold' : 'normal'}}                         
+                         onClick={()=> changeStep(id)}
+                         key={id}
+                       >{label}                         
+                       </div>
+                         {index + 1 < projectSteps.length && "-"}
+                      </>);
+              })}              
+            </div>);
+  };
+
+  const NavButtons = () => {
+    return (<div>
+              <button
+                className="btn btn-secondary btn-sm"
+              >Exit</button>
+              <button
+                className={'btn btn-sm'}
+                style={{backgroundColor: "#2d6f74",
+                        color: "#fff"}}
+              >Save Draft</button>
+              <button
+                className={'btn btn-sm'}
+                onClick={()=>{continueHandler();}}
+                style={{backgroundColor: "#2d6f74",
+                        color: "#fff"}}
+              >Save & Continue</button>
+            </div>);
+  };
+
+  
+  
   return (<>
             {modal && <ProjectWizardModal/>}
             <NavigationBar userId={userId} userName={userName} version={version}>
@@ -231,12 +375,9 @@ v              title={modal.title}
                      window.location.assign(`/project-wizard?institutionId=${institutionId}`);
                    }}]}
               />
-              <div className="project-wizard"
-                   style={{background: "#A0CAC6"}}>
-                <GeneralInformationCard/>
-                <VisibilityCard/>
-                <ProjectOptionsCard/>
-              </div>
+              <ProjectStepWizard/>
+              {CurrentStep()}
+              <NavButtons/>
             </NavigationBar>
           </>);
 };
