@@ -368,7 +368,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   };
 
   const NavButtons = () => {
-    return (<div>
+    return (<div className="nav-buttons">
               <button
                 className="btn btn-secondary btn-sm"
               >Exit</button>
@@ -407,8 +407,8 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
                    }}]}
               />
               <ProjectWizardNavigator/>
-              {CurrentStep()}
-              <NavButtons/>
+                {CurrentStep()}
+                <NavButtons/>
             </NavigationBar>
           </div>);
 };

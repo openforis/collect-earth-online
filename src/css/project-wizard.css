@@ -141,7 +141,6 @@ border: 1px solid var(--Neutral-Soft-gray);
 background: var(--Neutral-White);
 }
 
-
 .text-label .bold {
     font-weight: bold !important;
 }
@@ -170,4 +169,18 @@ line-height: 22px; /* 157.143% */}
 
 .card-title {
     font-weight: bold;
+}
+
+
+.nav-buttons {
+    display: flex;
+width: 100vw;
+flex-direction: row;
+justify-content: right;
+align-items: flex-end;
+gap: 8px;
+flex: 1 0 0;
+border-top: 1px solid var(--Neutral-Soft-gray);
+background: var(--Neutral-White);
+padding: 16px;
 }
