@@ -107,19 +107,29 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
       projectTypeRef.current = selected;
     }, [selected]);
     
-    return (<div>
+    return (<div
+            className="inputs">
                 {Object.entries(newProjectOptions).map(([id, [title, description]]) => {
                   return (
                     <div
+                      className={selected==id ?
+                                 "radio-selected-button"
+                                 : "radio-selection-button"}
                       key={id}
                       onClick={()=> {
                         setSelected(id);
                       }}
                     >
-                      <span>{ selected == id
-                              ? '⬤' : '◯' }</span>
-                      <p>{ title  }</p>
-                      <span>{ description }</span>
+                      <p
+                        className="radio-button-labeled"
+                      >{selected == id
+                        ? <SvgIcon icon="radioChecked" size="1.2rem" />                            
+                        : <SvgIcon icon="radio" size="1.2rem"
+                            className="radio-button-unchecked"/> }    {/*these four spaces left intentionally*/}
+                        { title } </p>
+                      <label
+                        className="radio-button-description"
+                      >{ description }</label>
                     </div>);
                 })}
               </div>);

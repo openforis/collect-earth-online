@@ -1,3 +1,67 @@
-.card {
-    color: inherit;
+.radio-selection-button {
+/*    display: flex;
+    flex-direction: column;	*/
+padding: 16px 12px;
+align-items: center;
+gap: 48px;
+align-self: stretch;
+border-radius: 4px;
+border: 1px solid var(--Neutral-Soft-gray, #E1E1E1);
+background: var(--Neutral-White, #FFF);
 }
+
+.radio-selected-button{
+/*display: flex;*/
+padding: 16px 12px;
+align-items: center;
+gap: 48px;
+align-self: stretch;
+border-radius: 4px;
+border: 1px solid var(--Primary-Standard-Green, #1F7067);
+background: var(--Primary-Light-Green, #E9F1F0);
+}
+
+.inputs {
+display: flex;
+padding: 24px;
+flex-direction: column;
+align-items: flex-start;
+gap: 24px;
+align-self: stretch;
+}
+
+.radio-button-labeled {
+
+display: flex;
+/*justify-content: center;*/
+align-items: center;
+gap: 8px;
+flex: 1 0 0;
+
+}
+
+.radio-button-description {
+color: var(--Neutral-Md-Gray, #767575);
+font-feature-settings: 'liga' off, 'clig' off;
+flex: 1 0 0;
+/* Small Paragraph */
+font-family: "Public Sans";
+font-size: 14px;
+font-style: normal;
+font-weight: 400;
+line-height: 22px; /* 157.143% */
+}
+
+.radio-button-checked{
+width: 20px;
+height: 20px;
+flex-shrink: 0;
+fill: var(--Primary-Standard-Green, #1F7067);
+}
+
+.radio-button-unchecked{
+width: 16.667px;
+height: 16.667px;
+fill: var(--Neutral-Dark-gray, #4A4A4A);
+}
+
