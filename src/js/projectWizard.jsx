@@ -330,18 +330,19 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
             className="project-wizard-navigator">
               {projectSteps.map(({id, label}, index)=>{
                 return(<>
-                       <div
-                         style={{
-                           cursor: 'pointer',
-                           fontWeight: currentStep === id ? 'bold' : 'normal'}}                         
-                         onClick={()=> changeStep(id)}
-                         key={id}
-                       >
-                         {index + 1}
-                         {label}                         
-                       </div>
+                         
+                         <div
+                           style={{fontWeight: currentStep === id ? 'bold' : 'normal'}}
+                           onClick={()=> changeStep(id)}
+                           key={id}
+                         >
+                           <span
+                           className={currentStep === id && "selected"}
+                         >{index + 1}</span>
+                           {label}
+                         </div>
                          {index + 1 < projectSteps.length && "- -- -"}
-                      </>);
+                       </>);
               })}              
             </div>);
   };
