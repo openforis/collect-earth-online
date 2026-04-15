@@ -175,41 +175,54 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
                                                             projectType: '',
                                                             learningMaterial: ''});
     return (<div
-            className="general-info-card">
-              <p>General Information</p>
-              <p>Project Type<span style={{color: "red"}}>*</span>
+            className="general-info-card card">
+              <p className="card-title">General Information</p>
+              <p className="text-label"
+                >Project Type<span style={{color: "red"}}>*</span>
                 <SvgIcon icon="info" size="1.2rem" /></p>
               <div>
+              <div style={{display: "inline-flex", gap:"12px"}}>
                 {Object.entries(projectTypeOptions).map(([id, label]) => {
                   return (<div
+                            className="labeled-input"                       
                             key={id}
                             onClick={()=> {
                               setSelected(id);
                             }}>
                             <span>{ selected == id
-                                    ? '⬤' : '◯' }</span>
-                            <p>{ label  }</p>
+                                    ? <SvgIcon icon="radioChecked" size="1.2rem" />    
+                                    : <SvgIcon icon="radio" size="1.2rem"/>}</span>
+                            <label                              
+                              className="text-label"
+                              style={selected == id ? {fontWeight: "bold"} : {}}
+                            >{ label  }</label>
                           </div>);                  
-                })}
+                })}</div>
                 <div>
-                  <label>Project Name<span style={{color: "red"}}>*</span></label>
+                  <label className="text-label"
+                  >Project Name<span style={{color: "red"}}>*</span></label>
                   <input type="text"
+                         className="text-input"
                          id="project-name"
                          value={generalInfoData.projectName}
                          onChange={(e)=>{setGeneralInfoData((s)=>({...s, projectName: e.target.value}));}}
                          placeholder="Enter Text"/>
                 </div>
                 <div>
-                  <label>Project Description<span style={{color: "red"}}>*</span></label>
+                  <label className="text-label"
+                  >Project Description<span style={{color: "red"}}>*</span></label>
                   <input type="text"
+                         className="text-input"
                          id="project-description"
                          onChange={(e)=>{setGeneralInfoData((s)=>({...s, projectDescription: e.target.value}));}}
                          value={generalInfoData.projectDescription}
                          placeholder="Enter Text"/>
                 </div>
                 <div>
-                  <label>Learning Material (Optional)<SvgIcon icon="info" size="1.2rem" /></label>
+                  <label className="text-label"
+                  >Learning Material (Optional)<SvgIcon icon="info" size="1.2rem" /></label>
                   <input type="text"
+                         className="text-input"
                          value={generalInfoData.learningMaterial}
                          onChange={(e)=>{setGeneralInfoData((s)=>({...s, learningMaterial: e.target.value}));}}
                          id="learning-material"
@@ -226,16 +239,19 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
                              institution: "Institution: Group Members",
                              private: "Private: Group Admins"};
     return (
-      <div>
-        <p>Visibility<span style={{color:"red"}}>*</span></p>
-        <SvgIcon icon="info" size="1.2rem" />
+      <div className="visibility-card card">
+        <p className="card-title">Visibility<span style={{color:"red"}}>*</span>
+        <SvgIcon icon="info" size="1.2rem" /></p>
         {Object.entries(visibilityOptions).map(([id, label])=>{
-	  return (<div
+	  return (<div className="labeled-input"
                        onClick={()=>{setVisibility(id);}}
                        key={id}>
                      <span>{ visibility == id
-                             ? '⬤' : '◯' }</span>
-                     <p>{ label  }</p>
+                             ? <SvgIcon icon="radioChecked" size="1.2rem" />    
+                             : <SvgIcon icon="radio" size="1.2rem"/>}</span>
+                    <label className="text-label"
+                           style={visibility == id ? {fontWeight: "bold"} : {}}
+                    >{ label  }</label>
                    </div>);
         })}
       </div>
@@ -251,17 +267,22 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
                                               extraPlotColumns: false,
                                               plotConfidence: false,
                                               autoGeo: false});
-    return(<div>
-           <p>Project Options</p>
+    return(<div className="project-options-card card">
+           <p className="card-title">Project Options</p>
            {Object.entries(projectOptions).map(([id, label])=> {
 	     return (
-	       <div>
+	       <div className="labeled-input">
 		 <span
+                   className="checkbox"
 		   onClick={() => {setSelected((s)=>({... s, [id]: !selected[id]}));
                                   }}>
-		   {selected[id] ? "▣" :"▢"}
+		   {selected[id]
+                    ? (<SvgIcon icon="checkboxChecked" size="1.2rem" />)
+                    : <SvgIcon icon="checkboxUnchecked" size="1.2rem" />}
 		 </span>
-		 <p>{label}</p>
+		 <label className="text-label"
+                        style={selected[id] ? {fontWeight: "bold"} : {}}
+                 >{label}</label>
 	       </div>
 	     ) ;
 	   })}
@@ -329,8 +350,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
     return (<div
             className="project-wizard-navigator">
               {projectSteps.map(({id, label}, index)=>{
-                return(<>
-                         
+                return(<>                         
                          <div
                            style={{fontWeight: currentStep === id ? 'bold' : 'normal'}}
                            onClick={()=> changeStep(id)}
