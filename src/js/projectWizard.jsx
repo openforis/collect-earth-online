@@ -48,10 +48,8 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
             label: 'Survey Rules'},
            {id: 'review',
             label: 'Review & Publish'}];
-          
 
-
- 
+  
   // -------------------
   // HANDLERS
   // ------------------
@@ -177,7 +175,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
                                                             projectType: '',
                                                             learningMaterial: ''});
     return (<div
-              style={{background:"white"}}>
+            className="general-info-card">
               <p>General Information</p>
               <p>Project Type<span style={{color: "red"}}>*</span>
                 <SvgIcon icon="info" size="1.2rem" /></p>
@@ -272,8 +270,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   };
 
   const OverviewStep = () => {
-    return (<div className="project-wizard"
-                 style={{background: "#A0CAC6"}}>
+    return (<div className="project-wizard">
               <GeneralInformationCard/>
               <VisibilityCard/>
               <ProjectOptionsCard/>    
@@ -328,8 +325,9 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
     default           : return (<div></div>);
     }};
 
-  const ProjectStepWizard = () => {        
-    return (<div>
+  const ProjectWizardNavigator = () => {        
+    return (<div
+            className="project-wizard-navigator">
               {projectSteps.map(({id, label}, index)=>{
                 return(<>
                        <div
@@ -338,9 +336,11 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
                            fontWeight: currentStep === id ? 'bold' : 'normal'}}                         
                          onClick={()=> changeStep(id)}
                          key={id}
-                       >{label}                         
+                       >
+                         {index + 1}
+                         {label}                         
                        </div>
-                         {index + 1 < projectSteps.length && "-"}
+                         {index + 1 < projectSteps.length && "- -- -"}
                       </>);
               })}              
             </div>);
@@ -367,7 +367,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
 
   
   
-  return (<>
+  return (<div className="project-wizard-container">
             {modal && <ProjectWizardModal/>}
             <NavigationBar userId={userId} userName={userName} version={version}>
               <BreadCrumbs
@@ -385,11 +385,11 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
                      window.location.assign(`/project-wizard?institutionId=${institutionId}`);
                    }}]}
               />
-              <ProjectStepWizard/>
+              <ProjectWizardNavigator/>
               {CurrentStep()}
               <NavButtons/>
             </NavigationBar>
-          </>);
+          </div>);
 };
 
 

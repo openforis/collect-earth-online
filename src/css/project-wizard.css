@@ -1,3 +1,25 @@
+.project-wizard-navigator {
+    display: inline-flex;
+    width: 100vw;
+    height: 56px;
+    padding: 12px 16px;
+    justify-content: space-between;
+    align-items: center;
+    background: #FFF;
+    box-shadow: 1px 4px 3px 0 rgba(0, 0, 0, 0.12);
+}
+.project-wizard-navigator div {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+}
+.project-wizard-container {
+    background: var(--Primary-Light-Green, #E9F1F0);
+    height: 100vh;
+}
+
 .radio-selection-button {
 /*    display: flex;
     flex-direction: column;	*/
