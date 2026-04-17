@@ -158,7 +158,6 @@ font-weight: 500;
 line-height: 22px; /* 157.143% */}
 
 .labeled-input {
-    display: inline-flex;
     gap: 8px;
     cursor: pointer;
 }
