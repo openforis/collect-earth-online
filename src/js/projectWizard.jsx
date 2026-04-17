@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 
@@ -162,15 +162,15 @@ const ProjectWizardModal = () => {
 const OverviewStep = () => {
   const { overview } = useAtomValue(projectWizardAtom);
   const setProjectWizardState = useSetAtom(projectWizardAtom);
+
+  const handleProjectName = (input) => {
+    setProjectWizardState((s)=>({
+      ...s, overview: {
+        ... s.overview, projectName: input}}));
+  };
   
   const GeneralInformationCard = () => {
     const projectTypeOptions = {regular: 'Regular Project', simplified: 'Simplified Project'};
-    
-    const [{ projectName, projectDescription, projectType, learningMaterial },
-           setGeneralInfo] = useState({projectName: '',
-                                       projectDescription: '',
-                                       projectType: null,
-                                       learningMaterial: ''});//useState(overview);
     
     return (<div
             className="general-info-card card">
@@ -185,7 +185,7 @@ const OverviewStep = () => {
                             className="labeled-input"                       
                             key={id}
                             onClick={()=> {                              
-                                setProjectWizardState((s) => ({
+                              setProjectWizardState((s) => ({
                                 ...s, overview: {
                                 ... s.overview, projectType: id}}));                                
                             }}>
@@ -205,11 +205,7 @@ const OverviewStep = () => {
                          className="text-input"
                          id="project-name"
                          value={overview.projectName}
-                         onChange={(e)=>{                           
-                           setProjectWizardState((s)=>({
-                             ...s, overview: {
-                               ... s.overview, projectName: e.target.value}}));
-                         }}
+                         onChange={(e)=>handleProjectName(e.target.value)}
                          placeholder="Enter Text"/>
                 </div>
                 <div>
@@ -231,7 +227,7 @@ const OverviewStep = () => {
                   >Learning Material (Optional)<SvgIcon icon="info" size="1.2rem" /></label>
                   <input type="text"
                          className="text-input"
-                         value={learningMaterial}
+                         value={overview.learningMaterial}
                          onChange={(e)=>{                                                      
                            setProjectWizardState((s)=>({
                              ...s, overview: {
@@ -384,7 +380,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
           modal
         } = useAtomValue(projectWizardAtom);
   const setProjectWizardState = useSetAtom(projectWizardAtom);
-  const projectTypeRef = useRef(null);
+
   
   
   // -------------------
@@ -398,6 +394,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
       currentStep: 'overview'}));
     };
 
+  
   // -------------------
   // HOOKS
   // ------------------
