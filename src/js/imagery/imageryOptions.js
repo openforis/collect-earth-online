@@ -87,7 +87,15 @@ export const imageryOptions = [
    defaultProxy: false,
    params: [
      { key: "startDate", display: "Start Date", type: "date" },
-     { key: "endDate", display: "End Date", type: "date" }
+     { key: "endDate", display: "End Date", type: "date" },
+     {
+        key: "visParams",
+        display: "Visualization Parameters (JSON format)",
+        type: "JSON",
+        options: { placeholder: '{"bands": ["R", "G", "B"], "min": 0-100, "max": 2800-3200}' },
+        validator: (value) =>
+          !isValidJSON(value) ? 'Invalid JSON in the "Visualization Parameters" field.' : "",
+      }
    ]},
   {
     type: "xyz",

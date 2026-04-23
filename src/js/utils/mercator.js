@@ -483,6 +483,15 @@ mercator.createSource = (
       ...sourceConfig,
     };
     return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
+  } else if (type === "DynamicWorld") {
+    const theJson = {
+      path: "imageCollection",
+      ...sourceConfig,
+      type: "GEEImageCollection",
+      assetId: "GOOGLE/DYNAMICWORLD/V1"
+    };
+    return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
+    
   } else if (type === "MapBoxRaster") {
     return new XYZ({
       url:
