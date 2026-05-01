@@ -201,48 +201,50 @@ RETURNS SETOF imagery_return AS $$
 $$ LANGUAGE SQL;
 
 
--- Returns all rows in imagery associated with institution_rid
+-- Returns all rows in imagery associated with project_id
 CREATE OR REPLACE FUNCTION select_imagery_by_project(
-  _project_id INTEGER,
-  _user_id INTEGER,
-  _token_key TEXT
+    _project_id INTEGER,
+    _user_id INTEGER,
+    _token_key TEXT
 )
 RETURNS SETOF imagery_return AS $$
-  WITH project_info AS (
-    SELECT
-      p.project_uid,
-      p.institution_rid
-    FROM projects p
-    WHERE p.project_uid = _project_id
-  ),
-  user_is_in_institution AS (
-    SELECT EXISTS (
-      SELECT 1
-      FROM get_all_users_by_institution_id((SELECT institution_rid FROM project_info))
-      WHERE user_id = _user_id
-    ) AS is_member
-  )
-
-  SELECT DISTINCT
-    i.imagery_uid,
-    i.institution_rid,
-    i.visibility,
-    i.title,
-    i.attribution,
-    i.extent,
-    i.is_proxied,
-    i.source_config
-  FROM project_info p
-  LEFT JOIN project_imagery pi ON pi.project_rid = p.project_uid
-  INNER JOIN imagery i
-    ON i.imagery_uid = pi.imagery_rid OR i.imagery_uid = p.project_uid
-  WHERE i.archived = FALSE
-    AND (
-      _user_id = 1
-      OR (SELECT is_member FROM user_is_in_institution)
-      OR i.visibility IN ('public', 'platform')
+    WITH project_info AS (
+        SELECT
+            p.project_uid,
+            p.institution_rid,
+            p.imagery_rid AS default_imagery_rid
+        FROM projects p
+        WHERE p.project_uid = _project_id
+    ),
+    user_is_in_institution AS (
+        SELECT EXISTS (
+            SELECT 1
+            FROM institution_users iu
+            WHERE iu.institution_rid = (SELECT institution_rid FROM project_info)
+              AND iu.user_rid = _user_id
+        ) AS is_member
     )
-  ORDER BY i.imagery_uid
+
+    SELECT DISTINCT
+        i.imagery_uid,
+        i.institution_rid,
+        i.visibility,
+        i.title,
+        i.attribution,
+        i.extent,
+        i.is_proxied,
+        i.source_config
+    FROM project_info p
+    LEFT JOIN project_imagery pi ON pi.project_rid = p.project_uid
+    INNER JOIN imagery i
+        ON i.imagery_uid = pi.imagery_rid 
+        OR i.imagery_uid = p.default_imagery_rid
+    WHERE i.archived = FALSE
+      AND (
+          (SELECT is_member FROM user_is_in_institution)
+          OR i.visibility IN ('public', 'platform')
+      )
+    ORDER BY i.imagery_uid
 $$ LANGUAGE SQL;
 
 --
