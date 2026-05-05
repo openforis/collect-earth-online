@@ -26,8 +26,11 @@ const projectWizardState = {
 export const projectWizardAtom = atom(projectWizardState);
 
 export const event_ids = {
+  currentStep: 'currentStep',
+  modal: 'modal',
   UPDATE_PATH: 'update-path',
   PRINT_DB: 'print-db',
+  projectSource: 'projectSource',
   overview: {projectName: 'overview.projectName',
              projectDescription: 'overview.projectDescription',
              projectType: 'overview.projectType',
@@ -41,6 +44,8 @@ export const event_ids = {
              }}};
 
 export const sub_ids = {
+  currentStep: 'currentStep',
+  modal: 'modal',
   GET_PATH: 'get-path',
   projectSource: 'projectSource',
   overview: {projectName: 'overview.projectName',
@@ -59,6 +64,8 @@ export const effects = {};
 
 initAppDb(
   {
+    currentStep: null,
+    modal: null,
     projectSource: null,
     // overview
     'overview.projectName': '',
@@ -82,11 +89,12 @@ initAppDb(
 
 
 regEvent(event_ids.UPDATE_PATH, ({ draftDb }, path, value)=>{
-  console.log(_.get(draftDb, path), value);
   _.set(draftDb, path, current(value));
 });
 
-regSub(sub_ids.projectsource, sub_ids.projectSource);
+regSub(sub_ids.currentStep, sub_ids.currentStep);
+regSub(sub_ids.modal, sub_ids.modal);
+regSub(sub_ids.projectSource, sub_ids.projectSource);
 regSub(sub_ids.overview.projectType, sub_ids.overview.projectType);
 regSub(sub_ids.overview.projectName, sub_ids.overview.projectName);
 regSub(sub_ids.overview.projectDescription, sub_ids.overview.projectDescription);
@@ -98,13 +106,23 @@ regSub(sub_ids.overview.projectOptions.plotConfidence, sub_ids.overview.projectO
 regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.autoGeo);
 
 
+regEvent(event_ids.currentStep,
+         ({ draftDb }, currentStep) => {
+           draftDb[event_ids.currentStep] = currentStep;
+         });
+
+regEvent(event_ids.modal,
+         ({ draftDb }, modal) => {
+           draftDb[event_ids.modal] = modal;
+         });
+
 regEvent(event_ids.overview.projectType,
          ({ draftDb }, projectType) => {
            draftDb[event_ids.overview.projectType] = projectType;
          });
 
-regEvent(event_ids.projectsource,
-         ({ draftDb }, projectSource) => {
+regEvent(event_ids.projectSource,
+         ({ draftDb }, projectSource) => {           
            draftDb[event_ids.projectSource] = projectSource;
          });
 
@@ -152,7 +170,6 @@ regSub(sub_ids.GET_PATH,
          return _.get(draftDb, path);
        }, () => []);
 
-regSub(sub_ids.project_source, 'projectSource');
 
 regEvent(event_ids.PRINT_DB, ({ draftDb })=>{
   console.log(_.get(draftDb, 'overview.projectName'));  

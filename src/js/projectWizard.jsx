@@ -14,34 +14,33 @@ import "../css/project-wizard.css";
 
 
 const projectSteps =
-          [{id: 'overview',
-            label: 'Project Overview'},
-           {id: 'imagery',
-            label: 'Imagery Selection'},
-           {id: 'boundary',
-            label: 'Project Boundary'},
-           {id: 'plots',
-            label: 'Plot Generation'},
-           {id: 'samples',
-            label: 'Sample Design'},
-           {id: 'questions',
-            label: 'Survey Questions'},
-           {id: 'rules',
-            label: 'Survey Rules'},
-           {id: 'review',
-            label: 'Review & Publish'}];
+      [{id: 'overview',
+        label: 'Project Overview'},
+       {id: 'imagery',
+        label: 'Imagery Selection'},
+       {id: 'boundary',
+        label: 'Project Boundary'},
+       {id: 'plots',
+        label: 'Plot Generation'},
+       {id: 'samples',
+        label: 'Sample Design'},
+       {id: 'questions',
+        label: 'Survey Questions'},
+       {id: 'rules',
+        label: 'Survey Rules'},
+       {id: 'review',
+        label: 'Review & Publish'}];
 
 
 const NavButtons = () => {
-  const { currentStep } = useAtomValue(projectWizardAtom);
-  const setProjectWizardState = useSetAtom(projectWizardAtom);
+  const currentStep = useSubscription([sub_ids.currentStep]);
   
   const  continueHandler = () => {
     const currentIdx = projectSteps.findIndex(({id})=>{return (id == currentStep);});
     
     currentIdx + 1 < projectSteps.length
-      ? setProjectWizardState((s)=>({...s, currentStep: projectSteps[currentIdx + 1].id}))
-      : setProjectWizardState((s)=>({...s, modal: {title: "Confirm & Submit"}}));
+      ? dispatch([event_ids.currentStep, projectSteps[currentIdx + 1].id])
+      : dispatch([event_ids.modal, {title: "Confirm & Submit"}]);
   };
 
   return (<div className="nav-buttons">
@@ -63,8 +62,7 @@ const NavButtons = () => {
 };
 
 const ProjectWizardNavigator = () => {
-  const { currentStep } = useAtomValue(projectWizardAtom);
-  const setProjectWizardState = useSetAtom(projectWizardAtom);
+  const currentStep = useSubscription([sub_ids.currentStep]);
   
   return (
     <div
@@ -75,8 +73,10 @@ const ProjectWizardNavigator = () => {
             <div
               key={id}
               style={{fontWeight: currentStep === id ? 'bold' : 'normal'}}
-              onClick={()=> setProjectWizardState((s) => ({
-                ... s, currentStep: id}))}>
+              onClick={
+                () => dispatch([event_ids.currentStep, id])
+              }
+            >
               <span className={currentStep === id && "selected"}
               >{index + 1}</span>
               {label}
@@ -88,7 +88,6 @@ const ProjectWizardNavigator = () => {
 };
 
 const NewProjectModal = () => {
-  const setProjectWizardState = useSetAtom(projectWizardAtom);
   const newProjectOptions = {
     newProject: ['Create a new project',
                  'Generate a new project from scratch by customizing all steps.'],
@@ -96,7 +95,7 @@ const NewProjectModal = () => {
                       'Select a template and prefill all the steps. You can edit and customize it.'],
     importProject: ['Import Collect Earth Project',
                     'Need Description']};
-  const projectSource = useSubscription([sub_ids.project_source]);
+  const projectSource = useSubscription([sub_ids.projectSource]);
 
   return (
     <div
@@ -110,7 +109,7 @@ const NewProjectModal = () => {
             key={id}
             onClick={()=> {
               dispatch([event_ids.projectSource, id]);
-            }}>
+            }}>            
             <p
               className="radio-button-labeled"
             >{projectSource === id
@@ -128,8 +127,8 @@ const NewProjectModal = () => {
   
 const ProjectWizardModal = () => {
   // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
-  const { modal, projectSource } = useAtomValue(projectWizardAtom);
-  const setProjectWizardState = useSetAtom(projectWizardAtom);
+  const projectSource = useSubscription([sub_ids.projectSource]);
+  const modal = useSubscription([sub_ids.modal]);
   
   const children = () => {
     switch (modal.id) {
@@ -150,25 +149,25 @@ const ProjectWizardModal = () => {
       closeText={modal.closeText}
       confirmText={modal.confirmText}
       onConfirm={modal.onConfirm && modal.onConfirm}
-      confirmDisabled={projectSource === null}//{confirmDisabled()}
+      confirmDisabled={confirmDisabled()}
       onClose={()=>{
         modal.onClose ? modal.onClose()
-          : setProjectWizardState((s) => ({... s, modal: null}));
+          : dispatch([event_ids.modal, null]);
       }}>
       {children()}
     </Modal>);
 };
 
 const OverviewStep = () => {
-  const setProjectWizardState = useSetAtom(projectWizardAtom);
-  const projectType = useSubscription([sub_ids.overview.projectType]);
-  const projectName = useSubscription([sub_ids.overview.projectName]);
-  const projectDescription = useSubscription([sub_ids.overview.projectDescription]);
-  const learningMaterial = useSubscription([sub_ids.overview.learningMaterial]);
+
   
   const GeneralInformationCard = () => {
     const projectTypeOptions = {regular: 'Regular Project', simplified: 'Simplified Project'};
-    
+    const projectType = useSubscription([sub_ids.overview.projectType]);
+    const projectName = useSubscription([sub_ids.overview.projectName]);
+    const projectDescription = useSubscription([sub_ids.overview.projectDescription]);
+    const learningMaterial = useSubscription([sub_ids.overview.learningMaterial]);
+
     return (<div
             className="general-info-card card">
               <p className="card-title">General Information</p>
@@ -233,7 +232,7 @@ const OverviewStep = () => {
                              users: "Users: Logged In Users",
                              institution: "Institution: Group Members",
                              private: "Private: Group Admins"};
-    const visibility = useSubscription([sub_ids.overview.visbility]);
+    const visibility = useSubscription([sub_ids.overview.visibility]);
     return (
       <div className="visibility-card card">
         <p className="card-title">Visibility<span style={{color:"red"}}>*</span>
@@ -261,6 +260,7 @@ const OverviewStep = () => {
                              extraPlotColumns: "Show Extra Plot Columns on Collection Page",
                              plotConfidence: "Collect Plot Confidence on Collection Page",
                              autoGeo: "Auto-launch Geo-Dash"};
+    
     const projectOptions = {gee: useSubscription([sub_ids.overview.projectOptions.gee]),
                             extraPlotColumns: useSubscription([sub_ids.overview.projectOptions.extraPlotColumns]),
                             plotConfidence: useSubscription([sub_ids.overview.projectOptions.plotConfidence]),
@@ -293,8 +293,8 @@ const OverviewStep = () => {
 
   return (
     <div className="project-wizard overview-step">
-      <GeneralInformationCard />      
-      <VisibilityCard/>
+      <GeneralInformationCard /> 
+      <VisibilityCard/> 
       <ProjectOptionsCard/>    
     </div>
   );
@@ -356,30 +356,16 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   // VARS & CONSTANTS
   // ------------------
   
-  const { projectSource,
-          currentStep,
-          overview,
-          imagery,
-          boundary,
-          plots,
-          samples,
-          questions,
-          rules,
-          modal
-        } = useAtomValue(projectWizardAtom);
-  const setProjectWizardState = useSetAtom(projectWizardAtom);
-
-  
+  const currentStep = useSubscription([sub_ids.currentStep]);
+  const modal = useSubscription([sub_ids.modal]);
   
   // -------------------
   // HANDLERS
   // ------------------
   
   const handleNewProject = () => {
-    setProjectWizardState((s)=>({
-      ...s, 
-      modal: null,
-      currentStep: 'overview'}));
+    dispatch([event_ids.modal, null]);
+    dispatch([event_ids.currentStep, 'overview']);
     };
 
   
@@ -387,16 +373,13 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   // HOOKS
   // ------------------
   
-  useEffect(() => {
-    dispatch(['print-db']);
-    setProjectWizardState((s) => ({
-      ... s,
-      modal: {title: 'Project Setup',
+  useEffect(() => {    
+    dispatch([event_ids.modal, {title: 'Project Setup',
               closeText: '',
               confirmText: 'Get Started',
               onConfirm: handleNewProject,
               id: 'newProject',
-              children: (<NewProjectModal/>)}}));
+              children: (<NewProjectModal/>)}]);
   }, []);
 
   
