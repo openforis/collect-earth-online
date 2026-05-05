@@ -1,21 +1,22 @@
 import { atom } from "jotai";
 import { initAppDb , regEvent , regEffect , dispatch , regSub , current } from '@flexsurfer/reflex';
-import _ from 'lodash';
 
 
-const projectWizardState = {
-  projectSource: null, // 'newProject' | 'importProject' | 'templateProject'
-  overview: {projectName: '',
-             projectDescription: '',
-             projectType: null, // 'simplified' | 'regular'
-             learningMaterial: '',
-             visibility: null, // 'public' | 'users' | 'institution' | 'private'
-             projectOptions: {
-               gee: false,
-               extraPlotColumns: false,
-               plotConfidence: false,
-               autoGeo: false
-             }},
+const projectWizardDb = {
+  currentStep: null,
+  modal: null,
+  projectSource: null,
+  // overview
+  'overview.projectName': '',
+  'overview.projectDescription': '',
+  'overview.projectType': null,
+  'overview.learningMaterial': '',
+  'overview.visibility': null,
+  //overview.projectOptions
+  'overview.projectOptions.gee': false,
+  'overview.projectOptions.extraPlotColumns': false,
+  'overview.projectOptions.plotConfidence': false,
+  'overview.projectOptions.autoGeo': false,
   imagery: [],
   boundary: [],
   plots: [],
@@ -23,13 +24,12 @@ const projectWizardState = {
   questions: [],
   rules: []  
 };
-export const projectWizardAtom = atom(projectWizardState);
+
+initAppDb(projectWizardDb);
 
 export const event_ids = {
   currentStep: 'currentStep',
   modal: 'modal',
-  UPDATE_PATH: 'update-path',
-  PRINT_DB: 'print-db',
   projectSource: 'projectSource',
   overview: {projectName: 'overview.projectName',
              projectDescription: 'overview.projectDescription',
@@ -46,7 +46,6 @@ export const event_ids = {
 export const sub_ids = {
   currentStep: 'currentStep',
   modal: 'modal',
-  GET_PATH: 'get-path',
   projectSource: 'projectSource',
   overview: {projectName: 'overview.projectName',
              projectDescription: 'overview.projectDescription',
@@ -61,36 +60,6 @@ export const sub_ids = {
              }}};
 
 export const effects = {};
-
-initAppDb(
-  {
-    currentStep: null,
-    modal: null,
-    projectSource: null,
-    // overview
-    'overview.projectName': '',
-    'overview.projectDescription': '',
-    'overview.projectType': null,
-    'overview.learningMaterial': '',
-    'overview.visibility': null,
-    //overview.projectOptions
-    'overview.projectOptions.gee': false,
-    'overview.projectOptions.extraPlotColumns': false,
-    'overview.projectOptions.plotConfidence': false,
-    'overview.projectOptions.autoGeo': false,
-    imagery: [],
-    boundary: [],
-    plots: [],
-    samples: [],
-    questions: [],
-    rules: []  
-  }
-);
-
-
-regEvent(event_ids.UPDATE_PATH, ({ draftDb }, path, value)=>{
-  _.set(draftDb, path, current(value));
-});
 
 regSub(sub_ids.currentStep, sub_ids.currentStep);
 regSub(sub_ids.modal, sub_ids.modal);
@@ -108,12 +77,12 @@ regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.
 
 regEvent(event_ids.currentStep,
          ({ draftDb }, currentStep) => {
-           draftDb[event_ids.currentStep] = currentStep;
+           draftDb[event_ids.currentStep] = currentStep;           
          });
 
 regEvent(event_ids.modal,
          ({ draftDb }, modal) => {
-           draftDb[event_ids.modal] = modal;
+           draftDb[event_ids.modal] = modal;           
          });
 
 regEvent(event_ids.overview.projectType,
@@ -123,12 +92,11 @@ regEvent(event_ids.overview.projectType,
 
 regEvent(event_ids.projectSource,
          ({ draftDb }, projectSource) => {           
-           draftDb[event_ids.projectSource] = projectSource;
+           draftDb[event_ids.projectSource] = projectSource;           
          });
 
 regEvent(event_ids.overview.projectName,
          ({ draftDb }, projectName) => {
-           console.log('project name event fires', projectName);
            draftDb[event_ids.overview.projectName] = projectName;
          });
 
@@ -136,14 +104,17 @@ regEvent(event_ids.overview.projectDescription,
          ({ draftDb }, projectDescription) => {
            draftDb[event_ids.overview.projectDescription] = projectDescription;
          });
+
 regEvent(event_ids.overview.learningMaterial,
          ({ draftDb }, learningMaterial) => {
            draftDb[event_ids.overview.learningMaterial] = learningMaterial;
          });
+
 regEvent(event_ids.overview.visibility,
          ({ draftDb }, visibility) => {
            draftDb[event_ids.overview.visibility] = visibility;
          });
+
 regEvent(event_ids.overview.projectOptions.gee,
          ({ draftDb }) => {
            draftDb[event_ids.overview.projectOptions.gee] = !draftDb[event_ids.overview.projectOptions.gee];
@@ -163,17 +134,6 @@ regEvent(event_ids.overview.projectOptions.autoGeo,
          ({ draftDb }) => {
            draftDb[event_ids.overview.projectOptions.autoGeo] = !draftDb[event_ids.overview.projectOptions.autoGeo];
          });
-
-
-regSub(sub_ids.GET_PATH,
-       ({ draftDb }, path) => {
-         return _.get(draftDb, path);
-       }, () => []);
-
-
-regEvent(event_ids.PRINT_DB, ({ draftDb })=>{
-  console.log(_.get(draftDb, 'overview.projectName'));  
-});
 
 
 

@@ -8,7 +8,7 @@ import  Modal  from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 
 import { stateAtom } from "./utils/constants";
-import { projectWizardAtom, event_ids, sub_ids } from "./state/projectWizard";
+import {  event_ids, sub_ids } from "./state/projectWizard";
 
 import "../css/project-wizard.css";
 
