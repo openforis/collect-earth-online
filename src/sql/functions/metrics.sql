@@ -18,7 +18,7 @@ BEGIN
          COUNT(up.user_plot_uid) AS user_plot_count,
          start_date_param AS start_date,
          end_date_param AS end_date,
-         proj.name AS project_name,
+         proj.name AS project_name
     FROM 
         imagery i
     JOIN project_imagery pi on pi.imagery_rid = i.imagery_uid
@@ -29,7 +29,7 @@ BEGIN
     WHERE 
         up.collection_start BETWEEN start_date_param::DATE AND end_date_param::DATE
     GROUP BY 
-        i.imagery_uid, i.title
+        i.imagery_uid, i.title, project_name
     ORDER BY
         user_plot_count DESC;
 END;
