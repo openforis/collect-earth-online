@@ -7,7 +7,7 @@ import { ProjectContext } from "../project/constants";
 
 export default function SurveyQuestionsDesigner() {
   const { setProjectDetails, surveyQuestions, surveyRules, projectId, originalProject, type, isProjectAdmin } =
-        useContext(ProjectContext);
+        useContext(ProjectContext);  
   const editMode =
     projectId === -1 || originalProject.availability === "unpublished" ? "full" : "partial";
   return (
