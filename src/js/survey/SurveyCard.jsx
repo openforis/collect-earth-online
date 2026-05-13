@@ -31,11 +31,11 @@ export default function SurveyCard({ cardNumber, editMode, surveyQuestionId, top
   };
 
   const surveyQuestion = surveyQuestions[surveyQuestionId];
-
+  
   return (
-    <div className="border rounded border-dark">
-      <div className="container">
-        <div className="row">
+    <div className="border rounded border-dark">      
+      <div className="container">        
+        <div className="row">          
           <div className="col-10 d-flex pl-1">
             <button
               className="btn btn-outline-lightgreen my-2"
@@ -48,7 +48,9 @@ export default function SurveyCard({ cardNumber, editMode, surveyQuestionId, top
                 <SvgIcon icon="plus" size="0.9rem" />
               )}
             </button>
-            <h2 className="font-weight-bold mt-2 pt-1 ml-2">Survey Card Number {cardNumber}</h2>
+            <h2 className="font-weight-bold mt-2 pt-1 ml-2">
+               Survey Card Number{cardNumber}
+            </h2>
             <h3 className="m-3">
               {!showQuestions &&
                 `-- ${editMode === "review" ? removeEnumerator(surveyQuestion.question) : surveyQuestion.question}`}
