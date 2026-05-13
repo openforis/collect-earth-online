@@ -159,7 +159,6 @@ const ProjectWizardModal = () => {
 };
 
 const OverviewStep = () => {
-
   
   const GeneralInformationCard = () => {
     const projectTypeOptions = {regular: 'Regular Project', simplified: 'Simplified Project'};
@@ -336,8 +335,168 @@ const QuestionsStep  = () => {
 };
 
 const RulesStep  = () => {
+
+  //TODO: DELETE DEV VARS
+  //vvvvvvvvvvvvvvvvvvvvvvvvvvvv
+  const rules = [
+    {ruleType: 'text-match',
+     surveyQuestion: 0,
+     label: 'Example',
+     pattern: 'example'},
+    {ruleType: 'text-match',
+     surveyQuestion: 0,
+     label: 'Example',
+     pattern: 'example'},
+    {ruleType: 'text-match',
+     surveyQuestion: 0,
+     label: 'Example',
+     pattern: 'example'}
+  ];
+  const questions = [
+    
+  ];
+  // ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  const ruleTypeOptions = {
+      regex: 'TextRegex Match',      
+    };
+
+
+  const RuleCard = (rule) => {
+    const {ruleType, question, label, pattern, ruleId} = rule;
+
+    //TODO: DELETE THIS PLACEHOLDER VAR AND CALCULATE RULE NUMBER OTHERWISE
+    //vvvvvvvvvvvvvvvvvvvvvv
+    const ruleNumber = 1;
+    //^^^^^^^^^^^^^^^^^^^^
+       
+    return (<div>
+              <SvgIcon icon='trash' style={{color:'red'}} size='1.2rem'
+                       onClick={()=>{console.log('delete rule!', ruleId);}}/>
+              <p style={{fontWeight: 'bold'}}
+              >{ruleNumber}.{ruleTypeOptions[ruleType]}</p>
+              <p>Rule Label: <span>{label}</span></p>
+              <p>The answer to question "<span>{question}</span>" should match the pattern <span>{pattern}</span>.</p>
+            </div>);
+  };
+
+  const NewRuleCard = () => {
+    const newRuleType = useSubscription([sub_ids.rules.newRule.type]);
+    const newRuleLabel = useSubscription([sub_ids.rules.newRule.label]);
+    const newRuleQuestion = useSubscription([sub_ids.rules.newRule.question]);
+    const newRulePattern = useSubscription([sub_ids.rules.newRule.pattern]);
+
+    
+    return (<div>
+              <div>
+                <label>Rule Type</label>
+                <select
+                  onChange={(e)=>{dispatch([event_ids.rules.newRule.type, e.target.value]);
+                                 }}>
+                  {Object.entries(ruleTypeOptions).map(([id, label]) => {
+                    return (<option key={id}>{label}</option>);
+                  })}
+                </select>
+              </div>
+
+              <div>            
+                <label>Enter Rule Label </label>
+                <SvgIcon icon='info' size='1.2rem'/>
+                <input
+                  placeHolder= 'Enter Text'
+                  value={newRuleLabel}
+                  onChange={(e)=>{dispatch([event_ids.rules.newRule.label, e.target.value]);
+                                }}></input>
+              </div>
+
+              <div>
+                <label>Survey Question <span style={{color:'red'}}>*</span></label>
+                <select
+                  onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                </select>
+              </div>
+
+              {newRuleType === 'regex' &&
+               <div>
+                 <label>Enter Regular Expression <span style={{color:'red'}}>*</span></label>
+                 <input
+                   placeholder= 'Enter Text'
+                   value= {newRulePattern}
+                   onChange={(e)=>{dispatch([event_ids.rules.newRule.pattern, e.target.value]);
+                                 }} ></input>
+               </div>
+              }
+              
+            </div>);
+  };
+
+  const RuleCardList = () => {
+    const ruleFilter = useSubscription([sub_ids.rules.filter]);
+    const ruleSearch = useSubscription([sub_ids.rules.search]);
+    
+    return (<div>
+              <p style={{fontWeight: 'heavy'}}
+              >questions to be answered during collection  <span style={
+                {fontWeight: 'normal',
+                 color: 'red'}}
+                                                           >*</span></p>
+              <p>Descriptive Text Here. Just Placeholder: This is a list of all institution projects. The color around the name shows its progress. Red indicates that it has no plots collected.</p>
+              <div>
+                <SvgIcon icon='search' size='1.2rem'/>
+                <input
+                onChange={(e) => dispatch([event_ids.rules.search, e.target.value])}
+                type='text'
+                placeholder='Search'
+                value={ruleSearch}
+              ></input>
+              </div>
+              
+              <p style={{fontWeight: 'heavy'}}>filter by:</p>
+              <div
+                className={ruleFilter === 'institution'
+                           ? 'radio-selected-button'
+                           : 'radio-selection-button'}
+                onClick={()=>{
+                  dispatch([event_ids.rules.filter, 'institution']);
+                }}>
+                {ruleFilter === 'institution' 
+                 ? <SvgIcon icon='radioChecked' size="1.2rem"/>
+                 : <SvgIcon icon='radio' size="1.2rem"
+                            className='radio-button-unchecked'
+                   />
+                }
+                <p>institution</p>
+              </div>
+              <div
+                className={ruleFilter === 'project'
+                           ? 'radio-selected-button'
+                           : 'radio-selection-button'}
+                onClick={()=>{
+                  dispatch([event_ids.rules.filter, 'project']);
+                }}>
+                {ruleFilter === 'project' 
+                 ? <SvgIcon icon='radioChecked' size="1.2rem"/>
+                 : <SvgIcon icon='radio' size="1.2rem"
+                            className='radio-button-unchecked'
+                   />
+                }
+                <p>project</p>
+              </div>
+              <NewRuleCard/>
+              {rules.map(RuleCard)}
+            </div>);
+  };
+
+  const PreviewCard = () => {
+    return(<div>
+
+           </div>);
+  };
+  
   return (
     <div>
+      <RuleCardList/>      
+      <PreviewCard/>
     </div>
   );
 };

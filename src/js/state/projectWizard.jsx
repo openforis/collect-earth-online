@@ -22,7 +22,14 @@ const projectWizardDb = {
   plots: [],
   samples: [],
   questions: [],
-  rules: []  
+  //rules
+  'rules.search': '',
+  'rules.filter': null,
+  //rules.newRule
+  'rules.newRule.type': null,
+  'rules.newRule.label': '',
+  'rules.newRule.question': null,
+  'rules.newRule.pattern': '',
 };
 
 initAppDb(projectWizardDb);
@@ -41,7 +48,13 @@ export const event_ids = {
                extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
                plotConfidence: 'overview.projectOptions.plotConfidence',
                autoGeo: 'overview.projectOptions.autoGeo'
-             }}};
+             }},
+  rules: {search: 'rules.search',
+          filter: 'rules.filter',
+          newRule: {label: 'rules.newRule.label',
+                    type: 'rules.newRule.type',
+                    question: 'rules.newRule.question',
+                    pattern: 'rules.newRule.pattern'}}};
 
 export const sub_ids = {
   currentStep: 'currentStep',
@@ -57,7 +70,13 @@ export const sub_ids = {
                extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
                plotConfidence: 'overview.projectOptions.plotConfidence',
                autoGeo: 'overview.projectOptions.autoGeo'
-             }}};
+             }},
+  rules: {search: 'rules.search',
+          filter: 'rules.filter',
+          newRule: {label: 'rules.newRule.label',
+                    type: 'rules.newRule.type',
+                    question: 'rules.newRule.question',
+                    pattern: 'rules.newRule.pattern'}}};
 
 export const effects = {};
 
@@ -73,6 +92,12 @@ regSub(sub_ids.overview.projectOptions.gee, sub_ids.overview.projectOptions.gee)
 regSub(sub_ids.overview.projectOptions.extraPlotColumns, sub_ids.overview.projectOptions.extraPlotColumns);
 regSub(sub_ids.overview.projectOptions.plotConfidence, sub_ids.overview.projectOptions.plotConfidence);
 regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.autoGeo);
+regSub(sub_ids.rules.search, sub_ids.rules.search);
+regSub(sub_ids.rules.filter, sub_ids.rules.filter);
+regSub(sub_ids.rules.newRule.type , sub_ids.rules.newRule.type);
+regSub(sub_ids.rules.newRule.label , sub_ids.rules.newRule.label);
+regSub(sub_ids.rules.newRule.question , sub_ids.rules.newRule.question);
+regSub(sub_ids.rules.newRule.pattern , sub_ids.rules.newRule.pattern);
 
 
 regEvent(event_ids.currentStep,
@@ -135,8 +160,34 @@ regEvent(event_ids.overview.projectOptions.autoGeo,
            draftDb[event_ids.overview.projectOptions.autoGeo] = !draftDb[event_ids.overview.projectOptions.autoGeo];
          });
 
+regEvent(event_ids.rules.search,
+         ({ draftDb }, search) => {
+           draftDb[event_ids.rules.search] = search;
+         });
 
+regEvent(event_ids.rules.filter,
+          ({ draftDb }, filter) => {
+            draftDb[event_ids.rules.filter] = filter;
+          });
 
+regEvent(event_ids.rules.newRule.type,
+         ({ draftDb }, type) => {
+           draftDb[event_ids.rules.newRule.type] = type;
+         });
 
+regEvent(event_ids.rules.newRule.label,
+         ({ draftDb }, label) => {
+           draftDb[event_ids.rules.newRule.label] = label;
+         });
+
+regEvent(event_ids.rules.newRule.question,
+         ({ draftDb }, question) => {
+           draftDb[event_ids.rules.newRule.question] = question;
+         });
+
+regEvent(event_ids.rules.newRule.pattern,
+         ({ draftDb }, pattern) => {
+           draftDb[event_ids.rules.newRule.pattern] = pattern;
+         });
 
 

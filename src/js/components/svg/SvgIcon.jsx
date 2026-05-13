@@ -37,6 +37,7 @@ import rightCaretIcon from "./rightCaretIcon.svg";
 import rightDoubleIcon from "./rightDoubleIcon.svg";
 import ruleIcon from "./ruleIcon.svg";
 import saveIcon from "./saveIcon.svg";
+import searchIcon from "./searchIcon.svg";
 import settingsIcon from "./settingsIcon.svg";
 import trashIcon from "./trashIcon.svg";
 import upArrowIcon from "./upArrowIcon.svg";
@@ -86,6 +87,7 @@ export const iconMap = {
   rightDouble: rightDoubleIcon,
   rule: ruleIcon,
   save: saveIcon,
+  search: searchIcon,
   settings: settingsIcon,
   trash: trashIcon,
   upArrow: upArrowIcon,
