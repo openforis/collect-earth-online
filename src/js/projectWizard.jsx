@@ -336,45 +336,25 @@ const QuestionsStep  = () => {
 
 const RulesStep  = () => {
 
-  //TODO: DELETE DEV VARS
-  //vvvvvvvvvvvvvvvvvvvvvvvvvvvv
-  const rules = [
-    {ruleType: 'text-match',
-     surveyQuestion: 0,
-     label: 'Example',
-     pattern: 'example'},
-    {ruleType: 'text-match',
-     surveyQuestion: 0,
-     label: 'Example',
-     pattern: 'example'},
-    {ruleType: 'text-match',
-     surveyQuestion: 0,
-     label: 'Example',
-     pattern: 'example'}
-  ];
-  const questions = [
-    
-  ];
-  // ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
+  const rules = useSubscription([sub_ids.rules.rules]);
+  const questions = useSubscription([sub_ids.questions.questions]);
   const ruleTypeOptions = {
       regex: 'TextRegex Match',      
     };
 
-
   const RuleCard = (rule) => {
-    const {ruleType, question, label, pattern, ruleId} = rule;
+    const [idx, {ruleType, question, label, pattern, ruleId}] = rule;
 
-    //TODO: DELETE THIS PLACEHOLDER VAR AND CALCULATE RULE NUMBER OTHERWISE
-    //vvvvvvvvvvvvvvvvvvvvvv
-    const ruleNumber = 1;
-    //^^^^^^^^^^^^^^^^^^^^
        
     return (<div>
-              <SvgIcon icon='trash' style={{color:'red'}} size='1.2rem'
-                       onClick={()=>{console.log('delete rule!', ruleId);}}/>
+              <div
+                style={{color:'red', cursor: 'pointer'}}
+                onClick={()=> dispatch([event_ids.rules.delete, idx])}>
+                <SvgIcon icon='trash' size='1.2rem'/>
+              </div>
+              
               <p style={{fontWeight: 'bold'}}
-              >{ruleNumber}.{ruleTypeOptions[ruleType]}</p>
+              >{Number(idx) + 1}.{ruleTypeOptions[ruleType]}</p>
               <p>Rule Label: <span>{label}</span></p>
               <p>The answer to question "<span>{question}</span>" should match the pattern <span>{pattern}</span>.</p>
             </div>);
@@ -426,6 +406,10 @@ const RulesStep  = () => {
                                  }} ></input>
                </div>
               }
+
+              <button
+                onClick={()=>dispatch([event_ids.rules.rules])}
+              ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>
               
             </div>);
   };
@@ -483,7 +467,7 @@ const RulesStep  = () => {
                 <p>project</p>
               </div>
               <NewRuleCard/>
-              {rules.map(RuleCard)}
+              {Object.entries(rules).map(RuleCard)}
             </div>);
   };
 
