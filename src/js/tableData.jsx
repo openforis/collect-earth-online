@@ -152,7 +152,7 @@ export const plotStatsColumns = [
     reorder: true,
   },
   {
-    name: "Flaggged",
+    name: "Flagged",
     selector: row => row.flagged ? row.flagged : "false",
     sortable: true,
     reorder: true,
@@ -187,7 +187,7 @@ export const userStatsColumns = [
   },
 
   {
-    name: "Flaggged",
+    name: "Flagged",
     selector: row => row.flagged ? row.flagged : 0,
     sortable: true,
     reorder: true,
