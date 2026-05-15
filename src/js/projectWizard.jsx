@@ -339,7 +339,12 @@ const RulesStep  = () => {
   const rules = useSubscription([sub_ids.rules.rules]);
   const questions = useSubscription([sub_ids.questions.questions]);
   const ruleTypeOptions = {
-      regex: 'Text Match',      
+    'text-match': ['Text Match', (question, pattern)=>{return (<span>The answer to question <span style={{fontWeight: 'bold'}}>"{question}"</span> should match the pattern <span style={{fontWeight: 'bold'}}>{pattern}</span>.</span>);}],
+    'numeric-range': ['Numeric Range', (question)=>{return (<span></span>);}],
+    'sum-of-answers': ['Sum of Answers', (question)=>{return (<span></span>);}],
+    'matching-sums': ['Matching Sums', (question, pattern)=>{return (<span></span>);}],
+    'incompatible-answers': ['Incompatible Answers', (question)=>{return (<span></span>);}],
+    'multiple-incompatible-answers': ['Multiple Incompatible Answers', (question, pattern)=>{return (<span></span>);}]
     };
 
   const RuleCard = (rule) => {
@@ -355,11 +360,11 @@ const RulesStep  = () => {
                 </div>
                 <div style={{display: "flex", flexDirection: "column", gap: ".5rem"}}> 
                   <span style={{fontWeight: 'bold'}}
-                  >{Number(idx) + 1}.{ruleTypeOptions[ruleType]}</span>
+                  >{Number(idx) + 1}.{ruleTypeOptions[ruleType][0]}</span>
                   <span>Rule Label: <span style={{fontWeight: 'bold'}}>{label}</span></span>
                 </div>
               </div>
-            <span>The answer to question <span style={{fontWeight: 'bold'}}>"{question}"</span> should match the pattern <span style={{fontWeight: 'bold'}}>{pattern}</span>.</span>
+              {ruleTypeOptions[ruleType][1].call(null, question, pattern)}
             </div>);
   };
 
@@ -368,6 +373,115 @@ const RulesStep  = () => {
     const newRuleLabel = useSubscription([sub_ids.rules.newRule.label]);
     const newRuleQuestion = useSubscription([sub_ids.rules.newRule.question]);
     const newRulePattern = useSubscription([sub_ids.rules.newRule.pattern]);
+
+    const newRuleInput = () => {
+      switch(newRuleType) {
+      case 'text-match'
+        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
+                    <div className='new-rule-input'>
+                      <label>Survey Question <span style={{color:'red'}}>*</span></label>
+                      <select
+                        className='select-bar'
+                        onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                        <option key='default'
+                                selected disabled hidden
+                        >Select</option>
+                      </select>
+                    </div>
+                    <div className='new-rule-input'>
+                      <label>Enter Regular Expression <span style={{color:'red'}}>*</span></label>
+                      <input
+                        className='rule-input'
+                        placeholder='Enter Text'
+                        value= {newRulePattern}
+                        onChange={(e)=>{dispatch([event_ids.rules.newRule.pattern, e.target.value]);
+                                       }} ></input>
+                    </div>
+                  </div>);
+      case 'numeric-range'
+        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
+                    <div className='new-rule-input'>
+                      <label>Survey Question <span style={{color:'red'}}>*</span></label>
+                      <select
+                        className='select-bar'
+                        onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                        <option key='default'
+                                selected disabled hidden
+                        >Select</option>
+                      </select>
+                    </div>
+                    <div className='new-rule-input'>
+                      <label>Min <span style={{color:'red'}}>*</span></label>
+                      <input
+                        type='number'
+                        className='rule-input'                        
+                        value= {''}
+                        onChange={(e)=>console.log(e.target.value)} ></input>
+                    </div>
+                    <div className='new-rule-input'>
+                      <label>Max <span style={{color:'red'}}>*</span></label>
+                      <input
+                        type='number'
+                        className='rule-input'                        
+                        value= {''}
+                        onChange={(e)=> console.log(e.target.value)} ></input>
+                    </div>
+                  </div>);
+      case 'sum-of-answers'
+        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
+                    <div className='new-rule-input'>
+                      <label>Survey Question <span style={{color:'red'}}>*</span></label>
+                      <select
+                        className='select-bar'
+                        onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                        <option key='default'
+                                selected disabled hidden
+                        >Select</option>
+                      </select>
+                    </div>                                        
+                  </div>);
+      case 'matching-sums'
+        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
+                    <div className='new-rule-input'>
+                      <label>Survey Question <span style={{color:'red'}}>*</span></label>
+                      <select
+                        className='select-bar'
+                        onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                        <option key='default'
+                                selected disabled hidden
+                        >Select</option>
+                      </select>
+                    </div>                    
+                  </div>);
+      case 'incompatible-answers'
+        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
+                    <div className='new-rule-input'>
+                      <label>Survey Question <span style={{color:'red'}}>*</span></label>
+                      <select
+                        className='select-bar'
+                        onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                        <option key='default'
+                                selected disabled hidden
+                        >Select</option>
+                      </select>
+                    </div>                    
+                  </div>);
+      case 'multiple-incompatible-answers'
+        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
+                    <div className='new-rule-input'>
+                      <label>Survey Question <span style={{color:'red'}}>*</span></label>
+                      <select
+                        className='select-bar'
+                        onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                        <option key='default'
+                                selected disabled hidden
+                        >Select</option>
+                      </select>
+                    </div>                    
+                  </div>);
+      default: break;
+      }
+    };
     
     return (<div className='new-rule-card'>
               <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
@@ -383,8 +497,8 @@ const RulesStep  = () => {
                       key='default'
                       selected disabled hidden
                       >Select Rule Type</option>
-                    {Object.entries(ruleTypeOptions).map(([id, label]) => {
-                      return (<option key={id} value={id}>{label}</option>);
+                    {Object.entries(ruleTypeOptions).map(([id, [title, label]]) => {
+                      return (<option key={id} value={id}>{title}</option>);
                     })}
                   </select>
                 </div>
@@ -401,30 +515,7 @@ const RulesStep  = () => {
                                    }}></input>
                 </div>
               </div>
-
-              {newRuleType == 'regex' &&
-               <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
-                 <div className='new-rule-input'>
-                   <label>Survey Question <span style={{color:'red'}}>*</span></label>
-                   <select
-                     className='select-bar'
-                     onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
-                     <option key='default'
-                             selected disabled hidden
-                     >Select</option>
-                   </select>
-                 </div>
-                 <div className='new-rule-input'>
-                   <label>Enter Regular Expression <span style={{color:'red'}}>*</span></label>
-                   <input
-                     className='rule-input'
-                     placeholder='Enter Text'
-                     value= {newRulePattern}
-                     onChange={(e)=>{dispatch([event_ids.rules.newRule.pattern, e.target.value]);
-                                    }} ></input>
-                 </div>
-               </div>
-              }
+              {newRuleInput()}
               <button className='new-rule-button'
                       onClick={()=>dispatch([event_ids.rules.rules])}
               ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>              
@@ -500,15 +591,26 @@ const RulesStep  = () => {
         </div>
       </div>);
   };
-
+  
+  const QuestionCard = ({title, answers}) => {
+    const [visible, setVisible] = useState(true);
+    return (<div className='question-card'>
+              <div onClick={()=>setVisible(!visible)}>
+            {visible ? "^" : "v"}
+              </div>
+            </div>);
+    
+  };
+  
   const PreviewCard = () => {
-    return(<div>
-
+    return(<div className="question-preview-container">
+             <p className="card-header">RULES PREVIEW</p>
+             {Object.entries(questions).map(QuestionCard)}
            </div>);
   };
   
   return (
-    <div>
+    <div style={{display: 'inline-flex', width: '100%'}}>
       <RuleCardList/>
       <PreviewCard/>
     </div>

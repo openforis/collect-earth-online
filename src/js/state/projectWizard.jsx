@@ -21,20 +21,24 @@ const projectWizardDb = {
   boundary: [],
   plots: [],
   samples: [],
-  questions: {
-    questions: [],},
+  //questions
+  'questions.questions': [
+      {title: 'Is this Deforestation?', answers: ['yes', 'no', 'maybe']},
+      {title: 'Is this a good example of Cocoa?' , answers: ['yes', 'no', 'maybe']},
+      {title: 'Is this Deforestation?' , answers: ['yes', 'no', 'maybe']},
+    ],
   // rules
   //TODO: DELETE PLACEHOLDER RULES
   'rules.rules' : [
-    {ruleType: 'regex',
+    {ruleType: 'text-match',
      surveyQuestion: 0,
      label: 'Example 1',
      pattern: 'example'},
-    {ruleType: 'regex',
+    {ruleType: 'text-match',
      surveyQuestion: 0,
      label: 'Example 2',
      pattern: 'example'},
-    {ruleType: 'regex',
+    {ruleType: 'text-match',
      surveyQuestion: 0,
      label: 'Example 3',
      pattern: 'example'}
