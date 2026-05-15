@@ -339,24 +339,27 @@ const RulesStep  = () => {
   const rules = useSubscription([sub_ids.rules.rules]);
   const questions = useSubscription([sub_ids.questions.questions]);
   const ruleTypeOptions = {
-      regex: 'TextRegex Match',      
+      regex: 'Text Match',      
     };
 
   const RuleCard = (rule) => {
     const [idx, {ruleType, question, label, pattern, ruleId}] = rule;
-
-       
-    return (<div>
-              <div
-                style={{color:'red', cursor: 'pointer'}}
-                onClick={()=> dispatch([event_ids.rules.delete, idx])}>
-                <SvgIcon icon='trash' size='1.2rem'/>
+    
+    return (<div className="rule-card">
+              <div style={{display: 'inline-flex',
+                           gap: '16px'}}>
+                <div
+                  className="delete-button"                  
+                  onClick={()=> dispatch([event_ids.rules.delete, idx])}>
+                  <SvgIcon icon='trash' size='1.2rem'/>
+                </div>
+                <div style={{display: "flex", flexDirection: "column", gap: ".5rem"}}> 
+                  <span style={{fontWeight: 'bold'}}
+                  >{Number(idx) + 1}.{ruleTypeOptions[ruleType]}</span>
+                  <span>Rule Label: <span style={{fontWeight: 'bold'}}>{label}</span></span>
+                </div>
               </div>
-              
-              <p style={{fontWeight: 'bold'}}
-              >{Number(idx) + 1}.{ruleTypeOptions[ruleType]}</p>
-              <p>Rule Label: <span>{label}</span></p>
-              <p>The answer to question "<span>{question}</span>" should match the pattern <span>{pattern}</span>.</p>
+            <span>The answer to question <span style={{fontWeight: 'bold'}}>"{question}"</span> should match the pattern <span style={{fontWeight: 'bold'}}>{pattern}</span>.</span>
             </div>);
   };
 
@@ -365,52 +368,66 @@ const RulesStep  = () => {
     const newRuleLabel = useSubscription([sub_ids.rules.newRule.label]);
     const newRuleQuestion = useSubscription([sub_ids.rules.newRule.question]);
     const newRulePattern = useSubscription([sub_ids.rules.newRule.pattern]);
-
     
-    return (<div>
-              <div>
-                <label>Rule Type</label>
-                <select
-                  onChange={(e)=>{dispatch([event_ids.rules.newRule.type, e.target.value]);
-                                 }}>
-                  {Object.entries(ruleTypeOptions).map(([id, label]) => {
-                    return (<option key={id}>{label}</option>);
-                  })}
-                </select>
+    return (<div className='new-rule-card'>
+              <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
+                <div className='new-rule-input'>
+                  <div style={{display: 'flex', flexDirection: 'row', gap:'1rem'}}>
+                    <label>Rule Type<span style={{color: 'red'}}>*</span></label>
+                    <SvgIcon icon='info' size='1.2rem'/>
+                  </div>
+                  <select
+                    className="select-bar"
+                    onChange={(e)=>dispatch([event_ids.rules.newRule.type, e.target.value])}>
+                    <option
+                      key='default'
+                      selected disabled hidden
+                      >Select Rule Type</option>
+                    {Object.entries(ruleTypeOptions).map(([id, label]) => {
+                      return (<option key={id} value={id}>{label}</option>);
+                    })}
+                  </select>
+                </div>
+                <div className='new-rule-input'>
+                  <div style={{display: 'flex', flexDirection: 'row', gap: '1rem'}}>
+                    <label>Enter Rule Label </label>
+                    <SvgIcon icon='info' size='1.2rem'/>
+                  </div>
+                  <input
+                    className="rule-input"
+                    placeHolder= 'Enter Text'
+                    value={newRuleLabel}
+                    onChange={(e)=>{dispatch([event_ids.rules.newRule.label, e.target.value]);
+                                   }}></input>
+                </div>
               </div>
 
-              <div>            
-                <label>Enter Rule Label </label>
-                <SvgIcon icon='info' size='1.2rem'/>
-                <input
-                  placeHolder= 'Enter Text'
-                  value={newRuleLabel}
-                  onChange={(e)=>{dispatch([event_ids.rules.newRule.label, e.target.value]);
-                                }}></input>
-              </div>
-
-              <div>
-                <label>Survey Question <span style={{color:'red'}}>*</span></label>
-                <select
-                  onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
-                </select>
-              </div>
-
-              {newRuleType === 'regex' &&
-               <div>
-                 <label>Enter Regular Expression <span style={{color:'red'}}>*</span></label>
-                 <input
-                   placeholder= 'Enter Text'
-                   value= {newRulePattern}
-                   onChange={(e)=>{dispatch([event_ids.rules.newRule.pattern, e.target.value]);
-                                 }} ></input>
+              {newRuleType == 'regex' &&
+               <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
+                 <div className='new-rule-input'>
+                   <label>Survey Question <span style={{color:'red'}}>*</span></label>
+                   <select
+                     className='select-bar'
+                     onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                     <option key='default'
+                             selected disabled hidden
+                     >Select</option>
+                   </select>
+                 </div>
+                 <div className='new-rule-input'>
+                   <label>Enter Regular Expression <span style={{color:'red'}}>*</span></label>
+                   <input
+                     className='rule-input'
+                     placeholder='Enter Text'
+                     value= {newRulePattern}
+                     onChange={(e)=>{dispatch([event_ids.rules.newRule.pattern, e.target.value]);
+                                    }} ></input>
+                 </div>
                </div>
               }
-
-              <button
-                onClick={()=>dispatch([event_ids.rules.rules])}
-              ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>
-              
+              <button className='new-rule-button'
+                      onClick={()=>dispatch([event_ids.rules.rules])}
+              ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>              
             </div>);
   };
 
@@ -418,43 +435,47 @@ const RulesStep  = () => {
     const ruleFilter = useSubscription([sub_ids.rules.filter]);
     const ruleSearch = useSubscription([sub_ids.rules.search]);
     
-    return (<div>
-              <p style={{fontWeight: 'heavy'}}
-              >questions to be answered during collection  <span style={
-                {fontWeight: 'normal',
-                 color: 'red'}}
-                                                           >*</span></p>
-              <p>Descriptive Text Here. Just Placeholder: This is a list of all institution projects. The color around the name shows its progress. Red indicates that it has no plots collected.</p>
-              <div>
-                <SvgIcon icon='search' size='1.2rem'/>
-                <input
+    return (
+      <div className='survey-rules-container'>
+        <div className='survey-rules-card'>
+          <div className="survey-rules-header">
+            <p>questions to be answered during collection  <span style={
+              {fontWeight: 'normal',
+               color: 'red'}}>*</span></p></div>
+          <p>Descriptive Text Here. Just Placeholder: This is a list of all institution projects. The color around the name shows its progress. Red indicates that it has no plots collected.</p>
+          <div className='survey-search-rules'>
+            <div className='search-bar'>
+              <SvgIcon icon='search' size='1.2rem'/>
+              <input
                 onChange={(e) => dispatch([event_ids.rules.search, e.target.value])}
                 type='text'
                 placeholder='Search'
                 value={ruleSearch}
               ></input>
-              </div>
-              
-              <p style={{fontWeight: 'heavy'}}>filter by:</p>
+            </div>
+            <div className="rule-filters">
+              <p className="filter-header"
+              >FILTER BY:</p>
               <div
-                className={ruleFilter === 'institution'
-                           ? 'radio-selected-button'
-                           : 'radio-selection-button'}
+                style={{display: 'inline-flex', gap: '8px'}}
                 onClick={()=>{
                   dispatch([event_ids.rules.filter, 'institution']);
                 }}>
                 {ruleFilter === 'institution' 
                  ? <SvgIcon icon='radioChecked' size="1.2rem"/>
                  : <SvgIcon icon='radio' size="1.2rem"
-                            className='radio-button-unchecked'
-                   />
+                    className='radio-button-unchecked'
+                 />
                 }
-                <p>institution</p>
+                <span
+                  className="filter-text"
+                  style={ruleFilter === 'institution'
+                         ? {fontWeight: 600}
+                         : {fontWeight: 400}}
+                >Institution</span>
               </div>
               <div
-                className={ruleFilter === 'project'
-                           ? 'radio-selected-button'
-                           : 'radio-selection-button'}
+                style={{display: 'inline-flex', gap: '8px'}}
                 onClick={()=>{
                   dispatch([event_ids.rules.filter, 'project']);
                 }}>
@@ -462,13 +483,22 @@ const RulesStep  = () => {
                  ? <SvgIcon icon='radioChecked' size="1.2rem"/>
                  : <SvgIcon icon='radio' size="1.2rem"
                             className='radio-button-unchecked'
-                   />
+                        />
                 }
-                <p>project</p>
+                <p
+                  className="filter-text"
+                  style={ruleFilter === 'project'
+                         ? {fontWeight: 600}
+                         : {fontWeight: 400}} 
+                >Project</p>
+                
               </div>
-              <NewRuleCard/>
-              {Object.entries(rules).map(RuleCard)}
-            </div>);
+            </div>            
+          </div>
+          <NewRuleCard/>
+          {Object.entries(rules).map(RuleCard)}
+        </div>
+      </div>);
   };
 
   const PreviewCard = () => {
@@ -479,7 +509,7 @@ const RulesStep  = () => {
   
   return (
     <div>
-      <RuleCardList/>      
+      <RuleCardList/>
       <PreviewCard/>
     </div>
   );
@@ -516,13 +546,15 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   // HOOKS
   // ------------------
   
-  useEffect(() => {    
+  useEffect(() => {
+    /*
     dispatch([event_ids.modal, {title: 'Project Setup',
               closeText: '',
               confirmText: 'Get Started',
               onConfirm: handleNewProject,
               id: 'newProject',
-              children: (<NewProjectModal/>)}]);
+              children: (<NewProjectModal/>)}]); */
+    dispatch([event_ids.currentStep, 'rules']);
   }, []);
 
   

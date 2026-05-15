@@ -26,15 +26,15 @@ const projectWizardDb = {
   // rules
   //TODO: DELETE PLACEHOLDER RULES
   'rules.rules' : [
-    {ruleType: 'text-match',
+    {ruleType: 'regex',
      surveyQuestion: 0,
      label: 'Example 1',
      pattern: 'example'},
-    {ruleType: 'text-match',
+    {ruleType: 'regex',
      surveyQuestion: 0,
      label: 'Example 2',
      pattern: 'example'},
-    {ruleType: 'text-match',
+    {ruleType: 'regex',
      surveyQuestion: 0,
      label: 'Example 3',
      pattern: 'example'}
