@@ -1,46 +1,46 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
+import { useSubscription, dispatch } from '@flexsurfer/reflex';
 
 import { BreadCrumbs, NavigationBar } from "./components/PageComponents";
 import  Modal  from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 
 import { stateAtom } from "./utils/constants";
-import { projectWizardAtom } from "./state/projectWizard";
+import {  event_ids, sub_ids } from "./state/projectWizard";
 
 import "../css/project-wizard.css";
 
 
 const projectSteps =
-          [{id: 'overview',
-            label: 'Project Overview'},
-           {id: 'imagery',
-            label: 'Imagery Selection'},
-           {id: 'boundary',
-            label: 'Project Boundary'},
-           {id: 'plots',
-            label: 'Plot Generation'},
-           {id: 'samples',
-            label: 'Sample Design'},
-           {id: 'questions',
-            label: 'Survey Questions'},
-           {id: 'rules',
-            label: 'Survey Rules'},
-           {id: 'review',
-            label: 'Review & Publish'}];
+      [{id: 'overview',
+        label: 'Project Overview'},
+       {id: 'imagery',
+        label: 'Imagery Selection'},
+       {id: 'boundary',
+        label: 'Project Boundary'},
+       {id: 'plots',
+        label: 'Plot Generation'},
+       {id: 'samples',
+        label: 'Sample Design'},
+       {id: 'questions',
+        label: 'Survey Questions'},
+       {id: 'rules',
+        label: 'Survey Rules'},
+       {id: 'review',
+        label: 'Review & Publish'}];
 
 
 const NavButtons = () => {
-  const { currentStep } = useAtomValue(projectWizardAtom);
-  const setProjectWizardState = useSetAtom(projectWizardAtom);
+  const currentStep = useSubscription([sub_ids.currentStep]);
   
   const  continueHandler = () => {
     const currentIdx = projectSteps.findIndex(({id})=>{return (id == currentStep);});
     
     currentIdx + 1 < projectSteps.length
-      ? setProjectWizardState((s)=>({...s, currentStep: projectSteps[currentIdx + 1].id}))
-      : setProjectWizardState((s)=>({...s, modal: {title: "Confirm & Submit"}}));
+      ? dispatch([event_ids.currentStep, projectSteps[currentIdx + 1].id])
+      : dispatch([event_ids.modal, {title: "Confirm & Submit"}]);
   };
 
   return (<div className="nav-buttons">
@@ -62,8 +62,7 @@ const NavButtons = () => {
 };
 
 const ProjectWizardNavigator = () => {
-  const { currentStep } = useAtomValue(projectWizardAtom);
-  const setProjectWizardState = useSetAtom(projectWizardAtom);
+  const currentStep = useSubscription([sub_ids.currentStep]);
   
   return (
     <div
@@ -74,8 +73,10 @@ const ProjectWizardNavigator = () => {
             <div
               key={id}
               style={{fontWeight: currentStep === id ? 'bold' : 'normal'}}
-              onClick={()=> setProjectWizardState((s) => ({
-                ... s, currentStep: id}))}>
+              onClick={
+                () => dispatch([event_ids.currentStep, id])
+              }
+            >
               <span className={currentStep === id && "selected"}
               >{index + 1}</span>
               {label}
@@ -87,9 +88,6 @@ const ProjectWizardNavigator = () => {
 };
 
 const NewProjectModal = () => {
-  const { projectSource } = useAtomValue(projectWizardAtom);
-  const setProjectWizardState = useSetAtom(projectWizardAtom);
-  
   const newProjectOptions = {
     newProject: ['Create a new project',
                  'Generate a new project from scratch by customizing all steps.'],
@@ -97,6 +95,7 @@ const NewProjectModal = () => {
                       'Select a template and prefill all the steps. You can edit and customize it.'],
     importProject: ['Import Collect Earth Project',
                     'Need Description']};
+  const projectSource = useSubscription([sub_ids.projectSource]);
 
   return (
     <div
@@ -108,9 +107,9 @@ const NewProjectModal = () => {
                        "radio-selected-button"
                        : "radio-selection-button"}
             key={id}
-            onClick={()=> {setProjectWizardState((s)=>({
-              ... s, projectSource: id}));
-                          }}>
+            onClick={()=> {
+              dispatch([event_ids.projectSource, id]);
+            }}>            
             <p
               className="radio-button-labeled"
             >{projectSource === id
@@ -128,8 +127,8 @@ const NewProjectModal = () => {
   
 const ProjectWizardModal = () => {
   // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
-  const { modal, projectSource } = useAtomValue(projectWizardAtom);
-  const setProjectWizardState = useSetAtom(projectWizardAtom);
+  const projectSource = useSubscription([sub_ids.projectSource]);
+  const modal = useSubscription([sub_ids.modal]);
   
   const children = () => {
     switch (modal.id) {
@@ -150,28 +149,25 @@ const ProjectWizardModal = () => {
       closeText={modal.closeText}
       confirmText={modal.confirmText}
       onConfirm={modal.onConfirm && modal.onConfirm}
-      confirmDisabled={projectSource === null}//{confirmDisabled()}
+      confirmDisabled={confirmDisabled()}
       onClose={()=>{
         modal.onClose ? modal.onClose()
-          : setProjectWizardState((s) => ({... s, modal: null}));
+          : dispatch([event_ids.modal, null]);
       }}>
       {children()}
     </Modal>);
 };
 
 const OverviewStep = () => {
-  const { overview } = useAtomValue(projectWizardAtom);
-  const setProjectWizardState = useSetAtom(projectWizardAtom);
 
-  const handleProjectName = (input) => {
-    setProjectWizardState((s)=>({
-      ...s, overview: {
-        ... s.overview, projectName: input}}));
-  };
   
   const GeneralInformationCard = () => {
     const projectTypeOptions = {regular: 'Regular Project', simplified: 'Simplified Project'};
-    
+    const projectType = useSubscription([sub_ids.overview.projectType]);
+    const projectName = useSubscription([sub_ids.overview.projectName]);
+    const projectDescription = useSubscription([sub_ids.overview.projectDescription]);
+    const learningMaterial = useSubscription([sub_ids.overview.learningMaterial]);
+
     return (<div
             className="general-info-card card">
               <p className="card-title">General Information</p>
@@ -184,18 +180,15 @@ const OverviewStep = () => {
                   return (<div
                             className="labeled-input"                       
                             key={id}
-                            onClick={()=> {                              
-                              setProjectWizardState((s) => ({
-                                ...s, overview: {
-                                ... s.overview, projectType: id}}));                                
-                            }}>
-                            <span>{ overview.projectType == id
+                            onClick={()=> {dispatch([event_ids.overview.projectType, id]);
+                                          }}>
+                            <span>{ projectType == id
                                     ? <SvgIcon icon="radioChecked" size="1.2rem" />    
                                     : <SvgIcon icon="radio" size="1.2rem"/>}</span>
                             <label                              
                               className="text-label"
-                              style={overview.projectType == id ? {fontWeight: "bold"} : {}}
-                            >{ label  }</label>
+                              style={projectType == id ? {fontWeight: "bold"} : {}}
+                            >{ label }</label>
                           </div>);                  
                 })}</div>
                 <div>
@@ -204,9 +197,9 @@ const OverviewStep = () => {
                   <input type="text"
                          className="text-input"
                          id="project-name"
-                         value={overview.projectName}
-                         onChange={(e)=>handleProjectName(e.target.value)}
-                         placeholder="Enter Text"/>
+                         value={projectName}            
+                         onChange={(e)=> {dispatch([event_ids.overview.projectName, e.target.value]);}} 
+                         placeholder="Enter Text"></input>
                 </div>
                 <div>
                   <label className="text-label"
@@ -214,12 +207,8 @@ const OverviewStep = () => {
                   <input type="text"
                          className="text-input"
                          id="project-description"
-                         onChange={(e)=>{                           
-                           setProjectWizardState((s)=>({
-                             ...s, overview: {
-                               ...s.overview, projectDescription: e.target.value}}));
-                         }}
-                         value={overview.projectDescription}
+                         onChange={(e)=>dispatch([event_ids.overview.projectDescription, e.target.value])}
+                         value={projectDescription}                         
                          placeholder="Enter Text"/>
                 </div>
                 <div>
@@ -227,17 +216,15 @@ const OverviewStep = () => {
                   >Learning Material (Optional)<SvgIcon icon="info" size="1.2rem" /></label>
                   <input type="text"
                          className="text-input"
-                         value={overview.learningMaterial}
-                         onChange={(e)=>{                                                      
-                           setProjectWizardState((s)=>({
-                             ...s, overview: {
-                               ...s.overview, learningMaterial: e.target.value}}));
+                         value={learningMaterial}
+                         onChange={(e)=>{
+                           dispatch([event_ids.overview.learningMaterial, e.target.value]);
                          }}
                          id="learning-material"
                          placeholder="Enter URL"/>
                 </div>
               </div>
-            </div>);
+            </div>);p
   };
 
   const VisibilityCard = () => {    
@@ -245,7 +232,7 @@ const OverviewStep = () => {
                              users: "Users: Logged In Users",
                              institution: "Institution: Group Members",
                              private: "Private: Group Admins"};
-    
+    const visibility = useSubscription([sub_ids.overview.visibility]);
     return (
       <div className="visibility-card card">
         <p className="card-title">Visibility<span style={{color:"red"}}>*</span>
@@ -253,16 +240,14 @@ const OverviewStep = () => {
         {Object.entries(visibilityOptions).map(([id, label])=>{
 	  return (<div className="labeled-input"
                        key={id}
-                       onClick={()=>{                         
-                         setProjectWizardState((s) => ({
-                           ...s, overview: {
-                             ...s.overview, visibility: id}}));
+                       onClick={()=>{
+                         dispatch([event_ids.overview.visibility, id]);                         
                        }}>
-                     <span>{ overview.visibility == id
+                     <span>{visibility == id
                              ? <SvgIcon icon="radioChecked" size="1.2rem" />    
                              : <SvgIcon icon="radio" size="1.2rem"/>}</span>
                     <label className="text-label"
-                           style={overview.visibility == id ? {fontWeight: "bold"} : {}}
+                           style={visibility == id ? {fontWeight: "bold"} : {}}
                     >{ label  }</label>
                    </div>);
         })}
@@ -272,9 +257,15 @@ const OverviewStep = () => {
 
   const ProjectOptionsCard = () => {    
     const projectOptionsMap={gee: "Show GEE Script Link on Collection Page",
-                          extraPlotColumns: "Show Extra Plot Columns on Collection Page",
-                          plotConfidence: "Collect Plot Confidence on Collection Page",
-                          autoGeo: "Auto-launch Geo-Dash"};
+                             extraPlotColumns: "Show Extra Plot Columns on Collection Page",
+                             plotConfidence: "Collect Plot Confidence on Collection Page",
+                             autoGeo: "Auto-launch Geo-Dash"};
+    
+    const projectOptions = {gee: useSubscription([sub_ids.overview.projectOptions.gee]),
+                            extraPlotColumns: useSubscription([sub_ids.overview.projectOptions.extraPlotColumns]),
+                            plotConfidence: useSubscription([sub_ids.overview.projectOptions.plotConfidence]),
+                            autoGeo: useSubscription([sub_ids.overview.projectOptions.autoGeo])
+                           };
     
     return(<div className="project-options-card card">
            <p className="card-title">Project Options</p>
@@ -283,19 +274,16 @@ const OverviewStep = () => {
 	       <div className="labeled-input">
 		 <span
                    className="checkbox"
-		   onClick={() => {                     
-                     setProjectWizardState((s)=>({
-                       ... s, overview: {
-                         ...s.overview, projectOptions: {
-                           ...s.overview.projectOptions, [id]: !overview.projectOptions[id]
-                       }}})); 
+		   onClick={() => {
+                     dispatch([event_ids.overview.projectOptions[id], !projectOptions[id]]);
+                     
                    }}>
-		   {overview.projectOptions[id]
+		   {projectOptions[id]
                     ? (<SvgIcon icon="checkboxChecked" size="1.2rem" />)
                     : <SvgIcon icon="checkboxUnchecked" size="1.2rem" />}
 		 </span>
 		 <label className="text-label"
-                        style={overview.projectOptions[id] ? {fontWeight: "bold"} : {}}
+                        style={projectOptions[id] ? {fontWeight: "bold"} : {}}
                  >{label}</label>
 	       </div>
 	     ) ;
@@ -305,8 +293,8 @@ const OverviewStep = () => {
 
   return (
     <div className="project-wizard overview-step">
-      <GeneralInformationCard />      
-      <VisibilityCard/>
+      <GeneralInformationCard /> 
+      <VisibilityCard/> 
       <ProjectOptionsCard/>    
     </div>
   );
@@ -368,30 +356,16 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   // VARS & CONSTANTS
   // ------------------
   
-  const { projectSource,
-          currentStep,
-          overview,
-          imagery,
-          boundary,
-          plots,
-          samples,
-          questions,
-          rules,
-          modal
-        } = useAtomValue(projectWizardAtom);
-  const setProjectWizardState = useSetAtom(projectWizardAtom);
-
-  
+  const currentStep = useSubscription([sub_ids.currentStep]);
+  const modal = useSubscription([sub_ids.modal]);
   
   // -------------------
   // HANDLERS
   // ------------------
   
   const handleNewProject = () => {
-    setProjectWizardState((s)=>({
-      ...s, 
-      modal: null,
-      currentStep: 'overview'}));
+    dispatch([event_ids.modal, null]);
+    dispatch([event_ids.currentStep, 'overview']);
     };
 
   
@@ -400,12 +374,12 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   // ------------------
   
   useEffect(() => {    
-      setProjectWizardState((s) => ({ ... s, modal: {title: 'Project Setup',
-                               closeText: '',
-                               confirmText: 'Get Started',
-                               onConfirm: handleNewProject,
-                               id: 'newProject',
-                               children: (<NewProjectModal/>)}}));
+    dispatch([event_ids.modal, {title: 'Project Setup',
+              closeText: '',
+              confirmText: 'Get Started',
+              onConfirm: handleNewProject,
+              id: 'newProject',
+              children: (<NewProjectModal/>)}]);
   }, []);
 
   
