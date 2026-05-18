@@ -43,6 +43,7 @@ export default defineConfig({
         "src/js/passwordRequest.jsx",
         "src/js/projectAdmin.jsx",
         "src/js/projectDashboard.jsx",
+	"src/js/projectWizard.jsx",
         "src/js/register.jsx",
         "src/js/reviewInstitution.jsx",
         "src/js/simpleCollection.jsx",

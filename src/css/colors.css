@@ -1,0 +1,16 @@
+/* Global custom colors stylesheets. to use:
+ @import ./colors.css;
+*/
+
+
+:root {
+    --Neutral-Soft-gray: #E1E1E1;
+    --Neutral-White: #FFF;
+    --Primary-Light-Green: #E9F1F0;
+    --Primary-Standard-Green: #1F7067;
+    --Neutral-Md-Gray: #767575;
+    --Neutral-Dark-gray: #4A4A4A;
+    --Neutral-Text-gray: #898989;
+    --Brand-Teal: #356A72;
+    --Primary-Highlight-Green: #A0CAC6;
+}

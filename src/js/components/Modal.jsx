@@ -18,7 +18,8 @@ export default function Modal({
   closeText,
   confirmText,
   onClose,
-  onConfirm,  
+  onConfirm,
+  confirmDisabled
 }) {
   return (
     <div
@@ -41,19 +42,20 @@ export default function Modal({
               &times;
             </button>
           </div>
-          <div className="modal-body" style={{"white-space": "pre-line"}}>{children}</div>
+          <div className="modal-body"p style={{"white-space": "pre-line"}}>{children}</div>
           <div className="modal-footer">
+            {closeText !== '' &&
             <button className="btn btn-secondary btn-sm" onClick={onClose} type="button">
               {closeText}
-            </button>
+            </button>}
             {typeof onConfirm === "function" && (
               <button
                 className={`btn btn-sm ${danger ? "btn-danger" : ""}`}
                 style={{backgroundColor: "#2d6f74",
                         color: "#fff"}}
                 onClick={onConfirm}
-                type="button"
-              >
+                disabled={confirmDisabled}
+                type="button">
                 {confirmText}
               </button>
             )}

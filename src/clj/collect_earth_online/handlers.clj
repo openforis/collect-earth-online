@@ -43,9 +43,11 @@
 (defn crumb-data [{:keys [params session]}]
   (let [user-id        (:userId session -1)
         project        (:project params (:projectId params))
-        project        (when-let [project-id (val->int project)]
-                         (-> (call-sql "select_project_by_id" project-id)
-                             first :name))
+        project        (if (= project "newProject")
+                         "Add a New Project"
+                         (when-let [project-id (val->int project)]
+                           (-> (call-sql "select_project_by_id" project-id)
+                               first :name)))
         institution    (when-let [inst-id (-> params :institution val->int)]
                          (-> (call-sql "select_institution_by_id" inst-id user-id)
                              first :name))]
