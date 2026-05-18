@@ -6,6 +6,8 @@ import { BreadCrumbs, NavigationBar } from "./components/PageComponents";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 import { ImageryStep } from "./components/ImageryStep";
+import { BoundaryStep } from "./components/BoundaryStep";
+import { PlotStep } from "./components/PlotStep";
 
 import { 
   projectSourceAtom, 
@@ -21,7 +23,7 @@ const wizardModalAtom = atom(null);
 const projectSteps = [
   {id: 'overview', label: 'Project Overview'},
   {id: 'imagery', label: 'Imagery Selection'},
-  {id: 'boundary', label: 'Project Boundary'},
+  {id: 'boundary', label: 'Project Boudary'},
   {id: 'plots', label: 'Plot Generation'},
   {id: 'samples', label: 'Sample Design'},
   {id: 'questions', label: 'Survey Questions'},
@@ -175,9 +177,10 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
 
   const CurrentStep = () => {
     switch (currentStep) {
-    case 'overview': return <OverviewStep />;
-    case 'imagery' : return <ImageryStep imageryList={availableImagery} />;
-    default        : return <div style={{padding: "20px"}}>Step {currentStep} coming soon</div>;
+    case 'overview' : return <OverviewStep />;
+    case 'imagery'  : return <ImageryStep imageryList={availableImagery} />;
+    case 'boundary' : return <BoundaryStep />;
+    default         : return <div style={{padding: "20px"}}>Step {currentStep} coming soon</div>;
     }
   };
 

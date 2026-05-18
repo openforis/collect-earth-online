@@ -17,8 +17,8 @@ export const projectOverviewAtom = atom (
 
 export const projectImageryListAtom = atom([]);
 
-export const boundaryAtom = atom([]);
-export const plotsAtom = atom([]);
+export const boundaryAtom = atom({});
+export const plotsAtom = atom({});
 export const samplesAtom = atom([]);
 export const questionsAtom = atom([]);
 export const rulesAtom = atom([]);

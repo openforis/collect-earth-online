@@ -135,3 +135,35 @@
     padding: 8px 0;
     cursor: pointer;
 }
+
+.coord-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.coord-input {
+    width: 160px !important;
+    height: 36px !important;
+    font-size: 13px !important;
+    text-align: center;
+}
+
+.text-label-sm {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 2px;
+}
+
+.map-title-overlay {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 12px;
+    font-weight: bold;
+    font-size: 12px;
+    border-radius: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}

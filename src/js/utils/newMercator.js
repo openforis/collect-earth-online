@@ -1,6 +1,62 @@
-import { Tile as TileLayer, Group as LayerGroup } from 'ol/layer';
-import { TileWMS, XYZ, OSM, BingMaps } from 'ol/source';
+import { Feature, Map, Overlay, View } from "ol";
+import { Tile as TileLayer, Group as LayerGroup, Vector as VectorLayer } from 'ol/layer';
+import { TileWMS, XYZ, OSM, BingMaps, Vector as VectorSource } from 'ol/source';
+import DragBox from 'ol/interaction/DragBox';
+import { Style, Stroke, Fill } from 'ol/style';
+import { toLonLat } from 'ol/proj';
 import Collection from 'ol/Collection';
+import { platformModifierKeyOnly } from 'ol/events/condition';
+
+
+export const createVectorSource = () => new VectorSource();
+
+export const boundaryStyle = new Style({
+  stroke: new Stroke({ color: '#ffc107', width: 3 }),
+  fill: new Fill({ color: 'rgba(255, 248, 225, 0.3)' }),
+});
+
+
+export const zoomMapToExtent = (map, target) => {
+  if (!map) return;
+  const view = map.getView();
+  const padding = [50, 50, 50, 50];
+
+  view.fit(target, {
+    padding: padding,
+    duration: 0,
+    maxZoom: 16
+  });
+};
+
+export const createBoxDrawInteraction = (source, onDrawEnd) => {
+  const dragBox = new DragBox({
+    condition: platformModifierKeyOnly,
+    className: 'ol-dragbox-style'
+  });
+
+  dragBox.on('boxend', () => {
+    const geometry = dragBox.getGeometry();
+    const extent = geometry.getExtent();
+        
+    const min = toLonLat([extent[0], extent[1]]);
+    const max = toLonLat([extent[2], extent[3]]);
+        
+    onDrawEnd({
+      west: min[0],
+      south: min[1],
+      east: max[0],
+      north: max[1]
+    }, geometry);
+
+    const feature = new Feature(geometry);
+    source.clear();
+    source.addFeature(feature);
+  });
+
+  dragBox.on('boxstart', () => source.clear());
+
+  return dragBox;
+};
 
 const sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
   const geeSource = new XYZ({
