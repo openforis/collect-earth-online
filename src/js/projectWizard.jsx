@@ -8,6 +8,7 @@ import SvgIcon from "./components/svg/SvgIcon";
 import { ImageryStep } from "./components/ImageryStep";
 import { BoundaryStep } from "./components/BoundaryStep";
 import { PlotStep } from "./components/PlotStep";
+import { SurveyQuestionsStep } from "./components/SurveyQuestionsStep";
 
 import { 
   projectSourceAtom, 
@@ -177,10 +178,11 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
 
   const CurrentStep = () => {
     switch (currentStep) {
-    case 'overview' : return <OverviewStep />;
-    case 'imagery'  : return <ImageryStep imageryList={availableImagery} />;
-    case 'boundary' : return <BoundaryStep />;
-    default         : return <div style={{padding: "20px"}}>Step {currentStep} coming soon</div>;
+    case 'overview'  : return <OverviewStep />;
+    case 'imagery'   : return <ImageryStep imageryList={availableImagery} />;
+    case 'boundary'  : return <BoundaryStep />;
+    case 'questions' : return <SurveyQuestionsStep />;
+    default          : return <div style={{padding: "20px"}}>Step {currentStep} coming soon</div>;
     }
   };
 

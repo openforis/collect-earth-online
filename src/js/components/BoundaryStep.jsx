@@ -12,7 +12,6 @@ export const BoundaryStep = () => {
 
   useEffect(() => {
     if (drawnMapBounds) {
-      // Sync map drawing to your local boundary state
       setBoundary(prev => ({
         ...prev,
         ...drawnMapBounds
@@ -23,11 +22,11 @@ export const BoundaryStep = () => {
   const updateBounds = (side, val) => setBoundary(prev => ({ ...prev, [side]: val }));
 
   return (
-    <div className="imagery-step-layout">
-      <div className="imagery-sidebar">
+    <div className="wizard-step-layout">
+      <div className="wizard-sidebar">
                 
         {/* Section 1: Selection */}
-        <div className="card" style={{ width: '100%', margin: '0 0 20px 0' }}>
+        <div className="card">
           <p className="card-title">SELECT PROJECT BOUNDARY GENERATION METHOD <span style={{color:'red'}}>*</span></p>
           {['draw', 'upload', 'shp'].map(m => (
             <div key={m} className="labeled-input" onClick={() => setBoundary(prev => ({...prev, method: m}))}>
@@ -40,8 +39,6 @@ export const BoundaryStep = () => {
             </div>
           ))}
         </div>
-
-        {/* Section 2: Conditional Inputs */}
         {boundary.method === 'draw' ? (
           <div className="card" style={{ width: '100%', margin: '0 0 20px 0' }}>
             <p className="card-title">DRAW PROJECT BOUNDARY <span style={{color:'red'}}>*</span></p>
@@ -81,7 +78,7 @@ export const BoundaryStep = () => {
             </div>
           </div>
         ) : (
-          <div className="card" style={{ width: '100%', margin: '0 0 20px 0' }}>
+          <div className="card">
             <p className="card-title">UPLOAD <span style={{color:'red'}}>*</span></p>
             <button className="btn btn-outline-secondary" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <SvgIcon icon="file" size="1.2rem" />

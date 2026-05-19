@@ -76,39 +76,39 @@ export const ImageryStep = ({ imageryList = [] }) => {
   };
 
   return (
-    <div className="imagery-step-layout">
-      <div className="imagery-sidebar card">
-        <section style={{ marginBottom: '30px', width: '100%' }}>
-          <p className="card-title">DEFAULT IMAGERY <span style={{color: 'red'}}>*</span></p>
-          <label className="text-label" style={{ display: 'block', marginBottom: '5px' }}>Base Map</label>
-          <select 
-            className="text-input" 
-            style={{ width: '100%' }}
-            value={selectedIds[0] || ""} 
-            onChange={(e) => {
-              const val = parseInt(e.target.value);
-              setSelectedIds(prev => [val, ...prev.filter(i => i !== val)]);
-            }}
-          >
-            <option value="" disabled>Select a base map</option>
-            {imageryList.map(img => (
-              <option key={img.id} value={img.id}>{img.title}</option>
-            ))}
-          </select>
-        </section>
+    <div className="wizard-step-layout">
+      <div className="wizard-sidebar">
+        <div className="card">
+          <section style={{ marginBottom: '30px', width: '100%' }}>
+            <p className="card-title">DEFAULT IMAGERY <span style={{color: 'red'}}>*</span></p>
+            <label className="text-label" style={{ display: 'block', marginBottom: '5px' }}>Base Map</label>
+            <select
+              className="text-input"
+              value={selectedIds[0] || ""}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setSelectedIds(prev => [val, ...prev.filter(i => i !== val)]);
+              }}
+            >
+              <option value="" disabled>Select a base map</option>
+              {imageryList.map(img => (
+                <option key={img.id} value={img.id}>{img.title}</option>
+              ))}
+            </select>
+          </section>
 
-        <section style={{ width: '100%' }}>
-          <p className="card-title">ADDITIONAL IMAGERY (OPTIONAL)</p>
-          <p style={{ fontSize: '0.75rem', color: '#666', marginBottom: '15px' }}>
-            {selectedIds.length} Selected
-          </p>
-                    
-          <VisibilitySection title="CEO Platform" type="platform" />
-          <VisibilitySection title="Institution" type="private" />
-          <VisibilitySection title="Public" type="public" />
-        </section>
+          <section style={{ width: '100%' }}>
+            <p className="card-title">ADDITIONAL IMAGERY (OPTIONAL)</p>
+            <p style={{ fontSize: '0.75rem', color: '#666', marginBottom: '15px' }}>
+              {selectedIds.length} Selected
+            </p>
+            
+            <VisibilitySection title="CEO Platform" type="platform" />
+            <VisibilitySection title="Institution" type="private" />
+            <VisibilitySection title="Public" type="public" />
+          </section>
+        </div>
       </div>
-
       <div className="map-area">
         <NewMap />
       </div>

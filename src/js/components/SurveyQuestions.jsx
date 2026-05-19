@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import _ from "lodash";
 import { stateAtom } from '../utils/constants';
+import { previewSelectedSampleIdAtom, previewUserSamplesAtom } from '../state/projectWizard';
 import { mercator } from '../utils/mercator';
 import { SidebarCard } from "./Sidebar";
 import SvgIcon from "./svg/SvgIcon";
@@ -17,55 +18,80 @@ import '../../css/sidebar.css'
 import '../../css/survey.css';
 
 
-export const SurveyQuestions = () => {
-  const { currentProject,
-          currentPlot,
-          mapConfig,
-          selectedSampleId,
-          userSamples } = useAtomValue(stateAtom);
+export const SurveyQuestions = ({
+  preview = false,
+  surveyQuestions = null
+}) => {
+  const {
+    currentProject,
+    currentPlot,
+    mapConfig,
+    selectedSampleId: globalSelectedId,
+    userSamples: globalUserSamples
+  } = useAtomValue(stateAtom);
+
   const setAppState = useSetAtom(stateAtom);
+
+  // PREVIEW STATE HOOKS
+  const [previewUserSamples, setPreviewUserSamples] = useAtom(previewUserSamplesAtom);
+  const previewSelectedId = useAtomValue(previewSelectedSampleIdAtom);
+
+  // SWITCH DATA SOURCES BASED ON PREVIEW FLAG
+  const surveyData = preview
+    ? surveyQuestions
+    : currentProject?.surveyQuestions;
+
+  const userSamples = preview
+    ? previewUserSamples
+    : globalUserSamples;
+
+  const selectedSampleId = preview
+    ? previewSelectedId
+    : globalSelectedId;
+
   const [openTopId, setOpenTopId] = useState(null);
-  const [openByParent, setOpenByParent] = useState({})
+  const [openByParent, setOpenByParent] = useState({});
   const [showLearningMaterial, setShowLearningMaterial] = useState(false);
 
   const entries = (obj = {}) => Object.entries(obj || {});
   const visibleAnswers = (q) => entries(q.answers).filter(([, a]) => !a?.hide);
 
-
-  //EFFECTS
   useEffect(() => {
-  }, [currentProject, userSamples]);
+  }, [surveyData, userSamples]);
 
-  //FUNCTIONS
-
-  // Which samples to write to
   const getSelectedSampleIds = (questionId) => {
-    const answered = currentProject?.surveyQuestions?.[questionId]?.answered || [];
+    // If preview, we just return the ID of our 1 fake sample
+    if (preview) return [selectedSampleId];
+    
+    const answered = surveyData?.[questionId]?.answered || [];
     const allFeatures = mercator.getAllFeatures(mapConfig, "currentSamples") || [];
     const unansweredFeatures = keyDifference(answered, allFeatures);
     const selectedSamples = mercator.getSelectedSamples(mapConfig);
     const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
 
     const list =
-          ((selectedFeatures.length === 0 && answered.length === 0) ||
-           lengthObject(userSamples) === 1)
-          ? allFeatures
-          : (selectedFeatures.length !== 0 ? selectedFeatures : unansweredFeatures);
-    
+      ((selectedFeatures.length === 0 && answered.length === 0) ||
+        lengthObject(userSamples) === 1)
+        ? allFeatures
+        : (selectedFeatures.length !== 0 ? selectedFeatures : unansweredFeatures);
+
     return list.map((f) => f.get("sampleId"));
   };
-  
-  // Validate the selection
+
   const checkSelection = (sampleIds, questionId) => {
-    const q = currentProject?.surveyQuestions?.[questionId];
+    if (preview) return true;
+    
+    const q = surveyData?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
     if (sampleIds.some((s) => !visibleIds.includes(s))) {
       setAppState((s) => ({
         ...s,
-        modal: { alert: {
-          alertType: "Selection Error",
-          alertMessage: "Invalid Selection. Try selecting the question before answering."
-        }}
+        modal: {
+          alert: {
+            alertType: "Selection Error",
+            alertMessage: "Invalid Selection. Try selecting the question before answering."
+          }
+        }
       }));
       return false;
     }
@@ -84,30 +110,49 @@ export const SurveyQuestions = () => {
     return true;
   };
 
-  // Save the answers to userSamples and userImages
   const setCurrentValue = (questionId, answerId, answerText) => {
-    setAppState((prev) => {
-      const sampleIds = getSelectedSampleIds(questionId);
-      if (!checkSelection(sampleIds, questionId)) return prev;
+    const sampleIds = getSelectedSampleIds(questionId);
+    if (preview) {
+      // Logic for updating the FAKE sample state
+      setPreviewUserSamples((prev) => {
+        const newSamples = sampleIds.reduce((acc, sampleId) => {
+          if (answerText == null) return acc;
+          const childIds = getChildQuestionIds(questionId);
+          const prevAnswers = prev?.[sampleId] || {};
+          const subQuestionsCleared = filterObject(
+            prevAnswers,
+            ([key]) => !childIds.includes(Number(key))
+          );
+          const newQuestion = { answerId };
+          if (answerText !== "") newQuestion.answer = answerText;
 
+          acc[sampleId] = {
+            ...subQuestionsCleared,
+            [questionId]: newQuestion,
+          };
+          return acc;
+        }, {});
+
+        return { ...prev, ...newSamples };
+      });
+      return;
+    }
+
+    // ORIGINAL LOGIC FOR GLOBAL STATE
+    setAppState((prev) => {
+      if (!checkSelection(sampleIds, questionId)) return prev;
       const childQuestionIds = getChildQuestionIds(questionId);
 
       const newSamples = sampleIds.reduce((acc, sampleId) => {
         if (answerText == null) return acc;
-
         const prevSampleAnswers = prev.userSamples?.[sampleId] || {};
         const subQuestionsCleared = filterObject(
           prevSampleAnswers,
           ([key]) => !childQuestionIds.includes(Number(key))
         );
-
         const newQuestion = { answerId };
         if (answerText !== "") newQuestion.answer = answerText;
-
-        acc[sampleId] = {
-          ...subQuestionsCleared,
-          [questionId]: newQuestion,
-        };
+        acc[sampleId] = { ...subQuestionsCleared, [questionId]: newQuestion };
         return acc;
       }, {});
 

@@ -1,48 +1,111 @@
 @import "./colors.css";
 
+/* 1. ROOT CONTAINER - Lock the viewport */
 .project-wizard-container {
     background-color: var(--Primary-Light-Green);
-    height: 100vh;
     width: 100vw;
     overflow: hidden;
     display: flex;
     flex-direction: column;
 }
 
+/* 2. LAYOUT WRAPPER - Calculate space minus top nav */
 .wizard-layout-wrapper {
     display: flex;
     flex-direction: column;
     height: calc(100vh - 60px);
     width: 100%;
+    overflow: hidden;
 }
 
-.wizard-header {
-    flex: 0 0 auto;
-}
-
+/* 3. STEP BODY - The "rigid" box for sidebar and map */
 .wizard-step-body {
-    flex: 1 1 auto;
-    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
     background-color: var(--Primary-Light-Green);
     position: relative;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
-.wizard-footer {
-    flex: 0 0 auto;
-    border-top: 1px solid var(--Neutral-Soft-gray);
+/* 4. STEP LAYOUT - The horizontal split (Sidebar | Map) */
+.wizard-step-layout {
+    display: flex;
+    flex: 1 1 0%;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
 }
+
+/* 5. SIDEBAR - The only place where scrolling is allowed */
+.wizard-sidebar {
+    flex: 0 0 45%;
+    min-width: 350px;
+    height: 100%; 
+    overflow-y: auto;
+    padding: 20px;
+    display: block;
+    box-sizing: border-box;
+}
+
+/* 6. CARDS - Clean up widths for sidebar usage */
+.card {
+    border-radius: 4px;
+    border: 1px solid var(--Primary-Highlight-Green);
+    background: var(--Neutral-White);
+    display: flex;
+    width: 720px;
+    padding: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+/* Specific override: Cards inside sidebars must be 100% width */
+.wizard-sidebar .card {
+    width: 100% !important;
+    max-width: 100%;
+    align-self: stretch;
+}
+
+/* 7. MAP AREA - Lock to container height */
+.map-area {
+    flex: 1;
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* 8. NAV BUTTONS - Pin to the bottom */
+.nav-buttons {
+    flex: 0 0 auto;
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    background: var(--Neutral-White);
+    padding: 16px 24px;
+    border-top: 1px solid var(--Neutral-Soft-gray);
+    z-index: 100;
+}
+
+/* --- UI HELPERS --- */
 
 .project-wizard-navigator {
+    flex: 0 0 auto;
     display: inline-flex;
-    width: 100vw;
+    width: 100%;
     height: 56px;
     padding: 0 16px;
     justify-content: space-between;
     align-items: center;
     background: var(--Neutral-White);
-    box-shadow: 1px 4px 3px 0 rgba(0, 0, 0, 0.12);
+    box-shadow: 1px 4px 3px 0 var(--Neutral-Dark-gray);
+    box-sizing: border-box;
 }
 
 .project-wizard-navigator span {
@@ -70,42 +133,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-.card {
-    border-radius: 4px;
-    border: 1px solid var(--Primary-Highlight-Green);
-    background: var(--Neutral-White);
-    display: flex;
-    width: 720px;
-    padding: 16px;
-    flex-direction: column;
-    align-items: flex-start;
-    margin-bottom: 20px;
-}
-
-.imagery-step-layout {
-    display: flex;
-    flex: 1;
-    width: 100%;
-    height: 100%;
-}
-
-.imagery-sidebar {
-    flex: 0 0 35%;
-    min-width: 350px;
-    height: 100%;
     overflow-y: auto;
-    background: var(--Neutral-White);
-    border-right: 1px solid var(--Neutral-Soft-gray);
-    padding: 20px;
-}
-
-.map-area {
-    flex: 1;
-    position: relative;
     height: 100%;
-    background-color: #cbd5e1;
 }
 
 .text-input {
@@ -116,16 +145,7 @@
     border: 1px solid var(--Neutral-Soft-gray);
     margin-top: 4px;
     margin-bottom: 12px;
-}
-
-.nav-buttons {
-    display: flex;
-    width: 100%;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 8px;
-    background: var(--Neutral-White);
-    padding: 16px;
+    box-sizing: border-box;
 }
 
 .labeled-input {
@@ -166,4 +186,56 @@
     font-size: 12px;
     border-radius: 2px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.question-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    width: 100%;
+    border-top: 1px solid #e2e8f0;
+}
+
+.footer-actions-center {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+.btn-outline-teal {
+    background: white;
+    border: 1px solid #2d6f74;
+    color: #2d6f74;
+    padding: 6px 16px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-text-action {
+    background: none;
+    border: none;
+    color: #2d6f74;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-delete-card {
+    background: white;
+    border: 1px solid #f61313;
+    color: #f61313;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
