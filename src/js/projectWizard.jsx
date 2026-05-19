@@ -339,14 +339,81 @@ const RulesStep  = () => {
   const rules = useSubscription([sub_ids.rules.rules]);
   const questions = useSubscription([sub_ids.questions.questions]);
   const ruleTypeOptions = {
-    'text-match': ['Text Match', (question, pattern)=>{return (<span>The answer to question <span style={{fontWeight: 'bold'}}>"{question}"</span> should match the pattern <span style={{fontWeight: 'bold'}}>{pattern}</span>.</span>);}],
-    'numeric-range': ['Numeric Range', (question)=>{return (<span></span>);}],
-    'sum-of-answers': ['Sum of Answers', (question)=>{return (<span></span>);}],
-    'matching-sums': ['Matching Sums', (question, pattern)=>{return (<span></span>);}],
-    'incompatible-answers': ['Incompatible Answers', (question)=>{return (<span></span>);}],
-    'multiple-incompatible-answers': ['Multiple Incompatible Answers', (question, pattern)=>{return (<span></span>);}]
-    };
-
+    'text-match': {
+      label: 'Text Match',
+      validOption: () => {return false;},
+      invalidOptionText: "This rule requires a question of type input-text.",
+      display: ([nil, {questions, pattern}])=>{
+        return (
+          <div>The answer to question
+            <b> "{questions[0]}"</b> should match the pattern
+            <b> {pattern}</b>.
+        </div>);}},
+    'numeric-range': {
+      label: 'Numeric Range',
+      validOption: () => {return false;},
+      invalidOptionText: "This rule requires a question of type input-number.",
+      display: ([nil, {questions, min, max}])=>{
+        return (
+          <div>The answer to question 
+            <b> "{questions[0]}"</b> should be between
+            <b> {min} </b>and<b> {max}</b>.
+          </div>);}},
+    'sum-of-answers': {
+      label: 'Sum of Answers',
+      validOption: () => {return false;},
+      invalidOptionText: "There must be at least 2 number questions for this rule type.",
+      display: ([nil, {questions, sum}])=>{
+        return (
+          <div>The answers to questions 
+            {Object.entries(questions).map(([idx, question]) => {              
+              return (<span><b> "{question}"</b>{(questions.length > 2 ) && (idx < (questions.length - 1)) && ","} {(idx == (questions.length - 2) ) && " and " } </span>);
+            })}
+             should sum up to <b>{sum}</b>.
+          </div>);}},
+    'matching-sums': {
+      label: 'Matching Sums',
+      validOption: () => {return false;},
+      invalidOptionText: "There must be at least 2 number questions for this rule type.",
+      display: ([nil, {questions}])=>{
+        return (
+          <div>The sum of the answers to questions
+            {Object.entries(questions[0]).map(([idx, question]) => {              
+              return (<span><b> "{question}"</b>{(questions[0].length > 2) && (idx < (questions[0].length - 1)) && ","} {(idx == (questions[0].length - 2) ) && " and " } </span>);
+            })}
+             should be equal to the sum of the answers to questions
+            {Object.entries(questions[1]).map(([idx, question]) => {              
+              return (<span><b> "{question}"</b>{(questions[1].length > 2) && (idx < (questions[1].length - 1)) && ","} {(idx == (questions[1].length - 2) ) && " and " } </span>);
+            })}
+          </div>);}},
+    'incompatible-answers': {
+      label: 'Incompatible Answers',
+      validOption: () => {return false;},
+      invalidOptionText: "There must be at least 3 questions where type is not input for this rule.",
+      display: ([nil, {questions}])=>{
+        return (
+          <div>The answer
+            <b> "{questions[0][1]}"</b> from question
+            <b> "{questions[0][0]}"</b> is incompatible with the answer
+            <b> "{questions[1][1]}"</b> from question
+            <b> "{questions[1][0]}"</b>.
+          </div>);}},
+    'multiple-incompatible-answers': {
+      label: 'Multiple Incompatible Answers',
+      validOption: () => {return false;},
+      invalidOptionText: "this is not a valid option",      
+      display: ([idx, {questions}])=>{
+        return (
+          <div className='card-text' >
+            {Object.entries(questions.slice(1)).map(( [idx, [question, answer]])=> {
+              return (<p className="card-text">If <b>"{answer}"</b> was answered for question <b>"{question}"</b>
+                        { (questions.length - 2 == idx) ?  "," : ', and '}                        
+                      </p>);
+            })}
+            <p>Then the answer <b>"{questions[0][1]}"</b> for the question <b>"{questions[0][0]}"</b> is incompatible.</p>
+          </div>);
+    }}};
+  
   const RuleCard = (rule) => {
     const [idx, {ruleType, question, label, pattern, ruleId}] = rule;
     
@@ -360,124 +427,241 @@ const RulesStep  = () => {
                 </div>
                 <div style={{display: "flex", flexDirection: "column", gap: ".5rem"}}> 
                   <span style={{fontWeight: 'bold'}}
-                  >{Number(idx) + 1}.{ruleTypeOptions[ruleType][0]}</span>
+                  >{Number(idx) + 1}. {ruleTypeOptions[ruleType].label}</span>
                   <span>Rule Label: <span style={{fontWeight: 'bold'}}>{label}</span></span>
                 </div>
               </div>
-              {ruleTypeOptions[ruleType][1].call(null, question, pattern)}
+              {ruleTypeOptions[ruleType].display( rule )}
             </div>);
   };
 
   const NewRuleCard = () => {
     const newRuleType = useSubscription([sub_ids.rules.newRule.type]);
     const newRuleLabel = useSubscription([sub_ids.rules.newRule.label]);
-    const newRuleQuestion = useSubscription([sub_ids.rules.newRule.question]);
+    const newRuleQuestion = useSubscription([sub_ids.rules.newRule.surveyQuestion]);
     const newRulePattern = useSubscription([sub_ids.rules.newRule.pattern]);
+    const newRuleMin = useSubscription([sub_ids.rules.newRule.min]);
+    const newRuleMax = useSubscription([sub_ids.rules.newRule.max]);
+    const newRuleSum = useSubscription([sub_ids.rules.newRule.sum]);
+    const newRuleQuestions = useSubscription([sub_ids.rules.newRule.questions]);
 
     const newRuleInput = () => {
       switch(newRuleType) {
-      case 'text-match'
-        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
+      case 'text-match' // input string: regex 
+        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
                     <div className='new-rule-input'>
-                      <label>Survey Question <span style={{color:'red'}}>*</span></label>
+                      <label> Survey Question </label>
                       <select
                         className='select-bar'
-                        onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                        onChange={(e)=>dispatch([event_ids.rules.newRule.surveyQuestion, e.target.value])}>
                         <option key='default'
                                 selected disabled hidden
                         >Select</option>
                       </select>
                     </div>
                     <div className='new-rule-input'>
-                      <label>Enter Regular Expression <span style={{color:'red'}}>*</span></label>
+                      <label> Enter Regular Expression </label>
                       <input
                         className='rule-input'
                         placeholder='Enter Text'
                         value= {newRulePattern}
-                        onChange={(e)=>{dispatch([event_ids.rules.newRule.pattern, e.target.value]);
-                                       }} ></input>
+                        onChange={(e)=>dispatch([event_ids.rules.newRule.pattern, e.target.value])}></input>
                     </div>
                   </div>);
-      case 'numeric-range'
-        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
+      case 'numeric-range' // input numbers: min, max 
+        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
                     <div className='new-rule-input'>
-                      <label>Survey Question <span style={{color:'red'}}>*</span></label>
+                      <label>Survey Question </label>
                       <select
                         className='select-bar'
-                        onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                        onChange={(e)=>dispatch([event_ids.rules.newRule.surveyQuestion, e.target.value])}>
                         <option key='default'
                                 selected disabled hidden
                         >Select</option>
                       </select>
                     </div>
                     <div className='new-rule-input'>
-                      <label>Min <span style={{color:'red'}}>*</span></label>
+                      <label>Min </label>
                       <input
                         type='number'
-                        className='rule-input'                        
-                        value= {''}
-                        onChange={(e)=>console.log(e.target.value)} ></input>
+                        className='rule-input'
+                        value= {newRuleMin}
+                        onChange={(e)=>dispatch([event_ids.rules.newRule.min, e.target.value])} ></input>
                     </div>
                     <div className='new-rule-input'>
-                      <label>Max <span style={{color:'red'}}>*</span></label>
+                      <label>Max </label>
                       <input
                         type='number'
-                        className='rule-input'                        
-                        value= {''}
-                        onChange={(e)=> console.log(e.target.value)} ></input>
+                        className='rule-input'
+                        value= {newRuleMax}
+                        onChange={(e)=> dispatch([event_ids.rules.newRule.max, e.target.value])} ></input>
                     </div>
                   </div>);
-      case 'sum-of-answers'
-        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
-                    <div className='new-rule-input'>
-                      <label>Survey Question <span style={{color:'red'}}>*</span></label>
+      case 'sum-of-answers' // select 2+ questions, input number: sum 
+        : return (<div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
+                    <div className='new-rule-input' >
+                      <label>Survey Question </label>
                       <select
                         className='select-bar'
-                        onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                        onChange={(e)=>{dispatch([event_ids.rules.newRule.surveyQuestion, e.target.value]);}}>
                         <option key='default'
                                 selected disabled hidden
-                        >Select</option>
+                        > Select </option>
                       </select>
-                    </div>                                        
+                    </div>
+                    <div className='new-rule-input'>
+                      <label> Survey Question </label>
+                      <div style={{display: 'inline-flex',
+                                   width: '100%'}}>
+                        <select
+                          className='select-bar'
+                          style={{width: '100%'}}
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
+                          <option key='default'
+                                  selected disabled hidden
+                          > Select </option>
+                        </select>
+                        <button className='new-rule-button'
+                                style={{alignSelf: 'center', marginTop:'1.7rem'}}
+                                onClick={()=>dispatch([event_ids.rules.questions])}
+                        ><SvgIcon icon='plus' size='1.2rem'/></button></div>
+                    </div>
+                    <div className='new-rule-input' >
+                      <label> Sum </label>
+                      <input
+                        type='number'
+                        className='rule-input'
+                        value={newRuleSum}
+                        onChange={(e)=>dispatch([event_ids.rules.newRule.sum])}>
+                      </input>                      
+                    </div>
                   </div>);
-      case 'matching-sums'
-        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
+      case 'matching-sums' // select two sets of questions 
+        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
                     <div className='new-rule-input'>
-                      <label>Survey Question <span style={{color:'red'}}>*</span></label>
+                      <label> Select First Question Set </label>
                       <select
                         className='select-bar'
-                        onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                        onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
                         <option key='default'
                                 selected disabled hidden
-                        >Select</option>
+                        > Select </option>
                       </select>
-                    </div>                    
+                    </div>
+                    <div className='new-rule-input'>
+                      <label> Select Second Question Set </label>
+                      <select
+                        className='select-bar'
+                        onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
+                        <option key='default'
+                                selected disabled hidden
+                        > Select </option>
+                      </select>
+                    </div>
                   </div>);
-      case 'incompatible-answers'
-        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
-                    <div className='new-rule-input'>
-                      <label>Survey Question <span style={{color:'red'}}>*</span></label>
-                      <select
-                        className='select-bar'
-                        onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
-                        <option key='default'
-                                selected disabled hidden
-                        >Select</option>
-                      </select>
-                    </div>                    
+      case 'incompatible-answers' // select question 1, answer 1, question 2, answer 2
+        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
+                    <div style={{width:"50%"}}>
+                      <div className='new-rule-input' style={{width: "100%"}}>
+                        <label> Question 1 </label>
+                        <select
+                          className='select-bar'
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
+                          <option key='default'
+                                  selected disabled hidden
+                          > Select Question 1 </option>
+                        </select>
+                      </div>
+                      <div className='new-rule-input' style={{width: "100%"}}>
+                        <label> Question 2 </label>
+                        <select
+                          className='select-bar'
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
+                          <option key='default'
+                                  selected disabled hidden
+                          > Select Question 2 </option>
+                        </select>
+                      </div>                      
+                    </div>
+                    <div style={{width:"50%"}}>                      
+                      <div className='new-rule-input' style={{width: "100%"}}>
+                        <label> Answer 1 </label>
+                        <select
+                          className='select-bar'
+                          onChange={(e)=>{dispatch([event_ids.rules.newRule.answers, e.target.value]);}}>
+                          <option key='default'
+                                  selected disabled hidden
+                          > Select Answer 1 </option>
+                        </select>
+                      </div>
+                      <div className='new-rule-input' style={{width: "100%"}}>
+                        <label> Answer 2 </label>
+                        <select
+                          className='select-bar'
+                          onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                          <option key='default'
+                                  selected disabled hidden
+                          > Select Answer 2 </option>
+                        </select>
+                      </div>
+                    </div>
                   </div>);
-      case 'multiple-incompatible-answers'
-        : return (<div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>                 
-                    <div className='new-rule-input'>
-                      <label>Survey Question <span style={{color:'red'}}>*</span></label>
-                      <select
-                        className='select-bar'
-                        onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
-                        <option key='default'
-                                selected disabled hidden
-                        >Select</option>
-                      </select>
-                    </div>                    
+      case 'multiple-incompatible-answers' // 
+        : return (<div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
+                    <div style={{display: 'inline-flex',
+                                 flexDirection: 'column'}}>
+                      <div style={{display: 'inline-flex', flexDirection: 'row'}}>
+                        <div className='new-rule-input'>
+                          <label> Question </label>
+                          <select
+                            className='select-bar'
+                            onChange={(e)=>{dispatch([event_ids.rules.newRule.questions, e.target.value]);}}>
+                            <option key='default'
+                                    selected disabled hidden
+                            > Select Question </option>
+                          </select>
+                        </div>
+                        <div className='new-rule-input'>
+                          <label> Answer </label>
+                          <select
+                            className='select-bar'
+                            onChange={(e)=>{dispatch([event_ids.rules.newRule.answers, e.target.value]);}}>
+                            <option key='default'
+                                    selected disabled hidden
+                            > Select Answer </option>
+                          </select>
+                        </div>
+                        <button className='new-rule-button'
+                                style={{alignSelf: 'center'}}
+                                onClick={()=>dispatch([event_ids.rules.newRules.questions])}
+                        ><SvgIcon icon='plus' size='1.2rem'/></button>
+                      </div>
+                    </div> 
+
+                    <b> If the answers above are selected, then the following answer is incompatible </b>
+
+                    <div style={{display: 'inline-flex', flexDirection: 'row'}}>
+                      <div className='new-rule-input'>
+                        <label> Question </label>
+                        <select
+                          className='select-bar'
+                          onChange={(e)=>{dispatch([event_ids.rules.newRule.questions, e.target.value]);}}>
+                          <option key='default'
+                                  selected disabled hidden
+                          > Select Question </option>
+                        </select>
+                      </div>
+                      <div className='new-rule-input'>
+                        <label> Answer </label>
+                        <select
+                          className='select-bar'
+                          onChange={(e)=>{dispatch([event_ids.rules.newRule.answers, e.target.value]);}}>
+                          <option key='default'
+                                  selected disabled hidden
+                          > Select Answer </option>
+                        </select>
+                      </div>
+                    </div>
                   </div>);
       default: break;
       }
@@ -497,8 +681,11 @@ const RulesStep  = () => {
                       key='default'
                       selected disabled hidden
                       >Select Rule Type</option>
-                    {Object.entries(ruleTypeOptions).map(([id, [title, label]]) => {
-                      return (<option key={id} value={id}>{title}</option>);
+                    {Object.entries(ruleTypeOptions).map(([id, option]) => {
+                      return (<option key={id} value={id}
+                                      {... (option.validOption()) && {title: option.invalidOptionText }}
+                                      disabled={option.validOption()}                              
+                              >{option.label}</option>);
                     })}
                   </select>
                 </div>
@@ -518,7 +705,7 @@ const RulesStep  = () => {
               {newRuleInput()}
               <button className='new-rule-button'
                       onClick={()=>dispatch([event_ids.rules.rules])}
-              ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>              
+              ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>
             </div>);
   };
 

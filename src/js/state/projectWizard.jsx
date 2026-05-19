@@ -31,17 +31,32 @@ const projectWizardDb = {
   //TODO: DELETE PLACEHOLDER RULES
   'rules.rules' : [
     {ruleType: 'text-match',
-     surveyQuestion: 0,
-     label: 'Example 1',
-     pattern: 'example'},
-    {ruleType: 'text-match',
-     surveyQuestion: 0,
-     label: 'Example 2',
-     pattern: 'example'},
-    {ruleType: 'text-match',
-     surveyQuestion: 0,
-     label: 'Example 3',
-     pattern: 'example'}
+     questions: [0],
+     label: 'Text Match Example',
+     pattern: 'example'},    
+    {ruleType: 'numeric-range',
+     label: 'Numeric Range Example',
+     questions: [0],
+     min: 0,
+     max: 1
+    },
+    {ruleType: 'sum-of-answers',
+     label: 'Sum of Answers Example',
+     questions: [0, 1],
+     sum: 1
+    },
+    {ruleType: 'matching-sums',
+     label: 'Matching Sums Example',
+     questions: [[0, 1], [1, 2]],     
+    },
+    {ruleType: 'incompatible-answers',
+     label: 'Incompatible Answers',
+     questions: [[0, 1], [1, 2]]
+    },
+    {ruleType: 'multiple-incompatible-answers',
+     label: 'Multiple Incompatible Answers Example',
+     questions: [[0, 1], [1, 2], [1, 3], [2, 3]]
+    }    
   ],
   'rules.search': '',
   'rules.filter': null,
@@ -50,6 +65,10 @@ const projectWizardDb = {
   'rules.newRule.label': '',
   'rules.newRule.question': null,
   'rules.newRule.pattern': '',
+  'rules.newRule.min' : 0,
+  'rules.newRule.max' : 0,
+  'rules.newRule.sum' : 0, // 0
+  'rules.newRule.questions' : [], // [0, 1, 2...] 
 };
 
 initAppDb(projectWizardDb);
@@ -80,8 +99,13 @@ export const event_ids = {
     newRule: {
       label: 'rules.newRule.label',
       type: 'rules.newRule.type',
-      question: 'rules.newRule.question',
-      pattern: 'rules.newRule.pattern'}}};
+      surveyQuestion: 'rules.newRule.surveyQuestion',
+      pattern: 'rules.newRule.pattern',
+      min: 'rules.newRule.min',
+      max : 'rules.newRule.max',
+      sum: 'rules.newRule.sum',
+      questions: 'rules.newRule.questions',
+    }}};
 
 export const sub_ids = {
   currentStep: 'currentStep',
@@ -108,8 +132,13 @@ export const sub_ids = {
     newRule: {
       label: 'rules.newRule.label',
       type: 'rules.newRule.type',
-      question: 'rules.newRule.question',
-      pattern: 'rules.newRule.pattern'}}};
+      surveyQuestion: 'rules.newRule.surveyQuestion',
+      pattern: 'rules.newRule.pattern',
+      min: 'rules.newRule.min',
+      max : 'rules.newRule.max',
+      sum: 'rules.newRule.sum',
+      questions: 'rules.newRule.questions',
+    }}};
 
 export const effects = {};
 
@@ -134,15 +163,17 @@ regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.
 regSub(sub_ids.questions.questions, sub_ids.questions.questions);
 
 // SURVEY RULES SUBS
+regSub(sub_ids.rules.rules, sub_ids.rules.rules);
 regSub(sub_ids.rules.search, sub_ids.rules.search);
 regSub(sub_ids.rules.filter, sub_ids.rules.filter);
 regSub(sub_ids.rules.newRule.type , sub_ids.rules.newRule.type);
 regSub(sub_ids.rules.newRule.label , sub_ids.rules.newRule.label);
-regSub(sub_ids.rules.newRule.question , sub_ids.rules.newRule.question);
+regSub(sub_ids.rules.newRule.surveyQuestion , sub_ids.rules.newRule.surveyQuestion);
 regSub(sub_ids.rules.newRule.pattern , sub_ids.rules.newRule.pattern);
-regSub(sub_ids.rules.rules, sub_ids.rules.rules);
-
-
+regSub(sub_ids.rules.newRule.min, sub_ids.rules.newRule.min);
+regSub(sub_ids.rules.newRule.max, sub_ids.rules.newRule.max);
+regSub(sub_ids.rules.newRule.sum, sub_ids.rules.newRule.sum);
+regSub(sub_ids.rules.newRule.questions, sub_ids.rules.newRule.questions);
 
 // PROJECT WIZARD EVENTS
 regEvent(event_ids.currentStep,
@@ -234,9 +265,9 @@ regEvent(event_ids.rules.newRule.label,
            draftDb[event_ids.rules.newRule.label] = label;
          });
 
-regEvent(event_ids.rules.newRule.question,
+regEvent(event_ids.rules.newRule.surveyQuestion,
          ({ draftDb }, question) => {
-           draftDb[event_ids.rules.newRule.question] = question;
+           draftDb[event_ids.rules.newRule.surveyQuestion] = question;
          });
 
 regEvent(event_ids.rules.newRule.pattern,
@@ -259,3 +290,27 @@ regEvent(event_ids.rules.delete,
          ({ draftDb }, idx) => {
            draftDb[event_ids.rules.rules].splice(idx, 1);
          });
+
+regEvent(event_ids.rules.newRule.min,
+         ({ draftDb }, min) => {
+           draftDb[event_ids.rules.newRule.min] = min;
+         });
+
+regEvent(event_ids.rules.newRule.max,
+         ({ draftDb }, max) => {
+           draftDb[event_ids.rules.newRule.max] = max;
+         });
+
+regEvent(event_ids.rules.newRule.sum,
+         ({ draftDb }, sum) => {
+           draftDb[event_ids.rules.newRule.sum] = sum;
+         });
+
+
+//TODO: handle questions conditionally based on rules.newRule.type
+regEvent(event_ids.rules.newRule.questions,
+         ({ draftDb }, questions) => {
+           draftDb[event_ids.rules.newRule.questions] = questions;
+         });
+
+
