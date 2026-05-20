@@ -23,20 +23,20 @@ const projectWizardDb = {
   samples: [],
   //questions
   'questions.questions': [
-      {title: 'Is this Deforestation?', answers: ['yes', 'no', 'maybe']},
-      {title: 'Is this a good example of Cocoa?' , answers: ['yes', 'no', 'maybe']},
-      {title: 'Is this Deforestation?' , answers: ['yes', 'no', 'maybe']},
-    ],
+    {question_id : 0, title: 'Is this Deforestation?', answers: ['yes', 'no', 'maybe']},
+    {question_id: 1, title: 'Is this a good example of Cocoa?' , answers: ['yes', 'no', 'maybe']},
+    {question_id: 2, title: 'Is this Deforestation?' , answers: ['yes', 'no', 'maybe']},
+  ],
   // rules
   //TODO: DELETE PLACEHOLDER RULES
   'rules.rules' : [
     {ruleType: 'text-match',
-     questions: [0],
+     question: 0,
      label: 'Text Match Example',
      pattern: 'example'},    
     {ruleType: 'numeric-range',
      label: 'Numeric Range Example',
-     questions: [0],
+     question: 0,
      min: 0,
      max: 1
     },
@@ -63,12 +63,13 @@ const projectWizardDb = {
   // rules.newRule
   'rules.newRule.type': null,
   'rules.newRule.label': '',
-  'rules.newRule.question': null,
+
   'rules.newRule.pattern': '',
-  'rules.newRule.min' : 0,
-  'rules.newRule.max' : 0,
-  'rules.newRule.sum' : 0, // 0
-  'rules.newRule.questions' : [], // [0, 1, 2...] 
+  'rules.newRule.min' : null,
+  'rules.newRule.max' : null,
+  'rules.newRule.sum' : null, // 0
+  'rules.newRule.questions' : [0, 1], //
+  'rules.newRule.sums.questions': [null, null]
 };
 
 initAppDb(projectWizardDb);
@@ -96,15 +97,17 @@ export const event_ids = {
     search: 'rules.search',
     filter: 'rules.filter',
     delete: 'rules.delete',
-    newRule: {
+    newRule: {      
       label: 'rules.newRule.label',
       type: 'rules.newRule.type',
-      surveyQuestion: 'rules.newRule.surveyQuestion',
       pattern: 'rules.newRule.pattern',
       min: 'rules.newRule.min',
       max : 'rules.newRule.max',
       sum: 'rules.newRule.sum',
       questions: 'rules.newRule.questions',
+      sums: {questions: {questions: 'rules.newRule.sums.questions.questions',
+                         add:'rules.newRule.sums.questions.add',
+                         remove: 'rules.newRule.sums.questions.remove'}}
     }}};
 
 export const sub_ids = {
@@ -132,12 +135,12 @@ export const sub_ids = {
     newRule: {
       label: 'rules.newRule.label',
       type: 'rules.newRule.type',
-      surveyQuestion: 'rules.newRule.surveyQuestion',
       pattern: 'rules.newRule.pattern',
       min: 'rules.newRule.min',
       max : 'rules.newRule.max',
       sum: 'rules.newRule.sum',
       questions: 'rules.newRule.questions',
+      sums: {questions: 'rules.newRule.sums.questions'}
     }}};
 
 export const effects = {};
@@ -168,12 +171,12 @@ regSub(sub_ids.rules.search, sub_ids.rules.search);
 regSub(sub_ids.rules.filter, sub_ids.rules.filter);
 regSub(sub_ids.rules.newRule.type , sub_ids.rules.newRule.type);
 regSub(sub_ids.rules.newRule.label , sub_ids.rules.newRule.label);
-regSub(sub_ids.rules.newRule.surveyQuestion , sub_ids.rules.newRule.surveyQuestion);
 regSub(sub_ids.rules.newRule.pattern , sub_ids.rules.newRule.pattern);
 regSub(sub_ids.rules.newRule.min, sub_ids.rules.newRule.min);
 regSub(sub_ids.rules.newRule.max, sub_ids.rules.newRule.max);
 regSub(sub_ids.rules.newRule.sum, sub_ids.rules.newRule.sum);
 regSub(sub_ids.rules.newRule.questions, sub_ids.rules.newRule.questions);
+regSub(sub_ids.rules.newRule.sums.questions, sub_ids.rules.newRule.sums.questions);
 
 // PROJECT WIZARD EVENTS
 regEvent(event_ids.currentStep,
@@ -251,23 +254,27 @@ regEvent(event_ids.rules.search,
          });
 
 regEvent(event_ids.rules.filter,
-          ({ draftDb }, filter) => {
-            draftDb[event_ids.rules.filter] = filter;
-          });
+         ({ draftDb }, filter) => {
+           draftDb[event_ids.rules.filter] = filter;
+         });
 
 regEvent(event_ids.rules.newRule.type,
          ({ draftDb }, type) => {
+           draftDb[event_ids.rules.newRule.label] = '';
+           draftDb[event_ids.rules.newRule.questions] = [];
+           draftDb[event_ids.rules.newRule.pattern] = null;
+           draftDb[event_ids.rules.newRule.min] = null;
+           draftDb[event_ids.rules.newRule.max] = null;
+           draftDb[event_ids.rules.newRule.sum] = null;
+
+           //           (type == 'sum-of-answers') && (draftDb[event_ids.rules.newRule.questions] = [null, null]);
+           
            draftDb[event_ids.rules.newRule.type] = type;
          });
 
 regEvent(event_ids.rules.newRule.label,
          ({ draftDb }, label) => {
            draftDb[event_ids.rules.newRule.label] = label;
-         });
-
-regEvent(event_ids.rules.newRule.surveyQuestion,
-         ({ draftDb }, question) => {
-           draftDb[event_ids.rules.newRule.surveyQuestion] = question;
          });
 
 regEvent(event_ids.rules.newRule.pattern,
@@ -277,40 +284,91 @@ regEvent(event_ids.rules.newRule.pattern,
 
 regEvent(event_ids.rules.rules,
          ({ draftDb }) => {           
-           const newRule = {
-             ruleType: draftDb[sub_ids.rules.newRule.type],
-             surveyQuestion: draftDb[sub_ids.rules.newRule.question],
-             label: draftDb[sub_ids.rules.newRule.label],
-             pattern: draftDb[sub_ids.rules.newRule.pattern]
-           };
-           draftDb[event_ids.rules.rules].push(newRule);
+           console.log('creating new rule', draftDb[sub_ids.rules.newRule.sum], draftDb[sub_ids.rules.newRule.sums.questions]);
+           (draftDb[sub_ids.rules.newRule.type] === 'text-match') && draftDb[event_ids.rules.rules].push(  {
+             ruleType:  draftDb[sub_ids.rules.newRule.type],
+             label:     draftDb[sub_ids.rules.newRule.label],
+             question:  draftDb[sub_ids.rules.newRule.questions],
+             pattern:   draftDb[sub_ids.rules.newRule.pattern]
+           });
+           (draftDb[sub_ids.rules.newRule.type] === 'numeric-range') && draftDb[event_ids.rules.rules].push( {
+             ruleType:  draftDb[sub_ids.rules.newRule.type],
+             label:     draftDb[sub_ids.rules.newRule.label],
+             question:  draftDb[sub_ids.rules.newRule.questions],
+             min:       draftDb[sub_ids.rules.newRule.min],
+             max:       draftDb[sub_ids.rules.newRule.max],
+           });
+           (draftDb[sub_ids.rules.newRule.type] === 'sum-of-answers') && draftDb[event_ids.rules.rules].push( {
+             ruleType:  draftDb[sub_ids.rules.newRule.type],
+             label:     draftDb[sub_ids.rules.newRule.label],
+             sum:       draftDb[sub_ids.rules.newRule.sum],
+             questions: draftDb[sub_ids.rules.newRule.sums.questions],
+           });
+           (draftDb[sub_ids.rules.newRule.type] === 'matching-sums') && draftDb[event_ids.rules.rules].push( {
+             ruleType:  draftDb[sub_ids.rules.newRule.type],
+             label:     draftDb[sub_ids.rules.newRule.label],
+             questions: draftDb[sub_ids.rules.newRule.questions],
+           });
+           (draftDb[sub_ids.rules.newRule.type] === 'incompatible-answers') && draftDb[event_ids.rules.rules].push( {
+             ruleType:  draftDb[sub_ids.rules.newRule.type],
+             label:     draftDb[sub_ids.rules.newRule.label],
+             questions: draftDb[sub_ids.rules.newRule.questions],
+           });
+           (draftDb[sub_ids.rules.newRule.type] === 'multiple-incompatible-answers') && draftDb[event_ids.rules.rules].push( {
+             ruleType:  draftDb[sub_ids.rules.newRule.type],
+             label:     draftDb[sub_ids.rules.newRule.label],
+             questions: draftDb[sub_ids.rules.newRule.questions],
+           });
+           
+           draftDb[sub_ids.rules.newRule.label] = '';
+           draftDb[sub_ids.rules.newRule.questions] = [];
+           draftDb[sub_ids.rules.newRule.pattern] = null;
+           draftDb[sub_ids.rules.newRule.min] = null;
+           draftDb[sub_ids.rules.newRule.max] = null;
+           draftDb[sub_ids.rules.newRule.sum] = null;
+           
+           
+           
          });
 
 regEvent(event_ids.rules.delete,
          ({ draftDb }, idx) => {
-           draftDb[event_ids.rules.rules].splice(idx, 1);
+           draftDb[sub_ids.rules.rules].splice(idx, 1);
          });
 
 regEvent(event_ids.rules.newRule.min,
          ({ draftDb }, min) => {
-           draftDb[event_ids.rules.newRule.min] = min;
+           draftDb[sub_ids.rules.newRule.min] = min;
          });
 
 regEvent(event_ids.rules.newRule.max,
          ({ draftDb }, max) => {
-           draftDb[event_ids.rules.newRule.max] = max;
+           draftDb[sub_ids.rules.newRule.max] = max;
          });
 
 regEvent(event_ids.rules.newRule.sum,
          ({ draftDb }, sum) => {
-           draftDb[event_ids.rules.newRule.sum] = sum;
+           draftDb[sub_ids.rules.newRule.sum] = sum;
          });
 
 
 //TODO: handle questions conditionally based on rules.newRule.type
 regEvent(event_ids.rules.newRule.questions,
-         ({ draftDb }, questions) => {
-           draftDb[event_ids.rules.newRule.questions] = questions;
+         ({ draftDb }, questions, idx) => {
+           draftDb[sub_ids.rules.newRule.questions] = questions;           
          });
 
+regEvent(event_ids.rules.newRule.sums.questions.add,
+         ({ draftDb }) => {
+           draftDb[sub_ids.rules.newRule.sums.questions].push(null);
+         });
 
+regEvent(event_ids.rules.newRule.sums.questions.remove,
+         ({ draftDb }, idx) => {           
+           draftDb[sub_ids.rules.newRule.sums.questions].splice(idx, 1);
+         });
+
+regEvent(event_ids.rules.newRule.sums.questions.questions,
+         ({ draftDb }, question, idx) => {           
+           draftDb[sub_ids.rules.newRule.questions][idx] = question;            
+         });

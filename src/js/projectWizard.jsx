@@ -36,7 +36,7 @@ const NavButtons = () => {
   const currentStep = useSubscription([sub_ids.currentStep]);
   
   const  continueHandler = () => {
-    const currentIdx = projectSteps.findIndex(({id})=>{return (id == currentStep);});
+    const currentIdx = projectSteps.findIndex(({id})=> (id == currentStep));
     
     currentIdx + 1 < projectSteps.length
       ? dispatch([event_ids.currentStep, projectSteps[currentIdx + 1].id])
@@ -54,7 +54,7 @@ const NavButtons = () => {
             >Save Draft</button>
             <button
               className={'btn btn-sm'}
-              onClick={()=>{continueHandler();}}
+              onClick={()=>continueHandler()}
               style={{backgroundColor: "#2d6f74",
                       color: "#fff"}}
             >Save & Continue</button>
@@ -216,9 +216,7 @@ const OverviewStep = () => {
                   <input type="text"
                          className="text-input"
                          value={learningMaterial}
-                         onChange={(e)=>{
-                           dispatch([event_ids.overview.learningMaterial, e.target.value]);
-                         }}
+                         onChange={(e)=>dispatch([event_ids.overview.learningMaterial, e.target.value])}
                          id="learning-material"
                          placeholder="Enter URL"/>
                 </div>
@@ -239,9 +237,7 @@ const OverviewStep = () => {
         {Object.entries(visibilityOptions).map(([id, label])=>{
 	  return (<div className="labeled-input"
                        key={id}
-                       onClick={()=>{
-                         dispatch([event_ids.overview.visibility, id]);                         
-                       }}>
+                       onClick={()=>dispatch([event_ids.overview.visibility, id])}>
                      <span>{visibility == id
                              ? <SvgIcon icon="radioChecked" size="1.2rem" />    
                              : <SvgIcon icon="radio" size="1.2rem"/>}</span>
@@ -338,52 +334,55 @@ const RulesStep  = () => {
 
   const rules = useSubscription([sub_ids.rules.rules]);
   const questions = useSubscription([sub_ids.questions.questions]);
+
   const ruleTypeOptions = {
     'text-match': {
       label: 'Text Match',
       validOption: () => {return false;},
       invalidOptionText: "This rule requires a question of type input-text.",
-      display: ([nil, {questions, pattern}])=>{
+      display: ([nil, {question, pattern}])=>{        
         return (
           <div>The answer to question
-            <b> "{questions[0]}"</b> should match the pattern
+            <b> "{questions.filter((q)=>q.question_id == question)[0].title}"</b> should match the pattern
             <b> {pattern}</b>.
         </div>);}},
     'numeric-range': {
       label: 'Numeric Range',
       validOption: () => {return false;},
       invalidOptionText: "This rule requires a question of type input-number.",
-      display: ([nil, {questions, min, max}])=>{
+      display: ([nil, {question, min, max}])=>{
         return (
           <div>The answer to question 
-            <b> "{questions[0]}"</b> should be between
+            <b> "{questions.filter((q)=>q.question_id == question)[0].title}"</b> should be between
             <b> {min} </b>and<b> {max}</b>.
           </div>);}},
     'sum-of-answers': {
       label: 'Sum of Answers',
       validOption: () => {return false;},
       invalidOptionText: "There must be at least 2 number questions for this rule type.",
-      display: ([nil, {questions, sum}])=>{
+      display: ([nil, rule])=>{
+        console.log('sum of answers', rule.questions, rule.sum, questions, rule);
         return (
           <div>The answers to questions 
-            {Object.entries(questions).map(([idx, question]) => {              
-              return (<span><b> "{question}"</b>{(questions.length > 2 ) && (idx < (questions.length - 1)) && ","} {(idx == (questions.length - 2) ) && " and " } </span>);
+            {Object.entries(rule.questions).map(([idx, question]) => {
+              console.log('display question answer', idx, question,);
+              return (<span><b> "{questions.filter((q)=>q.question_id == question)[0].title}"</b>{(rule.questions.length > 2 ) && (idx < (rule.questions.length - 1)) && ","} {(idx == (rule.questions.length - 2) ) && " and " } </span>);
             })}
-             should sum up to <b>{sum}</b>.
+             should sum up to <b>{rule.sum}</b>.
           </div>);}},
     'matching-sums': {
       label: 'Matching Sums',
       validOption: () => {return false;},
       invalidOptionText: "There must be at least 2 number questions for this rule type.",
-      display: ([nil, {questions}])=>{
+      display: ([nil, rule])=>{
         return (
           <div>The sum of the answers to questions
-            {Object.entries(questions[0]).map(([idx, question]) => {              
-              return (<span><b> "{question}"</b>{(questions[0].length > 2) && (idx < (questions[0].length - 1)) && ","} {(idx == (questions[0].length - 2) ) && " and " } </span>);
+            {Object.entries(rule.questions[0]).map(([idx, question]) => {              
+              return (<span><b> "{question}"</b>{(rule.questions[0].length > 2) && (idx < (rule.questions[0].length - 1)) && ","} {(idx == (rule.questions[0].length - 2) ) && " and " } </span>);
             })}
              should be equal to the sum of the answers to questions
             {Object.entries(questions[1]).map(([idx, question]) => {              
-              return (<span><b> "{question}"</b>{(questions[1].length > 2) && (idx < (questions[1].length - 1)) && ","} {(idx == (questions[1].length - 2) ) && " and " } </span>);
+              return (<span><b> "{question}"</b>{(rule.questions[1].length > 2) && (idx < (rule.questions[1].length - 1)) && ","} {(idx == (rule.questions[1].length - 2) ) && " and " } </span>);
             })}
           </div>);}},
     'incompatible-answers': {
@@ -436,14 +435,16 @@ const RulesStep  = () => {
   };
 
   const NewRuleCard = () => {
+    const surveyQuestions = useSubscription([sub_ids.questions.questions]);
     const newRuleType = useSubscription([sub_ids.rules.newRule.type]);
     const newRuleLabel = useSubscription([sub_ids.rules.newRule.label]);
-    const newRuleQuestion = useSubscription([sub_ids.rules.newRule.surveyQuestion]);
+
     const newRulePattern = useSubscription([sub_ids.rules.newRule.pattern]);
     const newRuleMin = useSubscription([sub_ids.rules.newRule.min]);
     const newRuleMax = useSubscription([sub_ids.rules.newRule.max]);
     const newRuleSum = useSubscription([sub_ids.rules.newRule.sum]);
     const newRuleQuestions = useSubscription([sub_ids.rules.newRule.questions]);
+    const sumsQuestions = useSubscription([sub_ids.rules.newRule.sums.questions]);
 
     const newRuleInput = () => {
       switch(newRuleType) {
@@ -453,10 +454,13 @@ const RulesStep  = () => {
                       <label> Survey Question </label>
                       <select
                         className='select-bar'
-                        onChange={(e)=>dispatch([event_ids.rules.newRule.surveyQuestion, e.target.value])}>
+                        onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
                         <option key='default'
                                 selected disabled hidden
                         >Select</option>
+                        {surveyQuestions.map(({title, question_id})=>{
+                          return (<option key={question_id} value={question_id} >{title}</option>);
+                        })}
                       </select>
                     </div>
                     <div className='new-rule-input'>
@@ -474,10 +478,13 @@ const RulesStep  = () => {
                       <label>Survey Question </label>
                       <select
                         className='select-bar'
-                        onChange={(e)=>dispatch([event_ids.rules.newRule.surveyQuestion, e.target.value])}>
+                        onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
                         <option key='default'
                                 selected disabled hidden
                         >Select</option>
+                        {surveyQuestions.map(({title, question_id})=>{
+                          return (<option key={question_id} value={question_id} >{title}</option>);
+                        })}
                       </select>
                     </div>
                     <div className='new-rule-input'>
@@ -498,34 +505,36 @@ const RulesStep  = () => {
                     </div>
                   </div>);
       case 'sum-of-answers' // select 2+ questions, input number: sum 
-        : return (<div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
-                    <div className='new-rule-input' >
-                      <label>Survey Question </label>
-                      <select
-                        className='select-bar'
-                        onChange={(e)=>{dispatch([event_ids.rules.newRule.surveyQuestion, e.target.value]);}}>
-                        <option key='default'
-                                selected disabled hidden
-                        > Select </option>
-                      </select>
-                    </div>
-                    <div className='new-rule-input'>
-                      <label> Survey Question </label>
-                      <div style={{display: 'inline-flex',
-                                   width: '100%'}}>
-                        <select
-                          className='select-bar'
-                          style={{width: '100%'}}
-                          onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
-                          <option key='default'
-                                  selected disabled hidden
-                          > Select </option>
-                        </select>
-                        <button className='new-rule-button'
-                                style={{alignSelf: 'center', marginTop:'1.7rem'}}
-                                onClick={()=>dispatch([event_ids.rules.questions])}
-                        ><SvgIcon icon='plus' size='1.2rem'/></button></div>
-                    </div>
+        : return (<div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>                    
+                    {Object.entries(sumsQuestions).map(([idx])=>{                      
+                      return(
+                        <div className='new-rule-input'>
+                          <label>  Survey Question  </label>
+                          <div style={{display: 'inline-flex',
+                                       width: '100%'}}>
+                            <select
+                              className='select-bar'
+                              style={{width: '100%'}}
+                              onChange={(e)=>dispatch([event_ids.rules.newRule.sums.questions.questions, e.target.value, idx])}>
+                              <option key='default'
+                                      selected disabled hidden
+                              > Select </option>
+                              {surveyQuestions.map(({title, question_id})=>{
+                                return (<option key={question_id} value={question_id} >{title}</option>);
+                              })}
+                            </select>{ (idx == (sumsQuestions.length - 1)) ?
+                                       <button className='new-rule-button'
+                                               style={{alignSelf: 'center'}}
+                                               onClick={()=>dispatch([event_ids.rules.newRule.sums.questions.add])}
+                                       ><SvgIcon icon='plus' size='1.2rem'/></button>
+                                       : (idx > 0) && <button className='new-rule-button'
+                                               style={{alignSelf: 'center'}}
+                                                onClick={()=>dispatch([event_ids.rules.newRule.sums.questions.remove, idx])}
+                            ><SvgIcon icon='minus' size='1.2rem'/></button>}</div>
+                        </div>                      
+                      );
+                    })}
+                    
                     <div className='new-rule-input' >
                       <label> Sum </label>
                       <input
@@ -555,7 +564,7 @@ const RulesStep  = () => {
                         onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
                         <option key='default'
                                 selected disabled hidden
-                        > Select </option>
+                        > Select </option>                        
                       </select>
                     </div>
                   </div>);
@@ -570,10 +579,16 @@ const RulesStep  = () => {
                           <option key='default'
                                   selected disabled hidden
                           > Select Question 1 </option>
+                          {surveyQuestions.map(({title, question_id})=>{
+                          return (<option key={question_id} value={question_id} >{title}</option>);
+                        })}
                         </select>
                       </div>
                       <div className='new-rule-input' style={{width: "100%"}}>
                         <label> Question 2 </label>
+                        {surveyQuestions.map(({title, question_id})=>{
+                          return (<option key={question_id} value={question_id} >{title}</option>);
+                        })}
                         <select
                           className='select-bar'
                           onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
@@ -588,7 +603,7 @@ const RulesStep  = () => {
                         <label> Answer 1 </label>
                         <select
                           className='select-bar'
-                          onChange={(e)=>{dispatch([event_ids.rules.newRule.answers, e.target.value]);}}>
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.answers, e.target.value])}>
                           <option key='default'
                                   selected disabled hidden
                           > Select Answer 1 </option>
@@ -598,7 +613,7 @@ const RulesStep  = () => {
                         <label> Answer 2 </label>
                         <select
                           className='select-bar'
-                          onChange={(e)=>{dispatch([event_ids.rules.newRule.question, e.target.value]);}}>
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
                           <option key='default'
                                   selected disabled hidden
                           > Select Answer 2 </option>
@@ -615,7 +630,7 @@ const RulesStep  = () => {
                           <label> Question </label>
                           <select
                             className='select-bar'
-                            onChange={(e)=>{dispatch([event_ids.rules.newRule.questions, e.target.value]);}}>
+                            onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
                             <option key='default'
                                     selected disabled hidden
                             > Select Question </option>
@@ -625,14 +640,14 @@ const RulesStep  = () => {
                           <label> Answer </label>
                           <select
                             className='select-bar'
-                            onChange={(e)=>{dispatch([event_ids.rules.newRule.answers, e.target.value]);}}>
+                            onChange={(e)=>dispatch([event_ids.rules.newRule.answers, e.target.value])}>
                             <option key='default'
                                     selected disabled hidden
                             > Select Answer </option>
                           </select>
                         </div>
                         <button className='new-rule-button'
-                                style={{alignSelf: 'center'}}
+                                style={{alignSelf: 'center', marginTop: '1.6rem'}}
                                 onClick={()=>dispatch([event_ids.rules.newRules.questions])}
                         ><SvgIcon icon='plus' size='1.2rem'/></button>
                       </div>
@@ -645,7 +660,7 @@ const RulesStep  = () => {
                         <label> Question </label>
                         <select
                           className='select-bar'
-                          onChange={(e)=>{dispatch([event_ids.rules.newRule.questions, e.target.value]);}}>
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
                           <option key='default'
                                   selected disabled hidden
                           > Select Question </option>
@@ -655,7 +670,7 @@ const RulesStep  = () => {
                         <label> Answer </label>
                         <select
                           className='select-bar'
-                          onChange={(e)=>{dispatch([event_ids.rules.newRule.answers, e.target.value]);}}>
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.answers, e.target.value])}>
                           <option key='default'
                                   selected disabled hidden
                           > Select Answer </option>
@@ -698,8 +713,8 @@ const RulesStep  = () => {
                     className="rule-input"
                     placeHolder= 'Enter Text'
                     value={newRuleLabel}
-                    onChange={(e)=>{dispatch([event_ids.rules.newRule.label, e.target.value]);
-                                   }}></input>
+                    onChange={(e)=>dispatch([event_ids.rules.newRule.label, e.target.value])}>
+                  </input>
                 </div>
               </div>
               {newRuleInput()}
@@ -736,9 +751,7 @@ const RulesStep  = () => {
               >FILTER BY:</p>
               <div
                 style={{display: 'inline-flex', gap: '8px'}}
-                onClick={()=>{
-                  dispatch([event_ids.rules.filter, 'institution']);
-                }}>
+                onClick={()=>dispatch([event_ids.rules.filter, 'institution'])}>
                 {ruleFilter === 'institution' 
                  ? <SvgIcon icon='radioChecked' size="1.2rem"/>
                  : <SvgIcon icon='radio' size="1.2rem"
@@ -754,9 +767,7 @@ const RulesStep  = () => {
               </div>
               <div
                 style={{display: 'inline-flex', gap: '8px'}}
-                onClick={()=>{
-                  dispatch([event_ids.rules.filter, 'project']);
-                }}>
+                onClick={()=>dispatch([event_ids.rules.filter, 'project'])}>
                 {ruleFilter === 'project' 
                  ? <SvgIcon icon='radioChecked' size="1.2rem"/>
                  : <SvgIcon icon='radio' size="1.2rem"
@@ -875,14 +886,12 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
                   {display: "Institution",
                    id: "institution",
                    query: ["institution", institutionId],
-                   onClick:()=>{
-                     window.location.assign(`/review-institution?institutionId=${institutionId}`);
+                   onClick:()=>{window.location.assign(`/review-institution?institutionId=${institutionId}`);
                    }},
                   {display: "Add a New Project",
                    id: "projectWizard",
                    query: ["project", "newProject"],
-                   onClick:()=>{
-                     window.location.assign(`/project-wizard?institutionId=${institutionId}`);
+                   onClick:()=>{window.location.assign(`/project-wizard?institutionId=${institutionId}`);
                    }}]}
               />
               <ProjectWizardNavigator/>
