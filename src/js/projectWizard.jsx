@@ -360,12 +360,10 @@ const RulesStep  = () => {
       label: 'Sum of Answers',
       validOption: () => {return false;},
       invalidOptionText: "There must be at least 2 number questions for this rule type.",
-      display: ([nil, rule])=>{
-        console.log('sum of answers', rule.questions, rule.sum, questions, rule);
+      display: ([nil, rule])=>{        
         return (
           <div>The answers to questions 
-            {Object.entries(rule.questions).map(([idx, question]) => {
-              console.log('display question answer', idx, question,);
+            {Object.entries(rule.questions).map(([idx, question]) => {                
               return (<span><b> "{questions.filter((q)=>q.question_id == question)[0].title}"</b>{(rule.questions.length > 2 ) && (idx < (rule.questions.length - 1)) && ","} {(idx == (rule.questions.length - 2) ) && " and " } </span>);
             })}
              should sum up to <b>{rule.sum}</b>.
@@ -520,7 +518,7 @@ const RulesStep  = () => {
                                       selected disabled hidden
                               > Select </option>
                               {surveyQuestions.map(({title, question_id})=>{
-                                return (<option key={question_id} value={question_id} >{title}</option>);
+                                return (<option key={question_id} value={question_id} selected={(question_id == sumsQuestions[idx])}>{title}</option>);
                               })}
                             </select>{ (idx == (sumsQuestions.length - 1)) ?
                                        <button className='new-rule-button'
@@ -541,7 +539,7 @@ const RulesStep  = () => {
                         type='number'
                         className='rule-input'
                         value={newRuleSum}
-                        onChange={(e)=>dispatch([event_ids.rules.newRule.sum])}>
+                        onChange={(e)=>dispatch([event_ids.rules.newRule.sum, e.target.value])}>
                       </input>                      
                     </div>
                   </div>);
@@ -585,16 +583,16 @@ const RulesStep  = () => {
                         </select>
                       </div>
                       <div className='new-rule-input' style={{width: "100%"}}>
-                        <label> Question 2 </label>
-                        {surveyQuestions.map(({title, question_id})=>{
-                          return (<option key={question_id} value={question_id} >{title}</option>);
-                        })}
+                        <label> Question 2 </label>                        
                         <select
                           className='select-bar'
                           onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
                           <option key='default'
                                   selected disabled hidden
                           > Select Question 2 </option>
+                          {surveyQuestions.map(({title, question_id})=>{
+                            return (<option key={question_id} value={question_id} >{title}</option>);
+                          })}
                         </select>
                       </div>                      
                     </div>

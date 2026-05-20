@@ -284,7 +284,14 @@ regEvent(event_ids.rules.newRule.pattern,
 
 regEvent(event_ids.rules.rules,
          ({ draftDb }) => {           
-           console.log('creating new rule', draftDb[sub_ids.rules.newRule.sum], draftDb[sub_ids.rules.newRule.sums.questions]);
+           console.log('creating new rule',
+                       draftDb[sub_ids.rules.newRule.sum],
+                       {
+             ruleType:  draftDb[sub_ids.rules.newRule.type],
+             label:     draftDb[sub_ids.rules.newRule.label],
+             sum:       draftDb[sub_ids.rules.newRule.sum],
+             questions: draftDb[sub_ids.rules.newRule.sums.questions],
+           });
            (draftDb[sub_ids.rules.newRule.type] === 'text-match') && draftDb[event_ids.rules.rules].push(  {
              ruleType:  draftDb[sub_ids.rules.newRule.type],
              label:     draftDb[sub_ids.rules.newRule.label],
@@ -348,6 +355,7 @@ regEvent(event_ids.rules.newRule.max,
 
 regEvent(event_ids.rules.newRule.sum,
          ({ draftDb }, sum) => {
+           console.log('adding new sum', sum);
            draftDb[sub_ids.rules.newRule.sum] = sum;
          });
 
@@ -370,5 +378,5 @@ regEvent(event_ids.rules.newRule.sums.questions.remove,
 
 regEvent(event_ids.rules.newRule.sums.questions.questions,
          ({ draftDb }, question, idx) => {           
-           draftDb[sub_ids.rules.newRule.questions][idx] = question;            
+           draftDb[sub_ids.rules.newRule.sums.questions][idx] = question;            
          });
