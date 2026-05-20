@@ -387,13 +387,13 @@ const RulesStep  = () => {
       label: 'Incompatible Answers',
       validOption: () => {return false;},
       invalidOptionText: "There must be at least 3 questions where type is not input for this rule.",
-      display: ([nil, {questions}])=>{
+      display: ([nil, rule])=>{
         return (
           <div>The answer
-            <b> "{questions[0][1]}"</b> from question
-            <b> "{questions[0][0]}"</b> is incompatible with the answer
-            <b> "{questions[1][1]}"</b> from question
-            <b> "{questions[1][0]}"</b>.
+            <b> "{questions.filter((q)=>q.question_id == rule.questions[0][0])[0].answers[rule.questions[0][1]]}"</b> from question
+            <b> "{questions.filter((q)=>q.question_id == rule.questions[0][0])[0].title}"</b> is incompatible with the answer
+            <b> "{questions.filter((q)=>q.question_id == rule.questions[1][0])[0].answers[rule.questions[1][1]]}"</b> from question
+            <b> "{questions.filter((q)=>q.question_id == rule.questions[1][0])[0].title}"</b>.
           </div>);}},
     'multiple-incompatible-answers': {
       label: 'Multiple Incompatible Answers',
@@ -443,6 +443,7 @@ const RulesStep  = () => {
     const newRuleSum = useSubscription([sub_ids.rules.newRule.sum]);
     const newRuleQuestions = useSubscription([sub_ids.rules.newRule.questions]);
     const sumsQuestions = useSubscription([sub_ids.rules.newRule.sums.questions]);
+    const incompatibleAnswers = useSubscription([sub_ids.rules.newRule.incompatibles]);
 
     const newRuleInput = () => {
       switch(newRuleType) {
@@ -518,7 +519,8 @@ const RulesStep  = () => {
                                       selected disabled hidden
                               > Select </option>
                               {surveyQuestions.map(({title, question_id})=>{
-                                return (<option key={question_id} value={question_id} selected={(question_id == sumsQuestions[idx])}>{title}</option>);
+                                return (<option key={question_id} value={question_id}
+                                                selected={(question_id == sumsQuestions[idx])}>{title}</option>);
                               })}
                             </select>{ (idx == (sumsQuestions.length - 1)) ?
                                        <button className='new-rule-button'
@@ -573,7 +575,7 @@ const RulesStep  = () => {
                         <label> Question 1 </label>
                         <select
                           className='select-bar'
-                          onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.incompatibles, 0, 0, e.target.value ])}>
                           <option key='default'
                                   selected disabled hidden
                           > Select Question 1 </option>
@@ -586,7 +588,7 @@ const RulesStep  = () => {
                         <label> Question 2 </label>                        
                         <select
                           className='select-bar'
-                          onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.incompatibles,1, 0,  e.target.value])}>
                           <option key='default'
                                   selected disabled hidden
                           > Select Question 2 </option>
@@ -601,20 +603,26 @@ const RulesStep  = () => {
                         <label> Answer 1 </label>
                         <select
                           className='select-bar'
-                          onChange={(e)=>dispatch([event_ids.rules.newRule.answers, e.target.value])}>
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.incompatibles, 0, 1, e.target.value])}>
                           <option key='default'
                                   selected disabled hidden
                           > Select Answer 1 </option>
+                          {incompatibleAnswers[0][0] &&
+                           Object.entries(surveyQuestions.filter(({question_id})=>question_id == incompatibleAnswers[0][0])[0].answers).map(([idx, answer]) => {return (<option key={idx} value={idx} >{answer}</option>);})
+                          }
                         </select>
                       </div>
                       <div className='new-rule-input' style={{width: "100%"}}>
                         <label> Answer 2 </label>
                         <select
                           className='select-bar'
-                          onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.incompatibles, 1, 1, e.target.value])}>
                           <option key='default'
                                   selected disabled hidden
                           > Select Answer 2 </option>
+                          {incompatibleAnswers[1][0] &&
+                             Object.entries(surveyQuestions.filter(({question_id})=>question_id == incompatibleAnswers[1][0])[0].answers).map(([idx, answer]) => {return (<option key={idx} value={idx} >{answer}</option>);})
+                          }
                         </select>
                       </div>
                     </div>
@@ -762,7 +770,7 @@ const RulesStep  = () => {
                          ? {fontWeight: 600}
                          : {fontWeight: 400}}
                 >Institution</span>
-              </div>
+             </div>
               <div
                 style={{display: 'inline-flex', gap: '8px'}}
                 onClick={()=>dispatch([event_ids.rules.filter, 'project'])}>
