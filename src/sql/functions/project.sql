@@ -1056,6 +1056,7 @@ RETURNS TABLE (
         extra_plot_info       json,
         extra_sample_info     json,
         sample_internal_id    integer,
+        imagery_used          text,
         guest_usernames       jsonb
 ) AS $$
 
@@ -1080,7 +1081,12 @@ WITH guest_users AS (
         saved_answers,
         extra_plot_info,
         extra_sample_info,
-        s.sample_uid
+        s.sample_uid,
+        (
+          SELECT jsonb_agg(img.title)::text
+          FROM jsonb_array_elements_text(up.imagery_ids) AS id
+          INNER JOIN imagery img ON img.imagery_uid::text = id
+        ) AS imagery_used
     FROM plots pl
     INNER JOIN samples s ON s.plot_rid = pl.plot_uid
     INNER JOIN user_plots up ON up.plot_rid = pl.plot_uid
@@ -1105,7 +1111,12 @@ WITH guest_users AS (
         saved_answers,
         extra_plot_info,
         extra_sample_info,
-        s.sample_uid
+        s.sample_uid,
+        (
+          SELECT jsonb_agg(img.title)::text
+          FROM jsonb_array_elements_text(up.imagery_ids) AS id
+          INNER JOIN imagery img ON img.imagery_uid::text = id
+        ) AS imagery_used
     FROM plots pl
     LEFT JOIN samples s ON s.plot_rid = pl.plot_uid
     LEFT JOIN user_plots up ON up.plot_rid = pl.plot_uid
@@ -1120,11 +1131,12 @@ SELECT * FROM (
            (SELECT guest_usernames FROM guest_users) AS guest_usernames
     FROM simplified_query WHERE _type = 'simplified'
     UNION ALL
-    SELECT *, NULL FROM regular_query WHERE _type = 'regular'
+    SELECT *,
+           (SELECT guest_usernames FROM guest_users) AS guest_usernames
+    FROM regular_query WHERE _type = 'regular'
 ) AS final_result
 
 $$ LANGUAGE SQL;
-
 
 -- Returns relevant information for DOI creation by ID.
 CREATE OR REPLACE FUNCTION select_project_info_for_doi(_project_id integer)

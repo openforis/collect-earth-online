@@ -990,6 +990,7 @@
                           :analysis_duration
                           :imagery_title
                           :imagery_attributions
+                          :imagery_used
                           :sample_geom
                           :confidence
                           :confidence_comment
