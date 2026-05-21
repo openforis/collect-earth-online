@@ -372,15 +372,15 @@ const RulesStep  = () => {
       label: 'Matching Sums',
       validOption: () => {return false;},
       invalidOptionText: "There must be at least 2 number questions for this rule type.",
-      display: ([nil, rule])=>{
+      display: ([nil, rule])=>{        
         return (
           <div>The sum of the answers to questions
             {Object.entries(rule.questions[0]).map(([idx, question]) => {              
-              return (<span><b> "{question}"</b>{(rule.questions[0].length > 2) && (idx < (rule.questions[0].length - 1)) && ","} {(idx == (rule.questions[0].length - 2) ) && " and " } </span>);
+              return (<span><b> "{questions.filter((q)=>q.question_id == question)[0].title}"</b>{(rule.questions[0].length > 2) && (idx < (rule.questions[0].length - 1)) && ","} {(idx == (rule.questions[0].length - 2) ) && " and " } </span>);
             })}
              should be equal to the sum of the answers to questions
-            {Object.entries(questions[1]).map(([idx, question]) => {              
-              return (<span><b> "{question}"</b>{(rule.questions[1].length > 2) && (idx < (rule.questions[1].length - 1)) && ","} {(idx == (rule.questions[1].length - 2) ) && " and " } </span>);
+            {Object.entries(rule.questions[1]).map(([idx, question]) => {              
+              return (<span><b> "{questions.filter((q)=>q.question_id == question)[0].title}"</b>{(rule.questions[1].length > 2) && (idx < (rule.questions[1].length - 1)) && ","} {(idx == (rule.questions[1].length - 2) ) && " and " } </span>);
             })}
           </div>);}},
     'incompatible-answers': {
@@ -551,20 +551,30 @@ const RulesStep  = () => {
                       <label> Select First Question Set </label>
                       <select
                         className='select-bar'
-                        onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
+                        multiple='multiple'
+                        style={{height: 'inherit'}}
+                        onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.selectedOptions, 0])}>
                         <option key='default'
                                 selected disabled hidden
                         > Select </option>
+                        {surveyQuestions.map(({title, question_id})=>{
+                          return (<option key={question_id} value={question_id} >{title}</option>);
+                        })}
                       </select>
                     </div>
                     <div className='new-rule-input'>
                       <label> Select Second Question Set </label>
                       <select
                         className='select-bar'
-                        onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
+                        multiple='multiple'
+                        style={{height: 'inherit'}}
+                        onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.selectedOptions, 1])}>
                         <option key='default'
                                 selected disabled hidden
-                        > Select </option>                        
+                        > Select </option>
+                        {surveyQuestions.map(({title, question_id})=>{
+                          return (<option key={question_id} value={question_id} >{title}</option>);
+                        })}
                       </select>
                     </div>
                   </div>);

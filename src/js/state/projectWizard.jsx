@@ -33,7 +33,7 @@ const projectWizardDb = {
     {ruleType: 'text-match',
      question: 0,
      label: 'Text Match Example',
-     pattern: 'example'},    
+     pattern: 'example'},
     {ruleType: 'numeric-range',
      label: 'Numeric Range Example',
      question: 0,
@@ -47,7 +47,7 @@ const projectWizardDb = {
     },
     {ruleType: 'matching-sums',
      label: 'Matching Sums Example',
-     questions: [[0, 1], [1, 2]],     
+     questions: [[0, 1], [1, 2]],
     },
     {ruleType: 'incompatible-answers',
      label: 'Incompatible Answers',
@@ -56,7 +56,7 @@ const projectWizardDb = {
     {ruleType: 'multiple-incompatible-answers',
      label: 'Multiple Incompatible Answers Example',
      questions: [[0, 1], [1, 2], [1, 3], [2, 3]]
-    }    
+    }
   ],
   'rules.search': '',
   'rules.filter': null,
@@ -67,8 +67,8 @@ const projectWizardDb = {
   'rules.newRule.pattern': '',
   'rules.newRule.min' : null,
   'rules.newRule.max' : null,
-  'rules.newRule.sum' : null, // 0
-  'rules.newRule.questions' : [0, 1], //
+  'rules.newRule.sum' : null, 
+  'rules.newRule.questions' : [0, 1], 
   'rules.newRule.sums.questions': [null, null],
   'rule.newRule.incompatibles': [[null, null], [null, null]]
 };
@@ -98,7 +98,7 @@ export const event_ids = {
     search: 'rules.search',
     filter: 'rules.filter',
     delete: 'rules.delete',
-    newRule: {      
+    newRule: {
       label: 'rules.newRule.label',
       type: 'rules.newRule.type',
       pattern: 'rules.newRule.pattern',
@@ -187,12 +187,12 @@ regSub('rule.newRule.incompatibles', 'rule.newRule.incompatibles');
 // PROJECT WIZARD EVENTS
 regEvent(event_ids.currentStep,
          ({ draftDb }, currentStep) => {
-           draftDb[event_ids.currentStep] = currentStep;           
+           draftDb[event_ids.currentStep] = currentStep;
          });
 
 regEvent(event_ids.modal,
          ({ draftDb }, modal) => {
-           draftDb[event_ids.modal] = modal;           
+           draftDb[event_ids.modal] = modal;
          });
 
 regEvent(event_ids.overview.projectType,
@@ -201,7 +201,7 @@ regEvent(event_ids.overview.projectType,
          });
 
 regEvent(event_ids.projectSource,
-         ({ draftDb }, projectSource) => {           
+         ({ draftDb }, projectSource) => {
            draftDb[event_ids.projectSource] = projectSource;
          });
 
@@ -287,40 +287,47 @@ regEvent(event_ids.rules.newRule.pattern,
          });
 
 regEvent(event_ids.rules.rules,
-         ({ draftDb }) => {                      
-           (draftDb[sub_ids.rules.newRule.type] === 'text-match') && draftDb[event_ids.rules.rules].push(  {
-             ruleType:  draftDb[sub_ids.rules.newRule.type],
-             label:     draftDb[sub_ids.rules.newRule.label],
-             question:  draftDb[sub_ids.rules.newRule.questions],
-             pattern:   draftDb[sub_ids.rules.newRule.pattern]
+         ({ draftDb }) => {
+           (draftDb[sub_ids.rules.newRule.type] === 'text-match') &&
+             draftDb[event_ids.rules.rules].push({
+               ruleType:  draftDb[sub_ids.rules.newRule.type],
+               label:     draftDb[sub_ids.rules.newRule.label],
+               question:  draftDb[sub_ids.rules.newRule.questions],
+               pattern:   draftDb[sub_ids.rules.newRule.pattern]
            });
-           (draftDb[sub_ids.rules.newRule.type] === 'numeric-range') && draftDb[event_ids.rules.rules].push( {
-             ruleType:  draftDb[sub_ids.rules.newRule.type],
-             label:     draftDb[sub_ids.rules.newRule.label],
-             question:  draftDb[sub_ids.rules.newRule.questions],
-             min:       draftDb[sub_ids.rules.newRule.min],
-             max:       draftDb[sub_ids.rules.newRule.max],
+           (draftDb[sub_ids.rules.newRule.type] === 'numeric-range') &&
+             draftDb[event_ids.rules.rules].push({
+               ruleType:  draftDb[sub_ids.rules.newRule.type],
+               label:     draftDb[sub_ids.rules.newRule.label],
+               question:  draftDb[sub_ids.rules.newRule.questions],
+               min:       draftDb[sub_ids.rules.newRule.min],
+               max:       draftDb[sub_ids.rules.newRule.max],
            });
-           (draftDb[sub_ids.rules.newRule.type] === 'sum-of-answers') && draftDb[event_ids.rules.rules].push( {
-             ruleType:  draftDb[sub_ids.rules.newRule.type],
-             label:     draftDb[sub_ids.rules.newRule.label],
-             sum:       draftDb[sub_ids.rules.newRule.sum],
-             questions: draftDb[sub_ids.rules.newRule.sums.questions],
+           (draftDb[sub_ids.rules.newRule.type] === 'sum-of-answers') &&
+             draftDb[event_ids.rules.rules].push( {
+               ruleType:  draftDb[sub_ids.rules.newRule.type],
+               label:     draftDb[sub_ids.rules.newRule.label],
+               sum:       draftDb[sub_ids.rules.newRule.sum],
+               questions: draftDb[sub_ids.rules.newRule.sums.questions],
            });
-           (draftDb[sub_ids.rules.newRule.type] === 'matching-sums') && draftDb[event_ids.rules.rules].push( {
-             ruleType:  draftDb[sub_ids.rules.newRule.type],
-             label:     draftDb[sub_ids.rules.newRule.label],
-             questions: draftDb[sub_ids.rules.newRule.questions],
-           });
-           (draftDb[sub_ids.rules.newRule.type] === 'incompatible-answers') && draftDb[event_ids.rules.rules].push( {
-             ruleType:  draftDb[sub_ids.rules.newRule.type],
-             label:     draftDb[sub_ids.rules.newRule.label],
-             questions: draftDb[sub_ids.rules.newRule.incompatibles],
-           });
-           (draftDb[sub_ids.rules.newRule.type] === 'multiple-incompatible-answers') && draftDb[event_ids.rules.rules].push( {
-             ruleType:  draftDb[sub_ids.rules.newRule.type],
-             label:     draftDb[sub_ids.rules.newRule.label],
-             questions: draftDb[sub_ids.rules.newRule.questions],
+           (draftDb[sub_ids.rules.newRule.type] === 'matching-sums') &&
+             draftDb[event_ids.rules.rules].push( {
+               ruleType:  draftDb[sub_ids.rules.newRule.type],
+               label:     draftDb[sub_ids.rules.newRule.label],
+               questions: draftDb[sub_ids.rules.newRule.questions],
+             });
+           
+           (draftDb[sub_ids.rules.newRule.type] === 'incompatible-answers') &&
+             draftDb[event_ids.rules.rules].push({
+               ruleType:  draftDb[sub_ids.rules.newRule.type],
+               label:     draftDb[sub_ids.rules.newRule.label],
+               questions: draftDb[sub_ids.rules.newRule.incompatibles],
+             });
+           (draftDb[sub_ids.rules.newRule.type] === 'multiple-incompatible-answers') &&
+             draftDb[event_ids.rules.rules].push({
+               ruleType:  draftDb[sub_ids.rules.newRule.type],
+               label:     draftDb[sub_ids.rules.newRule.label],
+               questions: draftDb[sub_ids.rules.newRule.questions],
            });
            
            draftDb[sub_ids.rules.newRule.label] = '';
@@ -328,7 +335,7 @@ regEvent(event_ids.rules.rules,
            draftDb[sub_ids.rules.newRule.pattern] = null;
            draftDb[sub_ids.rules.newRule.min] = null;
            draftDb[sub_ids.rules.newRule.max] = null;
-           draftDb[sub_ids.rules.newRule.sum] = null;          
+           draftDb[sub_ids.rules.newRule.sum] = null;
          });
 
 regEvent(event_ids.rules.delete,
@@ -347,21 +354,20 @@ regEvent(event_ids.rules.newRule.max,
          });
 
 regEvent(event_ids.rules.newRule.sum,
-         ({ draftDb }, sum) => {           
+         ({ draftDb }, sum) => {
            draftDb[sub_ids.rules.newRule.sum] = sum;
          });
-
 
 //TODO: handle questions conditionally based on rules.newRule.type
 regEvent(event_ids.rules.newRule.questions,
          ({ draftDb }, questions, idx) => {           
            (draftDb[sub_ids.rules.newRule.type] === 'matching-sums') ?             
-             draftDb[sub_ids.rules.newRule.questions][idx][0] = questions
-             : draftDb[sub_ids.rules.newRule.questions] = questions;           
+             draftDb[sub_ids.rules.newRule.questions][idx] = Array.from(questions, (i) => Number(i.value))
+             : draftDb[sub_ids.rules.newRule.questions] = questions;
          });
 
 regEvent(event_ids.rules.newRule.answers,
-         ({ draftDb }, questions, idx) => {           
+         ({ draftDb }, questions, idx) => {
            draftDb[sub_ids.rules.newRule.questions][idx][1] = questions;
          });
 
@@ -372,16 +378,17 @@ regEvent(event_ids.rules.newRule.sums.questions.add,
          });
 
 regEvent(event_ids.rules.newRule.sums.questions.remove,
-         ({ draftDb }, idx) => {           
+         ({ draftDb }, idx) => {
            draftDb[sub_ids.rules.newRule.sums.questions].splice(idx, 1);
          });
 
+
 regEvent(event_ids.rules.newRule.sums.questions.questions,
-         ({ draftDb }, question, idx) => {           
-           draftDb[sub_ids.rules.newRule.sums.questions][idx] = question;            
+         ({ draftDb }, question, idx) => {
+           draftDb[sub_ids.rules.newRule.sums.questions][idx] = question;
          });
 
 regEvent(event_ids.rules.newRule.incompatibles,
-         ({ draftDb }, question, answer, value) => {           
-           draftDb['rule.newRule.incompatibles'][question][answer] = value;           
+         ({ draftDb }, question, answer, value) => {
+           draftDb['rule.newRule.incompatibles'][question][answer] = value;
          });
