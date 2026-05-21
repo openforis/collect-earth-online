@@ -23,13 +23,13 @@ const projectWizardDb = {
   samples: [],
   //questions
   'questions.questions': [
-    {question_id : 0, title: 'Is this Deforestation?', answers: ['yes', 'no', 'maybe']},
-    {question_id: 1, title: 'Is this a good example of Cocoa?' , answers: ['yes', 'no', 'maybe']},
-    {question_id: 2, title: 'Is this Deforestation?' , answers: ['yes', 'no', 'maybe']},
+    {question_id: 3, title: 'Is this Deforestation?', answers: ['yes-forest', 'no-forest', 'maybe-forest']},
+    {question_id: 1, title: 'Is this a good example of Cocoa?' , answers: ['yes-cocoa', 'no-cocoa', 'maybe-cocoa']},
+    {question_id: 2, title: 'Is this water?' , answers: ['yes-water', 'no-water', 'maybe-water']},
   ],
   // rules
   //TODO: DELETE PLACEHOLDER RULES
-  'rules.rules' : [
+  'rules.rules' : [/*
     {ruleType: 'text-match',
      question: 0,
      label: 'Text Match Example',
@@ -42,21 +42,21 @@ const projectWizardDb = {
     },
     {ruleType: 'sum-of-answers',
      label: 'Sum of Answers Example',
-     questions: [0, 1],
+     questions: [3, 1],
      sum: 1
     },
     {ruleType: 'matching-sums',
      label: 'Matching Sums Example',
-     questions: [[0, 1], [1, 2]],
+     questions: [[3, 1], [1, 2]],
     },
     {ruleType: 'incompatible-answers',
      label: 'Incompatible Answers',
-     questions: [[0, 1], [1, 2]]
+     questions: [[3, 1], [1, 2]]
     },
     {ruleType: 'multiple-incompatible-answers',
      label: 'Multiple Incompatible Answers Example',
-     questions: [[0, 1], [1, 2], [1, 3], [2, 3]]
-    }
+     questions: [[3, 1], [1, 2], [3, 2]]
+     }*/
   ],
   'rules.search': '',
   'rules.filter': null,
@@ -70,7 +70,8 @@ const projectWizardDb = {
   'rules.newRule.sum' : null, 
   'rules.newRule.questions' : [0, 1], 
   'rules.newRule.sums.questions': [null, null],
-  'rule.newRule.incompatibles': [[null, null], [null, null]]
+  'rules.newRule.incompatibles': [[null, null], [null, null]],
+  'rules.newRule.multipleIncompatibles': [[null, null], [null, null], [null, null]]
 };
 
 initAppDb(projectWizardDb);
@@ -106,7 +107,8 @@ export const event_ids = {
       max : 'rules.newRule.max',
       sum: 'rules.newRule.sum',
       questions: 'rules.newRule.questions',
-      incompatibles: 'rule.newRule.incompatibles',
+      incompatibles: 'rules.newRule.incompatibles',
+      multipleIncompatibles: 'rules.newRule.multipleIncompatibles',
       answers: 'rules.newRule.answers',
       sums: {questions: {questions: 'rules.newRule.sums.questions.questions',
                          add:'rules.newRule.sums.questions.add',
@@ -143,7 +145,8 @@ export const sub_ids = {
       max : 'rules.newRule.max',
       sum: 'rules.newRule.sum',
       questions: 'rules.newRule.questions',
-      incompatibles: 'rule.newRule.incompatibles',
+      incompatibles: 'rules.newRule.incompatibles',
+      multipleIncompatibles: 'rules.newRule.multipleIncompatibles',
       sums: {questions: 'rules.newRule.sums.questions'}
     }}};
 
@@ -181,8 +184,8 @@ regSub(sub_ids.rules.newRule.max, sub_ids.rules.newRule.max);
 regSub(sub_ids.rules.newRule.sum, sub_ids.rules.newRule.sum);
 regSub(sub_ids.rules.newRule.questions, sub_ids.rules.newRule.questions);
 regSub(sub_ids.rules.newRule.sums.questions, sub_ids.rules.newRule.sums.questions);
-//regSub(sub_ids.rules.newRule.incompatibles, sub_ids.rules.newRule.incompatibles);
-regSub('rule.newRule.incompatibles', 'rule.newRule.incompatibles');
+regSub(sub_ids.rules.newRule.incompatibles, sub_ids.rules.newRule.incompatibles);
+regSub(sub_ids.rules.newRule.multipleIncompatibles, sub_ids.rules.newRule.multipleIncompatibles);
 
 // PROJECT WIZARD EVENTS
 regEvent(event_ids.currentStep,
@@ -266,13 +269,12 @@ regEvent(event_ids.rules.filter,
 
 regEvent(event_ids.rules.newRule.type,
          ({ draftDb }, type) => {
-           draftDb[event_ids.rules.newRule.label] = '';
-           draftDb[event_ids.rules.newRule.questions] = [];
-           draftDb[event_ids.rules.newRule.pattern] = null;
-           draftDb[event_ids.rules.newRule.min] = null;
-           draftDb[event_ids.rules.newRule.max] = null;
-           draftDb[event_ids.rules.newRule.sum] = null;
-           
+           draftDb[sub_ids.rules.newRule.label] = '';
+           draftDb[sub_ids.rules.newRule.questions] = [];
+           draftDb[sub_ids.rules.newRule.pattern] = null;
+           draftDb[sub_ids.rules.newRule.min] = null;
+           draftDb[sub_ids.rules.newRule.max] = null;
+           draftDb[sub_ids.rules.newRule.sum] = null;
            draftDb[event_ids.rules.newRule.type] = type;
          });
 
@@ -324,10 +326,11 @@ regEvent(event_ids.rules.rules,
                questions: draftDb[sub_ids.rules.newRule.incompatibles],
              });
            (draftDb[sub_ids.rules.newRule.type] === 'multiple-incompatible-answers') &&
+             
              draftDb[event_ids.rules.rules].push({
                ruleType:  draftDb[sub_ids.rules.newRule.type],
                label:     draftDb[sub_ids.rules.newRule.label],
-               questions: draftDb[sub_ids.rules.newRule.questions],
+               questions: draftDb[sub_ids.rules.newRule.multipleIncompatibles],
            });
            
            draftDb[sub_ids.rules.newRule.label] = '';
@@ -361,7 +364,7 @@ regEvent(event_ids.rules.newRule.sum,
 //TODO: handle questions conditionally based on rules.newRule.type
 regEvent(event_ids.rules.newRule.questions,
          ({ draftDb }, questions, idx) => {           
-           (draftDb[sub_ids.rules.newRule.type] === 'matching-sums') ?             
+           (draftDb[sub_ids.rules.newRule.type] === 'matching-sums') ?
              draftDb[sub_ids.rules.newRule.questions][idx] = Array.from(questions, (i) => Number(i.value))
              : draftDb[sub_ids.rules.newRule.questions] = questions;
          });
@@ -374,7 +377,9 @@ regEvent(event_ids.rules.newRule.answers,
 
 regEvent(event_ids.rules.newRule.sums.questions.add,
          ({ draftDb }) => {
-           draftDb[sub_ids.rules.newRule.sums.questions].push(null);
+//           (draftDb[sub_ids.rules.newRule.type] == 'multiple-incompatible-answers') ?
+  //           draftDb[sub_ids.rules.newRule.sums.questions].push([null, null])
+            draftDb[sub_ids.rules.newRule.sums.questions].push(null);
          });
 
 regEvent(event_ids.rules.newRule.sums.questions.remove,
@@ -389,6 +394,12 @@ regEvent(event_ids.rules.newRule.sums.questions.questions,
          });
 
 regEvent(event_ids.rules.newRule.incompatibles,
+         ({ draftDb }, question, answer, value) => {                      
+           draftDb[sub_ids.rules.newRule.incompatibles][question][answer] = Number(value);
+         });
+
+regEvent(event_ids.rules.newRule.multipleIncompatibles,
          ({ draftDb }, question, answer, value) => {
-           draftDb['rule.newRule.incompatibles'][question][answer] = value;
+           !draftDb[sub_ids.rules.newRule.multipleIncompatibles][question] && draftDb[sub_ids.rules.newRule.multipleIncompatibles].push([null, null]);
+           draftDb[sub_ids.rules.newRule.multipleIncompatibles][question][answer] = Number(value);
          });

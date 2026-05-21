@@ -124,7 +124,7 @@ const NewProjectModal = () => {
       })}
     </div>);
 };
-  
+
 const ProjectWizardModal = () => {
   // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
   const projectSource = useSubscription([sub_ids.projectSource]);
@@ -135,7 +135,7 @@ const ProjectWizardModal = () => {
     case 'newProject' : return (<NewProjectModal/>);
     default : break;
     }};
-    
+  
   const confirmDisabled = () => {
     switch (modal.id) {
     case 'newProject'
@@ -168,28 +168,28 @@ const OverviewStep = () => {
     const learningMaterial = useSubscription([sub_ids.overview.learningMaterial]);
 
     return (<div
-            className="general-info-card card">
+              className="general-info-card card">
               <p className="card-title">General Information</p>
               <p className="text-label"
-                >Project Type<span style={{color: "red"}}>*</span>
+              >Project Type<span style={{color: "red"}}>*</span>
                 <SvgIcon icon="info" size="1.2rem" /></p>
               <div>
-              <div style={{display: "inline-flex", gap:"12px"}}>
-                {Object.entries(projectTypeOptions).map(([id, label]) => {
-                  return (<div
-                            className="labeled-input"                       
-                            key={id}
-                            onClick={()=> {dispatch([event_ids.overview.projectType, id]);
-                                          }}>
-                            <span>{ projectType == id
-                                    ? <SvgIcon icon="radioChecked" size="1.2rem" />    
-                                    : <SvgIcon icon="radio" size="1.2rem"/>}</span>
-                            <label                              
-                              className="text-label"
-                              style={projectType == id ? {fontWeight: "bold"} : {}}
-                            >{ label }</label>
-                          </div>);                  
-                })}</div>
+                <div style={{display: "inline-flex", gap:"12px"}}>
+                  {Object.entries(projectTypeOptions).map(([id, label]) => {
+                    return (<div
+                              className="labeled-input"                       
+                              key={id}
+                              onClick={()=> {dispatch([event_ids.overview.projectType, id]);
+                                            }}>
+                              <span>{ projectType == id
+                                      ? <SvgIcon icon="radioChecked" size="1.2rem" />    
+                                      : <SvgIcon icon="radio" size="1.2rem"/>}</span>
+                              <label                              
+                                className="text-label"
+                                style={projectType == id ? {fontWeight: "bold"} : {}}
+                              >{ label }</label>
+                            </div>);                  
+                  })}</div>
                 <div>
                   <label className="text-label"
                   >Project Name<span style={{color: "red"}}>*</span></label>
@@ -233,18 +233,18 @@ const OverviewStep = () => {
     return (
       <div className="visibility-card card">
         <p className="card-title">Visibility<span style={{color:"red"}}>*</span>
-        <SvgIcon icon="info" size="1.2rem" /></p>
+          <SvgIcon icon="info" size="1.2rem" /></p>
         {Object.entries(visibilityOptions).map(([id, label])=>{
 	  return (<div className="labeled-input"
                        key={id}
                        onClick={()=>dispatch([event_ids.overview.visibility, id])}>
-                     <span>{visibility == id
-                             ? <SvgIcon icon="radioChecked" size="1.2rem" />    
-                             : <SvgIcon icon="radio" size="1.2rem"/>}</span>
+                    <span>{visibility == id
+                           ? <SvgIcon icon="radioChecked" size="1.2rem" />    
+                           : <SvgIcon icon="radio" size="1.2rem"/>}</span>
                     <label className="text-label"
                            style={visibility == id ? {fontWeight: "bold"} : {}}
                     >{ label  }</label>
-                   </div>);
+                  </div>);
         })}
       </div>
     );
@@ -263,27 +263,26 @@ const OverviewStep = () => {
                            };
     
     return(<div className="project-options-card card">
-           <p className="card-title">Project Options</p>
-           {Object.entries(projectOptionsMap).map(([id, label])=> {
-	     return (
-	       <div className="labeled-input">
-		 <span
-                   className="checkbox"
-		   onClick={() => {
-                     dispatch([event_ids.overview.projectOptions[id], !projectOptions[id]]);
-                     
-                   }}>
-		   {projectOptions[id]
-                    ? (<SvgIcon icon="checkboxChecked" size="1.2rem" />)
-                    : <SvgIcon icon="checkboxUnchecked" size="1.2rem" />}
-		 </span>
-		 <label className="text-label"
-                        style={projectOptions[id] ? {fontWeight: "bold"} : {}}
-                 >{label}</label>
-	       </div>
-	     ) ;
-	   })}
-         </div>);
+             <p className="card-title">Project Options</p>
+             {Object.entries(projectOptionsMap).map(([id, label])=> {
+	       return (
+	         <div className="labeled-input">
+		   <span
+                     className="checkbox"
+		     onClick={() => {
+                       dispatch([event_ids.overview.projectOptions[id], !projectOptions[id]]);
+                     }}>
+		     {projectOptions[id]
+                      ? (<SvgIcon icon="checkboxChecked" size="1.2rem" />)
+                      : <SvgIcon icon="checkboxUnchecked" size="1.2rem" />}
+		   </span>
+		   <label className="text-label"
+                          style={projectOptions[id] ? {fontWeight: "bold"} : {}}
+                   >{label}</label>
+	         </div>
+	       ) ;
+	     })}
+           </div>);
   };
 
   return (
@@ -345,7 +344,7 @@ const RulesStep  = () => {
           <div>The answer to question
             <b> "{questions.filter((q)=>q.question_id == question)[0].title}"</b> should match the pattern
             <b> {pattern}</b>.
-        </div>);}},
+          </div>);}},
     'numeric-range': {
       label: 'Numeric Range',
       validOption: () => {return false;},
@@ -366,7 +365,7 @@ const RulesStep  = () => {
             {Object.entries(rule.questions).map(([idx, question]) => {                
               return (<span><b> "{questions.filter((q)=>q.question_id == question)[0].title}"</b>{(rule.questions.length > 2 ) && (idx < (rule.questions.length - 1)) && ","} {(idx == (rule.questions.length - 2) ) && " and " } </span>);
             })}
-             should sum up to <b>{rule.sum}</b>.
+            should sum up to <b>{rule.sum}</b>.
           </div>);}},
     'matching-sums': {
       label: 'Matching Sums',
@@ -378,7 +377,7 @@ const RulesStep  = () => {
             {Object.entries(rule.questions[0]).map(([idx, question]) => {              
               return (<span><b> "{questions.filter((q)=>q.question_id == question)[0].title}"</b>{(rule.questions[0].length > 2) && (idx < (rule.questions[0].length - 1)) && ","} {(idx == (rule.questions[0].length - 2) ) && " and " } </span>);
             })}
-             should be equal to the sum of the answers to questions
+            should be equal to the sum of the answers to questions
             {Object.entries(rule.questions[1]).map(([idx, question]) => {              
               return (<span><b> "{questions.filter((q)=>q.question_id == question)[0].title}"</b>{(rule.questions[1].length > 2) && (idx < (rule.questions[1].length - 1)) && ","} {(idx == (rule.questions[1].length - 2) ) && " and " } </span>);
             })}
@@ -399,17 +398,17 @@ const RulesStep  = () => {
       label: 'Multiple Incompatible Answers',
       validOption: () => {return false;},
       invalidOptionText: "this is not a valid option",      
-      display: ([idx, {questions}])=>{
+      display: ([nil, rule])=>{
         return (
           <div className='card-text' >
-            {Object.entries(questions.slice(1)).map(( [idx, [question, answer]])=> {
-              return (<p className="card-text">If <b>"{answer}"</b> was answered for question <b>"{question}"</b>
-                        { (questions.length - 2 == idx) ?  "," : ', and '}                        
+            {Object.entries(rule.questions.slice(1)).map(( [idx, [question, answer]])=> {              
+              return (<p className="card-text">If <b>"{questions.filter((q)=>q.question_id == rule.questions[idx][0])[0].answers[rule.questions[idx][1]]}"</b> was answered for question <b>"{questions.filter((q)=>q.question_id == rule.questions[idx][0])[0].title}"</b>
+                        {(rule.questions.length - 2 == idx) ?  "," : ', and '}
                       </p>);
             })}
-            <p>Then the answer <b>"{questions[0][1]}"</b> for the question <b>"{questions[0][0]}"</b> is incompatible.</p>
+            <p>Then the answer <b>"{questions.filter((q)=>q.question_id == rule.questions[0][0])[0].answers[rule.questions[0][1]]}"</b> for the question <b>"{questions.filter((q)=>q.question_id == rule.questions[0][0])[0].title}"</b> is incompatible.</p>
           </div>);
-    }}};
+      }}};
   
   const RuleCard = (rule) => {
     const [idx, {ruleType, question, label, pattern, ruleId}] = rule;
@@ -444,7 +443,8 @@ const RulesStep  = () => {
     const newRuleQuestions = useSubscription([sub_ids.rules.newRule.questions]);
     const sumsQuestions = useSubscription([sub_ids.rules.newRule.sums.questions]);
     const incompatibleAnswers = useSubscription([sub_ids.rules.newRule.incompatibles]);
-
+    const multipleIncompatibles = useSubscription([sub_ids.rules.newRule.multipleIncompatibles]);
+    
     const newRuleInput = () => {
       switch(newRuleType) {
       case 'text-match' // input string: regex 
@@ -504,7 +504,7 @@ const RulesStep  = () => {
                     </div>
                   </div>);
       case 'sum-of-answers' // select 2+ questions, input number: sum 
-        : return (<div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>                    
+        : return (<div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>         
                     {Object.entries(sumsQuestions).map(([idx])=>{                      
                       return(
                         <div className='new-rule-input'>
@@ -522,19 +522,18 @@ const RulesStep  = () => {
                                 return (<option key={question_id} value={question_id}
                                                 selected={(question_id == sumsQuestions[idx])}>{title}</option>);
                               })}
-                            </select>{ (idx == (sumsQuestions.length - 1)) ?
-                                       <button className='new-rule-button'
-                                               style={{alignSelf: 'center'}}
-                                               onClick={()=>dispatch([event_ids.rules.newRule.sums.questions.add])}
-                                       ><SvgIcon icon='plus' size='1.2rem'/></button>
-                                       : (idx > 0) && <button className='new-rule-button'
-                                               style={{alignSelf: 'center'}}
-                                                onClick={()=>dispatch([event_ids.rules.newRule.sums.questions.remove, idx])}
-                            ><SvgIcon icon='minus' size='1.2rem'/></button>}</div>
+                            </select>{(idx == (sumsQuestions.length - 1)) ?
+                                      <button className='new-rule-button'
+                                              style={{alignSelf: 'center'}}
+                                              onClick={()=>dispatch([event_ids.rules.newRule.sums.questions.add])}
+                                      ><SvgIcon icon='plus' size='1.2rem'/></button>
+                                      : (idx > 0) && <button className='new-rule-button'
+                                                             style={{alignSelf: 'center'}}
+                                                             onClick={()=>dispatch([event_ids.rules.newRule.sums.questions.remove, idx])}                                                       
+                                                     ><SvgIcon icon='minus' size='1.2rem'/></button>}</div>
                         </div>                      
                       );
                     })}
-                    
                     <div className='new-rule-input' >
                       <label> Sum </label>
                       <input
@@ -590,8 +589,8 @@ const RulesStep  = () => {
                                   selected disabled hidden
                           > Select Question 1 </option>
                           {surveyQuestions.map(({title, question_id})=>{
-                          return (<option key={question_id} value={question_id} >{title}</option>);
-                        })}
+                            return (<option key={question_id} value={question_id} >{title}</option>);
+                          })}
                         </select>
                       </div>
                       <div className='new-rule-input' style={{width: "100%"}}>
@@ -631,7 +630,7 @@ const RulesStep  = () => {
                                   selected disabled hidden
                           > Select Answer 2 </option>
                           {incompatibleAnswers[1][0] &&
-                             Object.entries(surveyQuestions.filter(({question_id})=>question_id == incompatibleAnswers[1][0])[0].answers).map(([idx, answer]) => {return (<option key={idx} value={idx} >{answer}</option>);})
+                           Object.entries(surveyQuestions.filter(({question_id})=>question_id == incompatibleAnswers[1][0])[0].answers).map(([idx, answer]) => {return (<option key={idx} value={idx} >{answer}</option>);})
                           }
                         </select>
                       </div>
@@ -639,35 +638,58 @@ const RulesStep  = () => {
                   </div>);
       case 'multiple-incompatible-answers' // 
         : return (<div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
-                    <div style={{display: 'inline-flex',
-                                 flexDirection: 'column'}}>
-                      <div style={{display: 'inline-flex', flexDirection: 'row'}}>
-                        <div className='new-rule-input'>
-                          <label> Question </label>
-                          <select
-                            className='select-bar'
-                            onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
-                            <option key='default'
-                                    selected disabled hidden
-                            > Select Question </option>
-                          </select>
-                        </div>
-                        <div className='new-rule-input'>
-                          <label> Answer </label>
-                          <select
-                            className='select-bar'
-                            onChange={(e)=>dispatch([event_ids.rules.newRule.answers, e.target.value])}>
-                            <option key='default'
-                                    selected disabled hidden
-                            > Select Answer </option>
-                          </select>
-                        </div>
-                        <button className='new-rule-button'
-                                style={{alignSelf: 'center', marginTop: '1.6rem'}}
-                                onClick={()=>dispatch([event_ids.rules.newRules.questions])}
-                        ><SvgIcon icon='plus' size='1.2rem'/></button>
-                      </div>
-                    </div> 
+                    {Object.entries(sumsQuestions).map(([idx])=>{
+                      idx = Number(idx);
+                      return (
+                        <div style={{display: 'inline-flex',
+                                     flexDirection: 'column'}}>
+                          
+                          <div style={{display: 'inline-flex', flexDirection: 'row'}}>
+                            <div className='new-rule-input'>
+                              <label> Question {idx + 1}</label>
+                              <select
+                                className='select-bar'
+                                onChange={(e)=>{
+                                  dispatch([event_ids.rules.newRule.multipleIncompatibles, (idx + 1) , 0, e.target.value]);}}>
+                                <option key='default'
+                                        selected disabled hidden
+                                > Select Question </option>
+                                {surveyQuestions.map(({title, question_id})=>{
+                                  return (<option key={question_id} value={question_id} >{title}</option>);
+                                })}
+                              </select>
+                            </div>
+                            <div className='new-rule-input'>
+                              <label> Answer </label>
+                              <select
+                                className='select-bar'
+                                onChange={(e)=>dispatch([event_ids.rules.newRule.multipleIncompatibles, (idx + 1) , 1, e.target.value])}>
+                                <option key='default'
+                                        selected disabled hidden
+                                > Select Answer </option>
+                                {multipleIncompatibles &&
+                                 multipleIncompatibles[(idx + 1)] &&
+                                 multipleIncompatibles[(idx + 1)][0] &&
+                                 Object.entries(surveyQuestions.filter(({question_id})=>question_id == multipleIncompatibles[(idx + 1)][0])[0].answers).map(([idx, answer]) => {
+                                   return (<option key={idx} value={idx} >{answer}</option>);
+                                 })}
+                              </select>
+                            </div>
+                            {(idx == (sumsQuestions.length - 1)) ?
+                             <button className='new-rule-button'
+                                     style={{alignSelf: 'center', marginTop: '1.6rem'}}
+                                     onClick={()=>dispatch([event_ids.rules.newRule.sums.questions.add])}
+                             ><SvgIcon icon='plus' size='1.2rem'/></button>
+                             : (idx > 0) &&
+                             <button className='new-rule-button'
+                                     style={{alignSelf: 'center', marginTop: '1.6rem'}}
+                                     onClick={()=>
+                                       dispatch([event_ids.rules.newRule.sums.questions.remove, idx])}
+                             ><SvgIcon icon='minus' size='1.2rem'/></button>}
+                          </div>
+                        </div> 
+                      );
+                    })}                  
 
                     <b> If the answers above are selected, then the following answer is incompatible </b>
 
@@ -676,26 +698,35 @@ const RulesStep  = () => {
                         <label> Question </label>
                         <select
                           className='select-bar'
-                          onChange={(e)=>dispatch([event_ids.rules.newRule.questions, e.target.value])}>
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.multipleIncompatibles, 0, 0, e.target.value])}>
                           <option key='default'
                                   selected disabled hidden
                           > Select Question </option>
+                          {surveyQuestions.map(({title, question_id})=>{
+                            return (<option key={question_id} value={question_id} >{title}</option>);
+                          })}
                         </select>
                       </div>
                       <div className='new-rule-input'>
                         <label> Answer </label>
                         <select
                           className='select-bar'
-                          onChange={(e)=>dispatch([event_ids.rules.newRule.answers, e.target.value])}>
+                          onChange={(e)=>dispatch([event_ids.rules.newRule.multipleIncompatibles, 0, 1, e.target.value])}>
                           <option key='default'
                                   selected disabled hidden
                           > Select Answer </option>
+                          {multipleIncompatibles[0][0] &&
+                           Object.entries(surveyQuestions.filter(({question_id})=>
+                             question_id == multipleIncompatibles[0][0])[0].answers).map(
+                               ([idx, answer]) => {
+                                 return (<option key={idx} value={idx} >{answer}</option>);})}
                         </select>
                       </div>
                     </div>
                   </div>);
       default: break;
       }
+      
     };
     
     return (<div className='new-rule-card'>
@@ -711,12 +742,12 @@ const RulesStep  = () => {
                     <option
                       key='default'
                       selected disabled hidden
-                      >Select Rule Type</option>
+                    >Select Rule Type</option>
                     {Object.entries(ruleTypeOptions).map(([id, option]) => {
                       return (<option key={id} value={id}
-                                      {... (option.validOption()) && {title: option.invalidOptionText }}
-                                      disabled={option.validOption()}                              
-                              >{option.label}</option>);
+                                                           {... (option.validOption()) && {title: option.invalidOptionText }}
+                                                                   disabled={option.validOption()}                              
+                     >{option.label}</option>);
                     })}
                   </select>
                 </div>
@@ -771,8 +802,8 @@ const RulesStep  = () => {
                 {ruleFilter === 'institution' 
                  ? <SvgIcon icon='radioChecked' size="1.2rem"/>
                  : <SvgIcon icon='radio' size="1.2rem"
-                    className='radio-button-unchecked'
-                 />
+                            className='radio-button-unchecked'
+                   />
                 }
                 <span
                   className="filter-text"
@@ -780,7 +811,7 @@ const RulesStep  = () => {
                          ? {fontWeight: 600}
                          : {fontWeight: 400}}
                 >Institution</span>
-             </div>
+              </div>
               <div
                 style={{display: 'inline-flex', gap: '8px'}}
                 onClick={()=>dispatch([event_ids.rules.filter, 'project'])}>
@@ -788,7 +819,7 @@ const RulesStep  = () => {
                  ? <SvgIcon icon='radioChecked' size="1.2rem"/>
                  : <SvgIcon icon='radio' size="1.2rem"
                             className='radio-button-unchecked'
-                        />
+                   />
                 }
                 <p
                   className="filter-text"
@@ -810,10 +841,9 @@ const RulesStep  = () => {
     const [visible, setVisible] = useState(true);
     return (<div className='question-card'>
               <div onClick={()=>setVisible(!visible)}>
-            {visible ? "^" : "v"}
+                {visible ? "^" : "v"}
               </div>
             </div>);
-    
   };
   
   const PreviewCard = () => {
@@ -855,7 +885,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   const handleNewProject = () => {
     dispatch([event_ids.modal, null]);
     dispatch([event_ids.currentStep, 'overview']);
-    };
+  };
 
   
   // -------------------
@@ -864,12 +894,12 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   
   useEffect(() => {
     /*
-    dispatch([event_ids.modal, {title: 'Project Setup',
-              closeText: '',
-              confirmText: 'Get Started',
-              onConfirm: handleNewProject,
-              id: 'newProject',
-              children: (<NewProjectModal/>)}]); */
+      dispatch([event_ids.modal, {title: 'Project Setup',
+      closeText: '',
+      confirmText: 'Get Started',
+      onConfirm: handleNewProject,
+      id: 'newProject',
+      children: (<NewProjectModal/>)}]); */
     dispatch([event_ids.currentStep, 'rules']);
   }, []);
 
@@ -903,12 +933,12 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
                    id: "institution",
                    query: ["institution", institutionId],
                    onClick:()=>{window.location.assign(`/review-institution?institutionId=${institutionId}`);
-                   }},
+                               }},
                   {display: "Add a New Project",
                    id: "projectWizard",
                    query: ["project", "newProject"],
                    onClick:()=>{window.location.assign(`/project-wizard?institutionId=${institutionId}`);
-                   }}]}
+                               }}]}
               />
               <ProjectWizardNavigator/>
               {CurrentStep()}
@@ -929,3 +959,4 @@ export function pageInit(params, session) {
     document.getElementById("app")
   );
 }
+            
