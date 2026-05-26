@@ -66,5 +66,3 @@ export const stateAtom = atom({
   plotSimilarityDetails: {referencePlotId: 1,
                           years: [2024]}
 });
-
-

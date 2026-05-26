@@ -44,7 +44,7 @@ export const SidebarCard = ({
   infoButton = false,
   onInfoClick,
   infoPopup,
-  showHeader = true
+  showHeader = true,
 }) => {
   const [open, setOpen] = useState(defaultOpen);
   const {showInfoModal} = useAtomValue(stateAtom);
