@@ -1,11 +1,15 @@
-import React, { useContext } from "react";
+import React from "react";
 
 import SurveyRule from "./SurveyRule";
 
-import { ProjectContext } from "../project/constants";
+import { useSubscription, dispatch } from '@flexsurfer/reflex';
 
-export default function SurveyRulesList({ inDesignMode }) {
-  const { surveyRules, surveyQuestions, setProjectDetails } = useContext(ProjectContext);
+import {event_ids, sub_ids} from "../state/projectWizard";
+
+export default function SurveyRulesList({ inDesignMode , events, subs}) {
+  const surveyRules = useSubscription([sub_ids.rules.rules]);
+  function setProjectDetails (projectDetails) {dispatch([event_ids.projectDetails, projectDetails]);}
+  const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   return (surveyRules || []).length > 0 ? (
     <div>
       {surveyRules.map((rule) => (

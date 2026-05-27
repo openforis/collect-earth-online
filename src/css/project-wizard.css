@@ -115,7 +115,7 @@ fill: var(--Neutral-Dark-gray);
 }
 
 
-.card {
+.projectWizardCard {
 border-radius: 4px;
 border: 1px solid var(--Primary-Highlight-Green);
 background: var(--Neutral-White);

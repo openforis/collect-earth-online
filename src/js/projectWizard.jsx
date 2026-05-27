@@ -12,6 +12,8 @@ import {  event_ids, sub_ids } from "./state/projectWizard";
 
 import "../css/project-wizard.css";
 
+import SurveyRuleDesigner from "./survey/SurveyRulesDesigner";
+
 
 const projectSteps =
       [{id: 'overview',
@@ -169,7 +171,7 @@ const OverviewStep = () => {
     const learningMaterial = useSubscription([sub_ids.overview.learningMaterial]);
 
     return (<div
-            className="general-info-card card">
+            className="general-info-card projectWizardCard">
               <p className="card-title">General Information</p>
               <p className="text-label"
                 >Project Type<span style={{color: "red"}}>*</span>
@@ -234,7 +236,7 @@ const OverviewStep = () => {
                              private: "Private: Group Admins"};
     const visibility = useSubscription([sub_ids.overview.visibility]);
     return (
-      <div className="visibility-card card">
+      <div className="visibility-card projectWizardCard">
         <p className="card-title">Visibility<span style={{color:"red"}}>*</span>
         <SvgIcon icon="info" size="1.2rem" /></p>
         {Object.entries(visibilityOptions).map(([id, label])=>{
@@ -267,7 +269,7 @@ const OverviewStep = () => {
                             autoGeo: useSubscription([sub_ids.overview.projectOptions.autoGeo])
                            };
     
-    return(<div className="project-options-card card">
+    return(<div className="project-options-card projectWizardCard">
            <p className="card-title">Project Options</p>
            {Object.entries(projectOptionsMap).map(([id, label])=> {
 	     return (
@@ -337,8 +339,7 @@ const QuestionsStep  = () => {
 
 const RulesStep  = () => {
   return (
-    <div>
-    </div>
+    <SurveyRuleDesigner events={event_ids} subs={sub_ids}/>
   );
 };
 

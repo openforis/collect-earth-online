@@ -21,8 +21,34 @@ const projectWizardDb = {
   boundary: [],
   plots: [],
   samples: [],
-  questions: [],
-  rules: []  
+  questions: [
+    {componentType: 'input', dataType: 'text'},
+    {componentType: 'input', dataType: 'number'},
+    {componentType: 'input', dataType: 'number'},
+    {componentType: 'select'},
+    {componentType: 'select'},
+    {componentType: 'select'}
+
+  ],
+  'rules': [],
+  'rules.selectedRuleType': null,
+  'rules.newRule.regex': "",
+  'rules.newRule.questionId': -1,
+  'rules.newRule.min': 0,
+  'rules.newRule.max': 0,
+  'rules.newRule.validSum': 0,
+  'rules.newRule.questionIds': [],
+  'rules.newRule.questionIds1': [],
+  'rules.newRule.questionIds2': [],
+  'rules.newRule.questionId1': -1,
+  'rules.newRule.questionId2': -1,
+  'rules.newRule.incompatQuestionId': -1,
+  'rules.newRule.incompatAnswerId': -1,
+  'rules.newRule.tempQuestionId': -1,
+  'rules.newRule.tempAnswerId': -1,
+  'rules.newRule.answerId1': -1,
+  'rules.newRule.answerId2': -1,
+  'rules.newRule.answers': {}, 
 };
 
 initAppDb(projectWizardDb);
@@ -41,7 +67,30 @@ export const event_ids = {
                extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
                plotConfidence: 'overview.projectOptions.plotConfidence',
                autoGeo: 'overview.projectOptions.autoGeo'
-             }}};
+             }},
+  projectDetails: 'projectDetails',  
+  rules: {
+    rules: 'rules',
+    selectedRuleType: 'rules.selectedRuleType',
+    newRule: {
+      answers: 'rules.newRule.answers',
+      regex: 'rules.newRule.regex',
+      questionId: 'rules.newRule.questionId',
+      min: 'rules.newRule.min',
+      max: 'rules.newRule.max',
+      validSum: 'rules.newRule.validSum',
+      questionIds: 'rules.newRule.questionIds',
+      questionIds1: 'rules.newRule.questionIds1',
+      questionIds2: 'rules.newRule.questionIds2',
+      questionId1: 'rules.newRule.questionId1',
+      questionId2: 'rules.newRule.questionId2',
+      answerId1: 'rules.newRule.answerId1',
+      answerId2: 'rules.newRule.answerId2',
+      tempQuestionId: 'rules.newRule.tempQuestionId',
+      tempAnswerId: 'rules.newRule.tempAnswerId',
+      incompatQuestionId: 'rules.newRule.incompatQuestionId',
+      incompatAnswerId: 'rules.newRule.incompatAnswerId',
+    }}};
 
 export const sub_ids = {
   currentStep: 'currentStep',
@@ -57,7 +106,31 @@ export const sub_ids = {
                extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
                plotConfidence: 'overview.projectOptions.plotConfidence',
                autoGeo: 'overview.projectOptions.autoGeo'
-             }}};
+             }},
+  projectDetails: 'projectDetails',
+  rules: {rules: 'rules',
+          selectedRuleType: 'rules.selectedRuleType',
+          newRule: {
+            answers: 'rules.newRule.answers',
+            regex: 'rules.newRule.regex',            
+            min: 'rules.newRule.min',
+            max: 'rules.newRule.max',
+            validSum: 'rules.newRule.validSum',
+            questionId: 'rules.newRule.questionId',
+            questionIds: 'rules.newRule.questionIds',
+            questionIds1: 'rules.newRule.questionIds1',
+            questionIds2: 'rules.newRule.questionIds2',
+            questionId1: 'rules.newRule.questionId1',
+            questionId2: 'rules.newRule.questionId2',
+            answerId1: 'rules.newRule.answerId1',
+            answerId2: 'rules.newRule.answerId2',
+            tempQuestionId: 'rules.newRule.tempQuestionId',
+            tempAnswerId: 'rules.newRule.tempAnswerId',
+            incompatQuestionId: 'rules.newRule.incompatQuestionId',
+            incompatAnswerId: 'rules.newRule.incompatAnswerId',
+          }},
+  questions: {questions: 'questions'},
+};
 
 export const effects = {};
 
@@ -73,11 +146,36 @@ regSub(sub_ids.overview.projectOptions.gee, sub_ids.overview.projectOptions.gee)
 regSub(sub_ids.overview.projectOptions.extraPlotColumns, sub_ids.overview.projectOptions.extraPlotColumns);
 regSub(sub_ids.overview.projectOptions.plotConfidence, sub_ids.overview.projectOptions.plotConfidence);
 regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.autoGeo);
+regSub(sub_ids.questions.questions, sub_ids.questions.questions);
+regSub(sub_ids.rules.rules, sub_ids.rules.rules);
+regSub(sub_ids.rules.selectedRuleType, sub_ids.rules.selectedRuleType);
+regSub(sub_ids.rules.newRule.answers, sub_ids.rules.newRule.answers);
+regSub(sub_ids.rules.newRule.regex, sub_ids.rules.newRule.regex);
+regSub(sub_ids.rules.newRule.min, sub_ids.rules.newRule.min);
+regSub(sub_ids.rules.newRule.max, sub_ids.rules.newRule.max);
+regSub(sub_ids.rules.newRule.validSum, sub_ids.rules.newRule.validSum);
+regSub(sub_ids.rules.newRule.questionId, sub_ids.rules.newRule.questionId);
+regSub(sub_ids.rules.newRule.questionIds, sub_ids.rules.newRule.questionIds);
+regSub(sub_ids.rules.newRule.questionId1, sub_ids.rules.newRule.questionId1);
+regSub(sub_ids.rules.newRule.questionId2, sub_ids.rules.newRule.questionId2);
+regSub(sub_ids.rules.newRule.questionIds1, sub_ids.rules.newRule.questionIds1);
+regSub(sub_ids.rules.newRule.questionIds2, sub_ids.rules.newRule.questionIds2);
+regSub(sub_ids.rules.newRule.answerId1, sub_ids.rules.newRule.answerId1);
+regSub(sub_ids.rules.newRule.answerId2, sub_ids.rules.newRule.answerId2);
+regSub(sub_ids.rules.newRule.tempQuestionId, sub_ids.rules.newRule.tempQuestionId);
+regSub(sub_ids.rules.newRule.tempAnswerId, sub_ids.rules.newRule.tempAnswerId);
+regSub(sub_ids.rules.newRule.incompatQuestionId, sub_ids.rules.newRule.incompatQuestionId);
+regSub(sub_ids.rules.newRule.incompatAnswerId, sub_ids.rules.newRule.incompatAnswerId);
 
+
+regEvent(event_ids.projectDetails,
+         ({ draftDb }, projectDetails) => {
+           draftDb[sub_ids.projectDetails] = projectDetails;
+         });
 
 regEvent(event_ids.currentStep,
          ({ draftDb }, currentStep) => {
-           draftDb[event_ids.currentStep] = currentStep;           
+           draftDb[sub_ids.currentStep] = currentStep;           
          });
 
 regEvent(event_ids.modal,
@@ -135,8 +233,98 @@ regEvent(event_ids.overview.projectOptions.autoGeo,
            draftDb[event_ids.overview.projectOptions.autoGeo] = !draftDb[event_ids.overview.projectOptions.autoGeo];
          });
 
+regEvent(event_ids.rules.selectedRuleType,
+         ({ draftDb }, selectedRuleType) => {
+           draftDb[sub_ids.rules.selectedRuleType] = selectedRuleType;
+         });
 
+regEvent(event_ids.rules.rules,
+         ({ draftDb }, newRule) => {
+           draftDb[sub_ids.rules.rules].push(newRule);
+         });
 
+regEvent(event_ids.rules.newRule.regex,
+         ({ draftDb }, regex) => {
+           draftDb[sub_ids.rules.newRule.regex] = regex;
+         });
 
+regEvent(event_ids.rules.newRule.questionId,
+         ({ draftDb }, questionId) => {
+           draftDb[sub_ids.rules.newRule.questionId] = questionId;
+         });
 
+regEvent(event_ids.rules.newRule.min,
+         ({ draftDb }, min) => {
+           draftDb[sub_ids.rules.newRule.min] = min;
+         });
+
+regEvent(event_ids.rules.newRule.max,
+         ({ draftDb }, max) => {
+           draftDb[sub_ids.rules.newRule.max] = max;
+         });
+
+regEvent(event_ids.rules.newRule.validSum,
+         ({ draftDb }, validSum) => {
+           draftDb[sub_ids.rules.newRule.validSum] = validSum;
+         });
+
+regEvent(event_ids.rules.newRule.questionIds,
+         ({ draftDb }, questionIds) => {
+           draftDb[sub_ids.rules.newRule.questionIds] = questionIds;
+         });
+
+regEvent(event_ids.rules.newRule.questionIds1,
+         ({ draftDb }, questionIds1) => {
+           draftDb[sub_ids.rules.newRule.questionIds1] = questionIds1;
+         });
+
+regEvent(event_ids.rules.newRule.questionIds2,
+         ({ draftDb }, questionIds2) => {
+           draftDb[sub_ids.rules.newRule.questionIds2] = questionIds2;
+         });
+
+regEvent(event_ids.rules.newRule.questionId1,
+         ({ draftDb }, questionId1) => {
+           draftDb[sub_ids.rules.newRule.questionId1] = questionId1;
+         });
+
+regEvent(event_ids.rules.newRule.questionId2,
+         ({ draftDb }, questionId2) => {
+           draftDb[sub_ids.rules.newRule.questionId2] = questionId2;
+         });
+
+regEvent(event_ids.rules.newRule.answerId1,
+         ({ draftDb }, answerId1) => {
+           draftDb[sub_ids.rules.newRule.answerId1] = answerId1;
+         });
+
+regEvent(event_ids.rules.newRule.answerId2,
+         ({ draftDb }, answerId2) => {
+           draftDb[sub_ids.rules.newRule.answerId2] = answerId2;
+         });
+
+regEvent(event_ids.rules.newRule.answers,
+         ({ draftDb }, answers) => {
+           draftDb[sub_ids.rules.newRule.answers] = answers;
+         });
+
+regEvent(event_ids.rules.newRule.tempQuestionId,
+         ({ draftDb }, tempQuestionId) => {
+           draftDb[sub_ids.rules.newRule.tempQuestionId] = tempQuestionId;
+         });
+
+regEvent(event_ids.rules.newRule.tempAnswerId,
+         ({ draftDb }, tempAnswerId) => {
+           draftDb[sub_ids.rules.newRule.tempAnswerId] = tempAnswerId;
+         });
+
+regEvent(event_ids.rules.newRule.incompatQuestionId,
+         ({ draftDb }, incompatQuestionId) => {
+           draftDb[sub_ids.rules.newRule.incompatQuestionId] = incompatQuestionId;
+         });
+
+regEvent(event_ids.rules.newRule.incompatAnswerId,
+         ({ draftDb }, incompatAnswerId) => {
+           draftDb[sub_ids.rules.newRule.incompatAnswerId] = incompatAnswerId;
+         });
 
