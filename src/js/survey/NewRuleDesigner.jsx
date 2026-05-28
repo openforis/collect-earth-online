@@ -778,6 +778,49 @@ export default function NewRuleDesigner () {
   const selectedRuleType = useSubscription([sub_ids.rules.selectedRuleType]);
   function setSelectedRuleType (ruleType) {dispatch([event_ids.rules.selectedRuleType, ruleType]);}
 
+  /*
+    <div className='new-rule-card'>
+              <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
+                <div className='new-rule-input'>
+                  <div style={{display: 'flex', flexDirection: 'row', gap:'1rem'}}>
+                    <label>Rule Type<span style={{color: 'red'}}>*</span></label>
+                    <SvgIcon icon='info' size='1.2rem'/>
+                  </div>
+                  <select
+                    className="select-bar"
+                    onChange={(e)=>dispatch([event_ids.rules.newRule.type, e.target.value])}>
+                    <option
+                      key='default'
+                      selected disabled hidden
+                    >Select Rule Type</option>
+                    {Object.entries(ruleTypeOptions).map(([id, option]) => {
+                      return (<option key={id} value={id}
+                                                           {... (option.validOption()) && {title: option.invalidOptionText }}
+                                                                   disabled={option.validOption()}                              
+                     >{option.label}</option>);
+                    })}
+                  </select>
+                </div>
+                <div className='new-rule-input'>
+                  <div style={{display: 'flex', flexDirection: 'row', gap: '1rem'}}>
+                    <label>Enter Rule Label </label>
+                    <SvgIcon icon='info' size='1.2rem'/>
+                  </div>
+                  <input
+                    className="rule-input"
+                    placeHolder= 'Enter Text'
+                    value={newRuleLabel}
+                    onChange={(e)=>dispatch([event_ids.rules.newRule.label, e.target.value])}>
+                  </input>
+                </div>
+              </div>
+              {newRuleInput()}
+              <button className='new-rule-button'
+                      onClick={()=>dispatch([event_ids.rules.rules])}
+              ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>
+            </div>
+
+   */
   return (
     <div className="mt-3 d-flex justify-content-center">
       <div style={{ display: "flex", flexFlow: "column", width: "50rem" }}>
