@@ -22,17 +22,12 @@ const projectWizardDb = {
   plots: [],
   samples: [],
 
-  questions: [
-    {componentType: 'input', dataType: 'text'},
-    {componentType: 'input', dataType: 'number'},
-    {componentType: 'input', dataType: 'number'},
-    {componentType: 'select'},
-    {componentType: 'select'},
-    {componentType: 'select'}
-
-  ],
+  questions: [],
   'rules': [],
+  'rules.search': null,
+  'rules.filter': null,
   'rules.selectedRuleType': null,
+  'rules.newRule.label': null,
   'rules.newRule.regex': "",
   'rules.newRule.questionId': -1,
   'rules.newRule.min': 0,
@@ -49,48 +44,7 @@ const projectWizardDb = {
   'rules.newRule.tempAnswerId': -1,
   'rules.newRule.answerId1': -1,
   'rules.newRule.answerId2': -1,
-  'rules.newRule.answers': {}, 
-
-    //questions
-  /*
-  'questions.questions': [
-    {question_id: 3, title: 'Is this Deforestation?', answers: ['yes-forest', 'no-forest', 'maybe-forest']},
-    {question_id: 1, title: 'Is this a good example of Cocoa?' , answers: ['yes-cocoa', 'no-cocoa', 'maybe-cocoa']},
-    {question_id: 2, title: 'Is this water?' , answers: ['yes-water', 'no-water', 'maybe-water']},
-  ],
-  // rules
-  //TODO: DELETE PLACEHOLDER RULES
-  'rules.rules' : [/*
-    {ruleType: 'text-match',
-     question: 0,
-     label: 'Text Match Example',
-     pattern: 'example'},
-    {ruleType: 'numeric-range',
-     label: 'Numeric Range Example',
-     question: 0,
-     min: 0,
-     max: 1
-    },
-    {ruleType: 'sum-of-answers',
-     label: 'Sum of Answers Example',
-     questions: [3, 1],
-     sum: 1
-    },
-    {ruleType: 'matching-sums',
-     label: 'Matching Sums Example',
-     questions: [[3, 1], [1, 2]],
-    },
-    {ruleType: 'incompatible-answers',
-     label: 'Incompatible Answers',
-     questions: [[3, 1], [1, 2]]
-    },
-    {ruleType: 'multiple-incompatible-answers',
-     label: 'Multiple Incompatible Answers Example',
-     questions: [[3, 1], [1, 2], [3, 2]]
-     }
-  ],
-
-*/
+  'rules.newRule.answers': {},   
 
 };
 
@@ -115,8 +69,11 @@ export const event_ids = {
   projectDetails: 'projectDetails',  
   rules: {
     rules: 'rules',
+    search: 'rules.search',
+    filter: 'rules.filter',
     selectedRuleType: 'rules.selectedRuleType',
     newRule: {
+      label: 'rules.newRule.label',
       answers: 'rules.newRule.answers',
       regex: 'rules.newRule.regex',
       questionId: 'rules.newRule.questionId',
@@ -138,8 +95,8 @@ export const event_ids = {
 /*
 
   rules: {
-    search: 'rules.search',
-    filter: 'rules.filter',
+  
+  
     delete: 'rules.delete',
     }
                          */
@@ -163,8 +120,11 @@ export const sub_ids = {
              }},
   projectDetails: 'projectDetails',
   rules: {rules: 'rules',
+          search: 'rules.search',
+          filter: 'rules.filter',
           selectedRuleType: 'rules.selectedRuleType',
           newRule: {
+            label: 'rules.newRule.label',
             answers: 'rules.newRule.answers',
             regex: 'rules.newRule.regex',            
             min: 'rules.newRule.min',
@@ -203,8 +163,12 @@ regSub(sub_ids.overview.projectOptions.plotConfidence, sub_ids.overview.projectO
 regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.autoGeo);
 
 regSub(sub_ids.questions.questions, sub_ids.questions.questions);
+
 regSub(sub_ids.rules.rules, sub_ids.rules.rules);
+regSub(sub_ids.rules.search, sub_ids.rules.search);
+regSub(sub_ids.rules.filter, sub_ids.rules.filter);
 regSub(sub_ids.rules.selectedRuleType, sub_ids.rules.selectedRuleType);
+regSub(sub_ids.rules.newRule.label, sub_ids.rules.newRule.label);
 regSub(sub_ids.rules.newRule.answers, sub_ids.rules.newRule.answers);
 regSub(sub_ids.rules.newRule.regex, sub_ids.rules.newRule.regex);
 regSub(sub_ids.rules.newRule.min, sub_ids.rules.newRule.min);
@@ -233,27 +197,6 @@ regEvent(event_ids.currentStep,
          ({ draftDb }, currentStep) => {
            draftDb[sub_ids.currentStep] = currentStep;
          });
-
-/*
-// SURVEY QUESTIONS SUBS
-regSub(sub_ids.questions.questions, sub_ids.questions.questions);
-
-// SURVEY RULES SUBS
-regSub(sub_ids.rules.rules, sub_ids.rules.rules);
-regSub(sub_ids.rules.search, sub_ids.rules.search);
-regSub(sub_ids.rules.filter, sub_ids.rules.filter);
-regSub(sub_ids.rules.newRule.type , sub_ids.rules.newRule.type);
-regSub(sub_ids.rules.newRule.label , sub_ids.rules.newRule.label);
-regSub(sub_ids.rules.newRule.pattern , sub_ids.rules.newRule.pattern);
-regSub(sub_ids.rules.newRule.min, sub_ids.rules.newRule.min);
-regSub(sub_ids.rules.newRule.max, sub_ids.rules.newRule.max);
-regSub(sub_ids.rules.newRule.sum, sub_ids.rules.newRule.sum);
-regSub(sub_ids.rules.newRule.questions, sub_ids.rules.newRule.questions);
-regSub(sub_ids.rules.newRule.sums.questions, sub_ids.rules.newRule.sums.questions);
-regSub(sub_ids.rules.newRule.incompatibles, sub_ids.rules.newRule.incompatibles);
-regSub(sub_ids.rules.newRule.multipleIncompatibles, sub_ids.rules.newRule.multipleIncompatibles);
-
-         */
 
 // PROJECT WIZARD EVENTS
 
@@ -334,14 +277,6 @@ regEvent(event_ids.rules.newRule.questionId,
            draftDb[sub_ids.rules.newRule.questionId] = questionId;
          });
 
-// SURVEY QUESTIONS EVENTS
-/*
-regEvent(event_ids.questions.questions,
-         ({ draftDb }, newQuestion) => {
-           draftDb[event_ids.questions.questions].push(newQuestion);
-         });
-
-// SURVEY RULES EVENTS
 regEvent(event_ids.rules.search,
          ({ draftDb }, search) => {
            draftDb[event_ids.rules.search] = search;
@@ -352,80 +287,6 @@ regEvent(event_ids.rules.filter,
            draftDb[event_ids.rules.filter] = filter;
          });
 
-regEvent(event_ids.rules.newRule.type,
-         ({ draftDb }, type) => {
-           draftDb[sub_ids.rules.newRule.label] = '';
-           draftDb[sub_ids.rules.newRule.questions] = [];
-           draftDb[sub_ids.rules.newRule.pattern] = null;
-           draftDb[sub_ids.rules.newRule.min] = null;
-           draftDb[sub_ids.rules.newRule.max] = null;
-           draftDb[sub_ids.rules.newRule.sum] = null;
-           draftDb[event_ids.rules.newRule.type] = type;
-         });
-
-regEvent(event_ids.rules.newRule.label,
-         ({ draftDb }, label) => {
-           draftDb[event_ids.rules.newRule.label] = label;
-         });
-
-regEvent(event_ids.rules.newRule.pattern,
-         ({ draftDb }, pattern) => {
-           draftDb[event_ids.rules.newRule.pattern] = pattern;
-         });
-
-regEvent(event_ids.rules.rules,
-         ({ draftDb }) => {
-           (draftDb[sub_ids.rules.newRule.type] === 'text-match') &&
-             draftDb[event_ids.rules.rules].push({
-               ruleType:  draftDb[sub_ids.rules.newRule.type],
-               label:     draftDb[sub_ids.rules.newRule.label],
-               question:  draftDb[sub_ids.rules.newRule.questions],
-               pattern:   draftDb[sub_ids.rules.newRule.pattern]
-           });
-           (draftDb[sub_ids.rules.newRule.type] === 'numeric-range') &&
-             draftDb[event_ids.rules.rules].push({
-               ruleType:  draftDb[sub_ids.rules.newRule.type],
-               label:     draftDb[sub_ids.rules.newRule.label],
-               question:  draftDb[sub_ids.rules.newRule.questions],
-               min:       draftDb[sub_ids.rules.newRule.min],
-               max:       draftDb[sub_ids.rules.newRule.max],
-           });
-           (draftDb[sub_ids.rules.newRule.type] === 'sum-of-answers') &&
-             draftDb[event_ids.rules.rules].push( {
-               ruleType:  draftDb[sub_ids.rules.newRule.type],
-               label:     draftDb[sub_ids.rules.newRule.label],
-               sum:       draftDb[sub_ids.rules.newRule.sum],
-               questions: draftDb[sub_ids.rules.newRule.sums.questions],
-           });
-           (draftDb[sub_ids.rules.newRule.type] === 'matching-sums') &&
-             draftDb[event_ids.rules.rules].push( {
-               ruleType:  draftDb[sub_ids.rules.newRule.type],
-               label:     draftDb[sub_ids.rules.newRule.label],
-               questions: draftDb[sub_ids.rules.newRule.questions],
-             });
-           
-           (draftDb[sub_ids.rules.newRule.type] === 'incompatible-answers') &&
-             draftDb[event_ids.rules.rules].push({
-               ruleType:  draftDb[sub_ids.rules.newRule.type],
-               label:     draftDb[sub_ids.rules.newRule.label],
-               questions: draftDb[sub_ids.rules.newRule.incompatibles],
-             });
-           (draftDb[sub_ids.rules.newRule.type] === 'multiple-incompatible-answers') &&
-             
-             draftDb[event_ids.rules.rules].push({
-               ruleType:  draftDb[sub_ids.rules.newRule.type],
-               label:     draftDb[sub_ids.rules.newRule.label],
-               questions: draftDb[sub_ids.rules.newRule.multipleIncompatibles],
-           });
-           
-           draftDb[sub_ids.rules.newRule.label] = '';
-           draftDb[sub_ids.rules.newRule.questions] = [];
-           draftDb[sub_ids.rules.newRule.pattern] = null;
-           draftDb[sub_ids.rules.newRule.min] = null;
-           draftDb[sub_ids.rules.newRule.max] = null;
-           draftDb[sub_ids.rules.newRule.sum] = null;
-         });
-*/
 regEvent(event_ids.rules.delete,
          ({ draftDb }, idx) => {
            draftDb[sub_ids.rules.rules].splice(idx, 1);
@@ -507,53 +368,3 @@ regEvent(event_ids.rules.newRule.incompatAnswerId,
          });
 
 
-/*
-regEvent(event_ids.rules.newRule.sum,
-         ({ draftDb }, sum) => {
-           draftDb[sub_ids.rules.newRule.sum] = sum;
-         });
-
-//TODO: handle questions conditionally based on rules.newRule.type
-regEvent(event_ids.rules.newRule.questions,
-         ({ draftDb }, questions, idx) => {           
-           (draftDb[sub_ids.rules.newRule.type] === 'matching-sums') ?
-             draftDb[sub_ids.rules.newRule.questions][idx] = Array.from(questions, (i) => Number(i.value))
-             : draftDb[sub_ids.rules.newRule.questions] = questions;
-         });
-
-regEvent(event_ids.rules.newRule.answers,
-         ({ draftDb }, questions, idx) => {
-           draftDb[sub_ids.rules.newRule.questions][idx][1] = questions;
-         });
-
-
-regEvent(event_ids.rules.newRule.sums.questions.add,
-         ({ draftDb }) => {
-//           (draftDb[sub_ids.rules.newRule.type] == 'multiple-incompatible-answers') ?
-  //           draftDb[sub_ids.rules.newRule.sums.questions].push([null, null])
-            draftDb[sub_ids.rules.newRule.sums.questions].push(null);
-         });
-
-regEvent(event_ids.rules.newRule.sums.questions.remove,
-         ({ draftDb }, idx) => {
-           draftDb[sub_ids.rules.newRule.sums.questions].splice(idx, 1);
-         });
-
-
-regEvent(event_ids.rules.newRule.sums.questions.questions,
-         ({ draftDb }, question, idx) => {
-           draftDb[sub_ids.rules.newRule.sums.questions][idx] = question;
-         });
-
-regEvent(event_ids.rules.newRule.incompatibles,
-         ({ draftDb }, question, answer, value) => {                      
-           draftDb[sub_ids.rules.newRule.incompatibles][question][answer] = Number(value);
-         });
-
-regEvent(event_ids.rules.newRule.multipleIncompatibles,
-         ({ draftDb }, question, answer, value) => {
-           !draftDb[sub_ids.rules.newRule.multipleIncompatibles][question] && draftDb[sub_ids.rules.newRule.multipleIncompatibles].push([null, null]);
-           draftDb[sub_ids.rules.newRule.multipleIncompatibles][question][answer] = Number(value);
-         });
-*/
-  

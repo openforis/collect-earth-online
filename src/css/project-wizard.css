@@ -1,5 +1,12 @@
 @import "./colors.css";
 
+#survey-rule-designer {
+    width: 50%;
+    height: 100%;
+    display: inline-flex;
+    flex-direction: column;
+    padding: 1rem;
+}
 .project-wizard-navigator {
     display: inline-flex;
     width: 100vw;
@@ -44,7 +51,7 @@
 }
 .project-wizard-container {
     background-color: var(--Primary-Light-Green);
-    height: 100vh;
+    /* height: 100vh; */
 }
 
 .radio-selection-button {
@@ -173,6 +180,8 @@ margin: 4px auto;}
 
 
 .nav-buttons {
+    position: fixed;
+    bottom: 0;
     display: flex;
     width: 100vw;
     flex-direction: row;
@@ -187,8 +196,6 @@ margin: 4px auto;}
 
 .survey-rules-container {
     display: flex;
-    width: 50%;
-    height: 100%;
     padding: 16px;
     flex-direction: column;
     align-items: center;

@@ -66,51 +66,41 @@ function TextMatchForm () {
       });
     }
   };
+
   return lengthObject(availableQuestions) > 0 ? (
-    <>
-      {modal?.alert &&
-       <Modal title={modal.alert.alertType}
-              onClose={()=>setModal(null)}>
-         {modal.alert.alertMessage}
-       </Modal>}
-      <div className="form-group">
-        <label>Survey Question</label>
-        <select
-          className="form-control form-control-sm"
-          onChange={(e) => setQuestionId(Number(e.target.value))}
-          value={questionId}
-        >
-          <option value={-1}>- Select Question -</option>
-          {mapObjectArray(availableQuestions, ([aqId, aq]) => (
-            <option key={aqId} value={aqId}>
-              {aq.question}
-            </option>
-          ))}
-        </select>
+    <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
+      <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
+        <div className='new-rule-input form-group'>
+          <label> Survey Question </label>
+          <select
+            className='select-bar form-control form-control-sm'
+            value={questionId}
+            onChange={(e) => setQuestionId(Number(e.target.value))}>
+            <option value={-1} selected disabled hidden>- Select Question -</option>
+            {mapObjectArray(availableQuestions, ([aqId, aq]) => (
+              <option key={aqId} value={aqId}> {aq.question} </option>
+            ))}
+          </select>
+        </div>
+        <div className='new-rule-input form-group'>
+          <label> Enter Regular Expression </label>
+          <input
+            className='rule-input form-control form-control-sm'
+            type="text"
+            placeholder='Enter Text'
+            value= {regex}
+            onChange={(e) => setRegex(e.target.value)}></input>
+        </div>
       </div>
-      <div className="form-group">
-        <label>Enter regular expression</label>
-        <input
-          className="form-control form-control-sm"
-          onChange={(e) => setRegex(e.target.value)}
-          placeholder="Regular expression"
-          type="text"
-          value={regex}
-        />
+      <div className='row' style={{margin: '1rem'}}>
+        <button className='new-rule-button'
+                onClick={()=>addSurveyRule()}
+        ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>
       </div>
-      <div className="d-flex justify-content-end">
-        <input
-          className="btn btn-lightgreen"
-          onClick={()=> addSurveyRule()}
-          type="button"
-          value="Add Survey Rule"
-        />
-      </div>
-    </>
+    </div>
   ) : (
     <label>This rule requires a question of type input-text.</label>
   );
-
 };
 
 
@@ -164,53 +154,49 @@ function NumericRangeForm () {
       });
     }
   };
-  
+
   return lengthObject(availableQuestions) > 0 ? (
-    <>
-      <div className="form-group">
-        <label>Survey Question</label>
-        <select
-          className="form-control form-control-sm"
-          onChange={(e) => setQuestionId(Number(e.target.value))}
-          value={questionId}
-        >
-          <option value={-1}>- Select Question -</option>
-          {mapObjectArray(availableQuestions, ([aqId, aq]) => (
-            <option key={aqId} value={aqId}>
-              {aq.question}
-            </option>
-          ))}
-        </select>
+    <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
+      <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
+        <div className='new-rule-input form-group'>
+          <label>Survey Question </label>
+          <select
+            className='select-bar form-control form-control-sm'
+            onChange={(e) => setQuestionId(Number(e.target.value))}
+            value={questionId}>
+            <option value={-1} selected disabled hidden
+            >- Select Question -</option>
+            {mapObjectArray(availableQuestions, ([aqId, aq]) => (
+              <option key={aqId} value={aqId}>  {aq.question} </option>
+            ))}
+          </select>
+        </div>
+        <div className='new-rule-input'>
+          <label>Enter minimum</label>
+          <input
+            type='number'
+            className='rule-input form-control form-control-sm'
+            value={min}
+            placeholder="Minimum value"
+            onChange={(e) => setMin(Number(e.target.value))}></input>
+        </div>
+        <div className='new-rule-input form-group'>
+          <label>Enter maximum</label>
+          <input
+            type='number'
+            className='rule-input form-control form-control-sm'
+            placeholder="Maximum value"
+            value={max}
+            onChange={(e) => setMax(Number(e.target.value))}></input>
+        </div>
+        
       </div>
-      <div className="form-group">
-        <label>Enter minimum</label>
-        <input
-          className="form-control form-control-sm"
-          onChange={(e) => setMin(Number(e.target.value))}
-          placeholder="Minimum value"
-          type="number"
-          value={min}
-        />
+      <div className='row' style={{margin: '1rem'}}>
+        <button className='new-rule-button'
+                onClick={()=>addSurveyRule()}
+        ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>
       </div>
-      <div className="form-group">
-        <label>Enter maximum</label>
-        <input
-          className="form-control form-control-sm"
-          onChange={(e) => setMax(Number(e.target.value))}
-          placeholder="Maximum value"
-          type="number"
-          value={max}
-        />
-      </div>
-      <div className="d-flex justify-content-end">
-        <input
-          className="btn btn-lightgreen"
-          onClick={()=>addSurveyRule()}
-          type="button"
-          value="Add Survey Rule"
-        />
-      </div>
-    </>
+    </div>
   ) : (
     <label>This rule requires a question of type input-number.</label>
   );
@@ -267,46 +253,43 @@ function SumOfAnswersForm () {
   };
 
   return lengthObject(availableQuestions) > 1 ? (
-    <>
-      <div className="form-group">
-        <label>Select survey question</label>
-        <select
-          className="form-control form-control-sm overflow-auto"
-          multiple="multiple"
-          onChange={(e) =>
-            setQuestionIds(Array.from(e.target.selectedOptions, (i) => Number(i.value)))
-          }
-          value={questionIds}
-        >
-          {mapObjectArray(availableQuestions, ([aqId, aq]) => (
-            <option key={aqId} value={aqId}>
-              {aq.question}
-            </option>
-          ))}
-        </select>
-        <small className="form-text text-muted">
-          Hold ctrl/cmd and select multiple questions
-        </small>
+    <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
+      <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>      
+        <div className="form-group new-rule-input">
+          <label>Select survey question</label>
+          <select
+            className="form-control form-control-sm overflow-auto select-bar"
+            style={{width: '100%', display:'inline-flex'}}
+            multiple="multiple"
+            onChange={(e) => setQuestionIds(Array.from(e.target.selectedOptions, (i) => Number(i.value)))}
+            value={questionIds}>
+            {mapObjectArray(availableQuestions, ([aqId, aq]) => (
+              <option key={aqId} value={aqId}>
+                {aq.question}
+              </option>
+            ))}
+          </select>
+          <small className="form-text text-muted">
+            Hold ctrl/cmd and select multiple questions
+          </small>
+        </div>
+        <div className='new-rule-input form-group'>
+          <label>Enter valid sum</label>
+          <input
+            type='number'
+            className='rule-input form-control form-control-sm'
+            onChange={(e) => setValidSum(Number(e.target.value))}
+            placeholder="Valid sum"
+            value={validSum}>
+          </input>
+        </div>
       </div>
-      <div className="form-group">
-        <label>Enter valid sum</label>
-        <input
-          className="form-control form-control-sm"
-          onChange={(e) => setValidSum(Number(e.target.value))}
-          placeholder="Valid sum"
-          type="number"
-          value={validSum}
-        />
+      <div className='row' style={{margin: '1rem'}}>
+        <button className='new-rule-button'
+                onClick={()=>addSurveyRule()}
+        ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>
       </div>
-      <div className="d-flex justify-content-end">
-        <input
-          className="btn btn-lightgreen"
-          onClick={()=>addSurveyRule()}
-          type="button"
-          value="Add Survey Rule"
-        />
-      </div>
-    </>
+    </div>
   ) : (
     <label>There must be at least 2 number questions for this rule type.</label>
   );
@@ -370,58 +353,58 @@ function MatchingSumsForm () {
       });
     }
   };
-
+  
   return lengthObject(availableQuestions) > 1 ? (
-    <>
-      <div className="form-group">
-        <label>Select first question set</label>
-        <select
-          className="form-control form-control-sm overflow-auto"
-          multiple="multiple"
-          onChange={(e) =>
-            setQuestionIds1(Array.from(e.target.selectedOptions, (i) => Number(i.value)))            
-          }
-          value={questionIds1}
-        >
-          {mapObjectArray(availableQuestions, ([aqId, aq]) => (
-            <option key={aqId} value={aqId}>
-              {aq.question}
-            </option>
-          ))}
-        </select>
-        <small className="form-text text-muted">
-          Hold ctrl/cmd and select multiple questions
-        </small>
+    <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
+      <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
+        <div className="form-group new-rule-input">
+          <label>Select first question set</label>
+          <select
+            className="form-control form-control-sm overflow-auto select-bar"
+            style={{height: 'inherit'}}
+            multiple="multiple"
+            onChange={(e) => setQuestionIds1(Array.from(e.target.selectedOptions, (i) => Number(i.value)))}
+            value={questionIds1}
+          >
+            {mapObjectArray(availableQuestions, ([aqId, aq]) => (
+              <option key={aqId} value={aqId}>
+                {aq.question}
+              </option>
+            ))}
+          </select>
+          <small className="form-text text-muted">
+            Hold ctrl/cmd and select multiple questions
+          </small>
+        </div>
+        <div className="form-group new-rule-input">
+          <label>Select second question set</label>
+          <select
+            className="form-control form-control-sm overflow-auto select-bar"
+            style={{height: 'inherit'}}
+            multiple="multiple"
+            onChange={(e) =>
+              setQuestionIds2(Array.from(e.target.selectedOptions, (i) => Number(i.value)))
+            }
+            value={questionIds2}
+          >
+            {mapObjectArray(availableQuestions, ([aqId, aq]) => (
+              <option key={aqId} value={aqId}>
+                {aq.question}
+              </option>
+            ))}
+          </select>
+          <small className="form-text text-muted">
+            Hold ctrl/cmd and select multiple questions
+          </small>
+        </div>
+        
       </div>
-      <div className="form-group">
-        <label>Select second question set</label>
-        <select
-          className="form-control form-control-sm overflow-auto"
-          multiple="multiple"
-          onChange={(e) =>
-            setQuestionIds2(Array.from(e.target.selectedOptions, (i) => Number(i.value)))
-          }
-          value={questionIds2}
-        >
-          {mapObjectArray(availableQuestions, ([aqId, aq]) => (
-            <option key={aqId} value={aqId}>
-              {aq.question}
-            </option>
-          ))}
-        </select>
-        <small className="form-text text-muted">
-          Hold ctrl/cmd and select multiple questions
-        </small>
+      <div className='row' style={{margin: '1rem'}}>
+        <button className='new-rule-button'
+                onClick={()=>addSurveyRule()}
+        ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>
       </div>
-      <div className="d-flex justify-content-end">
-        <input
-          className="btn btn-lightgreen"
-          onClick={()=>addSurveyRule()}
-          type="button"
-          value="Add Survey Rule"
-        />
-      </div>
-    </>
+    </div>
   ) : (
     <label>There must be at least 2 number questions for this rule type.</label>
   );
@@ -507,86 +490,84 @@ function  IncompatibleAnswersForm () {
       });
     }
   };
+
   return lengthObject(availableQuestions) > 1 ? (
-    <>
+    <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>      
       <strong className="mb-2" style={{ textAlign: "center" }}>
         Select the incompatible questions and answers
       </strong>
-      <div className="form-group">
-        <label>Question 1</label>
-        <select
-          className="form-control form-control-sm"
-          onChange={(e) => {
-            setQuestionId1( Number(e.target.value));
-            setAnswerId1(-1);
-          }}
-          value={questionId1}
-        >
-          <option value="-1">- Select Question 1 -</option>
-          {mapObjectArray(availableQuestions, ([aqId, aq]) => (
-            <option key={aqId} value={aqId}>
-              {aq.question}
-            </option>
-          ))}
-        </select>
+      <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
+        <div className="form-group new-rule-input">
+          <label>Question 1</label>
+          <select
+            className="form-control form-control-sm select-bar"
+            onChange={(e) => {
+              setQuestionId1( Number(e.target.value));
+              setAnswerId1(-1);
+            }}
+            value={questionId1}>
+            <option value="-1" selected disabled hidden>- Select Question 1 -</option>
+            {mapObjectArray(availableQuestions, ([aqId, aq]) => (
+              <option key={aqId} value={aqId}>
+                {aq.question}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group new-rule-input">
+          <label>Answer 1</label>
+          <select
+            className="form-control form-control-sm select-bar"
+            onChange={(e) => setAnswerId1(Number(e.target.value))}
+            value={answerId1}>
+            <option value="-1" selected disabled hidden>- Select Answer 1 -</option>
+            {mapObjectArray(safeFindAnswers(questionId1), ([ansId, ans]) => (
+              <option key={ansId} value={ansId}>
+                {ans.answer}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
-      <div className="form-group">
-        <label>Answer 1</label>
-        <select
-          className="form-control form-control-sm"
-          onChange={(e) => setAnswerId1(Number(e.target.value))}
-          value={answerId1}
-        >
-          <option value="-1">- Select Answer 1 -</option>
-          {mapObjectArray(safeFindAnswers(questionId1), ([ansId, ans]) => (
-            <option key={ansId} value={ansId}>
-              {ans.answer}
-            </option>
-          ))}
-        </select>
+      <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
+        <div className="form-group new-rule-input">
+          <label>Question 2</label>
+          <select
+            className="form-control form-control-sm select-bar"
+            onChange={(e) =>{
+              setQuestionId2(Number(e.target.value));
+              setAnswerId2(-1);
+            }}
+            value={questionId2}>
+            <option value="-1" selected disabled hidden>- Select Question 2 -</option>
+            {mapObjectArray(availableQuestions, ([aqId, aq]) => (
+              <option key={aqId} value={aqId}>
+                {aq.question}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group new-rule-input">
+          <label>Answer 2</label>
+          <select
+            className="form-control form-control-sm select-bar"
+            onChange={(e) => setAnswerId2(Number(e.target.value))}
+            value={answerId2}>
+            <option value="-1" selected disabled hidden>- Select Answer 2 -</option>
+            {mapObjectArray(safeFindAnswers(questionId2), ([ansId, ans]) => (
+              <option key={ansId} value={ansId}>
+                {ans.answer}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
-      <div className="form-group">
-        <label>Question 2</label>
-        <select
-          className="form-control form-control-sm"
-          onChange={(e) =>{
-            setQuestionId2(Number(e.target.value));
-            setAnswerId2(-1);
-          }}
-          value={questionId2}
-        >
-          <option value="-1">- Select Question 2 -</option>
-          {mapObjectArray(availableQuestions, ([aqId, aq]) => (
-            <option key={aqId} value={aqId}>
-              {aq.question}
-            </option>
-          ))}
-        </select>
+      <div className='row' style={{margin: '1rem'}}>
+        <button className='new-rule-button'
+                onClick={()=>addSurveyRule()}
+        ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>
       </div>
-      <div className="form-group">
-        <label>Answer 2</label>
-        <select
-          className="form-control form-control-sm"
-          onChange={(e) => setAnswerId2(Number(e.target.value))}
-          value={answerId2}
-        >
-          <option value="-1">- Select Answer 2 -</option>
-          {mapObjectArray(safeFindAnswers(questionId2), ([ansId, ans]) => (
-            <option key={ansId} value={ansId}>
-              {ans.answer}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="d-flex justify-content-end">
-        <input
-          className="btn btn-lightgreen"
-          onClick={()=>addSurveyRule()}
-          type="button"
-          value="Add Survey Rule"
-        />
-      </div>
-    </>
+    </div>    
   ) : (
     <label>There must be at least 2 questions where type is not input for this rule.</label>
   );
@@ -664,47 +645,126 @@ function MultipleIncompatibleAnswersForm () {
     ([_id, sq]) => sq.componentType !== "input"
   );
 
+  /*
+    <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
+    {Object.entries(sumsQuestions).map(([idx])=>{
+    idx = Number(idx);
+    return (
+    <div style={{display: 'inline-flex',
+    flexDirection: 'column'}}>
+    
+    <div style={{display: 'inline-flex', flexDirection: 'row'}}>
+
+    <div className='new-rule-input'>
+    <label> Answer </label>
+    <select
+    className='select-bar'
+    onChange={(e)=>dispatch([event_ids.rules.newRule.multipleIncompatibles, (idx + 1) , 1, e.target.value])}>
+    <option key='default'
+    selected disabled hidden
+    > Select Answer </option>
+    {multipleIncompatibles &&
+    multipleIncompatibles[(idx + 1)] &&
+    multipleIncompatibles[(idx + 1)][0] &&
+    Object.entries(surveyQuestions.filter(({question_id})=>question_id == multipleIncompatibles[(idx + 1)][0])[0].answers).map(([idx, answer]) => {
+    return (<option key={idx} value={idx} >{answer}</option>);
+    })}
+    </select>
+    </div>
+    {(idx == (sumsQuestions.length - 1)) ?
+    <button className='new-rule-button'
+    style={{alignSelf: 'center', marginTop: '1.6rem'}}
+    onClick={()=>dispatch([event_ids.rules.newRule.sums.questions.add])}
+    ><SvgIcon icon='plus' size='1.2rem'/></button>
+    : (idx > 0) &&
+    <button className='new-rule-button'
+    style={{alignSelf: 'center', marginTop: '1.6rem'}}
+    onClick={()=>
+    dispatch([event_ids.rules.newRule.sums.questions.remove, idx])}
+    ><SvgIcon icon='minus' size='1.2rem'/></button>}
+    </div>
+    </div> 
+    );
+    })}                  
+
+    <b> If the answers above are selected, then the following answer is incompatible </b>
+
+    <div style={{display: 'inline-flex', flexDirection: 'row'}}>
+    <div className='new-rule-input'>
+    <label> Question </label>
+    <select
+    className='select-bar'
+    onChange={(e)=>dispatch([event_ids.rules.newRule.multipleIncompatibles, 0, 0, e.target.value])}>
+    <option key='default'
+    selected disabled hidden
+    > Select Question </option>
+    {surveyQuestions.map(({title, question_id})=>{
+    return (<option key={question_id} value={question_id} >{title}</option>);
+    })}
+    </select>
+    </div>
+    <div className='new-rule-input'>
+    <label> Answer </label>
+    <select
+    className='select-bar'
+    onChange={(e)=>dispatch([event_ids.rules.newRule.multipleIncompatibles, 0, 1, e.target.value])}>
+    <option key='default'
+    selected disabled hidden
+    > Select Answer </option>
+    {multipleIncompatibles[0][0] &&
+    Object.entries(surveyQuestions.filter(({question_id})=>
+    question_id == multipleIncompatibles[0][0])[0].answers).map(
+    ([idx, answer]) => {
+    return (<option key={idx} value={idx} >{answer}</option>);})}
+    </select>
+    </div>
+    </div>
+    </div>
+  */
+
   return lengthObject(availableQuestions) > 2 ? (
-    <>
+    <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
       <strong className="mb-2" style={{ textAlign: "center" }}>
         Select and add questions and answers to the rule
       </strong>
-      <div className="row" style={{ display: "flex", alignItems: "center"}}>
-        <label>Question </label>
-        <select
-          style={{ display: "inline-block"}}
-          className="form-inline form-control-sm ml-2 mr-2"
-          onChange={(e) => setTempQuestionId(e.target.value)}
-          value={tempQuestionId}
-        >
-          <option value="-1">- Select Question -</option>
-          {mapObjectArray(surveyQuestions, ([aqId, aq]) => {
-            if(answers[aqId] === undefined) {
-              return (
-                <option key={aqId} value={aqId}>
-                  {aq.question}
-                </option>
-              )
-            }})}
-        </select>
-        <label>Answer </label>
-        <select
-          style={{ display: "inline-block"}}
-          className="form-inline form-control-sm ml-2 mr-2"
-          onChange={(e) => setTempAnswerId(e.target.value) }
-          value={tempAnswerId}
-        >
-          <option value="-1">- Select Answer -</option>
-          {mapObjectArray(safeFindAnswers(tempQuestionId), ([ansId, ans]) => (
-            <option key={ansId} value={ansId}>
-              {ans.answer}
-            </option>
-          ))}
-        </select>
-        <div className="col-1">
-          <button
+      <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
+        <div className="new-rule-input">
+          <label>Question </label>
+          <select
             style={{ display: "inline-block"}}
-            className="btn btn-sm btn-success"
+            className="form-inline form-control-sm ml-2 mr-2 select-bar"
+            onChange={(e) => setTempQuestionId(e.target.value)}
+            value={tempQuestionId}
+          >
+            <option value="-1" selected disabled hidden>- Select Question -</option>
+            {mapObjectArray(surveyQuestions, ([aqId, aq]) => {
+              if(answers[aqId] === undefined) {
+                return (
+                  <option key={aqId} value={aqId}>
+                    {aq.question}
+                  </option>
+                );
+              } else {return (<></>);}})}
+          </select>
+        </div>
+        <div className="new-rule-input">
+          <label>Answer </label>
+          <select
+            style={{ display: "inline-block"}}
+            className="form-inline form-control-sm ml-2 mr-2 select-bar"
+            onChange={(e) => setTempAnswerId(e.target.value) }
+            value={tempAnswerId}>
+            <option value="-1" selected disabled hidden>- Select Answer -</option>
+            {mapObjectArray(safeFindAnswers(tempQuestionId), ([ansId, ans]) => (
+              <option key={ansId} value={ansId}>
+                {ans.answer}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div style={{alignContent: 'center', marginTop: '1rem'}}>
+          <button
+            className="btn btn-sm btn-success "
             disabled={tempAnswerId === -1 || tempQuestionId === -1}
             onClick={() => {
               addRule(tempQuestionId, tempAnswerId);
@@ -712,12 +772,10 @@ function MultipleIncompatibleAnswersForm () {
               setTempAnswerId(-1);                                
             }}
             title="Add Rule"
-            type="button"
-          >
+            type="button">
             <SvgIcon icon="plus" size="0.9rem" />
           </button>
         </div>
-
       </div>
       {Object.entries(answers)?.map(([question, answer]) =>
         renderRuleRow(surveyQuestions, question, answer))}
@@ -725,121 +783,109 @@ function MultipleIncompatibleAnswersForm () {
       <strong className="mb-2" style={{ textAlign: "center" }}>
         If the answers above are selected, then the following answer is incompatible
       </strong>
-
-      <div className="form-row" style={{ display: "flex", alignItems: "center"}}>
-        <label>Question </label>
-        <select
-          style={{ display: "inline-block"}}
-          className="form-inline form-control-sm ml-2 mr-2"
-          onChange={(e) => setIncompatQuestionId(e.target.value)}
-          value={incompatQuestionId}
-        >
-          <option value="-1">- Select Question -</option>
-          {mapObjectArray(surveyQuestions, ([aqId, aq]) => {
-            if(answers[aqId] === undefined) {
-              return (
-                <option key={aqId} value={aqId}>
-                  {aq.question}
-                </option>
-              );
-            }
-          })}
-        </select>
-        <label>Answer </label>
-        <select
-          style={{ display: "inline-block"}}
-          className="form-inline form-control-sm ml-2 mr-2"
-          onChange={(e) => setIncompatAnswerId(e.target.value) }
-          value={incompatAnswerId}
-        >
-          <option value="-1">- Select Answer -</option>
-          {mapObjectArray(safeFindAnswers(incompatQuestionId), ([ansId, ans]) => (
-            <option key={ansId} value={ansId}>
-              {ans.answer}
-            </option>
-          ))}
-        </select>
+      <div style={{display: 'inline-flex', flexDirection: 'row'}} className="form-row">        
+        <div className="new-rule-input">
+          <label>Question </label>
+          <select
+            style={{ display: "inline-block"}}
+            className="form-inline form-control-sm ml-2 mr-2 select-bar"
+            onChange={(e) => setIncompatQuestionId(e.target.value)}
+            value={incompatQuestionId}>
+            <option value="-1" selected disabled hidden>- Select Question -</option>
+            {mapObjectArray(surveyQuestions, ([aqId, aq]) => {
+              if(answers[aqId] === undefined) {
+                return (
+                  <option key={aqId} value={aqId}>
+                    {aq.question}
+                  </option>
+                );
+              } else {return (<></>);}})}
+          </select>
+        </div>
+        <div className='new-rule-input'>
+          <label>Answer </label>
+          <select
+            style={{ display: "inline-block"}}
+            className="form-inline form-control-sm ml-2 mr-2 select-bar"
+            onChange={(e) => setIncompatAnswerId(e.target.value) }
+            value={incompatAnswerId}>
+            <option value="-1" selected disabled hidden>- Select Answer -</option>
+            {mapObjectArray(safeFindAnswers(incompatQuestionId), ([ansId, ans]) => (
+              <option key={ansId} value={ansId}>
+                {ans.answer}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
-      <div className="d-flex justify-content-end">
-        <input
-          className="btn btn-lightgreen"
-          onClick={()=>addSurveyRule()}
-          type="button"
-          value="Add Survey Rule"
-        />
-      </div>
-    </>
+      <div className='row' style={{margin: '1rem'}}>
+        <button className='new-rule-button'
+                onClick={()=>addSurveyRule()}
+        ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>
+      </div> 
+    </div> 
   ) : (
     <label>There must be at least 3 questions where type is not input for this rule.</label>
   );
 }
 
 export default function NewRuleDesigner () {
+  //TODO: a better way to do this would be to define the form, validity, and addrule behavior in a map to iterate over. this way we could have a more unified style across all rule types more easily
+  const modal = useSubscription([sub_ids.modal]);
+  function setModal (modal) {dispatch([event_ids.modal, modal]);}
+  
   const selectedRuleType = useSubscription([sub_ids.rules.selectedRuleType]);
   function setSelectedRuleType (ruleType) {dispatch([event_ids.rules.selectedRuleType, ruleType]);}
 
-  /*
-    <div className='new-rule-card'>
-              <div style={{display: 'inline-flex', flexDirection: 'row', width: "100%"}}>
-                <div className='new-rule-input'>
-                  <div style={{display: 'flex', flexDirection: 'row', gap:'1rem'}}>
-                    <label>Rule Type<span style={{color: 'red'}}>*</span></label>
-                    <SvgIcon icon='info' size='1.2rem'/>
-                  </div>
-                  <select
-                    className="select-bar"
-                    onChange={(e)=>dispatch([event_ids.rules.newRule.type, e.target.value])}>
-                    <option
-                      key='default'
-                      selected disabled hidden
-                    >Select Rule Type</option>
-                    {Object.entries(ruleTypeOptions).map(([id, option]) => {
-                      return (<option key={id} value={id}
-                                                           {... (option.validOption()) && {title: option.invalidOptionText }}
-                                                                   disabled={option.validOption()}                              
-                     >{option.label}</option>);
-                    })}
-                  </select>
-                </div>
-                <div className='new-rule-input'>
-                  <div style={{display: 'flex', flexDirection: 'row', gap: '1rem'}}>
-                    <label>Enter Rule Label </label>
-                    <SvgIcon icon='info' size='1.2rem'/>
-                  </div>
-                  <input
-                    className="rule-input"
-                    placeHolder= 'Enter Text'
-                    value={newRuleLabel}
-                    onChange={(e)=>dispatch([event_ids.rules.newRule.label, e.target.value])}>
-                  </input>
-                </div>
-              </div>
-              {newRuleInput()}
-              <button className='new-rule-button'
-                      onClick={()=>dispatch([event_ids.rules.rules])}
-              ><SvgIcon icon='plus' size='1.2rem'/> Add Survey Rule</button>
-            </div>
-
-   */
+  const newRuleLabel = useSubscription([sub_ids.rules.newRule.label]);
+  function setNewRuleLabel (label) {dispatch([event_ids.rules.newRule.label, label]);}
+  
   return (
-    <div className="mt-3 d-flex justify-content-center">
-      <div style={{ display: "flex", flexFlow: "column", width: "50rem" }}>
-        <h2>New Rule</h2>
-        <div className="form-group">
-          <label>Rule Type</label>
-          <select
-            className="form-control form-control-sm"
-            onChange={(e) => setSelectedRuleType(e.target.value)}
-            value={selectedRuleType}
-          >
-            <option value={-1} selected disabled hidden>Select Rule Type</option>
-            <option value="text-match">Text Regex Match</option>
-            <option value="numeric-range">Numeric Range</option>
-            <option value="sum-of-answers">Sum of Answers</option>
-            <option value="matching-sums">Matching Sums</option>
-            <option value="incompatible-answers">Incompatible Answers</option>
-            <option value="multiple-incompatible-answers">Multiple Incompatible Answers</option>
-          </select>
+    <>{modal?.alert &&
+       <Modal title={modal.alert.alertType}
+              onClose={()=>setModal(null)}>
+         {modal.alert.alertMessage}
+       </Modal>}
+      <div className="mt-3 d-flex justify-content-center new-rule-card" >
+        <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>        
+          <h2>New Rule</h2>
+          <div className='row' style={{width: '100%'}}>
+            <div className="form-group new-rule-input">
+              <label>Rule Type</label>
+              <select
+                className="form-control form-control-sm select-bar"
+                onChange={(e) => setSelectedRuleType(e.target.value)}
+                value={selectedRuleType}
+              >
+                <option value={-1} selected disabled hidden>Select Rule Type</option>
+                {//TODO: conditionally disable rule type options, give popover text as to why they're not available
+                  /*Object.entries(ruleTypeOptions).map(([id, option]) => {
+                    return (<option key={id} value={id}
+                    {... (option.validOption()) && {title: option.invalidOptionText }}
+                    disabled={option.validOption()}                              
+                    >{option.label}</option>);
+                    }) */}
+                <option value="text-match">Text Regex Match</option>
+                <option value="numeric-range">Numeric Range</option>
+                <option value="sum-of-answers">Sum of Answers</option>
+                <option value="matching-sums">Matching Sums</option>
+                <option value="incompatible-answers">Incompatible Answers</option>
+                <option value="multiple-incompatible-answers">Multiple Incompatible Answers</option>
+              </select>
+            </div>
+            <div className='new-rule-input' style={{width: '50%'}}>
+              <div style={{display: 'flex', flexDirection: 'row', gap: '1rem'}}>
+                <label>Enter Rule Label </label>
+                <SvgIcon icon='info' size='1.2rem'/>
+              </div>
+              <input
+                className="rule-input"
+                placeHolder= 'Enter Text'
+                value={newRuleLabel}
+                onChange={(e)=>setNewRuleLabel(e.target.value)}>
+              </input>
+            </div>
+          </div>
         </div>
         {
           {
@@ -850,8 +896,8 @@ export default function NewRuleDesigner () {
             "incompatible-answers": <IncompatibleAnswersForm />,
             "multiple-incompatible-answers": <MultipleIncompatibleAnswersForm />,
           }[selectedRuleType]
-        }
+        }        
       </div>
-    </div>
+    </>
   );
 };

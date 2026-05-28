@@ -5,9 +5,11 @@ import NewRuleDesigner from "./NewRuleDesigner";
 
 export default function SurveyRuleDesigner({events, subs}) {
   return (
-    <div id="survey-rule-designer">
+    <div className="survey-rules-container">
+      <div style={{backgroundColor: 'white'}} >
       <SurveyRulesList inDesignMode events={events} subs={subs}/>
-      <NewRuleDesigner events={events} subs={subs}/>
+    <NewRuleDesigner events={events} subs={subs}/>
+    </div>
     </div>
   );
 }
