@@ -16,6 +16,8 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: "dist/public",
+    manifest: "manifest.json",
     chunkSizeWarningLimit: 9000,
     minify: false,
     manifest: true,
