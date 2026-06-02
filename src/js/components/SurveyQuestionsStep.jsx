@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { dispatch, useSubscription } from '@flexsurfer/reflex';
 import { surveyQuestionsAtom } from '../state/projectWizard';
@@ -303,6 +303,9 @@ export const SurveyQuestionsStep = () => {
   const [questions, setQuestions] = useAtom(surveyQuestionsAtom);
   const [newQuestion, setNewQuestion] = useState(newDefaultQuestion);
 
+  useEffect(() => {
+    console.log("Questions Atom Updated:", questions);
+  }, [questions]);
   const addQuestion = () => {
     if (!newQuestion.questionText) return;
 
