@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import _ from "lodash";
 import { stateAtom } from '../utils/constants';
+import { previewSelectedSampleIdAtom, previewUserSamplesAtom } from '../state/projectWizard';
 import { mercator } from '../utils/mercator';
 import { SidebarCard } from "./Sidebar";
 import SvgIcon from "./svg/SvgIcon";
@@ -17,30 +18,52 @@ import '../../css/sidebar.css'
 import '../../css/survey.css';
 
 
-export const SurveyQuestions = () => {
-  const { currentProject,
+export const SurveyQuestions = ({
+  preview = false,
+  surveyQuestions = null
+}) => {
+  const {
+    currentProject,
     currentPlot,
     mapConfig,
-    selectedSampleId,
-    userSamples } = useAtomValue(stateAtom);
+    selectedSampleId: globalSelectedId,
+    userSamples: globalUserSamples
+  } = useAtomValue(stateAtom);
+
   const setAppState = useSetAtom(stateAtom);
+
+  // PREVIEW STATE HOOKS
+  const [previewUserSamples, setPreviewUserSamples] = useAtom(previewUserSamplesAtom);
+  const previewSelectedId = useAtomValue(previewSelectedSampleIdAtom);
+
+  // SWITCH DATA SOURCES BASED ON PREVIEW FLAG
+  const surveyData = useMemo(() => {
+    return preview ? surveyQuestions : currentProject?.surveyQuestions;
+  }, [preview, surveyQuestions, currentProject?.surveyQuestions]);
+
+  const userSamples = preview
+    ? previewUserSamples
+    : globalUserSamples;
+
+  const selectedSampleId = preview
+    ? previewSelectedId
+    : globalSelectedId;
+
   const [openTopId, setOpenTopId] = useState(null);
-  const [openByParent, setOpenByParent] = useState({})
+  const [openByParent, setOpenByParent] = useState({});
   const [showLearningMaterial, setShowLearningMaterial] = useState(false);
 
   const entries = (obj = {}) => Object.entries(obj || {});
   const visibleAnswers = (q) => entries(q.answers).filter(([, a]) => !a?.hide);
 
-
-  //EFFECTS
   useEffect(() => {
-  }, [currentProject, userSamples]);
+  }, [surveyData, userSamples]);
 
-  //FUNCTIONS
-
-  // Which samples to write to
   const getSelectedSampleIds = (questionId) => {
-    const answered = currentProject?.surveyQuestions?.[questionId]?.answered || [];
+    // If preview, we just return the ID of our 1 fake sample
+    if (preview) return [selectedSampleId];
+    
+    const answered = surveyData?.[questionId]?.answered || [];
     const allFeatures = mercator.getAllFeatures(mapConfig, "currentSamples") || [];
     const unansweredFeatures = keyDifference(answered, allFeatures);
     const selectedSamples = mercator.getSelectedSamples(mapConfig);
@@ -51,21 +74,24 @@ export const SurveyQuestions = () => {
         lengthObject(userSamples) === 1)
         ? allFeatures
         : (selectedFeatures.length !== 0 ? selectedFeatures : unansweredFeatures);
-    
+
     return list.map((f) => f.get("sampleId"));
   };
-  
-  // Validate the selection
+
   const checkSelection = (sampleIds, questionId) => {
-    const q = currentProject?.surveyQuestions?.[questionId];
+    if (preview) return true;
+    
+    const q = surveyData?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
     if (sampleIds.some((s) => !visibleIds.includes(s))) {
       setAppState((s) => ({
         ...s,
-        modal: { alert: {
-          alertType: "Selection Error",
-          alertMessage: "Invalid Selection. Try selecting the question before answering."
-        }}
+        modal: {
+          alert: {
+            alertType: "Selection Error",
+            alertMessage: "Invalid Selection. Try selecting the question before answering."
+          }
+        }
       }));
       return false;
     }
@@ -84,30 +110,49 @@ export const SurveyQuestions = () => {
     return true;
   };
 
-  // Save the answers to userSamples and userImages
   const setCurrentValue = (questionId, answerId, answerText) => {
-    setAppState((prev) => {
-      const sampleIds = getSelectedSampleIds(questionId);
-      if (!checkSelection(sampleIds, questionId)) return prev;
+    const sampleIds = getSelectedSampleIds(questionId);
+    if (preview) {
+      // Logic for updating the FAKE sample state
+      setPreviewUserSamples((prev) => {
+        const newSamples = sampleIds.reduce((acc, sampleId) => {
+          if (answerText == null) return acc;
+          const childIds = getChildQuestionIds(questionId);
+          const prevAnswers = prev?.[sampleId] || {};
+          const subQuestionsCleared = filterObject(
+            prevAnswers,
+            ([key]) => !childIds.includes(Number(key))
+          );
+          const newQuestion = { answerId };
+          if (answerText !== "") newQuestion.answer = answerText;
 
+          acc[sampleId] = {
+            ...subQuestionsCleared,
+            [questionId]: newQuestion,
+          };
+          return acc;
+        }, {});
+
+        return { ...prev, ...newSamples };
+      });
+      return;
+    }
+
+    // ORIGINAL LOGIC FOR GLOBAL STATE
+    setAppState((prev) => {
+      if (!checkSelection(sampleIds, questionId)) return prev;
       const childQuestionIds = getChildQuestionIds(questionId);
 
       const newSamples = sampleIds.reduce((acc, sampleId) => {
         if (answerText == null) return acc;
-
         const prevSampleAnswers = prev.userSamples?.[sampleId] || {};
         const subQuestionsCleared = filterObject(
           prevSampleAnswers,
           ([key]) => !childQuestionIds.includes(Number(key))
         );
-
         const newQuestion = { answerId };
         if (answerText !== "") newQuestion.answer = answerText;
-
-        acc[sampleId] = {
-          ...subQuestionsCleared,
-          [questionId]: newQuestion,
-        };
+        acc[sampleId] = { ...subQuestionsCleared, [questionId]: newQuestion };
         return acc;
       }, {});
 
@@ -115,15 +160,15 @@ export const SurveyQuestions = () => {
         acc[sampleId] = {
           id: prev.currentImagery.id,
           attributes:
-            prev.currentImagery?.sourceConfig?.type === "PlanetDaily"
-              ? {
-                ...prev.imageryAttributes,
-                imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(
-                  prev.mapConfig,
-                  prev.currentImagery.id
-                ),
-              }
-              : prev.imageryAttributes,
+          prev.currentImagery?.sourceConfig?.type === "PlanetDaily"
+            ? {
+              ...prev.imageryAttributes,
+              imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(
+                prev.mapConfig,
+                prev.currentImagery.id
+              ),
+            }
+          : prev.imageryAttributes,
         };
         return acc;
       }, {});
@@ -157,9 +202,9 @@ export const SurveyQuestions = () => {
     return allowed.length === 0 || allowed.includes(Number(parentAns.answerId));
   };
 
-  const childrenOf = (parentId) =>
+  const childrenOf = (parentId, data) =>
     mapObjectArray(
-      currentProject?.surveyQuestions || {},
+      data || {},
       ([id, q]) => ({ id: Number(id), ...q })
     )
       .filter(q => q.parentQuestionId === parentId && !q.hideQuestion)
@@ -169,7 +214,7 @@ export const SurveyQuestions = () => {
     const us = userSamples?.[sampleId]?.[qId];
     if (us) return { answerId: Number(us.answerId), answer: us.answer };
     const a = (currentProject?.surveyQuestions?.[qId]?.answered || [])
-      .find(x => Number(x.sampleId) === Number(sampleId));
+          .find(x => Number(x.sampleId) === Number(sampleId));
     return a ? { answerId: Number(a.answerId), answer: a.answerText } : null;
   };
 
@@ -179,8 +224,8 @@ export const SurveyQuestions = () => {
     if (!q) return false;
     if (q.componentType === 'input') {
       const val = q.dataType === 'number'
-        ? (ansObj.answer ?? '').toString().trim()
-        : (ansObj.answer ?? '').toString().trim();
+            ? (ansObj.answer ?? '').toString().trim()
+            : (ansObj.answer ?? '').toString().trim();
       // number: must be non-empty and not NaN; text: non-empty string
       if (q.dataType === 'number') return val !== '' && !Number.isNaN(Number(val));
       return val.length > 0;
@@ -212,7 +257,7 @@ export const SurveyQuestions = () => {
     // if this question itself has no answers yet, it's 'none' regardless of children
     if (base === 'none') return 'none';
 
-    const children = childrenOf(questionId).filter(isChildVisible);
+    const children = childrenOf(questionId, surveyData).filter(isChildVisible);
     if (children.length === 0) return base;
     const childStatuses = children.map(child => getQuestionStatus(child.id));
     // complete only if this question AND all visible descendants are complete
@@ -229,7 +274,7 @@ export const SurveyQuestions = () => {
       const us = userSamples?.[selectedSampleId]?.[questionId];
       if (us) return { answerId: toNum(us.answerId), answer: us.answer };
       const fromSurvey = (currentProject?.surveyQuestions?.[questionId]?.answered || [])
-        .find(a => a.sampleId === selectedSampleId);
+            .find(a => a.sampleId === selectedSampleId);
       if (fromSurvey) return { answerId: toNum(fromSurvey.answerId), answer: fromSurvey.answerText };
     }
     const anyAnswers = (currentProject?.surveyQuestions?.[questionId]?.answered || [])[0];
@@ -271,11 +316,11 @@ export const SurveyQuestions = () => {
   // RENDERING FUNCTIONS
   const renderQuestionNode = (question, depth = 0) => {
     const isOpen =
-      depth === 0
-        ? openTopId === question.id
-        : openByParent[question.parentQuestionId] === question.id;
+          depth === 0
+          ? openTopId === question.id
+          : openByParent[question.parentQuestionId] === question.id;
 
-    const children = childrenOf(question.id).filter(isChildVisible);
+    const children = childrenOf(question.id, surveyData).filter(isChildVisible);
     const status = getQuestionStatus(question.id);
 
     const handleToggle = () => {
@@ -285,7 +330,7 @@ export const SurveyQuestions = () => {
         setOpenByParent(prev => ({
           ...prev,
           [question.parentQuestionId]:
-            prev[question.parentQuestionId] === question.id ? null : question.id,
+          prev[question.parentQuestionId] === question.id ? null : question.id,
         }));
       }
       setAppState(s => ({ ...s, selectedQuestionId: question.id }));
@@ -428,20 +473,12 @@ export const SurveyQuestions = () => {
   };
 
   // MEMOIZATION
-  const parents = useMemo(
-    () =>
-      mapObjectArray(
-        currentProject?.surveyQuestions || {},
-        ([id, q]) => ({ id: Number(id), ...q })
-      )
-        .filter((q) => (q.parentQuestionId ?? -1) < 0 && !q.hideQuestion)
-        .sort(
-          (a, b) =>
-            (a.cardOrder ?? Number.POSITIVE_INFINITY) -
-              (b.cardOrder ?? Number.POSITIVE_INFINITY)
-        ),
-    [currentProject?.surveyQuestions]
-  );
+  const parents = useMemo(() => {
+    return Object.entries(surveyData)
+      .map(([id, q]) => ({ id: Number(id), ...q }))
+      .filter(q => (q.parentQuestionId === -1 || q.parentQuestionId === "-1") && !q.hideQuestion)
+      .sort((a, b) => (a.cardOrder ?? 1e9) - (b.cardOrder ?? 1e9));
+  }, [surveyData]);
 
   const { validatedCount, totalTop } = useMemo(() => {
     const total = parents.length;
@@ -504,7 +541,7 @@ export const SurveyQuestions = () => {
 
   const checkRuleSumOfAnswers = (surveyRule, questionIdToSet, answerId, answerText) => {
     const answerVal = !isNaN(Number(answerText)) ?
-      Number(answerText) : Number(getSurveyAnswerText(questionIdToSet, answerId));
+          Number(answerText) : Number(getSurveyAnswerText(questionIdToSet, answerId));
     if (surveyRule.questionIds.includes(questionIdToSet)) {
       const answeredQuestions = getAnsweredQuestions(surveyRule.questionIds, questionIdToSet);
       if (surveyRule.questionIds.length === lengthObject(answeredQuestions) + 1) {
@@ -520,8 +557,8 @@ export const SurveyQuestions = () => {
             return `Sum of answers validation failed.\r\n\nSum for questions [${surveyRule.questionIds
               .map((q) => getSurveyQuestionText(q))
               .toString()}] must be ${surveyRule.validSum.toString()}.\r\n\nAn acceptable answer for "${question}" is ${(
-                surveyRule.validSum - invalidSum
-              ).toString()}.`;
+              surveyRule.validSum - invalidSum
+            ).toString()}.`;
           } else {
             return null;
           }
@@ -555,7 +592,7 @@ export const SurveyQuestions = () => {
       const ready = (al1, rl1, al2, rl2) => al1 > 1 && rl1 === al1 && rl2 === al2 + 1;
       if (
         ready(ansLen1, ruleLen1, ansLen2, ruleLen2) ||
-          ready(ansLen2, ruleLen2, ansLen1, ruleLen1)
+        ready(ansLen2, ruleLen2, ansLen1, ruleLen1)
       ) {
         const sampleIds = getSelectedSampleIds(questionIdToSet);
         const answeredSampleIds1 = getAnsweredSampleIds(answeredQuestions1);
@@ -577,14 +614,14 @@ export const SurveyQuestions = () => {
             const { question } = currentProject?.surveyQuestions[questionIdToSet];
             return (
               "Matching sums validation failed.\r\n\n" +
-                `Totals of the question sets [${surveyRule.questionIds1
-                  .map((q) => getSurveyQuestionText(q))
-                  .toString()}] and [${surveyRule.questionIds2
-                    .map((q) => getSurveyQuestionText(q))
-                    .toString()}] do not match.\r\n\n` +
-                `An acceptable answer for "${question}" is ${Math.abs(
-                  invalidSum[0] - invalidSum[1]
-                )}.`
+              `Totals of the question sets [${surveyRule.questionIds1
+                .map((q) => getSurveyQuestionText(q))
+                .toString()}] and [${surveyRule.questionIds2
+                .map((q) => getSurveyQuestionText(q))
+                .toString()}] do not match.\r\n\n` +
+              `An acceptable answer for "${question}" is ${Math.abs(
+                invalidSum[0] - invalidSum[1]
+              )}.`
             );
           } else {
             return null;
@@ -668,7 +705,7 @@ export const SurveyQuestions = () => {
     });
     const incompatQuestion = surveyQuestions[incompatQuestionId];
     const incompatAnswer = (incompatQuestion.answered.some((a) => a.answerId == incompatAnswerId) ||
-      (incompatQuestionId == questionIdToSet && incompatAnswerId == answerId));
+                            (incompatQuestionId == questionIdToSet && incompatAnswerId == answerId));
 
     if (ruleAnswerList.length === answeredQuestionsList.length && incompatAnswer) {
       const answerText = surveyQuestions[questionIdToSet].answers[answerId].answer;
@@ -691,11 +728,11 @@ export const SurveyQuestions = () => {
     };
     return (
       currentProject?.surveyRules &&
-        currentProject?.surveyRules
-          .map((surveyRule) =>
-            ruleFunctions[surveyRule.ruleType](surveyRule, questionIdToSet, answerId, answerText)
-          )
-          .find((msg) => msg)
+      currentProject?.surveyRules
+        .map((surveyRule) =>
+          ruleFunctions[surveyRule.ruleType](surveyRule, questionIdToSet, answerId, answerText)
+        )
+        .find((msg) => msg)
     );
   };
 
@@ -803,7 +840,7 @@ const ConfidenceItem = ({ isOpen, onToggle }) => {
             <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
               <rect x="4" y="9" width="12" height="2" fill="currentColor" rx="1" />
             </svg>
-          )}
+            )}
         </span>
         <span className="sq-text">Plot Confidence</span>
         <span className={`sq-chevron ${isOpen ? 'up' : 'down'}`} aria-hidden="true">▾</span>
@@ -866,42 +903,32 @@ export const DrawingTool = () => {
     lines: true,
     polygons: true,
   };
-
   const initialDrawTool = sg.polygons ? "Polygon" : sg.lines ? "LineString" : "Point";
   const [drawTool, setDrawToolState] = useState(initialDrawTool);
 
-  /**
-   * Helper to force the map back to the standard sample view.
-   * Note: Using "question" to match your stateAtom default mode.
-   */
-  const restoreStandardLayer = () => {
-    mercator.disableDrawing(mapConfig);
-    mercator.removeLayerById(mapConfig, "drawLayer");
-    setAppState((s) => ({ ...s, answerMode: "question" }));
+  const setAnswerMode = (newMode, tool) => {
+    setAppState((s) => ({ ...s, answerMode: newMode }));
+    if (newMode === "draw") {
+      featuresToDrawLayer(tool || drawTool);
+    } else {
+      featuresToSampleLayer();
+    }
   };
 
   const featuresToDrawLayer = (tool) => {
+    const type = currentProject.type;
     const samples = currentPlot?.samples || [];
-    
-    // 1. Capture existing features from "currentSamples" if they exist
-    const existingFeatures = mercator.getAllFeatures(mapConfig, "currentSamples") || [];
+    const visibleSamples =
+          type === "simplified" ? samples.filter((s) => s.visibleId !== 1) : samples;
 
     mercator.disableDrawing(mapConfig);
+    mercator.removeLayerById(mapConfig, "currentSamples");
     mercator.removeLayerById(mapConfig, "drawLayer");
 
-    // 2. Initialize source. Use existing map features if available to maintain state.
-    const source = existingFeatures.length > 0 
-      ? new VectorSource({ features: existingFeatures })
-      : mercator.samplesToVectorSource(samples);
-
-    // Remove the original layer only after the source is captured to avoid flicker
-    mercator.removeLayerById(mapConfig, "currentSamples");
-
-    // 3. Add the interactive drawing layer
     mercator.addVectorLayer(
       mapConfig,
       "drawLayer",
-      source,
+      mercator.samplesToVectorSource(visibleSamples),
       mercator.ceoMapStyles("draw", "orange"),
       9999
     );
@@ -910,20 +937,29 @@ export const DrawingTool = () => {
   };
 
   const featuresToSampleLayer = () => {
+    mercator.disableDrawing(mapConfig);
     const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
-    
-    const newSamples = allFeatures.map((cur, idx) => {
-      const existingId = cur.get("sampleId");
-      return {
-        id: existingId || idx + 1,
-        visibleId: cur.get("visibleId") || 1,
-        sampleGeom: mercator.geometryToGeoJSON(
-          cur.getGeometry(),
-          "EPSG:4326",
-          "EPSG:3857"
-        ),
-      };
-    });
+    const existingIds = allFeatures
+          .map((f) => f.get("sampleId"))
+          .filter((id) => id);
+
+    const getMax = (arr) => Math.max(0, ...existingIds, ...arr.map((s) => s.id));
+
+    const newSamples = allFeatures.reduce((acc, cur) => {
+      const nextId = cur.get("sampleId") || getMax(acc) + 1;
+      return [
+        ...acc,
+        {
+          id: nextId,
+          visibleId: cur.get("visibleId"),
+          sampleGeom: mercator.geometryToGeoJSON(
+            cur.getGeometry(),
+            "EPSG:4326",
+            "EPSG:3857"
+          ),
+        },
+      ];
+    }, []);
 
     setAppState((prev) => ({
       ...prev,
@@ -937,22 +973,12 @@ export const DrawingTool = () => {
         {}
       ),
     }));
-    
-    restoreStandardLayer();
   };
 
-  // Mount logic: Switch to draw mode immediately and clean standard samples
+  // enter draw mode on mount
   useEffect(() => {
-    if (mapConfig) {
-      featuresToDrawLayer(initialDrawTool);
-      setAppState((s) => ({ ...s, answerMode: "draw" }));
-    }
-
-    return () => {
-      // Logic for when the component is closed/unmounted
-      mercator.disableDrawing(mapConfig);
-      mercator.removeLayerById(mapConfig, "drawLayer");
-    };
+    setAnswerMode("draw", initialDrawTool);
+    return () => setAnswerMode("answer");
   }, [mapConfig]);
 
   const buttonStyle = (active) => ({
@@ -968,12 +994,43 @@ export const DrawingTool = () => {
     color: "#2d6f74",
   });
 
+  const setDrawTool = (type) => {
+    setDrawToolState(type);
+    setAnswerMode("draw", type);
+  };
+
+  const clearAll = (tool = drawTool) => {
+    if (answerMode === "draw" && window.confirm("Do you want to clear all samples from the draw area?")) {
+      mercator.disableDrawing(mapConfig);
+      mercator.removeLayerById(mapConfig, "currentSamples");
+      mercator.removeLayerById(mapConfig, "drawLayer");
+
+      // re-add an empty draw layer and re-enable drawing
+      mercator.addVectorLayer(
+        mapConfig,
+        "drawLayer",
+        null,
+        mercator.ceoMapStyles("draw", "orange"),
+        9999
+      );
+      mercator.enableDrawing(mapConfig, "drawLayer", tool);
+    } else if (window.confirm("Do you want to clear all answers?")) {
+      if (typeof resetPlotValues === "function") {
+        resetPlotValues();
+      } else {
+        // fallback: clear in-app answers if no handler provided
+        setAppState((s) => ({
+          ...s,
+          userSamples: {},
+          userImages: {},
+        }));
+      }
+    }
+  };
+
   const RenderDrawTool = ({ icon, title, type }) => (
     <div
-      onClick={() => {
-        setDrawToolState(type);
-        featuresToDrawLayer(type);
-      }}
+      onClick={() => setDrawTool(type)}
       style={{
         alignItems: "center",
         cursor: "pointer",
@@ -989,6 +1046,46 @@ export const DrawingTool = () => {
     </div>
   );
 
+  const RenderDrawTools = () => (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      {sg.points && (
+        <RenderDrawTool
+          icon="point"
+          title="Click anywhere to add a new point."
+          type="Point"
+        />
+      )}
+      {sg.lines && (
+        <RenderDrawTool
+          icon="lineString"
+          title={
+            "Click anywhere to start drawing.\n" +
+              "A new point along the line string can be added with a single click.\n" +
+              "Right click or double click to finish drawing.\n"
+          }
+          type="LineString"
+        />
+      )}
+      {sg.polygons && (
+        <RenderDrawTool
+          icon="polygon"
+          title={
+            "Click anywhere to start drawing.\n" +
+              "A new vertex can be added with a single click.\n" +
+              "Right click, double click, or complete the polygon to finish drawing.\n"
+          }
+          type="Polygon"
+        />
+      )}
+      <ul style={{ textAlign: "left", marginTop: "8px" }}>
+        How To:
+        <li>To modify an existing feature, hold Ctrl and click to drag</li>
+        <li>To delete a feature, hold Ctrl and right click on it</li>
+        <li>To save changes, click “Save to samples” below</li>
+      </ul>
+    </div>
+  );
+
   return (
     <SidebarCard
       title="Sample Drawing Tool"
@@ -997,29 +1094,21 @@ export const DrawingTool = () => {
       infoText="Draw or edit samples directly on the map"
     >
       <div className="sq-draw-body">
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {sg.points && (
-            <RenderDrawTool icon="point" title="Add point" type="Point" />
-          )}
-          {sg.lines && (
-            <RenderDrawTool icon="lineString" title="Add line" type="LineString" />
-          )}
-          {sg.polygons && (
-            <RenderDrawTool icon="polygon" title="Add polygon" type="Polygon" />
-          )}
-        </div>
+        <RenderDrawTools />
         <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
           <button
             className="btn btn-outline-lightgreen"
             onClick={featuresToSampleLayer}
+            title="Save drawn features back to sample list"
           >
             Save samples
           </button>
           <button
-            className="btn btn-outline-danger"
-            onClick={restoreStandardLayer}
+            className="btn btn-outline-lightgreen"
+            onClick={() => clearAll()}
+            title="Exit draw mode and return to answering"
           >
-            Cancel
+            Discard samples
           </button>
         </div>
       </div>
