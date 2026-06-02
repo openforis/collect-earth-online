@@ -282,12 +282,23 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
         "Accept": "application/json",
         "Content-Type": "application/json"
       },
-    }).then((response) => {
+    }).then(async (response) => {
       if(response.ok) {
         getInstitutionUserList();
         console.log(response);
       } else {
-        console.log(response);
+        const failureList = await response.json();
+        const alertBody = failureList.map(({ email, reason }, idx) => (
+          <div key={idx} style={{ marginBottom: "0.5rem" }}>
+            User <strong>{email}</strong> wasn't added to the institution due to: <strong>{reason}</strong>
+          </div>
+        ));
+        setModal({
+          alert: {
+            alertType: "Add Users Error",
+            alertMessage: alertBody
+          }
+        });
       }
     })
   }

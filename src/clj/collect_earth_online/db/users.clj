@@ -238,20 +238,28 @@
       :else
       (data-response "No accountIds were provided."))))
 
+(defn- process-user [institution-id {:keys [email role] :or {role "member"}}]
+  (let [user (first (call-sql "get_user_by_email" email))]
+    (cond
+      (not user)
+      {:email email :reason "User does not exist in CEO"}
+      :else
+      (try
+        (let [user-id (:user_id user)
+              res (call-sql "add_institution_user" institution-id user-id role)]
+          (if res nil {:email email :reason "Unknown database error"}))
+        (catch Exception e
+          {:email email :reason "User is already assigned to this institution"})))))
+
 (defn add-user-to-institution [{:keys [params]}]
-  (let [new-users      (:newUsers params)
-        institution-id (:institutionId params)]
-    (try
-    (when (seq new-users)
-      (doseq [user new-users]
-        (let [email        (:email user)
-              role         (get user :role "member")
-              user-id      (:user_id (first (call-sql "get_user_by_email" email)))]
-          (when user-id
-            (call-sql "add_institution_user" institution-id user-id role)))))
-      (data-response "Users added to the institution")
-      (catch Exception e
-        (data-response "One or more users don't exist in CEO")))))
+  (let [{:keys [newUsers institutionId]} params]
+    (if (empty? newUsers)
+      (data-response [] {:status 200})
+      (let [failures (->> newUsers
+                          (map #(process-user institutionId %))
+                          (remove nil?)
+                          (doall))]
+        (data-response failures {:status (if (seq failures) 400 200)})))))
 
 (defn request-institution-membership [{:keys [params session]}]
   (let [user-id        (:userId session -1)
