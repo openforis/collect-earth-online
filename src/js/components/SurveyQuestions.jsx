@@ -926,6 +926,7 @@ export const DrawingTool = () => {
 
     setAppState((prev) => ({
       ...prev,
+      answerMode: 'answer',
       currentPlot: { ...prev.currentPlot, samples: newSamples },
       userSamples: newSamples.reduce(
         (acc, cur) => ({ ...acc, [cur.id]: prev.userSamples?.[cur.id] || {} }),
@@ -940,7 +941,7 @@ export const DrawingTool = () => {
 
   // enter draw mode on mount
   useEffect(() => {
-    setAnswerMode("draw", initialDrawTool);
+    // setAnswerMode("draw", initialDrawTool);
     return () => setAnswerMode("answer");
   }, [mapConfig]);
 
