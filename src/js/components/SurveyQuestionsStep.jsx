@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useAtom } from 'jotai';
+import { dispatch, useSubscription } from '@flexsurfer/reflex';
 import { surveyQuestionsAtom } from '../state/projectWizard';
 import { SurveyQuestions } from './SurveyQuestions';
 import SvgIcon from './svg/SvgIcon';
+import { event_ids, sub_ids } from '../state/projectWizard';
+
 
 export const QuestionCard = ({
   qId,
@@ -20,11 +23,12 @@ export const QuestionCard = ({
     ([id, q]) => q.parentQuestionId === parseInt(qId)
   );
 
-  const updateQuestion = (field, value) => {
+  const updateQuestion = (field, value) => {    
     setQuestions((prev) => ({
       ...prev,
       [qId]: { ...prev[qId], [field]: value },
     }));
+    dispatch([event_ids.questions.updateQuestion, qId, field, value]);
   };
 
   const updateAnswer = (aId, field, value) => {
@@ -38,27 +42,33 @@ export const QuestionCard = ({
         },
       },
     }));
+    dispatch([event_ids.questions.updateAnswer, qId, aId, field, value]);
   };
 
   const addAnswer = () => {
     const aIds = Object.keys(question.answers).map(Number);
-    const nextAId = (aIds.length > 0 ? Math.max(...aIds) + 1 : 1).toString();
+    const nextAId = (aIds.length > 0 ? Math.max(...aIds) + 1 : 1).toString();    
     updateQuestion('answers', {
       ...question.answers,
       [nextAId]: { answer: '', color: '#cbd5e1', hide: false },
     });
+    dispatch([event_ids.questions.updateQuestion, qId, 'answers',
+              {... question.answers,
+               [nextAId]: { answer: '', color: '#cbd5e1', hide: false }}]);
   };
 
   const removeAnswer = (aId) => {
     const newAnswers = { ...question.answers };
     delete newAnswers[aId];
     updateQuestion('answers', newAnswers);
+    dispatch([event_ids.questions.updateQuestion, qId, 'answers', newAnswers]);
   };
 
   const removeQuestion = () => {
     const newQuestions = { ...questions };
     delete newQuestions[qId];
     setQuestions(newQuestions);
+    dispatch([event_ids.questions.setQuestions, newQuestions]);
   };
 
   return (
@@ -315,7 +325,7 @@ export const SurveyQuestionsStep = () => {
     };
 
     setQuestions((prev) => ({ ...prev, [nextId]: questionToAdd }));
-
+    dispatch([event_ids.questions.addQuestion, questionToAdd]);
     setNewQuestion(newDefaultQuestion);
   };
 
@@ -339,6 +349,7 @@ export const SurveyQuestionsStep = () => {
         newQuestions[nextId] = { ...nextQ, cardOrder: tempOrder };
         return newQuestions;
       });
+      dispatch([event_ids.questions.moveQuestion, id, targetQ, nextId, nextQ]);
     }
   };
 

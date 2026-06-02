@@ -25,8 +25,6 @@ export const rulesAtom = atom([]);
 export const previewSelectedSampleIdAtom = atom(1);
 export const previewUserSamplesAtom = atom({});
 
-
-
 const projectWizardDb = {
   currentStep: null,
   modal: null,
@@ -79,7 +77,6 @@ export const event_ids = {
   currentStep: 'currentStep',
   modal: 'modal',
   projectSource: 'projectSource',
-
   overview: {projectName: 'overview.projectName',
              projectDescription: 'overview.projectDescription',
              projectType: 'overview.projectType',
@@ -91,7 +88,13 @@ export const event_ids = {
                plotConfidence: 'overview.projectOptions.plotConfidence',
                autoGeo: 'overview.projectOptions.autoGeo'
              }},
-  projectDetails: 'projectDetails',  
+  projectDetails: 'projectDetails',
+  questions: {
+    addQuestion: 'addQuestion',
+    setQuestions: 'setQuestions',
+    updateQuestions: 'updateQuestion',
+    updateAnswer: 'updateAnswer',
+    moveQuestion: 'moveQuestion'},
   rules: {
     rules: 'rules',
     search: 'rules.search',
@@ -116,16 +119,6 @@ export const event_ids = {
       tempAnswerId: 'rules.newRule.tempAnswerId',
       incompatQuestionId: 'rules.newRule.incompatQuestionId',
       incompatAnswerId: 'rules.newRule.incompatAnswerId',
-
-/*
-
-  rules: {
-  
-  
-    delete: 'rules.delete',
-    }
-                         */
-
     }}};
 
 export const sub_ids = {
@@ -144,6 +137,9 @@ export const sub_ids = {
                autoGeo: 'overview.projectOptions.autoGeo'
              }},
   projectDetails: 'projectDetails',
+  questions: {
+    questions: 'questions'
+  },
   rules: {rules: 'rules',
           search: 'rules.search',
           filter: 'rules.filter',
@@ -168,7 +164,6 @@ export const sub_ids = {
             incompatQuestionId: 'rules.newRule.incompatQuestionId',
             incompatAnswerId: 'rules.newRule.incompatAnswerId',
           }},
-  questions: {questions: 'questions'},
 };
 
 export const effects = {};
@@ -227,59 +222,108 @@ regEvent(event_ids.currentStep,
 
 regEvent(event_ids.modal,
          ({ draftDb }, modal) => {
-           draftDb[event_ids.modal] = modal;
+           draftDb[sub_ids.modal] = modal;
          });
 
 regEvent(event_ids.overview.projectType,
          ({ draftDb }, projectType) => {
-           draftDb[event_ids.overview.projectType] = projectType;
+           draftDb[sub_ids.overview.projectType] = projectType;
          });
 
 regEvent(event_ids.projectSource,
          ({ draftDb }, projectSource) => {
-           draftDb[event_ids.projectSource] = projectSource;
+           draftDb[sub_ids.projectSource] = projectSource;
          });
 
 // PROJECT OVERVIEW EVENTS
 
 regEvent(event_ids.overview.projectName,
          ({ draftDb }, projectName) => {
-           draftDb[event_ids.overview.projectName] = projectName;
+           draftDb[sub_ids.overview.projectName] = projectName;
          });
 
 regEvent(event_ids.overview.projectDescription,
          ({ draftDb }, projectDescription) => {
-           draftDb[event_ids.overview.projectDescription] = projectDescription;
+           draftDb[sub_ids.overview.projectDescription] = projectDescription;
          });
 
 regEvent(event_ids.overview.learningMaterial,
          ({ draftDb }, learningMaterial) => {
-           draftDb[event_ids.overview.learningMaterial] = learningMaterial;
+           draftDb[sub_ids.overview.learningMaterial] = learningMaterial;
          });
 
 regEvent(event_ids.overview.visibility,
          ({ draftDb }, visibility) => {
-           draftDb[event_ids.overview.visibility] = visibility;
+           draftDb[sub_ids.overview.visibility] = visibility;
          });
 
 regEvent(event_ids.overview.projectOptions.gee,
          ({ draftDb }) => {
-           draftDb[event_ids.overview.projectOptions.gee] = !draftDb[event_ids.overview.projectOptions.gee];
+           draftDb[sub_ids.overview.projectOptions.gee] = !draftDb[sub_ids.overview.projectOptions.gee];
          });
 
 regEvent(event_ids.overview.projectOptions.extraPlotColumns,
          ({ draftDb }) => {
-           draftDb[event_ids.overview.projectOptions.extraPlotColumns] = !draftDb[event_ids.overview.projectOptions.extraPlotColumns];
+           draftDb[sub_ids.overview.projectOptions.extraPlotColumns] = !draftDb[sub_ids.overview.projectOptions.extraPlotColumns];
          });
 
 regEvent(event_ids.overview.projectOptions.plotConfidence,
          ({ draftDb }) => {
-           draftDb[event_ids.overview.projectOptions.plotConfidence] = !draftDb[event_ids.overview.projectOptions.plotConfidence];
+           draftDb[sub_ids.overview.projectOptions.plotConfidence] = !draftDb[sub_ids.overview.projectOptions.plotConfidence];
          });
 
 regEvent(event_ids.overview.projectOptions.autoGeo,
          ({ draftDb }) => {
-           draftDb[event_ids.overview.projectOptions.autoGeo] = !draftDb[event_ids.overview.projectOptions.autoGeo];
+           draftDb[sub_ids.overview.projectOptions.autoGeo] = !draftDb[sub_ids.overview.projectOptions.autoGeo];
+         });
+
+regEvent(event_ids.questions.addQuestion,
+         ({ draftDb }, questionToAdd ) => {
+           const prev = current(draftDb[sub_ids.questions.questions]);
+           console.log(sub_ids.questions.questions ,prev);
+           draftDb[sub_ids.questions.questions].push(questionToAdd);
+         });
+
+regEvent(event_ids.questions.setQuestions,
+         ({ draftDb }, questions ) => {
+           draftDb[sub_ids.questions.questions] = questions;
+         });
+
+regEvent(event_ids.questions.updateQuestion,
+         //TODO: is this the most idiomatic wayt to update questions here?
+         ({ draftDb }, qId, field, value) => {
+           const prev = current(draftDb[sub_ids.questions.questions]);
+           const newQuestion = {
+             ... prev,
+             [qId]: { ...prev[qId], [field]: value}
+           };
+           draftDb[sub_ids.questions.questions] = newQuestion;
+         });
+
+regEvent(event_ids.questions.updateAnswer,
+         //TODO: is this the most idiomatic wayt to update question answers here?
+         ({ draftDb }, qId, aId, field, value) => {
+           const prev = current(draftDb[sub_ids.questions.questions]);
+           const newQuestion = {
+             ... prev,
+             [qId]: { ...prev[qId],
+                      answers: {
+                        ...prev[qId].answers,
+                        [aId]: {...prev[qId].answers[aId], [field]: value }
+                      },
+                      [field]: value}
+           };
+           draftDb[sub_ids.questions.questions] = newQuestion;
+         });
+
+regEvent(event_ids.questions.moveQuestion,
+         //TODO: is this the most idiomatic wayt to update questions here?
+         ({ draftDb }, id, targetQ, nextId, nextQ) => {
+           const newQuestions = { ...current(draftDb[sub_ids.questions.questions])};
+           const tempOrder = targetQ.cardOrder;
+           newQuestions[id] = { ...targetQ, cardOrder: nextQ.cardOrder };
+           newQuestions[nextId] = { ...nextQ, cardOrder: tempOrder };           
+           draftDb[sub_ids.questions.questions] = newQuestions;
          });
 
 regEvent(event_ids.rules.selectedRuleType,
@@ -304,12 +348,12 @@ regEvent(event_ids.rules.newRule.questionId,
 
 regEvent(event_ids.rules.search,
          ({ draftDb }, search) => {
-           draftDb[event_ids.rules.search] = search;
+           draftDb[sub_ids.rules.search] = search;
          });
 
 regEvent(event_ids.rules.filter,
          ({ draftDb }, filter) => {
-           draftDb[event_ids.rules.filter] = filter;
+           draftDb[sub_ids.rules.filter] = filter;
          });
 
 regEvent(event_ids.rules.delete,

@@ -13,7 +13,7 @@ import {
 } from '../utils/sequence';
 import { LearningMaterialModal } from "./PageComponents";
 
-import '../../css/sidebar.css'
+import '../../css/sidebar.css';
 import '../../css/survey.css';
 
 
