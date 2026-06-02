@@ -49,6 +49,11 @@ export const ImageryTab = ({
         name: "Title",
         selector: (row) => row.title,
         sortable: true,
+        sortFunction: (rowA, rowB) => {
+          const a = rowA.title?.toLowerCase() || "";
+          const b = rowB.title?.toLowerCase() || "";
+          return a.localeCompare(b);
+        },
         cell: (row) => (
           <span style={{ color: "#2f615e", fontWeight: 600 }}>{row.title}</span>
         ),

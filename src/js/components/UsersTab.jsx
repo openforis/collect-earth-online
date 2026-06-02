@@ -44,6 +44,7 @@ export const UsersTab = ({
         ),
       },
       {
+        omit: !isAdmin,
         name: "Actions",
         cell: (row) => (
           <button
@@ -60,7 +61,7 @@ export const UsersTab = ({
         button: true,
       },
     ],
-    []
+    [isAdmin]
   );
 
   const customStyles = {

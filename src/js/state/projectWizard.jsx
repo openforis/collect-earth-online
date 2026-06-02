@@ -44,7 +44,6 @@ const projectWizardDb = {
   boundary: [],
   plots: [],
   samples: [],
-
   questions: [],
   'rules': [],
   'rules.search': null,
@@ -68,7 +67,6 @@ const projectWizardDb = {
   'rules.newRule.answerId1': -1,
   'rules.newRule.answerId2': -1,
   'rules.newRule.answers': {},   
-
 };
 
 initAppDb(projectWizardDb);
@@ -435,5 +433,3 @@ regEvent(event_ids.rules.newRule.incompatAnswerId,
          ({ draftDb }, incompatAnswerId) => {
            draftDb[sub_ids.rules.newRule.incompatAnswerId] = incompatAnswerId;
          });
-
-

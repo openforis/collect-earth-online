@@ -102,8 +102,12 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
         // select Imagery and make it render on the map
         const defaultImagery =
               (project?.imageryId && imageryList.find(im => im.id === project.imageryId)) ||
-              imageryList[0] || null;
-
+                imageryList[0] || null;
+        const firstQuestionId = Object.keys(project.surveyQuestions).reduce((minId, currentId) => {
+          const currentOrder = project.surveyQuestions[currentId].cardOrder ?? Infinity;
+          const minOrder = project.surveyQuestions[minId].cardOrder ?? Infinity;
+          return currentOrder < minOrder ? currentId : minId;
+        });
         if (defaultImagery?.id) {
           try {
             mercator.setVisibleLayer(mapConf, defaultImagery.id);
@@ -121,6 +125,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
         setState(s => ({
           ...s,
           currentProject: project,
+          selectedQuestionId: parseInt(firstQuestionId),
           plotList,
           plotters: Array.isArray(plotters) ? plotters : [],
           imageryList,
@@ -231,36 +236,42 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
       setState((s)=> ({ ...s, referencePlotId: state.currentProject.referencePlotId}));
   }, [state.navigationMode]);
 
-  const newPlotValues = (newPlot, copyValues = true) => ({	
-    newPlotInput: newPlot.visibleId,	
-    userSamples: newPlot.samples	
-      ? newPlot.samples.reduce(	
-        (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.savedAnswers || {} : {} }),	
-        {}	
-      )	
-      : {},	
-    originalUserSamples: newPlot.samples	
-      ? copyValues	
-      ? newPlot.samples.reduce((acc, cur) => ({ ...acc, [cur.id]: cur.savedAnswers || {} }), {})	
-      : state.originalUserSamples	
-    : {},	
-    userImages: newPlot.samples	
-      ? newPlot.samples.reduce(	
-        (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.userImage || {} : {} }),	
-        {}	
-      )	
-      : {},	
-    selectedQuestionId: Number(	
-      findObject(	
-        state.currentProject.surveyQuestions,	
-        ([_id, sq]) => sq.parentQuestionId === -1	
-      )	
-    ),	
-    collectionStart: Date.now(),	
-    unansweredColor: "black",	
-  });
- 
+  const newPlotValues = (newPlot, copyValues = true) => {
+    const surveyQs = state.currentProject?.surveyQuestions || {};
+    const firstQuestionId = Object.keys(surveyQs).length > 0
+      ? Object.keys(surveyQs).reduce((minId, currentId) => {
+        const currentOrder = surveyQs[currentId].cardOrder ?? Infinity;
+        const minOrder = surveyQs[minId].cardOrder ?? Infinity;
+        return currentOrder < minOrder ? currentId : minId;
+      })
+      : -1;
 
+    return {
+      newPlotInput: newPlot.visibleId,
+      userSamples: newPlot.samples
+        ? newPlot.samples.reduce(
+          (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.savedAnswers || {} : {} }),
+          {}
+        )
+        : {},
+      originalUserSamples: newPlot.samples
+        ? copyValues
+          ? newPlot.samples.reduce((acc, cur) => ({ ...acc, [cur.id]: cur.savedAnswers || {} }), {})
+          : state.originalUserSamples
+        : {},
+      userImages: newPlot.samples
+        ? newPlot.samples.reduce(
+          (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.userImage || {} : {} }),
+          {}
+        )
+        : {},
+      selectedQuestionId: state.selectedQuestionId > 0
+        ? state.selectedQuestionId
+        : parseInt(firstQuestionId),
+      collectionStart: Date.now(),
+      unansweredColor: "black",
+    };
+  };
   // API CALLS
   const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {       
     processModal("Getting plot", () => {
@@ -349,8 +360,10 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
     } = state;
 
     if (!mapConfig || !currentProject || selectedQuestionId == null) return;
+    const sortedQuestions = Object.values(currentProject.surveyQuestions || {})
+      .sort((a, b) => (a.cardOrder ?? Infinity) - (b.cardOrder ?? Infinity));
 
-    const selectedQuestion = currentProject.surveyQuestions?.[selectedQuestionId];
+    const selectedQuestion = sortedQuestions[0];
     if (!selectedQuestion) return;
 
     const type = currentProject.type;
@@ -774,9 +787,9 @@ function ImageAnalysisPane({}) {
       <div className="map-controls"
            style={{position: 'absolute',
                    bottom: '3.5em',
-                   right: '10vw',
+                   right: '10.2vw',
                    zIndex: 1}}>
-        <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '1rem' }}>
+        <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '0.8rem' }}>
           <input
             className="btn btn-outline-lightgreen btn-sm"
             onClick={zoomToPlot}

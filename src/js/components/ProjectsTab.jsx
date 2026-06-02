@@ -34,6 +34,11 @@ export const ProjectsTab = ({
         name: "Project Name",
         selector: (row) => row.name,
         sortable: true,
+        sortFunction: (rowA, rowB) => {
+          const a = rowA.title?.toLowerCase() || "";
+          const b = rowB.title?.toLowerCase() || "";
+          return a.localeCompare(b);
+        },
         grow: 2,
         cell: (row) => (
 			<a
@@ -63,11 +68,17 @@ export const ProjectsTab = ({
       },
       {
         name: "Completion %",
-        selector: (row) => row.percentComplete != null
-          ? `${Number(row.percentComplete).toFixed(2)}`
-          : "—",
+        selector: (row) => row.percentComplete ?? -1, 
         sortable: true,
         right: true,
+        cell: (row) => row.percentComplete != null
+          ? `${Number(row.percentComplete).toFixed(2)}%`
+          : "—",
+        sortFunction: (rowA, rowB) => {
+          const a = rowA.percentComplete ?? -1;
+          const b = rowB.percentComplete ?? -1;
+          return a - b;
+        },
       },
       {
         name: "Publication",
@@ -75,17 +86,18 @@ export const ProjectsTab = ({
         sortable: true,
       },
       
-      {omit: !isAdmin,
-       grow: .2,
-       cell: (row)=> <div
-                       className="btn-red"
-                       style={{borderRadius:".5rem"}}
-                       onClick={()=> {
-				      window.open(`/review-project?projectId=${row.id}&institutionId=${institutionId}`);
-				      }}
-                     >
-                       <SvgIcon icon="edit" size="2rem"/>
-                     </div>
+      {
+        omit: !isAdmin,
+        name: "Edit",
+        grow: .2,
+        cell: (row)=> <div
+                        className="edit-button"
+                        onClick={()=> {
+			  window.open(`/review-project?projectId=${row.id}&institutionId=${institutionId}`);
+		        }}
+        >
+                        <SvgIcon icon="edit" size="1.2rem"/>
+                      </div>
       },
       {cell: (row)=> <input
                        className="btn btn-outline-lightgreen btn-sm w-100"

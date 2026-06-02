@@ -22,7 +22,7 @@ export const InstitutionSidebar = ({
   const [activeTab, setActiveTab] = useState("affiliations");
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("institution");
-  const [showEmpty, setShowEmpty] = useState(false);
+  const [showEmpty, setShowEmpty] = useState(true);
   const [matchBeginning, setMatchBeginning] = useState(false);
   const [sortType, setSortType] = useState("projects");
 
