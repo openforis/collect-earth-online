@@ -17,36 +17,40 @@
 /* } */
 
 
-/* 1. ROOT CONTAINER - Lock the viewport */
+/* 1. ROOT CONTAINER - Lock down page bounce */
 .project-wizard-container {
     background-color: var(--Primary-Light-Green);
     width: 100vw;
+    height: 100vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
 }
 
-/* 2. LAYOUT WRAPPER - Calculate space minus top nav */
+/* 2. LAYOUT WRAPPER - Rigid workspace window minus main header components */
 .wizard-layout-wrapper {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 60px);
+    flex: 1;
     width: 100%;
     overflow: hidden;
+    position: relative;
 }
 
-/* 3. STEP BODY - The "rigid" box for sidebar and map */
+/* 3. STEP BODY - Eliminating min-height to provide clean percentage targets */
 .wizard-step-body {
     flex: 1;
-    min-height: 0;
+    width: 100%;
     background-color: var(--Primary-Light-Green);
     position: relative;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    padding-bottom: 70px;
+    box-sizing: border-box;
 }
 
-/* 4. STEP LAYOUT - The horizontal split (Sidebar | Map) */
+/* 4. STEP LAYOUT - Standardized split container */
 .wizard-step-layout {
     display: flex;
     flex: 1 1 0%;
@@ -86,6 +90,10 @@
     width: 100% !important;
     max-width: 100%;
     align-self: stretch;
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid var(--Primary-Highlight-Green);
+    background: var(--Neutral-White);
 }
 
 /* 7. MAP AREA - Lock to container height */
@@ -98,16 +106,21 @@
 
 /* 8. NAV BUTTONS - Pin to the bottom */
 .nav-buttons {
-    flex: 0 0 auto;
+    position: fixed;
+    bottom: 0;
+    left: 0;
     display: flex;
-    width: 100%;
+    width: 100vw;
+    height: 64px;
+    flex-direction: row;
     justify-content: flex-end;
     align-items: center;
     gap: 8px;
-    background: var(--Neutral-White);
-    padding: 16px 24px;
     border-top: 1px solid var(--Neutral-Soft-gray);
-    z-index: 100;
+    background: var(--Neutral-White);
+    padding: 0 24px;
+    z-index: 1000;
+    box-sizing: border-box;
 }
 
 /* --- UI HELPERS --- */

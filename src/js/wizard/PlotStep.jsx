@@ -1,8 +1,8 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import { plotsAtom } from '../state/projectWizard';
-import { NewMap } from './NewMap';
-import SvgIcon from './svg/SvgIcon';
+import { NewMap } from '../components/NewMap';
+import SvgIcon from '../components/svg/SvgIcon';
 
 export const PlotStep = () => {
   const [plots, setPlots] = useAtom(plotsAtom);

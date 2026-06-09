@@ -8,9 +8,9 @@ import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 import { LoadingModal, NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import { KBtoBase64Length } from "./utils/generalUtils";
-import { ProjectsTab } from "./components/ProjectsTab";
-import { ImageryTab } from "./components/ImageryTab";
-import { UsersTab } from "./components/UsersTab";
+import { ProjectsTab } from "./institution/ProjectsTab";
+import { ImageryTab } from "./institution/ImageryTab";
+import { UsersTab } from "./institution/UsersTab";
 import { safeLength } from "./utils/sequence";
 
 import '../css/institution.css';

@@ -70,9 +70,7 @@ export const NewMap = ({
       dragBoxInteraction = mercator.createBoxDrawInteraction(
         vectorSourceRef.current,
         (coords, geometry) => {
-          // Update the global state
           setDrawnFeature(coords);
-          // Fit the screen to the new geometry
           mercator.zoomMapToExtent(map, geometry);
         }
       );

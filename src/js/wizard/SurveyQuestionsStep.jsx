@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { dispatch, useSubscription } from '@flexsurfer/reflex';
-import { surveyQuestionsAtom } from '../state/projectWizard';
-import { SurveyQuestions } from './SurveyQuestions';
-import SvgIcon from './svg/SvgIcon';
-import { event_ids, sub_ids } from '../state/projectWizard';
+import { dispatch } from '@flexsurfer/reflex';
+import { SurveyQuestions } from '../components/SurveyQuestions';
+import SvgIcon from '../components/svg/SvgIcon';
+import { event_ids, surveyQuestionsAtom } from '../state/projectWizard';
 
 
 export const QuestionCard = ({

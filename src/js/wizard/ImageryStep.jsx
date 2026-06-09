@@ -2,18 +2,27 @@ import React, { useEffect } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
 import { projectImageryListAtom } from '../state/projectWizard';
 import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
-import { NewMap } from './NewMap';
-import SvgIcon from './svg/SvgIcon';
+import { NewMap } from '../components/NewMap';
+import SvgIcon from '../components/svg/SvgIcon';
 
 export const ImageryStep = ({ imageryList = [] }) => {
   const [selectedIds, setSelectedIds] = useAtom(projectImageryListAtom);
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
 
+  // Sets up default selected imagery.
   useEffect(() => {
     setMapLibrary(imageryList);
     if (imageryList && imageryList.length > 0 && selectedIds.length === 0) {
-      setSelectedIds([imageryList[0].id]);
+      const platformItems = imageryList.filter(img => img.visibility === 'platform');
+          if (platformItems.length > 0) {
+        // Find the lowest numeric ID
+        const lowestPlatform = platformItems.sort((a, b) => Number(a.id) - Number(b.id))[0];
+        setSelectedIds([Number(lowestPlatform.id)]);
+      } else {
+        // Fallback if no platform imagery exists
+        setSelectedIds([Number(imageryList[0].id)]);
+      }
     }
   }, [imageryList, setMapLibrary]);
 
@@ -30,9 +39,7 @@ export const ImageryStep = ({ imageryList = [] }) => {
   }, {});
 
   const VisibilitySection = ({ title, type }) => {
-    const items = groupedImagery[type] || [];
-    console.log(items);
-        
+    const items = groupedImagery[type] || [];        
     return (
       <div className="visibility-section" style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
@@ -110,7 +117,11 @@ export const ImageryStep = ({ imageryList = [] }) => {
         </div>
       </div>
       <div className="map-area">
-        <NewMap />
+        <NewMap
+          pan={false}
+          allowDrawing={false}
+          initZoom={6}
+        />
       </div>
     </div>
   );

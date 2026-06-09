@@ -1,32 +1,22 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { useAtom, useSetAtom, useAtomValue, atom } from 'jotai';
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 
 import { BreadCrumbs, NavigationBar } from "./components/PageComponents";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
-import { ImageryStep } from "./components/ImageryStep";
-import { BoundaryStep } from "./components/BoundaryStep";
-import { PlotStep } from "./components/PlotStep";
-import { SurveyQuestionsStep } from "./components/SurveyQuestionsStep";
-import { SurveyQuestions } from './components/SurveyQuestions';
+import { ImageryStep } from "./wizard/ImageryStep";
+import { BoundaryStep } from "./wizard/BoundaryStep";
+import { SurveyQuestionsStep } from "./wizard/SurveyQuestionsStep";
+import { SurveyQuestions } from "./components/SurveyQuestions";
 import SurveyRuleDesigner from "./survey/SurveyRulesDesigner";
-import { stateAtom } from "./utils/constants";
 
 import { 
-  projectSourceAtom, 
-  currentStepAtom,
-  projectOverviewAtom,
   event_ids,
   sub_ids
 } from "./state/projectWizard";
 
 import "../css/project-wizard.css";
-
-
-
-const wizardModalAtom = atom(null); 
 
 const projectSteps = [
   {id: 'overview', label: 'Project Overview'},

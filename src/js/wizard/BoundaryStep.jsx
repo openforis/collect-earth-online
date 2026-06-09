@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { boundaryAtom } from '../state/projectWizard';
 import { mapDrawingAtom } from '../state/map';
-import { NewMap } from './NewMap';
-import SvgIcon from './svg/SvgIcon';
+import { NewMap } from '../components/NewMap';
+import SvgIcon from '../components/svg/SvgIcon';
 
 
 export const BoundaryStep = () => {
