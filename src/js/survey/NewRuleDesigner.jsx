@@ -54,15 +54,10 @@ function TextMatchForm () {
                                    alertMessage: errorMessages.map((s) => "- " + s).join("\n")}}] );
     } else {
       setProjectDetails({
-        surveyRules: [
-          ...surveyRules,
-          {
-            id: getNextInSequence(surveyRules.map((rule) => rule.id)),
-            ruleType: "text-match",
-            questionId,
-            regex,
-          },
-        ],
+        id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+        ruleType: "text-match",
+        questionId,
+        regex,
       });
     }
   };
@@ -141,16 +136,11 @@ function NumericRangeForm () {
       setModal ({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
       setProjectDetails({
-        surveyRules: [
-          ...surveyRules,
-          {
-            id: getNextInSequence(surveyRules.map((rule) => rule.id)),
-            ruleType: "numeric-range",
-            questionId,
-            min,
-            max,
-          },
-        ],
+        id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+        ruleType: "numeric-range",
+        questionId,
+        min,
+        max,
       });
     }
   };
@@ -239,15 +229,10 @@ function SumOfAnswersForm () {
       setModal({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
       setProjectDetails({
-        surveyRules: [
-          ...surveyRules,
-          {
-            id: getNextInSequence(surveyRules.map((rule) => rule.id)),
-            ruleType: "sum-of-answers",
-            questionIds,
-            validSum,
-          },
-        ],
+        id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+        ruleType: "sum-of-answers",
+        questionIds,
+        validSum,
       });
     }
   };
@@ -341,15 +326,10 @@ function MatchingSumsForm () {
       setModal ({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
       setProjectDetails({
-        surveyRules: [
-          ...surveyRules,
-          {
-            id: getNextInSequence(surveyRules.map((rule) => rule.id)),
-            ruleType: "matching-sums",
-            questionIds1,
-            questionIds2,
-          },
-        ],
+        id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+        ruleType: "matching-sums",
+        questionIds1,
+        questionIds2,
       });
     }
   };
@@ -476,17 +456,12 @@ function  IncompatibleAnswersForm () {
       setModal ({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
       setProjectDetails({
-        surveyRules: [
-          ...surveyRules,
-          {
-            id: getNextInSequence(surveyRules.map((rule) => rule.id)),
-            ruleType: "incompatible-answers",
-            questionId1,
-            questionId2,
-            answerId1,
-            answerId2,
-          },
-        ],
+        id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+        ruleType: "incompatible-answers",
+        questionId1,
+        questionId2,
+        answerId1,
+        answerId2,
       });
     }
   };
@@ -600,16 +575,11 @@ function MultipleIncompatibleAnswersForm () {
 
   function addSurveyRule () {    
     setProjectDetails({
-      surveyRules: [
-        ...surveyRules,
-        {
-          id: getNextInSequence(surveyRules.map((rule) => rule.id)),
-          ruleType: "multiple-incompatible-answers",
-          answers: answers,
-          incompatQuestionId: incompatQuestionId,
-          incompatAnswerId: incompatAnswerId
-        },
-      ],
+      id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+      ruleType: "multiple-incompatible-answers",
+      answers: answers,
+      incompatQuestionId: incompatQuestionId,
+      incompatAnswerId: incompatAnswerId
     });
   };
 

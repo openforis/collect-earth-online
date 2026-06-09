@@ -26,6 +26,7 @@ export const previewSelectedSampleIdAtom = atom(1);
 export const previewUserSamplesAtom = atom({});
 
 const projectWizardDb = {
+  errors: [],
   currentStep: null,
   modal: null,
   projectSource: null,
@@ -72,6 +73,7 @@ const projectWizardDb = {
 initAppDb(projectWizardDb);
 
 export const event_ids = {
+  errors: 'errors',
   currentStep: 'currentStep',
   modal: 'modal',
   projectSource: 'projectSource',
@@ -95,6 +97,7 @@ export const event_ids = {
     moveQuestion: 'moveQuestion'},
   rules: {
     rules: 'rules',
+    removeRule: 'rules.removeRule',
     search: 'rules.search',
     filter: 'rules.filter',
     selectedRuleType: 'rules.selectedRuleType',
@@ -120,6 +123,7 @@ export const event_ids = {
     }}};
 
 export const sub_ids = {
+  errors: 'errors',
   currentStep: 'currentStep',
   modal: 'modal',
   projectSource: 'projectSource',
@@ -169,6 +173,7 @@ export const effects = {};
 regSub(sub_ids.currentStep, sub_ids.currentStep);
 regSub(sub_ids.modal, sub_ids.modal);
 regSub(sub_ids.projectSource, sub_ids.projectSource);
+regSub(sub_ids.errors, sub_ids.errors);
 
 regSub(sub_ids.overview.projectType, sub_ids.overview.projectType);
 regSub(sub_ids.overview.projectName, sub_ids.overview.projectName);
@@ -214,6 +219,11 @@ regEvent(event_ids.projectDetails,
 regEvent(event_ids.currentStep,
          ({ draftDb }, currentStep) => {
            draftDb[sub_ids.currentStep] = currentStep;
+         });
+
+regEvent(event_ids.errors,
+         ({ draftDb }, errors) => {
+           draftDb[sub_ids.errors] = errors;
          });
 
 // PROJECT WIZARD EVENTS
@@ -331,7 +341,19 @@ regEvent(event_ids.rules.selectedRuleType,
 
 regEvent(event_ids.rules.rules,
          ({ draftDb }, newRule) => {
-           draftDb[sub_ids.rules.rules].push(newRule);
+           
+           draftDb[sub_ids.rules.rules].push({...newRule, label: draftDb[sub_ids.rules.newRule.label]});
+         });
+
+regEvent(event_ids.rules.removeRule,
+         ({ draftDb }, rid ) => {
+           let newRules = draftDb[sub_ids.rules.rules].filter((r) => r.id !== rid);
+           draftDb[sub_ids.rules.rules] = newRules;
+         });
+
+regEvent(event_ids.rules.newRule.label,
+         ({ draftDb }, label) => {
+           draftDb[sub_ids.rules.newRule.label] = label;
          });
 
 regEvent(event_ids.rules.newRule.regex,

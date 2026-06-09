@@ -1,3 +1,5 @@
+//THIS IS A PROJECT-WIZARD STEP AND PROBABLY NEEDS TO BE IN A DISTINCT DIRECTORY FROM SURVEY STEPS?
+
 import React, { useEffect } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
 import { projectImageryListAtom } from '../state/projectWizard';
@@ -31,7 +33,6 @@ export const ImageryStep = ({ imageryList = [] }) => {
 
   const VisibilitySection = ({ title, type }) => {
     const items = groupedImagery[type] || [];
-    console.log(items);
         
     return (
       <div className="visibility-section" style={{ marginBottom: '20px' }}>

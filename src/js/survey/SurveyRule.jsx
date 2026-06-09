@@ -1,6 +1,9 @@
 import React from "react";
 import _ from "lodash";
 
+import { dispatch, useSubscription } from '@flexsurfer/reflex';
+import { event_ids, sub_ids } from '../state/projectWizard';
+
 import SvgIcon from "../components/svg/SvgIcon";
 
 import "../../css/project-wizard.css";
@@ -114,14 +117,9 @@ function MultipleIncompatibleAnswersBody({ answers, incompatQuestionId, incompat
 export default function SurveyRule({
   inDesignMode,
   rule,
-  surveyQuestions,
-  setProjectDetails,
-  surveyRules,
 }) {
-  const removeRule = () => {
-    const newSurveyRules = surveyRules.filter((r) => r.id !== rule.id);
-    setProjectDetails({ surveyRules: newSurveyRules });
-  };
+  function removeRule () {dispatch([event_ids.rules.removeRule, rule.id]);};
+  const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   const { RuleBody, title } = {
     "text-match": {
       RuleBody: () => <TextMatchRuleBody {...rule} surveyQuestions={surveyQuestions} />,
