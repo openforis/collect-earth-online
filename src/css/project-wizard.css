@@ -46,6 +46,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    margin-top: 112px;
     padding-bottom: 70px;
     box-sizing: border-box;
 }
@@ -58,6 +59,16 @@
     height: 100%;
     min-height: 0;
     overflow: hidden;
+}
+
+/* WIZARD PREVIEW */
+.wizard-preview-body {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+    background-color: var(--Primary-Light-Green);
 }
 
 /* 5. SIDEBAR - The only place where scrolling is allowed */
@@ -136,6 +147,10 @@
     background: var(--Neutral-White);
     box-shadow: 1px 4px 3px 0 var(--Neutral-Dark-gray);
     box-sizing: border-box;
+    position: fixed;
+    top: 112px;
+    left: 0;
+    z-index: 80;
 }
 
 .project-wizard-navigator span {

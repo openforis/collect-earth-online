@@ -511,14 +511,14 @@ export const SurveyQuestionsStep = () => {
 
       {/* PREVIEW AREA */}
       <div
-        className="map-area"
-        style={{ overflowY: 'auto', padding: "20px" }}
+        className="wizard-preview-body"
+        style={{ padding: "20px" }}
       >
         <div>
           <SurveyQuestions
             preview={true}
             surveyQuestions={questions}
-        />
+          />
         </div>
       </div>
     </div>

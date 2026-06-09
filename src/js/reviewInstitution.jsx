@@ -372,7 +372,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   }, []);
 
   return (
-    <>
+    <div className="reviewInstitution">
       <SidebarTabs
         tabs={[
           { id: "projects", label: "Projects", icon: "projects", badge: safeLength(state.projectList) },
@@ -422,7 +422,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
           addUsersBulk={addUsersBulk}
           usersList={state.usersList} />
       )}
-    </>
+    </div>
   )
 };
 
