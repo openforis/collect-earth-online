@@ -41,7 +41,21 @@ const projectWizardDb = {
   'overview.projectOptions.plotConfidence': false,
   'overview.projectOptions.autoGeo': false,
   imagery: [],
-  boundary: [],
+  // boundary
+  'boundary.generationMethod': 'manual',
+  'boundary.aoiFeatures': [],
+  'boundary.aoiFileName': '',
+  // plots
+  'plots.plotDistribution': 'random',
+  'plots.numPlots': '',
+  'plots.plotSize': '',
+  'plots.plotShape': 'circle',
+  'plots.plotSpacing': '',
+  'plots.shufflePlots': false,
+  'plots.totalPlots': 0,
+  'plots.plotFeatures': [],
+  'plots.plotFileName': '',
+  // samples
   plots: [],
   samples: [],
   questions: [],
@@ -87,6 +101,24 @@ export const event_ids = {
                autoGeo: 'overview.projectOptions.autoGeo'
              }},
   projectDetails: 'projectDetails',
+  boundary: {
+    generationMethod: 'boundary.generationMethod',
+    aoiFeatures: 'boundary.aoiFeatures',
+    aoiFileName: 'boundary.aoiFileName',
+    clearBoundary: 'boundary.clearBoundary',
+    setBoundaryFromFile: 'boundary.setBoundaryFromFile'
+  },
+  plots: {
+    plotDistribution: 'plots.plotDistribution',
+    numPlots: 'plots.numPlots',
+    plotSize: 'plots.plotSize',
+    plotShape: 'plots.plotShape',
+    plotSpacing: 'plots.plotSpacing',
+    shufflePlots: 'plots.shufflePlots',
+    totalPlots: 'plots.totalPlots',
+    plotFeatures: 'plots.plotFeatures',
+    plotFileName: 'plots.plotFileName'
+  },
   questions: {
     addQuestion: 'addQuestion',
     setQuestions: 'setQuestions',
@@ -135,6 +167,22 @@ export const sub_ids = {
                autoGeo: 'overview.projectOptions.autoGeo'
              }},
   projectDetails: 'projectDetails',
+  boundary: {
+    generationMethod: 'boundary.generationMethod',
+    aoiFeatures: 'boundary.aoiFeatures',
+    aoiFileName: 'boundary.aoiFileName'
+  },
+  plots: {
+    plotDistribution: 'plots.plotDistribution',
+    numPlots: 'plots.numPlots',
+    plotSize: 'plots.plotSize',
+    plotShape: 'plots.plotShape',
+    plotSpacing: 'plots.plotSpacing',
+    shufflePlots: 'plots.shufflePlots',
+    totalPlots: 'plots.totalPlots',
+    plotFeatures: 'plots.plotFeatures',
+    plotFileName: 'plots.plotFileName'
+  },
   questions: {
     questions: 'questions'
   },
@@ -179,6 +227,25 @@ regSub(sub_ids.overview.projectOptions.gee, sub_ids.overview.projectOptions.gee)
 regSub(sub_ids.overview.projectOptions.extraPlotColumns, sub_ids.overview.projectOptions.extraPlotColumns);
 regSub(sub_ids.overview.projectOptions.plotConfidence, sub_ids.overview.projectOptions.plotConfidence);
 regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.autoGeo);
+
+// boundary
+regSub(sub_ids.boundary.generationMethod, sub_ids.boundary.generationMethod);
+regSub(sub_ids.boundary.aoiFeatures, sub_ids.boundary.aoiFeatures);
+regSub(sub_ids.boundary.aoiFileName, sub_ids.boundary.aoiFileName);
+
+// plots
+regSub(sub_ids.plots.plotDistribution, sub_ids.plots.plotDistribution);
+regSub(sub_ids.plots.numPlots, sub_ids.plots.numPlots);
+regSub(sub_ids.plots.plotSize, sub_ids.plots.plotSize);
+regSub(sub_ids.plots.plotShape, sub_ids.plots.plotShape);
+regSub(sub_ids.plots.plotSpacing, sub_ids.plots.plotSpacing);
+regSub(sub_ids.plots.shufflePlots, sub_ids.plots.shufflePlots);
+regSub(sub_ids.plots.totalPlots, sub_ids.plots.totalPlots);
+regSub(sub_ids.plots.plotFeatures, sub_ids.plots.plotFeatures);
+regSub(sub_ids.plots.plotFileName, sub_ids.plots.plotFileName);
+
+
+// samples
 
 regSub(sub_ids.questions.questions, sub_ids.questions.questions);
 
@@ -274,6 +341,73 @@ regEvent(event_ids.overview.projectOptions.autoGeo,
          ({ draftDb }) => {
            draftDb[sub_ids.overview.projectOptions.autoGeo] = !draftDb[sub_ids.overview.projectOptions.autoGeo];
          });
+
+
+// PROJECT BOUNDARY EVENTS
+
+regEvent(event_ids.boundary.generationMethod, ({ draftDb }, method) => {
+  draftDb[sub_ids.boundary.generationMethod] = method;
+});
+
+regEvent(event_ids.boundary.aoiFeatures, ({ draftDb }, features) => {
+  draftDb[sub_ids.boundary.aoiFeatures] = features;
+  
+  if (features.length > 0 && draftDb[sub_ids.boundary.generationMethod] !== 'manual' && !draftDb[sub_ids.boundary.aoiFileName]) {
+    draftDb[sub_ids.boundary.generationMethod] = 'manual';
+  }
+});
+
+regEvent(event_ids.boundary.setBoundaryFromFile, ({ draftDb }, fileName, geometries) => {
+  draftDb[sub_ids.boundary.generationMethod] = 'shpFile';
+  draftDb[sub_ids.boundary.aoiFileName] = fileName;
+  draftDb[sub_ids.boundary.aoiFeatures] = geometries;
+});
+
+regEvent(event_ids.boundary.clearBoundary, ({ draftDb }) => {
+  draftDb[sub_ids.boundary.aoiFeatures] = [];
+  draftDb[sub_ids.boundary.aoiFileName] = '';
+});
+
+// PLOT GENERATION EVENTS
+regEvent(event_ids.plots.plotDistribution, ({ draftDb }, distribution) => {
+  draftDb[sub_ids.plots.plotDistribution] = distribution;
+});
+
+regEvent(event_ids.plots.numPlots, ({ draftDb }, count) => {
+  draftDb[sub_ids.plots.numPlots] = count;
+  draftDb[sub_ids.plots.totalPlots] = count; 
+});
+
+regEvent(event_ids.plots.plotSize, ({ draftDb }, size) => {
+  draftDb[sub_ids.plots.plotSize] = size;
+});
+
+regEvent(event_ids.plots.plotShape, ({ draftDb }, shape) => {
+  draftDb[sub_ids.plots.plotShape] = shape;
+});
+
+regEvent(event_ids.plots.plotSpacing, ({ draftDb }, spacing) => {
+  draftDb[sub_ids.plots.plotSpacing] = spacing;
+});
+
+regEvent(event_ids.plots.shufflePlots, ({ draftDb }, shouldShuffle) => {
+  draftDb[sub_ids.plots.shufflePlots] = shouldShuffle;
+});
+
+regEvent(event_ids.plots.totalPlots, ({ draftDb }, total) => {
+  draftDb[sub_ids.plots.totalPlots] = total;
+});
+
+regEvent(event_ids.plots.plotFeatures, ({ draftDb }, features) => {
+  draftDb[sub_ids.plots.plotFeatures] = features;
+});
+
+regEvent(event_ids.plots.plotFileName, ({ draftDb }, plotFileName) => {
+  draftDb[sub_ids.plots.plotFileName] = plotFileName;
+});
+
+
+// SAMPLE GENERATION EVENTS
 
 regEvent(event_ids.questions.addQuestion,
          ({ draftDb }, questionToAdd ) => {

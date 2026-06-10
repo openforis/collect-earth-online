@@ -1185,12 +1185,16 @@
     (if file-assignment?
       (data-response (-> updated-plots create-design-settings-from-file
                          (assoc :fileAoi file-aoi
-                                :fileBoundary file-bounds)))
+                                :fileBoundary file-bounds
+                                :plots (map (fn [p] (update p :plot_geom tc/jsonb->clj))
+                                            plots))))
       (data-response  {:userAssignment {:userMethod "none"
                                         :users      []
                                         :percents   []}
-                       :fileAoi       file-aoi
-                       :fileBoundary  file-bounds
+                       :fileAoi        file-aoi
+                       :fileBoundary   file-bounds
+                       :plots (map (fn [p] (update p :plot_geom tc/jsonb->clj))
+                                   plots)
                        :qaqcAssignment {:qaqcMethod "none"
                                         :smes       []
                                         :overlap    0}}))))
