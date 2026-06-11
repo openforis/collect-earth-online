@@ -153,6 +153,7 @@
     grid-template-columns: repeat(var(--cols, 1), 1fr);
     gap: 12px;
     padding: 10px;
+    justify-content: start;
 }
 
 .sq-pill {
@@ -169,10 +170,6 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
-}
-
-.sq-pill.active {
-  transform: scale(1.05);
 }
 
 .dot {

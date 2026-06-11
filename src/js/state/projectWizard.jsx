@@ -42,9 +42,27 @@ const projectWizardDb = {
   'overview.projectOptions.plotConfidence': false,
   'overview.projectOptions.autoGeo': false,
   imagery: [],
-  boundary: [],
-  plots: [],
-  samples: [],
+  // boundary
+  'boundary.generationMethod': 'manual',
+  'boundary.aoiFeatures': [],
+  'boundary.aoiFileName': '',
+  // plots
+  'plots.plotDistribution': 'random',
+  'plots.numPlots': '',
+  'plots.plotSize': '',
+  'plots.plotShape': 'circle',
+  'plots.plotSpacing': '',
+  'plots.shufflePlots': false,
+  'plots.totalPlots': 0,
+  'plots.plotFeatures': [],
+  'plots.plotFileName': '',
+  'plots.designSettings': {sampleGeometries: { points: true, lines: false, polygons: false }},
+  // samples
+  'samples.sampleDistribution': 'random',
+  'samples.samplesPerPlot': 1,
+  'samples.sampleResolution': 0,
+  'samples.sampleFileName': '',
+  'samples.allowDrawnSamples': false,
   questions: [],
   'rules': [],
   'rules.search': null,
@@ -67,7 +85,8 @@ const projectWizardDb = {
   'rules.newRule.tempAnswerId': -1,
   'rules.newRule.answerId1': -1,
   'rules.newRule.answerId2': -1,
-  'rules.newRule.answers': {},   
+  'rules.newRule.answers': {},
+  'institution.users': []
 };
 
 initAppDb(projectWizardDb);
@@ -89,10 +108,36 @@ export const event_ids = {
                autoGeo: 'overview.projectOptions.autoGeo'
              }},
   projectDetails: 'projectDetails',
+  boundary: {
+    generationMethod: 'boundary.generationMethod',
+    aoiFeatures: 'boundary.aoiFeatures',
+    aoiFileName: 'boundary.aoiFileName',
+    clearBoundary: 'boundary.clearBoundary',
+    setBoundaryFromFile: 'boundary.setBoundaryFromFile'
+  },
+  plots: {
+    plotDistribution: 'plots.plotDistribution',
+    numPlots: 'plots.numPlots',
+    plotSize: 'plots.plotSize',
+    plotShape: 'plots.plotShape',
+    plotSpacing: 'plots.plotSpacing',
+    shufflePlots: 'plots.shufflePlots',
+    totalPlots: 'plots.totalPlots',
+    plotFeatures: 'plots.plotFeatures',
+    plotFileName: 'plots.plotFileName',
+    designSettings: 'plots.designSettings',
+  },
+  samples: {
+    sampleDistribution: 'samples.sampleDistribution',
+    samplesPerPlot: 'samples.samplesPerPlot',
+    sampleResolution: 'samples.sampleResolution',
+    sampleFileName: 'samples.sampleFileName',
+    allowDrawnSamples: 'samples.allowDrawnSamples'
+  },
   questions: {
     addQuestion: 'addQuestion',
     setQuestions: 'setQuestions',
-    updateQuestions: 'updateQuestion',
+    updateQuestion: 'updateQuestion',
     updateAnswer: 'updateAnswer',
     moveQuestion: 'moveQuestion'},
   rules: {
@@ -120,7 +165,9 @@ export const event_ids = {
       tempAnswerId: 'rules.newRule.tempAnswerId',
       incompatQuestionId: 'rules.newRule.incompatQuestionId',
       incompatAnswerId: 'rules.newRule.incompatAnswerId',
-    }}};
+    }},
+    institution: {
+      users: 'institution.users'}};
 
 export const sub_ids = {
   errors: 'errors',
@@ -139,6 +186,30 @@ export const sub_ids = {
                autoGeo: 'overview.projectOptions.autoGeo'
              }},
   projectDetails: 'projectDetails',
+  boundary: {
+    generationMethod: 'boundary.generationMethod',
+    aoiFeatures: 'boundary.aoiFeatures',
+    aoiFileName: 'boundary.aoiFileName'
+  },
+  plots: {
+    plotDistribution: 'plots.plotDistribution',
+    numPlots: 'plots.numPlots',
+    plotSize: 'plots.plotSize',
+    plotShape: 'plots.plotShape',
+    plotSpacing: 'plots.plotSpacing',
+    shufflePlots: 'plots.shufflePlots',
+    totalPlots: 'plots.totalPlots',
+    plotFeatures: 'plots.plotFeatures',
+    plotFileName: 'plots.plotFileName',
+    designSettings: 'plots.designSettings',
+  },
+  samples: {
+    sampleDistribution: 'samples.sampleDistribution',
+    samplesPerPlot: 'samples.samplesPerPlot',
+    sampleResolution: 'samples.sampleResolution',
+    sampleFileName: 'samples.sampleFileName',
+    allowDrawnSamples: 'samples.allowDrawnSamples'
+  },
   questions: {
     questions: 'questions'
   },
@@ -166,6 +237,8 @@ export const sub_ids = {
             incompatQuestionId: 'rules.newRule.incompatQuestionId',
             incompatAnswerId: 'rules.newRule.incompatAnswerId',
           }},
+  institution: {
+    users: 'institution.users'}
 };
 
 export const effects = {};
@@ -184,6 +257,32 @@ regSub(sub_ids.overview.projectOptions.gee, sub_ids.overview.projectOptions.gee)
 regSub(sub_ids.overview.projectOptions.extraPlotColumns, sub_ids.overview.projectOptions.extraPlotColumns);
 regSub(sub_ids.overview.projectOptions.plotConfidence, sub_ids.overview.projectOptions.plotConfidence);
 regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.autoGeo);
+
+// boundary
+regSub(sub_ids.boundary.generationMethod, sub_ids.boundary.generationMethod);
+regSub(sub_ids.boundary.aoiFeatures, sub_ids.boundary.aoiFeatures);
+regSub(sub_ids.boundary.aoiFileName, sub_ids.boundary.aoiFileName);
+
+// plots
+regSub(sub_ids.plots.plotDistribution, sub_ids.plots.plotDistribution);
+regSub(sub_ids.plots.numPlots, sub_ids.plots.numPlots);
+regSub(sub_ids.plots.plotSize, sub_ids.plots.plotSize);
+regSub(sub_ids.plots.plotShape, sub_ids.plots.plotShape);
+regSub(sub_ids.plots.plotSpacing, sub_ids.plots.plotSpacing);
+regSub(sub_ids.plots.shufflePlots, sub_ids.plots.shufflePlots);
+regSub(sub_ids.plots.totalPlots, sub_ids.plots.totalPlots);
+regSub(sub_ids.plots.plotFeatures, sub_ids.plots.plotFeatures);
+regSub(sub_ids.plots.plotFileName, sub_ids.plots.plotFileName);
+regSub(sub_ids.plots.designSettings, sub_ids.plots.designSettings);
+
+
+// samples
+regSub(sub_ids.samples.sampleDistribution, sub_ids.samples.sampleDistribution);
+regSub(sub_ids.samples.samplesPerPlot, sub_ids.samples.samplesPerPlot);
+regSub(sub_ids.samples.sampleResolution, sub_ids.samples.sampleResolution);
+regSub(sub_ids.samples.sampleFileName, sub_ids.samples.sampleFileName);
+regSub(sub_ids.samples.allowDrawnSamples, sub_ids.samples.allowDrawnSamples);
+
 
 regSub(sub_ids.questions.questions, sub_ids.questions.questions);
 
@@ -209,6 +308,10 @@ regSub(sub_ids.rules.newRule.tempQuestionId, sub_ids.rules.newRule.tempQuestionI
 regSub(sub_ids.rules.newRule.tempAnswerId, sub_ids.rules.newRule.tempAnswerId);
 regSub(sub_ids.rules.newRule.incompatQuestionId, sub_ids.rules.newRule.incompatQuestionId);
 regSub(sub_ids.rules.newRule.incompatAnswerId, sub_ids.rules.newRule.incompatAnswerId);
+
+
+// institution
+regSub(sub_ids.institution.users, sub_ids.institution.users);
 
 
 regEvent(event_ids.projectDetails,
@@ -284,6 +387,93 @@ regEvent(event_ids.overview.projectOptions.autoGeo,
          ({ draftDb }) => {
            draftDb[sub_ids.overview.projectOptions.autoGeo] = !draftDb[sub_ids.overview.projectOptions.autoGeo];
          });
+
+
+// PROJECT BOUNDARY EVENTS
+
+regEvent(event_ids.boundary.generationMethod, ({ draftDb }, method) => {
+  draftDb[sub_ids.boundary.generationMethod] = method;
+});
+
+regEvent(event_ids.boundary.aoiFeatures, ({ draftDb }, features) => {
+  draftDb[sub_ids.boundary.aoiFeatures] = features;
+});
+
+regEvent(event_ids.boundary.setBoundaryFromFile, ({ draftDb }, fileName, geometries) => {
+  draftDb[sub_ids.boundary.generationMethod] = 'shpFile';
+  draftDb[sub_ids.boundary.aoiFileName] = fileName;
+  draftDb[sub_ids.boundary.aoiFeatures] = geometries;
+});
+
+regEvent(event_ids.boundary.clearBoundary, ({ draftDb }) => {
+  draftDb[sub_ids.boundary.aoiFeatures] = [];
+  draftDb[sub_ids.boundary.aoiFileName] = '';
+});
+
+// PLOT GENERATION EVENTS
+regEvent(event_ids.plots.plotDistribution, ({ draftDb }, distribution) => {
+  draftDb[sub_ids.plots.plotDistribution] = distribution;
+});
+
+regEvent(event_ids.plots.numPlots, ({ draftDb }, count) => {
+  draftDb[sub_ids.plots.numPlots] = count;
+  draftDb[sub_ids.plots.totalPlots] = count; 
+});
+
+regEvent(event_ids.plots.plotSize, ({ draftDb }, size) => {
+  draftDb[sub_ids.plots.plotSize] = size;
+});
+
+regEvent(event_ids.plots.plotShape, ({ draftDb }, shape) => {
+  draftDb[sub_ids.plots.plotShape] = shape;
+});
+
+regEvent(event_ids.plots.plotSpacing, ({ draftDb }, spacing) => {
+  draftDb[sub_ids.plots.plotSpacing] = spacing;
+});
+
+regEvent(event_ids.plots.shufflePlots, ({ draftDb }, shouldShuffle) => {
+  draftDb[sub_ids.plots.shufflePlots] = shouldShuffle;
+});
+
+regEvent(event_ids.plots.totalPlots, ({ draftDb }, total) => {
+  draftDb[sub_ids.plots.totalPlots] = total;
+});
+
+regEvent(event_ids.plots.plotFeatures, ({ draftDb }, features) => {
+  draftDb[sub_ids.plots.plotFeatures] = features;
+});
+
+regEvent(event_ids.plots.plotFileName, ({ draftDb }, plotFileName) => {
+  draftDb[sub_ids.plots.plotFileName] = plotFileName;
+});
+
+regEvent(event_ids.plots.designSettings, ({ draftDb }, designSettings) => {
+  draftDb[sub_ids.plots.designSettings] = designSettings;
+});
+
+// SAMPLE GENERATION EVENTS
+regEvent(event_ids.samples.sampleDistribution, ({ draftDb }, distribution) => {
+  draftDb[sub_ids.samples.sampleDistribution] = distribution;
+});
+
+regEvent(event_ids.samples.samplesPerPlot, ({ draftDb }, count) => {
+  draftDb[sub_ids.samples.samplesPerPlot] = count;
+});
+
+regEvent(event_ids.samples.sampleResolution, ({ draftDb }, resolution) => {
+  draftDb[sub_ids.samples.sampleResolution] = resolution;
+});
+
+regEvent(event_ids.samples.sampleFileName, ({ draftDb }, fileName) => {
+  draftDb[sub_ids.samples.sampleFileName] = fileName;
+});
+
+regEvent(event_ids.samples.allowDrawnSamples, ({ draftDb }, allow) => {
+  draftDb[sub_ids.samples.allowDrawnSamples] = allow;
+});
+
+
 
 regEvent(event_ids.questions.addQuestion,
          ({ draftDb }, questionToAdd ) => {
@@ -455,3 +645,10 @@ regEvent(event_ids.rules.newRule.incompatAnswerId,
          ({ draftDb }, incompatAnswerId) => {
            draftDb[sub_ids.rules.newRule.incompatAnswerId] = incompatAnswerId;
          });
+
+
+// EVENTS FOR INSTITUTION INFORMATION
+regEvent(event_ids.institution.users,
+  ({draftDb}, users) => {
+    draftDb[sub_ids.institution.users] = users;
+  });

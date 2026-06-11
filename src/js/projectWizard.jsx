@@ -1,27 +1,33 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { useAtom, useSetAtom, useAtomValue, atom } from 'jotai';
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 
 import { BreadCrumbs, NavigationBar } from "./components/PageComponents";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
-import { ImageryStep } from "./components/ImageryStep";
-import { BoundaryStep } from "./components/BoundaryStep";
-import { PlotStep } from "./components/PlotStep";
-import { SurveyQuestionsStep } from "./components/SurveyQuestionsStep";
 
-import OverviewStep from './project/OverviewStep';
+
+
+
+
+
+import OverviewStep from './wizard/OverviewStep';
 import RulesStep from './project/RulesStep';
 
-import { stateAtom } from "./utils/constants";
+
+
+import { ImageryStep } from "./wizard/ImageryStep";
+import { BoundaryStep } from "./wizard/BoundaryStep";
+import { PlotStep } from "./wizard/PlotStep";
+import { SurveyQuestionsStep } from "./wizard/SurveyQuestionsStep";
+import { SampleStep } from "./wizard/SampleStep";
+import { SurveyQuestions } from "./components/SurveyQuestions";
+import SurveyRuleDesigner from "./survey/SurveyRulesDesigner";
+
 
 import ReviewStep from "./project/ReviewStep";
 
 import { 
-  projectSourceAtom, 
-  currentStepAtom,
-  projectOverviewAtom,
   event_ids,
   sub_ids
 } from "./state/projectWizard";
@@ -29,10 +35,6 @@ import {
 import { lengthObject, someObject, filterObject } from "./utils/sequence";
 
 import "../css/project-wizard.css";
-
-
-
-const wizardModalAtom = atom(null); 
 
 const projectSteps = [
   {id: 'overview', label: 'Project Overview'},
@@ -314,8 +316,8 @@ const ProjectWizardNavigator = () => {
             <div
               key={id}
               style={{fontWeight: currentStep === id ? 'bold' : 'normal',
-                      display: 'inline-flex',
-                      cursor: 'pointer'}}
+                display: 'inline-flex',
+                cursor: 'pointer'}}
               onClick={
                 () => dispatch([event_ids.currentStep, id])
               }
@@ -333,11 +335,11 @@ const ProjectWizardNavigator = () => {
 function NewProjectModal () {
   const newProjectOptions = {
     newProject: ['Create a new project',
-                 'Generate a new project from scratch by customizing all steps.'],
+      'Generate a new project from scratch by customizing all steps.'],
     templateProject: ['Select from an existing template',
-                      'Select a template and prefill all the steps. You can edit and customize it.'],
+      'Select a template and prefill all the steps. You can edit and customize it.'],
     importProject: ['Import Collect Earth Project',
-                    'Need Description']};
+      'Need Description']};
   const projectSource = useSubscription([sub_ids.projectSource]);
 
   return (
@@ -347,8 +349,8 @@ function NewProjectModal () {
         return (
           <div
             className={projectSource === id ?
-                       "radio-selected-button"
-                       : "radio-selection-button"}
+              "radio-selected-button"
+              : "radio-selection-button"}
             key={id}
             onClick={()=> {
               dispatch([event_ids.projectSource, id]);
@@ -483,6 +485,10 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
       .then(res => res.json())
       .then(data => setAvailableImagery(data))
       .catch(err => console.error("Could not load imagery", err));
+    fetch(`/get-institution-users?institutionId=${institutionId}`)
+      .then(res  => res.json())
+      .then(data => dispatch([event_ids.institution.users, data]))
+      .catch(err => console.error("Could not load users", err));
   }, []);
 
   
@@ -498,8 +504,8 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
     case 'overview'   : return <OverviewStep />;
     case 'imagery'    : return <ImageryStep imageryList={availableImagery}/>;
     case 'boundary'   : return <BoundaryStep />;
-      //    case 'plots'      : return <PlotStep />;
-      //    case 'samples'    : return <SamplesStep />;
+    case 'plots'      : return <PlotStep />;
+    case 'samples'    : return <SampleStep />;
     case 'questions'  : return <SurveyQuestionsStep />;
     case 'rules'      : return <RulesStep />;
     case 'review'     : return <ReviewStep />;
@@ -514,15 +520,15 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
         <BreadCrumbs
           crumbs={[
             {display: "Institution",
-             id: "institution",
-             query: ["institution", institutionId],
-             onClick:()=>{window.location.assign(`/review-institution?institutionId=${institutionId}`);
-                         }},
+              id: "institution",
+              query: ["institution", institutionId],
+              onClick:()=>{window.location.assign(`/review-institution?institutionId=${institutionId}`);
+              }},
             {display: "Add a New Project",
-             id: "projectWizard",
-             query: ["project", "newProject"],
-             onClick:()=>{window.location.assign(`/project-wizard?institutionId=${institutionId}`);
-                         }}]}
+              id: "projectWizard",
+              query: ["project", "newProject"],
+              onClick:()=>{window.location.assign(`/project-wizard?institutionId=${institutionId}`);
+              }}]}
         />
         <ProjectWizardNavigator/>
         <div className="wizard-step-body" >

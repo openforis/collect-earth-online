@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { dispatch, useSubscription } from '@flexsurfer/reflex';
-import { surveyQuestionsAtom } from '../state/projectWizard';
-import { SurveyQuestions } from './SurveyQuestions';
-import SvgIcon from './svg/SvgIcon';
-import { event_ids, sub_ids } from '../state/projectWizard';
+import { dispatch } from '@flexsurfer/reflex';
+import { SurveyQuestions } from '../components/SurveyQuestions';
+import SvgIcon from '../components/svg/SvgIcon';
+import { event_ids, surveyQuestionsAtom } from '../state/projectWizard';
 
 
 export const QuestionCard = ({
@@ -230,11 +229,17 @@ export const QuestionCard = ({
                     onChange={(e) => updateAnswer(aId, 'color', e.target.value)}
                   />
                   <input
+                    type={question.dataType === 'number' ? 'number' : 'text'}
                     className="text-input"
                     style={{ margin: 0, flex: 1 }}
                     value={a.answer}
-                    placeholder="Enter Answer Text"
-                    onChange={(e) => updateAnswer(aId, 'answer', e.target.value)}
+                    placeholder={`Enter Answer ${question.dataType === 'number' ? 'Number' : 'Text'}`}
+                    onChange={(e) => {
+                      const value = question.dataType === 'number' && e.target.value !== ''
+                        ? Number(e.target.value)
+                        : e.target.value;
+                      updateAnswer(aId, 'answer', value);
+                    }}
                   />
                   <input
                     type="checkbox"
@@ -509,14 +514,14 @@ export const SurveyQuestionsStep = () => {
 
       {/* PREVIEW AREA */}
       <div
-        className="map-area"
-        style={{ overflowY: 'auto', padding: "20px" }}
+        className="wizard-preview-body"
+        style={{ padding: "20px" }}
       >
         <div>
           <SurveyQuestions
             preview={true}
             surveyQuestions={questions}
-        />
+          />
         </div>
       </div>
     </div>

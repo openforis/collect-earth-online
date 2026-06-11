@@ -188,7 +188,7 @@ export const SurveyQuestions = ({
     const parentId = child.parentQuestionId;
     if (parentId == null || parentId < 0) return false;
 
-    const parent = currentProject?.surveyQuestions?.[parentId];
+    const parent = surveyData?.[parentId];
     if (!parent) return false;
 
     const parentAns = getCurrentAnswer(parentId);
@@ -382,8 +382,10 @@ export const SurveyQuestions = ({
               <button
                 key={id}
                 style={{
-                  borderColor: isActive ? a.color : '#2d6f74',
-                  borderWidth: isActive ? '5px' : '2px',
+                  borderColor: a.color || '#2d6f74',
+                  borderWidth: '2px',
+                  boxShadow: isActive ? `0 0 0 2px ${a.color}` : 'none',
+                  fontWeight: isActive ? 'bold' : 'normal'
                 }}
                 className={`sq-pill ${isActive ? 'active' : ''}`}
                 onClick={() => validateAndSetCurrentValue(q.id, Number(id), a.answer)}

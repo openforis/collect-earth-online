@@ -6,8 +6,6 @@ import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import SurveyRuleDesigner from "../survey/SurveyRulesDesigner";
 import { SurveyQuestions } from '../components/SurveyQuestions';
 
-import { ProjectContext } from "./constants";
-
 import { event_ids,  sub_ids} from "../state/projectWizard";
 
 import "../../css/project-wizard.css";
@@ -16,13 +14,6 @@ import "../../css/project-wizard.css";
 export default function RulesStep () {
 
   const questions = useSubscription([sub_ids.questions.questions]);
-
-  const context = useContext(ProjectContext);
-
-  useEffect(()=>
-    //TODO: delete me!!
-    {console.log('Rules Step Context', context);},[]);
-  
 
   const PreviewCard = () => {
     return(<div className="question-preview-container">
