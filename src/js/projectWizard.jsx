@@ -23,7 +23,7 @@ import "../css/project-wizard.css";
 const projectSteps = [
   {id: 'overview', label: 'Project Overview'},
   {id: 'imagery', label: 'Imagery Selection'},
-  {id: 'boundary', label: 'Project Boudary'},
+  {id: 'boundary', label: 'Project Boundary'},
   {id: 'plots', label: 'Plot Generation'},
   {id: 'samples', label: 'Sample Design'},
   {id: 'questions', label: 'Survey Questions'},

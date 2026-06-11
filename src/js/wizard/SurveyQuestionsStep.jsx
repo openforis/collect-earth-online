@@ -229,11 +229,17 @@ export const QuestionCard = ({
                     onChange={(e) => updateAnswer(aId, 'color', e.target.value)}
                   />
                   <input
+                    type={question.dataType === 'number' ? 'number' : 'text'}
                     className="text-input"
                     style={{ margin: 0, flex: 1 }}
                     value={a.answer}
-                    placeholder="Enter Answer Text"
-                    onChange={(e) => updateAnswer(aId, 'answer', e.target.value)}
+                    placeholder={`Enter Answer ${question.dataType === 'number' ? 'Number' : 'Text'}`}
+                    onChange={(e) => {
+                      const value = question.dataType === 'number' && e.target.value !== ''
+                        ? Number(e.target.value)
+                        : e.target.value;
+                      updateAnswer(aId, 'answer', value);
+                    }}
                   />
                   <input
                     type="checkbox"

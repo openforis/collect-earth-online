@@ -135,7 +135,7 @@ export const event_ids = {
   questions: {
     addQuestion: 'addQuestion',
     setQuestions: 'setQuestions',
-    updateQuestions: 'updateQuestion',
+    updateQuestion: 'updateQuestion',
     updateAnswer: 'updateAnswer',
     moveQuestion: 'moveQuestion'},
   rules: {
