@@ -2,19 +2,18 @@
 
 import React, { useEffect, useState, useContext } from "react";
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
-import { ProjectContext } from './constants';
 
 import { event_ids, sub_ids } from "../state/projectWizard";
 
 import SvgIcon from '../components/svg/SvgIcon';
 import SurveyRule from '../survey/SurveyRule';
 import { SurveyQuestions } from '../components/SurveyQuestions';
+import { NewMap } from '../components/NewMap';;
 
 import "../../css/project-wizard.css";
 
 
-export default function ReviewStep () {
-  const context = useContext(ProjectContext);
+export default function ReviewStep ({imageryList = []}) {
 
   function OverviewCard () {
     const projectName = useSubscription([sub_ids.overview.projectName]);
@@ -30,10 +29,9 @@ export default function ReviewStep () {
       <div className='projectWizardCard'>
         <div className='review-card-header'>
           <p className="card-title">OVERVIEW</p>
-          <div       onClick={()=>{dispatch([event_ids.currentStep, 'overview']);}}>
-          <SvgIcon icon='edit' size='2rem'
-/>
-      </div>
+          <div onClick={()=>{dispatch([event_ids.currentStep, 'overview']);}}>
+          <SvgIcon icon='edit' size='2rem'/>
+          </div>
         </div>
         
         <p>Name: <b>{projectName}</b></p>
@@ -54,58 +52,88 @@ export default function ReviewStep () {
   }
 
   function ImageryCard () {
+    const selectedImageryIds = useSubscription([sub_ids.imagery.imagery]);
     return (
       <div className='projectWizardCard'>
         <div className='review-card-header'>
           <p className="card-title">IMAGERY</p>
-          <div 
-      onClick={()=>{dispatch([event_ids.currentStep, 'imagery']);}}>
+          <div onClick={()=>{dispatch([event_ids.currentStep, 'imagery']);}}>
           <SvgIcon icon='edit' size='2rem'/>
-      </div>
+          </div>
         </div>
+        <p >Imagery Used:</p>
+        {selectedImageryIds.map((selectedId)=>{return (
+          <b > {imageryList.filter(({id})=> id === selectedId)[0].title} </b>);})
+        }
       </div>
     );
   }
 
   function BoundaryCard () {
+    const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
     return (
-      <div className='projectWizardCard'>
+      <div className='projectWizardCard' style={{height: '420px'}}>
         <div className='review-card-header'>
           <p className="card-title">BOUNDARY</p>
-          <div 
-      onClick={()=>{dispatch([event_ids.currentStep, 'boundary']);}}>
-          <SvgIcon icon='edit' size='2rem'/>
-      </div>
+          <div onClick={()=>{dispatch([event_ids.currentStep, 'boundary']);}}>
+            <SvgIcon icon='edit' size='2rem'/>
+          </div>
+        </div>
+      <div className="map-area" style={{width: '670px',
+                                        height: '335px',
+                                        marginTop: '3rem',
+                                        position: 'absolute'}}>
+          <NewMap 
+            pan={false}
+            aoiToShow={aoiFeatures}
+            initZoom={4}
+          />
         </div>
       </div>
     );
+
   }
 
   function PlotsCard () {
+    const plotDistribution = useSubscription([sub_ids.plots.plotDistribution]);
+    const numPlots = useSubscription([sub_ids.plots.numPlots]);
+    const plotShape = useSubscription([sub_ids.plots.plotShape]);
+    const plotSize = useSubscription([sub_ids.plots.plotSize]);
     return (
       <div className='projectWizardCard'>
         <div className='review-card-header'>
           <p className="card-title">SURVEY PLOTS</p>
           <div onClick={()=>{dispatch([event_ids.currentStep, 'plots']);}}>
           <SvgIcon icon='edit' size='2rem'/>
-      </div>
+          </div>
         </div>
-      
+        <p>Plot Distribution: <b>{plotDistribution}</b></p>
+        <p>Number of Plots: <b>{numPlots}</b></p>
+        <p>Plot Shape: <b>{plotShape}</b></p>
+        <p>Plot Size: <b>{plotSize}</b></p>
+        <p>User Assignment: <b>{''}</b></p>
+        <p>Quality Control: <b>{''}</b></p>
       </div>
     );
   }
 
   function SamplesCard () {
+    const allowDrawnSamples = useSubscription([sub_ids.samples.allowDrawnSamples]);
+    const sampleDistribution = useSubscription([sub_ids.samples.sampleDistribution]);
+    const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]);
+    const numPlots = useSubscription([sub_ids.plots.numPlots]);
     return (
       <div className='projectWizardCard'>
         <div className='review-card-header'>
           <p className="card-title">PLOT SAMPLES</p>
-          <div 
-      onClick={()=>{dispatch([event_ids.currentStep, 'samples']);}}>
-          <SvgIcon icon='edit' size='2rem'/>
-      </div>
+          <div  onClick={()=>{dispatch([event_ids.currentStep, 'samples']);}}>
+            <SvgIcon icon='edit' size='2rem'/>
+          </div>
         </div>
-        
+        <p>Sample Distribution: <b>{sampleDistribution}</b></p>
+        <p>Samples Per Plot: <b>{samplesPerPlot}</b></p>
+        <p>Total Samples: <b>{Number(samplesPerPlot) * Number(numPlots)}</b></p>
+        <b > {!allowDrawnSamples && "Don't "} Allow users to draw their own samples</b>
       </div>
     );
   }
@@ -137,10 +165,8 @@ export default function ReviewStep () {
       <div className='projectWizardCard'>
         <div className='review-card-header'>
           <p className="card-title">SURVEY RULES</p>
-          <div          onClick={()=>{dispatch([event_ids.currentStep, 'rules']);}}>
-          <SvgIcon icon='edit' size='2rem'
-          
-        />
+          <div onClick={()=>{dispatch([event_ids.currentStep, 'rules']);}}>
+          <SvgIcon icon='edit' size='2rem'/>
       </div>
         </div>
 
@@ -152,11 +178,6 @@ export default function ReviewStep () {
       </div>
     );
   }
-
-  useEffect(()=>{
-    //TODO: delete me!!
-    console.log('Review Step context: ', context);
-  }, []);
 
   return (
     <div className="project-wizard review-step">

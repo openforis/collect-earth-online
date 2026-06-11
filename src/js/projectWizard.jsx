@@ -6,16 +6,8 @@ import { BreadCrumbs, NavigationBar } from "./components/PageComponents";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 
-
-
-
-
-
 import OverviewStep from './wizard/OverviewStep';
-import RulesStep from './project/RulesStep';
-
-
-
+import RulesStep from './wizard/RulesStep';
 import { ImageryStep } from "./wizard/ImageryStep";
 import { BoundaryStep } from "./wizard/BoundaryStep";
 import { PlotStep } from "./wizard/PlotStep";
@@ -202,38 +194,48 @@ function validateWizard () {
      or adds errors to state.
      may even send a request, if superficially valid, and still add errors to state, in case of server error
   */
-  const form = {name : "",
-	        description : "",
+  const form = {name : useSubscription([sub_ids.overview.projectName]),
+	        description : useSubscription([sub_ids.overview.projectDescription]),
 
-	        privacyLevel : "",
-	        imageryId : "",
-	        institutionImagery : "",
-	        projectImageryList : "",
-	        requiresPublic : " ",
+	        privacyLevel : useSubscription([sub_ids.overview.visibility]),
 
+                //TODO: what are these validation values?
+                //imageryId: is this really just one imagery?
+	        imageryId : useSubscription([sub_ids.imagery.imagery])[0],
+	        institutionImagery : [],
+	        projectImageryList : [],
+	        requiresPublic : false,
+
+                //TODO: what is this value? not validated against
 	        projectId : -1,
-	        aoiFeatures : [],
-	        plotDistribution : "",
-	        numPlots : -1,
-	        plotSpacing: "",
-	        plotSize : -1,
-	        plotFileName: "",
-	        useTemplatePlots : false,
-//	 originalProject ,
-	 designSettings: {
-	   
-	 },
-	        totalPlots : -1,
-	        plotFileNeeded : false,
-	        allowDrawnSamples : false,
-	        samplesPerPlot : -1,
-	 
-	        plotShape : "",
-	        sampleDistribution : "",
-	        sampleFileName : "",
-	        sampleResolution : "",
+                
+	        aoiFeatures : useSubscription([sub_ids.boundary.aoiFeatures]),
+	        plotDistribution : useSubscription([sub_ids.plots.plotDistribution]),
+	        numPlots : useSubscription([sub_ids.plots.numPlots]),
+	        plotSpacing: useSubscription([sub_ids.plots.plotSpacing]),
+	        plotSize : useSubscription([sub_ids.plots.plotSize]),
+	        plotFileName: usEsubscription([sub_ids.plots.plotFileName]),
 
-	        surveyQuestions : []};
+                //TODO: are we using these values for validation?
+	        useTemplatePlots : false,
+                //originalProject ,
+                
+	        designSettings: useSubscription([sub_ids.plots.designSettings]),
+	        totalPlots : useSubscription([sub_ids.plots.totalPlots]),
+
+                //TODO: how is plotFileNeeded used/stored? required for validation
+	        plotFileNeeded : false,
+
+                
+	        allowDrawnSamples : useSubscription([sub_ids.samples.allowDrawnSamples]),
+	        samplesPerPlot : useSubscription([sub_ids.samples.samplesPerPlot]),
+	 
+	        plotShape : useSubscription([sub_ids.plots.plotShape]),
+	        sampleDistribution : useSubscription([sub_ids.samples.sampleDistribution]),
+	        sampleFileName : useSubscription([sub_ids.samples.sampleFileName]),
+	        sampleResolution : useSubscription([sub_ids.samples.sampleResolution]),
+
+	        surveyQuestions : useSubscription([sub_ids.questions.questions])};
 
   const errors = [
     validateOverview(form),
@@ -508,7 +510,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
     case 'samples'    : return <SampleStep />;
     case 'questions'  : return <SurveyQuestionsStep />;
     case 'rules'      : return <RulesStep />;
-    case 'review'     : return <ReviewStep />;
+    case 'review'     : return <ReviewStep imageryList={availableImagery}/>;
     default           : return <div style={{padding: "20px"}}>Step {currentStep} coming soon</div>;
     }};
 

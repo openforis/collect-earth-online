@@ -42,6 +42,7 @@ const projectWizardDb = {
   'overview.projectOptions.plotConfidence': false,
   'overview.projectOptions.autoGeo': false,
   imagery: [],
+  imageryList: [],
   // boundary
   'boundary.generationMethod': 'manual',
   'boundary.aoiFeatures': [],
@@ -62,6 +63,7 @@ const projectWizardDb = {
   'samples.samplesPerPlot': 1,
   'samples.sampleResolution': 0,
   'samples.sampleFileName': '',
+  'samples.sampleFeautres': [],
   'samples.allowDrawnSamples': false,
   questions: [],
   'rules': [],
@@ -108,6 +110,9 @@ export const event_ids = {
                autoGeo: 'overview.projectOptions.autoGeo'
              }},
   projectDetails: 'projectDetails',
+  imagery: {
+    'imagery' : 'imagery',
+    imageryList: 'imageryList'},
   boundary: {
     generationMethod: 'boundary.generationMethod',
     aoiFeatures: 'boundary.aoiFeatures',
@@ -186,6 +191,9 @@ export const sub_ids = {
                autoGeo: 'overview.projectOptions.autoGeo'
              }},
   projectDetails: 'projectDetails',
+  imagery: {
+    'imagery' : 'imagery',
+    imageryList: 'imageryList'},
   boundary: {
     generationMethod: 'boundary.generationMethod',
     aoiFeatures: 'boundary.aoiFeatures',
@@ -257,6 +265,9 @@ regSub(sub_ids.overview.projectOptions.gee, sub_ids.overview.projectOptions.gee)
 regSub(sub_ids.overview.projectOptions.extraPlotColumns, sub_ids.overview.projectOptions.extraPlotColumns);
 regSub(sub_ids.overview.projectOptions.plotConfidence, sub_ids.overview.projectOptions.plotConfidence);
 regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.autoGeo);
+
+//imagery
+(regSub(sub_ids.imagery.imagery, sub_ids.imagery.imagery));
 
 // boundary
 regSub(sub_ids.boundary.generationMethod, sub_ids.boundary.generationMethod);
@@ -386,6 +397,16 @@ regEvent(event_ids.overview.projectOptions.plotConfidence,
 regEvent(event_ids.overview.projectOptions.autoGeo,
          ({ draftDb }) => {
            draftDb[sub_ids.overview.projectOptions.autoGeo] = !draftDb[sub_ids.overview.projectOptions.autoGeo];
+         });
+
+regEvent(event_ids.imagery.imagery,
+         ({ draftDb }, imageryIdList)=>{
+           draftDb[sub_ids.imagery.imagery] = imageryIdList;
+         });
+
+regEvent(event_ids.imagery.imageryList,
+         ({ draftDb }, imageryList ) => {
+           draftDb[sub_ids.imagery.imageryList] = imageryList;
          });
 
 
