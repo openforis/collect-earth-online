@@ -6,18 +6,36 @@ import { Vector as VectorSource } from 'ol/source';
 import { defaults as defaultInteractions } from 'ol/interaction';
 import { fromLonLat } from 'ol/proj';
 import GeoJSON from 'ol/format/GeoJSON';
-import { Style, Stroke, Fill } from 'ol/style';
+import { Style, Stroke, Fill, Circle as CircleStyle } from 'ol/style';
+import Point from 'ol/geom/Point';
+import { getCenter } from 'ol/extent';
 
 import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
 import * as mercator from '../utils/newMercator';
 
-const defaultPlotStyle = new Style({
-  stroke: new Stroke({
-    color: '#ff5500',
-    width: 2
+const plotCentroidStyle = new Style({
+  image: new CircleStyle({
+    radius: 4,
+    stroke: new Stroke({ color: '#ffffff', width: 2 }),
+    fill: new Fill({ color: '#3399cc' })
   }),
-  fill: new Fill({
-    color: 'rgba(255, 85, 0, 0.2)'
+  geometry: function (feature) {
+    const geometry = feature.getGeometry();
+    if (!geometry) return null;
+    const type = geometry.getType();
+    if (type === 'Polygon') {
+      return geometry.getInteriorPoint();
+    } else if (type === 'MultiPolygon') {
+      return new Point(getCenter(geometry.getExtent()));
+    }
+    return geometry;
+  }
+});
+
+const samplePointStyle = new Style({
+  image: new CircleStyle({
+    radius: 5,
+    stroke: new Stroke({ color: '#000', width: 1.5 }),
   })
 });
 
@@ -33,9 +51,11 @@ export const NewMap = ({
 }) => {
   const mapElement = useRef();
   const mapRef = useRef();
+  
   const aoiSourceRef = useRef(new VectorSource());
   const plotsSourceRef = useRef(new VectorSource());
   const samplesSourceRef = useRef(new VectorSource());
+  
   const layerCache = useRef(new Map());
   const library = useAtomValue(mapImageryLibraryAtom);
   const activeIds = useAtomValue(activeMapLayerIdsAtom);
@@ -51,13 +71,13 @@ export const NewMap = ({
 
     const plotsLayer = new VectorLayer({
       source: plotsSourceRef.current,
-      style: mercator.plotStyle || defaultPlotStyle,
+      style: plotCentroidStyle,
       zIndex: 1100
     });
 
     const samplesLayer = new VectorLayer({
       source: samplesSourceRef.current,
-      style: mercator.sampleStyle || mercator.boundaryStyle,
+      style:  samplePointStyle,
       zIndex: 1200
     });
 
@@ -144,7 +164,7 @@ export const NewMap = ({
     if (map && aoiToShow.length > 0) {
       const extent = aoiSourceRef.current.getExtent();
       if (extent && extent[0] !== Infinity) {
-        map.getView().fit(extent, { padding: [50, 50, 50, 50], duration: 500 });
+        map.getView().fit(extent, { padding: [50, 50, 50, 50], duration: 0 });
       }
     }
   }, [aoiToShow]);
@@ -156,15 +176,23 @@ export const NewMap = ({
     if (map && plotsToShow.length > 0) {
       const extent = plotsSourceRef.current.getExtent();
       if (extent && extent[0] !== Infinity) {
-        map.getView().fit(extent, { padding: [50, 50, 50, 50], duration: 500 });
+        map.getView().fit(extent, { padding: [50, 50, 50, 50], duration: 0 });
       }
     }
   }, [plotsToShow]);
 
   useEffect(() => {
     synchronizeLayerSource(samplesSourceRef.current, samplesToShow);
-  }, [samplesToShow]);
+    const map = mapRef.current;
 
+    if (map && samplesToShow.length > 0) {
+      const extent = plotsSourceRef.current.getExtent();
+      if (extent && extent[0] !== Infinity) {
+        map.getView().fit(extent, { padding: [50, 50, 50, 50], duration: 0 });
+      }
+    }
+  }, [samplesToShow]);
+  
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !library.length) return;

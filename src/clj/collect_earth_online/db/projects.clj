@@ -1113,7 +1113,7 @@
     "shp" (reduce
            (fn [points pgobj]
 	     (let [coord-pairs (->> pgobj :plot_geom .getValue
-                                    (call-sql "hex_ewkb_to_coordinate_arrays")
+                                    (call-sql "hex_ewkb_to_all_vertices")
                                     (map :coord_pair))]
                (into points coord-pairs)))
            [] plots)
@@ -1161,6 +1161,16 @@
      [(apply max (into [x-max] project-x)) (apply max (into [y-max] project-y))]]
     ))
 
+(defn sanitize-plot-geom [distribution row]
+  (let [raw-geom (if (instance? org.postgresql.util.PGobject (:plot_geom row))
+                   (.getValue (:plot_geom row))
+                   (:plot_geom row))]
+    (assoc row :plot_geom
+           (-> (call-sql "normalize_to_geojson" raw-geom)
+               first
+               :normalize_to_geojson
+               tc/jsonb->clj))))
+
 (defn check-plot-file
   [{:keys [params]}]
   (let [project-id       (tc/val->int (:projectId params))
@@ -1168,12 +1178,13 @@
         plot-file-base64 (:plotFileBase64 params)
         distribution     (:plotFileType params)
         
-        plots            (external-file/load-external-data! project-id
+        plots         (external-file/load-external-data! project-id
                                                             distribution
                                                             plot-file-name
                                                             plot-file-base64
                                                             "plot"
-                                                            [:visible_id])        
+                                                            [:visible_id])
+        sanitized-plots  (mapv #(sanitize-plot-geom distribution %) plots)
         file-bounds      (update-bounds-by-file distribution project-id plots)
         file-aoi         (fit-aoi-to-file distribution project-id plots)
         file-assignment? (some #(:user %) plots)
@@ -1186,15 +1197,13 @@
       (data-response (-> updated-plots create-design-settings-from-file
                          (assoc :fileAoi file-aoi
                                 :fileBoundary file-bounds
-                                :plots (map (fn [p] (update p :plot_geom tc/jsonb->clj))
-                                            plots))))
+                                :plots  sanitized-plots)))
       (data-response  {:userAssignment {:userMethod "none"
                                         :users      []
                                         :percents   []}
                        :fileAoi        file-aoi
                        :fileBoundary   file-bounds
-                       :plots (map (fn [p] (update p :plot_geom tc/jsonb->clj))
-                                   plots)
+                       :plots          sanitized-plots
                        :qaqcAssignment {:qaqcMethod "none"
                                         :smes       []
                                         :overlap    0}}))))

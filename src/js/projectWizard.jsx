@@ -9,6 +9,7 @@ import { ImageryStep } from "./wizard/ImageryStep";
 import { BoundaryStep } from "./wizard/BoundaryStep";
 import { PlotStep } from "./wizard/PlotStep";
 import { SurveyQuestionsStep } from "./wizard/SurveyQuestionsStep";
+import { SampleStep } from "./wizard/SampleStep";
 import { SurveyQuestions } from "./components/SurveyQuestions";
 import SurveyRuleDesigner from "./survey/SurveyRulesDesigner";
 
@@ -413,6 +414,10 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
       .then(res => res.json())
       .then(data => setAvailableImagery(data))
       .catch(err => console.error("Could not load imagery", err));
+    fetch(`/get-institution-users?institutionId=${institutionId}`)
+      .then(res  => res.json())
+      .then(data => dispatch([event_ids.institution.users, data]))
+      .catch(err => console.error("Could not load users", err));
   }, []);
 
   
@@ -429,7 +434,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
     case 'imagery'    : return <ImageryStep imageryList={availableImagery}/>;
     case 'boundary'   : return <BoundaryStep />;
     case 'plots'      : return <PlotStep />;
-      //    case 'samples'    : return <SamplesStep />;
+    case 'samples'    : return <SampleStep />;
     case 'questions'  : return <SurveyQuestionsStep />;
     case 'rules'      : return <RulesStep />;
       //    case 'review'     : return <ReviewStep />;

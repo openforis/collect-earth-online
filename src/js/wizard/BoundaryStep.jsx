@@ -13,22 +13,23 @@ import {
 } from '../state/projectWizard';
 
 export const BoundaryStep = () => {
-  // --- REFLEX SUBSCRIPTIONS ---
   const generationMethod = useSubscription([sub_ids.boundary.generationMethod]) || "manual";
   const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
   const aoiFileName = useSubscription([sub_ids.boundary.aoiFileName]) || "";
   const modal = useSubscription([sub_ids.modal]);
 
-  // Determine drawing status dynamically based on state
   const isDrawingActive = generationMethod === "manual";
 
-  // --- STATE HANDLERS ---
   const handleMethodChange = (method) => {
     dispatch([event_ids.boundary.clearBoundary]);
+    dispatch([event_ids.plots.plotFileName, ""]);
+    dispatch([event_ids.plots.plotFeatures, []]);
+    dispatch([event_ids.plots.totalPlots, 0]);
+    dispatch([event_ids.plots.numPlots, ""]);
+    dispatch([event_ids.plots.plotSize, ""]);
     dispatch([event_ids.boundary.generationMethod, method]);
   };
 
-  // Generic map callback handler to sync geometry up to Reflex
   const handleMapDrawComplete = (drawnFeatureGeoJSON) => {
     const updatedFeatures = [drawnFeatureGeoJSON];
     dispatch([event_ids.boundary.aoiFeatures, updatedFeatures]);
@@ -182,13 +183,12 @@ export const BoundaryStep = () => {
         </div>
       </div>
 
-      {/* RIGHT SIDE CONTENT MAP VIEWPORT FRAME */}
       <div className="map-area">
         <div className="map-title-overlay">PROJECT BOUNDARY PREVIEW</div>
         <NewMap 
           pan={true}
           allowDrawing={isDrawingActive}
-          featuresToShow={aoiFeatures}
+          aoiToShow={aoiFeatures}
           onDrawComplete={handleMapDrawComplete}
           initZoom={4}
         />

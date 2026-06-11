@@ -22,6 +22,11 @@ export default function UserSelect({ label, id, possibleUsers = [], disabled = f
       <div className="col-1">
         <button
           className="btn btn-sm btn-success"
+          style={{
+            backgroundColor: 'var(--Primary-Light-Green)',
+            border: '1px solid var(--Primary-Standard-Green)',
+            color: 'var(--Primary-Standard-Green)'
+          }}
           disabled={possibleUsers.length === 1 || selectedUserId === -1}
           onClick={() => {
             addUser(selectedUserId);

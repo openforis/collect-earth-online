@@ -55,9 +55,13 @@ const projectWizardDb = {
   'plots.totalPlots': 0,
   'plots.plotFeatures': [],
   'plots.plotFileName': '',
+  'plots.designSettings': {sampleGeometries: { points: true, lines: false, polygons: false }},
   // samples
-  plots: [],
-  samples: [],
+  'samples.sampleDistribution': 'random',
+  'samples.samplesPerPlot': 1,
+  'samples.sampleResolution': 0,
+  'samples.sampleFileName': '',
+  'samples.allowDrawnSamples': false,
   questions: [],
   'rules': [],
   'rules.search': null,
@@ -80,7 +84,8 @@ const projectWizardDb = {
   'rules.newRule.tempAnswerId': -1,
   'rules.newRule.answerId1': -1,
   'rules.newRule.answerId2': -1,
-  'rules.newRule.answers': {},   
+  'rules.newRule.answers': {},
+  'institution.users': []
 };
 
 initAppDb(projectWizardDb);
@@ -117,7 +122,15 @@ export const event_ids = {
     shufflePlots: 'plots.shufflePlots',
     totalPlots: 'plots.totalPlots',
     plotFeatures: 'plots.plotFeatures',
-    plotFileName: 'plots.plotFileName'
+    plotFileName: 'plots.plotFileName',
+    designSettings: 'plots.designSettings',
+  },
+  samples: {
+    sampleDistribution: 'samples.sampleDistribution',
+    samplesPerPlot: 'samples.samplesPerPlot',
+    sampleResolution: 'samples.sampleResolution',
+    sampleFileName: 'samples.sampleFileName',
+    allowDrawnSamples: 'samples.allowDrawnSamples'
   },
   questions: {
     addQuestion: 'addQuestion',
@@ -149,7 +162,9 @@ export const event_ids = {
       tempAnswerId: 'rules.newRule.tempAnswerId',
       incompatQuestionId: 'rules.newRule.incompatQuestionId',
       incompatAnswerId: 'rules.newRule.incompatAnswerId',
-    }}};
+    }},
+    institution: {
+      users: 'institution.users'}};
 
 export const sub_ids = {
   currentStep: 'currentStep',
@@ -181,7 +196,15 @@ export const sub_ids = {
     shufflePlots: 'plots.shufflePlots',
     totalPlots: 'plots.totalPlots',
     plotFeatures: 'plots.plotFeatures',
-    plotFileName: 'plots.plotFileName'
+    plotFileName: 'plots.plotFileName',
+    designSettings: 'plots.designSettings',
+  },
+  samples: {
+    sampleDistribution: 'samples.sampleDistribution',
+    samplesPerPlot: 'samples.samplesPerPlot',
+    sampleResolution: 'samples.sampleResolution',
+    sampleFileName: 'samples.sampleFileName',
+    allowDrawnSamples: 'samples.allowDrawnSamples'
   },
   questions: {
     questions: 'questions'
@@ -210,6 +233,8 @@ export const sub_ids = {
             incompatQuestionId: 'rules.newRule.incompatQuestionId',
             incompatAnswerId: 'rules.newRule.incompatAnswerId',
           }},
+  institution: {
+    users: 'institution.users'}
 };
 
 export const effects = {};
@@ -243,9 +268,16 @@ regSub(sub_ids.plots.shufflePlots, sub_ids.plots.shufflePlots);
 regSub(sub_ids.plots.totalPlots, sub_ids.plots.totalPlots);
 regSub(sub_ids.plots.plotFeatures, sub_ids.plots.plotFeatures);
 regSub(sub_ids.plots.plotFileName, sub_ids.plots.plotFileName);
+regSub(sub_ids.plots.designSettings, sub_ids.plots.designSettings);
 
 
 // samples
+regSub(sub_ids.samples.sampleDistribution, sub_ids.samples.sampleDistribution);
+regSub(sub_ids.samples.samplesPerPlot, sub_ids.samples.samplesPerPlot);
+regSub(sub_ids.samples.sampleResolution, sub_ids.samples.sampleResolution);
+regSub(sub_ids.samples.sampleFileName, sub_ids.samples.sampleFileName);
+regSub(sub_ids.samples.allowDrawnSamples, sub_ids.samples.allowDrawnSamples);
+
 
 regSub(sub_ids.questions.questions, sub_ids.questions.questions);
 
@@ -271,6 +303,10 @@ regSub(sub_ids.rules.newRule.tempQuestionId, sub_ids.rules.newRule.tempQuestionI
 regSub(sub_ids.rules.newRule.tempAnswerId, sub_ids.rules.newRule.tempAnswerId);
 regSub(sub_ids.rules.newRule.incompatQuestionId, sub_ids.rules.newRule.incompatQuestionId);
 regSub(sub_ids.rules.newRule.incompatAnswerId, sub_ids.rules.newRule.incompatAnswerId);
+
+
+// institution
+regSub(sub_ids.institution.users, sub_ids.institution.users);
 
 
 regEvent(event_ids.projectDetails,
@@ -351,10 +387,6 @@ regEvent(event_ids.boundary.generationMethod, ({ draftDb }, method) => {
 
 regEvent(event_ids.boundary.aoiFeatures, ({ draftDb }, features) => {
   draftDb[sub_ids.boundary.aoiFeatures] = features;
-  
-  if (features.length > 0 && draftDb[sub_ids.boundary.generationMethod] !== 'manual' && !draftDb[sub_ids.boundary.aoiFileName]) {
-    draftDb[sub_ids.boundary.generationMethod] = 'manual';
-  }
 });
 
 regEvent(event_ids.boundary.setBoundaryFromFile, ({ draftDb }, fileName, geometries) => {
@@ -406,8 +438,32 @@ regEvent(event_ids.plots.plotFileName, ({ draftDb }, plotFileName) => {
   draftDb[sub_ids.plots.plotFileName] = plotFileName;
 });
 
+regEvent(event_ids.plots.designSettings, ({ draftDb }, designSettings) => {
+  draftDb[sub_ids.plots.designSettings] = designSettings;
+});
 
 // SAMPLE GENERATION EVENTS
+regEvent(event_ids.samples.sampleDistribution, ({ draftDb }, distribution) => {
+  draftDb[sub_ids.samples.sampleDistribution] = distribution;
+});
+
+regEvent(event_ids.samples.samplesPerPlot, ({ draftDb }, count) => {
+  draftDb[sub_ids.samples.samplesPerPlot] = count;
+});
+
+regEvent(event_ids.samples.sampleResolution, ({ draftDb }, resolution) => {
+  draftDb[sub_ids.samples.sampleResolution] = resolution;
+});
+
+regEvent(event_ids.samples.sampleFileName, ({ draftDb }, fileName) => {
+  draftDb[sub_ids.samples.sampleFileName] = fileName;
+});
+
+regEvent(event_ids.samples.allowDrawnSamples, ({ draftDb }, allow) => {
+  draftDb[sub_ids.samples.allowDrawnSamples] = allow;
+});
+
+
 
 regEvent(event_ids.questions.addQuestion,
          ({ draftDb }, questionToAdd ) => {
@@ -567,3 +623,10 @@ regEvent(event_ids.rules.newRule.incompatAnswerId,
          ({ draftDb }, incompatAnswerId) => {
            draftDb[sub_ids.rules.newRule.incompatAnswerId] = incompatAnswerId;
          });
+
+
+// EVENTS FOR INSTITUTION INFORMATION
+regEvent(event_ids.institution.users,
+  ({draftDb}, users) => {
+    draftDb[sub_ids.institution.users] = users;
+  });

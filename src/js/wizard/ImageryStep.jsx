@@ -85,7 +85,7 @@ export const ImageryStep = ({ imageryList = [] }) => {
   return (
     <div className="wizard-step-layout">
       <div className="wizard-sidebar">
-        <div className="card">
+        <div className="card" style = {{padding: '20px'}}>
           <section style={{ marginBottom: '30px', width: '100%' }}>
             <p className="card-title">DEFAULT IMAGERY <span style={{color: 'red'}}>*</span></p>
             <label className="text-label" style={{ display: 'block', marginBottom: '5px' }}>Base Map</label>
