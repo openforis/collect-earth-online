@@ -302,10 +302,7 @@ export const SurveyQuestionsStep = () => {
   };
   const [questions, setQuestions] = useAtom(surveyQuestionsAtom);
   const [newQuestion, setNewQuestion] = useState(newDefaultQuestion);
-
-  useEffect(() => {
-    console.log("Questions Atom Updated:", questions);
-  }, [questions]);
+ 
   const addQuestion = () => {
     if (!newQuestion.questionText) return;
 

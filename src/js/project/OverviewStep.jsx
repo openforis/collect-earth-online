@@ -5,10 +5,8 @@ import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import {  event_ids,  sub_ids } from "../state/projectWizard";
 
 import SvgIcon from "../components/svg/SvgIcon";
-import { ProjectContext } from './constants';
 
 export default function OverviewStep () {
-  const context = useContext(ProjectContext);
   const GeneralInformationCard = () => {
     const projectTypeOptions = {regular: 'Regular Project', simplified: 'Simplified Project'};
     const projectType = useSubscription([sub_ids.overview.projectType]);
@@ -22,7 +20,7 @@ export default function OverviewStep () {
               <p className="text-label"
               >Project Type<span style={{color: "red"}}>*</span>
                 <SvgIcon icon="info" size="1.2rem" /></p>
-              <div>
+              <div style={{width: '100%'}}>
                 <div style={{display: "inline-flex", gap:"12px"}}>
                   {Object.entries(projectTypeOptions).map(([id, label]) => {
                     return (<div
@@ -33,10 +31,10 @@ export default function OverviewStep () {
                               <span>{ projectType == id
                                       ? <SvgIcon icon="radioChecked" size="1.2rem" />    
                                       : <SvgIcon icon="radio" size="1.2rem"/>}</span>
-                              <label                              
+                              <span
                                 className="text-label"
                                 style={projectType == id ? {fontWeight: "bold"} : {}}
-                              >{ label }</label>
+                              >{ label }</span>
                             </div>);                  
                   })}</div>
                 <div>
@@ -90,9 +88,9 @@ export default function OverviewStep () {
                     <span>{visibility == id
                            ? <SvgIcon icon="radioChecked" size="1.2rem" />    
                            : <SvgIcon icon="radio" size="1.2rem"/>}</span>
-                    <label className="text-label"
+                    <span className="text-label"
                            style={visibility == id ? {fontWeight: "bold"} : {}}
-                    >{ label  }</label>
+                    >{ label  }</span>
                   </div>);
         })}
       </div>
@@ -126,19 +124,14 @@ export default function OverviewStep () {
                  ? (<SvgIcon icon="checkboxChecked" size="1.2rem" />)
                  : <SvgIcon icon="checkboxUnchecked" size="1.2rem" />}
 	      </span>
-	      <label className="text-label"
+	      <span className="text-label"
                      style={projectOptions[id] ? {fontWeight: "bold"} : {}}
-              >{label}</label>
+              >{label}</span>
 	    </div>
 	  ) ;
 	})}
       </div>);
   };
-
-  useEffect(() => {
-    //TODO: delete me!!
-    console.log('overview step context: ', context);
-  }, []);
 
   return (
     <div className="project-wizard overview-step">
