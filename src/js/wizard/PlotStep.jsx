@@ -342,8 +342,7 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
     ["equal", "Equal assignments", false],
     ["percent", "Percentage of plots", false],
   ];
-
-  console.log('institutionUsers', institutionUserList);
+  
   const possibleUsers = [
     { id: -1, email: "Select user..." },
     ...institutionUserList.filter(u =>

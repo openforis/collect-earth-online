@@ -15,7 +15,7 @@ export const ImageryStep = ({ imageryList = [] }) => {
 
   function setSelectedIds (selectedIds) {dispatch([event_ids.imagery.imagery, selectedIds]);}
   const selectedIds = useSubscription([sub_ids.imagery.imagery]);
-
+  
   // Sets up default selected imagery.
   useEffect(() => {
     setMapLibrary(imageryList);

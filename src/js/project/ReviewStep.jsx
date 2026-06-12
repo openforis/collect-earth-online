@@ -152,7 +152,7 @@ export default function ReviewStep ({imageryList = []}) {
         </div>
         {questions.length > 0 &&
          <div className="review-card">
-           <SurveyQuestions preview={true} surveyQuestions={questions}/>
+           <SurveyQuestions preview={true} surveyQuestions={questions} showHeader={false}/>
          </div>}
       </div>
     );

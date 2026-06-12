@@ -281,7 +281,7 @@ text-underline-position: from-font;
 
 .project-wizard {
     padding: 40px 0px;
-    height: 100vh;
+    height: 100%;
 }
 
 .text-input {

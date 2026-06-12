@@ -1,6 +1,8 @@
 import { atom } from "jotai";
 import { initAppDb , regEvent , regEffect , dispatch , regSub , current } from '@flexsurfer/reflex';
 
+import {validateWizard} from '../wizard/validation';
+
 export const projectSourceAtom = atom(null);
 export const currentStepAtom = atom("overview");
 export const projectOverviewAtom = atom (
@@ -41,6 +43,7 @@ const projectWizardDb = {
   'overview.projectOptions.extraPlotColumns': false,
   'overview.projectOptions.plotConfidence': false,
   'overview.projectOptions.autoGeo': false,
+  'overview.useTemplatePlots': false,
   imagery: [],
   imageryList: [],
   // boundary
@@ -57,7 +60,18 @@ const projectWizardDb = {
   'plots.totalPlots': 0,
   'plots.plotFeatures': [],
   'plots.plotFileName': '',
-  'plots.designSettings': {sampleGeometries: { points: true, lines: false, polygons: false }},
+  'plots.designSettings': {
+    sampleGeometries : {points:   true,                                       
+                        lines:    true,
+                        polygons :true},
+    userAssignment:    {userMethod:  "none",
+                        users:      [],
+                        percents:   []},
+    qaqcAssignment:   {qaqcMethod:     "none",
+                       percent:        0,
+                       smes :          [],
+                       timesToReview : 2}},
+
   // samples
   'samples.sampleDistribution': 'random',
   'samples.samplesPerPlot': 1,
@@ -94,6 +108,7 @@ const projectWizardDb = {
 initAppDb(projectWizardDb);
 
 export const event_ids = {
+  validate: 'validate',
   errors: 'errors',
   currentStep: 'currentStep',
   modal: 'modal',
@@ -103,6 +118,7 @@ export const event_ids = {
              projectType: 'overview.projectType',
              learningMaterial: 'overview.learningMaterial',
              visibility: 'overview.visibility',
+             useTemplatePlots: 'overview.useTemplatePlots',
              projectOptions: {
                gee: 'overview.projectOptions.gee',
                extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
@@ -184,6 +200,7 @@ export const sub_ids = {
              projectType: 'overview.projectType',
              learningMaterial: 'overview.learningMaterial',
              visibility: 'overview.visibility',
+             useTemplatePlots: 'overview.useTemplatePlots',
              projectOptions: {
                gee: 'overview.projectOptions.gee',
                extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
@@ -265,6 +282,7 @@ regSub(sub_ids.overview.projectOptions.gee, sub_ids.overview.projectOptions.gee)
 regSub(sub_ids.overview.projectOptions.extraPlotColumns, sub_ids.overview.projectOptions.extraPlotColumns);
 regSub(sub_ids.overview.projectOptions.plotConfidence, sub_ids.overview.projectOptions.plotConfidence);
 regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.autoGeo);
+regSub(sub_ids.overview.useTemplatePlots, sub_ids.overview.useTemplatePlots);
 
 //imagery
 (regSub(sub_ids.imagery.imagery, sub_ids.imagery.imagery));
@@ -342,8 +360,85 @@ regEvent(event_ids.errors,
 
 // PROJECT WIZARD EVENTS
 
+regEvent(event_ids.validate,
+         ({ draftDb }) => {
+           console.log('validating');
+           const projectId = -1; //TODO
+           const plotDistribution = draftDb[sub_ids.plots.plotDistribution];
+           const originalProject = {plotDistribution: ''}; //TODO
+           const useTemplatePlots = draftDb[sub_ids.overview.useTemplatePlots];
+           const plotFileNeeded = !useTemplatePlots &&
+                 (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
+           const name = draftDb[sub_ids.overview.projectName];
+           const description= draftDb[sub_ids.overview.projectDescription];
+           const privacyLevel = draftDb[sub_ids.overview.visibility];
+           const imageryId = draftDb[sub_ids.imagery.imagery][0];
+           const aoiFeatures = draftDb[sub_ids.boundary.aoiFeatures];
+           const numPlots = draftDb[sub_ids.plots.numPlots];
+           const designSettings = draftDb[sub_ids.plots.designSettings];
+           const totalPlots = draftDb[sub_ids.plots.totalPlots];
+           const allowDrawnSamples = draftDb[sub_ids.samples.allowDrawnSamples];
+           const samplesPerPlot = draftDb[sub_ids.samples.samplesPerPlot];
+           const plotShape = draftDb[sub_ids.plots.plotShape];
+           const sampleDistribution = draftDb[sub_ids.samples.sampleDistribution];
+           const sampleFileName = draftDb[sub_ids.samples.sampleFileName];
+           const sampleResolution = draftDb[sub_ids.samples.sampleResolution];
+
+           const surveyQuestions = draftDb[sub_ids.questions.questions];
+
+           const successModal ={
+             id: 'success',
+             confirmText: 'Close',
+             onConfirm: ()=>{dispatch([event_ids.modal, null]);}};
+
+           const errorModal = {
+             id: 'error',
+             confirmText: "Go Back",
+             onConfirm: () => {
+               dispatch([event_ids.currentStep, 'review']);
+               dispatch([event_ids.modal, null]);
+             }
+           };
+
+
+
+           const {} = designSettings;
+           const form = {name ,
+	                 description,
+	                 privacyLevel,
+	                 imageryId,
+	                 aoiFeatures,
+	                 plotDistribution,
+	                 numPlots,
+
+                         //TODO: are we using these values for validation?
+	                 useTemplatePlots,
+                         //originalProject: TODO!!!
+                         
+	                 designSettings,
+	                 totalPlots,
+
+                         percent: null, //TODO: this is part of designSettings.qaqcAssignment
+                         percents: null, //TODO: designSettings.userAssignment.percents
+
+	                 plotFileNeeded ,
+	                 allowDrawnSamples  ,
+	                 samplesPerPlot,
+	                 plotShape ,
+	                 sampleDistribution ,
+	                 sampleFileName ,
+	                 sampleResolution  ,
+	                 surveyQuestions };
+           const errors = validateWizard(form);
+
+           console.log('validated', errors);
+           errors ? dispatch([event_ids.modal, errorModal]) : dispatch([event_ids.modal, successModal]);
+           
+         });
+
 regEvent(event_ids.modal,
-         ({ draftDb }, modal) => {
+         ({ draftDb }, modal, errors) => {
+           errors && dispatch([event_ids.validate]);
            draftDb[sub_ids.modal] = modal;
          });
 
@@ -397,6 +492,11 @@ regEvent(event_ids.overview.projectOptions.plotConfidence,
 regEvent(event_ids.overview.projectOptions.autoGeo,
          ({ draftDb }) => {
            draftDb[sub_ids.overview.projectOptions.autoGeo] = !draftDb[sub_ids.overview.projectOptions.autoGeo];
+         });
+
+regEvent(event_ids.overview.useTemplatePlots,
+         ({ draftDb }, useTemplatePlots)=>{
+           draftDb[sub_ids.overview.useTemplatePlots] = useTemplatePlots;
          });
 
 regEvent(event_ids.imagery.imagery,
