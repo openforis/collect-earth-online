@@ -15,8 +15,6 @@ import { SurveyQuestionsStep } from "./wizard/SurveyQuestionsStep";
 import { SampleStep } from "./wizard/SampleStep";
 import { SurveyQuestions } from "./components/SurveyQuestions";
 import SurveyRuleDesigner from "./survey/SurveyRulesDesigner";
-
-
 import ReviewStep from "./project/ReviewStep";
 
 import { 
@@ -24,9 +22,8 @@ import {
   sub_ids
 } from "./state/projectWizard";
 
-
-
 import "../css/project-wizard.css";
+
 
 const projectSteps = [
   {id: 'overview', label: 'Project Overview'},
@@ -148,7 +145,7 @@ function NewProjectModal () {
             >{projectSource === id
               ? <SvgIcon icon="radioChecked" size="1.2rem" />                            
               : <SvgIcon icon="radio" size="1.2rem"
-                                          className="radio-button-unchecked"/> }
+                         className="radio-button-unchecked"/> }
               {"    "}
               { title } </p>
             <label
@@ -182,15 +179,45 @@ function SuccessModal () {
 
 function ErrorModal () {
   const errors = useSubscription([sub_ids.errors]);
-  const errorTypes = {missingFields: ['Missing Fields', 'Some required fields are missing. Please complete all necessary fields before proceeding.']};
+  const [visible, setVisible] = useState([]);
+  function toggleVisible (errorType) {
+    visible.includes(errorType) ? setVisible(visible.filter((e) => e !== errorType)) : setVisible([... visible, errorType]);
+  };
+  function stepName (errorType) {
+    switch(errorType){
+    case 'overview' : return 'Overview Step';
+    case 'imagery' : return 'Imagery Step';
+    case 'plots' : return 'Plot Step';
+    case 'samples' : return 'Plot Samples';
+    case 'questions' : return 'Survey Questions';
+    default: return null;
+    }
+  }
   return  (
     <>
       <div className='alert-icon'>
         <SvgIcon  icon='alert' size='2rem'/>
       </div>
-      <br/>
-      <b >{errorTypes['missingFields'][0]}</b>      
-      <p >{errorTypes['missingFields'][1]}</p>
+      <b className='error-title'> Your Project contains the following errors:</b>
+      <br/>      
+      {errors.map(([errorType, errorMessages])=> {
+        return (<div className='error-card'>
+                  <div className='error-header' onClick={()=>toggleVisible(errorType)}>
+                    <b > {stepName(errorType)}</b>
+                    <SvgIcon icon={visible.includes(errorType) ? 'upCaretNew' : 'downCaretNew'}
+                             size='1.2rem'> </SvgIcon>
+                  </div>
+                  {visible.includes(errorType) &&
+                   <div >
+                     <br/>
+                     {errorMessages.map((message) => {
+                       return (
+                         <p > - {message}
+                         </p>);
+                     })}
+                   </div>}                  
+                </div>);
+      })}
     </>
   );
 };
@@ -249,7 +276,6 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   const currentStep = useSubscription([sub_ids.currentStep]);
   const modal = useSubscription([sub_ids.modal]);
 
-
   
   // -------------------
   // HANDLERS
@@ -266,13 +292,13 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   // ------------------
   
   useEffect(() => {
-    dispatch([event_ids.modal, {
+      dispatch([event_ids.modal, {
       title: 'Project Setup',
       closeText: '',
       confirmText: 'Get Started',
       onConfirm: handleNewProject,
       id: 'newProject',
-      children: (<NewProjectModal/>)}]); 
+      children: (<NewProjectModal/>)}]);  
     fetch(`/get-institution-imagery?institutionId=${institutionId}`)
       .then(res => res.json())
       .then(data => setAvailableImagery(data))
@@ -303,7 +329,6 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
     case 'review'     : return <ReviewStep imageryList={availableImagery}/>;
     default           : return <div style={{padding: "20px"}}>Step {currentStep} coming soon</div>;
     }};
-
   
   return (
     <div className="project-wizard-container">
@@ -330,7 +355,6 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
       </NavigationBar>
     </div>);
 };
-
 
 
 export function pageInit(params, session) {

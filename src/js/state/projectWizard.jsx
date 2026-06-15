@@ -356,13 +356,19 @@ regEvent(event_ids.currentStep,
 regEvent(event_ids.errors,
          ({ draftDb }, errors) => {
            draftDb[sub_ids.errors] = errors;
+           dispatch([event_ids.modal,  {
+             id: 'error',
+             confirmText: "Go Back",
+             onConfirm: () => {
+               dispatch([event_ids.currentStep, 'review']);
+               dispatch([event_ids.modal, null]);
+             }}]);
          });
 
 // PROJECT WIZARD EVENTS
 
 regEvent(event_ids.validate,
          ({ draftDb }) => {
-           console.log('validating');
            const projectId = -1; //TODO
            const plotDistribution = draftDb[sub_ids.plots.plotDistribution];
            const originalProject = {plotDistribution: ''}; //TODO
@@ -390,18 +396,7 @@ regEvent(event_ids.validate,
              id: 'success',
              confirmText: 'Close',
              onConfirm: ()=>{dispatch([event_ids.modal, null]);}};
-
-           const errorModal = {
-             id: 'error',
-             confirmText: "Go Back",
-             onConfirm: () => {
-               dispatch([event_ids.currentStep, 'review']);
-               dispatch([event_ids.modal, null]);
-             }
-           };
-
-
-
+           
            const {} = designSettings;
            const form = {name ,
 	                 description,
@@ -417,10 +412,6 @@ regEvent(event_ids.validate,
                          
 	                 designSettings,
 	                 totalPlots,
-
-                         percent: null, //TODO: this is part of designSettings.qaqcAssignment
-                         percents: null, //TODO: designSettings.userAssignment.percents
-
 	                 plotFileNeeded ,
 	                 allowDrawnSamples  ,
 	                 samplesPerPlot,
@@ -432,7 +423,8 @@ regEvent(event_ids.validate,
            const errors = validateWizard(form);
 
            console.log('validated', errors);
-           errors ? dispatch([event_ids.modal, errorModal]) : dispatch([event_ids.modal, successModal]);
+           
+           errors ? dispatch([event_ids.errors, errors]) : dispatch([event_ids.modal, successModal]);
            
          });
 

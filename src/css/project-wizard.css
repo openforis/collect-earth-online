@@ -677,3 +677,24 @@ text-underline-position: from-font;
     background: var(--Neutral-White, #FFF);
     color: var(--Primary-Standard-Green);
 }
+
+.error-card {
+    padding: 10px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--Error-Red, #D50000);
+    background: var(--Neutral-White, #FFF);
+}
+
+.error-title {
+    display: flex;
+    justify-content: center;
+}
+
+.error-header {
+    display: flex;
+    cursor: pointer;
+}
+
+.error-header svg {
+    margin-left: auto;
+}

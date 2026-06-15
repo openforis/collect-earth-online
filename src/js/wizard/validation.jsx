@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { lengthObject, someObject, filterObject } from "../utils/sequence";
 
 export function validateOverview ({name, description}) {
@@ -10,8 +11,8 @@ export function validateImagery ({requiresPublic, imageryId, privacyLevel}) {
   return(['imagery', [
     /*    requiresPublic &&
       `Projects with privacy level of ${privacyLevel} require at least one public imagery.`,*/
-    imageryId <= 0 && "Select a valid Basemap.",
-  ]]);
+    (imageryId <= 0) && "Select a valid Basemap.",
+  ].filter((e)=>e)]);
 }
 
 export function validatePlots({
@@ -25,59 +26,46 @@ export function validatePlots({
   plotLimit,
   users,
   userMethod,
-  //  percents,
+  designSettings: {userAssignment: {percents},
+                   qaqcAssignment: {percent}},
   qaqcMethod,
   smes,
   timesToReview,
-  numPlots,  
+  numPlots,
 }) {
   return (['plots',
-           [["random", "gridded"].includes(plotDistribution) &&
-            !aoiFeatures.length &&
+           [(["random", "gridded"].includes(plotDistribution) && !aoiFeatures.length) &&
             "Please select a valid boundary.",
-            plotDistribution === "random" &&
-            !numPlots &&
+            (plotDistribution === "random" && !numPlots) &&
             "A number of plots is required for random plot distribution.",
-            plotDistribution === "gridded" &&
-            !plotSpacing &&
+            (plotDistribution === "gridded" && !plotSpacing) &&
             "A plot spacing is required for gridded plot distribution.",
-            !["shp", "geojson"].includes(plotDistribution) && (!plotSize || plotSize === 0) && "A plot size is required.",
-            plotDistribution === "csv" &&
-            plotFileNeeded &&
-            !(plotFileName || "").includes(".csv") &&
+            (!["shp", "geojson"].includes(plotDistribution) && (!plotSize || plotSize === 0)) &&
+            "A plot size is required.",
+            (plotDistribution === "csv" && plotFileNeeded && !(plotFileName || "").includes(".csv")) &&
             "A plot CSV (.csv) file is required.",
-            plotDistribution === "shp" &&
-            plotFileNeeded &&
-            !(plotFileName || "").includes(".zip") &&
+            (plotDistribution === "shp" && plotFileNeeded && !(plotFileName || "").includes(".zip")) &&
             "A plot SHP (.zip) file is required.",
-            totalPlots > plotLimit &&
+            (totalPlots > plotLimit) &&
             "The plot size limit has been exceeded. Check the Plot Design section for detailed info.",
-            ["equal", "percent"].includes(userMethod) &&
-            users.length === 0 &&
+            ((["equal", "percent"].includes(userMethod) && users.length) === 0) &&
             "At least one user must be added to the plot assignment.",
-            userMethod === "percent" &&
-            percents.reduce((acc, p) => acc + p, 0) !== 100 &&
+            (userMethod === "percent" && percents.reduce((acc, p) => acc + p, 0) !== 100) &&
             "The assigned plot percentages must equal 100%.",
             userMethod === "percent" &&
-            percents.reduce((acc, p) => acc || p === 0, false) &&
+            (percents.reduce((acc, p) => acc || p === 0, false)) &&
             "All plot assignment percentages must be greater than 0%.",
-            ["overlap", "sme"].includes(qaqcMethod) &&
-            percent === 0 && //percent comes from plots.designsettings
+            (["overlap", "sme"].includes(qaqcMethod) && percent) === 0 && 
             "The assigned Quality Control percentage must be greater than 0%.",
-            ["random", "gridded"].includes(plotDistribution) &&
-            qaqcMethod === "sme" && smes.length === 0 && "At least one user must be added as an SME.",
-            qaqcMethod === "overlap" &&
-            users.length === 1 &&
+            (["random", "gridded"].includes(plotDistribution) && qaqcMethod === "sme" && smes.length === 0) &&
+            "At least one user must be added as an SME.",
+            (qaqcMethod === "overlap" && users.length === 1) &&
             "At least two assigned users are required for overlap mode.",
-            qaqcMethod === "overlap" && timesToReview < 2 && "# of Reviews must be at least 2.",
-            qaqcMethod === "overlap" &&
-            timesToReview > users.length &&
-            users.length > 1 &&
+            (qaqcMethod === "overlap" && timesToReview < 2) && "# of Reviews must be at least 2.",
+            (qaqcMethod === "overlap" && timesToReview > users.length && users.length > 1) &&
             "# of Reviews cannot be greater than the number of assigned users.",
-            userMethod !== "none" &&
-            qaqcMethod === "sme" &&
-            _.intersection(users, smes).length > 0 &&
-            "Users cannot be an Assigned User and an SME. Please remove the duplicate users.",]]);
+            (userMethod !== "none" && qaqcMethod === "sme" && _.intersection(users, smes).length > 0) &&
+            "Users cannot be an Assigned User and an SME. Please remove the duplicate users.",].filter((e)=>e)]);
 }
 
 function validateSamples({
@@ -114,7 +102,7 @@ function validateSamples({
      (samplesPerPlot > perPlotLimit || totalPlots * samplesPerPlot > sampleLimit) &&
      "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
      allowDrawnSamples && !Object.values(sampleGeometries).some((g) => g) &&
-     "At least one geometry type must be enabled.",]]);
+     "At least one geometry type must be enabled.",].filter((e)=>e)]);
 }
 
 export function validateQuestions({
@@ -128,7 +116,7 @@ export function validateQuestions({
     'questions',
     [lengthObject(surveyQuestions) === 0 && "A survey must include at least one question.",
      someObject(surveyQuestions, ([_id, sq]) => (lengthObject(sq.answers) === 0 || allAnswersHidden(sq.answers))) &&
-     "All survey questions must contain at least one (unhidden) answer.",]
+     "All survey questions must contain at least one (unhidden) answer.",].filter((e)=>e)
   ]);
 }
 
