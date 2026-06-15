@@ -151,57 +151,57 @@ export default class CreateProjectWizard extends React.Component {
   /// API Calls
 
   getDraftById = (projectDraftId) =>
-    fetch(`/get-project-draft-by-id?projectDraftId=${projectDraftId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (!data) {
-          this.setState ({modal: {alert: {alertType: "Get Draft Error",
-                                          onClose: ()=>{window.location = "/home";},
-                                          alertMessage: "No draft found with ID " + projectDraftId + "."}}});          
-        } else {
-          this.context.setProjectDetails(data);
-          this.context.setContextState({ originalProject: data });
-          return data.institution;
-        }
-      }).catch(() => {
+  fetch(`/get-project-draft-by-id?projectDraftId=${projectDraftId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      if (!data) {
         this.setState ({modal: {alert: {alertType: "Get Draft Error",
                                         onClose: ()=>{window.location = "/home";},
-                                        alertMessage: "No draft found with ID " + projectDraftId + "."}}});
-        
-      })
+                                        alertMessage: "No draft found with ID " + projectDraftId + "."}}});          
+      } else {
+        this.context.setProjectDetails(data);
+        this.context.setContextState({ originalProject: data });
+        return data.institution;
+      }
+    }).catch(() => {      
+      this.setState ({modal: {alert: {alertType: "Get Draft Error",
+                                      onClose: ()=>{window.location = "/home";},
+                                      alertMessage: "No draft found with ID " + projectDraftId + "."}}});
       
-    buildDraftObject = () => ({
-      imageryId: this.context.imageryId,
-      projectImageryList: this.context.projectImageryList,
-      aoiFeatures: this.context.aoiFeatures,
-      aoiFileName: this.context.aoiFileName,
-      description: this.context.description,
-      name: this.context.name,
-      type: this.context.type,
-      privacyLevel: this.context.privacyLevel,
-      projectOptions: this.context.projectOptions,
-      designSettings: this.context.designSettings,
-      numPlots: this.context.numPlots,
-      plotDistribution: this.context.plotDistribution,
-      plotShape: this.context.plotShape,
-      plotSize: this.context.plotSize,
-      plotSpacing: this.context.plotSpacing,
-      shufflePlots: this.context.shufflePlots,
-      sampleDistribution: this.context.sampleDistribution,
-      samplesPerPlot: this.context.samplesPerPlot,
-      sampleResolution: this.context.sampleResolution,
-      allowDrawnSamples: this.context.allowDrawnSamples,
-      surveyQuestions: this.context.surveyQuestions,
-      surveyRules: this.context.surveyRules,
-      plotFileName: this.context.plotFileName,
-      plotFileBase64: this.context.plotFileBase64,
-      sampleFileName: this.context.sampleFileName,
-      sampleFileBase64: this.context.sampleFileBase64
-    });
+    })
+  
+  buildDraftObject = () => ({
+    imageryId: this.context.imageryId,
+    projectImageryList: this.context.projectImageryList,
+    aoiFeatures: this.context.aoiFeatures,
+    aoiFileName: this.context.aoiFileName,
+    description: this.context.description,
+    name: this.context.name,
+    type: this.context.type,
+    privacyLevel: this.context.privacyLevel,
+    projectOptions: this.context.projectOptions,
+    designSettings: this.context.designSettings,
+    numPlots: this.context.numPlots,
+    plotDistribution: this.context.plotDistribution,
+    plotShape: this.context.plotShape,
+    plotSize: this.context.plotSize,
+    plotSpacing: this.context.plotSpacing,
+    shufflePlots: this.context.shufflePlots,
+    sampleDistribution: this.context.sampleDistribution,
+    samplesPerPlot: this.context.samplesPerPlot,
+    sampleResolution: this.context.sampleResolution,
+    allowDrawnSamples: this.context.allowDrawnSamples,
+    surveyQuestions: this.context.surveyQuestions,
+    surveyRules: this.context.surveyRules,
+    plotFileName: this.context.plotFileName,
+    plotFileBase64: this.context.plotFileBase64,
+    sampleFileName: this.context.sampleFileName,
+    sampleFileBase64: this.context.sampleFileBase64
+  });
 
-    saveDraft = () => {
-      if (this.context.projectDraftId > 0) {
-        this.context.processModal("Updating Draft", () =>
+  saveDraft = () => {
+    if (this.context.projectDraftId > 0) {
+      this.context.processModal("Updating Draft", () =>
         fetch("/update-project-draft", {
           method: "POST",
           headers: {
@@ -226,12 +226,12 @@ export default class CreateProjectWizard extends React.Component {
               return Promise.reject(data[1]);
             }
           })
-            .catch((message) => {
-              this.setState ({modal: {alert: {alertType: "Create Draft Error", alertMessage: "Error creating draft:\n" + message}}});
+          .catch((message) => {
+            this.setState ({modal: {alert: {alertType: "Create Draft Error", alertMessage: "Error creating draft:\n" + message}}});
           })
-        );
-      } else {
-        this.context.processModal("Creating Draft", () =>
+      );
+    } else {
+      this.context.processModal("Creating Draft", () =>
         fetch("/create-project-draft", {
           method: "POST",
           headers: {
@@ -255,12 +255,12 @@ export default class CreateProjectWizard extends React.Component {
               return Promise.reject(data[1]);
             }
           })
-            .catch((message) => {
-              this.setState ({modal: {alert: {alertType: "Draft Creation Error", alertMessage: "Error creating draft:\n" + message}}});
+          .catch((message) => {
+            this.setState ({modal: {alert: {alertType: "Draft Creation Error", alertMessage: "Error creating draft:\n" + message}}});
           })
-        );
-      }
+      );
     }
+  }
 
   updateSteps = (steps) => this.setState({ steps: steps });
   updateProjectType = (projectType) => {
@@ -274,18 +274,18 @@ export default class CreateProjectWizard extends React.Component {
   };
 
   getTemplateProjects = () =>
-    fetch(`/get-template-projects?projectType=${this.state.type}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) =>
-        this.setState({
-          templateProjectList:
-          data && data.length > 0 ? data : [{ id: -1, name: "No template projects found" }],
-        })
-      )
-      .catch((error) => {
-        this.setState({ templateProjectList: [{ id: -1, name: "Failed to load" }] });
-        Promise.reject(error);
-      });
+  fetch(`/get-template-projects?projectType=${this.state.type}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) =>
+      this.setState({
+        templateProjectList:
+        data && data.length > 0 ? data : [{ id: -1, name: "No template projects found" }],
+      })
+    )
+    .catch((error) => {
+      this.setState({ templateProjectList: [{ id: -1, name: "Failed to load" }] });
+      Promise.reject(error);
+    });
 
   getInstitutionUserList = () => {
     const { institutionId } = this.context;
@@ -297,57 +297,57 @@ export default class CreateProjectWizard extends React.Component {
   };
 
   getTemplateProject = (projectId) =>
-    Promise.all([
-      this.getTemplateById(projectId),
-      this.getProjectPlots(projectId),
-      this.getProjectImagery(projectId),
-    ])
-      .then(() => this.context.setProjectDetails({ templateProjectId: projectId }))
-      .catch((error) => {
-        this.setState({ templatePlots: [], templateProject: {} });
-        this.context.setProjectDetails({ templateProjectId: -1 });
-        console.error(error);
-        this.setState ({modal: {alert: {alertType: "Project Template Error", alertMessage: "Error getting complete template info. See console for details."}}});
-      });
+  Promise.all([
+    this.getTemplateById(projectId),
+    this.getProjectPlots(projectId),
+    this.getProjectImagery(projectId),
+  ])
+    .then(() => this.context.setProjectDetails({ templateProjectId: projectId }))
+    .catch((error) => {
+      this.setState({ templatePlots: [], templateProject: {} });
+      this.context.setProjectDetails({ templateProjectId: -1 });
+      console.error(error);
+      this.setState ({modal: {alert: {alertType: "Project Template Error", alertMessage: "Error getting complete template info. See console for details."}}});
+    });
 
   getTemplateById = (projectId) =>
-    fetch(`/get-template-by-id?projectId=${projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.setState({ templateProject: data });
-        const clearedTemplateAssignments = this.clearTemplateUserAssignments(data);
-        const institutionImageryIds = this.context.institutionImagery.map((i) => i.id);
-        this.context.setProjectDetails(
-          {
-            ...clearedTemplateAssignments,
-            templateProjectId: projectId,
-            imageryId: institutionImageryIds.includes(data.imageryId)
-              ? data.imageryId
-              : institutionImageryIds[0],
-            useTemplatePlots: true,
-            useTemplateWidgets: true,
-          },
-          this.checkAllSteps
-        );
-      });
+  fetch(`/get-template-by-id?projectId=${projectId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      this.setState({ templateProject: data });
+      const clearedTemplateAssignments = this.clearTemplateUserAssignments(data);
+      const institutionImageryIds = this.context.institutionImagery.map((i) => i.id);
+      this.context.setProjectDetails(
+        {
+          ...clearedTemplateAssignments,
+          templateProjectId: projectId,
+          imageryId: institutionImageryIds.includes(data.imageryId)
+            ? data.imageryId
+            : institutionImageryIds[0],
+          useTemplatePlots: true,
+          useTemplateWidgets: true,
+        },
+        this.checkAllSteps
+      );
+    });
 
   getProjectPlots = (projectId) =>
-    fetch(`/get-project-plots?projectId=${projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.setState({ templatePlots: data });
-        this.context.setProjectDetails({ plots: data });
-      });
+  fetch(`/get-project-plots?projectId=${projectId}`)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      this.setState({ templatePlots: data });
+      this.context.setProjectDetails({ plots: data });
+    });
 
   // TODO: just return with the project info because we only need the integer ID
   getProjectImagery = (projectId) =>
-    fetch("/get-project-imagery?projectId=" + projectId)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.context.setProjectDetails({
-          projectImageryList: data.map((i) => i.id)
-        });
+  fetch("/get-project-imagery?projectId=" + projectId)
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {
+      this.context.setProjectDetails({
+        projectImageryList: data.map((i) => i.id)
       });
+    });
 
   /// Validations
 
@@ -356,8 +356,8 @@ export default class CreateProjectWizard extends React.Component {
       return this.context.numPlots * this.context.aoiFeatures.length;
     } else if (
       this.context.plotDistribution === "gridded" &&
-      this.context.plotSize &&
-      this.context.plotSpacing
+        this.context.plotSize &&
+        this.context.plotSpacing
     ) {
       return this.context.aoiFeatures.reduce((acc, cur) => {
         const boundaryExtent = mercator.parseGeoJson(cur, true).getExtent();
@@ -380,13 +380,13 @@ export default class CreateProjectWizard extends React.Component {
       return this.context.samplesPerPlot;
     } else if (
       this.context.sampleDistribution === "gridded" &&
-      this.context.plotSize &&
-      this.context.sampleResolution
+        this.context.plotSize &&
+        this.context.sampleResolution
     ) {
       const steps =
-        Math.floor(
-          (this.context.plotSize - this.context.plotSize / 12.5) / this.context.sampleResolution + 1
-        ) ** 2;
+            Math.floor(
+              (this.context.plotSize - this.context.plotSize / 12.5) / this.context.sampleResolution + 1
+            ) ** 2;
       return this.context.plotShape === "circle" ? Math.floor(steps * (3.14 / 4)) : steps;
     } else if (this.context.sampleDistribution === "center") {
       return 1;
@@ -402,10 +402,10 @@ export default class CreateProjectWizard extends React.Component {
   validateImagery = () => {
     const { privacyLevel, imageryId, institutionImagery, projectImageryList } = this.context;
     const requiresPublic =
-      ["public", "users"].includes(privacyLevel) &&
-      [...projectImageryList, imageryId].every((id) =>
-        institutionImagery.some((il) => il.id === id && il.visibility === "private")
-      );
+          ["public", "users"].includes(privacyLevel) &&
+          [...projectImageryList, imageryId].every((id) =>
+            institutionImagery.some((il) => il.id === id && il.visibility === "private")
+          );
     return getErrors({...this.context,
                       requiresPublic: requiresPublic});
   };
@@ -420,7 +420,7 @@ export default class CreateProjectWizard extends React.Component {
     
     const totalPlots = this.getTotalPlots();
     const plotFileNeeded =
-      !useTemplatePlots &&
+          !useTemplatePlots &&
       (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
     return getErrors({...this.context,
                       totalPlots: totalPlots,
@@ -438,10 +438,10 @@ export default class CreateProjectWizard extends React.Component {
     const totalPlots = this.getTotalPlots();
     const samplesPerPlot = this.getSamplesPerPlot();
     const sampleFileNeeded =
-      !useTemplatePlots &&
+          !useTemplatePlots &&
       (projectId === -1 ||
-        sampleDistribution !== originalProject.sampleDistribution ||
-        plotFileName);
+       sampleDistribution !== originalProject.sampleDistribution ||
+       plotFileName);
     return getErrors({...this.context,
                       totalPlots: totalPlots,
                       samplesPerPlot: samplesPerPlot,
@@ -464,14 +464,14 @@ export default class CreateProjectWizard extends React.Component {
     return projectId === -1 || originalProject.availability === "unpublished"
       ? this.state.steps
       : filterObject(this.state.steps, ([key, _val]) =>
-          ["overview", "imagery", "questions"].includes(key)
-        );
+        ["overview", "imagery", "questions"].includes(key)
+      );
   };
 
   checkAllSteps = () => {
     const validSteps = Object.entries(this.state.steps)
-      .filter(([_key, val]) => val.validate().length === 0)
-      .map(([key, _val]) => key);
+          .filter(([_key, val]) => val.validate().length === 0)
+          .map(([key, _val]) => key);
     this.setState({ complete: new Set(validSteps) });
   };
 
@@ -479,9 +479,9 @@ export default class CreateProjectWizard extends React.Component {
     const errorList = this.state.steps[this.context.wizardStep].validate();
     this.setState({
       complete:
-        errorList.length > 0
-          ? removeFromSet(this.state.complete, this.context.wizardStep)
-          : this.state.complete.add(this.context.wizardStep),
+      errorList.length > 0
+        ? removeFromSet(this.state.complete, this.context.wizardStep)
+        : this.state.complete.add(this.context.wizardStep),
     });
     if (alertUser && errorList.length > 0) {
       this.setState ({modal: {alert: {alertType: "Change Step Error", alertMessage: errorList.join("\n")}}});
@@ -559,14 +559,14 @@ export default class CreateProjectWizard extends React.Component {
 
 
   clearTemplateUserAssignments = (templateProject) => 
-    this.context.institutionId != templateProject.templateInstitutionId ?
-      {...templateProject,
-       designSettings: {...templateProject.designSettings,
-                        userAssignment: {
-                            userMethod: null,
-                            users: [],
-                            percents: []}}}
-      : templateProject;
+  this.context.institutionId != templateProject.templateInstitutionId ?
+    {...templateProject,
+     designSettings: {...templateProject.designSettings,
+                      userAssignment: {
+                        userMethod: null,
+                        users: [],
+                        percents: []}}}
+  : templateProject;
 
 
   /// Render Functions
@@ -624,7 +624,7 @@ export default class CreateProjectWizard extends React.Component {
   render() {
     const steps = this.state.steps;
     const { description, StepComponent, helpDescription, StepHelpComponent } =
-      steps[this.context.wizardStep];
+          steps[this.context.wizardStep];
     const isLast = last(Object.keys(steps)) === this.context.wizardStep;
     return (
       <div className="d-flex pb-5 full-height align-items-center flex-column" id="wizard">

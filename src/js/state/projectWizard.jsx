@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { initAppDb , regEvent , regEffect , dispatch , regSub , current } from '@flexsurfer/reflex';
 
-import {validateWizard} from '../wizard/validation';
+import { validateWizard } from '../wizard/validation';
 
 export const projectSourceAtom = atom(null);
 export const currentStepAtom = atom("overview");
@@ -109,10 +109,12 @@ initAppDb(projectWizardDb);
 
 export const event_ids = {
   validate: 'validate',
+  submitForm: 'submitForm',
   errors: 'errors',
   currentStep: 'currentStep',
   modal: 'modal',
   projectSource: 'projectSource',
+  successResponse: 'successReponse',
   overview: {projectName: 'overview.projectName',
              projectDescription: 'overview.projectDescription',
              projectType: 'overview.projectType',
@@ -195,6 +197,7 @@ export const sub_ids = {
   currentStep: 'currentStep',
   modal: 'modal',
   projectSource: 'projectSource',
+  successResponse: 'successReponse',
   overview: {projectName: 'overview.projectName',
              projectDescription: 'overview.projectDescription',
              projectType: 'overview.projectType',
@@ -272,6 +275,7 @@ regSub(sub_ids.currentStep, sub_ids.currentStep);
 regSub(sub_ids.modal, sub_ids.modal);
 regSub(sub_ids.projectSource, sub_ids.projectSource);
 regSub(sub_ids.errors, sub_ids.errors);
+regSub(sub_ids.successResponse, sub_ids.successResponse);
 
 regSub(sub_ids.overview.projectType, sub_ids.overview.projectType);
 regSub(sub_ids.overview.projectName, sub_ids.overview.projectName);
@@ -370,33 +374,27 @@ regEvent(event_ids.errors,
 regEvent(event_ids.validate,
          ({ draftDb }) => {
            const projectId = -1; //TODO
-           const plotDistribution = draftDb[sub_ids.plots.plotDistribution];
+           const plotDistribution = current(draftDb[sub_ids.plots.plotDistribution]);
            const originalProject = {plotDistribution: ''}; //TODO
-           const useTemplatePlots = draftDb[sub_ids.overview.useTemplatePlots];
+           const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
            const plotFileNeeded = !useTemplatePlots &&
                  (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
-           const name = draftDb[sub_ids.overview.projectName];
-           const description= draftDb[sub_ids.overview.projectDescription];
-           const privacyLevel = draftDb[sub_ids.overview.visibility];
-           const imageryId = draftDb[sub_ids.imagery.imagery][0];
-           const aoiFeatures = draftDb[sub_ids.boundary.aoiFeatures];
-           const numPlots = draftDb[sub_ids.plots.numPlots];
-           const designSettings = draftDb[sub_ids.plots.designSettings];
-           const totalPlots = draftDb[sub_ids.plots.totalPlots];
-           const allowDrawnSamples = draftDb[sub_ids.samples.allowDrawnSamples];
-           const samplesPerPlot = draftDb[sub_ids.samples.samplesPerPlot];
-           const plotShape = draftDb[sub_ids.plots.plotShape];
-           const sampleDistribution = draftDb[sub_ids.samples.sampleDistribution];
-           const sampleFileName = draftDb[sub_ids.samples.sampleFileName];
-           const sampleResolution = draftDb[sub_ids.samples.sampleResolution];
-
-           const surveyQuestions = draftDb[sub_ids.questions.questions];
-
-           const successModal ={
-             id: 'success',
-             confirmText: 'Close',
-             onConfirm: ()=>{dispatch([event_ids.modal, null]);}};
-           
+           const name = current(draftDb[sub_ids.overview.projectName]);
+           const description= current(draftDb[sub_ids.overview.projectDescription]);
+           const privacyLevel = current(draftDb[sub_ids.overview.visibility]);
+           const imageryId = current(draftDb[sub_ids.imagery.imagery])[0];
+           const aoiFeatures = current(draftDb[sub_ids.boundary.aoiFeatures]);
+           const numPlots = current(draftDb[sub_ids.plots.numPlots]);
+           const designSettings = current(draftDb[sub_ids.plots.designSettings]);
+           const totalPlots = current(draftDb[sub_ids.plots.totalPlots]);
+           const allowDrawnSamples = current(draftDb[sub_ids.samples.allowDrawnSamples]);
+           const samplesPerPlot = current(draftDb[sub_ids.samples.samplesPerPlot]);
+           const plotShape = current(draftDb[sub_ids.plots.plotShape]);
+           const sampleDistribution = current(draftDb[sub_ids.samples.sampleDistribution]);
+           const sampleFileName = current(draftDb[sub_ids.samples.sampleFileName]);
+           const sampleResolution = current(draftDb[sub_ids.samples.sampleResolution]);
+           const surveyQuestions = current(draftDb[sub_ids.questions.questions]);
+           const plotSize = current(draftDb[sub_ids.plots.plotSize]);
            const {} = designSettings;
            const form = {name ,
 	                 description,
@@ -412,6 +410,7 @@ regEvent(event_ids.validate,
                          
 	                 designSettings,
 	                 totalPlots,
+                         plotSize,
 	                 plotFileNeeded ,
 	                 allowDrawnSamples  ,
 	                 samplesPerPlot,
@@ -421,11 +420,111 @@ regEvent(event_ids.validate,
 	                 sampleResolution  ,
 	                 surveyQuestions };
            const errors = validateWizard(form);
+           console.log('done validating', errors, (errors ? 'dispatching errors' : 'submit form'));
+           errors ? dispatch([event_ids.errors, errors]) : dispatch([event_ids.submitForm, form]);
+         });
 
-           console.log('validated', errors);
-           
-           errors ? dispatch([event_ids.errors, errors]) : dispatch([event_ids.modal, successModal]);
-           
+regEvent(event_ids.submitForm,
+         ({ draftDb }, form) => {
+           function createProjectDraft ({
+             institutionId,
+             templateProjectId,
+             useTemplatePlots,
+             useTemplateWidgets,
+             form}) {
+             fetch("/create-project-draft", {
+               method: "POST",
+               headers: {
+                 Accept: "application/json",
+                 "Content-Type": "application/json; charset=utf-8",
+               },
+               body: JSON.stringify({
+                 institutionId ,
+                 projectTemplate: templateProjectId,
+                 useTemplatePlots ,
+                 useTemplateWidgets,
+                 form,
+               }),
+             })
+               .then((response) => Promise.all([response.ok, response.json()]))
+               .then((data) => {
+                 console.log('create project draft request result', data);
+                 if (data[0] && Number.isInteger(data[1].projectDraftId)) {
+                   dispatch([event_ids.successReponse, ["Draft saved", data]]);
+                   return Promise.resolve();                   
+                 } else {
+                   return Promise.reject(data[1]);
+                 }
+               })
+               .catch((message) => {
+                 dispatch([event_ids.errors ['server', message]]);
+               });
+           }
+
+           function saveProjectDraft ({
+             projectDraftId,
+             institutionId,
+             templateProjectId,
+             useTemplatePlots,
+             useTemplateWidgets,
+             form}) {
+             console.log('saving project draft...');
+             fetch("/update-project-draft", {
+               method: "POST",
+               headers: {
+                 Accept: "application/json",
+                 "Content-Type": "application/json; charset=utf-8",
+               },
+               body: JSON.stringify({
+                 projectDraftId,
+                 institutionId,
+                 projectTemplate: templateProjectId,
+                 useTemplatePlots ,
+                 useTemplateWidgets ,
+                 form,
+               }),
+             })
+               .then((response) => Promise.all([response.ok, response.json()]))
+               .then((data) => {
+                 dispatch([event_ids.successResponse, ['Project Saved', data]]);
+                 return Promise.resolve();
+               })
+               .catch((message) => {                 
+                 dispatch([event_ids.errors ['server', message]]);
+               });
+           }
+
+           function getProjectDraftById(projectDraftId) {
+             fetch(`/get-project-draft-by-id?projectDraftId=${projectDraftId}`)
+               .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+               .then((data) => {
+                 if (!data) {
+                   dispatch([event_ids.errors, ['server', "No draft found with ID " + projectDraftId + "."]]);
+                   return Promise.resolve();
+                 } else {
+                   dispatch([event_ids.successResponse, ['success', data]]);
+                   return Promise.resolve();
+                 }
+               }).catch(() => {
+                 dispatch([event_ids.errors ['server', "No draft found with ID " + projectDraftId + "."]]);
+               });
+           }
+
+           console.log('attempting to submit form');
+           function successModal (message) {
+             return {
+               id: 'success',
+               message,
+               confirmText: 'Close',
+               onConfirm: ()=>{dispatch([event_ids.modal, null]);
+                              }};
+           };
+           form.projectId > 0 ? saveProjectDraft(form) : createProjectDraft(form);                      
+         });
+
+regEvent(event_ids.successResponse,
+         ({ draftDb }, response) => {
+           draftDb[sub_ids.successResponse] = response;
          });
 
 regEvent(event_ids.modal,
@@ -586,12 +685,9 @@ regEvent(event_ids.samples.allowDrawnSamples, ({ draftDb }, allow) => {
   draftDb[sub_ids.samples.allowDrawnSamples] = allow;
 });
 
-
-
 regEvent(event_ids.questions.addQuestion,
          ({ draftDb }, questionToAdd ) => {
            const prev = current(draftDb[sub_ids.questions.questions]);
-           console.log(sub_ids.questions.questions ,prev);
            draftDb[sub_ids.questions.questions].push(questionToAdd);
          });
 

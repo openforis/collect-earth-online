@@ -194,7 +194,9 @@ function ErrorModal () {
     }
   }
   return  (
-    <>
+    <div style={{display: 'flex',
+                 flexDirection: 'column',
+                 gap: '1rem'}}>
       <div className='alert-icon'>
         <SvgIcon  icon='alert' size='2rem'/>
       </div>
@@ -208,7 +210,7 @@ function ErrorModal () {
                              size='1.2rem'> </SvgIcon>
                   </div>
                   {visible.includes(errorType) &&
-                   <div >
+                   <div style={{gap: '1rem'}}>
                      <br/>
                      {errorMessages.map((message) => {
                        return (
@@ -218,7 +220,7 @@ function ErrorModal () {
                    </div>}                  
                 </div>);
       })}
-    </>
+    </div>
   );
 };
 

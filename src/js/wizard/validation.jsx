@@ -4,7 +4,7 @@ import { lengthObject, someObject, filterObject } from "../utils/sequence";
 export function validateOverview ({name, description}) {
   return(['overview', [
     (name === "" || description === "") && "A project must contain a name and description.",
-  ]]);
+  ].filter((e)=>e)]);
 }
 
 export function validateImagery ({requiresPublic, imageryId, privacyLevel}) {
@@ -139,3 +139,4 @@ export const validateWizard = (form) => {
   
   return (errors.length ? errors : false);
 };
+
