@@ -358,7 +358,7 @@ mercator.createSource = (
       attributions: attribution,
     });
   } else if (type === "xyz") {
-    return new XYZ({ url: sourceConfig.url });
+    return new XYZ({ url: sourceConfig.url, attributions: attribution });
   } else if (type === "Sentinel2" || type === "Sentinel1") {
     const { bandCombination } = sourceConfig;
     const getBands = (bc) => {
