@@ -411,7 +411,7 @@ function MatchingSumsForm () {
 }
 
 function  IncompatibleAnswersForm () {
-  function  checkPair (q1, a1, q2, a2) {return (q1 === q2 && a1 === a2);};
+  function checkPair (q1, a1, q2, a2) {return (q1 === q2 && a1 === a2);};
   function checkEquivalent (q1, a1, q2, a2, q3, a3, q4, a4) 
   {return(
     (this.checkPair(q1, a1, q3, a3) && this.checkPair(q2, a2, q4, a4)) ||
@@ -420,13 +420,13 @@ function  IncompatibleAnswersForm () {
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
-  function setProjectDetails  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
+  function setProjectDetails (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
   const questionId1 = useSubscription([sub_ids.rules.newRule.questionId1]);
   function setQuestionId1 (qid) {dispatch([event_ids.rules.newRule.questionId1, qid]);}
 
   const questionId2 = useSubscription([sub_ids.rules.newRule.questionId2]);
-  function setQuestionId2 (qid) {dispatch([event_ids.rules.newRule.qustionId2, qid]);}
+  function setQuestionId2 (qid) {dispatch([event_ids.rules.newRule.questionId2, qid]);}
 
   const answerId1 = useSubscription([sub_ids.rules.newRule.answerId1]);
   function setAnswerId1 (qid) {dispatch([event_ids.rules.newRule.answerId1, qid]);}
