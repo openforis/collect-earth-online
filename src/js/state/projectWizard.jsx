@@ -32,6 +32,12 @@ const projectWizardDb = {
   currentStep: null,
   modal: null,
   projectSource: null,
+  templateProjectId: -1,
+  projectId: -1,
+  projectDraftId: -1,
+  useTemplatePlots: false,
+  useTemplateWidgets: false,
+  
   // overview
   'overview.projectName': '',
   'overview.projectDescription': '',
@@ -194,10 +200,15 @@ export const event_ids = {
 
 export const sub_ids = {
   errors: 'errors',
+  projectId : 'projectId',
+  projectDraftId: 'projectDraftId',
   currentStep: 'currentStep',
   modal: 'modal',
   projectSource: 'projectSource',
   successResponse: 'successReponse',
+  templateProjectId: 'templateProjectId',
+  useTemplatePlots: 'useTemplatePlots',
+  useTemplateWidgets: 'useTemplateWidgets',
   overview: {projectName: 'overview.projectName',
              projectDescription: 'overview.projectDescription',
              projectType: 'overview.projectType',
@@ -276,6 +287,10 @@ regSub(sub_ids.modal, sub_ids.modal);
 regSub(sub_ids.projectSource, sub_ids.projectSource);
 regSub(sub_ids.errors, sub_ids.errors);
 regSub(sub_ids.successResponse, sub_ids.successResponse);
+
+regSub(sub_ids.templateProjectId, sub_ids.templateProjectId);
+regSub(sub_ids.useTemplatePlots, sub_ids.useTemplatePlots);
+regSub(sub_ids.useTemplateWidgets, sub_ids.useTemplateWidgets);
 
 regSub(sub_ids.overview.projectType, sub_ids.overview.projectType);
 regSub(sub_ids.overview.projectName, sub_ids.overview.projectName);
@@ -359,20 +374,18 @@ regEvent(event_ids.currentStep,
 
 regEvent(event_ids.errors,
          ({ draftDb }, errors) => {
+           console.log('there are errors', errors);
            draftDb[sub_ids.errors] = errors;
-           dispatch([event_ids.modal,  {
-             id: 'error',
-             confirmText: "Go Back",
-             onConfirm: () => {
-               dispatch([event_ids.currentStep, 'review']);
-               dispatch([event_ids.modal, null]);
-             }}]);
+           
+           
          });
 
 // PROJECT WIZARD EVENTS
 
 regEvent(event_ids.validate,
-         ({ draftDb }) => {
+         ({ draftDb }, 
+          institutionId,
+         ) => {           
            const projectId = -1; //TODO
            const plotDistribution = current(draftDb[sub_ids.plots.plotDistribution]);
            const originalProject = {plotDistribution: ''}; //TODO
@@ -395,7 +408,17 @@ regEvent(event_ids.validate,
            const sampleResolution = current(draftDb[sub_ids.samples.sampleResolution]);
            const surveyQuestions = current(draftDb[sub_ids.questions.questions]);
            const plotSize = current(draftDb[sub_ids.plots.plotSize]);
-           const {} = designSettings;
+           const projectImageryList = current(draftDb[sub_ids.imagery.imageryList]);
+           const aoiFileName = current(draftDb[sub_ids.boundary.aoiFileName]);
+           const type = current(draftDb[sub_ids.overview.projectType]);
+           const projectOptions = current(draftDb[sub_ids.overview.projectOptions]);
+           const plotSpacing = current(draftDb[sub_ids.plots.plotSpacing]);
+           const shufflePlots = current(draftDb[sub_ids.plots.shufflePlots]);
+           const surveyRules = current(draftDb[sub_ids.rules.rules]);
+           const plotFileName = current(draftDb[sub_ids.plots.plotFileName]);
+           const plotFileBase64 = current(draftDb[sub_ids.plots.plotFileBase64]);
+           const sampleFileBase64 = current(draftDb[sub_ids.samples.sampleFileBase64]);
+
            const form = {name ,
 	                 description,
 	                 privacyLevel,
@@ -404,6 +427,17 @@ regEvent(event_ids.validate,
 	                 plotDistribution,
 	                 numPlots,
 
+                         projectImageryList,
+                         aoiFileName,
+                         type,
+                         projectOptions,
+                         plotSpacing,
+                         shufflePlots,
+                         surveyRules,
+                         plotFileName,
+                         plotFileBase64,
+                         sampleFileBase64,
+                         
                          //TODO: are we using these values for validation?
 	                 useTemplatePlots,
                          //originalProject: TODO!!!
@@ -421,17 +455,21 @@ regEvent(event_ids.validate,
 	                 surveyQuestions };
            const errors = validateWizard(form);
            console.log('done validating', errors, (errors ? 'dispatching errors' : 'submit form'));
-           errors ? dispatch([event_ids.errors, errors]) : dispatch([event_ids.submitForm, form]);
+           errors ? dispatch([event_ids.errors, errors]) : dispatch([event_ids.submitForm, form, institutionId]);
          });
 
 regEvent(event_ids.submitForm,
-         ({ draftDb }, form) => {
-           function createProjectDraft ({
+         ({ draftDb }, form, institutionId) => {
+           const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
+           const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
+           const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
+           const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
+           function createProjectDraft (
              institutionId,
              templateProjectId,
              useTemplatePlots,
              useTemplateWidgets,
-             form}) {
+             form) {
              fetch("/create-project-draft", {
                method: "POST",
                headers: {
@@ -457,17 +495,18 @@ regEvent(event_ids.submitForm,
                  }
                })
                .catch((message) => {
+                 console.log('create project request errors', message);
                  dispatch([event_ids.errors ['server', message]]);
                });
            }
 
-           function saveProjectDraft ({
+           function saveProjectDraft (
              projectDraftId,
              institutionId,
              templateProjectId,
              useTemplatePlots,
              useTemplateWidgets,
-             form}) {
+             form) {
              console.log('saving project draft...');
              fetch("/update-project-draft", {
                method: "POST",
@@ -489,7 +528,16 @@ regEvent(event_ids.submitForm,
                  dispatch([event_ids.successResponse, ['Project Saved', data]]);
                  return Promise.resolve();
                })
-               .catch((message) => {                 
+               .catch((message) => {
+                 console.log('create project request errors', message);
+                 draftDb[sub_ids.modal] = {
+                   id: 'error',
+                   confirmText: "Go Back",
+                   onConfirm: () => {
+                     dispatch([event_ids.currentStep, 'review']);
+                     dispatch([event_ids.modal, null]);
+                   }};
+                
                  dispatch([event_ids.errors ['server', message]]);
                });
            }
@@ -510,7 +558,24 @@ regEvent(event_ids.submitForm,
                });
            }
 
-           console.log('attempting to submit form');
+           console.log('attempting to submit form');           
+           form.projectId > 0
+             ? saveProjectDraft(projectDraftId,
+                                institutionId,
+                                templateProjectId,
+                                useTemplatePlots,
+                                useTemplateWidgets,
+                                form)
+             : createProjectDraft(institutionId,
+                                  templateProjectId,
+                                  useTemplatePlots,
+                                  useTemplateWidgets,
+                                  form);
+         });
+
+regEvent(event_ids.successResponse,
+         ({ draftDb }, response) => {
+           draftDb[sub_ids.successResponse] = response;
            function successModal (message) {
              return {
                id: 'success',
@@ -519,12 +584,7 @@ regEvent(event_ids.submitForm,
                onConfirm: ()=>{dispatch([event_ids.modal, null]);
                               }};
            };
-           form.projectId > 0 ? saveProjectDraft(form) : createProjectDraft(form);                      
-         });
-
-regEvent(event_ids.successResponse,
-         ({ draftDb }, response) => {
-           draftDb[sub_ids.successResponse] = response;
+           draftDb[sub_ids.modal] = successModal(response);
          });
 
 regEvent(event_ids.modal,

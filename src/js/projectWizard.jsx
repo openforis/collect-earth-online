@@ -15,7 +15,7 @@ import { SurveyQuestionsStep } from "./wizard/SurveyQuestionsStep";
 import { SampleStep } from "./wizard/SampleStep";
 import { SurveyQuestions } from "./components/SurveyQuestions";
 import SurveyRuleDesigner from "./survey/SurveyRulesDesigner";
-import ReviewStep from "./project/ReviewStep";
+import ReviewStep from "./wizard/ReviewStep";
 
 import { 
   event_ids,

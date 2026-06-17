@@ -139,4 +139,3 @@ export const validateWizard = (form) => {
   
   return (errors.length ? errors : false);
 };
-

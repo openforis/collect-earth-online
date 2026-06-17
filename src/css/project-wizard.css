@@ -39,7 +39,7 @@
 
 /* 3. STEP BODY - Eliminating min-height to provide clean percentage targets */
 .wizard-step-body {
-    margin-top: 7rem;
+    margin-top: 10rem;
     flex: 1;
     width: 100%;
     background-color: var(--Primary-Light-Green);
