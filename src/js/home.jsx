@@ -76,18 +76,18 @@ export const InstitutionSidebar = ({
     filterType,
   ]);
   
-  function sortedInstitutions (institutions, sortType) {    
+  function sortedInstitutions (institutions, sortType) {
     switch (sortType) {
-    case 'alphabetical' : return institutions.sort((a, b) => {
-      return (
-        (a.name.toUpperCase() < b.name.topUpperCase()) ? -1 :
-          (a.name.toUpperCase() > b.name.topUpperCase()) ? 1 : 0);
-    });
-    case 'projects' : return institutions.sort((a, b) => {
-      return (
-        (projectsByInstitution[a.id] < projectsByInstitution[b.id]) ? -1 :
-          (projectsByInstitution[a.id] > projectsByInstitution[b.id]) ? 1 : 0);
-    });
+    case 'alphabetical' : return institutions.sort((a, b) =>
+      (a.name.toUpperCase() < b.name.toUpperCase()) ? -1 :
+        (a.name.toUpperCase() > b.name.toUpperCase()) ? 1 : 0 );
+    case 'projects' : return institutions.sort((a, b) =>{
+      let thisInstitutionProjects = projectsByInstitution[a.id] || [];
+       let thatInstitutionProjects = projectsByInstitution[b.id] || [];
+        return ( 
+          (thisInstitutionProjects.length < thatInstitutionProjects.length) ? -1 :
+            (thisInstitutionProjects.length > thatInstitutionProjects.length) ? 1 : 0);
+    });    
     default : return institutions;
     }};
   
