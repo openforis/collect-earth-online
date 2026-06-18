@@ -13,6 +13,7 @@ export const ImageryStep = ({ imageryList = [] }) => {
   // Sets up default selected imagery.
   useEffect(() => {
     setMapLibrary(imageryList);
+    /*
     if (imageryList && imageryList.length > 0 && selectedIds.length === 0) {
       const platformItems = imageryList.filter(img => img.visibility === 'platform');
           if (platformItems.length > 0) {
@@ -23,7 +24,8 @@ export const ImageryStep = ({ imageryList = [] }) => {
         // Fallback if no platform imagery exists
         setSelectedIds([Number(imageryList[0].id)]);
       }
-    }
+      }
+      */
   }, [imageryList, setMapLibrary]);
 
   useEffect(() => {
@@ -97,12 +99,30 @@ export const ImageryStep = ({ imageryList = [] }) => {
                 setSelectedIds(prev => [val, ...prev.filter(i => i !== val)]);
               }}
             >
-              <option value="" disabled>Select a base map</option>
+              <option value="" selected disabled hidden>Select a base map</option>
+              {imageryList.map(img => (
+                <option key={img.id} value={img.id}>{img.title}</option>
+              ))}
+            </select>
+            <label className="text-label" style={{ display: 'block', marginBottom: '5px' }}>Imagery</label>
+            <select
+              className="text-input"
+              value={''}
+              onChange={(e) => {
+                /*
+                const val = parseInt(e.target.value);
+                setSelectedIds(prev => [val, ...prev.filter(i => i !== val)]);
+                */
+              }}
+            >
+              <option value="" selected disabled hidden>Select Imagery</option>
               {imageryList.map(img => (
                 <option key={img.id} value={img.id}>{img.title}</option>
               ))}
             </select>
           </section>
+
+          
 
           <section style={{ width: '100%' }}>
             <p className="card-title">ADDITIONAL IMAGERY (OPTIONAL)</p>
