@@ -28,6 +28,7 @@ export const previewSelectedSampleIdAtom = atom(1);
 export const previewUserSamplesAtom = atom({});
 
 const projectWizardDb = {
+  institutionId: -1,
   errors: [],
   currentStep: null,
   modal: null,
@@ -41,14 +42,14 @@ const projectWizardDb = {
   // overview
   'overview.projectName': '',
   'overview.projectDescription': '',
-  'overview.projectType': null,
+  'overview.projectType': 'regular',
   'overview.learningMaterial': '',
-  'overview.visibility': null,
+  'overview.visibility': 'institution',
   // overview.projectOptions
   'overview.projectOptions.gee': false,
   'overview.projectOptions.extraPlotColumns': false,
   'overview.projectOptions.plotConfidence': false,
-  'overview.projectOptions.autoGeo': false,
+  'overview.projectOptions.autoGeo': true,
   'overview.useTemplatePlots': false,
   imagery: [],
   imageryList: [],
@@ -61,7 +62,7 @@ const projectWizardDb = {
   'plots.numPlots': '',
   'plots.plotSize': '',
   'plots.plotShape': 'circle',
-  'plots.plotSpacing': '',
+  'plots.plotSpacing': null,
   'plots.shufflePlots': false,
   'plots.totalPlots': 0,
   'plots.plotFeatures': [],
@@ -114,6 +115,7 @@ const projectWizardDb = {
 initAppDb(projectWizardDb);
 
 export const event_ids = {
+  institutionId: 'institutionId',
   validate: 'validate',
   submitForm: 'submitForm',
   errors: 'errors',
@@ -199,6 +201,7 @@ export const event_ids = {
       users: 'institution.users'}};
 
 export const sub_ids = {
+  institutionId: 'institutionId',
   errors: 'errors',
   projectId : 'projectId',
   projectDraftId: 'projectDraftId',
@@ -287,6 +290,7 @@ regSub(sub_ids.modal, sub_ids.modal);
 regSub(sub_ids.projectSource, sub_ids.projectSource);
 regSub(sub_ids.errors, sub_ids.errors);
 regSub(sub_ids.successResponse, sub_ids.successResponse);
+regSub(sub_ids.institutionId, sub_ids.institutionId);
 
 regSub(sub_ids.templateProjectId, sub_ids.templateProjectId);
 regSub(sub_ids.useTemplatePlots, sub_ids.useTemplatePlots);
@@ -373,99 +377,112 @@ regEvent(event_ids.currentStep,
          });
 
 regEvent(event_ids.errors,
-         ({ draftDb }, errors) => {
-           console.log('there are errors', errors);
+         ({ draftDb }, errors) => {           
            draftDb[sub_ids.errors] = errors;
-           
-           
+         });
+
+regEvent(event_ids.institutionId,
+         ({ draftDb }, institutionId )=> {
+           draftDb[sub_ids.institutionId] = institutionId;
          });
 
 // PROJECT WIZARD EVENTS
 
+function buildProject (draftDb, sub_ids) {
+  const projectId = -1; //TODO
+  const plotDistribution = current(draftDb[sub_ids.plots.plotDistribution]);
+  const originalProject = {plotDistribution: ''}; //TODO
+  const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
+  const plotFileNeeded = !useTemplatePlots &&
+        (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
+  const name = current(draftDb[sub_ids.overview.projectName]);
+  const description= current(draftDb[sub_ids.overview.projectDescription]);
+  const privacyLevel = current(draftDb[sub_ids.overview.visibility]);
+  const imageryId = current(draftDb[sub_ids.imagery.imagery])[0];
+  const aoiFeatures = current(draftDb[sub_ids.boundary.aoiFeatures]);
+  const numPlots = current(draftDb[sub_ids.plots.numPlots]);
+  const designSettings = current(draftDb[sub_ids.plots.designSettings]);
+  const totalPlots = current(draftDb[sub_ids.plots.totalPlots]);
+  const allowDrawnSamples = current(draftDb[sub_ids.samples.allowDrawnSamples]);
+  const samplesPerPlot = current(draftDb[sub_ids.samples.samplesPerPlot]);
+  const plotShape = current(draftDb[sub_ids.plots.plotShape]);
+  const sampleDistribution = current(draftDb[sub_ids.samples.sampleDistribution]);
+  const sampleFileName = current(draftDb[sub_ids.samples.sampleFileName]);
+  const sampleResolution = current(draftDb[sub_ids.samples.sampleResolution]);
+  const surveyQuestions = current(draftDb[sub_ids.questions.questions]);
+  const plotSize = current(draftDb[sub_ids.plots.plotSize]);
+  const projectImageryList = current(draftDb[sub_ids.imagery.imageryList]);
+  const aoiFileName = current(draftDb[sub_ids.boundary.aoiFileName]);
+  const type = current(draftDb[sub_ids.overview.projectType]);
+  const projectOptions = current(draftDb[sub_ids.overview.projectOptions]);
+  const plotSpacing = Number(current(draftDb[sub_ids.plots.plotSpacing]));
+  const shufflePlots = current(draftDb[sub_ids.plots.shufflePlots]);
+  const surveyRules = current(draftDb[sub_ids.rules.rules]);
+  const plotFileName = current(draftDb[sub_ids.plots.plotFileName]);
+  const plotFileBase64 = current(draftDb[sub_ids.plots.plotFileBase64]);
+  const sampleFileBase64 = current(draftDb[sub_ids.samples.sampleFileBase64]);
+
+  return {name ,
+	  description,
+	  privacyLevel,
+	  imageryId,
+	  aoiFeatures,
+	  plotDistribution,
+	  numPlots,
+
+          projectImageryList,
+          aoiFileName,
+          type,
+          projectOptions,
+          plotSpacing,
+          shufflePlots,
+          surveyRules,
+          plotFileName,
+          plotFileBase64,
+          sampleFileBase64,
+          
+          //TODO: are we using these values for validation?
+	  useTemplatePlots,
+          //originalProject: TODO!!!
+          
+	  designSettings,
+	  totalPlots,
+          plotSize,
+	  plotFileNeeded ,
+	  allowDrawnSamples  ,
+	  samplesPerPlot,
+	  plotShape ,
+	  sampleDistribution ,
+	  sampleFileName ,
+	  sampleResolution  ,
+	  surveyQuestions: Object.entries(surveyQuestions).reduce((acc, [idx, val])=>{
+            return {...acc, [idx]: val};
+          }, {}) };
+}
+
 regEvent(event_ids.validate,
-         ({ draftDb }, 
-          institutionId,
-         ) => {           
-           const projectId = -1; //TODO
-           const plotDistribution = current(draftDb[sub_ids.plots.plotDistribution]);
-           const originalProject = {plotDistribution: ''}; //TODO
-           const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
-           const plotFileNeeded = !useTemplatePlots &&
-                 (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
-           const name = current(draftDb[sub_ids.overview.projectName]);
-           const description= current(draftDb[sub_ids.overview.projectDescription]);
-           const privacyLevel = current(draftDb[sub_ids.overview.visibility]);
-           const imageryId = current(draftDb[sub_ids.imagery.imagery])[0];
-           const aoiFeatures = current(draftDb[sub_ids.boundary.aoiFeatures]);
-           const numPlots = current(draftDb[sub_ids.plots.numPlots]);
-           const designSettings = current(draftDb[sub_ids.plots.designSettings]);
-           const totalPlots = current(draftDb[sub_ids.plots.totalPlots]);
-           const allowDrawnSamples = current(draftDb[sub_ids.samples.allowDrawnSamples]);
-           const samplesPerPlot = current(draftDb[sub_ids.samples.samplesPerPlot]);
-           const plotShape = current(draftDb[sub_ids.plots.plotShape]);
-           const sampleDistribution = current(draftDb[sub_ids.samples.sampleDistribution]);
-           const sampleFileName = current(draftDb[sub_ids.samples.sampleFileName]);
-           const sampleResolution = current(draftDb[sub_ids.samples.sampleResolution]);
-           const surveyQuestions = current(draftDb[sub_ids.questions.questions]);
-           const plotSize = current(draftDb[sub_ids.plots.plotSize]);
-           const projectImageryList = current(draftDb[sub_ids.imagery.imageryList]);
-           const aoiFileName = current(draftDb[sub_ids.boundary.aoiFileName]);
-           const type = current(draftDb[sub_ids.overview.projectType]);
-           const projectOptions = current(draftDb[sub_ids.overview.projectOptions]);
-           const plotSpacing = current(draftDb[sub_ids.plots.plotSpacing]);
-           const shufflePlots = current(draftDb[sub_ids.plots.shufflePlots]);
-           const surveyRules = current(draftDb[sub_ids.rules.rules]);
-           const plotFileName = current(draftDb[sub_ids.plots.plotFileName]);
-           const plotFileBase64 = current(draftDb[sub_ids.plots.plotFileBase64]);
-           const sampleFileBase64 = current(draftDb[sub_ids.samples.sampleFileBase64]);
-
-           const form = {name ,
-	                 description,
-	                 privacyLevel,
-	                 imageryId,
-	                 aoiFeatures,
-	                 plotDistribution,
-	                 numPlots,
-
-                         projectImageryList,
-                         aoiFileName,
-                         type,
-                         projectOptions,
-                         plotSpacing,
-                         shufflePlots,
-                         surveyRules,
-                         plotFileName,
-                         plotFileBase64,
-                         sampleFileBase64,
-                         
-                         //TODO: are we using these values for validation?
-	                 useTemplatePlots,
-                         //originalProject: TODO!!!
-                         
-	                 designSettings,
-	                 totalPlots,
-                         plotSize,
-	                 plotFileNeeded ,
-	                 allowDrawnSamples  ,
-	                 samplesPerPlot,
-	                 plotShape ,
-	                 sampleDistribution ,
-	                 sampleFileName ,
-	                 sampleResolution  ,
-	                 surveyQuestions };
+         ({ draftDb }) => {
+           const institutionId = Number(current(draftDb[sub_ids.institutionId]));
+           const form = buildProject(draftDb, sub_ids);
            const errors = validateWizard(form);
            console.log('done validating', errors, (errors ? 'dispatching errors' : 'submit form'));
            errors ? dispatch([event_ids.errors, errors]) : dispatch([event_ids.submitForm, form, institutionId]);
          });
 
 regEvent(event_ids.submitForm,
-         ({ draftDb }, form, institutionId) => {
+         ({ draftDb }, form,  institutionId) => {
            const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
            const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
            const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
            const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
+           console.log('submitting form', {
+             institutionId ,
+             projectTemplate: templateProjectId,
+             useTemplatePlots ,
+             useTemplateWidgets,
+             ...form,
+           });
            function createProjectDraft (
-             institutionId,
              templateProjectId,
              useTemplatePlots,
              useTemplateWidgets,
@@ -481,7 +498,7 @@ regEvent(event_ids.submitForm,
                  projectTemplate: templateProjectId,
                  useTemplatePlots ,
                  useTemplateWidgets,
-                 form,
+                 ...form,
                }),
              })
                .then((response) => Promise.all([response.ok, response.json()]))
@@ -502,7 +519,6 @@ regEvent(event_ids.submitForm,
 
            function saveProjectDraft (
              projectDraftId,
-             institutionId,
              templateProjectId,
              useTemplatePlots,
              useTemplateWidgets,
@@ -558,16 +574,14 @@ regEvent(event_ids.submitForm,
                });
            }
 
-           console.log('attempting to submit form');           
+           console.log('attempting to submit form', form.projectId > 0);
            form.projectId > 0
              ? saveProjectDraft(projectDraftId,
-                                institutionId,
                                 templateProjectId,
                                 useTemplatePlots,
                                 useTemplateWidgets,
                                 form)
-             : createProjectDraft(institutionId,
-                                  templateProjectId,
+             : createProjectDraft(templateProjectId,
                                   useTemplatePlots,
                                   useTemplateWidgets,
                                   form);

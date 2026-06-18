@@ -294,7 +294,8 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   // ------------------
   
   useEffect(() => {
-      dispatch([event_ids.modal, {
+    dispatch([event_ids.institutionId, institutionId]);
+    dispatch([event_ids.modal, {
       title: 'Project Setup',
       closeText: '',
       confirmText: 'Get Started',

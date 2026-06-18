@@ -14,61 +14,63 @@ export default function OverviewStep () {
     const projectDescription = useSubscription([sub_ids.overview.projectDescription]);
     const learningMaterial = useSubscription([sub_ids.overview.learningMaterial]);
 
-    return (<div
-              className="general-info-card projectWizardCard">
-              <p className="card-title">General Information</p>
-              <p className="text-label"
-              >Project Type<span style={{color: "red"}}>*</span>
-                <SvgIcon icon="info" size="1.2rem" /></p>
-              <div style={{width: '100%'}}>
-                <div style={{display: "inline-flex", gap:"12px"}}>
-                  {Object.entries(projectTypeOptions).map(([id, label]) => {
-                    return (<div
-                              className="labeled-input"                       
-                              key={id}
-                              onClick={()=> {dispatch([event_ids.overview.projectType, id]);
-                                            }}>
-                              <span>{ projectType == id
-                                      ? <SvgIcon icon="radioChecked" size="1.2rem" />    
-                                      : <SvgIcon icon="radio" size="1.2rem"/>}</span>
-                              <span
-                                className="text-label"
-                                style={projectType == id ? {fontWeight: "bold"} : {}}
-                              >{ label }</span>
-                            </div>);                  
-                  })}</div>
-                <div>
-                  <label className="text-label"
-                  >Project Name<span style={{color: "red"}}>*</span></label>
-                  <input type="text"
-                         className="text-input"
-                         id="project-name"
-                         value={projectName}            
-                         onChange={(e)=> {dispatch([event_ids.overview.projectName, e.target.value]);}} 
-                         placeholder="Enter Text"></input>
-                </div>
-                <div>
-                  <label className="text-label"
-                  >Project Description<span style={{color: "red"}}>*</span></label>
-                  <input type="text"
-                         className="text-input"
-                         id="project-description"
-                         onChange={(e)=>dispatch([event_ids.overview.projectDescription, e.target.value])}
-                         value={projectDescription}                         
-                         placeholder="Enter Text"/>
-                </div>
-                <div>
-                  <label className="text-label"
-                  >Learning Material (Optional)<SvgIcon icon="info" size="1.2rem" /></label>
-                  <input type="text"
-                         className="text-input"
-                         value={learningMaterial}
-                         onChange={(e)=>dispatch([event_ids.overview.learningMaterial, e.target.value])}
-                         id="learning-material"
-                         placeholder="Enter URL"/>
-                </div>
-              </div>
-            </div>);
+    return (
+      <div
+        className="general-info-card projectWizardCard">
+        <p className="card-title">General Information</p>
+        <p className="text-label"
+        >Project Type<span style={{color: "red"}}>*</span>
+          <SvgIcon icon="info" size="1.2rem" /></p>
+        <div style={{width: '100%'}}>
+          <div style={{display: "inline-flex", gap:"12px"}}>
+            {Object.entries(projectTypeOptions).map(([id, label]) => {
+              return (
+                <div
+                  className="labeled-input"                       
+                  key={id}
+                  onClick={()=> {dispatch([event_ids.overview.projectType, id]);
+                                }}>
+                  <span>{ projectType == id
+                          ? <SvgIcon icon="radioChecked" size="1.2rem" />    
+                          : <SvgIcon icon="radio" size="1.2rem"/>}</span>
+                  <span
+                    className="text-label"
+                    style={projectType == id ? {fontWeight: "bold"} : {}}
+                  >{ label }</span>
+                </div>);                  
+            })}</div>
+          <div>
+            <label className="text-label"
+            >Project Name<span style={{color: "red"}}>*</span></label>
+            <input type="text"
+                   className="text-input"
+                   id="project-name"
+                   value={projectName}            
+                   onChange={(e)=> {dispatch([event_ids.overview.projectName, e.target.value]);}} 
+                   placeholder="Enter Text"></input>
+          </div>
+          <div>
+            <label className="text-label"
+            >Project Description<span style={{color: "red"}}>*</span></label>
+            <input type="text"
+                   className="text-input"
+                   id="project-description"
+                   onChange={(e)=>dispatch([event_ids.overview.projectDescription, e.target.value])}
+                   value={projectDescription}                         
+                   placeholder="Enter Text"/>
+          </div>
+          <div>
+            <label className="text-label"
+            >Learning Material (Optional)<SvgIcon icon="info" size="1.2rem" /></label>
+            <input type="text"
+                   className="text-input"
+                   value={learningMaterial}
+                   onChange={(e)=>dispatch([event_ids.overview.learningMaterial, e.target.value])}
+                   id="learning-material"
+                   placeholder="Enter URL"/>
+          </div>
+        </div>
+      </div>);
   };
 
   const VisibilityCard = () => {    
@@ -82,16 +84,17 @@ export default function OverviewStep () {
         <p className="card-title">Visibility<span style={{color:"red"}}>*</span>
           <SvgIcon icon="info" size="1.2rem" /></p>
         {Object.entries(visibilityOptions).map(([id, label])=>{
-	  return (<div className="labeled-input"
-                       key={id}
-                       onClick={()=>dispatch([event_ids.overview.visibility, id])}>
-                    <span>{visibility == id
-                           ? <SvgIcon icon="radioChecked" size="1.2rem" />    
-                           : <SvgIcon icon="radio" size="1.2rem"/>}</span>
-                    <span className="text-label"
-                           style={visibility == id ? {fontWeight: "bold"} : {}}
-                    >{ label  }</span>
-                  </div>);
+	  return (
+            <div className="labeled-input"
+                 key={id}
+                 onClick={()=>dispatch([event_ids.overview.visibility, id])}>
+              <span>{visibility == id
+                     ? <SvgIcon icon="radioChecked" size="1.2rem" />    
+                     : <SvgIcon icon="radio" size="1.2rem"/>}</span>
+              <span className="text-label"
+                    style={visibility == id ? {fontWeight: "bold"} : {}}
+              >{ label  }</span>
+            </div>);
         })}
       </div>
     );
@@ -125,7 +128,7 @@ export default function OverviewStep () {
                  : <SvgIcon icon="checkboxUnchecked" size="1.2rem" />}
 	      </span>
 	      <span className="text-label"
-                     style={projectOptions[id] ? {fontWeight: "bold"} : {}}
+                    style={projectOptions[id] ? {fontWeight: "bold"} : {}}
               >{label}</span>
 	    </div>
 	  ) ;
