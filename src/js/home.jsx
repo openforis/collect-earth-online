@@ -78,10 +78,10 @@ export const InstitutionSidebar = ({
   
   function sortedInstitutions (institutions, sortType) {
     switch (sortType) {
-    case 'alphabetical' : return institutions.sort((a, b) =>
+    case 'alphabetical' : return institutions.toSorted((a, b) =>
       (a.name.toUpperCase() < b.name.toUpperCase()) ? -1 :
         (a.name.toUpperCase() > b.name.toUpperCase()) ? 1 : 0 );
-    case 'projects' : return institutions.sort((a, b) =>{
+    case 'projects' : return institutions.toSorted((a, b) =>{
       let thisInstitutionProjects = projectsByInstitution[a.id] || [];
        let thatInstitutionProjects = projectsByInstitution[b.id] || [];
         return ( 
