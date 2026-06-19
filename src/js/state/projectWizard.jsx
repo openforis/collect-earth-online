@@ -3,6 +3,9 @@ import { initAppDb , regEvent , regEffect , dispatch , regSub , current } from '
 
 import { validateWizard } from '../wizard/validation';
 
+
+//TODO: Delete unused jotai-style atoms
+//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 export const projectSourceAtom = atom(null);
 export const currentStepAtom = atom("overview");
 export const projectOverviewAtom = atom (
@@ -26,6 +29,7 @@ export const surveyQuestionsAtom = atom([]);
 export const rulesAtom = atom([]);
 export const previewSelectedSampleIdAtom = atom(1);
 export const previewUserSamplesAtom = atom({});
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 const projectWizardDb = {
   institutionId: -1,
@@ -67,6 +71,8 @@ const projectWizardDb = {
   'plots.totalPlots': 0,
   'plots.plotFeatures': [],
   'plots.plotFileName': '',
+  'plots.referencePlotId': -1,
+  'plots.similariyYears': null,
   'plots.designSettings': {
     sampleGeometries : {points:   true,                                       
                         lines:    true,
@@ -116,8 +122,9 @@ initAppDb(projectWizardDb);
 
 export const event_ids = {
   institutionId: 'institutionId',
-  validate: 'validate',
   submitForm: 'submitForm',
+  saveDraft: 'saveDraft',
+  getDraft: 'getDraft',
   errors: 'errors',
   currentStep: 'currentStep',
   modal: 'modal',
@@ -244,6 +251,8 @@ export const sub_ids = {
     plotFeatures: 'plots.plotFeatures',
     plotFileName: 'plots.plotFileName',
     designSettings: 'plots.designSettings',
+    referencePlotId: 'plots.referencePlotId',
+    similarityYears: 'plots.similarityYears'
   },
   samples: {
     sampleDistribution: 'samples.sampleDistribution',
@@ -326,7 +335,8 @@ regSub(sub_ids.plots.totalPlots, sub_ids.plots.totalPlots);
 regSub(sub_ids.plots.plotFeatures, sub_ids.plots.plotFeatures);
 regSub(sub_ids.plots.plotFileName, sub_ids.plots.plotFileName);
 regSub(sub_ids.plots.designSettings, sub_ids.plots.designSettings);
-
+regSub(sub_ids.plots.referencePlotId, sub_ids.plots.referencePlotId);
+regSub(sub_ids.plots.similiarityYears, sub_ids.plots.similarityYears);
 
 // samples
 regSub(sub_ids.samples.sampleDistribution, sub_ids.samples.sampleDistribution);
@@ -361,30 +371,26 @@ regSub(sub_ids.rules.newRule.tempAnswerId, sub_ids.rules.newRule.tempAnswerId);
 regSub(sub_ids.rules.newRule.incompatQuestionId, sub_ids.rules.newRule.incompatQuestionId);
 regSub(sub_ids.rules.newRule.incompatAnswerId, sub_ids.rules.newRule.incompatAnswerId);
 
-
 // institution
 regSub(sub_ids.institution.users, sub_ids.institution.users);
 
 
-regEvent(event_ids.projectDetails,
-         ({ draftDb }, projectDetails) => {
-           draftDb[sub_ids.projectDetails] = projectDetails;
-         });
+regEvent(event_ids.projectDetails, ({ draftDb }, projectDetails) => {
+  draftDb[sub_ids.projectDetails] = projectDetails;
+});
 
-regEvent(event_ids.currentStep,
-         ({ draftDb }, currentStep) => {
-           draftDb[sub_ids.currentStep] = currentStep;
-         });
+regEvent(event_ids.currentStep, ({ draftDb }, currentStep) => {
+  draftDb[sub_ids.currentStep] = currentStep;
+});
 
-regEvent(event_ids.errors,
-         ({ draftDb }, errors) => {           
-           draftDb[sub_ids.errors] = errors;
-         });
+regEvent(event_ids.errors, ({ draftDb }, errors) => {           
+  draftDb[sub_ids.errors] = errors;
+  draftDb[sub_ids.modal] = {id: 'error'};
+});
 
-regEvent(event_ids.institutionId,
-         ({ draftDb }, institutionId )=> {
-           draftDb[sub_ids.institutionId] = institutionId;
-         });
+regEvent(event_ids.institutionId, ({ draftDb }, institutionId )=> {
+  draftDb[sub_ids.institutionId] = institutionId;
+});
 
 // PROJECT WIZARD EVENTS
 
@@ -460,219 +466,227 @@ function buildProject (draftDb, sub_ids) {
           }, {}) };
 }
 
-regEvent(event_ids.validate,
-         ({ draftDb }) => {
-           const institutionId = Number(current(draftDb[sub_ids.institutionId]));
-           const form = buildProject(draftDb, sub_ids);
-           const errors = validateWizard(form);
-           console.log('done validating', errors, (errors ? 'dispatching errors' : 'submit form'));
-           errors ? dispatch([event_ids.errors, errors]) : dispatch([event_ids.submitForm, form, institutionId]);
-         });
 
-regEvent(event_ids.submitForm,
-         ({ draftDb }, form,  institutionId) => {
-           const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
-           const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
-           const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
-           const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
-           console.log('submitting form', {
-             institutionId ,
-             projectTemplate: templateProjectId,
-             useTemplatePlots ,
-             useTemplateWidgets,
-             ...form,
-           });
-           function createProjectDraft (
-             templateProjectId,
-             useTemplatePlots,
-             useTemplateWidgets,
-             form) {
-             fetch("/create-project-draft", {
-               method: "POST",
-               headers: {
-                 Accept: "application/json",
-                 "Content-Type": "application/json; charset=utf-8",
-               },
-               body: JSON.stringify({
-                 institutionId ,
-                 projectTemplate: templateProjectId,
-                 useTemplatePlots ,
-                 useTemplateWidgets,
-                 ...form,
-               }),
-             })
-               .then((response) => Promise.all([response.ok, response.json()]))
-               .then((data) => {
-                 console.log('create project draft request result', data);
-                 if (data[0] && Number.isInteger(data[1].projectDraftId)) {
-                   dispatch([event_ids.successReponse, ["Draft saved", data]]);
-                   return Promise.resolve();                   
-                 } else {
-                   return Promise.reject(data[1]);
-                 }
-               })
-               .catch((message) => {
-                 console.log('create project request errors', message);
-                 dispatch([event_ids.errors ['server', message]]);
-               });
-           }
+regEvent(event_ids.getDraft, ({ draftDb }, draftId) => {
+  function getProjectDraftById(projectDraftId) {
+    fetch(`/get-project-draft-by-id?projectDraftId=${projectDraftId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        if (!data) {
+          dispatch([event_ids.errors, [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
+          return Promise.resolve();
+        } else {
+          dispatch([event_ids.successResponse, ['success', data]]);
+          return Promise.resolve();
+        }
+      }).catch(() => {
+        dispatch([event_ids.errors [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
+        
+      });
+  }
+  getProjectDraftById(draftId);
+});
 
-           function saveProjectDraft (
-             projectDraftId,
-             templateProjectId,
-             useTemplatePlots,
-             useTemplateWidgets,
-             form) {
-             console.log('saving project draft...');
-             fetch("/update-project-draft", {
-               method: "POST",
-               headers: {
-                 Accept: "application/json",
-                 "Content-Type": "application/json; charset=utf-8",
-               },
-               body: JSON.stringify({
-                 projectDraftId,
-                 institutionId,
-                 projectTemplate: templateProjectId,
-                 useTemplatePlots ,
-                 useTemplateWidgets ,
-                 form,
-               }),
-             })
-               .then((response) => Promise.all([response.ok, response.json()]))
-               .then((data) => {
-                 dispatch([event_ids.successResponse, ['Project Saved', data]]);
-                 return Promise.resolve();
-               })
-               .catch((message) => {
-                 console.log('create project request errors', message);
-                 draftDb[sub_ids.modal] = {
-                   id: 'error',
-                   confirmText: "Go Back",
-                   onConfirm: () => {
-                     dispatch([event_ids.currentStep, 'review']);
-                     dispatch([event_ids.modal, null]);
-                   }};
-                
-                 dispatch([event_ids.errors ['server', message]]);
-               });
-           }
+regEvent(event_ids.saveDraft, ({ draftDb }) => {
+  const institutionId = Number(current(draftDb[sub_ids.institutionId]));
+  const form = buildProject(draftDb, sub_ids);
+  const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
+  const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
+  const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
+  const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
 
-           function getProjectDraftById(projectDraftId) {
-             fetch(`/get-project-draft-by-id?projectDraftId=${projectDraftId}`)
-               .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-               .then((data) => {
-                 if (!data) {
-                   dispatch([event_ids.errors, ['server', "No draft found with ID " + projectDraftId + "."]]);
-                   return Promise.resolve();
-                 } else {
-                   dispatch([event_ids.successResponse, ['success', data]]);
-                   return Promise.resolve();
-                 }
-               }).catch(() => {
-                 dispatch([event_ids.errors ['server', "No draft found with ID " + projectDraftId + "."]]);
-               });
-           }
+  function createProjectDraft () {
+    fetch("/create-project-draft", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        institutionId ,
+        projectTemplate: templateProjectId,
+        useTemplatePlots ,
+        useTemplateWidgets,
+        ...form,
+      }),
+    })
+      .then((response) => Promise.all([response.ok, response.json()]))
+      .then((data) => {
+        console.log('create project draft request result', data);
+        if (data[0] && Number.isInteger(data[1].projectDraftId)) {
+          dispatch([event_ids.successReponse, data[1]]);
+          return Promise.resolve();
+        } else {          
+          let errs = Object.entries(data[1].params).map(([field, message])=>{return (field + "; " + message);});
+          dispatch([event_ids.errors, [['server', errs]]]);
+          return Promise.reject(data[1]);
+        }
+      })
+      .catch((message) => {
+        console.log('create project request errors', message);
+        let errs = Object.entries(message.params).map(([field, message])=>{return (field + "; " + message);});
+          dispatch([event_ids.errors, [['server', errs]]]);
+      });
+  }
 
-           console.log('attempting to submit form', form.projectId > 0);
-           form.projectId > 0
-             ? saveProjectDraft(projectDraftId,
-                                templateProjectId,
-                                useTemplatePlots,
-                                useTemplateWidgets,
-                                form)
-             : createProjectDraft(templateProjectId,
-                                  useTemplatePlots,
-                                  useTemplateWidgets,
-                                  form);
-         });
+  function saveProjectDraft () {
+    console.log('saving project draft...');
+    fetch("/update-project-draft", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        projectDraftId,
+        institutionId,
+        projectTemplate: templateProjectId,
+        useTemplatePlots ,
+        useTemplateWidgets ,
+        ...form,
+      }),
+    })
+      .then((response) => Promise.all([response.ok, response.json()]))
+      .then((data) => {
+        dispatch([event_ids.successResponse, ['Project Saved', data]]);
+        return Promise.resolve();
+      })
+      .catch((message) => {
+        console.log('create project request errors', message);        
+        dispatch([event_ids.errors [['server', Object.entries(message.params).map(([field, error]) => field + ": " + error)]]]);
+      });
+  }
 
-regEvent(event_ids.successResponse,
-         ({ draftDb }, response) => {
-           draftDb[sub_ids.successResponse] = response;
-           function successModal (message) {
-             return {
-               id: 'success',
-               message,
-               confirmText: 'Close',
-               onConfirm: ()=>{dispatch([event_ids.modal, null]);
-                              }};
-           };
-           draftDb[sub_ids.modal] = successModal(response);
-         });
+  form.projectId > 0
+    ? saveProjectDraft()
+    : createProjectDraft();           
+});
 
-regEvent(event_ids.modal,
-         ({ draftDb }, modal, errors) => {
-           errors && dispatch([event_ids.validate]);
-           draftDb[sub_ids.modal] = modal;
-         });
+regEvent(event_ids.submitForm, ({ draftDb }) => {
+  const institutionId = Number(current(draftDb[sub_ids.institutionId]));
+  const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
+  const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
+  const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
+  const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
+  const referencePlotId = current(draftDb[sub_ids.plots.referencePlotId]);
+  const similarityYears = current(draftDb[sub_ids.plots.similarityYears]);
+  const form = buildProject(draftDb, sub_ids);
+  const errors = validateWizard(form);
+  
+  function submitForm () {
+    fetch("/create-project", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        institutionId,
+        projectTemplate: templateProjectId,
+        useTemplatePlots,
+        useTemplateWidgets,
+        ...form,
+      }),
+    })
+      .then((response) => Promise.all([response.ok, response.json()]))
+      .then((data) => {
+        if (data[0] && Number.isInteger(data[1].projectId)) {
+          (referencePlotId > 0) && fetch("/start-plot-similarity", {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json; charset=utf-8",
+            },
+            body: JSON.stringify({
+              projectId: data[1].projectId,
+              referencePlotId,
+              similarityYears,
+            })
+          });
+          dispatch([event_ids.successResponse, data[1]]);
+          // window.location = `/review-project?projectId=${data[1].projectId}&institutionId=${this.context.institutionId}`;
+          return Promise.resolve();
+        } else {
+          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
+          return Promise.reject(data[1]);
+        }
+      })
+      .catch((message) => dispatch([event_ids.errors [['server', [message]]]]));
+  }
+  errors ? dispatch([event_ids.errors, errors]) : submitForm();
+});
 
-regEvent(event_ids.overview.projectType,
-         ({ draftDb }, projectType) => {
-           draftDb[sub_ids.overview.projectType] = projectType;
-         });
+regEvent(event_ids.successResponse, ({ draftDb }, response) => {  
+  function successModal (message) {
+    return {
+      id: 'success',
+      message,
+      confirmText: 'Close',
+      onConfirm: ()=>{dispatch([event_ids.modal, null]);
+                     }};
+  };
+  draftDb[sub_ids.successResponse] = response;
+  draftDb[sub_ids.modal] = successModal(response);
+});
 
-regEvent(event_ids.projectSource,
-         ({ draftDb }, projectSource) => {
-           draftDb[sub_ids.projectSource] = projectSource;
-         });
+regEvent(event_ids.modal, ({ draftDb }, modal, errors) => {
+  errors && dispatch([event_ids.validate]);
+  draftDb[sub_ids.modal] = modal;
+});
+
+regEvent(event_ids.overview.projectType, ({ draftDb }, projectType) => {
+  draftDb[sub_ids.overview.projectType] = projectType;
+});
+
+regEvent(event_ids.projectSource, ({ draftDb }, projectSource) => {
+  draftDb[sub_ids.projectSource] = projectSource;
+});
 
 // PROJECT OVERVIEW EVENTS
 
-regEvent(event_ids.overview.projectName,
-         ({ draftDb }, projectName) => {
-           draftDb[sub_ids.overview.projectName] = projectName;
-         });
+regEvent(event_ids.overview.projectName, ({ draftDb }, projectName) => {
+  draftDb[sub_ids.overview.projectName] = projectName;
+});
 
-regEvent(event_ids.overview.projectDescription,
-         ({ draftDb }, projectDescription) => {
-           draftDb[sub_ids.overview.projectDescription] = projectDescription;
-         });
+regEvent(event_ids.overview.projectDescription, ({ draftDb }, projectDescription) => {
+  draftDb[sub_ids.overview.projectDescription] = projectDescription;
+});
 
-regEvent(event_ids.overview.learningMaterial,
-         ({ draftDb }, learningMaterial) => {
-           draftDb[sub_ids.overview.learningMaterial] = learningMaterial;
-         });
+regEvent(event_ids.overview.learningMaterial, ({ draftDb }, learningMaterial) => {
+  draftDb[sub_ids.overview.learningMaterial] = learningMaterial;
+});
 
-regEvent(event_ids.overview.visibility,
-         ({ draftDb }, visibility) => {
-           draftDb[sub_ids.overview.visibility] = visibility;
-         });
+regEvent(event_ids.overview.visibility, ({ draftDb }, visibility) => {
+  draftDb[sub_ids.overview.visibility] = visibility;
+});
 
-regEvent(event_ids.overview.projectOptions.gee,
-         ({ draftDb }) => {
-           draftDb[sub_ids.overview.projectOptions.gee] = !draftDb[sub_ids.overview.projectOptions.gee];
-         });
+regEvent(event_ids.overview.projectOptions.gee, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.gee] = !draftDb[sub_ids.overview.projectOptions.gee];
+});
 
-regEvent(event_ids.overview.projectOptions.extraPlotColumns,
-         ({ draftDb }) => {
-           draftDb[sub_ids.overview.projectOptions.extraPlotColumns] = !draftDb[sub_ids.overview.projectOptions.extraPlotColumns];
-         });
+regEvent(event_ids.overview.projectOptions.extraPlotColumns, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.extraPlotColumns] = !draftDb[sub_ids.overview.projectOptions.extraPlotColumns];
+});
 
-regEvent(event_ids.overview.projectOptions.plotConfidence,
-         ({ draftDb }) => {
-           draftDb[sub_ids.overview.projectOptions.plotConfidence] = !draftDb[sub_ids.overview.projectOptions.plotConfidence];
-         });
+regEvent(event_ids.overview.projectOptions.plotConfidence, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.plotConfidence] = !draftDb[sub_ids.overview.projectOptions.plotConfidence];
+});
 
-regEvent(event_ids.overview.projectOptions.autoGeo,
-         ({ draftDb }) => {
-           draftDb[sub_ids.overview.projectOptions.autoGeo] = !draftDb[sub_ids.overview.projectOptions.autoGeo];
-         });
+regEvent(event_ids.overview.projectOptions.autoGeo, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.autoGeo] = !draftDb[sub_ids.overview.projectOptions.autoGeo];
+});
 
-regEvent(event_ids.overview.useTemplatePlots,
-         ({ draftDb }, useTemplatePlots)=>{
-           draftDb[sub_ids.overview.useTemplatePlots] = useTemplatePlots;
-         });
+regEvent(event_ids.overview.useTemplatePlots, ({ draftDb }, useTemplatePlots)=>{
+  draftDb[sub_ids.overview.useTemplatePlots] = useTemplatePlots;
+});
 
-regEvent(event_ids.imagery.imagery,
-         ({ draftDb }, imageryIdList)=>{
-           draftDb[sub_ids.imagery.imagery] = imageryIdList;
-         });
+regEvent(event_ids.imagery.imagery, ({ draftDb }, imageryIdList)=>{
+  draftDb[sub_ids.imagery.imagery] = imageryIdList;
+});
 
-regEvent(event_ids.imagery.imageryList,
-         ({ draftDb }, imageryList ) => {
-           draftDb[sub_ids.imagery.imageryList] = imageryList;
-         });
+regEvent(event_ids.imagery.imageryList, ({ draftDb }, imageryList ) => {
+  draftDb[sub_ids.imagery.imageryList] = imageryList;
+});
 
 
 // PROJECT BOUNDARY EVENTS
@@ -738,6 +752,14 @@ regEvent(event_ids.plots.designSettings, ({ draftDb }, designSettings) => {
   draftDb[sub_ids.plots.designSettings] = designSettings;
 });
 
+regEvent(event_ids.plots.referencePlotId, ({ draftDb }, referencePlotId) => {
+  draftDb[sub_ids.plots.referencePlotId] = referencePlotId;
+});
+
+regEvent(event_ids.plots.similarityYears, ({ draftDb }, similarityYears) => {
+  draftDb[sub_ids.plots.similarityYears] = similarityYears;
+});
+
 // SAMPLE GENERATION EVENTS
 regEvent(event_ids.samples.sampleDistribution, ({ draftDb }, distribution) => {
   draftDb[sub_ids.samples.sampleDistribution] = distribution;
@@ -759,179 +781,149 @@ regEvent(event_ids.samples.allowDrawnSamples, ({ draftDb }, allow) => {
   draftDb[sub_ids.samples.allowDrawnSamples] = allow;
 });
 
-regEvent(event_ids.questions.addQuestion,
-         ({ draftDb }, questionToAdd ) => {
-           const prev = current(draftDb[sub_ids.questions.questions]);
-           draftDb[sub_ids.questions.questions].push(questionToAdd);
-         });
+regEvent(event_ids.questions.addQuestion, ({ draftDb }, questionToAdd ) => {
+  const prev = current(draftDb[sub_ids.questions.questions]);
+  draftDb[sub_ids.questions.questions].push(questionToAdd);
+});
 
-regEvent(event_ids.questions.setQuestions,
-         ({ draftDb }, questions ) => {
-           draftDb[sub_ids.questions.questions] = questions;
-         });
+regEvent(event_ids.questions.setQuestions, ({ draftDb }, questions ) => {
+  draftDb[sub_ids.questions.questions] = questions;
+});
 
-regEvent(event_ids.questions.updateQuestion,
-         //TODO: is this the most idiomatic wayt to update questions here?
-         ({ draftDb }, qId, field, value) => {
-           const prev = current(draftDb[sub_ids.questions.questions]);
-           const newQuestion = {
-             ... prev,
-             [qId]: { ...prev[qId], [field]: value}
-           };
-           draftDb[sub_ids.questions.questions] = newQuestion;
-         });
+regEvent(event_ids.questions.updateQuestion, ({ draftDb }, qId, field, value) => {
+  //TODO: is this the most idiomatic wayt to update questions here?
+  const prev = current(draftDb[sub_ids.questions.questions]);
+  const newQuestion = {
+    ... prev,
+    [qId]: { ...prev[qId], [field]: value}
+  };
+  draftDb[sub_ids.questions.questions] = newQuestion;
+});
 
-regEvent(event_ids.questions.updateAnswer,
-         //TODO: is this the most idiomatic wayt to update question answers here?
-         ({ draftDb }, qId, aId, field, value) => {
-           const prev = current(draftDb[sub_ids.questions.questions]);
-           const newQuestion = {
-             ... prev,
-             [qId]: { ...prev[qId],
-                      answers: {
-                        ...prev[qId].answers,
-                        [aId]: {...prev[qId].answers[aId], [field]: value }
-                      },
-                      [field]: value}
-           };
-           draftDb[sub_ids.questions.questions] = newQuestion;
-         });
+regEvent(event_ids.questions.updateAnswer, ({ draftDb }, qId, aId, field, value) => {
+  //TODO: is this the most idiomatic wayt to update question answers here?
+  const prev = current(draftDb[sub_ids.questions.questions]);
+  const newQuestion = {
+    ... prev,
+    [qId]: { ...prev[qId],
+             answers: {
+               ...prev[qId].answers,
+               [aId]: {...prev[qId].answers[aId], [field]: value }
+             },
+             [field]: value}
+  };
+  draftDb[sub_ids.questions.questions] = newQuestion;
+});
 
-regEvent(event_ids.questions.moveQuestion,
-         //TODO: is this the most idiomatic wayt to update questions here?
-         ({ draftDb }, id, targetQ, nextId, nextQ) => {
-           const newQuestions = { ...current(draftDb[sub_ids.questions.questions])};
-           const tempOrder = targetQ.cardOrder;
-           newQuestions[id] = { ...targetQ, cardOrder: nextQ.cardOrder };
-           newQuestions[nextId] = { ...nextQ, cardOrder: tempOrder };           
-           draftDb[sub_ids.questions.questions] = newQuestions;
-         });
+regEvent(event_ids.questions.moveQuestion, ({ draftDb }, id, targetQ, nextId, nextQ) => {
+  //TODO: is this the most idiomatic wayt to update questions here?
+  const newQuestions = { ...current(draftDb[sub_ids.questions.questions])};
+  const tempOrder = targetQ.cardOrder;
+  newQuestions[id] = { ...targetQ, cardOrder: nextQ.cardOrder };
+  newQuestions[nextId] = { ...nextQ, cardOrder: tempOrder };           
+  draftDb[sub_ids.questions.questions] = newQuestions;
+});
 
-regEvent(event_ids.rules.selectedRuleType,
-         ({ draftDb }, selectedRuleType) => {
-           draftDb[sub_ids.rules.selectedRuleType] = selectedRuleType;
-         });
+regEvent(event_ids.rules.selectedRuleType, ({ draftDb }, selectedRuleType) => {
+  draftDb[sub_ids.rules.selectedRuleType] = selectedRuleType;
+});
 
-regEvent(event_ids.rules.rules,
-         ({ draftDb }, newRule) => {
-           
-           draftDb[sub_ids.rules.rules].push({...newRule, label: draftDb[sub_ids.rules.newRule.label]});
-         });
+regEvent(event_ids.rules.rules, ({ draftDb }, newRule) => {
+  
+  draftDb[sub_ids.rules.rules].push({...newRule, label: draftDb[sub_ids.rules.newRule.label]});
+});
 
-regEvent(event_ids.rules.removeRule,
-         ({ draftDb }, rid ) => {
-           let newRules = draftDb[sub_ids.rules.rules].filter((r) => r.id !== rid);
-           draftDb[sub_ids.rules.rules] = newRules;
-         });
+regEvent(event_ids.rules.removeRule, ({ draftDb }, rid ) => {
+  let newRules = draftDb[sub_ids.rules.rules].filter((r) => r.id !== rid);
+  draftDb[sub_ids.rules.rules] = newRules;
+});
 
-regEvent(event_ids.rules.newRule.label,
-         ({ draftDb }, label) => {
-           draftDb[sub_ids.rules.newRule.label] = label;
-         });
+regEvent(event_ids.rules.newRule.label, ({ draftDb }, label) => {
+  draftDb[sub_ids.rules.newRule.label] = label;
+});
 
-regEvent(event_ids.rules.newRule.regex,
-         ({ draftDb }, regex) => {
-           draftDb[sub_ids.rules.newRule.regex] = regex;
-         });
+regEvent(event_ids.rules.newRule.regex, ({ draftDb }, regex) => {
+  draftDb[sub_ids.rules.newRule.regex] = regex;
+});
 
-regEvent(event_ids.rules.newRule.questionId,
-         ({ draftDb }, questionId) => {
-           draftDb[sub_ids.rules.newRule.questionId] = questionId;
-         });
+regEvent(event_ids.rules.newRule.questionId, ({ draftDb }, questionId) => {
+  draftDb[sub_ids.rules.newRule.questionId] = questionId;
+});
 
-regEvent(event_ids.rules.search,
-         ({ draftDb }, search) => {
-           draftDb[sub_ids.rules.search] = search;
-         });
+regEvent(event_ids.rules.search, ({ draftDb }, search) => {
+  draftDb[sub_ids.rules.search] = search;
+});
 
-regEvent(event_ids.rules.filter,
-         ({ draftDb }, filter) => {
-           draftDb[sub_ids.rules.filter] = filter;
-         });
+regEvent(event_ids.rules.filter, ({ draftDb }, filter) => {
+  draftDb[sub_ids.rules.filter] = filter;
+});
 
-regEvent(event_ids.rules.delete,
-         ({ draftDb }, idx) => {
-           draftDb[sub_ids.rules.rules].splice(idx, 1);
-         });
+regEvent(event_ids.rules.delete, ({ draftDb }, idx) => {
+  draftDb[sub_ids.rules.rules].splice(idx, 1);
+});
 
-regEvent(event_ids.rules.newRule.min,
-         ({ draftDb }, min) => {
-           draftDb[sub_ids.rules.newRule.min] = min;
-         });
+regEvent(event_ids.rules.newRule.min, ({ draftDb }, min) => {
+  draftDb[sub_ids.rules.newRule.min] = min;
+});
 
-regEvent(event_ids.rules.newRule.max,
-         ({ draftDb }, max) => {
-           draftDb[sub_ids.rules.newRule.max] = max;
-         });
+regEvent(event_ids.rules.newRule.max, ({ draftDb }, max) => {
+  draftDb[sub_ids.rules.newRule.max] = max;
+});
 
-regEvent(event_ids.rules.newRule.validSum,
-         ({ draftDb }, validSum) => {
-           draftDb[sub_ids.rules.newRule.validSum] = validSum;
-         });
+regEvent(event_ids.rules.newRule.validSum, ({ draftDb }, validSum) => {
+  draftDb[sub_ids.rules.newRule.validSum] = validSum;
+});
 
-regEvent(event_ids.rules.newRule.questionIds,
-         ({ draftDb }, questionIds) => {
-           draftDb[sub_ids.rules.newRule.questionIds] = questionIds;
-         });
+regEvent(event_ids.rules.newRule.questionIds, ({ draftDb }, questionIds) => {
+  draftDb[sub_ids.rules.newRule.questionIds] = questionIds;
+});
 
-regEvent(event_ids.rules.newRule.questionIds1,
-         ({ draftDb }, questionIds1) => {
-           draftDb[sub_ids.rules.newRule.questionIds1] = questionIds1;
-         });
+regEvent(event_ids.rules.newRule.questionIds1, ({ draftDb }, questionIds1) => {
+  draftDb[sub_ids.rules.newRule.questionIds1] = questionIds1;
+});
 
-regEvent(event_ids.rules.newRule.questionIds2,
-         ({ draftDb }, questionIds2) => {
-           draftDb[sub_ids.rules.newRule.questionIds2] = questionIds2;
-         });
+regEvent(event_ids.rules.newRule.questionIds2, ({ draftDb }, questionIds2) => {
+  draftDb[sub_ids.rules.newRule.questionIds2] = questionIds2;
+});
 
-regEvent(event_ids.rules.newRule.questionId1,
-         ({ draftDb }, questionId1) => {
-           draftDb[sub_ids.rules.newRule.questionId1] = questionId1;
-         });
+regEvent(event_ids.rules.newRule.questionId1, ({ draftDb }, questionId1) => {
+  draftDb[sub_ids.rules.newRule.questionId1] = questionId1;
+});
 
-regEvent(event_ids.rules.newRule.questionId2,
-         ({ draftDb }, questionId2) => {
-           draftDb[sub_ids.rules.newRule.questionId2] = questionId2;
-         });
+regEvent(event_ids.rules.newRule.questionId2, ({ draftDb }, questionId2) => {
+  draftDb[sub_ids.rules.newRule.questionId2] = questionId2;
+});
 
-regEvent(event_ids.rules.newRule.answerId1,
-         ({ draftDb }, answerId1) => {
-           draftDb[sub_ids.rules.newRule.answerId1] = answerId1;
-         });
+regEvent(event_ids.rules.newRule.answerId1, ({ draftDb }, answerId1) => {
+  draftDb[sub_ids.rules.newRule.answerId1] = answerId1;
+});
 
-regEvent(event_ids.rules.newRule.answerId2,
-         ({ draftDb }, answerId2) => {
-           draftDb[sub_ids.rules.newRule.answerId2] = answerId2;
-         });
+regEvent(event_ids.rules.newRule.answerId2, ({ draftDb }, answerId2) => {
+  draftDb[sub_ids.rules.newRule.answerId2] = answerId2;
+});
 
-regEvent(event_ids.rules.newRule.answers,
-         ({ draftDb }, answers) => {
-           draftDb[sub_ids.rules.newRule.answers] = answers;
-         });
+regEvent(event_ids.rules.newRule.answers, ({ draftDb }, answers) => {
+  draftDb[sub_ids.rules.newRule.answers] = answers;
+});
 
-regEvent(event_ids.rules.newRule.tempQuestionId,
-         ({ draftDb }, tempQuestionId) => {
-           draftDb[sub_ids.rules.newRule.tempQuestionId] = tempQuestionId;
-         });
+regEvent(event_ids.rules.newRule.tempQuestionId, ({ draftDb }, tempQuestionId) => {
+  draftDb[sub_ids.rules.newRule.tempQuestionId] = tempQuestionId;
+});
 
-regEvent(event_ids.rules.newRule.tempAnswerId,
-         ({ draftDb }, tempAnswerId) => {
-           draftDb[sub_ids.rules.newRule.tempAnswerId] = tempAnswerId;
-         });
+regEvent(event_ids.rules.newRule.tempAnswerId, ({ draftDb }, tempAnswerId) => {
+  draftDb[sub_ids.rules.newRule.tempAnswerId] = tempAnswerId;
+});
 
-regEvent(event_ids.rules.newRule.incompatQuestionId,
-         ({ draftDb }, incompatQuestionId) => {
-           draftDb[sub_ids.rules.newRule.incompatQuestionId] = incompatQuestionId;
-         });
+regEvent(event_ids.rules.newRule.incompatQuestionId, ({ draftDb }, incompatQuestionId) => {
+  draftDb[sub_ids.rules.newRule.incompatQuestionId] = incompatQuestionId;
+});
 
-regEvent(event_ids.rules.newRule.incompatAnswerId,
-         ({ draftDb }, incompatAnswerId) => {
-           draftDb[sub_ids.rules.newRule.incompatAnswerId] = incompatAnswerId;
-         });
+regEvent(event_ids.rules.newRule.incompatAnswerId, ({ draftDb }, incompatAnswerId) => {
+  draftDb[sub_ids.rules.newRule.incompatAnswerId] = incompatAnswerId;
+});
 
 
 // EVENTS FOR INSTITUTION INFORMATION
-regEvent(event_ids.institution.users,
-  ({draftDb}, users) => {
-    draftDb[sub_ids.institution.users] = users;
-  });
+regEvent(event_ids.institution.users, ({draftDb}, users) => {
+  draftDb[sub_ids.institution.users] = users;
+});

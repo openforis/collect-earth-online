@@ -36,14 +36,12 @@ const projectSteps = [
   {id: 'review', label: 'Review & Publish'}
 ];
 
-
-
 const publishModal = {
   title: 'Ready to publish this project?',
   id: 'review',
   closeText: "Cancel",
   confirmText: "Publish Project",
-  onConfirm: ()=>{dispatch ([event_ids.validate]); }
+  onConfirm: ()=>{dispatch ([event_ids.submitForm]); }
 };
 
 const exitModal = {
@@ -52,22 +50,26 @@ const exitModal = {
   closeText: "Exit Workflow",
   confirmText: "Stay",
   onClose: ()=> {
-    console.log("save and exit workflow");
-  },
-  onConfirm: ()=>{
     dispatch([event_ids.modal, null]);
   },
-
+  onConfirm: ()=>{
+    dispatch([event_ids.saveDraft]);
+    dispatch([event_ids.modal, null]);
+  },
 };
 
 function NavButtons  () {
   const currentStep = useSubscription([sub_ids.currentStep]);
   
-  const  continueHandler = () => {
+  function continueHandler () {
     const currentIdx = projectSteps.findIndex(({id})=> (id == currentStep));
     currentIdx + 1 < projectSteps.length
       ? dispatch([event_ids.currentStep, projectSteps[currentIdx + 1].id])
       : dispatch([event_ids.modal, publishModal]);
+  };
+
+  function saveDraftHandler () {
+    dispatch([event_ids.saveDraft]);
   };
 
   return (<div className="nav-buttons">
@@ -79,6 +81,7 @@ function NavButtons  () {
               className={'btn btn-sm'}
               style={{backgroundColor: "#2d6f74",
                       color: "#fff"}}
+              onClick={()=>saveDraftHandler()}
             >Save Draft</button>
             <button
               className={'btn btn-sm'}
@@ -183,6 +186,7 @@ function ErrorModal () {
   function toggleVisible (errorType) {
     visible.includes(errorType) ? setVisible(visible.filter((e) => e !== errorType)) : setVisible([... visible, errorType]);
   };
+  console.log('error modal', errors);
   function stepName (errorType) {
     switch(errorType){
     case 'overview' : return 'Overview Step';
@@ -190,7 +194,7 @@ function ErrorModal () {
     case 'plots' : return 'Plot Step';
     case 'samples' : return 'Plot Samples';
     case 'questions' : return 'Survey Questions';
-    default: return null;
+    default: return 'Unknown Error';
     }
   }
   return  (
@@ -217,7 +221,7 @@ function ErrorModal () {
                          <p > - {message}
                          </p>);
                      })}
-                   </div>}                  
+                   </div>}
                 </div>);
       })}
     </div>
@@ -235,9 +239,8 @@ const ProjectWizardModal = () => {
   // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
   const projectSource = useSubscription([sub_ids.projectSource]);
   const modal = useSubscription([sub_ids.modal]);
-
-  
-  const children = () => {
+ 
+  function children () {
     switch (modal.id) {
     case 'newProject'  : return (<NewProjectModal/>);
     case 'review'      : return (<SubmitProjectModal/>);
@@ -247,7 +250,7 @@ const ProjectWizardModal = () => {
     default : break;
     }};
 
-  const confirmDisabled = () => {
+  function confirmDisabled () {
     switch (modal.id) {
     case 'newProject'
       : return projectSource === null;
