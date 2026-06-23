@@ -8,9 +8,9 @@ import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 import { LoadingModal, NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import { KBtoBase64Length } from "./utils/generalUtils";
-import { ProjectsTab } from "./components/ProjectsTab";
-import { ImageryTab } from "./components/ImageryTab";
-import { UsersTab } from "./components/UsersTab";
+import { ProjectsTab } from "./institution/ProjectsTab";
+import { ImageryTab } from "./institution/ImageryTab";
+import { UsersTab } from "./institution/UsersTab";
 import { safeLength } from "./utils/sequence";
 
 import '../css/institution.css';
@@ -372,7 +372,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   }, []);
 
   return (
-    <>
+    <div className="reviewInstitution">
       <SidebarTabs
         tabs={[
           { id: "projects", label: "Projects", icon: "projects", badge: safeLength(state.projectList) },
@@ -422,7 +422,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
           addUsersBulk={addUsersBulk}
           usersList={state.usersList} />
       )}
-    </>
+    </div>
   )
 };
 

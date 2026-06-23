@@ -3,6 +3,8 @@ import _ from "lodash";
 
 import SvgIcon from "../components/svg/SvgIcon";
 
+import "../../css/project-wizard.css";
+
 function getSurveyQuestionText(surveyQuestions, questionId) {
   return _.get(surveyQuestions, [questionId, "question"], "");
 }
@@ -54,6 +56,7 @@ function MatchingSumsRuleBody({ questionIds1, questionIds2, surveyQuestions }) {
   ];
   const surveyQuestionText1 = questionIds1.map((q) => getSurveyQuestionText(surveyQuestions, q));
   const surveyQuestionText2 = questionIds2.map((q) => getSurveyQuestionText(surveyQuestions, q));
+
   return (
     <p className="card-text">
       The {isQuestionIds1Multiple ? "sum of the answers" : "answer"} to question
@@ -93,6 +96,7 @@ function TextMatchRuleBody({ questionId, regex, surveyQuestions }) {
 
 function MultipleIncompatibleAnswersBody({ answers, incompatQuestionId, incompatAnswerId, surveyQuestions }) {
   const answersList = Object.entries(answers);
+
   return(
     <div className="card-text">
       {answersList.map((a, idx, arr) =>
@@ -146,36 +150,24 @@ export default function SurveyRule({
 
   }[rule.ruleType];
 
-  return (
-    <div className="d-flex flex-column mb-1" style={{ flex: 1 }}>
-      <div className="card" style={{ width: "100%" }}>
-        <div className="card-body pt-2 pb-2">
+  return (    
+    <div className="rule-card">
+      <div style={{display: 'inline-flex',
+                   gap: '16px'}}>
+        {inDesignMode && (
           <div
-            style={{
-              alignItems: "baseline",
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "start",
-            }}
-          >
-            {inDesignMode && (
-              <button
-                className="btn btn-sm btn-outline-red"
-                onClick={removeRule}
-                title="Delete Rule"
-                type="button"
-              >
-                <SvgIcon icon="trash" size="1rem" />
-              </button>
-            )}
-            <h3 style={{ marginBottom: 0, marginLeft: 6 }}>
-              {rule.id + 1}. {title}
-            </h3>
+            className="delete-button"
+            onClick={removeRule}>
+            <SvgIcon icon='trash' size='1.2rem'/>
           </div>
-          <hr style={{ margin: "0.5rem 0" }} />
-          <RuleBody />
+        )}
+        <div style={{display: "flex", flexDirection: "column", gap: ".5rem"}}> 
+          <span style={{fontWeight: 'bold'}}
+          >{rule.id + 1}. {title}</span>
+          <span>Rule Label: <span style={{fontWeight: 'bold'}}>{rule.label}</span></span> 
         </div>
       </div>
-    </div>
+      <RuleBody />
+    </div>              
   );
 }

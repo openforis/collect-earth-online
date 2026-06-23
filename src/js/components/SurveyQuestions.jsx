@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import _ from "lodash";
 import { stateAtom } from '../utils/constants';
+import { previewSelectedSampleIdAtom, previewUserSamplesAtom } from '../state/projectWizard';
 import { mercator } from '../utils/mercator';
 import { SidebarCard } from "./Sidebar";
 import SvgIcon from "./svg/SvgIcon";
@@ -13,59 +14,84 @@ import {
 } from '../utils/sequence';
 import { LearningMaterialModal } from "./PageComponents";
 
-import '../../css/sidebar.css'
+import '../../css/sidebar.css';
 import '../../css/survey.css';
 
 
-export const SurveyQuestions = () => {
-  const { currentProject,
-          currentPlot,
-          mapConfig,
-          selectedSampleId,
-          userSamples } = useAtomValue(stateAtom);
+export const SurveyQuestions = ({
+  preview = false,
+  surveyQuestions = null
+}) => {
+  const {
+    currentProject,
+    currentPlot,
+    mapConfig,
+    selectedSampleId: globalSelectedId,
+    userSamples: globalUserSamples
+  } = useAtomValue(stateAtom);
+
   const setAppState = useSetAtom(stateAtom);
+
+  // PREVIEW STATE HOOKS
+  const [previewUserSamples, setPreviewUserSamples] = useAtom(previewUserSamplesAtom);
+  const previewSelectedId = useAtomValue(previewSelectedSampleIdAtom);
+
+  // SWITCH DATA SOURCES BASED ON PREVIEW FLAG
+  const surveyData = useMemo(() => {
+    return preview ? surveyQuestions : currentProject?.surveyQuestions;
+  }, [preview, surveyQuestions, currentProject?.surveyQuestions]);
+
+  const userSamples = preview
+    ? previewUserSamples
+    : globalUserSamples;
+
+  const selectedSampleId = preview
+    ? previewSelectedId
+    : globalSelectedId;
+
   const [openTopId, setOpenTopId] = useState(null);
-  const [openByParent, setOpenByParent] = useState({})
+  const [openByParent, setOpenByParent] = useState({});
   const [showLearningMaterial, setShowLearningMaterial] = useState(false);
 
   const entries = (obj = {}) => Object.entries(obj || {});
   const visibleAnswers = (q) => entries(q.answers).filter(([, a]) => !a?.hide);
 
-
-  //EFFECTS
   useEffect(() => {
-  }, [currentProject, userSamples]);
+  }, [surveyData, userSamples]);
 
-  //FUNCTIONS
-
-  // Which samples to write to
   const getSelectedSampleIds = (questionId) => {
-    const answered = currentProject?.surveyQuestions?.[questionId]?.answered || [];
+    // If preview, we just return the ID of our 1 fake sample
+    if (preview) return [selectedSampleId];
+    
+    const answered = surveyData?.[questionId]?.answered || [];
     const allFeatures = mercator.getAllFeatures(mapConfig, "currentSamples") || [];
     const unansweredFeatures = keyDifference(answered, allFeatures);
     const selectedSamples = mercator.getSelectedSamples(mapConfig);
     const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
 
     const list =
-          ((selectedFeatures.length === 0 && answered.length === 0) ||
-           lengthObject(userSamples) === 1)
-          ? allFeatures
-          : (selectedFeatures.length !== 0 ? selectedFeatures : unansweredFeatures);
-    
+      ((selectedFeatures.length === 0 && answered.length === 0) ||
+        lengthObject(userSamples) === 1)
+        ? allFeatures
+        : (selectedFeatures.length !== 0 ? selectedFeatures : unansweredFeatures);
+
     return list.map((f) => f.get("sampleId"));
   };
-  
-  // Validate the selection
+
   const checkSelection = (sampleIds, questionId) => {
-    const q = currentProject?.surveyQuestions?.[questionId];
+    if (preview) return true;
+    
+    const q = surveyData?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
     if (sampleIds.some((s) => !visibleIds.includes(s))) {
       setAppState((s) => ({
         ...s,
-        modal: { alert: {
-          alertType: "Selection Error",
-          alertMessage: "Invalid Selection. Try selecting the question before answering."
-        }}
+        modal: {
+          alert: {
+            alertType: "Selection Error",
+            alertMessage: "Invalid Selection. Try selecting the question before answering."
+          }
+        }
       }));
       return false;
     }
@@ -84,30 +110,49 @@ export const SurveyQuestions = () => {
     return true;
   };
 
-  // Save the answers to userSamples and userImages
   const setCurrentValue = (questionId, answerId, answerText) => {
-    setAppState((prev) => {
-      const sampleIds = getSelectedSampleIds(questionId);
-      if (!checkSelection(sampleIds, questionId)) return prev;
+    const sampleIds = getSelectedSampleIds(questionId);
+    if (preview) {
+      // Logic for updating the FAKE sample state
+      setPreviewUserSamples((prev) => {
+        const newSamples = sampleIds.reduce((acc, sampleId) => {
+          if (answerText == null) return acc;
+          const childIds = getChildQuestionIds(questionId);
+          const prevAnswers = prev?.[sampleId] || {};
+          const subQuestionsCleared = filterObject(
+            prevAnswers,
+            ([key]) => !childIds.includes(Number(key))
+          );
+          const newQuestion = { answerId };
+          if (answerText !== "") newQuestion.answer = answerText;
 
+          acc[sampleId] = {
+            ...subQuestionsCleared,
+            [questionId]: newQuestion,
+          };
+          return acc;
+        }, {});
+
+        return { ...prev, ...newSamples };
+      });
+      return;
+    }
+
+    // ORIGINAL LOGIC FOR GLOBAL STATE
+    setAppState((prev) => {
+      if (!checkSelection(sampleIds, questionId)) return prev;
       const childQuestionIds = getChildQuestionIds(questionId);
 
       const newSamples = sampleIds.reduce((acc, sampleId) => {
         if (answerText == null) return acc;
-
         const prevSampleAnswers = prev.userSamples?.[sampleId] || {};
         const subQuestionsCleared = filterObject(
           prevSampleAnswers,
           ([key]) => !childQuestionIds.includes(Number(key))
         );
-
         const newQuestion = { answerId };
         if (answerText !== "") newQuestion.answer = answerText;
-
-        acc[sampleId] = {
-          ...subQuestionsCleared,
-          [questionId]: newQuestion,
-        };
+        acc[sampleId] = { ...subQuestionsCleared, [questionId]: newQuestion };
         return acc;
       }, {});
 
@@ -143,7 +188,7 @@ export const SurveyQuestions = () => {
     const parentId = child.parentQuestionId;
     if (parentId == null || parentId < 0) return false;
 
-    const parent = currentProject?.surveyQuestions?.[parentId];
+    const parent = surveyData?.[parentId];
     if (!parent) return false;
 
     const parentAns = getCurrentAnswer(parentId);
@@ -157,13 +202,13 @@ export const SurveyQuestions = () => {
     return allowed.length === 0 || allowed.includes(Number(parentAns.answerId));
   };
 
-  const childrenOf = (parentId) =>
+  const childrenOf = (parentId, data) =>
     mapObjectArray(
-      currentProject?.surveyQuestions || {},
+      data || {},
       ([id, q]) => ({ id: Number(id), ...q })
     )
-    .filter(q => q.parentQuestionId === parentId && !q.hideQuestion)
-    .sort((a, b) => (a.cardOrder ?? 1e9) - (b.cardOrder ?? 1e9));
+      .filter(q => q.parentQuestionId === parentId && !q.hideQuestion)
+      .sort((a, b) => (a.cardOrder ?? 1e9) - (b.cardOrder ?? 1e9));
 
   const getAnswerForSample = (qId, sampleId) => {
     const us = userSamples?.[sampleId]?.[qId];
@@ -212,7 +257,7 @@ export const SurveyQuestions = () => {
     // if this question itself has no answers yet, it's 'none' regardless of children
     if (base === 'none') return 'none';
 
-    const children = childrenOf(questionId).filter(isChildVisible);
+    const children = childrenOf(questionId, surveyData).filter(isChildVisible);
     if (children.length === 0) return base;
     const childStatuses = children.map(child => getQuestionStatus(child.id));
     // complete only if this question AND all visible descendants are complete
@@ -275,7 +320,7 @@ export const SurveyQuestions = () => {
           ? openTopId === question.id
           : openByParent[question.parentQuestionId] === question.id;
 
-    const children = childrenOf(question.id).filter(isChildVisible);
+    const children = childrenOf(question.id, surveyData).filter(isChildVisible);
     const status = getQuestionStatus(question.id);
 
     const handleToggle = () => {
@@ -337,8 +382,10 @@ export const SurveyQuestions = () => {
               <button
                 key={id}
                 style={{
-                  borderColor: isActive ? a.color : '#2d6f74',
-                  borderWidth: isActive ? '5px' : '2px',
+                  borderColor: a.color || '#2d6f74',
+                  borderWidth: '2px',
+                  boxShadow: isActive ? `0 0 0 2px ${a.color}` : 'none',
+                  fontWeight: isActive ? 'bold' : 'normal'
                 }}
                 className={`sq-pill ${isActive ? 'active' : ''}`}
                 onClick={() => validateAndSetCurrentValue(q.id, Number(id), a.answer)}
@@ -428,20 +475,12 @@ export const SurveyQuestions = () => {
   };
 
   // MEMOIZATION
-  const parents = useMemo(
-    () =>
-    mapObjectArray(
-      currentProject?.surveyQuestions || {},
-      ([id, q]) => ({ id: Number(id), ...q })
-    )
-      .filter((q) => (q.parentQuestionId ?? -1) < 0 && !q.hideQuestion)
-      .sort(
-        (a, b) =>
-        (a.cardOrder ?? Number.POSITIVE_INFINITY) -
-          (b.cardOrder ?? Number.POSITIVE_INFINITY)
-      ),
-    [currentProject?.surveyQuestions]
-  );
+  const parents = useMemo(() => {
+    return Object.entries(surveyData)
+      .map(([id, q]) => ({ id: Number(id), ...q }))
+      .filter(q => (q.parentQuestionId === -1 || q.parentQuestionId === "-1") && !q.hideQuestion)
+      .sort((a, b) => (a.cardOrder ?? 1e9) - (b.cardOrder ?? 1e9));
+  }, [surveyData]);
 
   const { validatedCount, totalTop } = useMemo(() => {
     const total = parents.length;

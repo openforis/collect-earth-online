@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
-import SvgIcon from "./svg/SvgIcon";
-import { BulkActions } from "./BulkActions";
+import SvgIcon from "../components/svg/SvgIcon";
+import { BulkActions } from "../components/BulkActions";
 
 import '../../css/institution.css';
 

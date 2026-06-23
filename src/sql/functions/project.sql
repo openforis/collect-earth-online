@@ -1437,16 +1437,34 @@ RETURNS int AS $$
       AND iu.user_rid = _user_id;
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION hex_ewkb_to_all_vertices(hex_ewkb text)
-RETURNS TABLE(x float, y float) AS $$
+CREATE OR REPLACE FUNCTION normalize_to_geojson(geom_input text)
+RETURNS text AS $$
 DECLARE
     geom geometry;
 BEGIN
-    geom := ST_GeomFromEWKB(decode(hex_ewkb, 'hex'));
-    
+    IF geom_input LIKE '{%' THEN
+        RETURN geom_input;
+    END IF;
+
+    IF geom_input ~ '^[A-Z]' THEN
+        geom := ST_GeomFromText(geom_input, 4326);
+    ELSE
+        geom := ST_GeomFromEWKB(decode(geom_input, 'hex'));
+    END IF;
+    geom := ST_Force2D(geom);
+    RETURN ST_AsGeoJSON(ST_MakeValid(geom))::text;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION hex_ewkb_to_all_vertices(hex_ewkb text)
+RETURNS TABLE(coord_pair float[]) AS $$
+BEGIN
     RETURN QUERY
-    SELECT ST_X((dp).geom) AS x, ST_Y((dp).geom) AS y
-    FROM ST_DumpPoints(geom) AS dp;
+    SELECT ARRAY[
+        CASE WHEN ST_X((dp).geom) IN ('Infinity'::float, '-Infinity'::float, 'NaN'::float) THEN 0.0 ELSE ST_X((dp).geom) END,
+        CASE WHEN ST_Y((dp).geom) IN ('Infinity'::float, '-Infinity'::float, 'NaN'::float) THEN 0.0 ELSE ST_Y((dp).geom) END
+    ]
+    FROM ST_DumpPoints(ST_Force2D(ST_GeomFromEWKB(decode(hex_ewkb, 'hex')))) AS dp;
 END;
 $$ LANGUAGE plpgsql;
 

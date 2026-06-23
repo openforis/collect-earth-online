@@ -15,7 +15,6 @@ import {
   ImageryLayerOptions,
   BreadCrumbs
 } from "./components/PageComponents";
-import SurveyCollection from "./survey/SurveyCollection";
 import {
   PlanetMenu,
   PlanetDailyMenu,

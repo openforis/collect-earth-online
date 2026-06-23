@@ -1310,7 +1310,13 @@ body {
     padding: 16px;
     align-items: center;
     background: var(--Neutral-White, #FFF);
-    box-shadow: 1px 4px 3px 0 rgba(0, 0, 0, 0.12), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.20);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    position: fixed;
+    top: 56px;
+    left: 0;
+    width: 100%;
+    z-index: 90;
+    box-sizing: border-box;
 }
 
 #breadcrumb-bar .crumb {

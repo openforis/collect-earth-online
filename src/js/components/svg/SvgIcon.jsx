@@ -10,6 +10,7 @@ import closeIcon from "./closeIcon.svg";
 import collapseIcon from "./collapseIcon.svg";
 import copyIcon from "./copyIcon.svg";
 import downCaretIcon from "./downCaretIcon.svg";
+import downCaretIconNew from "./downCaretIconNew.svg";
 import downRightArrowIcon from "./downRightArrowIcon.svg";
 import drawIcon from "./drawIcon.svg";
 import editIcon from "./editIcon.svg";
@@ -37,10 +38,12 @@ import rightCaretIcon from "./rightCaretIcon.svg";
 import rightDoubleIcon from "./rightDoubleIcon.svg";
 import ruleIcon from "./ruleIcon.svg";
 import saveIcon from "./saveIcon.svg";
+import searchIcon from "./searchIcon.svg";
 import settingsIcon from "./settingsIcon.svg";
 import trashIcon from "./trashIcon.svg";
 import upArrowIcon from "./upArrowIcon.svg";
 import upCaretIcon from "./upCaretIcon.svg";
+import upCaretIconNew from "./upCaretIconNew.svg";
 import zoomInIcon from "./zoomInIcon.svg";
 import personIcon from "./personIcon.svg";
 import landscapeIcon from "./landscapeIcon.svg";
@@ -59,6 +62,7 @@ export const iconMap = {
   collapse: collapseIcon,
   copy: copyIcon,
   downCaret: downCaretIcon,
+  downCaretNew: downCaretIconNew,
   downRightArrow: downRightArrowIcon,
   draw: drawIcon,
   edit: editIcon,
@@ -86,10 +90,12 @@ export const iconMap = {
   rightDouble: rightDoubleIcon,
   rule: ruleIcon,
   save: saveIcon,
+  search: searchIcon,
   settings: settingsIcon,
   trash: trashIcon,
   upArrow: upArrowIcon,
   upCaret: upCaretIcon,
+  upCaretNew: upCaretIconNew,
   zoomIn: zoomInIcon,
   users: personIcon,
   projects: landscapeIcon,
