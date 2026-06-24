@@ -373,9 +373,8 @@ export const SurveyQuestions = ({
     button: (q) => {
       const current = getCurrentAnswer(q.id);
       const opts = visibleAnswers(q);
-      const cols = Math.min(opts.length, 4);
       return (
-        <div className="sq-answers" style={{ '--cols': cols }}>
+        <div className="sq-answers">
           {opts.map(([id, a]) => {
             const isActive = current && Number(current.answerId) === Number(id);
             return (
