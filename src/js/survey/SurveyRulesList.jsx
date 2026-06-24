@@ -41,5 +41,6 @@ export default function SurveyRulesList({ inDesignMode}) {
       ) : (
         <label className="ml-3">No rules have been created for this survey.</label>
       )}
-    </div>);
+    </div>
+  );
 }

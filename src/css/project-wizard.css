@@ -371,7 +371,6 @@
 
 .search-input {
     display: flex;
-    width: 300px;
     height: 42px;
     padding: 10px 213px 10px 16px;
     align-items: center;

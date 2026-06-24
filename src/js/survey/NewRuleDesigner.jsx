@@ -300,7 +300,9 @@ function MatchingSumsForm () {
     ([_id, sq]) => sq.dataType === "number"
   );
 
-  function addSurveyRule () {      
+  function addSurveyRule () {
+    const { surveyRules, setProjectDetails } = this.context;
+    const { questionIds1, questionIds2 } = this.state;
     const conflictingRule = surveyRules.find(
       (rule) =>
       rule.ruleType === "matching-sums" &&
@@ -397,7 +399,6 @@ function  IncompatibleAnswersForm () {
   function  checkPair (q1, a1, q2, a2) {return (q1 === q2 && a1 === a2);};
   function checkEquivalent (q1, a1, q2, a2, q3, a3, q4, a4) 
   {return(
-    (checkPair(q1, a1, q3, a3) && checkPair(q2, a2, q4, a4)) ||
       (checkPair(q1, a1, q4, a4) && checkPair(q2, a2, q3, a3)));}
 
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
@@ -414,10 +415,8 @@ function  IncompatibleAnswersForm () {
 
   const answerId1 = useSubscription([sub_ids.rules.newRule.answerId1]);
   function setAnswerId1 (qid) {dispatch([event_ids.rules.newRule.answerId1, qid]);}
-
   const answerId2 = useSubscription([sub_ids.rules.newRule.answerId2]);
   function setAnswerId2 (qid) {dispatch([event_ids.rules.newRule.qustionId2, qid]);}
-  
   const modal = useSubscription([sub_ids.modal]);
   function setModal () {dispatch([event_ids.modal]);}
 
@@ -586,7 +585,7 @@ function MultipleIncompatibleAnswersForm () {
           incompatAnswerId: incompatAnswerId
     });
   };
-
+  
   function safeFindAnswers (questionId)  {    
     return questionId in surveyQuestions ? surveyQuestions[questionId].answers : {};
   };
