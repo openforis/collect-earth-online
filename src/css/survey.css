@@ -149,8 +149,8 @@
 
 /* For button-type answers */
 .sq-answers {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 1), 1fr);
   gap: 12px;
   padding: 10px;
   justify-content: start;
