@@ -40,6 +40,9 @@ export default function SurveyRulesList({ inDesignMode}) {
           <label className="ml-3">No rules have been created for this survey.</label>
         )}
       {/*
+         THE FOLLOWING SECTION DEFINES A PLACEHOLDER COMPONENT THAT FILTERS AND SEARCHES EXISTING RULES. THIS FEATURE IN TEMPORARILY DEPRECTAED AS WE ANTICIPATE USERS CREATING FEWER RULES
+         vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+         
       <div className='survey-search-rules'>
         <div className='search-bar'>
           <SvgIcon icon='search' size='1.2rem'/>
@@ -88,6 +91,7 @@ export default function SurveyRulesList({ inDesignMode}) {
             </div>
        
             </div>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             */}
     </div>);
 }

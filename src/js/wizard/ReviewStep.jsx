@@ -1,5 +1,3 @@
-//THIS IS A PROJECT-WIZARD STEP AND PROBABLY NEEDS TO BE IN A DISTINCT DIRECTORY FROM SURVEY STEPS
-
 import React, { useEffect, useState, useContext } from "react";
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 
