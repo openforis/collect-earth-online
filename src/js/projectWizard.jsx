@@ -60,14 +60,29 @@ const exitModal = {
 
 function NavButtons  () {
   const currentStep = useSubscription([sub_ids.currentStep]);
-  
+  function continueHandler () {dispatch([event_ids.continueHandler, currentStep]);}
+  /*
   function continueHandler () {
+    
+    switch (currentStep) {
+    case 'overview' : {dispatch([event_ids.continueHandler,]);}
+         case 'imagery' : {errors = validateOverview();
+                           errors ? dispatch([event_ids.errors, errors])
+                           : dispatch([event_ids.currentStep, 'imagery']);}
+      //    case 'boundary' : {}
+      //    case 'plots' : {}
+      //    case 'samples' : {}
+      //    case 'questions' : {}
+      //    case 'rules' : {}
+      //    case 'imagery' : {}
+    default : dispatch([event_ids.errors, ['Navigation', ['You have encountered a client erorr. Please refresh the page.']]]);
+    };
     const currentIdx = projectSteps.findIndex(({id})=> (id == currentStep));
     currentIdx + 1 < projectSteps.length
       ? dispatch([event_ids.currentStep, projectSteps[currentIdx + 1].id])
       : dispatch([event_ids.modal, publishModal]);
   };
-
+*/
   function saveDraftHandler () {
     dispatch([event_ids.saveDraft]);
   };
