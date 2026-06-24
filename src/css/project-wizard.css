@@ -337,6 +337,7 @@
     display: inline-flex;   
     padding: 16px;
     flex-direction: column;
+    width: 100%;
     align-items: center;
     gap: 8px;
     background: var(--Neutral-White);

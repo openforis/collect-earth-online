@@ -54,16 +54,11 @@ function TextMatchForm () {
                                    alertMessage: errorMessages.map((s) => "- " + s).join("\n")}}] );
     } else {
       setProjectDetails({
-        surveyRules: [
-          ...surveyRules,
-          {
             id: getNextInSequence(surveyRules.map((rule) => rule.id)),
             ruleType: "text-match",
             questionId,
             regex,
-          },
-        ],
-      });
+          });
     }
   };
 
@@ -141,17 +136,12 @@ function NumericRangeForm () {
       setModal ({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
       setProjectDetails({
-        surveyRules: [
-          ...surveyRules,
-          {
             id: getNextInSequence(surveyRules.map((rule) => rule.id)),
             ruleType: "numeric-range",
             questionId,
             min,
             max,
-          },
-        ],
-      });
+          });
     }
   };
 
@@ -239,16 +229,11 @@ function SumOfAnswersForm () {
       setModal({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
       setProjectDetails({
-        surveyRules: [
-          ...surveyRules,
-          {
             id: getNextInSequence(surveyRules.map((rule) => rule.id)),
             ruleType: "sum-of-answers",
             questionIds,
             validSum,
-          },
-        ],
-      });
+          });
     }
   };
 
@@ -315,9 +300,7 @@ function MatchingSumsForm () {
     ([_id, sq]) => sq.dataType === "number"
   );
 
-  function addSurveyRule () {
-    const { surveyRules, setProjectDetails } = this.context;
-    const { questionIds1, questionIds2 } = this.state;
+  function addSurveyRule () {      
     const conflictingRule = surveyRules.find(
       (rule) =>
       rule.ruleType === "matching-sums" &&
@@ -411,20 +394,21 @@ function MatchingSumsForm () {
 }
 
 function  IncompatibleAnswersForm () {
-  function checkPair (q1, a1, q2, a2) {return (q1 === q2 && a1 === a2);};
+  function  checkPair (q1, a1, q2, a2) {return (q1 === q2 && a1 === a2);};
   function checkEquivalent (q1, a1, q2, a2, q3, a3, q4, a4) 
-    {return(
-      (this.checkPair(q1, a1, q3, a3) && this.checkPair(q2, a2, q4, a4)) ||
-        (this.checkPair(q1, a1, q4, a4) && this.checkPair(q2, a2, q3, a3)));}
+  {return(
+    (checkPair(q1, a1, q3, a3) && checkPair(q2, a2, q4, a4)) ||
+      (checkPair(q1, a1, q4, a4) && checkPair(q2, a2, q3, a3)));}
 
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
-  function setProjectDetails (newRule) {dispatch([event_ids.rules.rules, newRule]);}
+  function addSurveyRule (newRule) {dispatch([event_ids.rules.rules, newRule]);}
+  function setProjectDetails  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
   const questionId1 = useSubscription([sub_ids.rules.newRule.questionId1]);
   function setQuestionId1 (qid) {dispatch([event_ids.rules.newRule.questionId1, qid]);}
-  
+
   const questionId2 = useSubscription([sub_ids.rules.newRule.questionId2]);
   function setQuestionId2 (qid) {dispatch([event_ids.rules.newRule.qustionId2, qid]);}
 
@@ -451,7 +435,7 @@ function  IncompatibleAnswersForm () {
     const conflictingRule = surveyRules.find(
       (rule) =>
       rule.ruleType === "incompatible-answers" &&
-        this.checkEquivalent(
+        checkEquivalent(
           rule.questionId1,
           rule.answerId1,
           rule.questionId2,
@@ -475,19 +459,14 @@ function  IncompatibleAnswersForm () {
     if (errorMessages.length > 0) {
       setModal ({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
-      setProjectDetails({
-        surveyRules: [
-          ...surveyRules,
-          {
+      addSurveyRule({
             id: getNextInSequence(surveyRules.map((rule) => rule.id)),
             ruleType: "incompatible-answers",
             questionId1,
             questionId2,
             answerId1,
             answerId2,
-          },
-        ],
-      });
+      });      
     }
   };
 
@@ -600,16 +579,11 @@ function MultipleIncompatibleAnswersForm () {
 
   function addSurveyRule () {    
     setProjectDetails({
-      surveyRules: [
-        ...surveyRules,
-        {
           id: getNextInSequence(surveyRules.map((rule) => rule.id)),
           ruleType: "multiple-incompatible-answers",
           answers: answers,
           incompatQuestionId: incompatQuestionId,
           incompatAnswerId: incompatAnswerId
-        },
-      ],
     });
   };
 
