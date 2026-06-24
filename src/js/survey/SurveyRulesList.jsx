@@ -18,9 +18,6 @@ export default function SurveyRulesList({ inDesignMode}) {
 
   const ruleFilter = useSubscription([sub_ids.rules.filter]);
   function setRuleFilter (filter) {dispatch([event_ids.rules.filter, filter]);}
-
-  console.log('survey rules', surveyRules);
-  
   return(
     <div style={{padding: '1rem'}}>
       <div className="survey-rules-header">

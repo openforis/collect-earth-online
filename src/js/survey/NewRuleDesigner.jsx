@@ -584,7 +584,7 @@ function MultipleIncompatibleAnswersForm () {
           answers: answers,
           incompatQuestionId: incompatQuestionId,
           incompatAnswerId: incompatAnswerId
-        });
+    });
   };
 
   function safeFindAnswers (questionId)  {    
