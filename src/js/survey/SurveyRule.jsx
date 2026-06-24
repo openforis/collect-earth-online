@@ -118,7 +118,6 @@ export default function SurveyRule({
   setProjectDetails,
   surveyRules,
 }) {
-  console.log('survey rule!', rule);
   const removeRule = () => {
     const newSurveyRules = surveyRules.filter((r) => r.id !== rule.id);
     setProjectDetails({ surveyRules: newSurveyRules });

@@ -149,19 +149,11 @@
 
 /* For button-type answers */
 .sq-answers {
-<<<<<<< HEAD
-    display: grid;
-    grid-template-columns: repeat(var(--cols, 1), 1fr);
-    gap: 12px;
-    padding: 10px;
-    justify-content: start;
-=======
   display: grid;
   grid-template-columns: repeat(var(--cols, 1), 1fr);
   gap: 12px;
   padding: 10px;
   justify-content: start;
->>>>>>> main
 }
 
 .sq-pill {
