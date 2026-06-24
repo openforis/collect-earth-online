@@ -337,6 +337,7 @@
     display: inline-flex;   
     padding: 16px;
     flex-direction: column;
+    width: 100%;
     align-items: center;
     gap: 8px;
     background: var(--Neutral-White);
@@ -370,7 +371,6 @@
 
 .search-input {
     display: flex;
- 
     height: 42px;
     padding: 10px 213px 10px 16px;
     align-items: center;

@@ -234,6 +234,11 @@ export const QuestionCard = ({
                     style={{ margin: 0, flex: 1 }}
                     value={a.answer}
                     placeholder={`Enter Answer ${question.dataType === 'number' ? 'Number' : 'Text'}`}
+                    onKeyDown={(e) => {
+                      if (question.dataType === 'number' && ['e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     onChange={(e) => {
                       const value = question.dataType === 'number' && e.target.value !== ''
                         ? Number(e.target.value)
