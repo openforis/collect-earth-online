@@ -33,7 +33,7 @@
     flex-direction: column;
     flex: 1;
     width: 100%;
-        /* overflow: hidden; */
+    /* overflow: hidden; */
     position: relative;
 }
 
@@ -353,6 +353,7 @@ text-underline-position: from-font;
     padding: 16px;
     flex-direction: column;
     width: 100%;
+    align-items: center;
     gap: 8px;
     background: var(--Neutral-White);
     box-shadow: 6px 0 8px 0 rgba(0, 0, 0, 0.12);

@@ -5,13 +5,11 @@ import shp from "shpjs";
 import { NewMap } from '../components/NewMap';
 import SvgIcon from '../components/svg/SvgIcon';
 import Modal from '../components/Modal';
-import { readFileAsArrayBuffer } from '../utils/generalUtils';
 
 import {
   event_ids,
   sub_ids
 } from '../state/projectWizard';
-
 
 export const BoundaryStep = () => {
   const generationMethod = useSubscription([sub_ids.boundary.generationMethod]) || "manual";
@@ -192,7 +190,7 @@ export const BoundaryStep = () => {
           onDrawComplete={handleMapDrawComplete}
           initZoom={4}
         />
-          </div>
+      </div>
     </div>
   );
 };

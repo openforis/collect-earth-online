@@ -1,11 +1,7 @@
 import { atom } from "jotai";
 import { initAppDb , regEvent , regEffect , dispatch , regSub , current } from '@flexsurfer/reflex';
-
 import { validateWizard } from '../wizard/validation';
 
-
-//TODO: Delete unused jotai-style atoms
-//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 export const projectSourceAtom = atom(null);
 export const currentStepAtom = atom("overview");
 export const projectOverviewAtom = atom (
@@ -29,7 +25,6 @@ export const surveyQuestionsAtom = atom([]);
 export const rulesAtom = atom([]);
 export const previewSelectedSampleIdAtom = atom(1);
 export const previewUserSamplesAtom = atom({});
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 const projectWizardDb = {
   institutionId: -1,
@@ -144,7 +139,7 @@ export const event_ids = {
              }},
   projectDetails: 'projectDetails',
   imagery: {
-    'imagery' : 'imagery',
+    imagery : 'imagery',
     imageryList: 'imageryList'},
   boundary: {
     generationMethod: 'boundary.generationMethod',
@@ -233,7 +228,7 @@ export const sub_ids = {
              }},
   projectDetails: 'projectDetails',
   imagery: {
-    'imagery' : 'imagery',
+    imagery : 'imagery',
     imageryList: 'imageryList'},
   boundary: {
     generationMethod: 'boundary.generationMethod',
@@ -345,6 +340,66 @@ regSub(sub_ids.samples.sampleResolution, sub_ids.samples.sampleResolution);
 regSub(sub_ids.samples.sampleFileName, sub_ids.samples.sampleFileName);
 regSub(sub_ids.samples.allowDrawnSamples, sub_ids.samples.allowDrawnSamples);
 
+// boundary
+regSub(sub_ids.boundary.generationMethod, sub_ids.boundary.generationMethod);
+regSub(sub_ids.boundary.aoiFeatures, sub_ids.boundary.aoiFeatures);
+regSub(sub_ids.boundary.aoiFileName, sub_ids.boundary.aoiFileName);
+
+// plots
+regSub(sub_ids.plots.plotDistribution, sub_ids.plots.plotDistribution);
+regSub(sub_ids.plots.numPlots, sub_ids.plots.numPlots);
+regSub(sub_ids.plots.plotSize, sub_ids.plots.plotSize);
+regSub(sub_ids.plots.plotShape, sub_ids.plots.plotShape);
+regSub(sub_ids.plots.plotSpacing, sub_ids.plots.plotSpacing);
+regSub(sub_ids.plots.shufflePlots, sub_ids.plots.shufflePlots);
+regSub(sub_ids.plots.totalPlots, sub_ids.plots.totalPlots);
+regSub(sub_ids.plots.plotFeatures, sub_ids.plots.plotFeatures);
+regSub(sub_ids.plots.plotFileName, sub_ids.plots.plotFileName);
+regSub(sub_ids.plots.designSettings, sub_ids.plots.designSettings);
+
+
+// samples
+regSub(sub_ids.samples.sampleDistribution, sub_ids.samples.sampleDistribution);
+regSub(sub_ids.samples.samplesPerPlot, sub_ids.samples.samplesPerPlot);
+regSub(sub_ids.samples.sampleResolution, sub_ids.samples.sampleResolution);
+regSub(sub_ids.samples.sampleFileName, sub_ids.samples.sampleFileName);
+regSub(sub_ids.samples.allowDrawnSamples, sub_ids.samples.allowDrawnSamples);
+
+
+regSub(sub_ids.questions.questions, sub_ids.questions.questions);
+
+regSub(sub_ids.rules.rules, sub_ids.rules.rules);
+regSub(sub_ids.rules.search, sub_ids.rules.search);
+regSub(sub_ids.rules.filter, sub_ids.rules.filter);
+regSub(sub_ids.rules.selectedRuleType, sub_ids.rules.selectedRuleType);
+regSub(sub_ids.rules.newRule.label, sub_ids.rules.newRule.label);
+regSub(sub_ids.rules.newRule.answers, sub_ids.rules.newRule.answers);
+regSub(sub_ids.rules.newRule.regex, sub_ids.rules.newRule.regex);
+regSub(sub_ids.rules.newRule.min, sub_ids.rules.newRule.min);
+regSub(sub_ids.rules.newRule.max, sub_ids.rules.newRule.max);
+regSub(sub_ids.rules.newRule.validSum, sub_ids.rules.newRule.validSum);
+regSub(sub_ids.rules.newRule.questionId, sub_ids.rules.newRule.questionId);
+regSub(sub_ids.rules.newRule.questionIds, sub_ids.rules.newRule.questionIds);
+regSub(sub_ids.rules.newRule.questionId1, sub_ids.rules.newRule.questionId1);
+regSub(sub_ids.rules.newRule.questionId2, sub_ids.rules.newRule.questionId2);
+regSub(sub_ids.rules.newRule.questionIds1, sub_ids.rules.newRule.questionIds1);
+regSub(sub_ids.rules.newRule.questionIds2, sub_ids.rules.newRule.questionIds2);
+regSub(sub_ids.rules.newRule.answerId1, sub_ids.rules.newRule.answerId1);
+regSub(sub_ids.rules.newRule.answerId2, sub_ids.rules.newRule.answerId2);
+regSub(sub_ids.rules.newRule.tempQuestionId, sub_ids.rules.newRule.tempQuestionId);
+regSub(sub_ids.rules.newRule.tempAnswerId, sub_ids.rules.newRule.tempAnswerId);
+regSub(sub_ids.rules.newRule.incompatQuestionId, sub_ids.rules.newRule.incompatQuestionId);
+regSub(sub_ids.rules.newRule.incompatAnswerId, sub_ids.rules.newRule.incompatAnswerId);
+
+
+// institution
+regSub(sub_ids.institution.users, sub_ids.institution.users);
+
+
+regEvent(event_ids.projectDetails,
+         ({ draftDb }, projectDetails) => {
+           draftDb[sub_ids.projectDetails] = projectDetails;
+         });
 
 regSub(sub_ids.questions.questions, sub_ids.questions.questions);
 
@@ -465,7 +520,6 @@ function buildProject (draftDb, sub_ids) {
             return {...acc, [idx]: val};
           }, {}) };
 }
-
 
 regEvent(event_ids.getDraft, ({ draftDb }, draftId) => {
   function getProjectDraftById(projectDraftId) {
@@ -688,6 +742,12 @@ regEvent(event_ids.imagery.imageryList, ({ draftDb }, imageryList ) => {
   draftDb[sub_ids.imagery.imageryList] = imageryList;
 });
 
+regEvent(event_ids.questions.addQuestion,
+         ({ draftDb }, questionToAdd ) => {
+           const prev = current(draftDb[sub_ids.questions.questions]);
+           console.log(sub_ids.questions.questions ,prev);
+           draftDb[sub_ids.questions.questions].push(questionToAdd);
+         });
 
 // PROJECT BOUNDARY EVENTS
 

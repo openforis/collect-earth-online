@@ -20,7 +20,6 @@ export default function SurveyRulesList({ inDesignMode}) {
   
   return(
     <div style={{padding: '1rem'}}>
-      
       <div className="survey-rules-header">
         <p>questions to be answered during collection  <span style={
           {fontWeight: 'normal',
@@ -93,5 +92,6 @@ export default function SurveyRulesList({ inDesignMode}) {
             </div>
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             */}
-    </div>);
+    </div>
+  );
 }

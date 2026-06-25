@@ -59,7 +59,6 @@ export const NewMap = ({
   const layerCache = useRef(new Map());
   const library = useAtomValue(mapImageryLibraryAtom);
   const activeIds = useAtomValue(activeMapLayerIdsAtom);
-  
   useEffect(() => {
     if (!mapElement.current) return;
 

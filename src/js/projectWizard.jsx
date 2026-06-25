@@ -5,22 +5,17 @@ import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import { BreadCrumbs, NavigationBar } from "./components/PageComponents";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
-
+import { SurveyQuestions } from "./components/SurveyQuestions";
 import OverviewStep from './wizard/OverviewStep';
-import RulesStep from './wizard/RulesStep';
 import { ImageryStep } from "./wizard/ImageryStep";
 import { BoundaryStep } from "./wizard/BoundaryStep";
 import { PlotStep } from "./wizard/PlotStep";
 import { SurveyQuestionsStep } from "./wizard/SurveyQuestionsStep";
 import { SampleStep } from "./wizard/SampleStep";
-import { SurveyQuestions } from "./components/SurveyQuestions";
-import SurveyRuleDesigner from "./survey/SurveyRulesDesigner";
+import RulesStep from './wizard/RulesStep';
 import ReviewStep from "./wizard/ReviewStep";
-
-import { 
-  event_ids,
-  sub_ids
-} from "./state/projectWizard";
+import SurveyRuleDesigner from "./survey/SurveyRulesDesigner";
+import { event_ids, sub_ids } from "./state/projectWizard";
 
 import "../css/project-wizard.css";
 
@@ -61,7 +56,7 @@ const exitModal = {
 function NavButtons  () {
   const currentStep = useSubscription([sub_ids.currentStep]);
   
-  function continueHandler () {
+  const  continueHandler = () => {
     const currentIdx = projectSteps.findIndex(({id})=> (id == currentStep));
     currentIdx + 1 < projectSteps.length
       ? dispatch([event_ids.currentStep, projectSteps[currentIdx + 1].id])
@@ -123,11 +118,11 @@ const ProjectWizardNavigator = () => {
 function NewProjectModal () {
   const newProjectOptions = {
     newProject: ['Create a new project',
-                 'Generate a new project from scratch by customizing all steps.'],
+      'Generate a new project from scratch by customizing all steps.'],
     templateProject: ['Select from an existing template',
-                      'Select a template and prefill all the steps. You can edit and customize it.'],
+      'Select a template and prefill all the steps. You can edit and customize it.'],
     importProject: ['Import Collect Earth Project',
-                    'Need Description']};
+      'Need Description']};
   const projectSource = useSubscription([sub_ids.projectSource]);
 
   return (
@@ -137,8 +132,8 @@ function NewProjectModal () {
         return (
           <div
             className={projectSource === id ?
-                       "radio-selected-button"
-                       : "radio-selection-button"}
+              "radio-selected-button"
+              : "radio-selection-button"}
             key={id}
             onClick={()=> {
               dispatch([event_ids.projectSource, id]);
@@ -250,7 +245,7 @@ const ProjectWizardModal = () => {
     default : break;
     }};
 
-  function confirmDisabled () {
+  const confirmDisabled = () => {
     switch (modal.id) {
     case 'newProject'
       : return projectSource === null;
@@ -361,6 +356,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
       </NavigationBar>
     </div>);
 };
+
 
 
 export function pageInit(params, session) {

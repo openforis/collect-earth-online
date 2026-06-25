@@ -12,7 +12,6 @@ import {
   mapObjectArray,
   sameContents,
 } from "../utils/sequence";
-import { ProjectContext } from "../project/constants";
 import Modal from "../components/Modal";
 
 
@@ -394,8 +393,8 @@ function  IncompatibleAnswersForm () {
   function  checkPair (q1, a1, q2, a2) {return (q1 === q2 && a1 === a2);};
   function checkEquivalent (q1, a1, q2, a2, q3, a3, q4, a4) 
   {return(
-    (this.checkPair(q1, a1, q3, a3) && this.checkPair(q2, a2, q4, a4)) ||
-      (this.checkPair(q1, a1, q4, a4) && this.checkPair(q2, a2, q3, a3)));}
+    (checkPair(q1, a1, q3, a3) && this.checkPair(q2, a2, q4, a4)) ||
+      (checkPair(q1, a1, q4, a4) && this.checkPair(q2, a2, q3, a3)));}
 
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
@@ -431,7 +430,7 @@ function  IncompatibleAnswersForm () {
     const conflictingRule = surveyRules.find(
       (rule) =>
       rule.ruleType === "incompatible-answers" &&
-        this.checkEquivalent(
+        checkEquivalent(
           rule.questionId1,
           rule.answerId1,
           rule.questionId2,
@@ -617,8 +616,7 @@ function MultipleIncompatibleAnswersForm () {
 
   /*
     THIS IS A SECTION THAT DEFINES A MULTIPLE-INCOMPATIBLE-ANSWERS with N Answers, but needs to be worked into state the way incompatQ1 are
-    vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    
+
     <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
     {Object.entries(sumsQuestions).map(([idx])=>{
     idx = Number(idx);
@@ -693,7 +691,10 @@ function MultipleIncompatibleAnswersForm () {
     </div>
     </div>
     </div>
+<<<<<<< HEAD
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+=======
+>>>>>>> main
   */
 
   return lengthObject(availableQuestions) > 2 ? (

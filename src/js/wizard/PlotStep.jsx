@@ -331,7 +331,6 @@ export const PlotStep = () => {
 export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
   const designSettings = useSubscription([sub_ids.plots.designSettings]) || {};
   const userAssignment = designSettings.userAssignment || { userMethod: "none", users: [], percents: [] };
-  
   const { userMethod, users, percents } = userAssignment;
   const { qaqcAssignment } = designSettings;
   const qaqcMethod = qaqcAssignment?.qaqcMethod || "none";
@@ -342,7 +341,6 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
     ["equal", "Equal assignments", false],
     ["percent", "Percentage of plots", false],
   ];
-  
   const possibleUsers = [
     { id: -1, email: "Select user..." },
     ...institutionUserList.filter(u =>

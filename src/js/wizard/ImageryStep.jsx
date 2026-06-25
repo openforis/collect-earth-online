@@ -7,7 +7,6 @@ import { NewMap } from '../components/NewMap';
 import SvgIcon from '../components/svg/SvgIcon';
 
 export const ImageryStep = ({ imageryList = [] }) => {
-//  const [selectedIds, setSelectedIds] = useAtom(projectImageryListAtom);
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
 
@@ -98,7 +97,7 @@ export const ImageryStep = ({ imageryList = [] }) => {
               value={selectedIds[0] || ""}
               onChange={(e) => {
                 const val = parseInt(e.target.value);
-                setSelectedIds([val, ...selectedIds.filter(i => i !== val)] );
+                setSelectedIds([val, ...selectedIds.filter(i => i !== val)]);
               }}
             >
               <option value="" disabled>Select a base map</option>

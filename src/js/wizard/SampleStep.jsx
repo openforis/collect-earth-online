@@ -4,19 +4,15 @@ import { event_ids, sub_ids } from '../state/projectWizard';
 import { NewMap } from '../components/NewMap';
 import Select from '../components/Select';
 import SvgIcon from '../components/svg/SvgIcon';
-import { readFileAsBase64Url } from '../utils/generalUtils';
 import { getPlotGeometry, generatePreviewSamples } from '../utils/newMercator';
 
 export const SampleStep = () => {
   const plotFeatures = useSubscription([sub_ids.plots.plotFeatures]) || [];
   const plotSize = useSubscription([sub_ids.plots.plotSize]) || 10;
   const plotShape = useSubscription([sub_ids.plots.plotShape]) || 'circle';
-
   const sampleDistribution = useSubscription([sub_ids.samples.sampleDistribution]) || "random";
   const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]) || 1;
   const sampleResolution = useSubscription([sub_ids.samples.sampleResolution]) || 0;
-  // const sampleFeatures = useSubscription([sub_ids.samples.sampleFeatures]) || [];
-
   const activePlot = (plotFeatures.length > 0) ? plotFeatures[0] : null;
   
   let aoiToShow = [];
