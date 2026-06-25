@@ -5,7 +5,6 @@ import shp from "shpjs";
 import { NewMap } from '../components/NewMap';
 import SvgIcon from '../components/svg/SvgIcon';
 import Modal from '../components/Modal';
-import { readFileAsArrayBuffer } from '../utils/generalUtils';
 
 import {
   event_ids,
@@ -182,7 +181,6 @@ export const BoundaryStep = () => {
           </section>
         </div>
       </div>
-
       <div className="map-area">
         <div className="map-title-overlay">PROJECT BOUNDARY PREVIEW</div>
         <NewMap 

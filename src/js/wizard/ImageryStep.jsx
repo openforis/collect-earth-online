@@ -1,15 +1,18 @@
 import React, { useEffect } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
-import { projectImageryListAtom } from '../state/projectWizard';
+import { dispatch, useSubscription } from '@flexsurfer/reflex';
+import { sub_ids, event_ids } from '../state/projectWizard';
 import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
 import { NewMap } from '../components/NewMap';
 import SvgIcon from '../components/svg/SvgIcon';
 
 export const ImageryStep = ({ imageryList = [] }) => {
-  const [selectedIds, setSelectedIds] = useAtom(projectImageryListAtom);
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
 
+  function setSelectedIds (selectedIds) {dispatch([event_ids.imagery.imagery, selectedIds]);}
+  const selectedIds = useSubscription([sub_ids.imagery.imagery]);
+  
   // Sets up default selected imagery.
   useEffect(() => {
     setMapLibrary(imageryList);
@@ -94,7 +97,7 @@ export const ImageryStep = ({ imageryList = [] }) => {
               value={selectedIds[0] || ""}
               onChange={(e) => {
                 const val = parseInt(e.target.value);
-                setSelectedIds(prev => [val, ...prev.filter(i => i !== val)]);
+                setSelectedIds([val, ...selectedIds.filter(i => i !== val)]);
               }}
             >
               <option value="" disabled>Select a base map</option>
