@@ -77,7 +77,7 @@ export const SampleGenerationCard = () => {
   ];
 
   return (
-    <div className="card" style={{ width: '100%', padding: '20px', marginBottom: '20px' }}>
+    <div className="wizard-card">
       <h5 className="card-title">SAMPLE GENERATION *</h5>
       <Select 
         label="Spatial Distribution"
@@ -119,7 +119,7 @@ export const UserDrawnSamplesCard = () => {
   const sampleGeometries = designSettings.sampleGeometries || { points: true, lines: false, polygons: false };
 
   return (
-    <div className="card" style={{ width: '100%', padding: '20px' }}>
+    <div className="wizard-card">
       <h5 className="card-title">USER DRAWN SAMPLES *</h5>
       <div className="form-check mb-2">
         <input type="checkbox" className="form-check-input" checked={allowDrawnSamples} 

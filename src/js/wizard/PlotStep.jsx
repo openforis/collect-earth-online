@@ -270,7 +270,7 @@ export const PlotStep = () => {
       )}
 
       <div className="wizard-sidebar">
-        <div className="card" style={{ width: '100%', padding: '20px' }}>
+        <div className="wizard-card">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="card-title" style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Plot Generation</h5>
             <SvgIcon icon="info" size="1.2rem" color="#666" />

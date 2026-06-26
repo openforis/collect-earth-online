@@ -10,8 +10,6 @@ import { BoundaryStep } from "./wizard/BoundaryStep";
 import { PlotStep } from "./wizard/PlotStep";
 import { SurveyQuestionsStep } from "./wizard/SurveyQuestionsStep";
 import { SampleStep } from "./wizard/SampleStep";
-import { SurveyQuestions } from "./components/SurveyQuestions";
-import SurveyRuleDesigner from "./survey/SurveyRulesDesigner";
 import ReviewStep from "./wizard/ReviewStep";
 import OverviewStep from './wizard/OverviewStep';
 import RulesStep from './wizard/RulesStep';

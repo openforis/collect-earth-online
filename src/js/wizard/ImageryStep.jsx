@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { useAtom, useSetAtom } from 'jotai';
+import React, { useEffect, useState, useRef } from 'react';
+import { useSetAtom } from 'jotai';
 import { dispatch, useSubscription } from '@flexsurfer/reflex';
 import { sub_ids, event_ids } from '../state/projectWizard';
 import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
@@ -7,7 +7,8 @@ import { NewMap } from '../components/NewMap';
 import SvgIcon from '../components/svg/SvgIcon';
 
 export const ImageryStep = ({ imageryList = [] }) => {
-  //  const [selectedIds, setSelectedIds] = useAtom(projectImageryListAtom);
+  const [previewId, setPreviewId] = useState("");
+  const initialized = useRef(false);
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
 
@@ -16,22 +17,19 @@ export const ImageryStep = ({ imageryList = [] }) => {
   // Sets up default selected imagery.
   useEffect(() => {
     setMapLibrary(imageryList);
-    if (imageryList && imageryList.length > 0 && selectedIds.length === 0) {
+    if (imageryList && imageryList.length > 0 && !initialized.current) {
       const platformItems = imageryList.filter(img => img.visibility === 'platform');
-          if (platformItems.length > 0) {
-        // Find the lowest numeric ID
-        const lowestPlatform = platformItems.sort((a, b) => Number(a.id) - Number(b.id))[0];
-        setSelectedIds([Number(lowestPlatform.id)]);
-      } else {
-        // Fallback if no platform imagery exists
-        setSelectedIds([Number(imageryList[0].id)]);
+      if (platformItems.length > 0) {
+        setPreviewId(platformItems[0].id.toString());
       }
+      initialized.current = true;
     }
   }, [imageryList, setMapLibrary]);
 
   useEffect(() => {
-    setActiveMapLayers(new Set(selectedIds));
-  }, [selectedIds, setActiveMapLayers]);
+    const previewArray = previewId ? [Number(previewId)] : [];
+    setActiveMapLayers(new Set(previewArray));
+  }, [previewId, setActiveMapLayers]);
 
   // Grouping logic with safety check
   const groupedImagery = (imageryList || []).reduce((acc, img) => {
@@ -88,7 +86,21 @@ export const ImageryStep = ({ imageryList = [] }) => {
   return (
     <div className="wizard-step-layout">
       <div className="wizard-sidebar">
-        <div className="card" style = {{padding: '20px'}}>
+        <div className="wizard-card">
+          <section style={{ marginBottom: '30px', width: '100%' }}>
+            <p className="card-title">IMAGERY PREVIEW</p>
+            <select
+              className="text-input"
+              value={previewId}
+              onChange={(e) => setPreviewId(e.target.value)}
+            >
+              <option value="">Select imagery to preview</option>
+              {imageryList.map(img => (
+                <option key={img.id} value={img.id}>{img.title}</option>
+              ))}
+            </select>
+          </section>
+
           <section style={{ marginBottom: '30px', width: '100%' }}>
             <p className="card-title">DEFAULT IMAGERY <span style={{color: 'red'}}>*</span></p>
             <label className="text-label" style={{ display: 'block', marginBottom: '5px' }}>Base Map</label>

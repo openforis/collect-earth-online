@@ -123,7 +123,6 @@ export const validateWizard = (form) => {
     may even send a request, if superficially valid, and still add errors to state, in case of server error
   */
 
-
   const errors = [
     ['overview', validateOverview(form)],
     ['imagery', validateImagery(form)],
