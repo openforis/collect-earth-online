@@ -12,10 +12,7 @@ import {
   sub_ids
 } from '../state/projectWizard';
 
-<<<<<<< HEAD
 
-=======
->>>>>>> main
 export const BoundaryStep = () => {
   const generationMethod = useSubscription([sub_ids.boundary.generationMethod]) || "manual";
   const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
@@ -186,10 +183,6 @@ export const BoundaryStep = () => {
           </section>
         </div>
       </div>
-<<<<<<< HEAD
-=======
-
->>>>>>> main
       <div className="map-area">
         <div className="map-title-overlay">PROJECT BOUNDARY PREVIEW</div>
         <NewMap 
@@ -199,11 +192,7 @@ export const BoundaryStep = () => {
           onDrawComplete={handleMapDrawComplete}
           initZoom={4}
         />
-<<<<<<< HEAD
-          </div>
-=======
       </div>
->>>>>>> main
     </div>
   );
 };

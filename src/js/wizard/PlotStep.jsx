@@ -331,11 +331,6 @@ export const PlotStep = () => {
 export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
   const designSettings = useSubscription([sub_ids.plots.designSettings]) || {};
   const userAssignment = designSettings.userAssignment || { userMethod: "none", users: [], percents: [] };
-<<<<<<< HEAD
-  
-=======
-
->>>>>>> main
   const { userMethod, users, percents } = userAssignment;
   const { qaqcAssignment } = designSettings;
   const qaqcMethod = qaqcAssignment?.qaqcMethod || "none";
@@ -346,11 +341,6 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
     ["equal", "Equal assignments", false],
     ["percent", "Percentage of plots", false],
   ];
-<<<<<<< HEAD
-  
-=======
-
->>>>>>> main
   const possibleUsers = [
     { id: -1, email: "Select user..." },
     ...institutionUserList.filter(u =>
@@ -445,11 +435,7 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
 };
 
 
-<<<<<<< HEAD
 export const QualityControlCard = ({ institutionUserList = [], totalPlots, allowDrawnSamples = false }) => {
-=======
-export const QualityControlCard = ({ institutionUserList, totalPlots, allowDrawnSamples = false }) => {
->>>>>>> main
   const designSettings = useSubscription([sub_ids.plots.designSettings]) || {};
   const { qaqcAssignment, userAssignment } = designSettings;
   const { qaqcMethod = "none", percent = 0, smes = [], timesToReview = 2 } = qaqcAssignment || {};
