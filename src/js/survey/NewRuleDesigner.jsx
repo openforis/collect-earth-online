@@ -20,7 +20,7 @@ function TextMatchForm () {
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
-  function setProjectDetails  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
+  function setSurveyRules  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
   const regex = useSubscription([sub_ids.rules.newRule.regex]);
   function setRegex (regex) {dispatch([event_ids.rules.newRule.regex, regex]);}
@@ -53,14 +53,13 @@ function TextMatchForm () {
                                   {alertType: "Rule Designer Error",
                                    alertMessage: errorMessages.map((s) => "- " + s).join("\n")}}] );
     } else {
-      setProjectDetails({
-            id: getNextInSequence(surveyRules.map((rule) => rule.id)),
-            ruleType: "text-match",
-            questionId,
-            regex,
-          });
-    }
-  };
+      setSurveyRules({
+        id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+        ruleType: "text-match",
+        questionId,
+        regex,
+      });
+    }};
 
   return lengthObject(availableQuestions) > 0 ? (
     <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
@@ -103,7 +102,7 @@ function NumericRangeForm () {
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
-  function setProjectDetails  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
+  function setSurveyRules (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
   const min = useSubscription([sub_ids.rules.newRule.min]);
   function setMin (min) {dispatch([event_ids.rules.newRule.min, min]);}
@@ -135,15 +134,14 @@ function NumericRangeForm () {
     if (errorMessages.length > 0) {
       setModal ({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
-      setProjectDetails({
-            id: getNextInSequence(surveyRules.map((rule) => rule.id)),
-            ruleType: "numeric-range",
-            questionId,
-            min,
-            max,
-          });
-    }
-  };
+      setSurveyRules({
+        id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+        ruleType: "numeric-range",
+        questionId,
+        min,
+        max,
+      });
+    }};
 
   return lengthObject(availableQuestions) > 0 ? (
     <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
@@ -196,7 +194,7 @@ function SumOfAnswersForm () {
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
-  function setProjectDetails  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
+  function setSurveyRules (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
   const validSum = useSubscription([sub_ids.rules.newRule.validSum]);
   function setValidSum (validSum) {dispatch([event_ids.rules.newRule.validSum, validSum]);}
@@ -228,14 +226,13 @@ function SumOfAnswersForm () {
     if (errorMessages.length > 0) {
       setModal({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
-      setProjectDetails({
-            id: getNextInSequence(surveyRules.map((rule) => rule.id)),
-            ruleType: "sum-of-answers",
-            questionIds,
-            validSum,
-          });
-    }
-  };
+      setSurveyRules({
+        id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+        ruleType: "sum-of-answers",
+        questionIds,
+        validSum,
+      });
+    }};
 
   return lengthObject(availableQuestions) > 1 ? (
     <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
@@ -284,7 +281,7 @@ function MatchingSumsForm () {
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
-  function setProjectDetails  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
+  function setSurveyRules (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
   const questionIds1 = useSubscription([sub_ids.rules.newRule.questionIds1]);
   function setQuestionIds1 (qids) {dispatch([event_ids.rules.newRule.questionIds1, qids]);}
@@ -323,16 +320,11 @@ function MatchingSumsForm () {
     if (errorMessages.length > 0) {
       setModal ({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
-      setProjectDetails({
-        surveyRules: [
-          ...surveyRules,
-          {
-            id: getNextInSequence(surveyRules.map((rule) => rule.id)),
-            ruleType: "matching-sums",
-            questionIds1,
-            questionIds2,
-          },
-        ],
+      setSurveyRules({
+        id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+        ruleType: "matching-sums",
+        questionIds1,
+        questionIds2,
       });
     }
   };
@@ -404,7 +396,6 @@ function  IncompatibleAnswersForm () {
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
   function addSurveyRule (newRule) {dispatch([event_ids.rules.rules, newRule]);}
-  function setProjectDetails  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
   const questionId1 = useSubscription([sub_ids.rules.newRule.questionId1]);
   function setQuestionId1 (qid) {dispatch([event_ids.rules.newRule.questionId1, qid]);}
@@ -467,8 +458,7 @@ function  IncompatibleAnswersForm () {
             answerId1,
             answerId2,
       });      
-    }
-  };
+    }};
 
   return lengthObject(availableQuestions) > 1 ? (
     <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>      
@@ -556,7 +546,7 @@ function MultipleIncompatibleAnswersForm () {
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
-  function setProjectDetails  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
+  function setSurveyRules  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
   const incompatQuestionId = useSubscription([sub_ids.rules.newRule.incompatQuestionId]);
   function setIncompatQuestionId (incompatQuestionId) {dispatch([event_ids.rules.newRule.incompatQuestionId, incompatQuestionId]);}
@@ -579,11 +569,11 @@ function MultipleIncompatibleAnswersForm () {
 
   function addSurveyRule () {    
     setProjectDetails({
-          id: getNextInSequence(surveyRules.map((rule) => rule.id)),
-          ruleType: "multiple-incompatible-answers",
-          answers: answers,
-          incompatQuestionId: incompatQuestionId,
-          incompatAnswerId: incompatAnswerId
+      id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+      ruleType: "multiple-incompatible-answers",
+      answers: answers,
+      incompatQuestionId: incompatQuestionId,
+      incompatAnswerId: incompatAnswerId
     });
   };
 
@@ -620,6 +610,9 @@ function MultipleIncompatibleAnswersForm () {
   );
 
   /*
+    THIS IS A SECTION THAT DEFINES A MULTIPLE-INCOMPATIBLE-ANSWERS with N Answers, but needs to be worked into state the way incompatQ1 are
+    vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
     <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
     {Object.entries(sumsQuestions).map(([idx])=>{
     idx = Number(idx);
@@ -694,6 +687,8 @@ function MultipleIncompatibleAnswersForm () {
     </div>
     </div>
     </div>
+
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   */
 
   return lengthObject(availableQuestions) > 2 ? (

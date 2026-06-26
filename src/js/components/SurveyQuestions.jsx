@@ -20,7 +20,8 @@ import '../../css/survey.css';
 
 export const SurveyQuestions = ({
   preview = false,
-  surveyQuestions = null
+  surveyQuestions = null,
+  showHeader
 }) => {
   const {
     currentProject,
@@ -752,6 +753,7 @@ export const SurveyQuestions = ({
   
   return (
     <SidebarCard
+      showHeader={showHeader}
       title={
         <>
           SURVEY{" "}

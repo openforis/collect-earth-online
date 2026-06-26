@@ -51,11 +51,9 @@ export const NewMap = ({
 }) => {
   const mapElement = useRef();
   const mapRef = useRef();
-  
   const aoiSourceRef = useRef(new VectorSource());
   const plotsSourceRef = useRef(new VectorSource());
   const samplesSourceRef = useRef(new VectorSource());
-  
   const layerCache = useRef(new Map());
   const library = useAtomValue(mapImageryLibraryAtom);
   const activeIds = useAtomValue(activeMapLayerIdsAtom);

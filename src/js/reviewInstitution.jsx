@@ -363,7 +363,6 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
     }
   };
 
-
   useEffect(() => {
     getProjectList();
     getImageryList();
@@ -372,7 +371,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   }, []);
 
   return (
-    <div className="reviewInstitution">
+    <div className="reviewInstitution" style={{paddingTop: '2rem'}}>
       <SidebarTabs
         tabs={[
           { id: "projects", label: "Projects", icon: "projects", badge: safeLength(state.projectList) },
@@ -423,7 +422,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
           usersList={state.usersList} />
       )}
     </div>
-  )
+  );
 };
 
 export const InstitutionDescription = () => {
