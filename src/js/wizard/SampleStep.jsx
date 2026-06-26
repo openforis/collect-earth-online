@@ -15,7 +15,11 @@ export const SampleStep = () => {
   const sampleDistribution = useSubscription([sub_ids.samples.sampleDistribution]) || "random";
   const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]) || 1;
   const sampleResolution = useSubscription([sub_ids.samples.sampleResolution]) || 0;
+<<<<<<< HEAD
   // const sampleFeatures = useSubscription([sub_ids.samples.sampleFeatures]) || [];
+=======
+  const sampleFeatures = useSubscription([sub_ids.samples.sampleFeatures]) || [];
+>>>>>>> main
 
   const activePlot = (plotFeatures.length > 0) ? plotFeatures[0] : null;
   

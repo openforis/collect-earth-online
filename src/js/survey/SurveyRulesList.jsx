@@ -11,16 +11,13 @@ export default function SurveyRulesList({ inDesignMode}) {
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
-
   const ruleSearch = useSubscription([sub_ids.rules.search]);
   function setRuleSearch (query) {dispatch([event_ids.rules.search, query]);}
 
   const ruleFilter = useSubscription([sub_ids.rules.filter]);
   function setRuleFilter (filter) {dispatch([event_ids.rules.filter, filter]);}
-  
   return(
     <div style={{padding: '1rem'}}>
-      
       <div className="survey-rules-header">
         <p>questions to be answered during collection  <span style={
           {fontWeight: 'normal',
@@ -93,5 +90,6 @@ export default function SurveyRulesList({ inDesignMode}) {
             </div>
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             */}
+
     </div>);
 }

@@ -422,7 +422,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
           usersList={state.usersList} />
       )}
     </div>
-  )
+  );
 };
 
 export const InstitutionDescription = () => {

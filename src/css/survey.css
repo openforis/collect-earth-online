@@ -159,9 +159,9 @@
 .sq-pill {
   display: inline-flex;
   align-items: center;
-  width: 100%;
   justify-content: center;
   gap: 8px;
+  flex: 1;
   padding: 10px 18px;
   border: 2px solid #2d6f74;
   border-radius: 10px;

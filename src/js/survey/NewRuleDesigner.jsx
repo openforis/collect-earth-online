@@ -59,8 +59,7 @@ function TextMatchForm () {
         questionId,
         regex,
       });
-    }
-  };
+    }};
 
   return lengthObject(availableQuestions) > 0 ? (
     <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
@@ -142,8 +141,7 @@ function NumericRangeForm () {
         min,
         max,
       });
-    }
-  };
+    }};
 
   return lengthObject(availableQuestions) > 0 ? (
     <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
@@ -234,8 +232,7 @@ function SumOfAnswersForm () {
         questionIds,
         validSum,
       });
-    }
-  };
+    }};
 
   return lengthObject(availableQuestions) > 1 ? (
     <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
@@ -300,9 +297,7 @@ function MatchingSumsForm () {
     ([_id, sq]) => sq.dataType === "number"
   );
 
-  function addSurveyRule () {
-    const { surveyRules, setProjectDetails } = this.context;
-    const { questionIds1, questionIds2 } = this.state;
+  function addSurveyRule () {      
     const conflictingRule = surveyRules.find(
       (rule) =>
       rule.ruleType === "matching-sums" &&
@@ -394,13 +389,13 @@ function  IncompatibleAnswersForm () {
   function  checkPair (q1, a1, q2, a2) {return (q1 === q2 && a1 === a2);};
   function checkEquivalent (q1, a1, q2, a2, q3, a3, q4, a4) 
   {return(
-    (this.checkPair(q1, a1, q3, a3) && this.checkPair(q2, a2, q4, a4)) ||
-      (this.checkPair(q1, a1, q4, a4) && this.checkPair(q2, a2, q3, a3)));}
+    (checkPair(q1, a1, q3, a3) && checkPair(q2, a2, q4, a4)) ||
+      (checkPair(q1, a1, q4, a4) && checkPair(q2, a2, q3, a3)));}
 
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
-  function setSurveyRules  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
+  function addSurveyRule (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
   const questionId1 = useSubscription([sub_ids.rules.newRule.questionId1]);
   function setQuestionId1 (qid) {dispatch([event_ids.rules.newRule.questionId1, qid]);}
@@ -431,7 +426,7 @@ function  IncompatibleAnswersForm () {
     const conflictingRule = surveyRules.find(
       (rule) =>
       rule.ruleType === "incompatible-answers" &&
-        this.checkEquivalent(
+        checkEquivalent(
           rule.questionId1,
           rule.answerId1,
           rule.questionId2,
@@ -455,16 +450,15 @@ function  IncompatibleAnswersForm () {
     if (errorMessages.length > 0) {
       setModal ({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
-      setSurveyRules({
-        id: getNextInSequence(surveyRules.map((rule) => rule.id)),
-        ruleType: "incompatible-answers",
-        questionId1,
-        questionId2,
-        answerId1,
-        answerId2,
-      });
-    }
-  };
+      addSurveyRule({
+            id: getNextInSequence(surveyRules.map((rule) => rule.id)),
+            ruleType: "incompatible-answers",
+            questionId1,
+            questionId2,
+            answerId1,
+            answerId2,
+      });      
+    }};
 
   return lengthObject(availableQuestions) > 1 ? (
     <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>      
@@ -618,7 +612,7 @@ function MultipleIncompatibleAnswersForm () {
   /*
     THIS IS A SECTION THAT DEFINES A MULTIPLE-INCOMPATIBLE-ANSWERS with N Answers, but needs to be worked into state the way incompatQ1 are
     vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    
+
     <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
     {Object.entries(sumsQuestions).map(([idx])=>{
     idx = Number(idx);
@@ -693,6 +687,7 @@ function MultipleIncompatibleAnswersForm () {
     </div>
     </div>
     </div>
+
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   */
 

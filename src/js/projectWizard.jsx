@@ -5,9 +5,6 @@ import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import { BreadCrumbs, NavigationBar } from "./components/PageComponents";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
-
-import OverviewStep from './wizard/OverviewStep';
-import RulesStep from './wizard/RulesStep';
 import { ImageryStep } from "./wizard/ImageryStep";
 import { BoundaryStep } from "./wizard/BoundaryStep";
 import { PlotStep } from "./wizard/PlotStep";
@@ -16,6 +13,8 @@ import { SampleStep } from "./wizard/SampleStep";
 import { SurveyQuestions } from "./components/SurveyQuestions";
 import SurveyRuleDesigner from "./survey/SurveyRulesDesigner";
 import ReviewStep from "./wizard/ReviewStep";
+import OverviewStep from './wizard/OverviewStep';
+import RulesStep from './wizard/RulesStep';
 
 import { 
   event_ids,
@@ -36,14 +35,6 @@ const projectSteps = [
   {id: 'review', label: 'Review & Publish'}
 ];
 
-const publishModal = {
-  title: 'Ready to publish this project?',
-  id: 'review',
-  closeText: "Cancel",
-  confirmText: "Publish Project",
-  onConfirm: ()=>{dispatch ([event_ids.submitForm]); }
-};
-
 const exitModal = {
   title: 'Exit "Add a New Project" Workflow?',
   id: 'exit',
@@ -61,28 +52,6 @@ const exitModal = {
 function NavButtons  () {
   const currentStep = useSubscription([sub_ids.currentStep]);
   function continueHandler () {dispatch([event_ids.continueHandler, currentStep]);}
-  /*
-  function continueHandler () {
-    
-    switch (currentStep) {
-    case 'overview' : {dispatch([event_ids.continueHandler,]);}
-         case 'imagery' : {errors = validateOverview();
-                           errors ? dispatch([event_ids.errors, errors])
-                           : dispatch([event_ids.currentStep, 'imagery']);}
-      //    case 'boundary' : {}
-      //    case 'plots' : {}
-      //    case 'samples' : {}
-      //    case 'questions' : {}
-      //    case 'rules' : {}
-      //    case 'imagery' : {}
-    default : dispatch([event_ids.errors, ['Navigation', ['You have encountered a client erorr. Please refresh the page.']]]);
-    };
-    const currentIdx = projectSteps.findIndex(({id})=> (id == currentStep));
-    currentIdx + 1 < projectSteps.length
-      ? dispatch([event_ids.currentStep, projectSteps[currentIdx + 1].id])
-      : dispatch([event_ids.modal, publishModal]);
-  };
-*/
   function saveDraftHandler () {
     dispatch([event_ids.saveDraft]);
   };
@@ -95,6 +64,7 @@ function NavButtons  () {
             <button
               className={'btn btn-sm'}
               style={{backgroundColor: "#2d6f74",
+
                       color: "#fff"}}
               onClick={()=>saveDraftHandler()}
             >Save Draft</button>
@@ -104,6 +74,7 @@ function NavButtons  () {
               style={{backgroundColor: "#2d6f74",
                       color: "#fff"}}
             >Save & {currentStep === 'review' ? 'Publish' : 'Continue'}</button>
+
           </div>);
 };
 
@@ -119,8 +90,8 @@ const ProjectWizardNavigator = () => {
             <div
               key={id}
               style={{fontWeight: currentStep === id ? 'bold' : 'normal',
-                      display: 'inline-flex',
-                      cursor: 'pointer'}}
+                display: 'inline-flex',
+                cursor: 'pointer'}}
               onClick={
                 () => dispatch([event_ids.currentStep, id])
               }
@@ -138,11 +109,11 @@ const ProjectWizardNavigator = () => {
 function NewProjectModal () {
   const newProjectOptions = {
     newProject: ['Create a new project',
-                 'Generate a new project from scratch by customizing all steps.'],
+      'Generate a new project from scratch by customizing all steps.'],
     templateProject: ['Select from an existing template',
-                      'Select a template and prefill all the steps. You can edit and customize it.'],
+      'Select a template and prefill all the steps. You can edit and customize it.'],
     importProject: ['Import Collect Earth Project',
-                    'Need Description']};
+      'Need Description']};
   const projectSource = useSubscription([sub_ids.projectSource]);
 
   return (
@@ -152,8 +123,8 @@ function NewProjectModal () {
         return (
           <div
             className={projectSource === id ?
-                       "radio-selected-button"
-                       : "radio-selection-button"}
+              "radio-selected-button"
+              : "radio-selection-button"}
             key={id}
             onClick={()=> {
               dispatch([event_ids.projectSource, id]);
@@ -165,6 +136,7 @@ function NewProjectModal () {
               : <SvgIcon icon="radio" size="1.2rem"
                          className="radio-button-unchecked"/> }
               {"    "}
+
               { title } </p>
             <label
               className="radio-button-description"
@@ -250,6 +222,7 @@ function ExitModal () {
   );
 }
 
+
 const ProjectWizardModal = () => {
   // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
   const projectSource = useSubscription([sub_ids.projectSource]);
@@ -266,6 +239,7 @@ const ProjectWizardModal = () => {
     }};
 
   function confirmDisabled () {
+
     switch (modal.id) {
     case 'newProject'
       : return projectSource === null;
@@ -376,7 +350,6 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
       </NavigationBar>
     </div>);
 };
-
 
 export function pageInit(params, session) {
   ReactDOM.render(
