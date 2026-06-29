@@ -75,7 +75,22 @@ export const InstitutionSidebar = ({
     projectsByInstitution,
     filterType,
   ]);
-
+  
+  function sortedInstitutions (institutions, sortType) {
+    switch (sortType) {
+    case 'alphabetical' : return institutions.toSorted((a, b) =>
+      (a.name.toUpperCase() < b.name.toUpperCase()) ? -1 :
+        (a.name.toUpperCase() > b.name.toUpperCase()) ? 1 : 0 );
+    case 'projects' : return institutions.toSorted((a, b) =>{
+      let thisInstitutionProjects = projectsByInstitution[a.id] || [];
+       let thatInstitutionProjects = projectsByInstitution[b.id] || [];
+        return ( 
+          (thisInstitutionProjects.length < thatInstitutionProjects.length) ? -1 :
+            (thisInstitutionProjects.length > thatInstitutionProjects.length) ? 1 : 0);
+    });    
+    default : return institutions;
+    }};
+  
   return (
     <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "30vw", position: "fixed" }}>
       <SidebarCard title="FILTERS">
@@ -206,7 +221,7 @@ export const InstitutionSidebar = ({
         </div>
       </SidebarCard>
 
-      {visibleInstitutions.map((inst) => {
+      {sortedInstitutions(visibleInstitutions, sortType).map((inst) => {
         const instProjects = projectsByInstitution[inst.id] || [];
         return (
           <SidebarCard key={inst.id} title={inst.name} collapsible defaultOpen={false}>
