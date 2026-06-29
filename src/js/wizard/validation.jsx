@@ -4,7 +4,7 @@ import { lengthObject, someObject, filterObject } from "../utils/sequence";
 export function validateOverview ({name, description}) {
   return([
     (name === "" || description === "") && "A project must contain a name and description.",
-  ]);
+  ].filter((e)=>e));
 }
 
 export function validateImagery ({requiresPublic, imageryId, privacyLevel}) {
@@ -12,7 +12,7 @@ export function validateImagery ({requiresPublic, imageryId, privacyLevel}) {
     /*    requiresPublic &&
       `Projects with privacy level of ${privacyLevel} require at least one public imagery.`,*/
     (imageryId <= 0) && "Select a valid Basemap.",
-  ]);
+  ].filter((e)=>e));
 }
 
 export function validatePlots({
@@ -65,7 +65,8 @@ export function validatePlots({
      (qaqcMethod === "overlap" && timesToReview > users.length && users.length > 1) &&
      "# of Reviews cannot be greater than the number of assigned users.",
      (userMethod !== "none" && qaqcMethod === "sme" && _.intersection(users, smes).length > 0) &&
-     "Users cannot be an Assigned User and an SME. Please remove the duplicate users.",]);
+     "Users cannot be an Assigned User and an SME. Please remove the duplicate users.",]
+      .filter((e)=>e));
 }
 
 export function validateSamples({
@@ -100,7 +101,8 @@ export function validateSamples({
      (samplesPerPlot > perPlotLimit || totalPlots * samplesPerPlot > sampleLimit) &&
      "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
      allowDrawnSamples && !Object.values(sampleGeometries).some((g) => g) &&
-     "At least one geometry type must be enabled.",]);
+           "At least one geometry type must be enabled.",]
+          .filter((e)=>e));
 }
 
 export function validateQuestions({
@@ -112,7 +114,8 @@ export function validateQuestions({
 
   return ([lengthObject(surveyQuestions) === 0 && "A survey must include at least one question.",
      someObject(surveyQuestions, ([_id, sq]) => (lengthObject(sq.answers) === 0 || allAnswersHidden(sq.answers))) &&
-     "All survey questions must contain at least one (unhidden) answer.",]);
+           "All survey questions must contain at least one (unhidden) answer.",]
+         .filter((e)=>e));
 }
 
 export const validateWizard = (form) => {
