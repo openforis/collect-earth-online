@@ -64,7 +64,7 @@ const projectWizardDb = {
   'overview.projectOptions.plotConfidence': false,
   'overview.projectOptions.autoGeo': true,
   'overview.useTemplatePlots': false,
-  imagery: [],
+  imagery: [-1],
   imageryList: [],
   // boundary
   'boundary.generationMethod': 'manual',

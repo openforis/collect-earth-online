@@ -183,6 +183,7 @@ export const BoundaryStep = () => {
           </section>
         </div>
       </div>
+
       <div className="map-area">
         <div className="map-title-overlay">PROJECT BOUNDARY PREVIEW</div>
         <NewMap 

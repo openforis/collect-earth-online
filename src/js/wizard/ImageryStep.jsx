@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useSetAtom } from 'jotai';
+import React, { useEffect } from 'react';
+import { useAtom, useSetAtom } from 'jotai';
 import { dispatch, useSubscription } from '@flexsurfer/reflex';
 import { sub_ids, event_ids } from '../state/projectWizard';
 import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
@@ -7,17 +7,17 @@ import { NewMap } from '../components/NewMap';
 import SvgIcon from '../components/svg/SvgIcon';
 
 export const ImageryStep = ({ imageryList = [] }) => {
-  const [previewId, setPreviewId] = useState("");
-  const initialized = useRef(false);
+  //TODO: initialize all this better without using setMapLbrary()
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
 
   function setSelectedIds (selectedIds) {dispatch([event_ids.imagery.imagery, selectedIds]);}
   const selectedIds = useSubscription([sub_ids.imagery.imagery]);
+  
   // Sets up default selected imagery.
   useEffect(() => {
     setMapLibrary(imageryList);
-    if (imageryList && imageryList.length > 0 && !initialized.current) {
+    if (imageryList && imageryList.length > 0 && selectedIds.filter((e)=>(e > 0)).length === 0) {
       const platformItems = imageryList.filter(img => img.visibility === 'platform');
       if (platformItems.length > 0) {
         setPreviewId(platformItems[0].id.toString());
@@ -27,9 +27,8 @@ export const ImageryStep = ({ imageryList = [] }) => {
   }, [imageryList, setMapLibrary]);
 
   useEffect(() => {
-    const previewArray = previewId ? [Number(previewId)] : [];
-    setActiveMapLayers(new Set(previewArray));
-  }, [previewId, setActiveMapLayers]);
+    setActiveMapLayers(new Set(selectedIds));
+  }, [selectedIds, setActiveMapLayers]);
 
   // Grouping logic with safety check
   const groupedImagery = (imageryList || []).reduce((acc, img) => {
@@ -109,7 +108,7 @@ export const ImageryStep = ({ imageryList = [] }) => {
               value={selectedIds[0] || ""}
               onChange={(e) => {
                 const val = parseInt(e.target.value);
-                setSelectedIds([val, ...selectedIds.filter(i => i !== val)]);
+                setSelectedIds([val, ...selectedIds.filter(i => i !== val)] );
               }}
             >
               <option value="" disabled>Select a base map</option>
