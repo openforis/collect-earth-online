@@ -328,7 +328,7 @@ export const PlotStep = () => {
   );
 };
 
-export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
+export const AssignPlotsCard = ({ totalPlots, institutionUserList = [] }) => {
   const designSettings = useSubscription([sub_ids.plots.designSettings]) || {};
   const userAssignment = designSettings.userAssignment || { userMethod: "none", users: [], percents: [] };
   const { userMethod, users, percents } = userAssignment;
