@@ -10,8 +10,9 @@ import { BoundaryStep } from "./wizard/BoundaryStep";
 import { PlotStep } from "./wizard/PlotStep";
 import { SurveyQuestionsStep } from "./wizard/SurveyQuestionsStep";
 import { SampleStep } from "./wizard/SampleStep";
-import { SurveyQuestions } from "./components/SurveyQuestions";
-import SurveyRuleDesigner from "./survey/SurveyRulesDesigner";
+import ReviewStep from "./wizard/ReviewStep";
+import OverviewStep from './wizard/OverviewStep';
+import RulesStep from './wizard/RulesStep';
 
 import { 
   event_ids,
@@ -19,6 +20,7 @@ import {
 } from "./state/projectWizard";
 
 import "../css/project-wizard.css";
+
 
 const projectSteps = [
   {id: 'overview', label: 'Project Overview'},
@@ -31,32 +33,46 @@ const projectSteps = [
   {id: 'review', label: 'Review & Publish'}
 ];
 
-const NavButtons = () => {
+const exitModal = {
+  title: 'Exit "Add a New Project" Workflow?',
+  id: 'exit',
+  closeText: "Exit Workflow",
+  confirmText: "Stay",
+  onClose: ()=> {
+    dispatch([event_ids.modal, null]);
+  },
+  onConfirm: ()=>{
+    dispatch([event_ids.saveDraft]);
+    dispatch([event_ids.modal, null]);
+  },
+};
+
+function NavButtons  () {
   const currentStep = useSubscription([sub_ids.currentStep]);
-  
-  const  continueHandler = () => {
-    const currentIdx = projectSteps.findIndex(({id})=> (id == currentStep));
-    
-    currentIdx + 1 < projectSteps.length
-      ? dispatch([event_ids.currentStep, projectSteps[currentIdx + 1].id])
-      : dispatch([event_ids.modal, {title: "Confirm & Submit"}]);
+  function continueHandler () {dispatch([event_ids.continueHandler, currentStep]);}
+  function saveDraftHandler () {
+    dispatch([event_ids.saveDraft]);
   };
 
   return (<div className="nav-buttons">
             <button
               className="btn btn-secondary btn-sm"
+              onClick={()=>dispatch([event_ids.modal, exitModal])}
             >Exit</button>
             <button
               className={'btn btn-sm'}
               style={{backgroundColor: "#2d6f74",
-                color: "#fff"}}
+
+                      color: "#fff"}}
+              onClick={()=>saveDraftHandler()}
             >Save Draft</button>
             <button
               className={'btn btn-sm'}
               onClick={()=>continueHandler()}
               style={{backgroundColor: "#2d6f74",
-                color: "#fff"}}
-            >Save & Continue</button>
+                      color: "#fff"}}
+            >Save & {currentStep === 'review' ? 'Publish' : 'Continue'}</button>
+
           </div>);
 };
 
@@ -88,7 +104,7 @@ const ProjectWizardNavigator = () => {
     </div>);
 };
 
-const NewProjectModal = () => {
+function NewProjectModal () {
   const newProjectOptions = {
     newProject: ['Create a new project',
       'Generate a new project from scratch by customizing all steps.'],
@@ -116,7 +132,9 @@ const NewProjectModal = () => {
             >{projectSource === id
               ? <SvgIcon icon="radioChecked" size="1.2rem" />                            
               : <SvgIcon icon="radio" size="1.2rem"
-                  className="radio-button-unchecked"/> }    {/*these four spaces left intentionally*/}
+                         className="radio-button-unchecked"/> }
+              {"    "}
+
               { title } </p>
             <label
               className="radio-button-description"
@@ -126,18 +144,100 @@ const NewProjectModal = () => {
     </div>);
 };
 
+function SubmitProjectModal () {
+  return (
+    <div>
+      <p >You are about to publish this project. Once published it will be added to your institution. You’ll still be able to make changes later from the project page within your institution.</p>
+      <p > Are you sure you want to continue?</p>
+    </div>);
+};
+
+function SuccessModal () {
+  return (
+    <>
+      <div className="success-icon">
+        <SvgIcon  icon='check' size='2rem'/>
+      </div>
+      <br/>
+      <b>Your Project has been published! </b>
+      <p >The Published Project can now be viewed in your Institutions Project Page.</p>
+    </>
+  );
+};
+
+function ErrorModal () {
+  const errors = useSubscription([sub_ids.errors]);
+  const [visible, setVisible] = useState([]);
+  function toggleVisible (errorType) {
+    visible.includes(errorType) ? setVisible(visible.filter((e) => e !== errorType)) : setVisible([... visible, errorType]);
+  };
+  console.log('error modal', errors);
+  function stepName (errorType) {
+    switch(errorType){
+    case 'overview' : return 'Overview Step';
+    case 'imagery' : return 'Imagery Step';
+    case 'plots' : return 'Plot Step';
+    case 'samples' : return 'Plot Samples';
+    case 'questions' : return 'Survey Questions';
+    default: return 'Unknown Error';
+    }
+  }
+  return  (
+    <div style={{display: 'flex',
+                 flexDirection: 'column',
+                 gap: '1rem'}}>
+      <div className='alert-icon'>
+        <SvgIcon  icon='alert' size='2rem'/>
+      </div>
+      <b className='error-title'> Your Project contains the following errors:</b>
+      <br/>      
+      {errors.map(([errorType, errorMessages])=> {
+        return (<div className='error-card'>
+                  <div className='error-header' onClick={()=>toggleVisible(errorType)}>
+                    <b > {stepName(errorType)}</b>
+                    <SvgIcon icon={visible.includes(errorType) ? 'upCaretNew' : 'downCaretNew'}
+                             size='1.2rem'> </SvgIcon>
+                  </div>
+                  {visible.includes(errorType) &&
+                   <div style={{gap: '1rem'}}>
+                     <br/>
+                     {errorMessages.map((message) => {
+                       return (
+                         <p > - {message}
+                         </p>);
+                     })}
+                   </div>}
+                </div>);
+      })}
+    </div>
+  );
+};
+
+
+function ExitModal () {
+  return (
+    <p > Are you sure you want to exit “Create New Scenario”? Saved steps will be kept in draft form, any steps you haven’t saved will be lost.</p>
+  );
+}
+
+
 const ProjectWizardModal = () => {
   // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
   const projectSource = useSubscription([sub_ids.projectSource]);
   const modal = useSubscription([sub_ids.modal]);
-  
-  const children = () => {
+ 
+  function children () {
     switch (modal.id) {
-    case 'newProject' : return (<NewProjectModal/>);
+    case 'newProject'  : return (<NewProjectModal/>);
+    case 'review'      : return (<SubmitProjectModal/>);
+    case 'success'     : return (<SuccessModal/>);
+    case 'error'       : return (<ErrorModal/>);
+    case 'exit'        : return (<ExitModal/>);
     default : break;
     }};
 
-  const confirmDisabled = () => {
+  function confirmDisabled () {
+
     switch (modal.id) {
     case 'newProject'
       : return projectSource === null;
@@ -159,226 +259,6 @@ const ProjectWizardModal = () => {
     </Modal>);
 };
 
-const OverviewStep = () => {
-  const GeneralInformationCard = () => {
-    const projectTypeOptions = {regular: 'Regular Project', simplified: 'Simplified Project'};
-    const projectType = useSubscription([sub_ids.overview.projectType]);
-    const projectName = useSubscription([sub_ids.overview.projectName]);
-    const projectDescription = useSubscription([sub_ids.overview.projectDescription]);
-    const learningMaterial = useSubscription([sub_ids.overview.learningMaterial]);
-
-    return (
-      <div
-        className="general-info-card projectWizardCard">
-        <p className="card-title">General Information</p>
-        <p className="text-label"
-        >Project Type<span style={{color: "red"}}>*</span>
-          <SvgIcon icon="info" size="1.2rem" /></p>
-        <div>
-          <div style={{display: "inline-flex", gap:"12px"}}>
-            {Object.entries(projectTypeOptions).map(([id, label]) => {
-              return (<div
-                        className="labeled-input"                       
-                        key={id}
-                        onClick={()=> {dispatch([event_ids.overview.projectType, id]);
-                        }}>
-                        <span>{ projectType == id
-                          ? <SvgIcon icon="radioChecked" size="1.2rem" />    
-                          : <SvgIcon icon="radio" size="1.2rem"/>}</span>
-                        <label                              
-                          className="text-label"
-                          style={projectType == id ? {fontWeight: "bold"} : {}}
-                        >{ label }</label>
-                      </div>);                  
-            })}</div>
-          <div>
-            <label className="text-label"
-            >Project Name<span style={{color: "red"}}>*</span></label>
-            <input type="text"
-              className="text-input"
-              id="project-name"
-              value={projectName}            
-              onChange={(e)=> {dispatch([event_ids.overview.projectName, e.target.value]);}} 
-              placeholder="Enter Text"></input>
-          </div>
-          <div>
-            <label className="text-label"
-            >Project Description<span style={{color: "red"}}>*</span></label>
-            <input type="text"
-              className="text-input"
-              id="project-description"
-              onChange={(e)=>dispatch([event_ids.overview.projectDescription, e.target.value])}
-              value={projectDescription}                         
-              placeholder="Enter Text"/>
-          </div>
-          <div>
-            <label className="text-label"
-            >Learning Material (Optional)<SvgIcon icon="info" size="1.2rem" /></label>
-            <input type="text"
-              className="text-input"
-              value={learningMaterial}
-              onChange={(e)=>dispatch([event_ids.overview.learningMaterial, e.target.value])}
-              id="learning-material"
-              placeholder="Enter URL"/>
-          </div>
-        </div>
-      </div>);
-  };
-
-  const VisibilityCard = () => {    
-    const visibilityOptions={public: "Public: All Users",
-      users: "Users: Logged In Users",
-      institution: "Institution: Group Members",
-      private: "Private: Group Admins"};
-    const visibility = useSubscription([sub_ids.overview.visibility]);
-    return (
-
-      <div className="visibility-card projectWizardCard">
-        <p className="card-title">Visibility<span style={{color:"red"}}>*</span>
-          <SvgIcon icon="info" size="1.2rem" /></p>
-        {Object.entries(visibilityOptions).map(([id, label])=>{
-	  return (<div className="labeled-input"
-                    key={id}
-                    onClick={()=>dispatch([event_ids.overview.visibility, id])}>
-                    <span>{visibility == id
-                      ? <SvgIcon icon="radioChecked" size="1.2rem" />    
-                      : <SvgIcon icon="radio" size="1.2rem"/>}</span>
-                    <label className="text-label"
-                      style={visibility == id ? {fontWeight: "bold"} : {}}
-                    >{ label  }</label>
-                  </div>);
-        })}
-      </div>
-    );
-  };
-  
-  const ProjectOptionsCard = () => {    
-    const projectOptionsMap={gee: "Show GEE Script Link on Collection Page",
-      extraPlotColumns: "Show Extra Plot Columns on Collection Page",
-      plotConfidence: "Collect Plot Confidence on Collection Page",
-      autoGeo: "Auto-launch Geo-Dash"};
-    
-    const projectOptions = {gee: useSubscription([sub_ids.overview.projectOptions.gee]),
-      extraPlotColumns: useSubscription([sub_ids.overview.projectOptions.extraPlotColumns]),
-      plotConfidence: useSubscription([sub_ids.overview.projectOptions.plotConfidence]),
-      autoGeo: useSubscription([sub_ids.overview.projectOptions.autoGeo])
-    };
-    
-    return(
-      <div className="project-options-card projectWizardCard">
-        <p className="card-title">Project Options</p>
-        {Object.entries(projectOptionsMap).map(([id, label])=> {
-	  return (
-	    <div className="labeled-input">
-		                                                                   <span
-  className="checkbox"
-  onClick={() => {
-    dispatch([event_ids.overview.projectOptions[id], !projectOptions[id]]);
-  }}>
-		                                                                     {projectOptions[id]
-                                                                                       ? (<SvgIcon icon="checkboxChecked" size="1.2rem" />)
-                                                                                       : <SvgIcon icon="checkboxUnchecked" size="1.2rem" />}
-		                                                                   </span>
-		                                                                   <label className="text-label"
-  style={projectOptions[id] ? {fontWeight: "bold"} : {}}
-                                                                                   >{label}</label>
-	                                                                         </div>
-	  ) ;
-	})}
-      </div>);
-  };
-
-  return (
-    <div className="project-wizard overview-step">
-      <GeneralInformationCard /> 
-      <VisibilityCard/> 
-      <ProjectOptionsCard/>
-    </div>
-  );
-};
-/*
-const ImageryStep  = () => {
-return (
-<div>
-</div>
-);
-};
-
-  const BoundaryStep  = () => {
-  return (
-  <div>
-  </div>
-  );
-  };
-
-  const PlotStep  = () => {
-  return (
-  <div>
-  </div>
-  );
-  };
-
-  const SamplesStep  = () => {
-  return (
-  <div>
-  </div>
-  );
-  };
-
-  const QuestionsStep  = () => {
-  return (
-  <div>
-  </div>
-  );
-  };
- */
-
-const RulesStep  = () => {
-
-  const questions = useSubscription([sub_ids.questions.questions]);
-
-  const QuestionCard = ({title, answers}) => {
-    const [visible, setVisible] = useState(true);
-    return (<div className='question-card'>
-              <div onClick={()=>setVisible(!visible)}>
-                {visible ? "^" : "v"}
-              </div>
-            </div>);
-  };
-  
-  const PreviewCard = () => {
-    return(<div className="question-preview-container">
-             <div
-               className="map-area"
-               style={{ overflowY: 'auto', padding: "20px", width: '100%'}}
-             >
-               <div>
-                 <SurveyQuestions
-                   preview={true}
-                   surveyQuestions={questions}
-                 />
-               </div>
-             </div>
-           </div>);
-  };
-  
-  return (
-    <div style={{display: 'inline-flex', width: '100%'}}>
-      <SurveyRuleDesigner/>
-      <PreviewCard/>
-    </div>
-  );
-};
-
-
-const ReviewStep  = () => {
-  return (
-    <div>
-    </div>
-  );
-};
-
-
 const ProjectWizard = ({userId, userName, version, institutionId}) => {
 
   // -------------------
@@ -387,6 +267,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   
   const currentStep = useSubscription([sub_ids.currentStep]);
   const modal = useSubscription([sub_ids.modal]);
+
   
   // -------------------
   // HANDLERS
@@ -403,13 +284,14 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   // ------------------
   
   useEffect(() => {
+    dispatch([event_ids.institutionId, institutionId]);
     dispatch([event_ids.modal, {
       title: 'Project Setup',
       closeText: '',
       confirmText: 'Get Started',
       onConfirm: handleNewProject,
       id: 'newProject',
-      children: (<NewProjectModal/>)}]); 
+      children: (<NewProjectModal/>)}]);  
     fetch(`/get-institution-imagery?institutionId=${institutionId}`)
       .then(res => res.json())
       .then(data => setAvailableImagery(data))
@@ -435,12 +317,11 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
     case 'boundary'   : return <BoundaryStep />;
     case 'plots'      : return <PlotStep />;
     case 'samples'    : return <SampleStep />;
-    case 'questions'  : return <SurveyQuestionsStep />;
+    case 'questions'  : return <SurveyQuestionsStep/>;
     case 'rules'      : return <RulesStep />;
-      //    case 'review'     : return <ReviewStep />;
+    case 'review'     : return <ReviewStep imageryList={availableImagery}/>;
     default           : return <div style={{padding: "20px"}}>Step {currentStep} coming soon</div>;
     }};
-
   
   return (
     <div className="project-wizard-container">
@@ -449,15 +330,15 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
         <BreadCrumbs
           crumbs={[
             {display: "Institution",
-              id: "institution",
-              query: ["institution", institutionId],
-              onClick:()=>{window.location.assign(`/review-institution?institutionId=${institutionId}`);
-              }},
+             id: "institution",
+             query: ["institution", institutionId],
+             onClick:()=>{window.location.assign(`/review-institution?institutionId=${institutionId}`);
+                         }},
             {display: "Add a New Project",
-              id: "projectWizard",
-              query: ["project", "newProject"],
-              onClick:()=>{window.location.assign(`/project-wizard?institutionId=${institutionId}`);
-              }}]}
+             id: "projectWizard",
+             query: ["project", "newProject"],
+             onClick:()=>{window.location.assign(`/project-wizard?institutionId=${institutionId}`);
+                         }}]}
         />
         <ProjectWizardNavigator/>
         <div className="wizard-step-body" >
@@ -467,8 +348,6 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
       </NavigationBar>
     </div>);
 };
-
-
 
 export function pageInit(params, session) {
   ReactDOM.render(

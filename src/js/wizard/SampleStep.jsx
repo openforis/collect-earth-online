@@ -4,7 +4,6 @@ import { event_ids, sub_ids } from '../state/projectWizard';
 import { NewMap } from '../components/NewMap';
 import Select from '../components/Select';
 import SvgIcon from '../components/svg/SvgIcon';
-import { readFileAsBase64Url } from '../utils/generalUtils';
 import { getPlotGeometry, generatePreviewSamples } from '../utils/newMercator';
 
 export const SampleStep = () => {
@@ -15,7 +14,7 @@ export const SampleStep = () => {
   const sampleDistribution = useSubscription([sub_ids.samples.sampleDistribution]) || "random";
   const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]) || 1;
   const sampleResolution = useSubscription([sub_ids.samples.sampleResolution]) || 0;
-  const sampleFeatures = useSubscription([sub_ids.samples.sampleFeatures]) || [];
+  // const sampleFeatures = useSubscription([sub_ids.samples.sampleFeatures]) || [];
 
   const activePlot = (plotFeatures.length > 0) ? plotFeatures[0] : null;
   
@@ -78,7 +77,7 @@ export const SampleGenerationCard = () => {
   ];
 
   return (
-    <div className="card" style={{ width: '100%', padding: '20px', marginBottom: '20px' }}>
+    <div className="wizard-card">
       <h5 className="card-title">SAMPLE GENERATION *</h5>
       <Select 
         label="Spatial Distribution"
@@ -120,7 +119,7 @@ export const UserDrawnSamplesCard = () => {
   const sampleGeometries = designSettings.sampleGeometries || { points: true, lines: false, polygons: false };
 
   return (
-    <div className="card" style={{ width: '100%', padding: '20px' }}>
+    <div className="wizard-card">
       <h5 className="card-title">USER DRAWN SAMPLES *</h5>
       <div className="form-check mb-2">
         <input type="checkbox" className="form-check-input" checked={allowDrawnSamples} 

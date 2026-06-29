@@ -25,6 +25,9 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   const setImageryList = (imagery) => setState((s) => ({ ...s, imageryList: imagery }));
   const setUsersList = (users) => setState((s) => ({ ...s, usersList: users }));
   const visibilityOrder = { platform: 0, private: 1, public: 2 };
+  const isMember = state.usersList?.some((u) => u.id === userId);
+  const showRequestMembership = userId > 0 && !isMember;
+
 
   const showAlert = ({ title, body }) => {
     setModal({ alert: { alertType: title, alertMessage: body } });
@@ -67,6 +70,28 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
           });
         })
     );
+  };
+
+  const requestMembership = () => {
+    fetch("/request-institution-membership", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        institutionId: institutionId
+      }),
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((message) => {
+        showAlert({title: "Membership Request Successful", body: message});
+        getInstitutionUserList();
+      })
+      .catch((response) => {
+        console.log(response);
+        showAlert({title: "Membership Request Error", body: "Error requesting institution membership. See console for details."});
+      });
   };
 
   const getImageryList = () => {
@@ -363,7 +388,6 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
     }
   };
 
-
   useEffect(() => {
     getProjectList();
     getImageryList();
@@ -372,7 +396,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   }, []);
 
   return (
-    <div className="reviewInstitution">
+    <div className="reviewInstitution" style={{paddingTop: '2rem'}}>
       <SidebarTabs
         tabs={[
           { id: "projects", label: "Projects", icon: "projects", badge: safeLength(state.projectList) },
@@ -420,10 +444,13 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
           isAdmin={state.isAdmin}
           editUsersBulk={editUsersBulk}
           addUsersBulk={addUsersBulk}
-          usersList={state.usersList} />
+          usersList={state.usersList}
+          requestMembership={requestMembership}
+          showRequestMembership={showRequestMembership}
+        />
       )}
     </div>
-  )
+  );
 };
 
 export const InstitutionDescription = () => {

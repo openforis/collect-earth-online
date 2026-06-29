@@ -270,7 +270,7 @@ export const PlotStep = () => {
       )}
 
       <div className="wizard-sidebar">
-        <div className="card" style={{ width: '100%', padding: '20px' }}>
+        <div className="wizard-card">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="card-title" style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Plot Generation</h5>
             <SvgIcon icon="info" size="1.2rem" color="#666" />
@@ -331,7 +331,6 @@ export const PlotStep = () => {
 export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
   const designSettings = useSubscription([sub_ids.plots.designSettings]) || {};
   const userAssignment = designSettings.userAssignment || { userMethod: "none", users: [], percents: [] };
-
   const { userMethod, users, percents } = userAssignment;
   const { qaqcAssignment } = designSettings;
   const qaqcMethod = qaqcAssignment?.qaqcMethod || "none";
@@ -342,7 +341,6 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
     ["equal", "Equal assignments", false],
     ["percent", "Percentage of plots", false],
   ];
-
   const possibleUsers = [
     { id: -1, email: "Select user..." },
     ...institutionUserList.filter(u =>
@@ -437,7 +435,7 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
 };
 
 
-export const QualityControlCard = ({ institutionUserList, totalPlots, allowDrawnSamples = false }) => {
+export const QualityControlCard = ({ institutionUserList = [], totalPlots, allowDrawnSamples = false }) => {
   const designSettings = useSubscription([sub_ids.plots.designSettings]) || {};
   const { qaqcAssignment, userAssignment } = designSettings;
   const { qaqcMethod = "none", percent = 0, smes = [], timesToReview = 2 } = qaqcAssignment || {};

@@ -11,6 +11,8 @@ export const UsersTab = ({
   editUsersBulk,
   addUsersBulk,
   isAdmin,
+  showRequestMembership,
+  requestMembership,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [filterText, setFilterText] = useState("");
@@ -88,19 +90,30 @@ export const UsersTab = ({
   return (
     <div className="tab-container">
       <div className="tab-header">
-        <h2 classname="tab-title">
+        <h2 className="tab-title">
           Users ({usersList.length})
         </h2>
 
-        {isAdmin && (
-          <button
-            className="filled-button"
-            onClick={() => setShowAddUsers(true)}
-          >
-            <SvgIcon icon="plus" size="1rem" />
-            Add User
-          </button>
-        )}
+        <div className="tab-header-actions" style={{ display: 'flex', gap: '1rem' }}>
+          {showRequestMembership && (
+            <button
+              className="filled-button"
+              onClick={requestMembership}
+            >
+              Request Membership
+            </button>
+          )}
+
+          {isAdmin && (
+            <button
+              className="filled-button"
+              onClick={() => setShowAddUsers(true)}
+            >
+              <SvgIcon icon="plus" size="1rem" />
+              Add User
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="tab-filter">
@@ -136,12 +149,13 @@ export const UsersTab = ({
         noDataComponent="No users found."
         sortIcon={<SvgIcon icon="downCaret" size="0.9rem" />}
       />
-      {showAddUsers &&
-       <AddUsersModal
-         onClose={() => setShowAddUsers(false)}
-         onAdd={(rows) => addUsersBulk(rows)}
-       />
-      }
+
+      {showAddUsers && (
+        <AddUsersModal
+          onClose={() => setShowAddUsers(false)}
+          onAdd={(rows) => addUsersBulk(rows)}
+        />
+      )}
     </div>
   );
 };
@@ -178,7 +192,6 @@ export const AddUsersModal = ({ onClose, onAdd }) => {
       onConfirm={handleConfirm}
     >
       <div className="add-users-container">
-
         {rows.map((row, i) => (
           <div key={i} className="add-users-row">
             <div>
@@ -225,6 +238,5 @@ export const AddUsersModal = ({ onClose, onAdd }) => {
         </button>
       </div>
     </Modal>
-
   );
 };
