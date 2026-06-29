@@ -600,7 +600,7 @@ regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
         id: 'review',
         closeText: "Cancel",
         confirmText: "Publish Project",
-        nonConfirm: ()=>{dispatch ([event_ids.submitForm]); }
+        onConfirm: ()=>{dispatch ([event_ids.submitForm]); }
       };
   break;}
   default : 
