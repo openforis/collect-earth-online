@@ -101,7 +101,7 @@ const projectWizardDb = {
   'samples.sampleFileName': '',
   'samples.sampleFeautres': [],
   'samples.allowDrawnSamples': false,
-  questions: [],
+  'questions': {},
   'rules': [],
   'rules.search': null,
   'rules.filter': null,
@@ -415,8 +415,6 @@ regEvent(event_ids.projectDetails,
          ({ draftDb }, projectDetails) => {
            draftDb[sub_ids.projectDetails] = projectDetails;
          });
-
-regSub(sub_ids.questions.questions, sub_ids.questions.questions);
 
 regSub(sub_ids.rules.rules, sub_ids.rules.rules);
 regSub(sub_ids.rules.search, sub_ids.rules.search);
@@ -812,13 +810,6 @@ regEvent(event_ids.imagery.imageryList, ({ draftDb }, imageryList ) => {
   draftDb[sub_ids.imagery.imageryList] = imageryList;
 });
 
-regEvent(event_ids.questions.addQuestion,
-         ({ draftDb }, questionToAdd ) => {
-           const prev = current(draftDb[sub_ids.questions.questions]);
-           console.log(sub_ids.questions.questions ,prev);
-           draftDb[sub_ids.questions.questions].push(questionToAdd);
-         });
-
 // PROJECT BOUNDARY EVENTS
 
 regEvent(event_ids.boundary.generationMethod, ({ draftDb }, method) => {
@@ -911,48 +902,53 @@ regEvent(event_ids.samples.allowDrawnSamples, ({ draftDb }, allow) => {
   draftDb[sub_ids.samples.allowDrawnSamples] = allow;
 });
 
-regEvent(event_ids.questions.addQuestion, ({ draftDb }, questionToAdd ) => {
-  const prev = current(draftDb[sub_ids.questions.questions]);
-  draftDb[sub_ids.questions.questions].push(questionToAdd);
+
+// SURVEY QUESTIONS EVENTS
+
+regEvent(event_ids.questions.addQuestion, ({ draftDb }, questionToAdd) => {
+  let questions = draftDb[sub_ids.questions.questions];
+  if (Array.isArray(questions)) {
+    questions = {};
+    draftDb[sub_ids.questions.questions] = questions;
+  }
+  const keys = Object.keys(questions).map(Number).filter(n => !isNaN(n));
+  const nextId = (keys.length > 0 ? Math.max(...keys) + 1 : 1).toString();
+  draftDb[sub_ids.questions.questions][nextId] = questionToAdd;
 });
 
-regEvent(event_ids.questions.setQuestions, ({ draftDb }, questions ) => {
+regEvent(event_ids.questions.setQuestions, ({ draftDb }, questions) => {
   draftDb[sub_ids.questions.questions] = questions;
 });
 
 regEvent(event_ids.questions.updateQuestion, ({ draftDb }, qId, field, value) => {
-  //TODO: is this the most idiomatic wayt to update questions here?
-  const prev = current(draftDb[sub_ids.questions.questions]);
-  const newQuestion = {
-    ... prev,
-    [qId]: { ...prev[qId], [field]: value}
-  };
-  draftDb[sub_ids.questions.questions] = newQuestion;
+  const questions = draftDb[sub_ids.questions.questions];
+  const q = questions[qId] || questions[String(qId)] || questions[Number(qId)];
+  if (q) {
+    q[field] = value;
+  }
 });
 
 regEvent(event_ids.questions.updateAnswer, ({ draftDb }, qId, aId, field, value) => {
-  //TODO: is this the most idiomatic wayt to update question answers here?
-  const prev = current(draftDb[sub_ids.questions.questions]);
-  const newQuestion = {
-    ... prev,
-    [qId]: { ...prev[qId],
-             answers: {
-               ...prev[qId].answers,
-               [aId]: {...prev[qId].answers[aId], [field]: value }
-             },
-             [field]: value}
-  };
-  draftDb[sub_ids.questions.questions] = newQuestion;
+  const questions = draftDb[sub_ids.questions.questions];
+  const q = questions[qId] || questions[String(qId)] || questions[Number(qId)];
+  if (q && q.answers) {
+    const a = q.answers[aId] || q.answers[String(aId)] || q.answers[Number(aId)];
+    if (a) {
+      a[field] = value;
+    }
+  }
 });
 
 regEvent(event_ids.questions.moveQuestion, ({ draftDb }, id, targetQ, nextId, nextQ) => {
-  //TODO: is this the most idiomatic wayt to update questions here?
-  const newQuestions = { ...current(draftDb[sub_ids.questions.questions])};
-  const tempOrder = targetQ.cardOrder;
-  newQuestions[id] = { ...targetQ, cardOrder: nextQ.cardOrder };
-  newQuestions[nextId] = { ...nextQ, cardOrder: tempOrder };           
-  draftDb[sub_ids.questions.questions] = newQuestions;
+  const questions = draftDb[sub_ids.questions.questions];
+  const currentQ = questions[id] || questions[String(id)] || questions[Number(id)];
+  const targetNextQ = questions[nextId] || questions[String(nextId)] || questions[Number(nextId)];
+
+  if (currentQ) currentQ.cardOrder = nextQ.cardOrder;
+  if (targetNextQ) targetNextQ.cardOrder = targetQ.cardOrder;
 });
+
+// RULES EVENTS
 
 regEvent(event_ids.rules.selectedRuleType, ({ draftDb }, selectedRuleType) => {
   draftDb[sub_ids.rules.selectedRuleType] = selectedRuleType;
