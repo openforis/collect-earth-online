@@ -116,7 +116,8 @@ export const NewPlotNavigation = ({userEmail}) => {
     inReviewMode,
     navigationMode,
     newPlotId,
-    userPlotList
+    userPlotList,
+    plotSimilarityDeatils
   } = useAtomValue(stateAtom);
   const [selectedEmail, setSelectedEmail] = useState(currentPlot?.email || "");
 
@@ -284,7 +285,7 @@ export const NewPlotNavigation = ({userEmail}) => {
         <option value="analyzed">Analyzed plots</option>
         <option value="unanalyzed">Unanalyzed plots</option>
         <option value="flagged">Flagged plots</option>
-        <option value="similar">Similar Plots</option>
+        <option value="similar" disabled={!currentProject?.plotSimilarityDetails?.referencePlotId}>Similar Plots</option>
       </select>
 
       {currentProject?.isProjectAdmin && (
