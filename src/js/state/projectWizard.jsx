@@ -50,6 +50,7 @@ const projectWizardDb = {
   templateProjectId: -1,
   projectId: -1,
   projectDraftId: -1,
+//  templateProjects: [],
   useTemplatePlots: false,
   useTemplateWidgets: false,
   // overview
@@ -130,6 +131,7 @@ const projectWizardDb = {
 initAppDb(projectWizardDb);
 
 export const event_ids = {
+//  templateProjects: 'templateProjects',
   institutionId: 'institutionId',
   submitForm: 'submitForm',
   saveDraft: 'saveDraft',
@@ -226,6 +228,7 @@ export const sub_ids = {
   modal: 'modal',
   projectSource: 'projectSource',
   successResponse: 'successReponse',
+//  templateProjects: 'templateProjects',
   templateProjectId: 'templateProjectId',
   useTemplatePlots: 'useTemplatePlots',
   useTemplateWidgets: 'useTemplateWidgets',
@@ -310,7 +313,7 @@ regSub(sub_ids.projectSource, sub_ids.projectSource);
 regSub(sub_ids.errors, sub_ids.errors);
 regSub(sub_ids.successResponse, sub_ids.successResponse);
 regSub(sub_ids.institutionId, sub_ids.institutionId);
-
+//regSub(sub_ids.templateProjects, sub_ids.templateProjects);
 regSub(sub_ids.templateProjectId, sub_ids.templateProjectId);
 regSub(sub_ids.useTemplatePlots, sub_ids.useTemplatePlots);
 regSub(sub_ids.useTemplateWidgets, sub_ids.useTemplateWidgets);
@@ -455,7 +458,7 @@ regEvent(event_ids.currentStep, ({ draftDb }, currentStep) => {
 
 regEvent(event_ids.errors, ({ draftDb }, errors) => {
   draftDb[sub_ids.errors] = errors;
-  draftDb[sub_ids.modal] = {id: 'error'};
+  draftDb[sub_ids.modal] = 'error';
 });
 
 regEvent(event_ids.institutionId, ({ draftDb }, institutionId )=> {
@@ -597,13 +600,7 @@ regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
   case 'review' : {
     const errors = validateWizard(form);
     errors ? dispatch([event_ids.errors, errors])
-      : draftDb[sub_ids.modal] = {
-        title: 'Ready to publish this project?',
-        id: 'review',
-        closeText: "Cancel",
-        confirmText: "Publish Project",
-        onConfirm: ()=>{dispatch ([event_ids.submitForm]); }
-      };
+      : draftDb[sub_ids.modal] = 'review';
   break;}
   default : 
     dispatch([event_ids.errors, [['Navigation', ['Your browser experienced a client error. please refresh the page.']]]]);
@@ -741,16 +738,8 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
 });
 
 regEvent(event_ids.successResponse, ({ draftDb }, response) => {  
-  function successModal (message) {
-    return {
-      id: 'success',
-      message,
-      confirmText: 'Close',
-      onConfirm: ()=>{dispatch([event_ids.modal, null]);
-                     }};
-  };
   draftDb[sub_ids.successResponse] = response;
-  draftDb[sub_ids.modal] = successModal(response);
+  draftDb[sub_ids.modal] = 'success';
 });
 
 regEvent(event_ids.modal, ({ draftDb }, modal, errors) => {
@@ -763,7 +752,18 @@ regEvent(event_ids.overview.projectType, ({ draftDb }, projectType) => {
 });
 
 regEvent(event_ids.projectSource, ({ draftDb }, projectSource) => {
+/*  switch (projectSource) {
+  case 'template' : {
+    console.log('setting projectSource');
+    draftDb[sub_ids.projectSource] = 'template';
+    draftDb[sub_ids.modal] = ;
+    break;}
+  default : draftDb[sub_ids.projectSource] = projectSource; break;
+  }
+*/
+  console.log('updating project source', projectSource);
   draftDb[sub_ids.projectSource] = projectSource;
+  
 });
 
 // PROJECT OVERVIEW EVENTS

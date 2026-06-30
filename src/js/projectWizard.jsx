@@ -28,17 +28,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   
   const currentStep = useSubscription([sub_ids.currentStep]);
   const modal = useSubscription([sub_ids.modal]);
-
-  
-  // -------------------
-  // HANDLERS
-  // ------------------
-  
-  const handleNewProject = () => {
-    dispatch([event_ids.modal, null]);
-    dispatch([event_ids.currentStep, 'overview']);
-  };
-
+  const projectSource = useSubscription([sub_ids.projectSource]);
   
   // -------------------
   // HOOKS
@@ -46,14 +36,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   
   useEffect(() => {
     dispatch([event_ids.institutionId, institutionId]);
-    dispatch([event_ids.modal, {
-      title: 'Project Setup',
-      closeText: '',
-      confirmText: 'Get Started',
-      onConfirm: handleNewProject,
-      id: 'newProject',
-//      children: (<NewProjectModal/>)
-    }]);  
+    dispatch([event_ids.modal, 'newProject']);  
     fetch(`/get-institution-imagery?institutionId=${institutionId}`)
       .then(res => res.json())
       .then(data => setAvailableImagery(data))
@@ -63,7 +46,6 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
       .then(data => dispatch([event_ids.institution.users, data]))
       .catch(err => console.error("Could not load users", err));
   }, []);
-
   
   // -------------------
   // RENDER FUNCTIONS

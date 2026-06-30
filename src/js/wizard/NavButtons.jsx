@@ -3,19 +3,6 @@ import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import { event_ids,  sub_ids } from "../state/projectWizard";
 
 
-const exitModal = {
-  title: 'Exit "Add a New Project" Workflow?',
-  id: 'exit',
-  closeText: "Exit Workflow",
-  confirmText: "Stay",
-  onClose: ()=> {
-    dispatch([event_ids.modal, null]);
-  },
-  onConfirm: ()=>{
-    dispatch([event_ids.saveDraft]);
-    dispatch([event_ids.modal, null]);
-  },
-};
 
 const projectSteps = [
   {id: 'overview', label: 'Project Overview'},
@@ -39,7 +26,7 @@ export default function NavButtons () {
   return (<div className="nav-buttons">
             <button
               className="btn btn-secondary btn-sm"
-              onClick={()=>dispatch([event_ids.modal, exitModal])}
+              onClick={()=>dispatch([event_ids.modal, 'exit'])}
             >Exit</button>
             {stepIdx > 0 &&
              (<button

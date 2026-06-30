@@ -53,21 +53,14 @@ export const BoundaryStep = () => {
 
       } catch (error) {
         dispatch([
-          event_ids.modal, 
-          {
-            title: "ShapeFile Error",
-            message: error.message || "Failed to properly parse chosen zipped archive."
-          }
+          event_ids.errors, [['File Error', [error.message || "Failed to properly parse chosen zipped archive."]]]
         ]);
       }
     };
     reader.onerror = () => {
       dispatch([
-        event_ids.modal,
-        {
-          title: "File Reader Error",
-          message: "Failed to read the file from your local disk space stack."
-        }
+        event_ids.errors,
+        [['File Error', "Failed to read the file from your local disk space stack."]]        
       ]);
     };
     reader.readAsArrayBuffer(file);

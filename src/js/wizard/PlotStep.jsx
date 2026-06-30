@@ -139,7 +139,7 @@ export const PlotStep = () => {
       })
       .catch((err) => {
         console.error(err);
-        dispatch([event_ids.modal, { title: "Plot File Error", message: "Failed to parse file." }]);
+        dispatch([event_ids.errors, [['File Error', ['Failed to parse file']]]]);
       });
   };
 
