@@ -71,7 +71,7 @@ export const SampleGenerationCard = ({ setSampleFeatures }) => {
   const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]) || 1;
   const sampleResolution = useSubscription([sub_ids.samples.sampleResolution]) || 0;
   const sampleFileName = useSubscription([sub_ids.samples.sampleFileName]) || "";
-  const extension = sampleDistribution === 'shp' ? 'zip' : fileType;
+  const extension = sampleDistribution === 'shp' ? 'zip' : sampleDistribution;
 
   const distributionOptions = [
     ["random", "Random", false],
