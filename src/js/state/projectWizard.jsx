@@ -63,6 +63,7 @@ const projectWizardDb = {
   'overview.projectOptions.extraPlotColumns': false,
   'overview.projectOptions.plotConfidence': false,
   'overview.projectOptions.autoGeo': true,
+  'overview.projectOptions.plotSimilarity': false,
   'overview.useTemplatePlots': false,
   imagery: [],
   imageryList: [],
@@ -80,6 +81,7 @@ const projectWizardDb = {
   'plots.totalPlots': 0,
   'plots.plotFeatures': [],
   'plots.plotFileName': '',
+  'plots.plotFileBase64': '',
   'plots.referencePlotId': -1,
   'plots.similariyYears': null,
   'plots.designSettings': {
@@ -92,8 +94,8 @@ const projectWizardDb = {
     qaqcAssignment:   {qaqcMethod:     "none",
                        percent:        0,
                        smes :          [],
-                       timesToReview : 2}},
-
+      timesToReview : 2}},
+  'plots.plotSimilarityDetails': { referencePlotId: "", years: [] },
   // samples
   'samples.sampleDistribution': 'random',
   'samples.samplesPerPlot': 1,
@@ -101,6 +103,7 @@ const projectWizardDb = {
   'samples.sampleFileName': '',
   'samples.sampleFeautres': [],
   'samples.allowDrawnSamples': false,
+  'samples.sampleFileBase64': '',
   'questions': {},
   'rules': [],
   'rules.search': null,
@@ -150,11 +153,12 @@ export const event_ids = {
                gee: 'overview.projectOptions.gee',
                extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
                plotConfidence: 'overview.projectOptions.plotConfidence',
-               autoGeo: 'overview.projectOptions.autoGeo'
+               autoGeo: 'overview.projectOptions.autoGeo',
+               plotSimilarity: 'overview.projectOptions.plotSimilarity',
              }},
   projectDetails: 'projectDetails',
   imagery: {
-    'imagery' : 'imagery',
+    imagery : 'imagery',
     imageryList: 'imageryList'},
   boundary: {
     generationMethod: 'boundary.generationMethod',
@@ -173,13 +177,16 @@ export const event_ids = {
     totalPlots: 'plots.totalPlots',
     plotFeatures: 'plots.plotFeatures',
     plotFileName: 'plots.plotFileName',
+    plotFileBase64: 'plots.plotFileBase64',
     designSettings: 'plots.designSettings',
+    plotSimilarityDetails: 'plots.plotSimilarityDetails'
   },
   samples: {
     sampleDistribution: 'samples.sampleDistribution',
     samplesPerPlot: 'samples.samplesPerPlot',
     sampleResolution: 'samples.sampleResolution',
     sampleFileName: 'samples.sampleFileName',
+    sampleFileBase64: 'samples.sampleFileBase64',
     allowDrawnSamples: 'samples.allowDrawnSamples'
   },
   questions: {
@@ -239,11 +246,12 @@ export const sub_ids = {
                gee: 'overview.projectOptions.gee',
                extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
                plotConfidence: 'overview.projectOptions.plotConfidence',
-               autoGeo: 'overview.projectOptions.autoGeo'
+               autoGeo: 'overview.projectOptions.autoGeo',
+               plotSimilarity: 'overview.projectOptions.plotSimilarity',
              }},
   projectDetails: 'projectDetails',
   imagery: {
-    'imagery' : 'imagery',
+    imagery : 'imagery',
     imageryList: 'imageryList'},
   boundary: {
     generationMethod: 'boundary.generationMethod',
@@ -260,15 +268,16 @@ export const sub_ids = {
     totalPlots: 'plots.totalPlots',
     plotFeatures: 'plots.plotFeatures',
     plotFileName: 'plots.plotFileName',
+    plotFileBase64: 'plots.plotFileBase64',
     designSettings: 'plots.designSettings',
-    referencePlotId: 'plots.referencePlotId',
-    similarityYears: 'plots.similarityYears'
+    plotSimilarityDetails: 'plots.plotSimilarityDetails'
   },
   samples: {
     sampleDistribution: 'samples.sampleDistribution',
     samplesPerPlot: 'samples.samplesPerPlot',
     sampleResolution: 'samples.sampleResolution',
     sampleFileName: 'samples.sampleFileName',
+    sampleFileBase64: 'samples.sampleFileBase64',
     allowDrawnSamples: 'samples.allowDrawnSamples'
   },
   questions: {
@@ -325,6 +334,8 @@ regSub(sub_ids.overview.projectOptions.extraPlotColumns, sub_ids.overview.projec
 regSub(sub_ids.overview.projectOptions.plotConfidence, sub_ids.overview.projectOptions.plotConfidence);
 regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.autoGeo);
 regSub(sub_ids.overview.useTemplatePlots, sub_ids.overview.useTemplatePlots);
+regSub(sub_ids.overview.projectOptions.plotSimilarity, sub_ids.overview.projectOptions.plotSimilarity);
+
 
 //imagery
 (regSub(sub_ids.imagery.imagery, sub_ids.imagery.imagery));
@@ -344,9 +355,9 @@ regSub(sub_ids.plots.shufflePlots, sub_ids.plots.shufflePlots);
 regSub(sub_ids.plots.totalPlots, sub_ids.plots.totalPlots);
 regSub(sub_ids.plots.plotFeatures, sub_ids.plots.plotFeatures);
 regSub(sub_ids.plots.plotFileName, sub_ids.plots.plotFileName);
+regSub(sub_ids.plots.plotFileBase64, sub_ids.plots.plotFileBase64);
 regSub(sub_ids.plots.designSettings, sub_ids.plots.designSettings);
-regSub(sub_ids.plots.referencePlotId, sub_ids.plots.referencePlotId);
-regSub(sub_ids.plots.similiarityYears, sub_ids.plots.similarityYears);
+regSub(sub_ids.plots.plotSimilarityDetails, sub_ids.plots.plotSimilarityDetails);
 
 // samples
 regSub(sub_ids.samples.sampleDistribution, sub_ids.samples.sampleDistribution);
@@ -354,68 +365,13 @@ regSub(sub_ids.samples.samplesPerPlot, sub_ids.samples.samplesPerPlot);
 regSub(sub_ids.samples.sampleResolution, sub_ids.samples.sampleResolution);
 regSub(sub_ids.samples.sampleFileName, sub_ids.samples.sampleFileName);
 regSub(sub_ids.samples.allowDrawnSamples, sub_ids.samples.allowDrawnSamples);
-
-// boundary
-regSub(sub_ids.boundary.generationMethod, sub_ids.boundary.generationMethod);
-regSub(sub_ids.boundary.aoiFeatures, sub_ids.boundary.aoiFeatures);
-regSub(sub_ids.boundary.aoiFileName, sub_ids.boundary.aoiFileName);
-
-// plots
-regSub(sub_ids.plots.plotDistribution, sub_ids.plots.plotDistribution);
-regSub(sub_ids.plots.numPlots, sub_ids.plots.numPlots);
-regSub(sub_ids.plots.plotSize, sub_ids.plots.plotSize);
-regSub(sub_ids.plots.plotShape, sub_ids.plots.plotShape);
-regSub(sub_ids.plots.plotSpacing, sub_ids.plots.plotSpacing);
-regSub(sub_ids.plots.shufflePlots, sub_ids.plots.shufflePlots);
-regSub(sub_ids.plots.totalPlots, sub_ids.plots.totalPlots);
-regSub(sub_ids.plots.plotFeatures, sub_ids.plots.plotFeatures);
-regSub(sub_ids.plots.plotFileName, sub_ids.plots.plotFileName);
-regSub(sub_ids.plots.designSettings, sub_ids.plots.designSettings);
-
-
-// samples
-regSub(sub_ids.samples.sampleDistribution, sub_ids.samples.sampleDistribution);
-regSub(sub_ids.samples.samplesPerPlot, sub_ids.samples.samplesPerPlot);
-regSub(sub_ids.samples.sampleResolution, sub_ids.samples.sampleResolution);
-regSub(sub_ids.samples.sampleFileName, sub_ids.samples.sampleFileName);
-regSub(sub_ids.samples.allowDrawnSamples, sub_ids.samples.allowDrawnSamples);
+regSub(sub_ids.samples.sampleFileBase64, sub_ids.samples.sampleFileBase64);
 
 
 regSub(sub_ids.questions.questions, sub_ids.questions.questions);
 
-regSub(sub_ids.rules.rules, sub_ids.rules.rules);
-regSub(sub_ids.rules.search, sub_ids.rules.search);
-regSub(sub_ids.rules.filter, sub_ids.rules.filter);
-regSub(sub_ids.rules.selectedRuleType, sub_ids.rules.selectedRuleType);
-regSub(sub_ids.rules.newRule.label, sub_ids.rules.newRule.label);
-regSub(sub_ids.rules.newRule.answers, sub_ids.rules.newRule.answers);
-regSub(sub_ids.rules.newRule.regex, sub_ids.rules.newRule.regex);
-regSub(sub_ids.rules.newRule.min, sub_ids.rules.newRule.min);
-regSub(sub_ids.rules.newRule.max, sub_ids.rules.newRule.max);
-regSub(sub_ids.rules.newRule.validSum, sub_ids.rules.newRule.validSum);
-regSub(sub_ids.rules.newRule.questionId, sub_ids.rules.newRule.questionId);
-regSub(sub_ids.rules.newRule.questionIds, sub_ids.rules.newRule.questionIds);
-regSub(sub_ids.rules.newRule.questionId1, sub_ids.rules.newRule.questionId1);
-regSub(sub_ids.rules.newRule.questionId2, sub_ids.rules.newRule.questionId2);
-regSub(sub_ids.rules.newRule.questionIds1, sub_ids.rules.newRule.questionIds1);
-regSub(sub_ids.rules.newRule.questionIds2, sub_ids.rules.newRule.questionIds2);
-regSub(sub_ids.rules.newRule.answerId1, sub_ids.rules.newRule.answerId1);
-regSub(sub_ids.rules.newRule.answerId2, sub_ids.rules.newRule.answerId2);
-regSub(sub_ids.rules.newRule.tempQuestionId, sub_ids.rules.newRule.tempQuestionId);
-regSub(sub_ids.rules.newRule.tempAnswerId, sub_ids.rules.newRule.tempAnswerId);
-regSub(sub_ids.rules.newRule.incompatQuestionId, sub_ids.rules.newRule.incompatQuestionId);
-regSub(sub_ids.rules.newRule.incompatAnswerId, sub_ids.rules.newRule.incompatAnswerId);
 
-
-// institution
-regSub(sub_ids.institution.users, sub_ids.institution.users);
-
-
-regEvent(event_ids.projectDetails,
-         ({ draftDb }, projectDetails) => {
-           draftDb[sub_ids.projectDetails] = projectDetails;
-         });
-
+// rules
 regSub(sub_ids.rules.rules, sub_ids.rules.rules);
 regSub(sub_ids.rules.search, sub_ids.rules.search);
 regSub(sub_ids.rules.filter, sub_ids.rules.filter);
@@ -441,7 +397,6 @@ regSub(sub_ids.rules.newRule.incompatAnswerId, sub_ids.rules.newRule.incompatAns
 
 // institution
 regSub(sub_ids.institution.users, sub_ids.institution.users);
-
 
 regEvent(event_ids.projectDetails, ({ draftDb }, projectDetails) => {
   draftDb[sub_ids.projectDetails] = projectDetails;
@@ -690,8 +645,9 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
   const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
   const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
-  const referencePlotId = current(draftDb[sub_ids.plots.referencePlotId]);
-  const similarityYears = current(draftDb[sub_ids.plots.similarityYears]);
+  const similarityDetails = current(draftDb[sub_ids.plots.plotSimilarityDetails]) || {};
+  const referencePlotId = similarityDetails.referencePlotId;
+  const similarityYears = similarityDetails.years;
   const form = buildProject(draftDb, sub_ids);
   const errors = validateWizard(form);
   
@@ -802,6 +758,10 @@ regEvent(event_ids.overview.useTemplatePlots, ({ draftDb }, useTemplatePlots)=>{
   draftDb[sub_ids.overview.useTemplatePlots] = useTemplatePlots;
 });
 
+regEvent(event_ids.overview.projectOptions.plotSimilarity, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.plotSimilarity] = !draftDb[sub_ids.overview.projectOptions.plotSimilarity];
+});
+
 regEvent(event_ids.imagery.imagery, ({ draftDb }, imageryIdList)=>{
   draftDb[sub_ids.imagery.imagery] = imageryIdList;
 });
@@ -869,16 +829,16 @@ regEvent(event_ids.plots.plotFileName, ({ draftDb }, plotFileName) => {
   draftDb[sub_ids.plots.plotFileName] = plotFileName;
 });
 
+regEvent(event_ids.plots.plotFileBase64, ({ draftDb }, plotFileBase64) => {
+  draftDb[sub_ids.plots.plotFileBase64] = plotFileBase64;
+});
+
 regEvent(event_ids.plots.designSettings, ({ draftDb }, designSettings) => {
   draftDb[sub_ids.plots.designSettings] = designSettings;
 });
 
-regEvent(event_ids.plots.referencePlotId, ({ draftDb }, referencePlotId) => {
-  draftDb[sub_ids.plots.referencePlotId] = referencePlotId;
-});
-
-regEvent(event_ids.plots.similarityYears, ({ draftDb }, similarityYears) => {
-  draftDb[sub_ids.plots.similarityYears] = similarityYears;
+regEvent(event_ids.plots.plotSimilarityDetails, ({ draftDb }, details) => {
+  draftDb[sub_ids.plots.plotSimilarityDetails] = details;
 });
 
 // SAMPLE GENERATION EVENTS
@@ -897,6 +857,11 @@ regEvent(event_ids.samples.sampleResolution, ({ draftDb }, resolution) => {
 regEvent(event_ids.samples.sampleFileName, ({ draftDb }, fileName) => {
   draftDb[sub_ids.samples.sampleFileName] = fileName;
 });
+
+regEvent(event_ids.samples.sampleFileBase64, ({ draftDb }, fileBase64) => {
+  draftDb[sub_ids.samples.sampleFileBase64] = fileBase64;
+});
+
 
 regEvent(event_ids.samples.allowDrawnSamples, ({ draftDb }, allow) => {
   draftDb[sub_ids.samples.allowDrawnSamples] = allow;

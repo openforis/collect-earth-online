@@ -189,6 +189,7 @@ export const BoundaryStep = () => {
           pan={true}
           allowDrawing={isDrawingActive}
           aoiToShow={aoiFeatures}
+          preview={true}
           onDrawComplete={handleMapDrawComplete}
           initZoom={4}
         />
