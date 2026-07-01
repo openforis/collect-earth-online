@@ -271,39 +271,47 @@ export const PlotStep = () => {
     </>
   );
 
-  const renderFileBasedLayout = (fileType) => (
-    <div className="d-flex flex-column mb-3">
-      <label className="text-label-sm" style={{ margin: '0 0 8px 0', fontWeight: 'bold' }}>
-        UPLOAD PLOT FILE <span style={{ color: 'red' }}>*</span>
-      </label>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
-        <label 
-          className="btn btn-sm btn-outline-lightgreen py-2 px-3 text-nowrap"
-          htmlFor="plot-file-upload-input"
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}
-        >
-          <SvgIcon icon="plus" size="0.9rem" />
-          Upload {fileType.toUpperCase()} file
-          <input 
-            type="file"
-            id="plot-file-upload-input"
-            accept={acceptedMimeTypes[fileType]}
-            style={{ display: 'none' }}
-            onChange={(e) => processIncomingDataFile(e, fileType)}
-          />
+  const renderFileBasedLayout = (fileType) => {
+    const extension = fileType === 'shp' ? 'zip' : fileType;
+    const downloadHref = `test_data/plot-${fileType}-example.${extension}`;
+
+    return (
+      <div className="d-flex flex-column mb-3">
+        <label className="text-label-sm" style={{ margin: '0 0 8px 0', fontWeight: 'bold' }}>
+          UPLOAD PLOT FILE <span style={{ color: 'red' }}>*</span>
         </label>
-        <span className="text-label-sm" style={{ color: plotFileName ? '#333' : '#999', fontStyle: !plotFileName ? 'italic' : 'normal' }}>
-          {plotFileName ? `File: ${plotFileName}` : 'No dataset file uploaded'}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
+          <label 
+            className="btn btn-sm btn-outline-lightgreen py-2 px-3 text-nowrap"
+            htmlFor="plot-file-upload-input"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}
+          >
+            <SvgIcon icon="plus" size="0.9rem" />
+            Upload {fileType.toUpperCase()} file
+            <input 
+              type="file"
+              id="plot-file-upload-input"
+              accept={acceptedMimeTypes[fileType]}
+              style={{ display: 'none' }}
+              onChange={(e) => processIncomingDataFile(e, fileType)}
+            />
+          </label>
+          <span className="text-label-sm" style={{ color: plotFileName ? '#333' : '#999', fontStyle: !plotFileName ? 'italic' : 'normal' }}>
+            {plotFileName ? `File: ${plotFileName}` : 'No dataset file uploaded'}
+          </span>
+        </div>
+        <a href={downloadHref} className="text-label-sm mb-3" style={{ textDecoration: 'underline', color: '#007bff' }}>
+          Download example {fileType.toUpperCase()} file
+        </a>
+        {fileType === 'csv' && (
+          <>
+            {renderPlotSizeInput()}
+            {renderPlotShapeInput()}
+          </>
+        )}
       </div>
-      {fileType === 'csv' && (
-        <>
-          {renderPlotSizeInput()}
-          {renderPlotShapeInput()}
-        </>
-      )}
-    </div>
-  );
+    );
+  };
 
   const distributionStrategies = {
     random: { display: "Random", renderer: renderRandomLayout },

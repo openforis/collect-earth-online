@@ -71,6 +71,7 @@ export const SampleGenerationCard = ({ setSampleFeatures }) => {
   const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]) || 1;
   const sampleResolution = useSubscription([sub_ids.samples.sampleResolution]) || 0;
   const sampleFileName = useSubscription([sub_ids.samples.sampleFileName]) || "";
+  const extension = sampleDistribution === 'shp' ? 'zip' : fileType;
 
   const distributionOptions = [
     ["random", "Random", false],
@@ -223,6 +224,9 @@ export const SampleGenerationCard = ({ setSampleFeatures }) => {
               {sampleFileName ? `File: ${sampleFileName}` : 'No dataset file uploaded'}
             </span>
           </div>
+          <a href={`test_data/sample-${sampleDistribution}-example.${extension}`} className="text-label-sm mb-3" style={{ textDecoration: 'underline', color: '#007bff' }}>
+          Download example sample file
+        </a>
         </div>
       )}
     </div>
