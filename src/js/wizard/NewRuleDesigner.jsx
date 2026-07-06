@@ -282,7 +282,7 @@ function SumOfAnswersForm () {
   );
 }
 
-function MatchingSumsForm () {//WORKSN'T
+function MatchingSumsForm () {
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
@@ -408,19 +408,19 @@ function  IncompatibleAnswersForm () {//WORKSN'T
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
-  function addSurveyRule (newRule) {dispatch([event_ids.rules.rules, newRule]);}
+  function setSurveyRules (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
   const questionId1 = useSubscription([sub_ids.rules.newRule.questionId1]);
   function setQuestionId1 (qid) {dispatch([event_ids.rules.newRule.questionId1, qid]);}
 
   const questionId2 = useSubscription([sub_ids.rules.newRule.questionId2]);
-  function setQuestionId2 (qid) {dispatch([event_ids.rules.newRule.qustionId2, qid]);}
+  function setQuestionId2 (qid) {dispatch([event_ids.rules.newRule.questionId2, qid]);}
 
   const answerId1 = useSubscription([sub_ids.rules.newRule.answerId1]);
   function setAnswerId1 (qid) {dispatch([event_ids.rules.newRule.answerId1, qid]);}
 
   const answerId2 = useSubscription([sub_ids.rules.newRule.answerId2]);
-  function setAnswerId2 (qid) {dispatch([event_ids.rules.newRule.qustionId2, qid]);}
+  function setAnswerId2 (qid) {dispatch([event_ids.rules.newRule.answerId2, qid]);}
   
   const modal = useSubscription([sub_ids.modal]);
   function setModal () {dispatch([event_ids.modal]);}
@@ -463,7 +463,7 @@ function  IncompatibleAnswersForm () {//WORKSN'T
     if (errorMessages.length > 0) {
       setModal ({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
-      addSurveyRule({
+      setSurveyRules({
             id: getNextInSequence(surveyRules.map((rule) => rule.id)),
             ruleType: "incompatible-answers",
             questionId1,
