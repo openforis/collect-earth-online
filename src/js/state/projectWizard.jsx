@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import _ from 'lodash';
 import { initAppDb , regEvent , regEffect , dispatch , regSub , current } from '@flexsurfer/reflex';
 
 import { validateOverview,
@@ -1005,7 +1006,11 @@ regEvent(event_ids.rules.newRule.validSum, ({ draftDb }, validSum) => {
 });
 
 regEvent(event_ids.rules.newRule.questionIds, ({ draftDb }, questionIds) => {
-  draftDb[sub_ids.rules.newRule.questionIds] = questionIds;
+  let dbIds = current(draftDb[sub_ids.rules.newRule.questionIds]);
+  let symDiff = dbIds.filter(x => !questionIds.includes(x))
+      .concat(questionIds.filter(x => !dbIds.includes(x)));
+  questionIds.length ? draftDb[sub_ids.rules.newRule.questionIds] = symDiff
+    : draftDb[sub_ids.rules.newRule.questionIds] = [] ;
 });
 
 regEvent(event_ids.rules.newRule.questionIds1, ({ draftDb }, questionIds1) => {

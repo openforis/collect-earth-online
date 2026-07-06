@@ -16,7 +16,7 @@ import { ProjectContext } from "../project/constants";
 import Modal from "../components/Modal";
 
 
-function TextMatchForm () {
+function TextMatchForm () { //WORKS
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
@@ -98,7 +98,7 @@ function TextMatchForm () {
 };
 
 
-function NumericRangeForm () {
+function NumericRangeForm () { //WORKS
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
@@ -190,7 +190,7 @@ function NumericRangeForm () {
   );
 }
 
-function SumOfAnswersForm () {
+function SumOfAnswersForm () {//WORKSN'T
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
@@ -200,7 +200,7 @@ function SumOfAnswersForm () {
   function setValidSum (validSum) {dispatch([event_ids.rules.newRule.validSum, validSum]);}
   
   const questionIds = useSubscription([sub_ids.rules.newRule.questionIds]);
-  function setQuestionIds (qids) {dispatch([event_ids.rules.newRule.qusetionIids, qids]);}
+  function setQuestionIds (qids) {dispatch([event_ids.rules.newRule.questionIds, qids]);}
   
   const modal = useSubscription([sub_ids.modal]);
   function setModal () {dispatch([event_ids.modal]);}
@@ -243,7 +243,10 @@ function SumOfAnswersForm () {
             className="form-control form-control-sm overflow-auto select-bar"
             style={{width: '100%', display:'inline-flex'}}
             multiple="multiple"
-            onChange={(e) => setQuestionIds(Array.from(e.target.selectedOptions, (i) => Number(i.value)))}
+            onChange={(e) => {             
+              /* console.log(questionIds, Array.from(e.target.selectedOptions, (i) => Number(i.value))); */
+              setQuestionIds(Array.from(e.target.selectedOptions, (i) => Number(i.value)));
+            }}
             value={questionIds}>
             {mapObjectArray(availableQuestions, ([aqId, aq]) => (
               <option key={aqId} value={aqId}>
@@ -261,8 +264,8 @@ function SumOfAnswersForm () {
             type='number'
             className='rule-input form-control form-control-sm'
             onChange={(e) => setValidSum(Number(e.target.value))}
-            placeholder="Valid sum"
-            value={validSum}>
+            placeholder={0}
+            defaultValue={validSum}>
           </input>
         </div>
       </div>
@@ -277,7 +280,7 @@ function SumOfAnswersForm () {
   );
 }
 
-function MatchingSumsForm () {
+function MatchingSumsForm () {//WORKSN'T
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
@@ -385,7 +388,7 @@ function MatchingSumsForm () {
   );
 }
 
-function  IncompatibleAnswersForm () {
+function  IncompatibleAnswersForm () {//WORKSN'T
   function  checkPair (q1, a1, q2, a2) {return (q1 === q2 && a1 === a2);};
   function checkEquivalent (q1, a1, q2, a2, q3, a3, q4, a4) 
   {return(
@@ -542,8 +545,10 @@ function  IncompatibleAnswersForm () {
   );
 }
 
-function MultipleIncompatibleAnswersForm () {
+function MultipleIncompatibleAnswersForm () {//WORKSN'T
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
+
+  console.log('multiple incompat answers', surveyQuestions);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
   function setSurveyRules  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
