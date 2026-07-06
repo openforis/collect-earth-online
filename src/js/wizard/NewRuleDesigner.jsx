@@ -558,8 +558,6 @@ function  IncompatibleAnswersForm () {//WORKSN'T
 function MultipleIncompatibleAnswersForm () {//WORKSN'T
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
 
-  console.log('multiple incompat answers', surveyQuestions);
-  
   const surveyRules = useSubscription([sub_ids.rules.rules]);
   function setSurveyRules  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
@@ -717,17 +715,20 @@ function MultipleIncompatibleAnswersForm () {//WORKSN'T
           <select
             style={{ display: "inline-block"}}
             className="form-inline form-control-sm ml-2 mr-2 select-bar"
-            onChange={(e) => setTempQuestionId(e.target.value)}
+            onChange={(e) => setTempQuestionId(Number(e.target.value))}
             value={tempQuestionId}
           >
             <option value="-1" selected disabled hidden>- Select Question -</option>
-            {mapObjectArray(surveyQuestions, ([aqId, aq]) => {
-              if(answers[aqId] === undefined) {
-                return (
-                  <option key={aqId} value={aqId}>
-                    {aq.question}
-                  </option>
-                );
+            {mapObjectArray(
+              surveyQuestions
+                .filter(({componentType})=>componentType !== 'input'),
+              ([aqId, aq]) => {
+                if(answers[aqId] === undefined) {
+                  return (
+                    <option key={aqId} value={aqId}>
+                      {aq.question}
+                    </option>
+                  );
               } else {return (<></>);}})}
           </select>
         </div>
@@ -736,7 +737,7 @@ function MultipleIncompatibleAnswersForm () {//WORKSN'T
           <select
             style={{ display: "inline-block"}}
             className="form-inline form-control-sm ml-2 mr-2 select-bar"
-            onChange={(e) => setTempAnswerId(e.target.value) }
+            onChange={(e) => setTempAnswerId(Number(e.target.value))}
             value={tempAnswerId}>
             <option value="-1" selected disabled hidden>- Select Answer -</option>
             {mapObjectArray(safeFindAnswers(tempQuestionId), ([ansId, ans]) => (
@@ -753,7 +754,7 @@ function MultipleIncompatibleAnswersForm () {//WORKSN'T
             onClick={() => {
               addRule(tempQuestionId, tempAnswerId);
               setTempQuestionId(-1);
-              setTempAnswerId(-1);                                
+              setTempAnswerId(-1);
             }}
             title="Add Rule"
             type="button">
@@ -761,7 +762,7 @@ function MultipleIncompatibleAnswersForm () {//WORKSN'T
           </button>
         </div>
       </div>
-      {Object.entries(answers)?.map(([question, answer]) =>
+      {answers.map(([question, answer]) =>
         renderRuleRow(surveyQuestions, question, answer))}
       <br/>
       <strong className="mb-2" style={{ textAlign: "center" }}>

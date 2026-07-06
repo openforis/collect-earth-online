@@ -124,7 +124,7 @@ const projectWizardDb = {
   'rules.newRule.tempAnswerId': -1,
   'rules.newRule.answerId1': -1,
   'rules.newRule.answerId2': -1,
-  'rules.newRule.answers': {},
+  'rules.newRule.answers': [],
   'institution.users': []
 };
 
@@ -198,6 +198,8 @@ export const event_ids = {
     newRule: {
       label: 'rules.newRule.label',
       answers: 'rules.newRule.answers',
+      addAnswer: 'rules.newRule.addAnswer',
+      removeAnswer: 'rules.newRule.removeAnswer',
       regex: 'rules.newRule.regex',
       questionId: 'rules.newRule.questionId',
       min: 'rules.newRule.min',
@@ -816,7 +818,6 @@ regEvent(event_ids.imagery.imageryList, ({ draftDb }, imageryList ) => {
 regEvent(event_ids.questions.addQuestion,
          ({ draftDb }, questionToAdd ) => {
            const prev = current(draftDb[sub_ids.questions.questions]);
-           console.log(sub_ids.questions.questions ,prev);
            draftDb[sub_ids.questions.questions].push(questionToAdd);
          });
 
@@ -1036,6 +1037,18 @@ regEvent(event_ids.rules.newRule.answerId2, ({ draftDb }, answerId2) => {
 regEvent(event_ids.rules.newRule.answers, ({ draftDb }, answers) => {
   draftDb[sub_ids.rules.newRule.answers] = answers;
 });
+
+regEvent(event_ids.rules.newRule.addAnswer, ({ draftDb }) => {
+  let dbAnswers = current(draftDb[sub_ids.rules.newRule.answers]);
+  let answer = [current(draftDb[sub_ids.rules.newRule.tempQuestionId]),
+                current(draftDb[sub_ids.rules.newRule.tempAnswerId])];
+  draftDb[sub_ids.rules.newRule.answers] = [... dbAnswers, answer];
+});
+regEvent(event_ids.rules.newRule.removeAnswer, ({ draftDb }, questionId) => {
+  let dbAnswers = current(draftDb[sub_ids.rules.newRule.answers]);
+  draftDb[sub_ids.rules.newRule.answers] = dbAnswers.filter(([question])=>question != questionId);
+});
+
 
 regEvent(event_ids.rules.newRule.tempQuestionId, ({ draftDb }, tempQuestionId) => {
   draftDb[sub_ids.rules.newRule.tempQuestionId] = tempQuestionId;
