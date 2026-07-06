@@ -16,7 +16,7 @@ import { ProjectContext } from "../project/constants";
 import Modal from "../components/Modal";
 
 
-function TextMatchForm () { //WORKS
+function TextMatchForm () {
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
@@ -98,7 +98,7 @@ function TextMatchForm () { //WORKS
 };
 
 
-function NumericRangeForm () { //WORKS
+function NumericRangeForm () {
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
@@ -190,7 +190,7 @@ function NumericRangeForm () { //WORKS
   );
 }
 
-function SumOfAnswersForm () {//WORKSN'T
+function SumOfAnswersForm () {
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
@@ -243,9 +243,11 @@ function SumOfAnswersForm () {//WORKSN'T
             className="form-control form-control-sm overflow-auto select-bar"
             style={{width: '100%', display:'inline-flex'}}
             multiple="multiple"
-            onChange={(e) => {             
-              /* console.log(questionIds, Array.from(e.target.selectedOptions, (i) => Number(i.value))); */
-              setQuestionIds(Array.from(e.target.selectedOptions, (i) => Number(i.value)));
+            onChange={(e) => {
+              let input = Array.from(e.target.selectedOptions, (i) => Number(i.value));
+              let symDiff = input.length ? questionIds.filter(x => !input.includes(x))
+                  .concat(input.filter(x => !questionIds.includes(x))) : [];
+              setQuestionIds(symDiff);
             }}
             value={questionIds}>
             {mapObjectArray(availableQuestions, ([aqId, aq]) => (
@@ -290,7 +292,7 @@ function MatchingSumsForm () {//WORKSN'T
   function setQuestionIds1 (qids) {dispatch([event_ids.rules.newRule.questionIds1, qids]);}
 
   const questionIds2 = useSubscription([sub_ids.rules.newRule.questionIds2]);
-  function setQuestionIds2 (qids) {dispatch([event_ids.rules.newRule.qustionIds2, qids]);}
+  function setQuestionIds2 (qids) {dispatch([event_ids.rules.newRule.questionIds2, qids]);}
   
   const modal = useSubscription([sub_ids.modal]);
   function setModal () {dispatch([event_ids.modal]);}
@@ -341,7 +343,11 @@ function MatchingSumsForm () {//WORKSN'T
             className="form-control form-control-sm overflow-auto select-bar"
             style={{height: 'inherit'}}
             multiple="multiple"
-            onChange={(e) => setQuestionIds1(Array.from(e.target.selectedOptions, (i) => Number(i.value)))}
+            onChange={(e) => {
+              let input = Array.from(e.target.selectedOptions, (i) => Number(i.value));
+              let symDiff = input.length ? questionIds1.filter(x => !input.includes(x))
+                  .concat(input.filter(x => !questionIds1.includes(x))) : [];
+              setQuestionIds1(symDiff);}}
             value={questionIds1}
           >
             {mapObjectArray(availableQuestions, ([aqId, aq]) => (
@@ -360,8 +366,12 @@ function MatchingSumsForm () {//WORKSN'T
             className="form-control form-control-sm overflow-auto select-bar"
             style={{height: 'inherit'}}
             multiple="multiple"
-            onChange={(e) =>
-              setQuestionIds2(Array.from(e.target.selectedOptions, (i) => Number(i.value)))
+            onChange={(e) =>{
+              let input = Array.from(e.target.selectedOptions, (i) => Number(i.value));
+              let symDiff = input.length ? questionIds2.filter(x => !input.includes(x))
+                  .concat(input.filter(x => !questionIds2.includes(x))) : [];
+              setQuestionIds2(symDiff);
+            }
             }
             value={questionIds2}
           >
