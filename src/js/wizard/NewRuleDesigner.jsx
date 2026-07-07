@@ -581,10 +581,10 @@ function MultipleIncompatibleAnswersForm () {//WORKSN'T
   function setTempAnswerId (aid) {dispatch([event_ids.rules.newRule.tempAnswerId, aid]);}  
 
   function addSurveyRule () {    
-    setProjectDetails({
+    setSurveyRules({
       id: getNextInSequence(surveyRules.map((rule) => rule.id)),
       ruleType: "multiple-incompatible-answers",
-      answers: answers,
+      answers: answers.reduce((out, [q, a])=>{return {... out, [q]: a};}, {}),
       incompatQuestionId: incompatQuestionId,
       incompatAnswerId: incompatAnswerId
     });

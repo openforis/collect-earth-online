@@ -815,11 +815,9 @@ regEvent(event_ids.imagery.imageryList, ({ draftDb }, imageryList ) => {
   draftDb[sub_ids.imagery.imageryList] = imageryList;
 });
 
-regEvent(event_ids.questions.addQuestion,
-         ({ draftDb }, questionToAdd ) => {
-           const prev = current(draftDb[sub_ids.questions.questions]);
-           draftDb[sub_ids.questions.questions].push(questionToAdd);
-         });
+regEvent(event_ids.questions.addQuestion, ({ draftDb }, questionToAdd ) => {
+  draftDb[sub_ids.questions.questions].push(questionToAdd);
+});
 
 // PROJECT BOUNDARY EVENTS
 
