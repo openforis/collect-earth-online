@@ -1,13 +1,25 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 
-import SurveyRuleDesigner from "../survey/SurveyRulesDesigner";
+import SurveyRulesList from "../survey/SurveyRulesList";
+import NewRuleDesigner from "../wizard/NewRuleDesigner";
 import { SurveyQuestions } from '../components/SurveyQuestions';
 
 import { event_ids,  sub_ids} from "../state/projectWizard";
 
 import "../../css/project-wizard.css";
 
+
+function SurveyRuleDesigner({events, subs}) {
+  return (
+    <div className="survey-rules-container">
+      <div style={{backgroundColor: 'white'}} >
+        <SurveyRulesList inDesignMode events={events} subs={subs}/>
+        <NewRuleDesigner events={events} subs={subs}/>
+      </div>
+    </div>
+  );
+}
 
 export default function RulesStep () {
 
