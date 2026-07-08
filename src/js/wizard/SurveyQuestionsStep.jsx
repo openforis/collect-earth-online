@@ -22,6 +22,8 @@ export const QuestionCard = ({
     ([id, q]) => q.parentQuestionId === parseInt(qId)
   );
 
+  const isInputType = question.componentType === 'input';
+
   const updateQuestion = (field, value) => {    
     setQuestions((prev) => ({
       ...prev,
@@ -52,8 +54,8 @@ export const QuestionCard = ({
       [nextAId]: { answer: '', color: '#cbd5e1', hide: false },
     });
     dispatch([event_ids.questions.updateQuestion, qId, 'answers',
-              {... question.answers,
-               [nextAId]: { answer: '', color: '#cbd5e1', hide: false }}]);
+      {... question.answers,
+        [nextAId]: { answer: '', color: '#cbd5e1', hide: false }}]);
   };
 
   const removeAnswer = (aId) => {
@@ -240,10 +242,13 @@ export const QuestionCard = ({
                       }
                     }}
                     onChange={(e) => {
-                      const value = question.dataType === 'number' && e.target.value !== ''
-                        ? Number(e.target.value)
-                        : e.target.value;
-                      updateAnswer(aId, 'answer', value);
+                      if (question.dataType !== 'number') {
+                        updateAnswer(aId, 'answer', e.target.value);
+                        return;
+                      }
+                      const s = e.target.value;
+                      const n = s === '' ? 0 : Number(s);
+                      updateAnswer(aId, 'answer', Number.isNaN(n) ? 0 : n);
                     }}
                   />
                   <input
@@ -251,7 +256,7 @@ export const QuestionCard = ({
                     checked={a.hide || false}
                     onChange={(e) => updateAnswer(aId, 'hide', e.target.checked)}
                   />
-                  {Object.keys(question.answers).length > 1 && (
+                  {(!isInputType && Object.keys(question.answers).length > 1) && (
                     <div
                       onClick={() => removeAnswer(aId)}
                       style={{ cursor: 'pointer', color: '#f61313' }}
@@ -264,9 +269,11 @@ export const QuestionCard = ({
             </div>
 
             <div className="question-card-footer">
-              <button className="btn-outline-teal" onClick={addAnswer}>
-                <SvgIcon icon="plus" size="0.8rem" /> Add Another Answer
-              </button>
+              {!isInputType && (
+                <button className="btn-outline-teal" onClick={addAnswer}>
+                  <SvgIcon icon="plus" size="0.8rem" /> Add Another Answer
+                </button>
+              )}
 
               <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                 <label className="labeled-input" style={{ cursor: 'pointer' }}>
@@ -318,6 +325,7 @@ export const SurveyQuestionsStep = () => {
     const nextId = (Math.max(...Object.keys(questions).map(Number), 0) + 1).toString();
     const isTopLevel = newQuestion.parentQuestionId === "-1";
 
+    const defaultAnswer = newQuestion.dataType === 'text' ? "Example Answer" : 0;
     const questionToAdd = {
       question: newQuestion.questionText,
       questionLabel: newQuestion.questionLabel,
@@ -329,7 +337,7 @@ export const SurveyQuestionsStep = () => {
         ? Object.values(questions).filter((q) => q.parentQuestionId === -1).length + 1
         : null,
       answers: {
-        "1": { answer: "Example Answer", color: "#109844" },
+        "1": { answer: defaultAnswer, color: "#109844" },
       },
     };
 
