@@ -50,7 +50,6 @@ const projectWizardDb = {
   templateProjectId: -1,
   projectId: -1,
   projectDraftId: -1,
-//  templateProjects: [],
   useTemplatePlots: false,
   useTemplateWidgets: false,
   // overview
@@ -67,11 +66,13 @@ const projectWizardDb = {
   'overview.useTemplatePlots': false,
   imagery: [],
   imageryList: [],
+  institutionImagery: [],
   // boundary
   'boundary.generationMethod': 'manual',
   'boundary.aoiFeatures': [],
   'boundary.aoiFileName': '',
   // plots
+  'plots.plots': [],
   'plots.plotDistribution': 'random',
   'plots.numPlots': '',
   'plots.plotSize': '',
@@ -131,13 +132,14 @@ const projectWizardDb = {
 initAppDb(projectWizardDb);
 
 export const event_ids = {
-//  templateProjects: 'templateProjects',
   institutionId: 'institutionId',
+  templateProject: 'templateProject',
   submitForm: 'submitForm',
   saveDraft: 'saveDraft',
   getDraft: 'getDraft',
   errors: 'errors',
   continueHandler: 'continueHandler',
+  validate: 'validate',
   currentStep: 'currentStep',
   modal: 'modal',
   projectSource: 'projectSource',
@@ -148,6 +150,7 @@ export const event_ids = {
              learningMaterial: 'overview.learningMaterial',
              visibility: 'overview.visibility',
              useTemplatePlots: 'overview.useTemplatePlots',
+             useTemplateWidgets: 'overview.useTemplateWidgets',
              projectOptions: {
                gee: 'overview.projectOptions.gee',
                extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
@@ -156,7 +159,7 @@ export const event_ids = {
              }},
   projectDetails: 'projectDetails',
   imagery: {
-    'imagery' : 'imagery',
+    imagery : 'imagery',
     imageryList: 'imageryList'},
   boundary: {
     generationMethod: 'boundary.generationMethod',
@@ -166,6 +169,7 @@ export const event_ids = {
     setBoundaryFromFile: 'boundary.setBoundaryFromFile'
   },
   plots: {
+    plots: 'plots.plots',
     plotDistribution: 'plots.plotDistribution',
     numPlots: 'plots.numPlots',
     plotSize: 'plots.plotSize',
@@ -217,7 +221,8 @@ export const event_ids = {
       incompatAnswerId: 'rules.newRule.incompatAnswerId',
     }},
     institution: {
-      users: 'institution.users'}};
+      users: 'institution.users',
+      imagery: 'institutionImagery'}};
 
 export const sub_ids = {
   institutionId: 'institutionId',
@@ -228,7 +233,6 @@ export const sub_ids = {
   modal: 'modal',
   projectSource: 'projectSource',
   successResponse: 'successReponse',
-//  templateProjects: 'templateProjects',
   templateProjectId: 'templateProjectId',
   useTemplatePlots: 'useTemplatePlots',
   useTemplateWidgets: 'useTemplateWidgets',
@@ -238,6 +242,7 @@ export const sub_ids = {
              learningMaterial: 'overview.learningMaterial',
              visibility: 'overview.visibility',
              useTemplatePlots: 'overview.useTemplatePlots',
+             useTemplateWidgets: 'overview.useTemplateWidgets',
              projectOptions: {
                gee: 'overview.projectOptions.gee',
                extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
@@ -246,7 +251,7 @@ export const sub_ids = {
              }},
   projectDetails: 'projectDetails',
   imagery: {
-    'imagery' : 'imagery',
+    imagery : 'imagery',
     imageryList: 'imageryList'},
   boundary: {
     generationMethod: 'boundary.generationMethod',
@@ -254,6 +259,7 @@ export const sub_ids = {
     aoiFileName: 'boundary.aoiFileName'
   },
   plots: {
+    plots: 'plots.plots',
     plotDistribution: 'plots.plotDistribution',
     numPlots: 'plots.numPlots',
     plotSize: 'plots.plotSize',
@@ -302,6 +308,7 @@ export const sub_ids = {
             incompatAnswerId: 'rules.newRule.incompatAnswerId',
           }},
   institution: {
+    imagery: 'institutionImagery',
     users: 'institution.users'}
 };
 
@@ -313,7 +320,6 @@ regSub(sub_ids.projectSource, sub_ids.projectSource);
 regSub(sub_ids.errors, sub_ids.errors);
 regSub(sub_ids.successResponse, sub_ids.successResponse);
 regSub(sub_ids.institutionId, sub_ids.institutionId);
-//regSub(sub_ids.templateProjects, sub_ids.templateProjects);
 regSub(sub_ids.templateProjectId, sub_ids.templateProjectId);
 regSub(sub_ids.useTemplatePlots, sub_ids.useTemplatePlots);
 regSub(sub_ids.useTemplateWidgets, sub_ids.useTemplateWidgets);
@@ -328,9 +334,10 @@ regSub(sub_ids.overview.projectOptions.extraPlotColumns, sub_ids.overview.projec
 regSub(sub_ids.overview.projectOptions.plotConfidence, sub_ids.overview.projectOptions.plotConfidence);
 regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.autoGeo);
 regSub(sub_ids.overview.useTemplatePlots, sub_ids.overview.useTemplatePlots);
+regSub(sub_ids.overview.useTemplateWidgets, sub_ids.overview.useTemplateWidgets);
 
 //imagery
-(regSub(sub_ids.imagery.imagery, sub_ids.imagery.imagery));
+regSub(sub_ids.imagery.imagery, sub_ids.imagery.imagery);
 
 // boundary
 regSub(sub_ids.boundary.generationMethod, sub_ids.boundary.generationMethod);
@@ -338,6 +345,7 @@ regSub(sub_ids.boundary.aoiFeatures, sub_ids.boundary.aoiFeatures);
 regSub(sub_ids.boundary.aoiFileName, sub_ids.boundary.aoiFileName);
 
 // plots
+regSub(sub_ids.plots.plots, sub_ids.plots.plots);
 regSub(sub_ids.plots.plotDistribution, sub_ids.plots.plotDistribution);
 regSub(sub_ids.plots.numPlots, sub_ids.plots.numPlots);
 regSub(sub_ids.plots.plotSize, sub_ids.plots.plotSize);
@@ -412,7 +420,7 @@ regSub(sub_ids.rules.newRule.incompatAnswerId, sub_ids.rules.newRule.incompatAns
 
 // institution
 regSub(sub_ids.institution.users, sub_ids.institution.users);
-
+regSub(sub_ids.institution.imagery, sub_ids.institution.imagery);
 
 regEvent(event_ids.projectDetails,
          ({ draftDb }, projectDetails) => {
@@ -467,7 +475,27 @@ regEvent(event_ids.institutionId, ({ draftDb }, institutionId )=> {
 
 // PROJECT WIZARD EVENTS
 
-function buildProject (draftDb, sub_ids) {
+regEvent(event_ids.getDraft, ({ draftDb }, draftId) => {
+  function getProjectDraftById(projectDraftId) {
+    fetch(`/get-project-draft-by-id?projectDraftId=${projectDraftId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        if (!data) {
+          dispatch([event_ids.errors, [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
+          return Promise.resolve();
+        } else {
+          dispatch([event_ids.successResponse, ['success', data]]);
+          return Promise.resolve();
+        }
+      }).catch(() => {
+        dispatch([event_ids.errors [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
+        
+      });
+  }
+  getProjectDraftById(draftId);
+});
+
+export function buildProject (draftDb, sub_ids) {
   const projectId = -1; //TODO
   const plotDistribution = current(draftDb[sub_ids.plots.plotDistribution]);
   const originalProject = {plotDistribution: ''}; //TODO
@@ -540,24 +568,42 @@ function buildProject (draftDb, sub_ids) {
 }
 
 
-regEvent(event_ids.getDraft, ({ draftDb }, draftId) => {
-  function getProjectDraftById(projectDraftId) {
-    fetch(`/get-project-draft-by-id?projectDraftId=${projectDraftId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (!data) {
-          dispatch([event_ids.errors, [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
-          return Promise.resolve();
-        } else {
-          dispatch([event_ids.successResponse, ['success', data]]);
-          return Promise.resolve();
-        }
-      }).catch(() => {
-        dispatch([event_ids.errors [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
-        
-      });
+regEvent(event_ids.validate, ({ draftDb }, step='wizard') => {
+  const form = buildProject(draftDb, sub_ids);
+
+  switch (step) {
+  case 'overview' : {    
+    const errors = validateOverview(form).filter((e)=>e);
+    errors.length && dispatch([event_ids.errors, [['overview', errors]]]);
+    break;}
+  case 'imagery': {
+    const errors = validateImagery(form).filter((e)=>e);
+    errors.length && dispatch([event_ids.errors, [['imagery', errors]]]);
+  break;}
+  case 'plots' : {
+    const errors = validatePlots(form).filter((e)=>e);
+    errors.length && dispatch([event_ids.errors, [['plots', errors]]]);
+  break;}
+  case 'samples' : {
+    const errors = validateSamples(form).filter((e)=>e);
+    errors.length && dispatch([event_ids.errors, [['samples', errors]]]);
+  break;}
+  case 'questions' : {
+    const errors = validateQuestions(form).filter((e)=>e);
+    errors.length && dispatch([event_ids.errors, [['questions', errors]]]);
+  break;}
+  case 'review' : {
+    const errors = validateWizard(form);
+    errors && dispatch([event_ids.errors, errors]);
+    break;}
+  case 'wizard' : {
+    const errors = validateWizard(form);
+    errors.length ? dispatch([event_ids.errors, errors]) : dispatch([event_ids.currentStep, 'review']);
+    !errors.length && dispatch([event_ids.modal, null]);
+    break;}
+  default : 
+    dispatch([event_ids.errors, [['Navigation', ['Your browser experienced a client error. please refresh the page.']]]]);
   }
-  getProjectDraftById(draftId);
 });
 
 regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
@@ -569,8 +615,7 @@ regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
     const errors = validateOverview(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['overview', errors]]]) :
       dispatch([event_ids.currentStep, 'imagery']);
-    break;
-}
+    break;}
   case 'imagery': {
     const errors = validateImagery(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['imagery', errors]]]) 
@@ -603,9 +648,74 @@ regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
       : draftDb[sub_ids.modal] = 'review';
   break;}
   default : 
-    dispatch([event_ids.errors, [['Navigation', ['Your browser experienced a client error. please refresh the page.']]]]);
-    
+    dispatch([event_ids.errors, [['Navigation', ['Your browser experienced a client error. please refresh the page.']]]]);    
   }
+});
+
+regEvent(event_ids.templateProjectId, ({ draftDb }, templateProjectId) => {
+  draftDb[sub_ids.templateProjectId] = templateProjectId;
+});
+
+regEvent(event_ids.overview.useTemplateWidgets, ({ draftDb }, useTemplateWidgets) => {
+  draftDb[sub_ids.overview.useTemplateWidgets] = useTemplateWidgets;
+});
+
+regEvent(event_ids.templateProject, ({ draftDb }, {
+  allowDrawnSamples,
+  aoiFeatures,
+  aoiFileName,
+  description,
+  designSettings,
+  imageryId,
+  learningMaterial,
+  name,
+  numPlots,
+  plotDistribution,
+  plotfileName,
+  plotShape,
+  plotSize,
+  plotSpacing,
+  projectOptions,
+  projectType,
+  referencePlot,
+  sampleDistribution,
+  sampleFileName,
+  sampleResolution,
+  samplesPerPlot,
+  surveyQuestions,
+  surveyRules,
+  visibility,
+}) => {
+  draftDb[sub_ids.overview.projectName] = name;
+  draftDb[sub_ids.overview.projectDescription] = description;
+  draftDb[sub_ids.overview.projectType] = projectType;
+  draftDb[sub_ids.overview.learningMaterial] = learningMaterial;
+  draftDb[sub_ids.overview.visibility] = visibility;
+  draftDb[sub_ids.projectOptions] = {gee:projectOptions.showGEEScript, 
+                                     extraPlotColumns: projectOptions.showPlotInformation,
+                                     plotConfidence: projectOptions.collectConfidence,
+                                     autoGeo: projectOptions.autoLaunchGeoDash};
+  draftDb[sub_ids.imagery.imagery] = [imageryId]; //??!
+  draftDb[sub_ids.boundary.generationMethod] = 'manual'; //??
+  draftDb[sub_ids.boundary.aoiFeatures] = aoiFeatures;
+  draftDb[sub_ids.boundary.aoiFileName] = aoiFileName;
+  draftDb[sub_ids.plots.plotDistribution] = plotDistribution;
+  draftDb[sub_ids.plots.numPlots] = Number(numPlots);
+  draftDb[sub_ids.plots.plotSize] = Number(plotSize);
+  draftDb[sub_ids.plots.plotShape] = plotShape;
+  draftDb[sub_ids.plots.plotSpacing] = plotSpacing;
+  draftDb[sub_ids.plots.totalPlots] = Number(numPlots); //??
+  draftDb[sub_ids.plots.plotFileName] = plotfileName;
+  draftDb[sub_ids.plots.referencePlotId] = Number(referencePlot);
+  draftDb[sub_ids.plots.designSettings] = designSettings;
+  draftDb[sub_ids.samples.sampleDistribution] = sampleDistribution;
+  draftDb[sub_ids.samples.samplesPerPlot] = Number((samplesPerPlot));
+  draftDb[sub_ids.samples.sampleResolution] = Number(sampleResolution);
+  draftDb[sub_ids.samples.sampleFileName] = sampleFileName;
+  draftDb[sub_ids.samples.allowDrawnSamples] = allowDrawnSamples;
+  draftDb[sub_ids.questions.questions] = surveyQuestions;
+  draftDb[sub_ids.rules.rules] = surveyRules;
+
 });
 
 regEvent(event_ids.saveDraft, ({ draftDb }) => {
@@ -752,18 +862,7 @@ regEvent(event_ids.overview.projectType, ({ draftDb }, projectType) => {
 });
 
 regEvent(event_ids.projectSource, ({ draftDb }, projectSource) => {
-/*  switch (projectSource) {
-  case 'template' : {
-    console.log('setting projectSource');
-    draftDb[sub_ids.projectSource] = 'template';
-    draftDb[sub_ids.modal] = ;
-    break;}
-  default : draftDb[sub_ids.projectSource] = projectSource; break;
-  }
-*/
-  console.log('updating project source', projectSource);
   draftDb[sub_ids.projectSource] = projectSource;
-  
 });
 
 // PROJECT OVERVIEW EVENTS
@@ -841,6 +940,10 @@ regEvent(event_ids.boundary.clearBoundary, ({ draftDb }) => {
 });
 
 // PLOT GENERATION EVENTS
+regEvent(event_ids.plots.plots, ({ draftDb }, plots) => {
+  draftDb[sub_ids.plots.plots] = plots;
+});
+
 regEvent(event_ids.plots.plotDistribution, ({ draftDb }, distribution) => {
   draftDb[sub_ids.plots.plotDistribution] = distribution;
 });
@@ -1056,4 +1159,8 @@ regEvent(event_ids.rules.newRule.incompatAnswerId, ({ draftDb }, incompatAnswerI
 // EVENTS FOR INSTITUTION INFORMATION
 regEvent(event_ids.institution.users, ({draftDb}, users) => {
   draftDb[sub_ids.institution.users] = users;
+});
+
+regEvent(event_ids.institution.imagery, ({ draftDb }, imagery) => {
+  draftDb[sub_ids.institution.imagery] = imagery;
 });

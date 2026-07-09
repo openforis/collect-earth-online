@@ -5,64 +5,83 @@ import Modal from "../components/Modal";
 import SvgIcon from "../components/svg/SvgIcon";
 import { event_ids,  sub_ids } from "../state/projectWizard";
 
-function getTemplateProjects (projectId) {
-  function getTemplateById (projectId) {
-  fetch(`/get-template-by-id?projectId=${projectId}`)
-    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-    .then((data) => {
-      this.setState({ templateProject: data });
-      const clearedTemplateAssignments = this.clearTemplateUserAssignments(data);
-      const institutionImageryIds = this.context.institutionImagery.map((i) => i.id);
-      this.context.setProjectDetails(
-        {
-          ...clearedTemplateAssignments,
-          templateProjectId: projectId,
-          imageryId: institutionImageryIds.includes(data.imageryId)
-            ? data.imageryId
-            : institutionImageryIds[0],
-          useTemplatePlots: true,
-          useTemplateWidgets: true,
-        },
-        this.checkAllSteps
-      );
-    });}
-  function getProjectPlots(projectId) {
-  fetch(`/get-project-plots?projectId=${projectId}`)
-    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-    .then((data) => {
-      this.setState({ templatePlots: data });
-      this.context.setProjectDetails({ plots: data });
-    });}
-  function getProjectImagery(projectId) {
-  fetch("/get-project-imagery?projectId=" + projectId)
-    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-    .then((data) => {
-      this.context.setProjectDetails({
-        projectImageryList: data.map((i) => i.id)
-      });
-    });}
-  
-  Promise.all([
-    getTemplateById(projectId),
-    getProjectPlots(projectId),
-    getProjectImagery(projectId),
-  ])
-    .then(() => this.context.setProjectDetails({ templateProjectId: projectId }))
-    .catch((error) => {
-      //this.setState({ templatePlots: [], templateProject: {} });
-      //      this.context.setProjectDetails({ templateProjectId: -1 });
-      console.error(error);
-      //      this.setState ({modal: {alert: {alertType: "Project Template Error", alertMessage: "Error getting complete template info. See console for details."}}});
-    });
-}
 
 function TemplateProjectModal () {
-  
-  const projectType = useSubscription([sub_ids.overview.projectType]) || 'regular';
-  function setTemplateProjectId (templateProjectId) {dispatch([event_ids.templateProjectId, templateProjectId]);}
-  const templateProjectId = useSubscription([sub_ids.templateProjectId]);
 
+  const [templatePlots, setTemplatePlots] = useState([]);
+  function setTemplateProject (templateProject) {dispatch([event_ids.templateProject, templateProject]);}
+
+  const institutionId = useSubscription([sub_ids.instituionId]);
+  const institutionImagery = useSubscription([sub_ids.institution.imagery]);
+
+  const projectType = useSubscription([sub_ids.overview.projectType]) || 'regular';
+  // function setTemplateProjectId (templateProjectId) {dispatch([event_ids.templateProjectId, templateProjectId]);}
+  // const templateProjectId = useSubscription([sub_ids.templateProjectId]);
+  const [templateProjectId, setTemplateProjectId] = useState(-1);
   const [templateProjects, setTemplateProjects] = useState([]);
+
+  function setUseTemplatePlots (useTemplatePlots) {dispatch([event_ids.overview.useTemplatePlots, useTemplatePlots]);}
+  function setDesignSettings (designSettings) {dispatch([event_ids.plots.designSettings, designSettings]);}
+  function setImageryId (imageryId) {dispatch([event_ids.imagery.imagery, imageryId]);}
+  function validate () {dispatch([event_ids.validate]);}
+  function setPlots (plots) {dispatch([event_ids.plots.plots, plots]);}
+  function setImageryList (imageryList) {dispatch([event_ids.imagery.imageryList, imageryList]);}
+
+  function setUseTemplateWidgets (useTemplateWidgets) {dispatch([event_ids.overview.useTemplateWidgets, useTemplateWidgets]);}
+  
+  function getTemplateById (projectId) {
+    fetch(`/get-template-by-id?projectId=${projectId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        setTemplateProject(data);
+        const institutionImageryIds = institutionImagery.map((i) => i.id);
+        data.institutionId != institutionId ?
+          setDesignSettings({... data.designSettings, userAssignment: {
+            userMethod: null,
+            users: [],
+            percents: []}})
+          : setDesignSettings(data.designSettings);
+        setTemplateProjectId(projectId);
+        setImageryId(institutionImageryIds.includes(data.imageryId)
+                     ? data.imageryId
+                     : institutionImageryIds[0]);
+        setUseTemplatePlots(true);
+        setUseTemplateWidgets(true);
+        validate();
+      });}
+  
+  function getProjectPlots(projectId) {
+    fetch(`/get-project-plots?projectId=${projectId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        setTemplatePlots(data);
+        setPlots(data);
+      });}
+  
+  function getProjectImagery(projectId) {
+    fetch("/get-project-imagery?projectId=" + projectId)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        setImageryList(data.map((i) => i.id));        
+      });}
+
+  function getTemplateProjects (projectId) {
+    Promise.all([
+      getTemplateById(projectId),
+      getProjectPlots(projectId),
+      getProjectImagery(projectId),
+    ])
+//      .then(() => setTemplateProjectId(projectId))
+      .catch((error) => {
+        setTemplatePlots([]);
+        setTemplateProject({});
+        setTemplateProjectId(-1);
+        console.error(error);
+        dispatch([event_ids.modal, [['Project Template Error', ["Error getting complete template info. See console for details."]]]]);
+      });
+  }
+  
+  
   //get: get-template-projects ({params: {projecType: ""}}) => [{id: 0, name: "", institutionId: 0}]
   /*
     send: get-template-by-id ({params: {projectId: 0}}) =>
@@ -92,7 +111,6 @@ function TemplateProjectModal () {
   */
   
   useEffect(() => {
-    console.log('getting template plots', projectType);
     fetch(`/get-template-projects?projectType=${projectType}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) =>
@@ -104,30 +122,25 @@ function TemplateProjectModal () {
         dispatch([event_ids.errors, [['Template Projects', ['Failed to load template projects']]]]);
         Promise.reject(error);
       });
-
   }, []);  
   return (
     <Modal
       title='Select Template Project'
       confirmText='Select'
       closeText='Quit'
-      onConfirm={()=> {
-        dispatch([event_ids.modal, null]);
-      }}      
+      onConfirm={()=> {getTemplateProjects(templateProjectId);}}      
       onClose={()=>{ dispatch([event_ids.modal, 'newProject']);}}>
       <div>        
         {templateProjects.length &&
          <select
            className="text-input"
            onChange={(e)=>{
-             console.log('setting template project id', e, e.target.value, Number(e.target.value));
              setTemplateProjectId(Number(e.target.value));}}>
-           <option value={-1} selected disabled hidden>Select Template Project Id:</option>
+           <option value={-1} selected disabled hidden>Select Template Project:</option>
            {templateProjects.map(e =>(<option key={e.id} value={e.id}>{e.name}</option>))}
          </select>}
       </div>
     </Modal>
-    
   );
 }
 
@@ -142,7 +155,6 @@ function handleNewProject (projectSource) {
   } break;
   }
 };
-
 
 function NewProjectModal () {
   const newProjectOptions = {
@@ -179,7 +191,7 @@ function NewProjectModal () {
               >{projectSource === id
                 ? <SvgIcon icon="radioChecked" size="1.2rem" />                            
                 : <SvgIcon icon="radio" size="1.2rem"
-              className="radio-button-unchecked"/> }
+                           className="radio-button-unchecked"/> }
                 {"    "}
                 { title } </p>
               <label
@@ -257,21 +269,21 @@ function ErrorModal () {
         <br/>      
         {errors.map(([errorType, errorMessages])=> {
           return (<div className='error-card'>
-           <div className='error-header' onClick={()=>toggleVisible(errorType)}>
-             <b > {stepName(errorType)}</b>
-             <SvgIcon icon={visible.includes(errorType) ? 'upCaretNew' : 'downCaretNew'}
-                      size='1.2rem'> </SvgIcon>
-           </div>
-           {visible.includes(errorType) &&
-            <div style={{gap: '1rem'}}>
-              <br/>
-              {errorMessages.map((message) => {
-                return (
-                  <p > - {message}
-                  </p>);
-              })}
-            </div>}
-         </div>);
+       <div className='error-header' onClick={()=>toggleVisible(errorType)}>
+         <b > {stepName(errorType)}</b>
+         <SvgIcon icon={visible.includes(errorType) ? 'upCaretNew' : 'downCaretNew'}
+                  size='1.2rem'> </SvgIcon>
+       </div>
+       {visible.includes(errorType) &&
+        <div style={{gap: '1rem'}}>
+          <br/>
+          {errorMessages.map((message) => {
+            return (
+              <p > - {message}
+              </p>);
+          })}
+        </div>}
+     </div>);
         })}
       </div>
     </Modal>
@@ -302,7 +314,7 @@ export default function ProjectWizardModal () {
   // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
 
   const modal = useSubscription([sub_ids.modal]);
-    
+  
   switch (modal) {
   case 'template'    : return (<TemplateProjectModal/>);
   case 'newProject'  : return (<NewProjectModal/>);

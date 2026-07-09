@@ -49,8 +49,8 @@ export default function ReviewStep ({imageryList = []}) {
     );
   }
 
-  function ImageryCard () {
-    const selectedImageryIds = useSubscription([sub_ids.imagery.imagery]);
+  function ImageryCard () {    
+    const imageryId = useSubscription([sub_ids.imagery.imagery]);
     return (
       <div className='projectWizardCard'>
         <div className='review-card-header'>
@@ -60,9 +60,10 @@ export default function ReviewStep ({imageryList = []}) {
           </div>
         </div>
         <p >Imagery Used:</p>
-        {selectedImageryIds.map((selectedId)=>{return (
+        <b > {imageryList.filter(({id})=> id === imageryId)[0].title} </b>
+        {/*selectedImageryIds.map((selectedId)=>{return (
           <b > {imageryList.filter(({id})=> id === selectedId)[0].title} </b>);})
-        }
+        */}
       </div>
     );
   }
