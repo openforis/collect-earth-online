@@ -316,9 +316,11 @@ export const SurveyQuestionsStep = () => {
     dataType: 'text',
     parentQuestionId: "-1",
     parentAnswerIds: [],
+    answers: null,
   };
   const [questions, setQuestions] = useAtom(surveyQuestionsAtom);
   const [newQuestion, setNewQuestion] = useState(newDefaultQuestion);
+  
   const addQuestion = () => {
     if (!newQuestion.questionText) return;
 
@@ -336,7 +338,7 @@ export const SurveyQuestionsStep = () => {
       cardOrder: isTopLevel
         ? Object.values(questions).filter((q) => q.parentQuestionId === -1).length + 1
         : null,
-      answers: {
+      answers: newQuestion.answers || {
         "1": { answer: defaultAnswer, color: "#109844" },
       },
     };
@@ -349,7 +351,6 @@ export const SurveyQuestionsStep = () => {
   const moveQuestion = (id, direction) => {
     const targetQ = questions[id];
     const parentId = targetQ.parentQuestionId;
-    // Get all siblings at the same level
     const siblings = Object.entries(questions)
       .filter(([_, q]) => q.parentQuestionId === parentId)
       .sort((a, b) => (a[1].cardOrder || 0) - (b[1].cardOrder || 0));
@@ -370,7 +371,6 @@ export const SurveyQuestionsStep = () => {
     }
   };
 
-  // Helper to get answers from the currently selected parent question
   const getParentAnswers = () => {
     if (newQuestion.parentQuestionId === "-1") return [];
     const parent = questions[newQuestion.parentQuestionId];
@@ -381,7 +381,6 @@ export const SurveyQuestionsStep = () => {
     <div className="wizard-step-layout">
       <div className="wizard-sidebar">
         
-        {/* CREATE QUESTION CARD */}
         <div className="card" style={{ width: '100%', border: '1px solid #2d6f74', padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
             <p className="card-title">
@@ -390,7 +389,6 @@ export const SurveyQuestionsStep = () => {
             <SvgIcon icon="info" size="1.2rem" />
           </div>
 
-          {/* Question Text */}
           <label className="text-label-sm">
             Question Text <span style={{ color: 'red' }}>*</span>
           </label>
@@ -404,7 +402,6 @@ export const SurveyQuestionsStep = () => {
             })}
           />
 
-          {/* Question Label */}
           <label className="text-label-sm">
             Question Label (Optional) <SvgIcon icon="info" size="0.8rem" />
           </label>
@@ -418,76 +415,109 @@ export const SurveyQuestionsStep = () => {
             })}
           />
 
-          {/* Component Type & Parent Row */}
-          <div style={{ display: 'flex', gap: '15px' }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: '15px', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+              <div style={{ flex: newQuestion.componentType === 'copy' ? '1 1 calc(50% - 15px)' : '1' }}>
+                <label className="text-label-sm">
+                  Component Type <span style={{ color: 'red' }}>*</span>
+                </label>
+                <select
+                  className="text-input"
+                  value={`${newQuestion.componentType}-${newQuestion.dataType}`}
+                  onChange={(e) => {
+                    const [comp, data] = e.target.value.split('-');
+                    setNewQuestion({
+                      ...newQuestion,
+                      componentType: comp,
+                      dataType: data
+                    });
+                  }}
+                >
+                  <option value="button-text">Button - Text</option>
+                  <option value="button-number">Button - Number</option>
+                  <option value="radiobutton-text">Radiobutton - Text</option>
+                  <option value="radiobutton-number">Radiobutton - Number</option>
+                  <option value="dropdown-text">Dropdown - Text</option>
+                  <option value="dropdown-number">Dropdown - Number</option>
+                  <option value="input-text">Input - Text</option>
+                  <option value="input-number">Input - Number</option>
+                  <option value="copy-none">Copy Existing Question</option>
+                </select>
+              </div>
+
+              {newQuestion.componentType === 'copy' && (
+                <div style={{ flex: '1 1 calc(50% - 15px)' }}>
+                  <label className="text-label-sm">
+                    Select Question to Copy <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <select
+                    className="text-input"
+                    defaultValue=""
+                    onChange={(e) => {
+                      const targetQ = questions[e.target.value];
+                      targetQ && setNewQuestion({
+                        ...newQuestion,
+                        questionText: `${targetQ.question} - COPY`,
+                        questionLabel: targetQ.questionLabel || '',
+                        componentType: targetQ.componentType,
+                        dataType: targetQ.dataType,
+                        answers: targetQ.answers
+                      });
+                    }}
+                  >
+                    <option value="" disabled>-- Select Question --</option>
+                    {Object.entries(questions).map(([id, q]) => (
+                      <option key={id} value={id}>
+                        {q.question}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div style={{ flex: newQuestion.componentType === 'copy' ? '1 1 100%' : '1' }}>
+                <label className="text-label-sm">Parent Question</label>
+                <select
+                  className="text-input"
+                  value={newQuestion.parentQuestionId}
+                  onChange={(e) => setNewQuestion({
+                    ...newQuestion,
+                    parentQuestionId: e.target.value,
+                    parentAnswerIds: []
+                  })}
+                >
+                  <option value="-1">None (Top Level)</option>
+                  {Object.entries(questions).map(([id, q]) => (
+                    <option key={id} value={id}>
+                      {q.question}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div style={{ width: '100%' }}>
               <label className="text-label-sm">
-                Component Type <span style={{ color: 'red' }}>*</span>
+                Parent Answer
               </label>
               <select
                 className="text-input"
-                value={`${newQuestion.componentType}-${newQuestion.dataType}`}
-                onChange={(e) => {
-                  const [comp, data] = e.target.value.split('-');
-                  setNewQuestion({
-                    ...newQuestion,
-                    componentType: comp,
-                    dataType: data
-                  });
-                }}
-              >
-                <option value="button-text">Button - Text</option>
-                <option value="button-number">Button - Number</option>
-                <option value="radiobutton-text">Radiobutton - Text</option>
-                <option value="radiobutton-number">Radiobutton - Number</option>
-                <option value="dropdown-text">Dropdown - Text</option>
-                <option value="dropdown-number">Dropdown - Number</option>
-                <option value="input-text">Input - Text</option>
-                <option value="input-number">Input - Number</option>
-              </select>
-            </div>
-
-            <div style={{ flex: 1 }}>
-              <label className="text-label-sm">Parent Question</label>
-              <select
-                className="text-input"
-                value={newQuestion.parentQuestionId}
+                disabled={newQuestion.parentQuestionId === "-1"}
+                value={newQuestion.parentAnswerIds[0] || ""}
                 onChange={(e) => setNewQuestion({
                   ...newQuestion,
-                  parentQuestionId: e.target.value,
-                  parentAnswerIds: []
+                  parentAnswerIds: e.target.value ? [parseInt(e.target.value)] : []
                 })}
               >
-                <option value="-1">None (Top Level)</option>
-                {Object.entries(questions).map(([id, q]) => (
-                  <option key={id} value={id}>
-                    {q.question}
+                <option value="">-- Select Parent Answer --</option>
+                {getParentAnswers().map(([ansId, ansObj]) => (
+                  <option key={ansId} value={ansId}>
+                    {ansObj.answer}
                   </option>
                 ))}
               </select>
             </div>
           </div>
-
-          {/* Parent Answer Dropdown */}
-          <label className="text-label-sm">
-            Parent Answer
-          </label>
-          <select
-            className="text-input"
-            disabled={newQuestion.parentQuestionId === "-1"}
-            value={newQuestion.parentAnswerIds[0] || ""}
-            onChange={(e) => setNewQuestion({
-              ...newQuestion,
-              parentAnswerIds: e.target.value ? [parseInt(e.target.value)] : []
-            })}
-          >
-            <option value="">-- Select Parent Answer --</option>
-            {getParentAnswers().map(([ansId, ansObj]) => (
-              <option key={ansId} value={ansId}>
-                {ansObj.answer}
-              </option>
-            ))}
-          </select>
 
           <button
             className="btn btn-sm"
@@ -507,7 +537,6 @@ export const SurveyQuestionsStep = () => {
           </button>
         </div>
 
-        {/* THE QUESTION TREE */}
         <div className="questions-list-container">
           {Object.entries(questions)
             .filter(([id, q]) => q.parentQuestionId === -1)
@@ -524,7 +553,6 @@ export const SurveyQuestionsStep = () => {
         </div>
       </div>
 
-      {/* PREVIEW AREA */}
       <div
         className="wizard-preview-body"
         style={{ padding: "20px" }}
