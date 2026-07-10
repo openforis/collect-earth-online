@@ -39,7 +39,8 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   
   useEffect(() => {
     dispatch([event_ids.institutionId, institutionId]);
-    dispatch([event_ids.modal, 'newProject']);  
+    dispatch([event_ids.modal, 'newProject']);
+
     fetch(`/get-institution-imagery?institutionId=${institutionId}`)
       .then(res => res.json())
       .then(data => setInstitutionImagery(data))
@@ -59,8 +60,8 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
     case null         : return (<></>);
     case 'overview'   : return <OverviewStep />;
     case 'imagery'    : return <ImageryStep imageryList={institutionImagery}/>;
-    case 'boundary'   : return <BoundaryStep />;
-    case 'plots'      : return <PlotStep />;
+    case 'boundary'   : return <BoundaryStep imageryList={institutionImagery}/>;
+    case 'plots'      : return <PlotStep imageryList={institutionImagery}/>;
     case 'samples'    : return <SampleStep />;
     case 'questions'  : return <SurveyQuestionsStep/>;
     case 'rules'      : return <RulesStep />;

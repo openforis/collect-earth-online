@@ -3,7 +3,6 @@ import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import { event_ids,  sub_ids } from "../state/projectWizard";
 
 
-
 const projectSteps = [
   {id: 'overview', label: 'Project Overview'},
   {id: 'imagery', label: 'Imagery Selection'},
@@ -27,6 +26,7 @@ export default function NavButtons () {
             <button
               className="btn btn-secondary btn-sm"
               onClick={()=>dispatch([event_ids.modal, 'exit'])}
+
             >Exit</button>
             {stepIdx > 0 &&
              (<button

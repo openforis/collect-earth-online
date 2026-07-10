@@ -10,7 +10,7 @@ function TemplateProjectModal () {
 
   function setTemplateProject (templateProject) {dispatch([event_ids.templateProject, templateProject]);}
 
-  const institutionId = useSubscription([sub_ids.instituionId]);
+  const institutionId = useSubscription([sub_ids.institutionId]);
   const institutionImagery = useSubscription([sub_ids.institution.imagery]);
 
   const projectType = useSubscription([sub_ids.overview.projectType]) || 'regular';
@@ -76,36 +76,7 @@ function TemplateProjectModal () {
         dispatch([event_ids.modal, [['Project Template Error', ["Error getting complete template info. See console for details."]]]]);
       });
   }
-  
-  
-  //get: get-template-projects ({params: {projecType: ""}}) => [{id: 0, name: "", institutionId: 0}]
-  /*
-    send: get-template-by-id ({params: {projectId: 0}}) =>
-    [{imageryId: 0,
-    templateInstitutionId: 0,
-    name: "",
-    description: "",
-    aoiFeatures:{},
-    aoiFileName: "",
-    plotDistribution: "",
-    numPlots: 0,
-    plotSpacing: 0.0,
-    plotShape: "",
-    plotSize: 0.0,
-    plotFileName: "",
-    sampleDistribution: "",
-    samplesPerPlot: 0,
-    sampleResolution: 0.0,
-    sampleFileName: "",
-    allowDrawnSamples: bool,
-    surveyQuestions: {},
-    surveyRules: {},
-    projectOptions: {},
-    designSettings: {},
-    referencePlot: 0
-    }] => set as all current data in just normal 
-  */
-  
+    
   useEffect(() => {
     fetch(`/get-template-projects?projectType=${projectType}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
@@ -225,12 +196,14 @@ function SuccessModal () {
       confirmText='Close'
       onConfirm={()=>{dispatch([event_ids.modal, null]);}}
       onClose={()=>{dispatch([event_ids.modal, null]);}}>
+
       <div className="success-icon">
         <SvgIcon  icon='check' size='2rem'/>
       </div>
       <br/>
       <b>Your Project has been published! </b>
       <p >The Published Project can now be viewed in your Institutions Project Page.</p>
+
     </Modal>
 
   );
@@ -301,14 +274,12 @@ function ExitModal () {
       onClose={()=>{dispatch([event_ids.modal, null]);}}>
       <p > Are you sure you want to exit “Create New Scenario”? Saved steps will be kept in draft form, any steps you haven’t saved will be lost.</p>
     </Modal>
-    
   );
 }
 
 
 export default function ProjectWizardModal () {
   // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
-
   const modal = useSubscription([sub_ids.modal]);
   
   switch (modal) {

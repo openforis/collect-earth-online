@@ -80,7 +80,7 @@ export function validateSamples({
   totalPlots,
   sampleLimit,
   allowDrawnSamples,
-  sampleGeometries
+  designSettings,
 }) {
   return ([sampleDistribution === "random" &&
      !samplesPerPlot && "A number of samples per plot is required for random sample distribution.",
@@ -99,8 +99,8 @@ export function validateSamples({
      plotShape === "square" &&
      sampleResolution >= plotSize && "The sample spacing must be less than the plot width.",
      (samplesPerPlot > perPlotLimit || totalPlots * samplesPerPlot > sampleLimit) &&
-     "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
-     allowDrawnSamples && !Object.values(sampleGeometries).some((g) => g) &&
+       "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
+     allowDrawnSamples && !Object.values(designSettings?.sampleGeometries).some((g) => g) &&
            "At least one geometry type must be enabled.",]
           .filter((e)=>e));
 }

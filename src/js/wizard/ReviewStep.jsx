@@ -1,7 +1,9 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useRef } from "react";
+import { useSetAtom } from 'jotai';
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 
 import { event_ids, sub_ids } from "../state/projectWizard";
+import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
 
 import SvgIcon from '../components/svg/SvgIcon';
 import SurveyRule from '../survey/SurveyRule';
@@ -49,8 +51,29 @@ export default function ReviewStep ({imageryList = []}) {
     );
   }
 
-  function ImageryCard () {    
+  function ImageryCard () {
+    const initialized = useRef(false);
     const selectedImagery = useSubscription([sub_ids.imagery.imagery]);
+    const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
+    const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
+    function setPreviewId (previewId) {dispatch([event_ids.imagery.previewId]);}
+    const previewId = useSubscription([sub_ids.imagery.previewId]);
+    
+    useEffect(() => {
+    setMapLibrary(imageryList);
+    if (imageryList && imageryList.length > 0 && !initialized.current) {
+      const platformItems = imageryList.filter(img => img.visibility === 'platform');
+      if (platformItems.length > 0) {
+        setPreviewId(platformItems[0].id.toString());
+      }
+      initialized.current = true;
+    }
+  }, [imageryList]);
+    
+    useEffect(() => {
+      const previewArray = previewId ? [Number(previewId)] : [];
+      setActiveMapLayers(new Set(previewArray));
+    }, [previewId, setActiveMapLayers]);
     
     return (
       <div className='projectWizardCard'>

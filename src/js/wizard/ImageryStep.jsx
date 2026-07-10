@@ -7,14 +7,18 @@ import { NewMap } from '../components/NewMap';
 import SvgIcon from '../components/svg/SvgIcon';
 
 export const ImageryStep = ({ imageryList = [] }) => {
-  const [previewId, setPreviewId] = useState("");
+//  const [previewId, setPreviewId] = useState("");
+  function setPreviewId (previewId) {dispatch([event_ids.imagery.previewId, previewId]);}
+  const previewId = useSubscription([sub_ids.imagery.previewId]);
   const initialized = useRef(false);
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
 
-  function setSelectedIds (selectedIds) {dispatch([event_ids.imagery.imagery, selectedIds]);}
-  const selectedIds = useSubscription([sub_ids.imagery.imagery]);
-  // Sets up default selected imagery.
+  function setSelectedIds (newIds) {
+    dispatch([event_ids.imagery.imagery, newIds]);
+  }
+  const selectedIds = useSubscription([sub_ids.imagery.imagery]) || [];
+
   useEffect(() => {
     setMapLibrary(imageryList);
     if (imageryList && imageryList.length > 0 && !initialized.current) {
@@ -24,14 +28,13 @@ export const ImageryStep = ({ imageryList = [] }) => {
       }
       initialized.current = true;
     }
-  }, [imageryList, setMapLibrary]);
+  }, [imageryList]);
 
   useEffect(() => {
     const previewArray = previewId ? [Number(previewId)] : [];
     setActiveMapLayers(new Set(previewArray));
   }, [previewId, setActiveMapLayers]);
 
-  // Grouping logic with safety check
   const groupedImagery = (imageryList || []).reduce((acc, img) => {
     const vis = img.visibility || 'public';
     if (!acc[vis]) acc[vis] = [];
@@ -57,11 +60,10 @@ export const ImageryStep = ({ imageryList = [] }) => {
                   key={img.id} 
                   style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', cursor: 'pointer' }}
                   onClick={() => {
-                    setSelectedIds(prev => 
-                      prev.includes(img.id) 
-                        ? prev.filter(i => i !== img.id) 
-                        : [...prev, img.id]
-                    );
+                    const newIds = isSelected
+                      ? selectedIds.filter(i => i !== img.id)
+                      : [...selectedIds, img.id];
+                    setSelectedIds(newIds);
                   }}
                 >
                   <SvgIcon 

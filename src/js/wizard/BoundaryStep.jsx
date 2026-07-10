@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import shp from "shpjs";
-
+import { useSetAtom } from 'jotai';
 import { NewMap } from '../components/NewMap';
+import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
 import SvgIcon from '../components/svg/SvgIcon';
 import Modal from '../components/Modal';
-import { readFileAsArrayBuffer } from '../utils/generalUtils';
 
 import {
   event_ids,
@@ -13,13 +13,25 @@ import {
 } from '../state/projectWizard';
 
 
-export const BoundaryStep = () => {
+export const BoundaryStep = ({ imageryList = [] }) => {
   const generationMethod = useSubscription([sub_ids.boundary.generationMethod]) || "manual";
   const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
   const aoiFileName = useSubscription([sub_ids.boundary.aoiFileName]) || "";
   const modal = useSubscription([sub_ids.modal]);
-
   const isDrawingActive = generationMethod === "manual";
+  const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
+  const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
+  const initializedMap = useRef(false);
+
+  useEffect(() => {
+    setMapLibrary(imageryList);
+    if (imageryList && imageryList.length > 0 && !initializedMap.current) {
+      const platformItems = imageryList.filter(img => img.visibility === 'platform');
+      const defaultImagery = platformItems[0];
+      setActiveMapLayers(new Set([defaultImagery]));
+      initializedMap.current = true;
+    }
+  }, [imageryList]);
 
   const handleMethodChange = (method) => {
     dispatch([event_ids.boundary.clearBoundary]);
@@ -138,7 +150,7 @@ export const BoundaryStep = () => {
             {generationMethod === "plotFile" && (
               <div>
                 <p className="font-italic" style={{ fontSize: '0.85rem', color: '#666' }}>
-                  - No configuration required here. Your area boundary track paths will extract automatically when plots load during the next page phase.
+                  - No configuration required. Your area boundary track paths will extract automatically when plots load during the next page phase.
                 </p>
               </div>
             )}
@@ -182,6 +194,7 @@ export const BoundaryStep = () => {
           pan={true}
           allowDrawing={isDrawingActive}
           aoiToShow={aoiFeatures}
+          preview={true}
           onDrawComplete={handleMapDrawComplete}
           initZoom={4}
         />

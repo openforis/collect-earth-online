@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
+import { useSetAtom } from 'jotai';
+import DatePicker from 'react-datepicker';
 
 import { NewMap } from '../components/NewMap';
-import Select  from '../components/Select';
-import UserSelect  from '../components/UserSelect';
+import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
+import Select from '../components/Select';
+import UserSelect from '../components/UserSelect';
 import SvgIcon from '../components/svg/SvgIcon';
 import Modal from '../components/Modal';
 import { formatNumberWithCommas, readFileAsBase64Url } from '../utils/generalUtils';
@@ -11,13 +14,14 @@ import {
   calculateGeoJsonArea,
   generateRandomPlots,
   generateGriddedPlots,
-  estimateGriddedPlotCount } from '../utils/newMercator';
+  estimateGriddedPlotCount
+} from '../utils/newMercator';
 import {
   event_ids,
   sub_ids
 } from '../state/projectWizard';
 
-export const PlotStep = () => {
+export const PlotStep = ({ imageryList = [] }) => {
   const boundaryMethod = useSubscription([sub_ids.boundary.generationMethod]) || "manual";
   const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
   const plotFeatures = useSubscription([sub_ids.plots.plotFeatures]) || [];
@@ -33,8 +37,12 @@ export const PlotStep = () => {
   const modal = useSubscription([sub_ids.modal]);
   const designSettings = useSubscription([sub_ids.plots.designSettings]) || {};
   const activeAreaGeometry = aoiFeatures[0];
-
+  const [plotLimitError, setPlotLimitError] = useState("");
+  const [uploadedPlotIds, setUploadedPlotIds] = useState([]);
   const isBoundaryFileDriven = boundaryMethod === "plotFile" || boundaryMethod === "shpFile";
+  const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
+  const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
+  const initializedMap = useRef(false);
 
   const acceptedMimeTypes = {
     csv: "text/csv",
@@ -42,21 +50,67 @@ export const PlotStep = () => {
     geojson: "application/json",
   };
 
-  // Debounced auto-simulation
   useEffect(() => {
-    if (!activeAreaGeometry || ["shp", "geojson", "csv"].includes(plotDistribution)) return;
+    setMapLibrary(imageryList);
+    if (imageryList && imageryList.length > 0 && !initializedMap.current) {
+      const platformItems = imageryList.filter(img => img.visibility === 'platform');
+      const defaultImagery = platformItems[0];
+      setActiveMapLayers(new Set([defaultImagery]));
+      initializedMap.current = true;
+    }
+  }, [imageryList]);
+
+  const plotIdList = useMemo(() => {
+    if (['random', 'gridded'].includes(plotDistribution)) {
+      if (totalPlotsCalculated === 0) return [];
+      return Array.from({ length: Math.min(totalPlotsCalculated, 5000) }, (_, i) => i + 1);
+    } else {
+      return uploadedPlotIds;
+    }
+  }, [plotDistribution, totalPlotsCalculated, uploadedPlotIds]);
+
+  useEffect(() => {
+    if (!activeAreaGeometry || ["shp", "geojson", "csv"].includes(plotDistribution)) {
+      setPlotLimitError("");
+      return;
+    }
 
     const handler = setTimeout(() => {
       let generatedPlots = [];
+      setPlotLimitError("");
+
       if (plotDistribution === "random" && numPlots > 0 && plotSize > 0) {
+        if (numPlots > 5000) {
+          setPlotLimitError("A maximum of 5,000 plots is allowed for random distribution.");
+          dispatch([event_ids.plots.totalPlots, 0]);
+          dispatch([event_ids.plots.plotFeatures, []]);
+          return;
+        }
         generatedPlots = generateRandomPlots(activeAreaGeometry, numPlots);
       } else if (plotDistribution === "gridded" && plotSpacing > 0 && plotSize > 0) {
+        const estimatedCount = estimateGriddedPlotCount(activeAreaGeometry, plotSpacing);
+        if (estimatedCount > 5000) {
+          setPlotLimitError(`Current spacing results in ~${formatNumberWithCommas(estimatedCount)} plots (Max 5,000). Please increase plot spacing.`);
+          dispatch([event_ids.plots.totalPlots, 0]);
+          dispatch([event_ids.plots.plotFeatures, []]);
+          return;
+        }
         generatedPlots = generateGriddedPlots(activeAreaGeometry, plotSpacing, plotSize);
+
+        if (generatedPlots.length > 5000) {
+          setPlotLimitError(`Generated ${formatNumberWithCommas(generatedPlots.length)} plots (Max 5,000). Please slightly increase plot spacing.`);
+          dispatch([event_ids.plots.totalPlots, 0]);
+          dispatch([event_ids.plots.plotFeatures, []]);
+          return;
+        }
       }
 
       if (generatedPlots.length > 0) {
         dispatch([event_ids.plots.totalPlots, generatedPlots.length]);
         dispatch([event_ids.plots.plotFeatures, generatedPlots]);
+      } else if ((numPlots > 0 || plotSpacing > 0) && plotSize > 0) {
+        dispatch([event_ids.plots.totalPlots, 0]);
+        dispatch([event_ids.plots.plotFeatures, []]);
       }
     }, 600);
 
@@ -82,6 +136,8 @@ export const PlotStep = () => {
     dispatch([event_ids.plots.plotFeatures, []]);
     dispatch([event_ids.plots.plotFileName, ""]);
     dispatch([event_ids.plots.totalPlots, 0]);
+    setPlotLimitError("");
+    setUploadedPlotIds([]);
   }, [plotDistribution]);
 
   const checkUploadedPlotFile = (fileType, fileName, base64Payload) => {
@@ -128,9 +184,17 @@ export const PlotStep = () => {
         }
 
         if (data.plots && data.plots.length > 0) {
+          const extractedIds = data.plots.map(p => {
+            const props = p.properties || p;
+            const keys = Object.keys(props);
+            const k = keys.find((key) => ["visible_id", "plotid", "plot_id", "PlotID", "plotId", "PLOTID"].includes(key));
+            return k ? props[k] : undefined;
+          }).filter(v => v != null);
+
+          setUploadedPlotIds(extractedIds);
+
           const parsedGeometries = data.plots.map(p => {
             if (!p) return null;
-            // Extract geometry directly if it's already a raw feature vector map
             return p.type ? p : (p.plot_geom || p.plotGeom);
           }).filter(Boolean);
 
@@ -190,8 +254,9 @@ export const PlotStep = () => {
         <input 
           type="number" 
           className="text-input" 
-          placeholder="Enter Number"
+          placeholder="Enter Number (Max 5000)"
           value={numPlots}
+          max="5000"
           onChange={(e) => dispatch([event_ids.plots.numPlots, Number(e.target.value)])}
         />
       </div>
@@ -219,39 +284,47 @@ export const PlotStep = () => {
     </>
   );
 
-  const renderFileBasedLayout = (fileType) => (
-    <div className="d-flex flex-column mb-3">
-      <label className="text-label-sm" style={{ margin: '0 0 8px 0', fontWeight: 'bold' }}>
-        UPLOAD PLOT FILE <span style={{ color: 'red' }}>*</span>
-      </label>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
-        <label 
-          className="btn btn-sm btn-outline-lightgreen py-2 px-3 text-nowrap"
-          htmlFor="plot-file-upload-input"
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}
-        >
-          <SvgIcon icon="plus" size="0.9rem" />
-          Upload {fileType.toUpperCase()} file
-          <input 
-            type="file"
-            id="plot-file-upload-input"
-            accept={acceptedMimeTypes[fileType]}
-            style={{ display: 'none' }}
-            onChange={(e) => processIncomingDataFile(e, fileType)}
-          />
+  const renderFileBasedLayout = (fileType) => {
+    const extension = fileType === 'shp' ? 'zip' : fileType;
+    const downloadHref = `test_data/plot-${fileType}-example.${extension}`;
+
+    return (
+      <div className="d-flex flex-column mb-3">
+        <label className="text-label-sm" style={{ margin: '0 0 8px 0', fontWeight: 'bold' }}>
+          UPLOAD PLOT FILE <span style={{ color: 'red' }}>*</span>
         </label>
-        <span className="text-label-sm" style={{ color: plotFileName ? '#333' : '#999', fontStyle: !plotFileName ? 'italic' : 'normal' }}>
-          {plotFileName ? `File: ${plotFileName}` : 'No dataset file uploaded'}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
+          <label 
+            className="btn btn-sm btn-outline-lightgreen py-2 px-3 text-nowrap"
+            htmlFor="plot-file-upload-input"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}
+          >
+            <SvgIcon icon="plus" size="0.9rem" />
+            Upload {fileType.toUpperCase()} file
+            <input 
+              type="file"
+              id="plot-file-upload-input"
+              accept={acceptedMimeTypes[fileType]}
+              style={{ display: 'none' }}
+              onChange={(e) => processIncomingDataFile(e, fileType)}
+            />
+          </label>
+          <span className="text-label-sm" style={{ color: plotFileName ? '#333' : '#999', fontStyle: !plotFileName ? 'italic' : 'normal' }}>
+            {plotFileName ? `File: ${plotFileName}` : 'No dataset file uploaded'}
+          </span>
+        </div>
+        <a href={downloadHref} className="text-label-sm mb-3" style={{ textDecoration: 'underline', color: '#007bff' }}>
+          Download example {fileType.toUpperCase()} file
+        </a>
+        {fileType === 'csv' && (
+          <>
+            {renderPlotSizeInput()}
+            {renderPlotShapeInput()}
+          </>
+        )}
       </div>
-      {fileType === 'csv' && (
-        <>
-          {renderPlotSizeInput()}
-          {renderPlotShapeInput()}
-        </>
-      )}
-    </div>
-  );
+    );
+  };
 
   const distributionStrategies = {
     random: { display: "Random", renderer: renderRandomLayout },
@@ -303,7 +376,15 @@ export const PlotStep = () => {
 
           {["random", "gridded"].includes(plotDistribution) && renderPlotShapeInput()}
 
-          {totalPlotsCalculated > 0 && (
+          {plotLimitError && (
+            <div className="mt-3 p-3 rounded" style={{ backgroundColor: '#fff0f0', border: '1px solid #ffcccc' }}>
+              <p style={{ margin: 0, color: '#cc0000', fontSize: '0.9rem', fontWeight: '500' }}>
+                {plotLimitError}
+              </p>
+            </div>
+          )}
+
+          {!plotLimitError && totalPlotsCalculated > 0 && (
             <div className="mt-4 p-3 rounded" style={{ backgroundColor: '#e6f4f4', border: '1px solid #2d6f74' }}>
               <p className="font-italic" style={{ margin: 0, color: '#2d6f74', fontSize: '0.9rem', fontWeight: '500' }}>
                 This project will contain around {formatNumberWithCommas(totalPlotsCalculated)} plots.
@@ -311,6 +392,7 @@ export const PlotStep = () => {
             </div>
           )}
         </div>
+        <PlotSimilarityCard plotIdList={plotIdList} />
         <AssignPlotsCard totalPlots={totalPlotsCalculated} institutionUserList={institutionUsers}/>
         <QualityControlCard totalPlots={totalPlotsCalculated} institutionUserList={institutionUsers}/>
       </div>
@@ -320,10 +402,77 @@ export const PlotStep = () => {
         <NewMap 
           pan={false}
           allowDrawing={false}
+          preview={true}
           aoiToShow={aoiFeatures}
           plotsToShow={plotFeatures}
         />
       </div>
+    </div>
+  );
+};
+
+export const PlotSimilarityCard = ({ plotIdList = [] }) => {
+  const plotSimilarity = useSubscription([sub_ids.overview.projectOptions.plotSimilarity]) || false;
+  const plotSimilarityDetails = useSubscription([sub_ids.plots.plotSimilarityDetails]) || { referencePlotId: "", years: [] };
+  const { referencePlotId, years } = plotSimilarityDetails;
+
+  const setPlotSimilarityDetails = (updates) => {
+    dispatch([event_ids.plots.plotSimilarityDetails, { ...plotSimilarityDetails, ...updates }]);
+  };
+
+  return (
+    <div className="card" style={{ width: '100%', padding: '20px', marginTop: '20px' }}>
+      <h5 className="card-title" style={{ color: 'var(--Neutral-Dark-gray)', marginBottom: '15px', textTransform: 'uppercase' }}>
+        Plot Similarity Configuration
+      </h5>
+      <div
+        className="form-check mb-3"
+        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+        onClick={() => dispatch([event_ids.overview.projectOptions.plotSimilarity])}
+      >
+        <SvgIcon icon={plotSimilarity ? "checkboxChecked" : "checkboxUnchecked"} size="1.2rem" />
+        <label className="text-label-sm" style={{ margin: 0, cursor: 'pointer' }}>
+          Enable navigation by similarity
+        </label>
+      </div>
+      {plotSimilarity && (
+        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+          <div className="form-group mb-0" style={{ flex: 1, minWidth: '200px' }}>
+            <label className="text-label-sm" style={{ display: 'block', marginBottom: '8px' }}>
+              Reference Plot ID
+            </label>
+            <select
+              className="text-input"
+              style={{ width: '100%' }}
+              value={referencePlotId}
+              onChange={(e) => setPlotSimilarityDetails({ referencePlotId: e.target.value })}
+            >
+              <option value="" disabled>Select a plot ID</option>
+              {plotIdList.map((id) => (
+                <option key={id} value={id}>{id}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group mb-0" style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
+            <label className="text-label-sm" style={{ display: 'block', marginBottom: '8px' }}>
+              Year for comparison
+            </label>
+            <div style={{ display: 'block', width: '100%' }}>
+              <DatePicker
+                selected={years[0] ? new Date(years[0], 0, 1) : new Date(new Date().getFullYear() - 1, 0, 1)}
+                onChange={(d) => setPlotSimilarityDetails({ years: [d.getFullYear()] })}
+                className="text-input"
+                wrapperClassName="w-100"
+                style={{ width: '100%' }}
+                showYearPicker
+                dateFormat="yyyy"
+                maxDate={new Date()}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -433,7 +582,6 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
     </div>
   );
 };
-
 
 export const QualityControlCard = ({ institutionUserList = [], totalPlots, allowDrawnSamples = false }) => {
   const designSettings = useSubscription([sub_ids.plots.designSettings]) || {};

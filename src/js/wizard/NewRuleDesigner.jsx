@@ -200,7 +200,7 @@ function SumOfAnswersForm () {
   function setValidSum (validSum) {dispatch([event_ids.rules.newRule.validSum, validSum]);}
   
   const questionIds = useSubscription([sub_ids.rules.newRule.questionIds]);
-  function setQuestionIds (qids) {dispatch([event_ids.rules.newRule.qusetionIids, qids]);}
+  function setQuestionIds (qids) {dispatch([event_ids.rules.newRule.questionIds, qids]);}
   
   const modal = useSubscription([sub_ids.modal]);
   function setModal () {dispatch([event_ids.modal]);}
@@ -243,7 +243,12 @@ function SumOfAnswersForm () {
             className="form-control form-control-sm overflow-auto select-bar"
             style={{width: '100%', display:'inline-flex'}}
             multiple="multiple"
-            onChange={(e) => setQuestionIds(Array.from(e.target.selectedOptions, (i) => Number(i.value)))}
+            onChange={(e) => {
+              let input = Array.from(e.target.selectedOptions, (i) => Number(i.value));
+              let symDiff = input.length ? questionIds.filter(x => !input.includes(x))
+                  .concat(input.filter(x => !questionIds.includes(x))) : [];
+              setQuestionIds(symDiff);
+            }}
             value={questionIds}>
             {mapObjectArray(availableQuestions, ([aqId, aq]) => (
               <option key={aqId} value={aqId}>
@@ -261,8 +266,8 @@ function SumOfAnswersForm () {
             type='number'
             className='rule-input form-control form-control-sm'
             onChange={(e) => setValidSum(Number(e.target.value))}
-            placeholder="Valid sum"
-            value={validSum}>
+            placeholder={0}
+            defaultValue={validSum}>
           </input>
         </div>
       </div>
@@ -287,7 +292,7 @@ function MatchingSumsForm () {
   function setQuestionIds1 (qids) {dispatch([event_ids.rules.newRule.questionIds1, qids]);}
 
   const questionIds2 = useSubscription([sub_ids.rules.newRule.questionIds2]);
-  function setQuestionIds2 (qids) {dispatch([event_ids.rules.newRule.qustionIds2, qids]);}
+  function setQuestionIds2 (qids) {dispatch([event_ids.rules.newRule.questionIds2, qids]);}
   
   const modal = useSubscription([sub_ids.modal]);
   function setModal () {dispatch([event_ids.modal]);}
@@ -338,7 +343,11 @@ function MatchingSumsForm () {
             className="form-control form-control-sm overflow-auto select-bar"
             style={{height: 'inherit'}}
             multiple="multiple"
-            onChange={(e) => setQuestionIds1(Array.from(e.target.selectedOptions, (i) => Number(i.value)))}
+            onChange={(e) => {
+              let input = Array.from(e.target.selectedOptions, (i) => Number(i.value));
+              let symDiff = input.length ? questionIds1.filter(x => !input.includes(x))
+                  .concat(input.filter(x => !questionIds1.includes(x))) : [];
+              setQuestionIds1(symDiff);}}
             value={questionIds1}
           >
             {mapObjectArray(availableQuestions, ([aqId, aq]) => (
@@ -357,8 +366,12 @@ function MatchingSumsForm () {
             className="form-control form-control-sm overflow-auto select-bar"
             style={{height: 'inherit'}}
             multiple="multiple"
-            onChange={(e) =>
-              setQuestionIds2(Array.from(e.target.selectedOptions, (i) => Number(i.value)))
+            onChange={(e) =>{
+              let input = Array.from(e.target.selectedOptions, (i) => Number(i.value));
+              let symDiff = input.length ? questionIds2.filter(x => !input.includes(x))
+                  .concat(input.filter(x => !questionIds2.includes(x))) : [];
+              setQuestionIds2(symDiff);
+            }
             }
             value={questionIds2}
           >
@@ -385,7 +398,7 @@ function MatchingSumsForm () {
   );
 }
 
-function  IncompatibleAnswersForm () {
+function  IncompatibleAnswersForm () {//WORKSN'T
   function  checkPair (q1, a1, q2, a2) {return (q1 === q2 && a1 === a2);};
   function checkEquivalent (q1, a1, q2, a2, q3, a3, q4, a4) 
   {return(
@@ -395,19 +408,19 @@ function  IncompatibleAnswersForm () {
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
-  function addSurveyRule (newRule) {dispatch([event_ids.rules.rules, newRule]);}
+  function setSurveyRules (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
   const questionId1 = useSubscription([sub_ids.rules.newRule.questionId1]);
   function setQuestionId1 (qid) {dispatch([event_ids.rules.newRule.questionId1, qid]);}
 
   const questionId2 = useSubscription([sub_ids.rules.newRule.questionId2]);
-  function setQuestionId2 (qid) {dispatch([event_ids.rules.newRule.qustionId2, qid]);}
+  function setQuestionId2 (qid) {dispatch([event_ids.rules.newRule.questionId2, qid]);}
 
   const answerId1 = useSubscription([sub_ids.rules.newRule.answerId1]);
   function setAnswerId1 (qid) {dispatch([event_ids.rules.newRule.answerId1, qid]);}
 
   const answerId2 = useSubscription([sub_ids.rules.newRule.answerId2]);
-  function setAnswerId2 (qid) {dispatch([event_ids.rules.newRule.qustionId2, qid]);}
+  function setAnswerId2 (qid) {dispatch([event_ids.rules.newRule.answerId2, qid]);}
   
   const modal = useSubscription([sub_ids.modal]);
   function setModal () {dispatch([event_ids.modal]);}
@@ -450,7 +463,7 @@ function  IncompatibleAnswersForm () {
     if (errorMessages.length > 0) {
       setModal ({alert: {alertType: "Rule Designer Error", alertMessage: errorMessages.map((s) => "- " + s).join("\n")}});
     } else {
-      addSurveyRule({
+      setSurveyRules({
             id: getNextInSequence(surveyRules.map((rule) => rule.id)),
             ruleType: "incompatible-answers",
             questionId1,
@@ -542,9 +555,9 @@ function  IncompatibleAnswersForm () {
   );
 }
 
-function MultipleIncompatibleAnswersForm () {
+function MultipleIncompatibleAnswersForm () {//WORKSN'T
   const surveyQuestions = useSubscription([sub_ids.questions.questions]);
-  
+
   const surveyRules = useSubscription([sub_ids.rules.rules]);
   function setSurveyRules  (newRule) {dispatch([event_ids.rules.rules, newRule]);}
   
@@ -568,10 +581,10 @@ function MultipleIncompatibleAnswersForm () {
   function setTempAnswerId (aid) {dispatch([event_ids.rules.newRule.tempAnswerId, aid]);}  
 
   function addSurveyRule () {    
-    setProjectDetails({
+    setSurveyRules({
       id: getNextInSequence(surveyRules.map((rule) => rule.id)),
       ruleType: "multiple-incompatible-answers",
-      answers: answers,
+      answers: answers.reduce((out, [q, a])=>{return {... out, [q]: a};}, {}),
       incompatQuestionId: incompatQuestionId,
       incompatAnswerId: incompatAnswerId
     });
@@ -702,17 +715,20 @@ function MultipleIncompatibleAnswersForm () {
           <select
             style={{ display: "inline-block"}}
             className="form-inline form-control-sm ml-2 mr-2 select-bar"
-            onChange={(e) => setTempQuestionId(e.target.value)}
+            onChange={(e) => setTempQuestionId(Number(e.target.value))}
             value={tempQuestionId}
           >
             <option value="-1" selected disabled hidden>- Select Question -</option>
-            {mapObjectArray(surveyQuestions, ([aqId, aq]) => {
-              if(answers[aqId] === undefined) {
-                return (
-                  <option key={aqId} value={aqId}>
-                    {aq.question}
-                  </option>
-                );
+            {mapObjectArray(
+              surveyQuestions
+                .filter(({componentType})=>componentType !== 'input'),
+              ([aqId, aq]) => {
+                if(answers[aqId] === undefined) {
+                  return (
+                    <option key={aqId} value={aqId}>
+                      {aq.question}
+                    </option>
+                  );
               } else {return (<></>);}})}
           </select>
         </div>
@@ -721,7 +737,7 @@ function MultipleIncompatibleAnswersForm () {
           <select
             style={{ display: "inline-block"}}
             className="form-inline form-control-sm ml-2 mr-2 select-bar"
-            onChange={(e) => setTempAnswerId(e.target.value) }
+            onChange={(e) => setTempAnswerId(Number(e.target.value))}
             value={tempAnswerId}>
             <option value="-1" selected disabled hidden>- Select Answer -</option>
             {mapObjectArray(safeFindAnswers(tempQuestionId), ([ansId, ans]) => (
@@ -738,7 +754,7 @@ function MultipleIncompatibleAnswersForm () {
             onClick={() => {
               addRule(tempQuestionId, tempAnswerId);
               setTempQuestionId(-1);
-              setTempAnswerId(-1);                                
+              setTempAnswerId(-1);
             }}
             title="Add Rule"
             type="button">
@@ -746,7 +762,7 @@ function MultipleIncompatibleAnswersForm () {
           </button>
         </div>
       </div>
-      {Object.entries(answers)?.map(([question, answer]) =>
+      {answers.map(([question, answer]) =>
         renderRuleRow(surveyQuestions, question, answer))}
       <br/>
       <strong className="mb-2" style={{ textAlign: "center" }}>
