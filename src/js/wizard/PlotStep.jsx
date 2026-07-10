@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
+import { useSetAtom } from 'jotai';
 import DatePicker from 'react-datepicker';
 
 import { NewMap } from '../components/NewMap';
+import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
 import Select from '../components/Select';
 import UserSelect from '../components/UserSelect';
 import SvgIcon from '../components/svg/SvgIcon';
@@ -19,7 +21,7 @@ import {
   sub_ids
 } from '../state/projectWizard';
 
-export const PlotStep = () => {
+export const PlotStep = ({ imageryList = [] }) => {
   const boundaryMethod = useSubscription([sub_ids.boundary.generationMethod]) || "manual";
   const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
   const plotFeatures = useSubscription([sub_ids.plots.plotFeatures]) || [];
@@ -35,17 +37,27 @@ export const PlotStep = () => {
   const modal = useSubscription([sub_ids.modal]);
   const designSettings = useSubscription([sub_ids.plots.designSettings]) || {};
   const activeAreaGeometry = aoiFeatures[0];
-
   const [plotLimitError, setPlotLimitError] = useState("");
   const [uploadedPlotIds, setUploadedPlotIds] = useState([]);
-
   const isBoundaryFileDriven = boundaryMethod === "plotFile" || boundaryMethod === "shpFile";
+  const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
+  const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
 
   const acceptedMimeTypes = {
     csv: "text/csv",
     shp: "application/zip",
     geojson: "application/json",
   };
+
+  useEffect(() => {
+    setMapLibrary(imageryList);
+    if (imageryList && imageryList.length > 0 && !initialized.current) {
+      const platformItems = imageryList.filter(img => img.visibility === 'platform');
+      const defaultImagery = platformItems[0];
+      setActiveMapLayers(new Set(defaultImagery));
+      initialized.current = true;
+    }
+  }, [imageryList]);
 
   const plotIdList = useMemo(() => {
     if (['random', 'gridded'].includes(plotDistribution)) {

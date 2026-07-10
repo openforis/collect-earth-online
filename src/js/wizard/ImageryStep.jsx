@@ -26,7 +26,7 @@ export const ImageryStep = ({ imageryList = [] }) => {
       }
       initialized.current = true;
     }
-  }, [imageryList, setMapLibrary]);
+  }, [imageryList]);
 
   useEffect(() => {
     const previewArray = previewId ? [Number(previewId)] : [];
