@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import { useSetAtom } from 'jotai';
 import DatePicker from 'react-datepicker';
@@ -42,6 +42,7 @@ export const PlotStep = ({ imageryList = [] }) => {
   const isBoundaryFileDriven = boundaryMethod === "plotFile" || boundaryMethod === "shpFile";
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
+  const initializedMap = useRef(false);
 
   const acceptedMimeTypes = {
     csv: "text/csv",
@@ -51,11 +52,11 @@ export const PlotStep = ({ imageryList = [] }) => {
 
   useEffect(() => {
     setMapLibrary(imageryList);
-    if (imageryList && imageryList.length > 0 && !initialized.current) {
+    if (imageryList && imageryList.length > 0 && !initializedMap.current) {
       const platformItems = imageryList.filter(img => img.visibility === 'platform');
       const defaultImagery = platformItems[0];
-      setActiveMapLayers(new Set(defaultImagery));
-      initialized.current = true;
+      setActiveMapLayers(new Set([defaultImagery]));
+      initializedMap.current = true;
     }
   }, [imageryList]);
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import shp from "shpjs";
 import { useSetAtom } from 'jotai';
@@ -21,14 +21,15 @@ export const BoundaryStep = ({ imageryList = [] }) => {
   const isDrawingActive = generationMethod === "manual";
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
+  const initializedMap = useRef(false);
 
   useEffect(() => {
     setMapLibrary(imageryList);
-    if (imageryList && imageryList.length > 0 && !initialized.current) {
+    if (imageryList && imageryList.length > 0 && !initializedMap.current) {
       const platformItems = imageryList.filter(img => img.visibility === 'platform');
       const defaultImagery = platformItems[0];
-      setActiveMapLayers(new Set(defaultImagery));
-      initialized.current = true;
+      setActiveMapLayers(new Set([defaultImagery]));
+      initializedMap.current = true;
     }
   }, [imageryList]);
 
