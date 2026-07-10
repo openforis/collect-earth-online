@@ -33,7 +33,7 @@ export const projectImageryListAtom = atom([]);
 export const boundaryAtom = atom({});
 export const plotsAtom = atom({});
 export const samplesAtom = atom([]);
-export const surveyQuestionsAtom = atom([]);
+
 export const rulesAtom = atom([]);
 export const previewSelectedSampleIdAtom = atom(1);
 export const previewUserSamplesAtom = atom({});
@@ -66,6 +66,7 @@ const projectWizardDb = {
   'overview.useTemplatePlots': false,
   imagery: [],
   imageryList: [],
+  'imagery.previewId': '',
   institutionImagery: [],
   // boundary
   'boundary.generationMethod': 'manual',
@@ -103,7 +104,7 @@ const projectWizardDb = {
   'samples.sampleFileName': '',
   'samples.sampleFeautres': [],
   'samples.allowDrawnSamples': false,
-  questions: [],
+  questions: {},
   'rules': [],
   'rules.search': null,
   'rules.filter': null,
@@ -160,7 +161,8 @@ export const event_ids = {
   projectDetails: 'projectDetails',
   imagery: {
     imagery : 'imagery',
-    imageryList: 'imageryList'},
+    imageryList: 'imageryList',
+    previewId: 'imagery.previewId'},
   boundary: {
     generationMethod: 'boundary.generationMethod',
     aoiFeatures: 'boundary.aoiFeatures',
@@ -252,7 +254,8 @@ export const sub_ids = {
   projectDetails: 'projectDetails',
   imagery: {
     imagery : 'imagery',
-    imageryList: 'imageryList'},
+    imageryList: 'imageryList',
+    previewId: 'imagery.previewId'},
   boundary: {
     generationMethod: 'boundary.generationMethod',
     aoiFeatures: 'boundary.aoiFeatures',
@@ -338,6 +341,7 @@ regSub(sub_ids.overview.useTemplateWidgets, sub_ids.overview.useTemplateWidgets)
 
 //imagery
 regSub(sub_ids.imagery.imagery, sub_ids.imagery.imagery);
+regSub(sub_ids.imagery.previewId, sub_ids.imagery.previewId);
 
 // boundary
 regSub(sub_ids.boundary.generationMethod, sub_ids.boundary.generationMethod);
@@ -666,7 +670,6 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   aoiFileName,
   description,
   designSettings,
-  imageryId,
   learningMaterial,
   name,
   numPlots,
@@ -695,7 +698,6 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
                                      extraPlotColumns: projectOptions.showPlotInformation,
                                      plotConfidence: projectOptions.collectConfidence,
                                      autoGeo: projectOptions.autoLaunchGeoDash};
-  draftDb[sub_ids.imagery.imagery] = [imageryId]; //??!
   draftDb[sub_ids.boundary.generationMethod] = 'manual'; //??
   draftDb[sub_ids.boundary.aoiFeatures] = aoiFeatures;
   draftDb[sub_ids.boundary.aoiFileName] = aoiFileName;
@@ -715,7 +717,6 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.samples.allowDrawnSamples] = allowDrawnSamples;
   draftDb[sub_ids.questions.questions] = surveyQuestions;
   draftDb[sub_ids.rules.rules] = surveyRules;
-
 });
 
 regEvent(event_ids.saveDraft, ({ draftDb }) => {
@@ -903,20 +904,22 @@ regEvent(event_ids.overview.useTemplatePlots, ({ draftDb }, useTemplatePlots)=>{
   draftDb[sub_ids.overview.useTemplatePlots] = useTemplatePlots;
 });
 
-regEvent(event_ids.imagery.imagery, ({ draftDb }, imageryIdList)=>{
+regEvent(event_ids.imagery.imagery, ({ draftDb }, imageryIdList) => {
   draftDb[sub_ids.imagery.imagery] = imageryIdList;
+});
+
+regEvent(event_ids.imagery.previewId, ({ draftDb }, previewId) => {
+  draftDb[sub_ids.imagery.previewId] = previewId;
 });
 
 regEvent(event_ids.imagery.imageryList, ({ draftDb }, imageryList ) => {
   draftDb[sub_ids.imagery.imageryList] = imageryList;
 });
 
-regEvent(event_ids.questions.addQuestion,
-         ({ draftDb }, questionToAdd ) => {
-           const prev = current(draftDb[sub_ids.questions.questions]);
-           console.log(sub_ids.questions.questions ,prev);
-           draftDb[sub_ids.questions.questions].push(questionToAdd);
-         });
+regEvent(event_ids.questions.addQuestion, ({ draftDb }, nextId, questionToAdd ) => {
+  const questions = draftDb[sub_ids.questions.quesions];
+  draftDb[sub_ids.questions.questions] = {... questions, [nextId]: questionToAdd};
+});
 
 // PROJECT BOUNDARY EVENTS
 
@@ -1012,11 +1015,6 @@ regEvent(event_ids.samples.sampleFileName, ({ draftDb }, fileName) => {
 
 regEvent(event_ids.samples.allowDrawnSamples, ({ draftDb }, allow) => {
   draftDb[sub_ids.samples.allowDrawnSamples] = allow;
-});
-
-regEvent(event_ids.questions.addQuestion, ({ draftDb }, questionToAdd ) => {
-  const prev = current(draftDb[sub_ids.questions.questions]);
-  draftDb[sub_ids.questions.questions].push(questionToAdd);
 });
 
 regEvent(event_ids.questions.setQuestions, ({ draftDb }, questions ) => {

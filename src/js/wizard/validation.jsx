@@ -111,8 +111,7 @@ export function validateQuestions({
   function allAnswersHidden (answers) {
     const hiddenAnswers = filterObject(answers, ([_id, ans]) => ans.hide);
     return lengthObject(answers) === lengthObject(hiddenAnswers);}
-
-  return ([lengthObject(surveyQuestions) === 0 && "A survey must include at least one question.",
+  return ([lengthObject(Object.values(surveyQuestions)) === 0 && "A survey must include at least one question.",
      someObject(surveyQuestions, ([_id, sq]) => (lengthObject(sq.answers) === 0 || allAnswersHidden(sq.answers))) &&
            "All survey questions must contain at least one (unhidden) answer.",]
          .filter((e)=>e));

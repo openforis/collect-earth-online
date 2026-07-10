@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { dispatch } from '@flexsurfer/reflex';
+import { dispatch, useSubscription } from '@flexsurfer/reflex';
 import { SurveyQuestions } from '../components/SurveyQuestions';
 import SvgIcon from '../components/svg/SvgIcon';
-import { event_ids, surveyQuestionsAtom } from '../state/projectWizard';
+import { event_ids, sub_ids } from '../state/projectWizard';
 
 
 export const QuestionCard = ({
@@ -310,7 +310,9 @@ export const SurveyQuestionsStep = () => {
     parentQuestionId: "-1",
     parentAnswerIds: [],
   };
-  const [questions, setQuestions] = useAtom(surveyQuestionsAtom);
+
+  function setQuestions (questions) {dispatch([event_ids.questions.setQuestions, questions]);}
+  const questions = useSubscription([sub_ids.questions.questions]);
   const [newQuestion, setNewQuestion] = useState(newDefaultQuestion);
   const addQuestion = () => {
     if (!newQuestion.questionText) return;
@@ -333,8 +335,7 @@ export const SurveyQuestionsStep = () => {
       },
     };
 
-    setQuestions((prev) => ({ ...prev, [nextId]: questionToAdd }));
-    dispatch([event_ids.questions.addQuestion, questionToAdd]);
+    setQuestions({ ...questions, [nextId]: questionToAdd });
     setNewQuestion(newDefaultQuestion);
   };
 
@@ -351,13 +352,11 @@ export const SurveyQuestionsStep = () => {
 
     if (nextIndex >= 0 && nextIndex < siblings.length) {
       const [nextId, nextQ] = siblings[nextIndex];
-      setQuestions(prev => {
-        const newQuestions = { ...prev };
-        const tempOrder = targetQ.cardOrder;
-        newQuestions[id] = { ...targetQ, cardOrder: nextQ.cardOrder };
-        newQuestions[nextId] = { ...nextQ, cardOrder: tempOrder };
-        return newQuestions;
-      });
+      const newQuestions = { ... questions };
+      const tempOrder = targetQ.cardOrder;
+      newQuestions[id] = { ...targetQ, cardOrder: nextQ.cardOrder };
+      newQuestions[nextId] = { ...nextQ, cardOrder: tempOrder };
+      setQuestions(newQuestions);
       dispatch([event_ids.questions.moveQuestion, id, targetQ, nextId, nextQ]);
     }
   };

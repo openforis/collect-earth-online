@@ -8,15 +8,12 @@ import { event_ids,  sub_ids } from "../state/projectWizard";
 
 function TemplateProjectModal () {
 
-  const [templatePlots, setTemplatePlots] = useState([]);
   function setTemplateProject (templateProject) {dispatch([event_ids.templateProject, templateProject]);}
 
   const institutionId = useSubscription([sub_ids.instituionId]);
   const institutionImagery = useSubscription([sub_ids.institution.imagery]);
 
   const projectType = useSubscription([sub_ids.overview.projectType]) || 'regular';
-  // function setTemplateProjectId (templateProjectId) {dispatch([event_ids.templateProjectId, templateProjectId]);}
-  // const templateProjectId = useSubscription([sub_ids.templateProjectId]);
   const [templateProjectId, setTemplateProjectId] = useState(-1);
   const [templateProjects, setTemplateProjects] = useState([]);
 
@@ -26,7 +23,7 @@ function TemplateProjectModal () {
   function validate () {dispatch([event_ids.validate]);}
   function setPlots (plots) {dispatch([event_ids.plots.plots, plots]);}
   function setImageryList (imageryList) {dispatch([event_ids.imagery.imageryList, imageryList]);}
-
+  function setPreviewImagery (imageryId) {dispatch([event_ids.imagery.previewId, imageryId]);}
   function setUseTemplateWidgets (useTemplateWidgets) {dispatch([event_ids.overview.useTemplateWidgets, useTemplateWidgets]);}
   
   function getTemplateById (projectId) {
@@ -41,10 +38,10 @@ function TemplateProjectModal () {
             users: [],
             percents: []}})
           : setDesignSettings(data.designSettings);
-        setTemplateProjectId(projectId);
+        setTemplateProjectId(projectId);        
         setImageryId(institutionImageryIds.includes(data.imageryId)
-                     ? data.imageryId
-                     : institutionImageryIds[0]);
+                     ? [data.imageryId]
+                     : institutionImageryIds);
         setUseTemplatePlots(true);
         setUseTemplateWidgets(true);
         validate();
@@ -54,14 +51,14 @@ function TemplateProjectModal () {
     fetch(`/get-project-plots?projectId=${projectId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
-        setTemplatePlots(data);
         setPlots(data);
       });}
   
-  function getProjectImagery(projectId) {
+  function getProjectImagery(projectId) {    
     fetch("/get-project-imagery?projectId=" + projectId)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
+        setPreviewImagery(data[0].id);
         setImageryList(data.map((i) => i.id));        
       });}
 
@@ -73,7 +70,6 @@ function TemplateProjectModal () {
     ])
 //      .then(() => setTemplateProjectId(projectId))
       .catch((error) => {
-        setTemplatePlots([]);
         setTemplateProject({});
         setTemplateProjectId(-1);
         console.error(error);
@@ -258,7 +254,8 @@ function ErrorModal () {
     }
   }
   return  (
-    <Modal>
+    <Modal
+      onClose={()=>{dispatch([event_ids.modal, null]);}}>
       <div style={{display: 'flex',
                    flexDirection: 'column',
                    gap: '1rem'}}>
@@ -286,8 +283,7 @@ function ErrorModal () {
      </div>);
         })}
       </div>
-    </Modal>
-    
+    </Modal>    
   );
 };
 

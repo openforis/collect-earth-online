@@ -7,11 +7,13 @@ import { NewMap } from '../components/NewMap';
 import SvgIcon from '../components/svg/SvgIcon';
 
 export const ImageryStep = ({ imageryList = [] }) => {
-  const [previewId, setPreviewId] = useState("");
   const initialized = useRef(false);
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
 
+  function setPreviewId (previewId) {dispatch([event_ids.imagery.previewId, previewId]);}
+  const previewId = useSubscription([sub_ids.imagery.previewId]);
+   
   function setSelectedIds (selectedIds) {dispatch([event_ids.imagery.imagery, selectedIds]);}
   const selectedIds = useSubscription([sub_ids.imagery.imagery]);
   // Sets up default selected imagery.
