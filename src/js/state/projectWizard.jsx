@@ -161,8 +161,7 @@ export const event_ids = {
   projectDetails: 'projectDetails',
   imagery: {
     imagery : 'imagery',
-    imageryList: 'imageryList',
-    previewId: 'imagery.previewId'},
+    imageryList: 'imageryList',},
   boundary: {
     generationMethod: 'boundary.generationMethod',
     aoiFeatures: 'boundary.aoiFeatures',
@@ -254,8 +253,7 @@ export const sub_ids = {
   projectDetails: 'projectDetails',
   imagery: {
     imagery : 'imagery',
-    imageryList: 'imageryList',
-    previewId: 'imagery.previewId'},
+    imageryList: 'imageryList',},
   boundary: {
     generationMethod: 'boundary.generationMethod',
     aoiFeatures: 'boundary.aoiFeatures',
@@ -341,7 +339,6 @@ regSub(sub_ids.overview.useTemplateWidgets, sub_ids.overview.useTemplateWidgets)
 
 //imagery
 regSub(sub_ids.imagery.imagery, sub_ids.imagery.imagery);
-regSub(sub_ids.imagery.previewId, sub_ids.imagery.previewId);
 
 // boundary
 regSub(sub_ids.boundary.generationMethod, sub_ids.boundary.generationMethod);
@@ -906,10 +903,6 @@ regEvent(event_ids.overview.useTemplatePlots, ({ draftDb }, useTemplatePlots)=>{
 
 regEvent(event_ids.imagery.imagery, ({ draftDb }, imageryIdList) => {
   draftDb[sub_ids.imagery.imagery] = imageryIdList;
-});
-
-regEvent(event_ids.imagery.previewId, ({ draftDb }, previewId) => {
-  draftDb[sub_ids.imagery.previewId] = previewId;
 });
 
 regEvent(event_ids.imagery.imageryList, ({ draftDb }, imageryList ) => {

@@ -118,12 +118,6 @@ export function validateQuestions({
 }
 
 export const validateWizard = (form) => {
-  /* validates the existing draft project.
-    returns a boolean.
-    side effects: sends api request to create project,
-    or adds errors to state.
-    may even send a request, if superficially valid, and still add errors to state, in case of server error
-  */
 
   const errors = [
     ['overview', validateOverview(form)],
