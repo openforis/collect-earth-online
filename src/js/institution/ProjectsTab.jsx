@@ -15,6 +15,12 @@ export const ProjectsTab = ({
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [filterText, setFilterText] = useState("");
+  const visibilityOptions = [
+    { value: "public", label: "Public: All Users" },
+    { value: "users", label: "Users: Logged In Users" },
+    { value: "institution", label: "Institution: Group Members" },
+    { value: "private", label: "Private: Group Admins" },
+  ];
   
   const filteredProjects = useMemo(() => {
     const lower = filterText.toLowerCase();
@@ -208,7 +214,7 @@ export const ProjectsTab = ({
       {isAdmin && (
         <BulkActions
           isAdmin={isAdmin}
-          visibilityOptions={["public", "users", "institution", "private"]}
+          visibilityOptions={visibilityOptions}
           showDownload={true}
           onChangeVisibility={editProjectsBulk}
           onDownload={handleDownload}
