@@ -139,8 +139,8 @@ function NewProjectModal () {
       closeText=''
       confirmText='Get Started'
       onConfirm={()=>{handleNewProject(projectSource);}}
-      onClose={()=>{dispatch([event_ids.modal, null]);}}>
-      confirmDisabled={projectSource === null}
+      onClose={()=>{dispatch([event_ids.modal, null]);}}
+      confirmDisabled={projectSource === null}>
       <div
         className="inputs">
         {Object.entries(newProjectOptions).map(([id, [title, description]]) => {

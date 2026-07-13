@@ -1,5 +1,7 @@
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 
+import SvgIcon from '../components/svg/SvgIcon';
+
 import { event_ids,  sub_ids } from "../state/projectWizard";
 
 
@@ -52,7 +54,15 @@ export default function NavButtons () {
 
 export function ProjectWizardNavigator () {
   const currentStep = useSubscription([sub_ids.currentStep]);
-  
+  function navText () {
+    if (screen.width > 1426) {
+      return "- -- -";
+    } else if (screen.width > 950) {
+      return "--";
+    } else {
+      return "-";
+    }    
+  } 
   return (
     <div
       className="project-wizard-navigator">
@@ -66,11 +76,16 @@ export function ProjectWizardNavigator () {
                 cursor: 'pointer'}}
               onClick={() => dispatch([event_ids.currentStep, id])}
             >
-              <span className={currentStep === id && "selected"}
-              >{index + 1}</span>
+              {currentStep === projectSteps[index + 1]?.id ?
+               (<SvgIcon icon='check' size='1.2rem'/>) :
+                (<span className={currentStep === id && "selected"}
+              >{index + 1}</span>)}
+              
               {label}
             </div>
-            {index + 1 < projectSteps.length && "- -- -"}
+            {index + 1 < projectSteps.length && (<div className="nav-separator">{
+              navText()
+            }</div>)}
           </>);
       })}              
     </div>);
