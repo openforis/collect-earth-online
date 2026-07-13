@@ -703,7 +703,7 @@ function MultipleIncompatibleAnswersForm () {//WORKSN'T
 
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   */
-
+  
   return lengthObject(availableQuestions) > 2 ? (
     <div style={{display: 'inline-flex', flexDirection: 'column', width: "100%"}}>
       <strong className="mb-2" style={{ textAlign: "center" }}>
@@ -719,16 +719,14 @@ function MultipleIncompatibleAnswersForm () {//WORKSN'T
             value={tempQuestionId}
           >
             <option value="-1" selected disabled hidden>- Select Question -</option>
-            {mapObjectArray(
-              surveyQuestions
-                .filter(({componentType})=>componentType !== 'input'),
-              ([aqId, aq]) => {
-                if(answers[aqId] === undefined) {
-                  return (
-                    <option key={aqId} value={aqId}>
-                      {aq.question}
-                    </option>
-                  );
+            {mapObjectArray(availableQuestions, ([aqId, aq]) => {              
+              if((answers[aqId] === undefined )
+                 && !answers.reduce((coll, [qid])=>{return [... coll, qid];}, []).includes(Number(aqId)))
+              {return (
+                <option key={aqId} value={aqId} >
+                  {aq.question}
+                </option>
+              );
               } else {return (<></>);}})}
           </select>
         </div>
@@ -778,7 +776,9 @@ function MultipleIncompatibleAnswersForm () {//WORKSN'T
             value={incompatQuestionId}>
             <option value="-1" selected disabled hidden>- Select Question -</option>
             {mapObjectArray(surveyQuestions, ([aqId, aq]) => {
-              if(answers[aqId] === undefined) {
+              if((answers[aqId] === undefined )
+                 && !answers.reduce((coll, [qid])=>{return [... coll, qid];}, []).includes(Number(aqId)))
+              {
                 return (
                   <option key={aqId} value={aqId}>
                     {aq.question}

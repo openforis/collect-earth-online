@@ -1100,9 +1100,9 @@ regEvent(event_ids.rules.newRule.answers, ({ draftDb }, answers) => {
 });
 
 regEvent(event_ids.rules.newRule.addAnswer, ({ draftDb }) => {
-  let dbAnswers = current(draftDb[sub_ids.rules.newRule.answers]);
-  let answer = [current(draftDb[sub_ids.rules.newRule.tempQuestionId]),
-                current(draftDb[sub_ids.rules.newRule.tempAnswerId])];
+  let dbAnswers = draftDb[sub_ids.rules.newRule.answers];
+  let answer = [draftDb[sub_ids.rules.newRule.tempQuestionId],
+                draftDb[sub_ids.rules.newRule.tempAnswerId]];
   draftDb[sub_ids.rules.newRule.answers] = [... dbAnswers, answer];
 });
 regEvent(event_ids.rules.newRule.removeAnswer, ({ draftDb }, questionId) => {

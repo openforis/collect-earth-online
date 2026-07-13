@@ -10,12 +10,12 @@ import { event_ids,  sub_ids} from "../state/projectWizard";
 import "../../css/project-wizard.css";
 
 
-function SurveyRuleDesigner({events, subs}) {
+function SurveyRuleDesigner() {
   return (
     <div className="survey-rules-container">
       <div style={{backgroundColor: 'white'}} >
-        <SurveyRulesList inDesignMode events={events} subs={subs}/>
-        <NewRuleDesigner events={events} subs={subs}/>
+        <SurveyRulesList inDesignMode />
+        <NewRuleDesigner/>
       </div>
     </div>
   );
