@@ -1,7 +1,9 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useRef } from "react";
+import { useSetAtom } from 'jotai';
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 
 import { event_ids, sub_ids } from "../state/projectWizard";
+import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
 
 import SvgIcon from '../components/svg/SvgIcon';
 import SurveyRule from '../survey/SurveyRule';
@@ -50,7 +52,29 @@ export default function ReviewStep ({imageryList = []}) {
   }
 
   function ImageryCard () {
-    const selectedImageryIds = useSubscription([sub_ids.imagery.imagery]);
+    const initialized = useRef(false);
+    const selectedImagery = useSubscription([sub_ids.imagery.imagery]);
+    const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
+    const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
+    function setPreviewId (previewId) {dispatch([event_ids.imagery.previewId]);}
+    const previewId = useSubscription([sub_ids.imagery.previewId]);
+    
+    useEffect(() => {
+    setMapLibrary(imageryList);
+    if (imageryList && imageryList.length > 0 && !initialized.current) {
+      const platformItems = imageryList.filter(img => img.visibility === 'platform');
+      if (platformItems.length > 0) {
+        setPreviewId(platformItems[0].id.toString());
+      }
+      initialized.current = true;
+    }
+  }, [imageryList]);
+    
+    useEffect(() => {
+      const previewArray = previewId ? [Number(previewId)] : [];
+      setActiveMapLayers(new Set(previewArray));
+    }, [previewId, setActiveMapLayers]);
+    
     return (
       <div className='projectWizardCard'>
         <div className='review-card-header'>
@@ -60,15 +84,15 @@ export default function ReviewStep ({imageryList = []}) {
           </div>
         </div>
         <p >Imagery Used:</p>
-        {selectedImageryIds.map((selectedId)=>{return (
-          <b > {imageryList.filter(({id})=> id === selectedId)[0].title} </b>);})
-        }
+        {selectedImagery.map((selectedId)=>{return (
+           <b > {imageryList.filter(({id})=> id === selectedId)[0].title} </b>);})}        
       </div>
     );
   }
 
   function BoundaryCard () {
     const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
+
     return (
       <div className='projectWizardCard' style={{height: '420px'}}>
         <div className='review-card-header'>
@@ -77,10 +101,11 @@ export default function ReviewStep ({imageryList = []}) {
             <SvgIcon icon='edit' size='2rem'/>
           </div>
         </div>
-      <div className="map-area" style={{width: '670px',
-                                        height: '335px',
-                                        marginTop: '3rem',
-                                        position: 'absolute'}}>
+        <div className="map-area"
+             style={{width: '670px',
+                     height: '335px',
+                     marginTop: '3rem',
+                     position: 'absolute'}}>
           <NewMap 
             pan={false}
             aoiToShow={aoiFeatures}
@@ -89,7 +114,6 @@ export default function ReviewStep ({imageryList = []}) {
         </div>
       </div>
     );
-
   }
 
   function PlotsCard () {
@@ -97,6 +121,7 @@ export default function ReviewStep ({imageryList = []}) {
     const numPlots = useSubscription([sub_ids.plots.numPlots]);
     const plotShape = useSubscription([sub_ids.plots.plotShape]);
     const plotSize = useSubscription([sub_ids.plots.plotSize]);
+
     return (
       <div className='projectWizardCard'>
         <div className='review-card-header'>
@@ -120,6 +145,7 @@ export default function ReviewStep ({imageryList = []}) {
     const sampleDistribution = useSubscription([sub_ids.samples.sampleDistribution]);
     const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]);
     const numPlots = useSubscription([sub_ids.plots.numPlots]);
+
     return (
       <div className='projectWizardCard'>
         <div className='review-card-header'>
@@ -138,7 +164,7 @@ export default function ReviewStep ({imageryList = []}) {
 
   function QuestionsCard () {
     const questions = useSubscription([sub_ids.questions.questions]);
-    
+
     return (
       <div className='projectWizardCard'>
         <div className='review-card-header'>
@@ -148,17 +174,16 @@ export default function ReviewStep ({imageryList = []}) {
           <SvgIcon icon='edit' size='2rem'/>
       </div>
         </div>
-        {questions.length > 0 &&
-         <div className="review-card">
+        <div className="review-card">
            <SurveyQuestions preview={true} surveyQuestions={questions} showHeader={false}/>
-         </div>}
+         </div>
       </div>
     );
   }
 
   function RulesCard () {
     const rules = useSubscription([sub_ids.rules.rules]);
-    
+
     return (
       <div className='projectWizardCard'>
         <div className='review-card-header'>

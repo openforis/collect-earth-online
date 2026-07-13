@@ -80,7 +80,7 @@ export function validateSamples({
   totalPlots,
   sampleLimit,
   allowDrawnSamples,
-  sampleGeometries
+  designSettings,
 }) {
   return ([sampleDistribution === "random" &&
      !samplesPerPlot && "A number of samples per plot is required for random sample distribution.",
@@ -100,7 +100,7 @@ export function validateSamples({
      sampleResolution >= plotSize && "The sample spacing must be less than the plot width.",
      (samplesPerPlot > perPlotLimit || totalPlots * samplesPerPlot > sampleLimit) &&
        "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
-     allowDrawnSamples && !Object.values(sampleGeometries).some((g) => g) &&
+     allowDrawnSamples && !Object.values(designSettings?.sampleGeometries).some((g) => g) &&
            "At least one geometry type must be enabled.",]
           .filter((e)=>e));
 }
@@ -111,20 +111,13 @@ export function validateQuestions({
   function allAnswersHidden (answers) {
     const hiddenAnswers = filterObject(answers, ([_id, ans]) => ans.hide);
     return lengthObject(answers) === lengthObject(hiddenAnswers);}
-
-  return ([lengthObject(surveyQuestions) === 0 && "A survey must include at least one question.",
+  return ([lengthObject(Object.values(surveyQuestions)) === 0 && "A survey must include at least one question.",
      someObject(surveyQuestions, ([_id, sq]) => (lengthObject(sq.answers) === 0 || allAnswersHidden(sq.answers))) &&
            "All survey questions must contain at least one (unhidden) answer.",]
          .filter((e)=>e));
 }
 
 export const validateWizard = (form) => {
-  /* validates the existing draft project.
-    returns a boolean.
-    side effects: sends api request to create project,
-    or adds errors to state.
-    may even send a request, if superficially valid, and still add errors to state, in case of server error
-  */
 
   const errors = [
     ['overview', validateOverview(form)],

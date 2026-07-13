@@ -28,17 +28,10 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   
   const currentStep = useSubscription([sub_ids.currentStep]);
   const modal = useSubscription([sub_ids.modal]);
-
+  const projectSource = useSubscription([sub_ids.projectSource]);
+  function setInstitutionImagery (imagery) {dispatch([event_ids.institution.imagery, imagery]);}
+  const institutionImagery = useSubscription([sub_ids.institution.imagery]);
   
-  // -------------------
-  // HANDLERS
-  // ------------------
-  
-  const handleNewProject = () => {
-    dispatch([event_ids.modal, null]);
-    dispatch([event_ids.currentStep, 'overview']);
-  };
-
   
   // -------------------
   // HOOKS
@@ -46,42 +39,33 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   
   useEffect(() => {
     dispatch([event_ids.institutionId, institutionId]);
-    dispatch([event_ids.modal, {
-      title: 'Project Setup',
-      closeText: '',
-      confirmText: 'Get Started',
-      onConfirm: handleNewProject,
-      id: 'newProject',
-//      children: (<NewProjectModal/>)
-    }]);  
+    dispatch([event_ids.modal, 'newProject']);
+
     fetch(`/get-institution-imagery?institutionId=${institutionId}`)
       .then(res => res.json())
-      .then(data => setAvailableImagery(data))
+      .then(data => setInstitutionImagery(data))
       .catch(err => console.error("Could not load imagery", err));
     fetch(`/get-institution-users?institutionId=${institutionId}`)
       .then(res  => res.json())
       .then(data => dispatch([event_ids.institution.users, data]))
       .catch(err => console.error("Could not load users", err));
   }, []);
-
   
   // -------------------
   // RENDER FUNCTIONS
   // ------------------
-  
-  const [availableImagery, setAvailableImagery] = useState([]);
-  
+    
   const CurrentStep = () => {
     switch (currentStep) {
     case null         : return (<></>);
     case 'overview'   : return <OverviewStep />;
-    case 'imagery'    : return <ImageryStep imageryList={availableImagery}/>;
-    case 'boundary'   : return <BoundaryStep />;
-    case 'plots'      : return <PlotStep />;
+    case 'imagery'    : return <ImageryStep imageryList={institutionImagery}/>;
+    case 'boundary'   : return <BoundaryStep imageryList={institutionImagery}/>;
+    case 'plots'      : return <PlotStep imageryList={institutionImagery}/>;
     case 'samples'    : return <SampleStep />;
     case 'questions'  : return <SurveyQuestionsStep/>;
     case 'rules'      : return <RulesStep />;
-    case 'review'     : return <ReviewStep imageryList={availableImagery}/>;
+    case 'review'     : return <ReviewStep imageryList={institutionImagery}/>;
     default           : return <div style={{padding: "20px"}}>Step {currentStep} coming soon</div>;
     }};
   

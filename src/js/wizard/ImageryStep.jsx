@@ -7,7 +7,9 @@ import { NewMap } from '../components/NewMap';
 import SvgIcon from '../components/svg/SvgIcon';
 
 export const ImageryStep = ({ imageryList = [] }) => {
-  const [previewId, setPreviewId] = useState("");
+//  const [previewId, setPreviewId] = useState("");
+  function setPreviewId (previewId) {dispatch([event_ids.imagery.previewId, previewId]);}
+  const previewId = useSubscription([sub_ids.imagery.previewId]);
   const initialized = useRef(false);
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
@@ -26,7 +28,7 @@ export const ImageryStep = ({ imageryList = [] }) => {
       }
       initialized.current = true;
     }
-  }, [imageryList, setMapLibrary]);
+  }, [imageryList]);
 
   useEffect(() => {
     const previewArray = previewId ? [Number(previewId)] : [];

@@ -8,7 +8,6 @@ import {event_ids, sub_ids} from "../state/projectWizard";
 
 
 export default function SurveyRulesList({ inDesignMode}) {
-  const surveyQuestions = useSubscription([sub_ids.questions.questions]);
   
   const surveyRules = useSubscription([sub_ids.rules.rules]);
   const ruleSearch = useSubscription([sub_ids.rules.search]);
