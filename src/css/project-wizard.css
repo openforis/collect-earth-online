@@ -179,6 +179,7 @@
 
 .project-wizard-container {
     background-color: var(--Primary-Light-Green);
+    font-family: "Public Sans";
     /* height: 100vh; */
 }
 
