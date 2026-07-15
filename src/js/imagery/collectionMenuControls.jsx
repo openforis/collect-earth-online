@@ -693,6 +693,7 @@ export class GEEImageMenu extends React.Component {
   };
 
   updateGEEImagery = () => {
+    console.log('updating gee imagery');
     this.updateImageryInformation();
     mercator.updateLayerSource(
       this.props.mapConfig,
@@ -719,7 +720,7 @@ export class GEEImageMenu extends React.Component {
         </div>
         <div className="slide-container">
           <button
-            className="btn btn-lightgreen btn-sm btn-block"
+            className="btn filled btn-sm btn-block"
             id="update-gee-image-button"
             onClick={this.updateGEEImagery}
             type="button"

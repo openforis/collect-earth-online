@@ -703,7 +703,7 @@ export const SurveyQuestions = ({
 
     const answeredQuestionsList = ruleAnswerList.filter((answer) => {
       const question = surveyQuestions[answer[0]];
-      return question.answered.some((a) => a.answerId == answer[1])
+      return question.answered.some((a) => a.answerId == answer[1]);
     });
     const incompatQuestion = surveyQuestions[incompatQuestionId];
     const incompatAnswer = (incompatQuestion.answered.some((a) => a.answerId == incompatAnswerId) ||
@@ -713,11 +713,11 @@ export const SurveyQuestions = ({
       const answerText = surveyQuestions[questionIdToSet].answers[answerId].answer;
       const questionText = getSurveyQuestionText(questionIdToSet);
       const answerTextList = formatErrorText(ruleAnswerList);
-      return `Answer "${answerText}" for question "${questionText}" is incompatible in case ${answerTextList} are selected.`
+      return `Answer "${answerText}" for question "${questionText}" is incompatible in case ${answerTextList} are selected.`;
     } else {
       return null;
     }
-  }
+  };
 
   const rulesViolated = (questionIdToSet, answerId, answerText) => {
     const ruleFunctions = {

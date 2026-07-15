@@ -150,9 +150,9 @@
 /* For button-type answers */
 .sq-answers {
     display: grid;
-    grid-template-columns: repeat(var(--cols, 1), 1fr);
+    grid-template-columns: repeat(var(--cols, 2), 1fr);
     gap: 12px;
-    padding: 10px;
+    padding: 1rem;
     justify-content: start;
 }
 
@@ -162,7 +162,7 @@
   justify-content: center;
   gap: 8px;
   flex: 1;
-  padding: 10px 18px;
+  padding: .3rem;
   border: 2px solid #2d6f74;
   border-radius: 10px;
   background: #fff;
