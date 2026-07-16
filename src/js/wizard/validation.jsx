@@ -117,7 +117,17 @@ export function validateQuestions({
          .filter((e)=>e));
 }
 
-export const validateWizard = (form) => {
+export const validateStep = {
+  overview: validateOverview,
+  imagery: validateImagery,
+  plots: validatePlots,
+  samples: validateSamples,
+  questions: validateQuestions,
+  rules: ()=> false,
+  boundary: ()=> false  
+};
+
+export function validateWizard (form) {
 
   const errors = [
     ['overview', validateOverview(form)],
