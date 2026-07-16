@@ -1,10 +1,123 @@
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import React, { useEffect, useState } from "react";
 
+import { readFileAsBase64Url } from '../utils/generalUtils';
 import Modal from "../components/Modal";
 import SvgIcon from "../components/svg/SvgIcon";
 import { event_ids,  sub_ids } from "../state/projectWizard";
 
+
+function ImportProjectModal () {
+
+  /*
+/    new project -> new project modal
+/    template project -> template project modal
+!    browse/upload file -> parse and validate file
+    => invalid file -> error modal
+    =>   valid file -> update file name in client state, activate 'upload' button
+    upload button -> send import request
+    => invalid request -> error modal
+    =>   valid request -> populate wizard, set modal null
+   */
+
+  const [projectFileName, setProjectFileName] = useState("");
+  const [projectFileBase64, setProjectFileBase64] = useState(null);
+  const [importErrors, setImportErrors] = useState(null);
+
+  function uploadProjectFile (file) {
+    /*
+      the user has selected a file from the 'Upload Collect Earth Project File' button:
+      parse, validate the file.
+      if valid, enable the 'Upload' onConfirm button and set the filename to display in state
+      if invalid, dispatch error modal with errors.
+    */
+    setImportErrors(null);
+    console.log('validating project file', file.name);
+    readFileAsBase64Url(file, (base64) => {
+      //do some sort of validating
+      
+      setProjectFileName(file.name);
+      setProjectFileBase64(base64);});       
+  }
+
+  const importCollectProject = (fileName, fileb64) => {
+    /*
+      sends request to API to create project. receives error code or project data.
+      handles error codes, dispatches modal
+      handles success codes, dispatches event with data
+     */
+    fetch(`/import-ce-project`, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fileName,
+        fileb64,
+      }),
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        console.log('set project details:', data);
+        dispatch([event_ids.templateProject, data]);
+      })
+      .catch((message) => {
+        console.log('import collect earth project errors: ', message);        
+        setImportErrors([message.statusText]);
+      });
+  };
+
+  return (
+    <Modal
+      title='Upload Collect Earth Project File'
+      confirmText='Upload'
+      closeText='Quit'
+      onConfirm={()=> {importCollectProject(projectFileName, projectFileBase64);}}      
+      onClose={()=>{ dispatch([event_ids.modal, 'newProject']);}}
+      confirmDisabled={projectFileName === ""}
+    >
+      <div>
+        <label
+          className="btn btn-sm filled py-2 px-3 text-nowrap"
+          htmlFor='template-project-file'
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}
+        >
+          <SvgIcon icon='plus' size='0.9rem' />
+          {projectFileName ? `File: ${projectFileName}` : 'Upload Collect Earth Project File'}
+        <input
+          type='file'
+          accept='application/zip'
+          defaultValue=''
+          id='template-project-file'
+          style={{ display: 'none'}}
+          onChange={(e)=> {
+            console.log('uploading file!', e.target.files[0]);
+            const file = e.target.files[0];
+            file && uploadProjectFile(file);
+          }}
+        />
+        </label>
+        {importErrors &&
+         (<div style={{border: '1px solid red',
+                       background: 'pink',
+                       color: 'red'}} >
+            {importErrors.map((message) => {
+              return (<span > {message} <br/> </span>);
+            })}
+
+          </div>)}
+        
+
+        {/*
+        <span className="text-label-sm" style={{ color: projectFileName ? '#333' : '#999', fontStyle: !projectFileName ? 'italic' : 'normal' }}>
+          {projectFileName ? `File: ${projectFileName}` : 'No project file selected'}
+        </span> */}
+      </div>
+    </Modal>
+  );
+
+}
 
 function TemplateProjectModal () {
 
@@ -116,6 +229,9 @@ function handleNewProject (projectSource) {
   case 'templateProject' : {
     dispatch ([event_ids.modal, 'template']);
   } break;
+  case 'importProject' : {
+    dispatch([event_ids.modal, 'import']);
+  } break;
   default: {
     dispatch([event_ids.modal, null]);
     dispatch([event_ids.currentStep, 'overview']);
@@ -139,8 +255,8 @@ function NewProjectModal () {
       closeText=''
       confirmText='Get Started'
       onConfirm={()=>{handleNewProject(projectSource);}}
-      onClose={()=>{dispatch([event_ids.modal, null]);}}>
-      confirmDisabled={projectSource === null}
+      onClose={()=>{dispatch([event_ids.modal, 'newProject']);}}
+      confirmDisabled={projectSource === null}>
       <div
         className="inputs">
         {Object.entries(newProjectOptions).map(([id, [title, description]]) => {
@@ -178,7 +294,7 @@ function SubmitProjectModal () {
       closeText='Cancel'
       confirmText='Publish Project'
       onConfirm={()=>{dispatch ([event_ids.submitForm]); }}
-      confirmDisabled={confirmDisabled()}
+      //confirmDisabled={confirmDisabled()}
       onClose={()=>{dispatch([event_ids.modal, null]);}}>
       <div>
         <p >You are about to publish this project. Once published it will be added to your institution. You’ll still be able to make changes later from the project page within your institution.</p>
@@ -284,6 +400,7 @@ export default function ProjectWizardModal () {
   
   switch (modal) {
   case 'template'    : return (<TemplateProjectModal/>);
+  case 'import'      : return (<ImportProjectModal/>);
   case 'newProject'  : return (<NewProjectModal/>);
   case 'review'      : return (<SubmitProjectModal/>);
   case 'success'     : return (<SuccessModal/>);
