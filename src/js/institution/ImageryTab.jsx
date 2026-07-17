@@ -21,6 +21,13 @@ export const ImageryTab = ({
   const [filterText, setFilterText] = useState("");
   const [showNewImagery, setShowNewImagery] = useState(false);
   const [imageryToEdit, setImageryToEdit] = useState({ id: -1 });
+  const bulkDescription = `Public Institution Imagery is visible to all CEO users who
+can view the project. Private Institution Imagery is visible only to institution members, regardless
+of project visibility`;
+  const visibilityOptions = [
+    { value: "private", label: "Public Institution Imagery" },
+    { value: "public", label: "Private Institution Imagery" },
+  ];
 
   const filteredImagery = useMemo(() => {
     const lower = filterText.toLowerCase();
@@ -147,11 +154,12 @@ export const ImageryTab = ({
       {isAdmin && (
         <BulkActions
           isAdmin={isAdmin}
-          visibilityOptions={["public", "private"]}
+          visibilityOptions={visibilityOptions}
           showDownload={false}
           onChangeVisibility={editImagery}
           onDelete={handleDelete}
           selectedRows={selectedRows}
+          description={bulkDescription}
         />
       )}
 

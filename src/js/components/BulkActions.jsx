@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
+
 export const BulkActions = ({
   isAdmin = false,
   showDownload = false,
@@ -8,12 +9,12 @@ export const BulkActions = ({
   onDelete,
   visibilityOptions = [],
   selectedRows = [],
+  description,
 }) => {
   const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [selectedVisibility, setSelectedVisibility] = useState(null);
   const [selectedDownloads, setSelectedDownloads] = useState([]);
-
 
   const visibilityRef = useRef(null);
   const downloadRef = useRef(null);
@@ -36,8 +37,8 @@ export const BulkActions = ({
       <div className="bulk-actions-group" ref={visibilityRef}>
         <button
           className={`btn-outlined-green bulk-actions-trigger ${
-        showVisibilityMenu ? "active" : ""
-      }`}
+            showVisibilityMenu ? "active" : ""
+          }`}
           onClick={() => setShowVisibilityMenu((v) => !v)}
         >
           Change Visibility ▾
@@ -45,36 +46,51 @@ export const BulkActions = ({
 
         {showVisibilityMenu && (
           <div className="bulk-actions-dropdown">
+            {description && (
+              <div style={{ fontStyle: "italic", fontSize: "13px", lineHeight: "1.4", marginBottom: "12px", color: "#555" }}>
+                {description}
+              </div>
+            )}
             {(visibilityOptions.length > 0
               ? visibilityOptions
-              : ["Private", "Public", "Platform"]
-             ).map((option) => (
-               <div key={option} className="bulk-actions-row">
-                 <input
-                   type="radio"
-                   id={option}
-                   name="visibility"
-                   checked={selectedVisibility === option}
-                   onChange={() => setSelectedVisibility(option)}
-                 />
-                 <label htmlFor={option} className="bulk-actions-label">
-                   {option ? option.charAt(0).toUpperCase() + option.slice(1) : ""}
-                 </label>
-               </div>
-             ))}
+              : [
+                { value: "Private", label: "Private" },
+                { value: "Public", label: "Public" },
+                { value: "Platform", label: "Platform" },
+              ]
+            ).map((option) => {
+              const val = option.value !== undefined ? option.value : option;
+              const lbl =
+                option.label !== undefined
+                  ? option.label
+                  : typeof option === "string"
+                    ? option.charAt(0).toUpperCase() + option.slice(1)
+                    : "";
+
+              return (
+                <div key={val} className="bulk-actions-row">
+                  <input
+                    type="radio"
+                    id={val}
+                    name="visibility"
+                    checked={selectedVisibility === val}
+                    onChange={() => setSelectedVisibility(val)}
+                  />
+                  <label htmlFor={val} className="bulk-actions-label">
+                    {lbl}
+                  </label>
+                </div>
+              );
+            })}
 
             <div className="bulk-actions-footer">
               <button
-                className="btn-outlined-gray"
-                onClick={() => setShowVisibilityMenu(false)}
-              >
-                Cancel
-              </button>
-
-              <button
                 className="btn-filled-green"
                 onClick={() => {
-                  onChangeVisibility(selectedRows.map((r) => r.id), selectedVisibility);
+                  onChangeVisibility(
+                    selectedRows.map((r) => r.id),
+                    selectedVisibility
+                  );
                   setShowVisibilityMenu(false);
                 }}
               >
@@ -89,8 +105,8 @@ export const BulkActions = ({
         <div className="bulk-actions-group" ref={downloadRef}>
           <button
             className={`btn-outlined-green bulk-actions-trigger ${
-          showDownloadMenu ? "active" : ""
-        }`}
+              showDownloadMenu ? "active" : ""
+            }`}
             onClick={() => setShowDownloadMenu((v) => !v)}
           >
             Download ▾

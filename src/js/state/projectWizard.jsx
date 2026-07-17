@@ -8,6 +8,7 @@ import { validateOverview,
          validateSamples,
          validateQuestions,
          validateWizard,
+         validateStep,
        } from "../wizard/validation";
 
 
@@ -53,6 +54,7 @@ const projectWizardDb = {
   projectDraftId: -1,
   useTemplatePlots: false,
   useTemplateWidgets: false,
+  invalidSteps: [],
   // overview
   'overview.projectName': '',
   'overview.projectDescription': '',
@@ -249,6 +251,8 @@ export const sub_ids = {
   templateProjectId: 'templateProjectId',
   useTemplatePlots: 'useTemplatePlots',
   useTemplateWidgets: 'useTemplateWidgets',
+  validStep: 'validStep',
+  invalidSteps: 'invalidSteps',
   overview: {projectName: 'overview.projectName',
              projectDescription: 'overview.projectDescription',
              projectType: 'overview.projectType',
@@ -415,13 +419,12 @@ regSub(sub_ids.rules.newRule.incompatAnswerId, sub_ids.rules.newRule.incompatAns
 regSub(sub_ids.institution.users, sub_ids.institution.users);
 regSub(sub_ids.institution.imagery, sub_ids.institution.imagery);
 
+regSub(sub_ids.invalidSteps, sub_ids.invalidSteps);
+
 regEvent(event_ids.projectDetails, ({ draftDb }, projectDetails) => {
   draftDb[sub_ids.projectDetails] = projectDetails;
 });
 
-regEvent(event_ids.currentStep, ({ draftDb }, currentStep) => {
-  draftDb[sub_ids.currentStep] = currentStep;
-});
 
 regEvent(event_ids.errors, ({ draftDb }, errors) => {
   draftDb[sub_ids.errors] = errors;
@@ -525,6 +528,15 @@ export function buildProject (draftDb, sub_ids) {
             return {...acc, [idx]: val};
           }, {}) };
 }
+
+
+
+regEvent(event_ids.currentStep, ({ draftDb }, currentStep) => {
+  let prevStep = draftDb[sub_ids.currentStep];
+  let validStep = prevStep && validateStep[prevStep].call(this, buildProject(draftDb, sub_ids));
+  validStep && draftDb[sub_ids.invalidSteps].push(prevStep);
+  draftDb[sub_ids.currentStep] = currentStep;
+});
 
 
 regEvent(event_ids.validate, ({ draftDb }, step='wizard') => {

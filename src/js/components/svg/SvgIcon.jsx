@@ -4,6 +4,7 @@ import alertIcon from "./alertIcon.svg";
 import cancelIcon from "./cancelIcon.svg";
 import centerIcon from "./centerIcon.svg";
 import checkIcon from "./checkIcon.svg";
+import checkFilledIcon from "./checkFilledIcon.svg";
 import checkboxIcon from "./checkboxIcon.svg";
 import uncheckedBoxIcon from "./uncheckedBoxIcon.svg";
 import closeIcon from "./closeIcon.svg";
@@ -56,6 +57,7 @@ export const iconMap = {
   cancel: cancelIcon,
   center: centerIcon,
   check: checkIcon,
+  checkFilled: checkFilledIcon,
   checkboxChecked: checkboxIcon,
   checkboxUnchecked: uncheckedBoxIcon,
   close: closeIcon,
