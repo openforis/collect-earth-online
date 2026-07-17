@@ -9,43 +9,11 @@ import { event_ids,  sub_ids } from "../state/projectWizard";
 
 function ImportProjectModal () {
 
-  /*
-/    new project -> new project modal
-/    template project -> template project modal
-!    browse/upload file -> parse and validate file
-    => invalid file -> error modal
-    =>   valid file -> update file name in client state, activate 'upload' button
-    upload button -> send import request
-    => invalid request -> error modal
-    =>   valid request -> populate wizard, set modal null
-   */
-
   const [projectFileName, setProjectFileName] = useState("");
   const [projectFileBase64, setProjectFileBase64] = useState(null);
   const [importErrors, setImportErrors] = useState(null);
 
-  function uploadProjectFile (file) {
-    /*
-      the user has selected a file from the 'Upload Collect Earth Project File' button:
-      parse, validate the file.
-      if valid, enable the 'Upload' onConfirm button and set the filename to display in state
-      if invalid, dispatch error modal with errors.
-    */
-    setImportErrors(null);
-    console.log('validating project file', file.name);
-    readFileAsBase64Url(file, (base64) => {
-      //do some sort of validating
-      
-      setProjectFileName(file.name);
-      setProjectFileBase64(base64);});       
-  }
-
-  const importCollectProject = (fileName, fileb64) => {
-    /*
-      sends request to API to create project. receives error code or project data.
-      handles error codes, dispatches modal
-      handles success codes, dispatches event with data
-     */
+  function importCollectProject (fileName, fileb64) {
     fetch(`/import-ce-project`, {
       method: "POST",
       headers: {
@@ -59,13 +27,23 @@ function ImportProjectModal () {
     })
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
-        console.log('set project details:', data);
         dispatch([event_ids.templateProject, data]);
+        dispatch([event_ids.currentStep, 'review']);
+        dispatch([event_ids.modal, null]);
       })
       .catch((message) => {
         console.log('import collect earth project errors: ', message);        
         setImportErrors([message.statusText]);
       });
+  };
+
+  function uploadProjectFile (file) {
+    setImportErrors(null);
+    readFileAsBase64Url(file, (base64) => {
+      //do some sort of validating
+      setProjectFileName(file.name);
+      setProjectFileBase64(base64);
+    });       
   };
 
   return (
@@ -87,12 +65,11 @@ function ImportProjectModal () {
           {projectFileName ? `File: ${projectFileName}` : 'Upload Collect Earth Project File'}
         <input
           type='file'
-          accept='application/zip'
+          accept='application/cep'
           defaultValue=''
           id='template-project-file'
           style={{ display: 'none'}}
           onChange={(e)=> {
-            console.log('uploading file!', e.target.files[0]);
             const file = e.target.files[0];
             file && uploadProjectFile(file);
           }}
@@ -105,31 +82,21 @@ function ImportProjectModal () {
             {importErrors.map((message) => {
               return (<span > {message} <br/> </span>);
             })}
-
           </div>)}
-        
-
-        {/*
-        <span className="text-label-sm" style={{ color: projectFileName ? '#333' : '#999', fontStyle: !projectFileName ? 'italic' : 'normal' }}>
-          {projectFileName ? `File: ${projectFileName}` : 'No project file selected'}
-        </span> */}
       </div>
     </Modal>
   );
-
 }
 
 function TemplateProjectModal () {
 
-  function setTemplateProject (templateProject) {dispatch([event_ids.templateProject, templateProject]);}
-
   const institutionId = useSubscription([sub_ids.institutionId]);
   const institutionImagery = useSubscription([sub_ids.institution.imagery]);
-
   const projectType = useSubscription([sub_ids.overview.projectType]) || 'regular';
   const [templateProjectId, setTemplateProjectId] = useState(-1);
   const [templateProjects, setTemplateProjects] = useState([]);
 
+  function setTemplateProject (templateProject) {dispatch([event_ids.templateProject, templateProject]);}
   function setUseTemplatePlots (useTemplatePlots) {dispatch([event_ids.overview.useTemplatePlots, useTemplatePlots]);}
   function setDesignSettings (designSettings) {dispatch([event_ids.plots.designSettings, designSettings]);}
   function setImageryId (imageryId) {dispatch([event_ids.imagery.imagery, imageryId]);}

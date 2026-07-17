@@ -345,7 +345,7 @@
   [file-name file-base64]
   (let [file-without-ext (first (clojure.string/split file-name #"\."))
         _                (remove-old-dir file-without-ext)
-        output-dir       (str tmp-dir
+        output-dir       (str tmp-dir 
                               "/ceo-tmp-"
                               file-without-ext
                               "/")
