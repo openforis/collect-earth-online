@@ -213,7 +213,7 @@ function NewProjectModal () {
     templateProject: ['Select from an existing template',
                       'Select a template and prefill all the steps. You can edit and customize it.'],
     importProject: ['Import Collect Earth Project',
-                    'Need Description']};
+                    'Import a project from the Collect Earth desktop application.']};
   const projectSource = useSubscription([sub_ids.projectSource]);
 
   return (
