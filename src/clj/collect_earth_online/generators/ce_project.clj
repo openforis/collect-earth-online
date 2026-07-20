@@ -258,7 +258,7 @@
 (defn import-ce-project
   [{:keys [params]}]
   (let [file-name (:fileName params)
-        file-b64  (:fileb64 params)
+       file-b64  (:fileb64 params)
         saved-file (unzip-project file-name file-b64)
         project-properties (format-project-properties saved-file)
         survey-questions (remove-metadata-questions

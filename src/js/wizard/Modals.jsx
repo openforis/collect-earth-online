@@ -1,22 +1,102 @@
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import React, { useEffect, useState } from "react";
 
+import { readFileAsBase64Url } from '../utils/generalUtils';
 import Modal from "../components/Modal";
 import SvgIcon from "../components/svg/SvgIcon";
 import { event_ids,  sub_ids } from "../state/projectWizard";
 
 
-function TemplateProjectModal () {
+function ImportProjectModal () {
 
-  function setTemplateProject (templateProject) {dispatch([event_ids.templateProject, templateProject]);}
+  const [projectFileName, setProjectFileName] = useState("");
+  const [projectFileBase64, setProjectFileBase64] = useState(null);
+  const [importErrors, setImportErrors] = useState(null);
+
+  function importCollectProject (fileName, fileb64) {
+    fetch(`/import-ce-project`, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fileName,
+        fileb64,
+      }),
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        dispatch([event_ids.templateProject, data]);
+        dispatch([event_ids.currentStep, 'review']);
+        dispatch([event_ids.modal, null]);
+      })
+      .catch((message) => {
+        console.log('import collect earth project errors: ', message);        
+        setImportErrors([message.statusText]);
+      });
+  };
+
+  function uploadProjectFile (file) {
+    setImportErrors(null);
+    readFileAsBase64Url(file, (base64) => {
+      //do some sort of validating
+      setProjectFileName(file.name);
+      setProjectFileBase64(base64);
+    });       
+  };
+
+  return (
+    <Modal
+      title='Upload Collect Earth Project File'
+      confirmText='Upload'
+      closeText='Quit'
+      onConfirm={()=> {importCollectProject(projectFileName, projectFileBase64);}}      
+      onClose={()=>{ dispatch([event_ids.modal, 'newProject']);}}
+      confirmDisabled={projectFileName === ""}
+    >
+      <div>
+        <label
+          className="btn btn-sm filled py-2 px-3 text-nowrap"
+          htmlFor='template-project-file'
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}
+        >
+          <SvgIcon icon='plus' size='0.9rem' />
+          {projectFileName ? `File: ${projectFileName}` : 'Upload Collect Earth Project File'}
+        <input
+          type='file'
+          accept='application/cep'
+          defaultValue=''
+          id='template-project-file'
+          style={{ display: 'none'}}
+          onChange={(e)=> {
+            const file = e.target.files[0];
+            file && uploadProjectFile(file);
+          }}
+        />
+        </label>
+        {importErrors &&
+         (<div style={{border: '1px solid red',
+                       background: 'pink',
+                       color: 'red'}} >
+            {importErrors.map((message) => {
+              return (<span > {message} <br/> </span>);
+            })}
+          </div>)}
+      </div>
+    </Modal>
+  );
+}
+
+function TemplateProjectModal () {
 
   const institutionId = useSubscription([sub_ids.institutionId]);
   const institutionImagery = useSubscription([sub_ids.institution.imagery]);
-
   const projectType = useSubscription([sub_ids.overview.projectType]) || 'regular';
   const [templateProjectId, setTemplateProjectId] = useState(-1);
   const [templateProjects, setTemplateProjects] = useState([]);
 
+  function setTemplateProject (templateProject) {dispatch([event_ids.templateProject, templateProject]);}
   function setUseTemplatePlots (useTemplatePlots) {dispatch([event_ids.overview.useTemplatePlots, useTemplatePlots]);}
   function setDesignSettings (designSettings) {dispatch([event_ids.plots.designSettings, designSettings]);}
   function setImageryId (imageryId) {dispatch([event_ids.imagery.imagery, imageryId]);}
@@ -116,6 +196,9 @@ function handleNewProject (projectSource) {
   case 'templateProject' : {
     dispatch ([event_ids.modal, 'template']);
   } break;
+  case 'importProject' : {
+    dispatch([event_ids.modal, 'import']);
+  } break;
   default: {
     dispatch([event_ids.modal, null]);
     dispatch([event_ids.currentStep, 'overview']);
@@ -130,7 +213,7 @@ function NewProjectModal () {
     templateProject: ['Select from an existing template',
                       'Select a template and prefill all the steps. You can edit and customize it.'],
     importProject: ['Import Collect Earth Project',
-                    'Need Description']};
+                    'Import a project from the Collect Earth desktop application.']};
   const projectSource = useSubscription([sub_ids.projectSource]);
 
   return (
@@ -139,7 +222,7 @@ function NewProjectModal () {
       closeText=''
       confirmText='Get Started'
       onConfirm={()=>{handleNewProject(projectSource);}}
-      onClose={()=>{dispatch([event_ids.modal, null]);}}
+      onClose={()=>{dispatch([event_ids.modal, 'newProject']);}}
       confirmDisabled={projectSource === null}>
       <div
         className="inputs">
@@ -178,7 +261,7 @@ function SubmitProjectModal () {
       closeText='Cancel'
       confirmText='Publish Project'
       onConfirm={()=>{dispatch ([event_ids.submitForm]); }}
-      confirmDisabled={confirmDisabled()}
+      //confirmDisabled={confirmDisabled()}
       onClose={()=>{dispatch([event_ids.modal, null]);}}>
       <div>
         <p >You are about to publish this project. Once published it will be added to your institution. You’ll still be able to make changes later from the project page within your institution.</p>
@@ -284,6 +367,7 @@ export default function ProjectWizardModal () {
   
   switch (modal) {
   case 'template'    : return (<TemplateProjectModal/>);
+  case 'import'      : return (<ImportProjectModal/>);
   case 'newProject'  : return (<NewProjectModal/>);
   case 'review'      : return (<SubmitProjectModal/>);
   case 'success'     : return (<SuccessModal/>);
