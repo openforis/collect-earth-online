@@ -71,7 +71,7 @@
     width: 25px;
     height: 25px;
     border-radius: 50%;
-    background: var(--lightgreen);
+    background: #3D7F7A;
     cursor: pointer;
 }
 .slider::-moz-range-thumb {
