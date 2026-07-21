@@ -138,9 +138,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
       fetch(`/get-institution-users?institutionId=${institutionId}`)
         .then((r) => (r.ok ? r.json() : Promise.reject(r)))
         .then((data) => {
-          const users = data.filter((u) => u.institutionRole !== "pending");
-          const usersData = state.isAdmin ? data : users;
-          setUsersList(usersData);
+          setUsersList(data);
         })
         .catch(() => {
           setUsersList([]);
