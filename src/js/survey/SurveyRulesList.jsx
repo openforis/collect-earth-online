@@ -18,10 +18,7 @@ export default function SurveyRulesList({ inDesignMode}) {
   return(
     <div style={{padding: '1rem'}}>
       <div className="survey-rules-header">
-        <p>questions to be answered during collection  <span style={
-          {fontWeight: 'normal',
-           color: 'red'}}>*</span></p></div>
-    <p>Descriptive Text Here. Just Placeholder: This is a list of all institution projects. The color around the name shows its progress. Red indicates that it has no plots collected.</p>
+        <p> Survey Rules </p></div>
     {(surveyRules || []).length > 0 ? (             
           <div className='survey-rules-card'>            
             {surveyRules.map((rule) => (
