@@ -30,11 +30,6 @@ export const projectOverviewAtom = atom (
    plotConfidence: false,
    autoGeo: false}});
 
-export const projectImageryListAtom = atom([]);
-
-export const boundaryAtom = atom({});
-export const plotsAtom = atom({});
-export const samplesAtom = atom([]);
 
 export const rulesAtom = atom([]);
 export const previewSelectedSampleIdAtom = atom(1);
@@ -68,10 +63,9 @@ const projectWizardDb = {
   'overview.projectOptions.autoGeo': true,
   'overview.projectOptions.plotSimilarity': false,
   'overview.useTemplatePlots': false,
-  imagery: [],
-  imageryList: [],
+  'imagery.imageryList': [],
   'imagery.previewId': '',
-  institutionImagery: [],
+  'institutionImagery': [],
   // boundary
   'boundary.generationMethod': 'manual',
   'boundary.aoiFeatures': [],
@@ -167,8 +161,7 @@ export const event_ids = {
              }},
   projectDetails: 'projectDetails',
   imagery: {
-    imagery : 'imagery',
-    imageryList: 'imageryList',
+    imageryList: 'imagery.imageryList',
     previewId: 'imagery.previewId'
   },
   boundary: {
@@ -269,8 +262,7 @@ export const sub_ids = {
              }},
   projectDetails: 'projectDetails',
   imagery: {
-    imagery : 'imagery',
-    imageryList: 'imageryList',
+    imageryList: 'imagery.imageryList',
     previewId: 'imagery.previewId'},
   boundary: {
     generationMethod: 'boundary.generationMethod',
@@ -358,7 +350,7 @@ regSub(sub_ids.overview.useTemplateWidgets, sub_ids.overview.useTemplateWidgets)
 regSub(sub_ids.overview.projectOptions.plotSimilarity, sub_ids.overview.projectOptions.plotSimilarity);
 
 //imagery
-regSub(sub_ids.imagery.imagery, sub_ids.imagery.imagery);
+regSub(sub_ids.imagery.imageryList, sub_ids.imagery.imageryList);
 regSub(sub_ids.imagery.previewId, sub_ids.imagery.imageryId);
 
 // boundary
@@ -467,7 +459,7 @@ export function buildProject (draftDb, sub_ids) {
   const name = current(draftDb[sub_ids.overview.projectName]);
   const description= current(draftDb[sub_ids.overview.projectDescription]);
   const privacyLevel = current(draftDb[sub_ids.overview.visibility]);
-  const imageryId = current(draftDb[sub_ids.imagery.imagery])[0];
+  const imageryId = current(draftDb[sub_ids.imagery.imageryList])[0];
   const aoiFeatures = current(draftDb[sub_ids.boundary.aoiFeatures]);
   const numPlots = current(draftDb[sub_ids.plots.numPlots]);
   const designSettings = current(draftDb[sub_ids.plots.designSettings]);
@@ -528,8 +520,6 @@ export function buildProject (draftDb, sub_ids) {
             return {...acc, [idx]: val};
           }, {}) };
 }
-
-
 
 regEvent(event_ids.currentStep, ({ draftDb }, currentStep) => {
   let prevStep = draftDb[sub_ids.currentStep];
@@ -874,10 +864,6 @@ regEvent(event_ids.overview.useTemplatePlots, ({ draftDb }, useTemplatePlots)=>{
 
 regEvent(event_ids.overview.projectOptions.plotSimilarity, ({ draftDb }) => {
   draftDb[sub_ids.overview.projectOptions.plotSimilarity] = !draftDb[sub_ids.overview.projectOptions.plotSimilarity];
-});
-
-regEvent(event_ids.imagery.imagery, ({ draftDb }, imageryIdList) => {
-  draftDb[sub_ids.imagery.imagery] = imageryIdList;
 });
 
 regEvent(event_ids.imagery.imageryList, ({ draftDb }, imageryList ) => {

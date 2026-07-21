@@ -53,7 +53,7 @@ export default function ReviewStep ({imageryList = []}) {
 
   function ImageryCard () {
     const initialized = useRef(false);
-    const selectedImagery = useSubscription([sub_ids.imagery.imagery]);
+    const selectedImagery = useSubscription([sub_ids.imagery.imageryList]);
     const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
     const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
     function setPreviewId (previewId) {dispatch([event_ids.imagery.previewId]);}

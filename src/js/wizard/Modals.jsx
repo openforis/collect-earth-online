@@ -343,19 +343,20 @@ function ErrorModal () {
   );
 };
 
-
 function ExitModal () {
+  const institutionId = useSubscription([sub_ids.institutionId]);
   return (
     <Modal
       title='Exit "Add a New Project" Workflow?'
       closeText='Exit Workflow'
       confirmText='Stay'
       onConfirm={()=>{
-        dispatch([event_ids.saveDraft]);
         dispatch([event_ids.modal, null]);
       }}
-      onClose={()=>{dispatch([event_ids.modal, null]);}}>
-      <p > Are you sure you want to exit “Create New Scenario”? Saved steps will be kept in draft form, any steps you haven’t saved will be lost.</p>
+      onClose={()=>{
+        window.location.href = `/review-institution?institutionId=${institutionId}`;
+      }}>
+      <p > Are you sure you want to exit Project Creation? </p>
     </Modal>
   );
 }

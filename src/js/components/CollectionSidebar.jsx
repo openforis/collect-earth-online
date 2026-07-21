@@ -825,9 +825,6 @@ export const ImageryOptions = () => {
 
       {currentImagery.id && (
         <div className="sq-field">
-          <label htmlFor="base-map-source" className="sq-label">
-            Base imagery
-          </label>
           <select
             className="sq-select"
             id="base-map-source"

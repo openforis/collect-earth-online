@@ -15,9 +15,9 @@ export const ImageryStep = ({ imageryList = [] }) => {
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
 
   function setSelectedIds (newIds) {
-    dispatch([event_ids.imagery.imagery, newIds]);
+    dispatch([event_ids.imagery.imageryList, newIds]);
   }
-  const selectedIds = useSubscription([sub_ids.imagery.imagery]) || [];
+  const selectedIds = useSubscription([sub_ids.imagery.imageryList]) || [];
 
   useEffect(() => {
     setMapLibrary(imageryList);
