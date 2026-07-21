@@ -129,6 +129,7 @@ export const UsersTab = ({
         <BulkActions
           isAdmin={isAdmin}
           showDownload={false}
+          buttonText={"Change Role"}
           visibilityOptions={["admin", "member"]}
           onChangeVisibility={editUsersBulk}
           onDelete={handleRemove}

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 export const BulkActions = ({
   isAdmin = false,
   showDownload = false,
+  buttonText = "Change Visibility",
   onChangeVisibility,
   onDownload,
   onDelete,
@@ -41,7 +42,7 @@ export const BulkActions = ({
           }`}
           onClick={() => setShowVisibilityMenu((v) => !v)}
         >
-          Change Visibility ▾
+          {buttonText} ▾
         </button>
 
         {showVisibilityMenu && (
