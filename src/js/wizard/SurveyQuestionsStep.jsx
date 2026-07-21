@@ -19,10 +19,30 @@ export const QuestionCard = ({
   if (!question) return null;
 
   const children = Object.entries(questions).filter(
-    ([id, q]) => q.parentQuestionId === parseInt(qId)
+    ([id, q]) => parseInt(q.parentQuestionId, 10) === parseInt(qId, 10)
   );
 
   const isInputType = question.componentType === 'input';
+
+  const getHierarchyString = (currentId) => {
+    const buildHierarchy = (id, acc) => {
+      const q = questions[id];
+      if (!q) return acc;
+
+      if (parseInt(q.parentQuestionId, 10) === -1) {
+        return [q.cardOrder || id, ...acc];
+      }
+
+      const siblings = Object.keys(questions).filter(
+        (k) => parseInt(questions[k].parentQuestionId, 10) === parseInt(q.parentQuestionId, 10)
+      );
+      const order = siblings.indexOf(id.toString()) + 1;
+
+      return buildHierarchy(q.parentQuestionId, [order, ...acc]);
+    };
+
+    return buildHierarchy(currentId, []).join('.');
+  };
 
   const updateQuestion = (field, value) => {    
     setQuestions({
@@ -75,94 +95,34 @@ export const QuestionCard = ({
   return (
     <div
       className="question-node-wrapper"
-      style={{
-        marginLeft: depth > 0 ? '40px' : '0',
-        position: 'relative',
-        marginTop: '20px',
-      }}
+      style={{ marginLeft: depth > 0 ? '40px' : '0' }}
     >
-      {depth > 0 && (
-        <div
-          style={{
-            position: 'absolute',
-            left: '-25px',
-            top: '-20px',
-            bottom: '50%',
-            width: '25px',
-            borderLeft: '2px solid #cbd5e1',
-            borderBottom: '2px solid #cbd5e1',
-            borderBottomLeftRadius: '12px',
-            zIndex: 0,
-          }}
-        />
-      )}
+      {depth > 0 && <div className="question-branch-line" />}
 
-      <div
-        className="card">
+      <div className="card">
         <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '10px 15px',
-            width: '100%',
-            marginBottom: isCollapsed ? '0' : '15px',
-          }}
+          className="question-card-header"
+          style={{ marginBottom: isCollapsed ? '0' : '15px' }}
         >
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div className="question-header-left">
             <button
-              className="btn-icon-sm"
-              style={{
-                border: '1px solid #A0CAC6',
-                background: '#fff',
-                borderRadius: '4px',
-                width: '35px',
-                height: '35px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer'
-              }}
+              className="btn-icon-sm question-action-btn"
               onClick={() => onMove(qId, -1)}
             >
               <SvgIcon icon="upCaretNew" color="#2d6f74" size="2rem" />
             </button>
             <button
-              className="btn-icon-sm"
-              style={{
-                border: '1px solid #A0CAC6',
-                background: '#fff',
-                borderRadius: '4px',
-                width: '35px',
-                height: '35px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer'
-              }}
+              className="btn-icon-sm question-action-btn"
               onClick={() => onMove(qId, 1)}
             >
               <SvgIcon icon="downCaretNew" color="#2d6f74" size="2rem" />
             </button>
-            <span
-              style={{
-                fontWeight: 'bold',
-                fontSize: '0.85rem',
-                color: '#555',
-                textTransform: 'uppercase',
-                marginLeft: '8px'
-              }}
-            >
-              Survey Question {question.cardOrder || qId}
+            <span className="question-header-title">
+              {getHierarchyString(qId)}. {question.question}
             </span>
           </div>
           <button
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '5px'
-            }}
+            className="question-collapse-btn"
             onClick={() => setIsCollapsed(!isCollapsed)}
           >
             <SvgIcon
@@ -172,10 +132,11 @@ export const QuestionCard = ({
             />
           </button>
         </div>
+        
         {!isCollapsed && (
-          <div style={{ padding: '0 15px 15px 15px' }}>
+          <div className="question-card-body">
             <label className="text-label-sm">
-              Question Text <span style={{ color: 'red' }}>*</span>
+              Question Text <span className="question-required-asterisk">*</span>
             </label>
             <input
               className="text-input"
@@ -192,48 +153,33 @@ export const QuestionCard = ({
               placeholder="Enter Label"
               onChange={(e) => updateQuestion('questionLabel', e.target.value)}
             />
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                margin: '15px 0',
-              }}
-            >
-              <span style={{ fontSize: '0.85rem' }}>
+            
+            <div className="question-metadata-row">
+              <span>
                 Component Type: <strong>{question.componentType} - {question.dataType || 'text'}</strong>
               </span>
             </div>
-            <div style={{ width: '100%', marginBottom: '10px' }}>
-              <div style={{ display: 'flex', gap: '20px', marginBottom: '5px' }}>
-                <label className="text-label-sm" style={{ width: '40px' }}>Color *</label>
-                <label className="text-label-sm" style={{ flex: 1, display: 'flex', justifyContent: 'space-between' }}>
+            
+            <div className="question-answers-container">
+              <div className="question-answers-header-row">
+                <label className="text-label-sm question-color-label">Color *</label>
+                <label className="text-label-sm question-answer-label-group">
                   <span>Answer Text *</span>
-                  <span style={{ marginRight: '30px' }}>Hide Answer</span>
+                  <span className="question-hide-answer-label">Hide Answer</span>
                 </label>
               </div>
+              
               {Object.entries(question.answers).map(([aId, a]) => (
-                <div
-                  key={aId}
-                  style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}
-                >
+                <div key={aId} className="question-answer-row">
                   <input
                     type="color"
+                    className="question-color-picker"
                     value={a.color}
-                    style={{
-                      width: '40px',
-                      height: '36px',
-                      border: '1px solid #ccc',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      padding: '2px',
-                    }}
                     onChange={(e) => updateAnswer(aId, 'color', e.target.value)}
                   />
                   <input
                     type={question.dataType === 'number' ? 'number' : 'text'}
-                    className="text-input"
-                    style={{ margin: 0, flex: 1 }}
+                    className="text-input question-answer-input"
                     value={a.answer}
                     placeholder={`Enter Answer ${question.dataType === 'number' ? 'Number' : 'Text'}`}
                     onKeyDown={(e) => {
@@ -258,8 +204,8 @@ export const QuestionCard = ({
                   />
                   {(!isInputType && Object.keys(question.answers).length > 1) && (
                     <div
+                      className="question-delete-icon"
                       onClick={() => removeAnswer(aId)}
-                      style={{ cursor: 'pointer', color: '#f61313' }}
                     >
                       <SvgIcon icon="trash" size="1.1rem" />
                     </div>
@@ -275,8 +221,8 @@ export const QuestionCard = ({
                 </button>
               )}
 
-              <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                <label className="labeled-input" style={{ cursor: 'pointer' }}>
+              <div className="question-footer-actions">
+                <label className="labeled-input question-hide-toggle">
                   <input
                     type="checkbox"
                     checked={question.hideQuestion || false}
