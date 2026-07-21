@@ -25,24 +25,24 @@ export const QuestionCard = ({
   const isInputType = question.componentType === 'input';
 
   const updateQuestion = (field, value) => {    
-    setQuestions((prev) => ({
-      ...prev,
-      [qId]: { ...prev[qId], [field]: value },
-    }));
+    setQuestions({
+      ...questions,
+      [qId]: { ...questions[qId], [field]: value },
+    });
     dispatch([event_ids.questions.updateQuestion, qId, field, value]);
   };
 
   const updateAnswer = (aId, field, value) => {
-    setQuestions((prev) => ({
-      ...prev,
+    setQuestions({
+      ...questions,
       [qId]: {
-        ...prev[qId],
+        ...questions[qId],
         answers: {
-          ...prev[qId].answers,
-          [aId]: { ...prev[qId].answers[aId], [field]: value },
+          ...questions[qId].answers,
+          [aId]: { ...questions[qId].answers[aId], [field]: value },
         },
       },
-    }));
+    });
     dispatch([event_ids.questions.updateAnswer, qId, aId, field, value]);
   };
 

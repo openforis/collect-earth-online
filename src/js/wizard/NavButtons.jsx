@@ -55,22 +55,23 @@ export default function NavButtons () {
 export function ProjectWizardNavigator () {
   const currentStep = useSubscription([sub_ids.currentStep]);
   const invalidSteps = useSubscription([sub_ids.invalidSteps]);
-  function navText () {
+
+  function navWidth () {
     if (screen.width > 1426) {
-      return "- -- -";
+      return "40px";
     } else if (screen.width > 950) {
-      return "--";
+      return "20px";
     } else {
-      return "-";
+      return "10px";
     }    
   }
-  
+
   return (
     <div
       className="project-wizard-navigator">
-      {projectSteps.map(({id, label}, index)=>{        
+      {projectSteps.map(({id, label}, index)=>{
         return(
-          <>                         
+          <>
             <div
               key={id}
               style={{fontWeight: currentStep === id ? 'bold' : 'normal',
@@ -80,16 +81,28 @@ export function ProjectWizardNavigator () {
             >
               {((projectSteps.map(({id})=>id).indexOf(currentStep) > index)
                 && !invalidSteps.includes(id)) ?                
-               (<SvgIcon icon='checkFilled' size='1.2rem' style={{marginTop: '.2rem'}}/>) :
+                (<SvgIcon icon='checkFilled' size='1.2rem' style={{marginTop: '.2rem'}}/>) :
                 (<span className={currentStep === id && "selected"}
-                 >{index + 1}</span>)}
-              
-          <label style={{lineHeight: 1.1}}>{label}</label>
+                >{index + 1}</span>)}
+
+              <label style={{lineHeight: 1.1}}>{label}</label>
             </div>
-            {index + 1 < projectSteps.length && (<div className="nav-separator">{
-              navText()
-            }</div>)}
+            {index + 1 < projectSteps.length && (
+              <div
+                className="nav-separator"
+                style={{
+                  width: navWidth(),
+                  height: '2px',
+                  backgroundColor: '#1F7067',
+                  alignSelf: 'center',
+                  margin: '0 12px',
+                  display: 'inline-block',
+                  verticalAlign: 'middle'
+                }}
+              />
+            )}
           </>);
-      })}              
-    </div>);
+      })}
+    </div>
+  );
 };
