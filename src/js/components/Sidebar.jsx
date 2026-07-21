@@ -60,6 +60,7 @@ export const SidebarCard = ({
            /* justifyContent: "space-between", */
            alignItems: "center",
            cursor: collapsible ? "pointer" : "default",
+           paddingTop: 0
          }}
          onClick={collapsible ? () => setOpen(!open) : undefined}
        >
