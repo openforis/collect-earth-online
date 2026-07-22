@@ -271,6 +271,24 @@ function SubmitProjectModal () {
   );
 };
 
+function DraftSuccessModal () {
+  const institutionId = useSubscription([sub_ids.institutionId]);
+  return (
+    <Modal
+      title='Draft Success'
+      closeText='Return to Institution'
+      confirmText='Return to Wizard'
+      onConfirm={()=>{dispatch([event_ids.modal, null]);}}
+      onClose={()=>{window.location=`/review-institution?institutionId=${institutionId}`;}}
+    >
+      <div>
+        <p > You have Successfully saved your Draft Project.</p>
+        <p > Click below to return to institution dashboard, or continue editing your project. </p>
+      </div>
+    </Modal>
+  );
+}
+
 function SuccessModal () {  
   return (
     <Modal
@@ -373,7 +391,9 @@ export default function ProjectWizardModal () {
   case 'review'      : return (<SubmitProjectModal/>);
   case 'success'     : return (<SuccessModal/>);
   case 'error'       : return (<ErrorModal/>);
+  case 'draft-success' : return (<DraftSuccessModal/>);
   case 'exit'        : return (<ExitModal/>);
+    
   default : break;
   }
 };

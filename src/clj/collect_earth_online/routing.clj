@@ -139,6 +139,9 @@
    [:get "/delete-project-draft"]            {:handler     (validate projects/delete-project-draft!)
                                               :auth-type   :user
                                               :auth-action :block}
+   [:post "/delete-draft-projects-bulk"]     {:handler     projects/delete-draft-projects-bulk!
+                                              :auth-tupe   :admin
+                                              :auth-action :block}
    [:post "/delete-projects-bulk"]           {:handler     (validate projects/delete-projects-bulk!)
                                               :auth-type   :admin
                                               :auth-action :block}

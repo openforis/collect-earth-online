@@ -1385,6 +1385,18 @@ RETURNS integer AS $$
     RETURNING project_draft_uid
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION delete_project_drafts_bulk(_institution_id integer, _project_ids_text TEXT)
+RETURNS VOID AS $$
+DECLARE
+    project_ids INTEGER[];
+    deleted_ids INTEGER[];
+BEGIN
+    DELETE FROM project_drafts    
+    WHERE project_draft_uid = ANY(string_to_array(_project_ids_text, ',')::INTEGER[]) AND institution_rid = _institution_id;    
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- Delete projects in bulk
 CREATE OR REPLACE FUNCTION delete_projects_bulk(_institution_id integer, _project_ids_text TEXT)
 RETURNS VOID AS $$

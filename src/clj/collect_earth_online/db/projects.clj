@@ -1289,6 +1289,18 @@
           (when-not causes (log (ex-message e)))
           (data-response "Internal server error." {:status 500}))))))
 
+(defn delete-draft-projects-bulk!
+  [{:keys [params]}]
+  (let [project-ids (clojure.string/join "," (:projectIds params))
+        institution-id (tc/val->int (:institutionId params))]
+    (try
+      (let [result (call-sql "delete_project_drafts_bulk" institution-id project-ids)]
+        (data-response {:message "Projects deleted"
+                        :project-ids project-ids}))
+      (catch Exception e
+        (println e)
+        (data-response "Internal server error." {:status 500})))))
+
 (defn delete-projects-bulk!
   [{:keys [params]}]
   (let [project-ids (clojure.string/join "," (:projectIds params))

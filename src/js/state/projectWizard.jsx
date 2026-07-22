@@ -703,7 +703,9 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
       .then((data) => {
         console.log('create project draft request result', data);
         if (data[0] && Number.isInteger(data[1].projectDraftId)) {
-          dispatch([event_ids.successReponse, data[1]]);
+          console.log('dispatch success response');
+          dispatch([event_ids.modal, 'draft-success']);
+          //dispatch([event_ids.successResponse, data[1]]);
           return Promise.resolve();
         } else {          
           let errs = Object.entries(data[1].params).map(([field, message])=>{return (field + "; " + message);});
@@ -737,6 +739,7 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
+        console.log('resolving project draft data');
         dispatch([event_ids.successResponse, ['Project Saved', data]]);
         return Promise.resolve();
       })
