@@ -36,7 +36,7 @@
   padding: 16px;
   border-radius: 6px;
   border: 1px solid #ddd;
-  font-family: sans-serif;
+  font-family: 'Public Sans', sans-serif;
 }
 
 .sidebar-header {
@@ -198,7 +198,7 @@
   border: 1px solid #A4AAE0;
   border-radius: 8px;
   padding: 1rem;
-  font-family: sans-serif;
+  font-family: 'Public Sans', sans-serif;
 }
 
 .sidebar-info-button {

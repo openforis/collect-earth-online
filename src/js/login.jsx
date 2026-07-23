@@ -39,7 +39,7 @@ export function Login ({returnurl}) {
            {loginAtom.modal.alert.alertMessage}
          </Modal>}
 
-        <div className="card card-lightgreen" style={{top: '3rem'}}>
+        <div className="card card-darkgreen" style={{top: '3rem'}}>
           <div className="card-header card-header-lightgreen">Sign into your account</div>
           <div className="card-body">
             <form
@@ -78,7 +78,7 @@ export function Login ({returnurl}) {
               </div>
               <div className="d-flex justify-content-between align-items-center">
                 <a href="/password-request">Forgot your password?</a>
-                <button className="btn btn-lightgreen" type="submit">
+                <button className="btn btn-darkgreen" type="submit">
                   Login
                 </button>
               </div>
@@ -88,7 +88,7 @@ export function Login ({returnurl}) {
           <div className="card-body">
             <div className="d-flex justify-content-end">
               <input
-                className="btn btn-lightgreen"
+                className="btn btn-darkgreen"
                 name="register"
                 onClick={() => window.location.assign("/register")}
                 type="button"

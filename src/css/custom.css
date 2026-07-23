@@ -1,10 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap');
+
 /**********/
 /* Colors */
 /**********/
 :root {
     --lightgreen: #31bab0;
     --lightgreen-hover: #279b93;
-    --darkgreen: #0c4d48;
+    --darkgreen: #3d7f7a;
     --yellow: #fccf07;
     --yellow-hover: #ecbc0d;
     --lightgray: #eceeef;
@@ -21,7 +23,7 @@
     border-collapse: collapse;
     border: 2px solid rgb(200, 200, 200);
     letter-spacing: 1px;
-    font-family: sans-serif;
+    font-family: 'Public Sans', sans-serif;
     font-size: 0.8rem;
     padding: 5px;
     text-align: center;
@@ -110,30 +112,13 @@
     pointer-events: none;
 }
 
-/*********/
-/* Fonts */
-/*********/
-@font-face {
-    font-family: "CaviarDreams";
-    src: url("/fonts/CaviarDreams.eot");
-    src: local("☺"), url("/fonts/CaviarDreams.woff") format("woff"),
-	 url("/fonts/CaviarDreams.ttf") format("truetype"), url("/fonts/CaviarDreams.svg") format("svg");
-}
-@font-face {
-    font-family: "CaviarDreams_Bold";
-    src: url("/fonts/CaviarDreams_Bold.eot");
-    src: local("☺"), url("/fonts/CaviarDreams_Bold.woff") format("woff"),
-	 url("/fonts/CaviarDreams_Bold.ttf") format("truetype"),
-	 url("/fonts/CaviarDreams_Bold.svg") format("svg");
-}
-
 /**************/
 /* Typography */
 /**************/
 h1,
 h2,
 h3 {
-    font-family: "CaviarDreams";
+    font-family: 'Public Sans', sans-serif;
 }
 h1,
 h2 {
@@ -213,6 +198,18 @@ h4 {
     background-color: var(--lightgreen-hover);
     color: white;
 }
+.btn-darkgreen {
+    background-color: var(--darkgreen);
+    color: white;
+    -webkit-transition: background-color 50ms linear;
+    -ms-transition: background-color 50ms linear;
+    transition: background-color 50ms linear;
+}
+.btn-darkgreen:hover {
+    background-color: var(--darkgreen);
+    color: white;
+}
+
 .btn-red {
     background-color: #c42121;
     color: white;
@@ -238,6 +235,22 @@ h4 {
     background-color: var(--lightgreen);
     border-color: var(--lightgreen);
 }
+
+.btn-outline-darkgreen {
+    color: var(--darkgreen);
+    background-color: white;
+    background-image: none;
+    border-color: var(--darkgreen);
+    -webkit-transition: background-color 50ms linear;
+    -ms-transition: background-color 50ms linear;
+    transition: background-color 50ms linear;
+}
+.btn-outline-darkgreen:hover {
+    color: #ffff;
+    background-color: var(--darkgreen);
+    border-color: var(--darkgreen);
+}
+
 .btn-outline-lightgray {
     color: black;
     background-color: white;
@@ -334,12 +347,19 @@ a:hover {
     font-size: 1rem;
     border-color: var(--lightgreen);
 }
+
+.card-darkgreen {
+    width: 25rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    border-color: var(--darkgreen);
+}
+
 .card-header-lightgreen {
     color: white;
-    background-color: var(--lightgreen);
+    background-color: var(--darkgreen);
     text-align: center;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-		 sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     font-size: 1.1rem;
     font-weight: 500;
 }
@@ -600,7 +620,7 @@ a.ol-popup-closer.close {
 }
 .ol-overlay-container .cTitle h1 {
     color: white;
-    font-family: inherit;
+    font-family: 'Public Sans', sans-serif;
     font-size: 1rem;
     padding: 0.6rem;
     margin-bottom: 0;
@@ -625,11 +645,10 @@ a.ol-popup-closer.close {
 /***********************/
 h2.header {
     color: white;
-    background: var(--lightgreen);
+    background: var(--darkgreen);
     margin: 0 -15px 10px -15px;
     padding: 1rem;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-		 sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-family: 'Public Sans', sans-serif;
     font-size: 1.1rem;
     font-weight: 500;
 }
@@ -651,8 +670,7 @@ h2.header {
 }
 .modal-title {
     font-size: 1rem;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-		 sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-family: 'Public Sans', sans-serif;
     color: black;
 }
 .modal-footer {
@@ -874,6 +892,7 @@ input:checked + .switch-slider:before {
 
 body {
     /* margin-left: 1rem; */
+    font-family: 'Public Sans', sans-serif;
     margin-top: 60px;
     overflow-x: hidden;
 }

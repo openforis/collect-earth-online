@@ -69,7 +69,7 @@ class CreateInstitution extends React.Component {
 
   renderButtonGroup = () => (
     <input
-      className="btn btn-outline-lightgreen btn-sm btn-block"
+      className="btn btn-outline-darkgreen btn-sm btn-block"
       id="create-institution"
       onClick={this.createInstitution}
       type="button"

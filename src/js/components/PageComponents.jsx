@@ -20,7 +20,7 @@ export function LogOutButton({ userName, uri }) {
 
   return loggedOut ? (
     <button
-      className="btn btn-lightgreen btn-sm"
+      className="btn btn-darkgreen btn-sm"
       onClick={() => window.location.assign("/login?returnurl=" + encodeURIComponent(fullUri))}
       type="button"
     >
