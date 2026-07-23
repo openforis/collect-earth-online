@@ -154,6 +154,31 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
     }
   };
 
+  function deleteDraftProjects (projectIds) {
+    confirm("Do you REALLY want to delete ALL selected project drafts? This operation cannot be undone.") && fetch(`/delete-draft-projects-bulk?institutionId=${institutionId}`, {
+      method: "POST",
+      body: JSON.stringify({ projectIds }),
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    }).then((response) => {
+      if (response.ok) {
+        getProjectList();
+        showAlert({
+          title: "Project Info",
+          body: "Selected project draftss have been deleted.",
+        });
+      } else {
+        console.error(response);
+        showAlert({
+          title: "Project Info Error",
+          body: "Error deleting project drafts. See console for details.",
+        });
+      }
+    }); 
+  };
+
   const deleteProjectsBulk = (projectIds) => {
     if (confirm("Do you REALLY want to delete ALL selected projects? This operation cannot be undone.")) {
       fetch(`/delete-projects-bulk?institutionId=${institutionId}`, {
@@ -421,7 +446,9 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
         <ProjectsTab
           institutionId={institutionId}
           projectList={state.projectList}
+          projectDrafts={state.draftProjects}
           isAdmin={state.isAdmin}
+          deleteDraftProjects={deleteDraftProjects}
           deleteProjectsBulk={deleteProjectsBulk}
           editProjectsBulk={editProjectsBulk}
           downloadProjectsBulk={downloadProjectsBulk}

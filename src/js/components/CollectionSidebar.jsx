@@ -207,6 +207,18 @@ export const NewPlotNavigation = ({userEmail}) => {
     };
     
     return (
+      <>
+      <div
+        className="modal-spoofer"
+        onClick={()=>{setAppState((s) => ({... s, showInfoModal: !s.showInfoModal}));}}
+        style={{backgroundColor: 'red',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                opacity: 0,
+                width: '100vw',
+                height: '100vh'}}>
+      </div>
       <div
         style={{
           position: "absolute", 
@@ -260,7 +272,8 @@ export const NewPlotNavigation = ({userEmail}) => {
              </div>
            </>}
         </SidebarCard>
-      </div>);};
+      </div>
+    </>);};
 
   return (
     <SidebarCard      

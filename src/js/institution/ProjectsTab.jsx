@@ -2,17 +2,20 @@ import React, { useMemo, useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import SvgIcon from "../components/svg/SvgIcon";
 import { BulkActions } from "../components/BulkActions";
+import { getNextInSequence, } from "../utils/sequence";
 
 import '../../css/institution.css';
 
 export const ProjectsTab = ({
   institutionId,
   projectList = [],
+  projectDrafts = [],
   isAdmin,
-  deleteProjectsBulk,
+  deleteDraftProjects,
+  deleteProjectsBulk,  
   editProjectsBulk,
   downloadProjectsBulk,
-}) => {
+}) => {  
   const [selectedRows, setSelectedRows] = useState([]);
   const [filterText, setFilterText] = useState("");
   const visibilityOptions = [
@@ -23,16 +26,19 @@ export const ProjectsTab = ({
   ];
   
   const filteredProjects = useMemo(() => {
+    const idOffset =  getNextInSequence(projectList.map((e)=>e.id));
     const lower = filterText.toLowerCase();
-    return projectList.filter((p) => p.name?.toLowerCase().includes(lower));
-  }, [projectList, filterText]);
+    return projectList.concat(projectDrafts.map((p)=>{return {... p, isDraft: true,
+                                                              draftId: p.id,
+                                                              id: (Number(p.id) + idOffset)};}))
+      .filter((p) => p.name?.toLowerCase().includes(lower));
+  }, [projectList, projectDrafts, filterText]);
 
   const columns = useMemo(
     () => [
-      
       {
         name: "Visibility",
-        selector: (row) => row.privacyLevel || "—",
+        selector: (row) => row.isDraft ? 'draft' : row.privacyLevel || "—",
         sortable: true,
         grow: 0.8,
       },
@@ -88,7 +94,7 @@ export const ProjectsTab = ({
       },
       {
         name: "Publication",
-        selector: (row) => row.availability ?? "Unpublished",
+        selector: (row) => row.isDraft ? 'draft' : row.availability ?? "Unpublished",
         sortable: true,
       },
       
@@ -99,19 +105,20 @@ export const ProjectsTab = ({
         cell: (row)=> <div
                         className="edit-button"
                         onClick={()=> {
-			  window.open(`/review-project?projectId=${row.id}&institutionId=${institutionId}`);
+                          window.location.assign(`project-wizard?draftId=${row.id}&institutionId=${institutionId}`);
 		        }}
         >
                         <SvgIcon icon="edit" size="1.2rem"/>
                       </div>
       },
-      {cell: (row)=> <input
-                       className="btn btn-outline-lightgreen btn-sm w-100"
-                       onClick={() => window.open(`/collection?projectId=${row.id}&institutionId=${institutionId}`)
-                               }
-                       type="button"
-                       value="Collect"
-                     />}
+      {cell: (row)=> !row.isDraft &&
+       <input
+            className="btn btn-outline-lightgreen btn-sm w-100"
+            onClick={() => window.open(`/collection?projectId=${row.id}&institutionId=${institutionId}`)
+                    }
+            type="button"
+            value="Collect"
+          />}
     ],
     [isAdmin]
   );
@@ -133,8 +140,14 @@ export const ProjectsTab = ({
   };
 
   const handleDelete = () => {
+    
+    const selectedProjects = selectedRows.map((r) => !r.isDraft && r.id).filter((e)=>e);
+    const selectedDrafts = selectedRows.map((r) => r.isDraft && r.draftId).filter((e)=>e);
+    console.log('handle delete projects', selectedProjects);
+    console.log('handle delete drafts', selectedDrafts);
     if (selectedRows.length === 0) return;
-    deleteProjectsBulk(selectedRows.map((r) => r.id));
+    selectedProjects.length && deleteProjectsBulk(selectedRows.map((r) => !r.isDraft && r.id));
+    selectedDrafts.length && deleteDraftProjects(selectedRows.map((r) => r.isDraft && r.draftId));
   };
 
   const handleDownload = (selectedFiles) => {
@@ -149,6 +162,10 @@ export const ProjectsTab = ({
         borderLeft: '4px solid #9286D3',
       },
     },
+    { // Draft Project: Red?
+      when: row => row.isDraft,
+      style: {
+        borderLeft: '4px solid #D98EB2'}},
     { // No Plots Collected: Red
       when: row => row.type !== "simplified" && row.percentComplete == 0,
       style: {
