@@ -452,7 +452,7 @@ regEvent(event_ids.draftProject, ({ draftDb }, draftId) => {
   dispatch([event_ids.currentStep, 'review']);
 });
 
-regEvent(event_ids.draftProject, ({ draftDb }, projectId) => {
+regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
   function getProjectById(projectId) {
     fetch(`/get-project-by-id?projectId=${projectId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
