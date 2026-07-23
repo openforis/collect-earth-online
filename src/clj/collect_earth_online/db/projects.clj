@@ -152,8 +152,15 @@
 
 (defn get-project-by-id [{:keys [params session]}]
   (let [user-id    (:userId session -1)
-        project-id (tc/val->int (:projectId params))]
-    (data-response (build-project-by-id user-id project-id))))
+        project-id (tc/val->int (:projectId params))
+        project    (build-project-by-id user-id project-id)]
+    (if (or (:isProjectAdmin project)
+            (and (= (:availability project) "published")
+                 (or (= (:privacyLevel project) "public")
+                     (and (pos? user-id) (= (:privacyLevel project) "users"))
+                     (and (:userRole project) (= (:privacyLevel project) "institution")))))
+      (data-response project)
+      (data-response "" {:status 403}))))
 
 (defn get-template-by-id [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
