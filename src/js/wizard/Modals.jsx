@@ -277,7 +277,7 @@ function DraftSuccessModal () {
     <Modal
       title='Draft Success'
       closeText='Return to Institution'
-      confirmText='Return to Wizard'
+      confirmText='Continue Editing'
       onConfirm={()=>{dispatch([event_ids.modal, null]);}}
       onClose={()=>{window.location=`/review-institution?institutionId=${institutionId}`;}}
     >
