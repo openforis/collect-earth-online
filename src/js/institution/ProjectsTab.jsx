@@ -26,10 +26,11 @@ export const ProjectsTab = ({
   ];
   
   const filteredProjects = useMemo(() => {
+    const idOffset =  getNextInSequence(projectList.map((e)=>e.id));
     const lower = filterText.toLowerCase();
     return projectList.concat(projectDrafts.map((p)=>{return {... p, isDraft: true,
                                                               draftId: p.id,
-                                                              id: (Number(p.id) + getNextInSequence(projectList.map((e)=>e.id)))};}))
+                                                              id: (Number(p.id) + idOffset)};}))
       .filter((p) => p.name?.toLowerCase().includes(lower));
   }, [projectList, projectDrafts, filterText]);
 
