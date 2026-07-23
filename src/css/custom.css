@@ -80,7 +80,7 @@
     width: 25px;
     height: 25px;
     border-radius: 50%;
-    background: var(--lightgreen);
+    background: var(--darkgreen);
     cursor: pointer;
 }
 .full-height {

@@ -80,7 +80,7 @@ export class PlanetMenu extends React.Component {
         </div>
         <div className="slide-container">
           <button
-            className="btn btn-lightgreen btn-sm btn-block"
+            className="btn btn-darkgreen btn-sm btn-block"
             onClick={this.updatePlanetLayer}
             type="button"
           >
@@ -182,7 +182,7 @@ export class PlanetDailyMenu extends React.Component {
         </div>
         <div className="slide-container">
           <button
-            className="btn btn-lightgreen btn-sm btn-block"
+            className="btn btn-darkgreen btn-sm btn-block"
             onClick={this.updatePlanetDailyLayer}
             type="button"
           >
@@ -306,7 +306,7 @@ export class PlanetTFOMenu extends React.Component {
               ))}
             </select>
             <button
-              className="btn btn-outline-lightgreen btn-sm mr-1"
+              className="btn btn-outline-darkgreen btn-sm mr-1"
               type="button"
               onClick={() => {
                 this.switchImagery("backward")
@@ -316,7 +316,7 @@ export class PlanetTFOMenu extends React.Component {
               <SvgIcon icon="leftArrow" size="0.9rem" />
             </button>
             <button
-              className="btn btn-outline-lightgreen btn-sm"
+              className="btn btn-outline-darkgreen btn-sm"
               type="button"
               onClick={() => {
                 this.switchImagery("forward")
@@ -653,7 +653,7 @@ export class SentinelMenu extends React.Component {
         </div>
         <div className="slide-container">
           <button
-            className="btn btn-lightgreen btn-sm btn-block"
+            className="btn btn-darkgreen btn-sm btn-block"
             onClick={this.updateSentinelLayer}
             type="button"
           >
@@ -842,7 +842,7 @@ export class GEEImageCollectionMenu extends React.Component {
         </div>
         <div className="slide-container">
           <button
-            className="btn btn-lightgreen btn-sm btn-block"
+            className="btn btn-darkgreen btn-sm btn-block"
             onClick={this.updateGEEImageCollection}
             type="button"
           >
