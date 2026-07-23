@@ -135,9 +135,9 @@ initAppDb(projectWizardDb);
 export const event_ids = {
   institutionId: 'institutionId',
   templateProject: 'templateProject',
+  draftProject: 'draftProject',
   submitForm: 'submitForm',
   saveDraft: 'saveDraft',
-  getDraft: 'getDraft',
   errors: 'errors',
   continueHandler: 'continueHandler',
   validate: 'validate',
@@ -429,7 +429,7 @@ regEvent(event_ids.institutionId, ({ draftDb }, institutionId )=> {
 
 // PROJECT WIZARD EVENTS
 
-regEvent(event_ids.getDraft, ({ draftDb }, draftId) => {
+regEvent(event_ids.draftProject, ({ draftDb }, draftId) => {
   function getProjectDraftById(projectDraftId) {
     fetch(`/get-project-draft-by-id?projectDraftId=${projectDraftId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
@@ -438,7 +438,7 @@ regEvent(event_ids.getDraft, ({ draftDb }, draftId) => {
           dispatch([event_ids.errors, [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
           return Promise.resolve();
         } else {
-          dispatch([event_ids.successResponse, ['success', data]]);
+          dispatch([event_ids.templateProject, data]);
           return Promise.resolve();
         }
       }).catch(() => {
@@ -447,6 +447,8 @@ regEvent(event_ids.getDraft, ({ draftDb }, draftId) => {
       });
   }
   getProjectDraftById(draftId);
+  dispatch([event_ids.modal, null]);
+  dispatch([event_ids.currentStep, 'review']);
 });
 
 export function buildProject (draftDb, sub_ids) {
@@ -703,7 +705,9 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
       .then((data) => {
         console.log('create project draft request result', data);
         if (data[0] && Number.isInteger(data[1].projectDraftId)) {
-          dispatch([event_ids.successReponse, data[1]]);
+          console.log('dispatch success response');
+          dispatch([event_ids.modal, 'draft-success']);
+          //dispatch([event_ids.successResponse, data[1]]);
           return Promise.resolve();
         } else {          
           let errs = Object.entries(data[1].params).map(([field, message])=>{return (field + "; " + message);});
@@ -737,6 +741,7 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
+        console.log('resolving project draft data');
         dispatch([event_ids.successResponse, ['Project Saved', data]]);
         return Promise.resolve();
       })
