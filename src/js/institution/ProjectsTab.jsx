@@ -117,7 +117,7 @@ export const ProjectsTab = ({
       },
       {cell: (row)=> !row.isDraft &&
        <input
-            className="btn btn-outline-lightgreen btn-sm w-100"
+            className="btn btn-outline-darkgreen btn-sm w-100"
             onClick={() => window.open(`/collection?projectId=${row.id}&institutionId=${institutionId}`)
                     }
             type="button"
