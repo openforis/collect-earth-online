@@ -104,19 +104,20 @@ export const ProjectsTab = ({
         cell: (row)=> <div
                         className="edit-button"
                         onClick={()=> {
-			  window.open(`/review-project?projectId=${row.id}&institutionId=${institutionId}`);
+                          window.location.assign(`project-wizard?draftId=${row.id}&institutionId=${institutionId}`);
 		        }}
         >
                         <SvgIcon icon="edit" size="1.2rem"/>
                       </div>
       },
-      {cell: (row)=> !row.isDraft && <input
-                       className="btn btn-outline-lightgreen btn-sm w-100"
-                       onClick={() => window.open(`/collection?projectId=${row.id}&institutionId=${institutionId}`)
-                               }
-                       type="button"
-                       value="Collect"
-                     />}
+      {cell: (row)=> !row.isDraft &&
+       <input
+            className="btn btn-outline-lightgreen btn-sm w-100"
+            onClick={() => window.open(`/collection?projectId=${row.id}&institutionId=${institutionId}`)
+                    }
+            type="button"
+            value="Collect"
+          />}
     ],
     [isAdmin]
   );

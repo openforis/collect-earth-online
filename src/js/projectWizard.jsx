@@ -20,7 +20,7 @@ import { event_ids,  sub_ids } from "./state/projectWizard";
 import "../css/project-wizard.css";
 
 
-const ProjectWizard = ({userId, userName, version, institutionId}) => {
+const ProjectWizard = ({userId, userName, version, institutionId, draftId}) => {
 
   // -------------------
   // VARS & CONSTANTS
@@ -31,7 +31,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   const projectSource = useSubscription([sub_ids.projectSource]);
   function setInstitutionImagery (imagery) {dispatch([event_ids.institution.imagery, imagery]);}
   const institutionImagery = useSubscription([sub_ids.institution.imagery]);
-  
+  function setDraftProject (draftProject) {dispatch([event_ids.draftProject, draftProject]);};
   
   // -------------------
   // HOOKS
@@ -40,7 +40,7 @@ const ProjectWizard = ({userId, userName, version, institutionId}) => {
   useEffect(() => {
     dispatch([event_ids.institutionId, institutionId]);
     dispatch([event_ids.modal, 'newProject']);
-
+    draftId && setDraftProject(draftId);
     fetch(`/get-institution-imagery?institutionId=${institutionId}`)
       .then(res => res.json())
       .then(data => setInstitutionImagery(data))
@@ -101,6 +101,7 @@ export function pageInit(params, session) {
       userId={session.userId}
       userName={session.userName}
       version={session.versionDeployed}
+      draftId={params.draftId}
       institutionId={params.institutionId}/>,
     document.getElementById("app")
   );
