@@ -458,16 +458,33 @@ regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (!data) {
-          dispatch([event_ids.errors, [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
+          dispatch([event_ids.errors, [['server', ["Can't edit project  " + projectId + "."]]]]);
           return Promise.resolve();
         } else {
           dispatch([event_ids.templateProject, data]);
           return Promise.resolve();
         }
       }).catch(() => {
-        dispatch([event_ids.errors [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
+        dispatch([event_ids.errors [['server', ["Can't edit project " + projectId + "."]]]]);
       });
   }
+  function getProjectImagery(projectId) {
+    fetch(`/get-project-imagery?projectId=${projectId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        if (!data) {
+          dispatch([event_ids.errors, [['server', ["Can't edit project" + projectId + "."]]]]);
+          return Promise.resolve();
+        } else {
+          console.log(data.map((i) => i.id));
+          dispatch([event_ids.imagery.imageryList, data.map((i) => i.id)]);
+          return Promise.resolve();
+        }
+      }).catch(() => {
+        dispatch([event_ids.errors [['server', ["Can't edit project " + projectId + "."]]]]);
+      });
+  }
+  getProjectImagery(projectId);
   getProjectById(projectId);
   dispatch([event_ids.modal, null]);
   dispatch([event_ids.currentStep, 'review']);
@@ -682,7 +699,6 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
                                      extraPlotColumns: projectOptions.showPlotInformation,
                                      plotConfidence: projectOptions.collectConfidence,
     autoGeo: projectOptions.autoLaunchGeoDash};
-  draftDb[sub_ids.imagery.imageryList] = projectImageryList;
   draftDb[sub_ids.boundary.generationMethod] = 'manual';
   draftDb[sub_ids.boundary.aoiFeatures] = aoiFeatures;
   draftDb[sub_ids.boundary.aoiFileName] = aoiFileName;
