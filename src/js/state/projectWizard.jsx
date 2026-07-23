@@ -336,6 +336,7 @@ regSub(sub_ids.institutionId, sub_ids.institutionId);
 regSub(sub_ids.templateProjectId, sub_ids.templateProjectId);
 regSub(sub_ids.useTemplatePlots, sub_ids.useTemplatePlots);
 regSub(sub_ids.useTemplateWidgets, sub_ids.useTemplateWidgets);
+regSub(sub_ids.projectDraftId, sub_ids.projectDraftId);
 
 regSub(sub_ids.overview.projectType, sub_ids.overview.projectType);
 regSub(sub_ids.overview.projectName, sub_ids.overview.projectName);
@@ -440,14 +441,15 @@ regEvent(event_ids.draftProject, ({ draftDb }, draftId) => {
           return Promise.resolve();
         } else {
           dispatch([event_ids.templateProject, data]);
+
           return Promise.resolve();
         }
       }).catch(() => {
         dispatch([event_ids.errors [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
-        
       });
   }
   getProjectDraftById(draftId);
+  draftDb[sub_ids.projectDraftId] = draftId;
   dispatch([event_ids.modal, null]);
   dispatch([event_ids.currentStep, 'review']);
 });
@@ -667,6 +669,7 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   allowDrawnSamples,
   aoiFeatures,
   aoiFileName,
+  id = -1,
   description,
   designSettings = {},
   learningMaterial = '',
@@ -689,12 +692,13 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   visibility = 'institution',
   projectImageryList = [],
 
-}) => {
+}) => {  
   draftDb[sub_ids.overview.projectName] = name;
   draftDb[sub_ids.overview.projectDescription] = description;
   draftDb[sub_ids.overview.projectType] = projectType;
   draftDb[sub_ids.overview.learningMaterial] = learningMaterial;
   draftDb[sub_ids.overview.visibility] = visibility;
+  draftDb[sub_ids.templateProjectId] = id;
   draftDb[sub_ids.projectOptions] = {gee:projectOptions.showGEEScript, 
                                      extraPlotColumns: projectOptions.showPlotInformation,
                                      plotConfidence: projectOptions.collectConfidence,
@@ -721,12 +725,12 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
 });
 
 regEvent(event_ids.saveDraft, ({ draftDb }) => {
-  const institutionId = Number(current(draftDb[sub_ids.institutionId]));
+  const institutionId = Number(draftDb[sub_ids.institutionId]);
   const form = buildProject(draftDb, sub_ids);
-  const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
-  const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
-  const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
-  const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
+  const useTemplateWidgets = draftDb[sub_ids.useTemplateWidgets];
+  const useTemplatePlots = draftDb[sub_ids.overview.useTemplatePlots];
+  const templateProjectId = draftDb[sub_ids.templateProjectId];
+  const projectDraftId = draftDb[sub_ids.projectDraftId];
 
   function createProjectDraft () {
     fetch("/create-project-draft", {
@@ -798,35 +802,64 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
     : createProjectDraft();           
 });
 
-regEvent(event_ids.submitForm, ({ draftDb }) => {
-  const institutionId = Number(current(draftDb[sub_ids.institutionId]));
-  const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
-  const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
-  const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
-  const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
-  const similarityDetails = current(draftDb[sub_ids.plots.plotSimilarityDetails]) || {};
+regEvent(event_ids.submitForm, ({ draftDb }, publish) => {
+  const institutionId = Number(draftDb[sub_ids.institutionId]);
+  const useTemplateWidgets = draftDb[sub_ids.useTemplateWidgets];
+  const useTemplatePlots = draftDb[sub_ids.overview.useTemplatePlots];
+  const templateProjectId = draftDb[sub_ids.templateProjectId];
+  const projectDraftId = draftDb[sub_ids.projectDraftId];
+  const similarityDetails = draftDb[sub_ids.plots.plotSimilarityDetails] || {};
   const referencePlotId = similarityDetails.referencePlotId;
   const similarityYears = similarityDetails.years;
+
   const form = buildProject(draftDb, sub_ids);
   const errors = validateWizard(form);
-  
-  function submitForm () {
-    fetch("/create-project", {
+
+  const upsertRoute = templateProjectId < 0 ? "/create-project" : "/update-project";
+  const upsertParams = templateProjectId < 0 ? JSON.stringify({
+    institutionId,
+    projectTemplate: templateProjectId,
+    useTemplatePlots,
+    useTemplateWidgets,
+    ...form,
+  }) : JSON.stringify({
+    projectId: templateProjectId,
+    institutionId,
+    ...form,
+  });
+
+  function publishForm () {
+    console.log('publishing project', templateProjectId);
+    fetch (`/publish-project`, {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json; charset=utf-8",
       },
       body: JSON.stringify({
-        institutionId,
-        projectTemplate: templateProjectId,
-        useTemplatePlots,
-        useTemplateWidgets,
-        ...form,
+        projectId: templateProjectId,
+        clearSaved: true
       }),
+    })
+      .then((response)=> Promise.all([response.ok, response.json()]))
+      .then((data)=> {
+        console.log('form published!');
+        dispatch([event_ids.successResponse, data[1]]);})
+      .catch((err)=>console.err(err));
+  }
+
+  function submitForm () {
+    fetch(upsertRoute, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: upsertParams,
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
+        publish && (templateProjectId > 0) && publishForm();
         if (data[0] && Number.isInteger(data[1].projectId)) {
           (referencePlotId > 0) && fetch("/start-plot-similarity", {
             method: "POST",
@@ -840,8 +873,7 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
               similarityYears,
             })
           });
-          dispatch([event_ids.successResponse, data[1]]);
-          // window.location = `/review-project?projectId=${data[1].projectId}&institutionId=${this.context.institutionId}`;
+          !publish && dispatch([event_ids.successResponse, data[1]]);
           return Promise.resolve();
         } else {
           dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
@@ -850,7 +882,7 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
       })
       .catch((message) => dispatch([event_ids.errors [['server', [message]]]]));
   }
-  errors ? dispatch([event_ids.errors, errors]) : submitForm();
+  errors ? dispatch([event_ids.errors, errors]) : submitForm();  
 });
 
 regEvent(event_ids.successResponse, ({ draftDb }, response) => {  

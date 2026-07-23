@@ -255,12 +255,13 @@ function NewProjectModal () {
 };
 
 function SubmitProjectModal () {
+  const [publishForm, togglePublishForm] = useState(true); 
   return (
     <Modal
       title='Ready to publish this project?'
       closeText='Cancel'
       confirmText='Publish Project'
-      onConfirm={()=>{dispatch ([event_ids.submitForm]); }}
+      onConfirm={()=>{dispatch ([event_ids.submitForm, publishForm]); }}
       //confirmDisabled={confirmDisabled()}
       onClose={()=>{dispatch([event_ids.modal, null]);}}>
       <div>

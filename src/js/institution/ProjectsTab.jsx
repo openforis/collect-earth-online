@@ -34,6 +34,7 @@ export const ProjectsTab = ({
       .filter((p) => p.name?.toLowerCase().includes(lower));
   }, [projectList, projectDrafts, filterText]);
 
+  console.log('projectsTab', projectList, projectDrafts);
   const columns = useMemo(
     () => [
       {
@@ -94,7 +95,7 @@ export const ProjectsTab = ({
       },
       {
         name: "Publication",
-        selector: (row) => row.isDraft ? 'draft' : row.availability ?? "Unpublished",
+        selector: (row) => row.availability ?? "Unpublished",
         sortable: true,
       },
       
@@ -106,7 +107,7 @@ export const ProjectsTab = ({
                         className="edit-button"
                         onClick={()=> {
                           if(row.isDraft){
-                            window.location.assign(`project-wizard?draftId=${row.id}&institutionId=${institutionId}`);
+                            window.location.assign(`project-wizard?draftId=${row.draftId}&institutionId=${institutionId}`);
                           } else {
                             window.location.assign(`project-wizard?projectId=${row.id}&institutionId=${institutionId}`);
                           }
