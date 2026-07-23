@@ -84,8 +84,8 @@ export default function ReviewStep ({imageryList = []}) {
           </div>
         </div>
         <p >Imagery Used:</p>
-        {selectedImagery.map((selectedId)=>{return (
-           <b > {imageryList.filter(({id})=> id === selectedId)[0].title} </b>);})}        
+        {imageryList.map((imag)=>{return (
+           <b > {imageryList.filter(({id})=> id === imag.id)[0].title} </b>);})}
       </div>
     );
   }
@@ -110,6 +110,7 @@ export default function ReviewStep ({imageryList = []}) {
             pan={false}
             aoiToShow={aoiFeatures}
             initZoom={4}
+            preview={true}
           />
         </div>
       </div>

@@ -124,7 +124,8 @@ export const validateStep = {
   samples: validateSamples,
   questions: validateQuestions,
   rules: ()=> false,
-  boundary: ()=> false  
+  boundary: ()=> false,
+  review: ()=> false
 };
 
 export function validateWizard (form) {

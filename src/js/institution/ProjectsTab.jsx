@@ -105,7 +105,11 @@ export const ProjectsTab = ({
         cell: (row)=> <div
                         className="edit-button"
                         onClick={()=> {
-                          window.location.assign(`project-wizard?draftId=${row.id}&institutionId=${institutionId}`);
+                          if(row.isDraft){
+                            window.location.assign(`project-wizard?draftId=${row.id}&institutionId=${institutionId}`);
+                          } else {
+                            window.location.assign(`project-wizard?projectId=${row.id}&institutionId=${institutionId}`);
+                          }
 		        }}
         >
                         <SvgIcon icon="edit" size="1.2rem"/>

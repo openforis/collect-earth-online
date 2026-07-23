@@ -136,6 +136,7 @@ export const event_ids = {
   institutionId: 'institutionId',
   templateProject: 'templateProject',
   draftProject: 'draftProject',
+  editProject: 'editProject',
   submitForm: 'submitForm',
   saveDraft: 'saveDraft',
   errors: 'errors',
@@ -451,6 +452,28 @@ regEvent(event_ids.draftProject, ({ draftDb }, draftId) => {
   dispatch([event_ids.currentStep, 'review']);
 });
 
+regEvent(event_ids.draftProject, ({ draftDb }, projectId) => {
+  function getProjectById(projectId) {
+    fetch(`/get-project-by-id?projectId=${projectId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        if (!data) {
+          dispatch([event_ids.errors, [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
+          return Promise.resolve();
+        } else {
+          dispatch([event_ids.templateProject, data]);
+          return Promise.resolve();
+        }
+      }).catch(() => {
+        dispatch([event_ids.errors [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
+      });
+  }
+  getProjectById(projectId);
+  dispatch([event_ids.modal, null]);
+  dispatch([event_ids.currentStep, 'review']);
+});
+
+
 export function buildProject (draftDb, sub_ids) {
   const projectId = -1; //TODO
   const plotDistribution = current(draftDb[sub_ids.plots.plotDistribution]);
@@ -647,6 +670,8 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   surveyQuestions,
   surveyRules = [],
   visibility = 'institution',
+  projectImageryList = [],
+
 }) => {
   draftDb[sub_ids.overview.projectName] = name;
   draftDb[sub_ids.overview.projectDescription] = description;
@@ -656,8 +681,9 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.projectOptions] = {gee:projectOptions.showGEEScript, 
                                      extraPlotColumns: projectOptions.showPlotInformation,
                                      plotConfidence: projectOptions.collectConfidence,
-                                     autoGeo: projectOptions.autoLaunchGeoDash};
-  draftDb[sub_ids.boundary.generationMethod] = 'manual'; //??
+    autoGeo: projectOptions.autoLaunchGeoDash};
+  draftDb[sub_ids.imagery.imageryList] = projectImageryList;
+  draftDb[sub_ids.boundary.generationMethod] = 'manual';
   draftDb[sub_ids.boundary.aoiFeatures] = aoiFeatures;
   draftDb[sub_ids.boundary.aoiFileName] = aoiFileName;
   draftDb[sub_ids.plots.plotDistribution] = plotDistribution;
@@ -665,7 +691,7 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.plots.plotSize] = Number(plotSize);
   draftDb[sub_ids.plots.plotShape] = plotShape;
   draftDb[sub_ids.plots.plotSpacing] = plotSpacing;
-  draftDb[sub_ids.plots.totalPlots] = Number(numPlots); //??
+  draftDb[sub_ids.plots.totalPlots] = Number(numPlots);
   draftDb[sub_ids.plots.plotFileName] = plotfileName;
   draftDb[sub_ids.plots.referencePlotId] = Number(referencePlot);
   draftDb[sub_ids.plots.designSettings] = designSettings;
