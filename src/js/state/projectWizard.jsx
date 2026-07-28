@@ -50,7 +50,11 @@ const projectWizardDb = {
   useTemplatePlots: false,
   useTemplateWidgets: false,
   invalidSteps: [],
-  // overview
+  availability: '',
+  publishedDate: '',
+  createdDate: '',
+  closedDate: '',
+    // overview
   'overview.projectName': '',
   'overview.projectDescription': '',
   'overview.projectType': 'regular',
@@ -247,6 +251,10 @@ export const sub_ids = {
   useTemplateWidgets: 'useTemplateWidgets',
   validStep: 'validStep',
   invalidSteps: 'invalidSteps',
+  availability: 'availability',
+  publishedDate: 'publishedDate',
+  createdDate: 'createdDate',
+  closedDate: 'closedDate',
   overview: {projectName: 'overview.projectName',
              projectDescription: 'overview.projectDescription',
              projectType: 'overview.projectType',
@@ -336,6 +344,10 @@ regSub(sub_ids.institutionId, sub_ids.institutionId);
 regSub(sub_ids.templateProjectId, sub_ids.templateProjectId);
 regSub(sub_ids.useTemplatePlots, sub_ids.useTemplatePlots);
 regSub(sub_ids.useTemplateWidgets, sub_ids.useTemplateWidgets);
+regSub(sub_ids.availability, sub_ids.availability);
+regSub(sub_ids.publishedDate, sub_ids.publishedDate);
+regSub(sub_ids.createdDate, sub_ids.createdDate);
+regSub(sub_ids.closedDate, sub_ids.closedDate);
 
 regSub(sub_ids.overview.projectType, sub_ids.overview.projectType);
 regSub(sub_ids.overview.projectName, sub_ids.overview.projectName);
@@ -687,7 +699,10 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   surveyQuestions,
   surveyRules = [],
   visibility = 'institution',
-  projectImageryList = [],
+  availability = '',
+  createdDate = '',
+  publishedDate = '',
+  closedDate = '',
 
 }) => {
   draftDb[sub_ids.overview.projectName] = name;
@@ -718,6 +733,11 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.samples.allowDrawnSamples] = allowDrawnSamples;
   draftDb[sub_ids.questions.questions] = surveyQuestions;
   draftDb[sub_ids.rules.rules] = surveyRules;
+  draftDb[sub_ids.availability] = availability;
+  draftDb[sub_ids.createdDate] = createdDate;
+  draftDb[sub_ids.publishedDate] = publishedDate;
+  draftDb[sub_ids.closedDate] = closedDate;
+
 });
 
 regEvent(event_ids.saveDraft, ({ draftDb }) => {

@@ -1,3 +1,5 @@
+
+
 (ns collect-earth-online.db.doi
   (:require [clj-http.client                               :as http]
             [clojure.data.json                             :as json]
@@ -194,7 +196,9 @@
   (let [user-id            (:userId session -1)
         project-id         (:projectId params)
         project-name       (:projectName params)
-        institution-name   (:name (first (call-sql "select_institution_by_id" (-> params :institution) user-id)))
+        institution-name   (:name (first (call-sql "select_institution_by_id"
+                                                   (-> params :institution tc/val->int)
+                                                   user-id)))
         description        (:description params)
         creator            (first (call-sql "get_user_by_id" user-id))
         contributors       (call-sql "select_assigned_users_by_project" project-id)

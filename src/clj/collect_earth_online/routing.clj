@@ -51,7 +51,9 @@
    [:get  "/project-dashboard"]              {:handler     (render-page "/project-dashboard")
                                               :auth-type   :admin
                                               :auth-action :redirect}
-   [:get "/project-wizard"]                  {:handler (render-page "/project-wizard")}
+   [:get "/project-wizard"]                  {:handler (render-page "/project-wizard")
+                                              :auth-type   :admin
+                                              :auth-action :redirect}
    [:get  "/register"]                       {:handler (render-page "/register")}
    [:get  "/review-institution"]             {:handler (render-page "/review-institution")}
    [:get  "/review-project"]                 {:handler     (render-page "/project-admin")
