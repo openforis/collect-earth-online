@@ -240,7 +240,7 @@ export const UserDrawnSamplesCard = () => {
 
   return (
     <div className="wizard-card">
-      <h5 className="card-title">USER DRAWN SAMPLES *</h5>
+      <h5 className="card-title">USER DRAWN SAMPLES</h5>
       <div className="form-check mb-2">
         <input type="checkbox" className="form-check-input" checked={allowDrawnSamples} 
           onChange={() => dispatch([event_ids.samples.allowDrawnSamples, !allowDrawnSamples])} />
