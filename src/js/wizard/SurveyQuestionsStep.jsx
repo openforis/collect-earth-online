@@ -293,13 +293,13 @@ export const SurveyQuestionsStep = () => {
       answers: newQuestion.answers || {
         "1": { answer: defaultAnswer, color: "#109844" },
       },
-    };
-    const testquestions = {... questions, 0: {question: 'test question', questionLabel: 'test label'}};
-    const duplicateQuestions =   Object.values(testquestions)
+    };    
+    const duplicateQuestions =   Object.values(questions)
           .map(({questionLabel})=> questionLabel.split(/\(\d\)/)[0] == questionToAdd.questionLabel.split(/\(\d\)/)[0]);
     duplicateQuestions.some((e)=>e) && !duplicateWarning ? errors(
       [`Warning: This is a duplicate name.  It will be added as "${questionToAdd.questionLabel.split(/\(\d\)/)[0] + "(" + duplicateQuestions.length + ")"}" in design mode.`])
-      : setQuestions({ ...questions, [nextId]: questionToAdd });
+      : setQuestions({ ...questions, [nextId]: duplicateQuestions.some((e)=>e) ? {... questionToAdd, questionLabel: questionToAdd.questionLabel.split(/\(\d\)/)[0] + "(" + duplicateQuestions.length + ")"}
+                       : questionToAdd });
     setNewQuestion(newDefaultQuestion);
   };
 
