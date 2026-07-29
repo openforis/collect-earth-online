@@ -720,16 +720,15 @@ function MultipleIncompatibleAnswersForm () {//WORKSN'T
           >
             <option value="-1" selected disabled hidden>- Select Question -</option>
             {mapObjectArray(
-              surveyQuestions
-                .filter(({componentType})=>componentType !== 'input'),
-              ([aqId, aq]) => {
-                if(answers[aqId] === undefined) {
-                  return (
-                    <option key={aqId} value={aqId}>
+              surveyQuestions,
+              ([aqId, aq]) => {                
+                if(answers[aqId] === undefined && aq.componentType !== 'input') {                  
+                    return (
+                      <option key={aqId} value={aqId}>
                       {aq.question}
                     </option>
                   );
-              } else {return (<></>);}})}
+                  } else {return (<></>);}})}
           </select>
         </div>
         <div className="new-rule-input">
