@@ -4,6 +4,7 @@ import { dispatch, useSubscription } from '@flexsurfer/reflex';
 import { SurveyQuestions } from '../components/SurveyQuestions';
 import SvgIcon from '../components/svg/SvgIcon';
 import { event_ids, sub_ids } from '../state/projectWizard';
+import { mapObjectArray } from '../utils/sequence';
 
 
 export const QuestionCard = ({
@@ -255,6 +256,7 @@ export const QuestionCard = ({
 };
 
 export const SurveyQuestionsStep = () => {
+  const [duplicateWarning, confirmDuplicateWarning] = useState(false);
   const newDefaultQuestion = {
     questionText: '',
     questionLabel: '',
@@ -268,6 +270,8 @@ export const SurveyQuestionsStep = () => {
   function setQuestions (questions) {dispatch([event_ids.questions.setQuestions, questions]);}
   const questions = useSubscription([sub_ids.questions.questions]);
   const [newQuestion, setNewQuestion] = useState(newDefaultQuestion);
+  function errors (errors) {dispatch([event_ids.errors, [['questions', errors]]]);
+                            confirmDuplicateWarning(true);}
   
   const addQuestion = () => {
     if (!newQuestion.questionText) return;
@@ -289,9 +293,13 @@ export const SurveyQuestionsStep = () => {
       answers: newQuestion.answers || {
         "1": { answer: defaultAnswer, color: "#109844" },
       },
-    };
-
-    setQuestions({ ...questions, [nextId]: questionToAdd });
+    };    
+    const duplicateQuestions =   Object.values(questions)
+          .map(({questionLabel})=> questionLabel.split(/\(\d\)/)[0] == questionToAdd.questionLabel.split(/\(\d\)/)[0]);
+    duplicateQuestions.some((e)=>e) && !duplicateWarning ? errors(
+      [`Warning: This is a duplicate name.  It will be added as "${questionToAdd.questionLabel.split(/\(\d\)/)[0] + "(" + duplicateQuestions.length + ")"}" in design mode.`])
+      : setQuestions({ ...questions, [nextId]: duplicateQuestions.some((e)=>e) ? {... questionToAdd, questionLabel: questionToAdd.questionLabel.split(/\(\d\)/)[0] + "(" + duplicateQuestions.length + ")"}
+                       : questionToAdd });
     setNewQuestion(newDefaultQuestion);
   };
 
