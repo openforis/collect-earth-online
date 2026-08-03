@@ -142,7 +142,7 @@ export const BoundaryStep = ({ imageryList = [] }) => {
             {generationMethod === "manual" && (
               <div>
                 <p className="font-italic" style={{ fontSize: '0.85rem', color: '#555' }}>
-                  * Use the map polygon layout utilities directly on the viewport to outline your project bounds canvas.
+                  * Hold CTRL and click-and-drag a bounding box on the map
                 </p>
               </div>
             )}
