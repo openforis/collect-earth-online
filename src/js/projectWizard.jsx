@@ -66,7 +66,10 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
     case 'samples'    : return <SampleStep />;
     case 'questions'  : return <SurveyQuestionsStep/>;
     case 'rules'      : return <RulesStep />;
-    case 'review'     : return <ReviewStep imageryList={institutionImagery}/>;
+    case 'review'     : return <ReviewStep
+                                 imageryList={institutionImagery}
+                                 institutionId={institutionId}
+                                 projectId={projectId}/>;
     default           : return <div style={{padding: "20px"}}>Step {currentStep} coming soon</div>;
     }};
   
