@@ -33,6 +33,8 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
   const institutionImagery = useSubscription([sub_ids.institution.imagery]);
   function setDraftProject (draftProject) {dispatch([event_ids.draftProject, draftProject]);};
   function setEditProject (project) {dispatch([event_ids.editProject, project]);};
+  function setPlotFeatures (plots) { dispatch([event_ids.plots.plotFeatures, plots]) };
+
   // -------------------
   // HOOKS
   // ------------------
@@ -42,6 +44,12 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
     dispatch([event_ids.modal, 'newProject']);
     draftId && setDraftProject(draftId);
     projectId && setEditProject(projectId);
+    projectId && (
+      fetch(`/get-project-plots?projectId=${projectId}`)
+        .then(res => res.json())
+        .then(data => setPlotFeatures(data))
+        .catch(err => console.error("could not load plots", err))
+    );
     fetch(`/get-institution-imagery?institutionId=${institutionId}`)
       .then(res => res.json())
       .then(data => setInstitutionImagery(data))
@@ -107,7 +115,8 @@ export function pageInit(params, session) {
       version={session.versionDeployed}
       draftId={params.draftId}
       projectId={params.projectId}
-      institutionId={params.institutionId}/>,
+      institutionId={params.institutionId}
+      edit={params.edit}/>,
     document.getElementById("app")
   );
 }

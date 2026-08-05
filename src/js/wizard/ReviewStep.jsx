@@ -491,8 +491,8 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         <BoundaryCard/>
         <ImageryCard/>
         <PlotsCard/>
-        <SamplesCard/>
         <QuestionsCard/>
+        <SamplesCard/>
         <RulesCard/>
       </div>
       <div
