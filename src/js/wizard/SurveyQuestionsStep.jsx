@@ -179,7 +179,7 @@ export const QuestionCard = ({
                     onChange={(e) => updateAnswer(aId, 'color', e.target.value)}
                   />
                   <input
-                    type={question.dataType === 'number' ? 'number' : 'text'}
+                    type="text"
                     className="text-input question-answer-input"
                     value={a.answer}
                     placeholder={`Enter Answer ${question.dataType === 'number' ? 'Number' : 'Text'}`}
@@ -188,15 +188,14 @@ export const QuestionCard = ({
                         e.preventDefault();
                       }
                     }}
+                    defaultValue={question.dataType === 'number' ? 0 : ''}                    
                     onChange={(e) => {
-                      if (question.dataType !== 'number') {
-                        updateAnswer(aId, 'answer', e.target.value);
-                        return;
-                      }
-                      const s = e.target.value;
-                      const n = s === '' ? 0 : Number(s);
-                      updateAnswer(aId, 'answer', Number.isNaN(n) ? 0 : n);
-                    }}
+                      const regex = /^[0-9]*\.?[0-9]*$/;
+                      question.dataType === 'number'
+                        ? updateAnswer(aId, 'answer', regex.test(e.target.value)
+                                       ? e.target.value
+                                       : e.target.value.slice(0, e.target.value.length - 1))
+                        : updateAnswer(aId, 'answer', e.target.value);}}
                   />
                   <input
                     type="checkbox"
