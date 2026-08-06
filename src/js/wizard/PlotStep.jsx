@@ -266,7 +266,7 @@ export const PlotStep = ({ imageryList = [] }) => {
           onChange={(e) =>{
             const regex = /^[0-9]*$/;
             const input = e.target.value;
-            function inRange (n) {return (1 < Number(n) && Number(n) < 5000);};
+            function inRange (n) {return (0 < Number(n) && Number(n) < 5001);};
             const value = (regex.test(input) && inRange(input)) ? input : input.slice(0, input.length - 1);
             dispatch([event_ids.plots.numPlots, value]);
           }}
