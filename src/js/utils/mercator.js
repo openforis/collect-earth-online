@@ -167,6 +167,136 @@ mercator.getTopVisiblePlanetLayerDate = (mapConfig, layerId) => {
  *** Create map source and layer objects
  ***
  *****************************************************************************/
+// [Pure] Where to fetch GetCapabilities from. Proxied sources go through the
+// back end, which holds the credentials.
+const wmtsCapabilitiesUrl = (sourceConfig, imageryId, isProxied) => {
+  if (isProxied) return `/get-wmts-capabilities?imageryId=${imageryId}`;
+  const { geoserverUrl } = sourceConfig;
+  const joiner = /[?&]$/.test(geoserverUrl) ? "" : geoserverUrl.includes("?") ? "&" : "?";
+  return `${geoserverUrl}${joiner}SERVICE=WMTS&REQUEST=GetCapabilities&VERSION=1.0.0`;
+};
+
+// [Side Effects] Cache capabilities
+const capabilitiesRequests = {};
+
+const fetchCapabilities = (url) => {
+  if (!capabilitiesRequests[url]) {
+    capabilitiesRequests[url] = fetch(url)
+      .then((res) =>
+        res.ok ? res.text() : Promise.reject(new Error(`GetCapabilities returned ${res.status}`))
+      )
+      .catch((err) => {
+        delete capabilitiesRequests[url];
+        throw err;
+      });
+  }
+  return capabilitiesRequests[url];
+};
+
+// [Pure] Send tile requests to our proxy instead of the service. The tile grid
+// still comes from the capabilities; only the transport changes. REST templates
+// need an explicit placeholder for every dimension, KVP appends them itself.
+const proxiedTileUrls = (requestEncoding, dimensions, imageryId) => {
+  const base = `/get-wmts-tiles?imageryId=${imageryId}`;
+  if (requestEncoding === "KVP") return { requestEncoding, urls: [base] };
+
+  const dims = Object.keys(dimensions)
+    .map((name) => `&${name}={${name}}`)
+    .join("");
+  return {
+    requestEncoding: "REST",
+    urls: [`${base}&TileMatrix={TileMatrix}&TileCol={TileCol}&TileRow={TileRow}${dims}`],
+  };
+};
+
+// [Pure] Some servers advertise the OGC namespaces over https, which OL's
+// parser does not match.
+const normalizeCapabilitiesNamespace = (text) =>
+  text
+    .replace('xmlns="https://www.opengis.net/wmts/1.0"', 'xmlns="http://www.opengis.net/wmts/1.0"')
+    .replace(
+      'xmlns:ows="https://www.opengis.net/ows/1.1"',
+      'xmlns:ows="http://www.opengis.net/ows/1.1"'
+    );
+
+// [Side Effects] Swaps the source of an already-added layer, since the real
+// source is only available once the capabilities have loaded.
+const updateMapLayerSource = (mercator, imageryId, source) => {
+  const layer = mercator.currentMap
+    .getLayers()
+    .getArray()
+    .find((l) => l.get("id") === imageryId);
+  if (layer) layer.setSource(source);
+};
+
+// [Pure] Resolves each dimension the layer declares, preferring the value saved
+// on the imagery over the server's default. Time defaults to yesterday because
+// today's imagery is usually not published yet.
+const buildWMTSDimensions = (dimensions = [], sourceConfig) =>
+  dimensions.reduce((acc, dim) => {
+    const configKey = dim.Identifier.toLowerCase();
+    let dimValue = sourceConfig[configKey] || dim.Default;
+    if (configKey === "time" && !sourceConfig[configKey]) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      dimValue = yesterday.toISOString().split("T")[0];
+    }
+    return { ...acc, [dim.Identifier]: dimValue };
+  }, {});
+
+// [Pure] Wayback serves plain XYZ tiles behind a WMTS façade, so we rewrite its
+// template rather than building a tile grid.
+const buildWaybackSource = (layerCapabilities, attribution) => {
+  const resourceUrl = layerCapabilities.ResourceURL.find((r) => r.resourceType === "tile")
+    .template.replace("{TileMatrixSet}", "default028mm")
+    .replace("/MapServer/tile/20512", "/MapServer/tile/10")
+    .replace("{TileMatrix}", "{z}")
+    .replace("{TileRow}", "{y}")
+    .replace("{TileCol}", "{x}");
+  return new XYZ({ url: resourceUrl, attributions: attribution });
+};
+
+// [Side Effects] Returns a placeholder source right away and swaps in the real
+// one once the capabilities have been fetched and parsed.
+const createWMTSSource = (sourceConfig, imageryId, attribution, isProxied) => {
+  const { LAYERS } = sourceConfig.geoserverParams || {};
+  const loadingSource = new XYZ({
+    url: "img/source-loading.png",
+    attributions: attribution,
+  });
+  loadingSource.set("id", imageryId);
+
+  fetchCapabilities(wmtsCapabilitiesUrl(sourceConfig, imageryId, isProxied))
+    .then((text) => {
+      const caps = new WMTSCapabilities().read(normalizeCapabilitiesNamespace(text));
+      const layerCaps = caps?.Contents?.Layer?.find((l) => l.Identifier === LAYERS);
+      if (!layerCaps) throw new Error(`layer ${LAYERS} is not in the capabilities`);
+      if (!isProxied && caps.ServiceIdentification?.Title?.includes("Wayback")) {
+        updateMapLayerSource(mercator, imageryId, buildWaybackSource(layerCaps, attribution));
+        return;
+      }
+      const options = optionsFromCapabilities(caps, {
+        layer: LAYERS,
+        matrixSet: layerCaps.TileMatrixSetLink[0].TileMatrixSet,
+      });
+      if (!options) throw new Error(`could not build a tile grid for layer ${LAYERS}`);
+      const dimensions = buildWMTSDimensions(layerCaps.Dimension, sourceConfig);
+      const source = new WMTS({
+        ...options,
+        dimensions,
+        attributions: attribution,
+        ...(isProxied ? proxiedTileUrls(options.requestEncoding, dimensions, imageryId) : {}),
+      });
+      updateMapLayerSource(mercator, imageryId, source);
+    })
+    .catch((err) => {
+      console.error(`Error loading WMTS imagery ${imageryId}: `, err);
+      loadingSource.setUrl("img/source-not-found.png");
+    });
+
+  return loadingSource;
+};
+
 
 // [Pure] If text is valid JSON, return the parsed value. Otherwise
 // return the text unmodified.
@@ -242,14 +372,16 @@ mercator.createSource = (
         params: { imageryId },
         attributions: attribution,
       });
-    } else if (sourceConfig.type === "Planet") {
+    } else if (type === "Planet") {
       return new XYZ({
         url:
           `/get-tile?imageryId=${imageryId}` +
-          `&z={z}&x={x}&y={y}&tile={0-3}&month=${sourceConfig.month}` +
-          `&year=${sourceConfig.year}`,
+            `&z={z}&x={x}&y={y}&tile={0-3}&month=${sourceConfig.month}` +
+            `&year=${sourceConfig.year}`,
         attributions: attribution,
       });
+    } else if (type === "WMTS") {
+      return createWMTSSource(sourceConfig, imageryId, attribution, true);
     } else {
       return new XYZ({ url: "img/source-not-found.png" });
     }
@@ -257,21 +389,21 @@ mercator.createSource = (
     return new XYZ({
       url:
         "https://tiles{0-3}.planet.com/basemaps/v1/global_monthly_" +
-        `${sourceConfig.year}_${sourceConfig.month}` +
-        "_mosaic/gmap/{z}/{x}/{y}.png" +
-        `?api_key=${sourceConfig.accessToken}`,
+          `${sourceConfig.year}_${sourceConfig.month}` +
+          "_mosaic/gmap/{z}/{x}/{y}.png" +
+          `?api_key=${sourceConfig.accessToken}`,
       attributions: attribution,
     });
   } else if (type === "PlanetTFO") {
     const dataLayer = (sourceConfig.time === "newest") ? mercator.newestTFOLayer() : sourceConfig.time;
     return new XYZ({
       url:
-       "get-tfo-tiles?z={z}&x={x}&y={y}" +
-        `&dataLayer=${dataLayer}` +
-        `&band=${sourceConfig.band}` +
-        `&imageryId=${imageryId}`,
-       attributions: attribution,
-      });
+        "get-tfo-tiles?z={z}&x={x}&y={y}" +
+          `&dataLayer=${dataLayer}` +
+          `&band=${sourceConfig.band}` +
+          `&imageryId=${imageryId}`,
+      attributions: attribution,
+    });
   } else if (type === "PlanetDaily") {
     // make ajax call to get layerid then add xyz layer
     const theJson = {
@@ -387,10 +519,10 @@ mercator.createSource = (
       cloudLessThan: type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null,
       startDate:
         sourceConfig.year +
-        "-" +
-        (sourceConfig.month.length === 1 ? "0" : "") +
-        sourceConfig.month +
-        "-01",
+          "-" +
+          (sourceConfig.month.length === 1 ? "0" : "") +
+          sourceConfig.month +
+          "-01",
       endDate: formatDateISO(endDate),
     };
     return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
@@ -401,82 +533,7 @@ mercator.createSource = (
     };
     return mercator.sendGEERequest(theJson, sourceConfig, imageryId, attribution);
   } else if (type === "WMTS") {
-    const { geoserverUrl, geoserverParams = {} } = sourceConfig;
-    const { LAYERS } = geoserverParams;
-
-    const parser = new WMTSCapabilities();
-    const placeholder = new XYZ({
-      url: "img/source-loading.png",
-      attributions: attribution,
-    });
-    placeholder.set("id", imageryId);
-
-    const setSourceOnMap = (source) => {
-      const layer = mercator.currentMap
-            .getLayers()
-            .getArray()
-            .find((l) => l.get("id") === imageryId);
-      if (!layer) return;
-      layer.setSource(source);
-    };
-
-    const normalizeCapsNamespace = (text) =>
-          text
-          .replace('xmlns="https://www.opengis.net/wmts/1.0"', 'xmlns="http://www.opengis.net/wmts/1.0"')
-          .replace('xmlns:ows="https://www.opengis.net/ows/1.1"', 'xmlns:ows="http://www.opengis.net/ows/1.1"');
-
-    fetch(`${geoserverUrl}?SERVICE=WMTS&REQUEST=GetCapabilities&VERSION=1.0.0`)
-      .then((r) => r.text())
-      .then((text) => {
-        text = normalizeCapsNamespace(text);
-        const caps = parser.read(text);
-        if (!caps?.Contents?.Layer)
-          throw new Error("Invalid WMTS Capabilities: missing Contents.Layer");
-
-        const layerCaps = caps.Contents.Layer.find((l) => l.Identifier === LAYERS);
-        if (!layerCaps)
-          throw new Error(`Layer not found in capabilities: ${LAYERS}`);
-
-        const isWayback = caps?.ServiceIdentification?.Title?.includes("Wayback");
-
-        if (isWayback) {
-          const layerCaps = caps.Contents.Layer.find((l) => l.Identifier === LAYERS);
-          const resourceUrl =
-                layerCaps.ResourceURL.find((r) => r.resourceType === "tile").template
-                .replace("{TileMatrixSet}", "default028mm")
-                .replace("/MapServer/tile/20512", "/MapServer/tile/10")
-                .replace("{TileMatrix}", "{z}")
-                .replace("{TileRow}", "{y}")
-                .replace("{TileCol}", "{x}");
-
-          const source = new XYZ({
-            url: resourceUrl,
-            attributions: attribution,
-          });
-
-          setSourceOnMap(source);
-          return;
-        }
-        const matrixSet = layerCaps.TileMatrixSetLink[0].TileMatrixSet;
-        const options = optionsFromCapabilities(caps, {
-          layer: LAYERS,
-          matrixSet,
-        });
-
-        const source = new WMTS({
-          ...options,
-          attributions: attribution,
-        });
-
-        setSourceOnMap(source);
-      })
-      .catch((err) => {
-        console.error("WMTS load error:", err);
-        placeholder.setUrl("img/source-not-found.png");
-      });
-
-    return placeholder;
-    
+    return createWMTSSource(sourceConfig, imageryId, attribution, false);
   } else if (type === "GEEImageCollection") {
     const theJson = {
       path: "imageCollection",
@@ -496,10 +553,10 @@ mercator.createSource = (
     return new XYZ({
       url:
         "https://api.mapbox.com/v4/" +
-        sourceConfig.layerName +
-        "/{z}/{x}/{y}.jpg90" +
-        "?access_token=" +
-        sourceConfig.accessToken,
+          sourceConfig.layerName +
+          "/{z}/{x}/{y}.jpg90" +
+          "?access_token=" +
+          sourceConfig.accessToken,
       attributions: mapboxAttributionText,
       attributionsCollapsible: false,
     });
@@ -507,12 +564,12 @@ mercator.createSource = (
     return new XYZ({
       url:
         "https://api.mapbox.com/styles/v1/" +
-        sourceConfig.userName +
-        "/" +
-        sourceConfig.mapStyleId +
-        "/tiles/256/{z}/{x}/{y}" +
-        "?access_token=" +
-        sourceConfig.accessToken,
+          sourceConfig.userName +
+          "/" +
+          sourceConfig.mapStyleId +
+          "/tiles/256/{z}/{x}/{y}" +
+          "?access_token=" +
+          sourceConfig.accessToken,
       attributions: mapboxAttributionText,
       attributionsCollapsible: false,
     });

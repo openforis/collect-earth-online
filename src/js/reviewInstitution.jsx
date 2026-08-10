@@ -1187,7 +1187,7 @@ class NewImagery extends React.Component {
           this.setState({ imageryTitle: e.target.value })
         )}
         {/* This should be generalized into the imageryOptions */}
-        {["GeoServer", "xyz"].includes(type) &&
+        {["GeoServer", "xyz", "WMTS"].includes(type) &&
          this.formInput("Attribution", "text", this.state.imageryAttribution, (e) =>
            this.setState({ imageryAttribution: e.target.value })
          )}

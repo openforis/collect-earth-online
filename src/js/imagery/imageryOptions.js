@@ -81,6 +81,37 @@ export const imageryOptions = [
     ],
     // FIXME, add url if help document is created.
   },
+    {
+    type: "WMTS",
+    label: "WMTS Imagery",
+    optionalProxy: true,
+    defaultProxy: false,
+    params: [
+      {
+        key: "geoserverUrl",
+        display: "WMTS URL",
+        sanitizer: (value) => (value.endsWith("?") ? value.slice(0, -1) : value),
+        validator: (value) =>
+          !urlValidator(value)
+            ? "The server address (URL) is not valid."
+            : "",
+      },
+      { key: "LAYERS", display: "WMTS Layer Name", parent: "geoserverParams" },
+      { key: "accessToken", display: "Access Token", required: false },
+      {
+        key: "geoserverParams",
+        display: "Additional WMTS Params (JSON format)",
+        required: false,
+        type: "JSON",
+        validator: (value) =>
+          !isValidJSON(value)
+            ? 'Invalid JSON in the "Visualization Parameters" field.'
+            : !olProjectionValidator(value)
+            ? "SRS/CRS is not valid. OpenLayers will automatically use EPSG:3857."
+            : "",
+      },
+    ],
+  },
   {type: "DynamicWorld",
    label: "Dynamic World",
    optionalProxy: false,
