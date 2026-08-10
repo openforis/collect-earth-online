@@ -1,41 +1,19 @@
-import { atom } from "jotai";
 import _ from 'lodash';
+import { atom } from 'jotai';
 import { initAppDb , regEvent , regEffect , dispatch , regSub , current } from '@flexsurfer/reflex';
 
-import { validateOverview,
-         validateImagery,
-         validatePlots,
-         validateSamples,
-         validateQuestions,
-         validateWizard,
-         validateStep,
-       } from "../wizard/validation";
+import {
+  validateOverview,
+  validateImagery,
+  validatePlots,
+  validateSamples,
+  validateQuestions,
+  validateWizard,
+  validateStep,
+} from "../wizard/validation";
 
-
-
-//TODO: Delete unused jotai-style atoms
-//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-export const projectSourceAtom = atom(null);
-export const currentStepAtom = atom("overview");
-export const projectOverviewAtom = atom (
-  {projectName: '',
-   projectDescription: '',
-   projectType: null, // 'simplified' | 'regular'
-   learningMaterial: '',
-   visibility: null, // 'public' | 'users' | 'institution' | 'private'
-   projectOptions: {
-   gee: false,
-   extraPlotColumns: false,
-   plotConfidence: false,
-   autoGeo: false}});
-
-
-export const rulesAtom = atom([]);
 export const previewSelectedSampleIdAtom = atom(1);
 export const previewUserSamplesAtom = atom({});
-
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 const projectWizardDb = {
@@ -624,6 +602,7 @@ regEvent(event_ids.validate, ({ draftDb }, step='wizard') => {
 regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
   
   const form = buildProject(draftDb, sub_ids);
+  const isSimplified = draftDb[sub_ids.overview.projectType] === 'simplified';
 
   switch (currentStep) {
   case 'overview' : {    
@@ -635,33 +614,33 @@ regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
     const errors = validateImagery(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['imagery', errors]]]) 
       : dispatch([event_ids.currentStep, 'boundary']) ;
-  break;}
+    break;}
   case 'boundary' : {
-    dispatch([event_ids.currentStep,  'plots']);
-  break;}
+    dispatch([event_ids.currentStep, isSimplified ? 'questions' : 'plots']);
+    break;}
   case 'plots' : {
     const errors = validatePlots(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['plots', errors]]]) 
       : dispatch([event_ids.currentStep, 'samples']);
-  break;}
+    break;}
   case 'samples' : {
     const errors = validateSamples(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['samples', errors]]]) 
       : dispatch([sub_ids.currentStep, 'questions']);
-  break;}
+    break;}
   case 'questions' : {
     const errors = validateQuestions(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['questions', errors]]]) 
-      : dispatch([sub_ids.currentStep, 'rules']);
-  break;}
+      : dispatch([sub_ids.currentStep, isSimplified ? 'review' : 'rules']);
+    break;}
   case 'rules' : {
     dispatch([sub_ids.currentStep, 'review']);
-  break;}
+    break;}
   case 'review' : {
     const errors = validateWizard(form);
     errors ? dispatch([event_ids.errors, errors])
       : draftDb[sub_ids.modal] = 'review';
-  break;}
+    break;}
   default : 
     dispatch([event_ids.errors, [['Navigation', ['Your browser experienced a client error. please refresh the page.']]]]);    
   }

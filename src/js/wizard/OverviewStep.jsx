@@ -26,8 +26,8 @@ export default function OverviewStep () {
                 <div
                   className="labeled-input"                       
                   key={id}
-                  onClick={()=> {dispatch([event_ids.overview.projectType, id]);
-                                }}>
+                  onClick={()=> {
+                    dispatch([event_ids.overview.projectType, id]);}}>
                   <span>{ projectType == id
                           ? <SvgIcon icon="radioChecked" size="1.2rem" />    
                           : <SvgIcon icon="radio" size="1.2rem"/>}</span>
