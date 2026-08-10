@@ -24,7 +24,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const extraPlotColumns = useSubscription([sub_ids.overview.projectOptions.extraPlotColumns]);
     const plotConfidence = useSubscription([sub_ids.overview.projectOptions.plotConfidence]);
     const autoGeo = useSubscription([sub_ids.overview.projectOptions.autoGeo]);
-    
+
     return (
       <div className='projectWizardCard'>
         <div className='review-card-header'>

@@ -67,16 +67,19 @@ const projectWizardDb = {
   'plots.referencePlotId': -1,
   'plots.similariyYears': null,
   'plots.designSettings': {
-    sampleGeometries : {points:   true,                                       
-                        lines:    true,
-                        polygons :true},
-    userAssignment:    {userMethod:  "none",
-                        users:      [],
-                        percents:   []},
-    qaqcAssignment:   {qaqcMethod:     "none",
-                       percent:        0,
-                       smes :          [],
-      timesToReview : 2}},
+    sampleGeometries: {
+      points:   true,
+      lines:    true,
+      polygons: true},
+    userAssignment: {
+      userMethod:  "none",
+      users:       [],
+      percents:    []},
+    qaqcAssignment: {
+      qaqcMethod:    "none",
+      percent:       0,
+      smes:          [],
+      timesToReview: 2}},
   'plots.plotSimilarityDetails': { referencePlotId: "", years: [] },
   // samples
   'samples.sampleDistribution': 'random',

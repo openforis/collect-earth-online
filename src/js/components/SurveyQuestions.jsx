@@ -1101,14 +1101,14 @@ export const DrawingTool = () => {
         <RenderDrawTools />
         <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
           <button
-            className="btn btn-outline-lightgreen"
+            className="btn btn-outline-darkgreen"
             onClick={featuresToSampleLayer}
             title="Save drawn features back to sample list"
           >
             Save samples
           </button>
           <button
-            className="btn btn-outline-lightgreen"
+            className="btn btn-outline-darkgreen"
             onClick={() => clearAll()}
             title="Exit draw mode and return to answering"
           >

@@ -40,14 +40,17 @@ export const BoundaryStep = ({ imageryList = [] }) => {
     dispatch([event_ids.plots.plotFileName, ""]);
     dispatch([event_ids.plots.plotFeatures, []]);
     dispatch([event_ids.plots.totalPlots, 0]);
-    dispatch([event_ids.plots.numPlots, ""]);
-    dispatch([event_ids.plots.plotSize, ""]);
+    dispatch([event_ids.plots.numPlots, 0]);
+    dispatch([event_ids.plots.plotSize, 0]);
     dispatch([event_ids.boundary.generationMethod, method]);
   };
 
   const handleMapDrawComplete = (drawnFeatureGeoJSON) => {
     const updatedFeatures = [drawnFeatureGeoJSON];
     dispatch([event_ids.boundary.aoiFeatures, updatedFeatures]);
+    isSimplified ? dispatch([event_ids.plots.plotSize, 1000]) : null;
+    isSimplified ? dispatch([event_ids.plots.numPlots, 1]) : null;
+
   };
 
   const loadZippedShapefile = (file) => {
@@ -64,7 +67,8 @@ export const BoundaryStep = ({ imageryList = [] }) => {
           throw new Error("No valid spatial features found inside Shapefile.");
         }
         dispatch([event_ids.boundary.setBoundaryFromFile, file.name, geometries]);
-
+        isSimplified ? dispatch([event_ids.plots.plotSize, 1000]) : null;
+        isSimplified ? dispatch([event_ids.plots.numPlots, 1]) : null;
       } catch (error) {
         dispatch([
           event_ids.errors, [['File Error', [error.message || "Failed to properly parse chosen zipped archive."]]]
@@ -158,7 +162,7 @@ export const BoundaryStep = ({ imageryList = [] }) => {
                 </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                   <label 
-                    className="btn btn-sm btn-outline-lightgreen py-2 px-3 text-nowrap"
+                    className="btn btn-sm btn-outline-darkgreen py-2 px-3 text-nowrap"
                     htmlFor="project-boundary-file"
                     style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}
                   >
