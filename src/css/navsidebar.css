@@ -1,0 +1,24 @@
+.nav-sidebar {
+    width: 100px;
+    height: 100vh;
+    z-index: 1080;
+    
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+
+    align-items: flex-start;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 1rem .5rem ;
+
+    background-color: #393E46;
+   
+}
+

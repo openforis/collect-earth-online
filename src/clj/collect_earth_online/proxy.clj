@@ -74,6 +74,9 @@
 (defn- build-url [{:keys [query-params]}]
   (let [source-config (get-imagery-source-config (tc/val->int (get query-params "imageryId")))
         source-type   (:type source-config "")]
+    (println ">>>> BUILDING URL:")
+    (println query-params)
+    (println source-config)
     (cond
       (= "Planet" source-type)
       (planet-url source-config query-params)

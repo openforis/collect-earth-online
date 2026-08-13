@@ -74,7 +74,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
       const previewArray = previewId ? [Number(previewId)] : [];
       setActiveMapLayers(new Set(previewArray));
     }, [previewId, setActiveMapLayers]);
-    
+
     return (
       <div className='projectWizardCard'>
         <div className='review-card-header'>

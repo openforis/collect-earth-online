@@ -11,6 +11,8 @@ import { getLanguage, capitalizeFirst } from "../utils/generalUtils";
 import { getPreference, setPreference } from "../utils/preferences";
 import { stateAtom } from "../utils/constants";
 
+import '../../css/navsidebar.css';
+
 export function LogOutButton({ userName, uri }) {
   const fullUri = uri + window.location.search;
   const loggedOut = !userName || userName === "guest";
@@ -144,6 +146,192 @@ class HelpSlideDialog extends React.Component {
   }
 }
 
+export function NavigationBar ({ userName, userId, children, version }) {
+  const [helpSlides, setHelpSlides] = useState([]);
+  const [showHelpMenu, toggleHelpMenu] = useState(false);
+  const [page, setPage] = useState("");
+  const uri = window.location.pathname;
+  const loggedOut = !userName || userName === "guest";
+  const [navIcon, setNavIcon] = useState("highlights");
+
+  function highlightsHandler() {
+    console.log("highlights!");
+    setNavIcon("highlights");
+  };
+  function institutionsHandler() {
+    console.log("institutions!");
+    setNavIcon("institutions");
+  };
+  function collectHandler() {
+    console.log("collect!");
+    setNavIcon("collect");
+  };
+  function manageHandler() {
+    console.log("manage!");
+    setNavIcon("manage");
+  };
+  
+  const navIcons = {
+    highlights:
+    {title: "Highlights",
+     icon: "edit",
+     clickHandler: highlightsHandler},
+    institutions:
+    {title: "Institutions",
+     icon: "edit",
+     clickHandler: institutionsHandler},
+    collect:
+    {title: "Collect",
+     icon: "edit",
+     clickHandler: collectHandler},
+    manage:
+    {title: "Manage",
+     icon: "edit",
+     clickHandler: manageHandler},
+  };
+
+  function autoShowHelpMenu (page) {
+    const autoShowPages = ["home"];
+    const key = `${page}:seen`;
+    if (autoShowPages.includes(page) && !getPreference(key)) {
+      toggleHelpMenu(true);
+      setPreference(key, true);
+    }};
+
+  function getHelpSlides (availableLanguages, page) {
+    fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`, {
+      headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json" },
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        setHelpSlides(data);
+        setPage(page);        
+        autoShowHelpMenu(page);
+      })
+      .catch((error) => console.log(page, getLanguage(availableLanguages), error));
+  };
+
+  function closeHelpMenu () {
+    toggleHelpMenu(false);
+  };
+
+  useEffect(()=>{
+    fetch("/locale/help.json", {
+      headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json" },
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        const location = window.location.pathname.slice(1);
+        const page = location === "" ? "home" : location;
+        const availableLanguages = data[page];
+        if (availableLanguages) getHelpSlides(availableLanguages, page);
+      })
+      .catch((error) => console.log(error));    
+  }, []);
+
+  function NavIcon ({icon, clickHandler, title, navikey}) {
+    return (
+      <div onClick={clickHandler}
+           style={navIcon === navikey ? {paddingLeft: "8px"} : null}>
+        <SvgIcon icon={icon} size="2rem" color="white"/>
+        <p style={{color: "white"}}>{title}</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {showHelpMenu && (
+        <HelpSlideDialog
+          closeHelpMenu={closeHelpMenu}
+          helpSlides={helpSlides}
+          page={page}
+        />
+      )}
+      <nav className="nav-sidebar" id="main-nav">
+        <a href="/home">
+          <div className="d-flex flex-column align-items-center justify-content-center">
+            <img
+              alt="Home"
+              className="img-fluid"
+              id="ceo-site-logo"
+              src="/img/ceo-logo.png"
+              style={{ maxHeight: "40px" }}
+            />
+            <div className="badge badge-pill badge-light" style={{ fontSize: "0.6rem" }}>
+              Version: {version}
+            </div>
+          </div>
+        </a>
+        <div id="navbarSupportedContent">
+          {
+            Object.entries(navIcons).map(([navikey, {clickHandler, icon, title}])=>{
+              return (
+                <div
+                  key={navikey}
+                  style={navIcon === navikey
+                         ? {backgroundColor: "#001A19",
+                            width: "100px",
+                            borderLeft: "8px solid #15C1AE"}
+                         : null}>
+                  <NavIcon icon={icon} clickHandler={clickHandler} title={title} navikey={navikey}/>
+                </div>
+              );
+            })
+          }
+          {/*
+             <ul >
+             {[
+             //{ page: "CEO", link: "/home" },
+             //{ page: "Home", link: "https://collect.earth/" },
+             //{ page: "About", link: "https://collect.earth/about/" },
+             //{ page: "Support", link: "https://collect.earth/ceo-guides" },
+             //{ page: "Blog", link: "https://collect.earth/blog" },
+             ].map(({ page, link }) => (
+             <li
+             key={page}
+             className={"nav-item" + (page === "CEO" && uri === "/home" && " active")}
+             >
+             <a className="nav-link" href={link}>
+             {page}
+             </a>
+             </li>
+             ))}
+             {!loggedOut && (
+             <li className={"nav-item" + (uri === "/account" && " active")}>
+             <a className="nav-link" href={"/account?accountId=" + userId}>
+             Account
+             </a>
+             </li>
+             )}
+             </ul>
+           */}
+          <ul  id="login-info">
+            <LogOutButton uri={uri} userName={userName} />
+          </ul>
+          <div className="ml-3" onClick={() => toggleHelpMenu(true)}>
+            {helpSlides.length > 0 && (
+              <div
+                className="tooltip_wrapper"
+                style={{
+                  animation: "glow 2s 6 alternate",
+                  animationDelay: "1s",
+                  borderRadius: "2rem",
+                }}
+              >
+                <SvgIcon color="purple" cursor="pointer" icon="help" size="2rem" />
+                <span className="tooltip_content">Help</span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+      </nav>
+      {children}
+    </>
+  );
+}
+/*
 export class NavigationBar extends React.Component {
   constructor(props) {
     super(props);
@@ -287,7 +475,7 @@ export class NavigationBar extends React.Component {
     );
   }
 }
-
+*/
 export function Logo({ size, url, name, id, src }) {
   const logoCSS = (logoSize) => ({
     display: "flex",
