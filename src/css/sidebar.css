@@ -1,5 +1,6 @@
 .sidebar-container {
   position: fixed;
+  margin-top: 54px;
   margin-left: 100px;
   padding-bottom: 60px;
   top: 0;

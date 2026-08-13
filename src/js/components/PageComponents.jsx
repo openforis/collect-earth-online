@@ -146,12 +146,7 @@ class HelpSlideDialog extends React.Component {
   }
 }
 
-export function NavigationBar ({ userName, userId, children, version }) {
-  const [helpSlides, setHelpSlides] = useState([]);
-  const [showHelpMenu, toggleHelpMenu] = useState(false);
-  const [page, setPage] = useState("");
-  const uri = window.location.pathname;
-  const loggedOut = !userName || userName === "guest";
+export function NavSideBar () {
   const [navIcon, setNavIcon] = useState("highlights");
 
   function highlightsHandler() {
@@ -174,96 +169,36 @@ export function NavigationBar ({ userName, userId, children, version }) {
   const navIcons = {
     highlights:
     {title: "Highlights",
-     icon: "edit",
+     icon: "compass",
      clickHandler: highlightsHandler},
     institutions:
     {title: "Institutions",
-     icon: "edit",
+     icon: "group",
      clickHandler: institutionsHandler},
     collect:
     {title: "Collect",
-     icon: "edit",
+     icon: "collect",
      clickHandler: collectHandler},
     manage:
     {title: "Manage",
-     icon: "edit",
+     icon: "settings",
      clickHandler: manageHandler},
   };
-
-  function autoShowHelpMenu (page) {
-    const autoShowPages = ["home"];
-    const key = `${page}:seen`;
-    if (autoShowPages.includes(page) && !getPreference(key)) {
-      toggleHelpMenu(true);
-      setPreference(key, true);
-    }};
-
-  function getHelpSlides (availableLanguages, page) {
-    fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`, {
-      headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json" },
-    })
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        setHelpSlides(data);
-        setPage(page);        
-        autoShowHelpMenu(page);
-      })
-      .catch((error) => console.log(page, getLanguage(availableLanguages), error));
-  };
-
-  function closeHelpMenu () {
-    toggleHelpMenu(false);
-  };
-
-  useEffect(()=>{
-    fetch("/locale/help.json", {
-      headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json" },
-    })
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        const location = window.location.pathname.slice(1);
-        const page = location === "" ? "home" : location;
-        const availableLanguages = data[page];
-        if (availableLanguages) getHelpSlides(availableLanguages, page);
-      })
-      .catch((error) => console.log(error));    
-  }, []);
 
   function NavIcon ({icon, clickHandler, title, navikey}) {
     return (
       <div onClick={clickHandler}
+           className="sidebar-navicon"
            style={navIcon === navikey ? {paddingLeft: "8px"} : null}>
-        <SvgIcon icon={icon} size="2rem" color="white"/>
+        <SvgIcon icon={icon} size="2rem" 
+        />
         <p style={{color: "white"}}>{title}</p>
       </div>
     );
   }
 
   return (
-    <>
-      {showHelpMenu && (
-        <HelpSlideDialog
-          closeHelpMenu={closeHelpMenu}
-          helpSlides={helpSlides}
-          page={page}
-        />
-      )}
-      <nav className="nav-sidebar" id="main-nav">
-        <a href="/home">
-          <div className="d-flex flex-column align-items-center justify-content-center">
-            <img
-              alt="Home"
-              className="img-fluid"
-              id="ceo-site-logo"
-              src="/img/ceo-logo.png"
-              style={{ maxHeight: "40px" }}
-            />
-            <div className="badge badge-pill badge-light" style={{ fontSize: "0.6rem" }}>
-              Version: {version}
-            </div>
-          </div>
-        </a>
-        <div id="navbarSupportedContent">
+        <div id="nav-sidebar" className="nav-sidebar">
           {
             Object.entries(navIcons).map(([navikey, {clickHandler, icon, title}])=>{
               return (
@@ -278,71 +213,43 @@ export function NavigationBar ({ userName, userId, children, version }) {
                 </div>
               );
             })
-          }
-          {/*
-             <ul >
-             {[
-             //{ page: "CEO", link: "/home" },
-             //{ page: "Home", link: "https://collect.earth/" },
-             //{ page: "About", link: "https://collect.earth/about/" },
-             //{ page: "Support", link: "https://collect.earth/ceo-guides" },
-             //{ page: "Blog", link: "https://collect.earth/blog" },
-             ].map(({ page, link }) => (
-             <li
-             key={page}
-             className={"nav-item" + (page === "CEO" && uri === "/home" && " active")}
-             >
-             <a className="nav-link" href={link}>
-             {page}
-             </a>
-             </li>
-             ))}
-             {!loggedOut && (
-             <li className={"nav-item" + (uri === "/account" && " active")}>
-             <a className="nav-link" href={"/account?accountId=" + userId}>
-             Account
-             </a>
-             </li>
-             )}
-             </ul>
-           */}
-          <ul  id="login-info">
-            <LogOutButton uri={uri} userName={userName} />
-          </ul>
-          <div className="ml-3" onClick={() => toggleHelpMenu(true)}>
-            {helpSlides.length > 0 && (
-              <div
-                className="tooltip_wrapper"
-                style={{
-                  animation: "glow 2s 6 alternate",
-                  animationDelay: "1s",
-                  borderRadius: "2rem",
-                }}
-              >
-                <SvgIcon color="purple" cursor="pointer" icon="help" size="2rem" />
-                <span className="tooltip_content">Help</span>
-              </div>
-            )}
-          </div>
-        </div>
-        
-      </nav>
-      {children}
-    </>
+          }                              
+        </div>        
   );
 }
-/*
-export class NavigationBar extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      helpSlides: [],
-      showHelpMenu: false,
-      page: "",
-    };
-  }
 
-  componentDidMount() {
+export function NavTopBar ({version, userName, userId, children}) {
+  const [helpSlides, setHelpSlides] = useState([]);
+  const [showHelpMenu, toggleHelpMenu] = useState(false);
+  const [page, setPage] = useState("");
+  const uri = window.location.pathname;
+  const loggedOut = !userName || userName === "guest";
+
+  function autoShowHelpMenu (page) {
+    const autoShowPages = ["home"];
+    const key = `${page}:seen`;
+    if (autoShowPages.includes(page) && !getPreference(key)) {
+      toggleHelpMenu(true);
+      setPreference(key, true);
+    }
+  };
+
+  function getHelpSlides (availableLanguages, page) {
+    fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`, {
+      headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json" },
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        setHelpSlides(data);
+        setPage(page);
+        autoShowHelpMenu(page);
+      })
+      .catch((error) => console.log(page, getLanguage(availableLanguages), error));
+  };
+
+  function closeHelpMenu () {toggleHelpMenu(false);};
+
+  useEffect(()=>{
     fetch("/locale/help.json", {
       headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json" },
     })
@@ -351,46 +258,18 @@ export class NavigationBar extends React.Component {
         const location = window.location.pathname.slice(1);
         const page = location === "" ? "home" : location;
         const availableLanguages = data[page];
-        if (availableLanguages) this.getHelpSlides(availableLanguages, page);
+        if (availableLanguages) getHelpSlides(availableLanguages, page);
       })
       .catch((error) => console.log(error));
-  }
+  },[]);
 
-  autoShowHelpMenu = (page) => {
-    const autoShowPages = ["home"];
-    const key = `${page}:seen`;
-    if (autoShowPages.includes(page) && !getPreference(key)) {
-      this.setState({ showHelpMenu: true });
-      setPreference(key, true);
-    }
-  };
-
-  getHelpSlides = (availableLanguages, page) => {
-    fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`, {
-      headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json" },
-    })
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.setState({ helpSlides: data, page });
-        this.autoShowHelpMenu(page);
-      })
-      .catch((error) => console.log(page, getLanguage(availableLanguages), error));
-  };
-
-  closeHelpMenu = () => this.setState({ showHelpMenu: false });
-
-  render() {
-    const { userName, userId, children } = this.props;
-    const uri = window.location.pathname;
-    const loggedOut = !userName || userName === "guest";
-
-    return (
+  return (
       <>
-        {this.state.showHelpMenu && (
+        {showHelpMenu && (
           <HelpSlideDialog
-            closeHelpMenu={this.closeHelpMenu}
-            helpSlides={this.state.helpSlides}
-            page={this.state.page}
+            closeHelpMenu={closeHelpMenu}
+            helpSlides={helpSlides}
+            page={page}
           />
         )}
         <nav
@@ -408,7 +287,7 @@ export class NavigationBar extends React.Component {
                 style={{ maxHeight: "40px" }}
               />
               <div className="badge badge-pill badge-light" style={{ fontSize: "0.6rem" }}>
-                Version: {this.props.version}
+                Version: {version}
               </div>
             </div>
           </a>
@@ -452,8 +331,8 @@ export class NavigationBar extends React.Component {
             <ul className="navbar-nav mr-0" id="login-info">
               <LogOutButton uri={uri} userName={userName} />
             </ul>
-            <div className="ml-3" onClick={() => this.setState({ showHelpMenu: true })}>
-              {this.state.helpSlides.length > 0 && (
+            <div className="ml-3" onClick={() => toggleHelpMenu(true)}>
+              {helpSlides.length > 0 && (
                 <div
                   className="tooltip_wrapper"
                   style={{
@@ -467,15 +346,23 @@ export class NavigationBar extends React.Component {
                 </div>
               )}
             </div>
-          </div>
-          
+          </div>          
         </nav>
         {children}
       </>
     );
-  }
 }
-*/
+
+
+export function NavigationBar ({children, version, userName, userId}) {
+  return(
+    <>
+      <NavSideBar/>
+      <NavTopBar children={children} version={version} userName={userName} userId={userId}/>
+    </>
+  );
+}
+
 export function Logo({ size, url, name, id, src }) {
   const logoCSS = (logoSize) => ({
     display: "flex",
