@@ -29,6 +29,7 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
   const currentStep = useSubscription([sub_ids.currentStep]);
   const modal = useSubscription([sub_ids.modal]);
   const projectSource = useSubscription([sub_ids.projectSource]);
+  const projectType = useSubscription([sub_ids.overview.projectType]);
   function setInstitutionImagery (imagery) {dispatch([event_ids.institution.imagery, imagery]);}
   const institutionImagery = useSubscription([sub_ids.institution.imagery]);
   function setDraftProject (draftProject) {dispatch([event_ids.draftProject, draftProject]);};
@@ -65,15 +66,17 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
   // ------------------
     
   const CurrentStep = () => {
+    const isSimplified = projectType === 'simplified';
+
     switch (currentStep) {
     case null         : return (<></>);
     case 'overview'   : return <OverviewStep />;
     case 'imagery'    : return <ImageryStep imageryList={institutionImagery}/>;
     case 'boundary'   : return <BoundaryStep imageryList={institutionImagery}/>;
-    case 'plots'      : return <PlotStep imageryList={institutionImagery}/>;
-    case 'samples'    : return <SampleStep />;
+    case 'plots'      : return isSimplified ? null : <PlotStep imageryList={institutionImagery}/>;
+    case 'samples'    : return isSimplified ? null : <SampleStep />;
     case 'questions'  : return <SurveyQuestionsStep/>;
-    case 'rules'      : return <RulesStep />;
+    case 'rules'      : return isSimplified ? null : <RulesStep />;
     case 'review'     : return <ReviewStep
                                  imageryList={institutionImagery}
                                  institutionId={institutionId}
@@ -88,15 +91,15 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
         <BreadCrumbs
           crumbs={[
             {display: "Institution",
-             id: "institution",
-             query: ["institution", institutionId],
-             onClick:()=>{window.location.assign(`/review-institution?institutionId=${institutionId}`);
-                         }},
+              id: "institution",
+              query: ["institution", institutionId],
+              onClick:()=>{window.location.assign(`/review-institution?institutionId=${institutionId}`);
+              }},
             {display: "Add a New Project",
-             id: "projectWizard",
-             query: ["project", "newProject"],
-             onClick:()=>{window.location.assign(`/project-wizard?institutionId=${institutionId}`);
-                         }}]}
+              id: "projectWizard",
+              query: ["project", "newProject"],
+              onClick:()=>{window.location.assign(`/project-wizard?institutionId=${institutionId}`);
+              }}]}
         />
         <ProjectWizardNavigator/>
         <div className="wizard-step-body" >
