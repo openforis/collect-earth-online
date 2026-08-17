@@ -219,8 +219,9 @@ function TemplateProjectModal () {
              <option value={-1} selected disabled hidden>Select Template Project:</option>
              {templateProjects
               .filter(({id, name}) => {
-                return (((filterProjectId !== -1) && id.toString().includes(filterProjectId.toString())) ||
-                        ((filterProjectName !== "") && name.includes(filterProjectName)));
+                return ((id.toString().includes(filterProjectId.toString())) ||
+                        (name.includes(filterProjectName)));
+
               })
               .map(e =>(<option key={e.id} value={e.id}>{e.name}</option>))}
          </select>
