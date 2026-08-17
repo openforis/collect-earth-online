@@ -11,6 +11,27 @@ export default function OverviewStep () {
     const projectName = useSubscription([sub_ids.overview.projectName]);
     const projectDescription = useSubscription([sub_ids.overview.projectDescription]);
     const learningMaterial = useSubscription([sub_ids.overview.learningMaterial]);
+    const designSettings = useSubscription([sub_ids.plots.designSettings]);
+
+    const changeProjectType = (type) => {
+      dispatch([event_ids.overview.projectType, type]);
+      if(type === 'simplified') {
+        const simplifiedDesignSettings = { ...designSettings,
+          sampleGeometries: {
+            points: true,
+            lines: true,
+            polygons: true
+          }};
+        dispatch([event_ids.plots.designSettings, simplifiedDesignSettings]);
+        dispatch([event_ids.samples.allowDrawnSamples, true]);
+        dispatch([event_ids.samples.sampleDistribution, 'center']);
+        dispatch([event_ids.plots.numPlots, 1]);
+        dispatch([event_ids.plots.plotDistribution, 'simplified']);
+        dispatch([event_ids.plots.plotSize, 1000]);
+      } else {
+        dispatch([event_ids.plots.plotDistribution, 'random']);
+      }
+    }
 
     return (
       <div
@@ -21,19 +42,20 @@ export default function OverviewStep () {
           <SvgIcon icon="info" size="1.2rem" /></p>
         <div style={{width: '100%'}}>
           <div style={{display: "inline-flex", gap:"12px"}}>
-            {Object.entries(projectTypeOptions).map(([id, label]) => {
+            {Object.entries(projectTypeOptions).map(([type, label]) => {
               return (
                 <div
                   className="labeled-input"                       
-                  key={id}
-                  onClick={()=> {dispatch([event_ids.overview.projectType, id]);
-                                }}>
-                  <span>{ projectType == id
+                  key={type}
+                  onClick={()=> {
+                    changeProjectType(type);
+                  }}>
+                  <span>{ projectType === type
                           ? <SvgIcon icon="radioChecked" size="1.2rem" />    
                           : <SvgIcon icon="radio" size="1.2rem"/>}</span>
                   <span
                     className="text-label"
-                    style={projectType == id ? {fontWeight: "bold"} : {}}
+                    style={projectType == type ? {fontWeight: "bold"} : {}}
                   >{ label }</span>
                 </div>);                  
             })}</div>

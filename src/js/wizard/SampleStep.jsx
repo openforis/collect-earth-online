@@ -12,7 +12,7 @@ export const SampleStep = () => {
   const plotShape = useSubscription([sub_ids.plots.plotShape]) || 'circle';
 
   const sampleDistribution = useSubscription([sub_ids.samples.sampleDistribution]) || "random";
-  const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]) || 1;
+  const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]);
   const sampleResolution = useSubscription([sub_ids.samples.sampleResolution]) || 0;
   const [sampleFeatures, setSampleFeatures] = useState([]);
 
@@ -68,7 +68,7 @@ export const SampleStep = () => {
 
 export const SampleGenerationCard = ({ setSampleFeatures }) => {
   const sampleDistribution = useSubscription([sub_ids.samples.sampleDistribution]) || "random";
-  const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]) || 1;
+  const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]);
   const sampleResolution = useSubscription([sub_ids.samples.sampleResolution]) || 0;
   const sampleFileName = useSubscription([sub_ids.samples.sampleFileName]) || "";
   const extension = sampleDistribution === 'shp' ? 'zip' : sampleDistribution;
@@ -182,8 +182,13 @@ export const SampleGenerationCard = ({ setSampleFeatures }) => {
       {sampleDistribution === 'random' && (
         <div className="form-group mt-3">
           <label className="text-label-sm">Number of Samples</label>
-          <input className="text-input" type="number" value={samplesPerPlot} 
-            onChange={(e) => dispatch([event_ids.samples.samplesPerPlot, Number(e.target.value)])} />
+          <input className="text-input" type="text"
+                 value={samplesPerPlot} 
+                 onChange={(e) => {                   
+                   const regex = /^[0-9]*$/;
+                   const input = e.target.value;
+                   const value = regex.test(input) ? input : input.slice(0, input.length - 1);
+                   dispatch([event_ids.samples.samplesPerPlot, value]);}} />
         </div>
       )}
 

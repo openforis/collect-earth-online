@@ -29,10 +29,13 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
   const currentStep = useSubscription([sub_ids.currentStep]);
   const modal = useSubscription([sub_ids.modal]);
   const projectSource = useSubscription([sub_ids.projectSource]);
+  const projectType = useSubscription([sub_ids.overview.projectType]);
   function setInstitutionImagery (imagery) {dispatch([event_ids.institution.imagery, imagery]);}
   const institutionImagery = useSubscription([sub_ids.institution.imagery]);
   function setDraftProject (draftProject) {dispatch([event_ids.draftProject, draftProject]);};
   function setEditProject (project) {dispatch([event_ids.editProject, project]);};
+  function setPlotFeatures (plots) { dispatch([event_ids.plots.plotFeatures, plots]) };
+
   // -------------------
   // HOOKS
   // ------------------
@@ -42,6 +45,12 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
     dispatch([event_ids.modal, 'newProject']);
     draftId && setDraftProject(draftId);
     projectId && setEditProject(projectId);
+    projectId && (
+      fetch(`/get-project-plots?projectId=${projectId}`)
+        .then(res => res.json())
+        .then(data => setPlotFeatures(data))
+        .catch(err => console.error("could not load plots", err))
+    );
     fetch(`/get-institution-imagery?institutionId=${institutionId}`)
       .then(res => res.json())
       .then(data => setInstitutionImagery(data))
@@ -57,16 +66,21 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
   // ------------------
     
   const CurrentStep = () => {
+    const isSimplified = projectType === 'simplified';
+
     switch (currentStep) {
     case null         : return (<></>);
     case 'overview'   : return <OverviewStep />;
     case 'imagery'    : return <ImageryStep imageryList={institutionImagery}/>;
     case 'boundary'   : return <BoundaryStep imageryList={institutionImagery}/>;
-    case 'plots'      : return <PlotStep imageryList={institutionImagery}/>;
-    case 'samples'    : return <SampleStep />;
+    case 'plots'      : return isSimplified ? null : <PlotStep imageryList={institutionImagery}/>;
+    case 'samples'    : return isSimplified ? null : <SampleStep />;
     case 'questions'  : return <SurveyQuestionsStep/>;
-    case 'rules'      : return <RulesStep />;
-    case 'review'     : return <ReviewStep imageryList={institutionImagery}/>;
+    case 'rules'      : return isSimplified ? null : <RulesStep />;
+    case 'review'     : return <ReviewStep
+                                 imageryList={institutionImagery}
+                                 institutionId={institutionId}
+                                 projectId={projectId}/>;
     default           : return <div style={{padding: "20px"}}>Step {currentStep} coming soon</div>;
     }};
   
@@ -77,15 +91,15 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
         <BreadCrumbs
           crumbs={[
             {display: "Institution",
-             id: "institution",
-             query: ["institution", institutionId],
-             onClick:()=>{window.location.assign(`/review-institution?institutionId=${institutionId}`);
-                         }},
+              id: "institution",
+              query: ["institution", institutionId],
+              onClick:()=>{window.location.assign(`/review-institution?institutionId=${institutionId}`);
+              }},
             {display: "Add a New Project",
-             id: "projectWizard",
-             query: ["project", "newProject"],
-             onClick:()=>{window.location.assign(`/project-wizard?institutionId=${institutionId}`);
-                         }}]}
+              id: "projectWizard",
+              query: ["project", "newProject"],
+              onClick:()=>{window.location.assign(`/project-wizard?institutionId=${institutionId}`);
+              }}]}
         />
         <ProjectWizardNavigator/>
         <div className="wizard-step-body" >
@@ -104,7 +118,8 @@ export function pageInit(params, session) {
       version={session.versionDeployed}
       draftId={params.draftId}
       projectId={params.projectId}
-      institutionId={params.institutionId}/>,
+      institutionId={params.institutionId}
+      edit={params.edit}/>,
     document.getElementById("app")
   );
 }

@@ -22,6 +22,8 @@ export const BoundaryStep = ({ imageryList = [] }) => {
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
   const initializedMap = useRef(false);
+  const projectType = useSubscription([sub_ids.overview.projectType]) || 'regular';
+  const isSimplified = projectType === 'simplified';
 
   useEffect(() => {
     setMapLibrary(imageryList);
@@ -38,14 +40,17 @@ export const BoundaryStep = ({ imageryList = [] }) => {
     dispatch([event_ids.plots.plotFileName, ""]);
     dispatch([event_ids.plots.plotFeatures, []]);
     dispatch([event_ids.plots.totalPlots, 0]);
-    dispatch([event_ids.plots.numPlots, ""]);
-    dispatch([event_ids.plots.plotSize, ""]);
+    dispatch([event_ids.plots.numPlots, 0]);
+    dispatch([event_ids.plots.plotSize, 0]);
     dispatch([event_ids.boundary.generationMethod, method]);
   };
 
   const handleMapDrawComplete = (drawnFeatureGeoJSON) => {
     const updatedFeatures = [drawnFeatureGeoJSON];
     dispatch([event_ids.boundary.aoiFeatures, updatedFeatures]);
+    isSimplified ? dispatch([event_ids.plots.plotSize, 1000]) : null;
+    isSimplified ? dispatch([event_ids.plots.numPlots, 1]) : null;
+
   };
 
   const loadZippedShapefile = (file) => {
@@ -62,7 +67,8 @@ export const BoundaryStep = ({ imageryList = [] }) => {
           throw new Error("No valid spatial features found inside Shapefile.");
         }
         dispatch([event_ids.boundary.setBoundaryFromFile, file.name, geometries]);
-
+        isSimplified ? dispatch([event_ids.plots.plotSize, 1000]) : null;
+        isSimplified ? dispatch([event_ids.plots.numPlots, 1]) : null;
       } catch (error) {
         dispatch([
           event_ids.errors, [['File Error', [error.message || "Failed to properly parse chosen zipped archive."]]]
@@ -80,14 +86,11 @@ export const BoundaryStep = ({ imageryList = [] }) => {
 
   return (
     <div className="wizard-step-layout">
-      {/* Alert Modals handled centrally via app database subscription properties */}
       {modal?.message && (
         <Modal title={modal.title} onClose={() => dispatch([event_ids.modal, null])}>
           <p>{modal.message}</p>
         </Modal>
       )}
-
-      {/* LEFT SIDE PANEL SIZING CONTAINER */}
       <div className="wizard-sidebar">
         <div className="card" style={{ width: '100%', padding: '20px' }}>
           
@@ -96,7 +99,6 @@ export const BoundaryStep = ({ imageryList = [] }) => {
             <p className="card-title">
               SELECT PROJECT BOUNDARY GENERATION METHOD <span style={{ color: 'red' }}>*</span>
             </p>
-
             {/* Option 1: Draw on Map */}
             <div 
               className={generationMethod === "manual" ? "radio-selected-button" : "radio-selection-button"}
@@ -108,19 +110,19 @@ export const BoundaryStep = ({ imageryList = [] }) => {
                 <span>Draw Project Boundary on Map</span>
               </p>
             </div>
-
-            {/* Option 2: Define from Plots File (Placeholder for step 4/5) */}
-            <div 
-              className={generationMethod === "plotFile" ? "radio-selected-button" : "radio-selection-button"}
-              onClick={() => handleMethodChange("plotFile")}
-              style={{ marginBottom: '12px', cursor: 'pointer' }}
-            >
-              <p className="radio-button-labeled">
-                <SvgIcon icon={generationMethod === "plotFile" ? "radioChecked" : "radio"} size="1.2rem" />
-                <span>Define AOI from plots file</span>
-              </p>
-            </div>
-
+            {/* Option 2: Define from plot file */}
+            {isSimplified ? null : (
+              <div
+                className={generationMethod === "plotFile" ? "radio-selected-button" : "radio-selection-button"}
+                onClick={() => handleMethodChange("plotFile")}
+                style={{ marginBottom: '12px', cursor: 'pointer' }}
+              >
+                <p className="radio-button-labeled">
+                  <SvgIcon icon={generationMethod === "plotFile" ? "radioChecked" : "radio"} size="1.2rem" />
+                  <span>Define AOI from plots file</span>
+                </p>
+              </div>
+            )}
             {/* Option 3: Upload Shapefile */}
             <div 
               className={generationMethod === "shpFile" ? "radio-selected-button" : "radio-selection-button"}
@@ -134,8 +136,6 @@ export const BoundaryStep = ({ imageryList = [] }) => {
               </p>
             </div>
           </section>
-
-          {/* Conditional Input UI Sub-render Triggers */}
           <hr style={{ borderTop: '1px solid var(--Neutral-Soft-gray)', width: '100%', margin: '20px 0' }} />
 
           <section style={{ width: '100%' }}>
@@ -162,7 +162,7 @@ export const BoundaryStep = ({ imageryList = [] }) => {
                 </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                   <label 
-                    className="btn btn-sm btn-outline-lightgreen py-2 px-3 text-nowrap"
+                    className="btn btn-sm btn-outline-darkgreen py-2 px-3 text-nowrap"
                     htmlFor="project-boundary-file"
                     style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}
                   >

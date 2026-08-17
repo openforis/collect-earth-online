@@ -238,11 +238,18 @@ export const PlotStep = ({ imageryList = [] }) => {
     <div className="form-group mb-3">
       <label className="text-label-sm">{labelPlotDimensionUnits} <span style={{ color: 'red' }}>*</span></label>
       <input
-        type="number"
+        type="text"
         className="text-input"
         placeholder="Enter Number"
         value={plotSize}
-        onChange={(e) => dispatch([event_ids.plots.plotSize, Number(e.target.value)])}
+        onChange={(e) => {
+          const regex = /^[0-9]*\.?[0-9]*$/;
+          const input = e.target.value;                   
+          dispatch([event_ids.plots.plotSize,
+                    input !== "" &&                              
+                    regex.test(input) ? input
+                    : input.slice(0, input.length - 1)]);
+                 }}
       />
     </div>
   );
@@ -252,12 +259,17 @@ export const PlotStep = ({ imageryList = [] }) => {
       <div className="form-group mb-3">
         <label className="text-label-sm">Number of Plots this project will contain <span style={{ color: 'red' }}>*</span></label>
         <input 
-          type="number" 
+          type="text" 
           className="text-input" 
           placeholder="Enter Number (Max 5000)"
           value={numPlots}
-          max="5000"
-          onChange={(e) => dispatch([event_ids.plots.numPlots, Number(e.target.value)])}
+          onChange={(e) =>{
+            const regex = /^[0-9]*$/;
+            const input = e.target.value;
+            function inRange (n) {return (0 < Number(n) && Number(n) < 5001);};
+            const value = (regex.test(input) && inRange(input)) ? input : input.slice(0, input.length - 1);
+            dispatch([event_ids.plots.numPlots, value]);
+          }}
         />
       </div>
       {renderPlotSizeInput()}

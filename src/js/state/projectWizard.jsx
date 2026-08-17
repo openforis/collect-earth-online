@@ -1,41 +1,19 @@
-import { atom } from "jotai";
 import _ from 'lodash';
+import { atom } from 'jotai';
 import { initAppDb , regEvent , regEffect , dispatch , regSub , current } from '@flexsurfer/reflex';
 
-import { validateOverview,
-         validateImagery,
-         validatePlots,
-         validateSamples,
-         validateQuestions,
-         validateWizard,
-         validateStep,
-       } from "../wizard/validation";
+import {
+  validateOverview,
+  validateImagery,
+  validatePlots,
+  validateSamples,
+  validateQuestions,
+  validateWizard,
+  validateStep,
+} from "../wizard/validation";
 
-
-
-//TODO: Delete unused jotai-style atoms
-//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-export const projectSourceAtom = atom(null);
-export const currentStepAtom = atom("overview");
-export const projectOverviewAtom = atom (
-  {projectName: '',
-   projectDescription: '',
-   projectType: null, // 'simplified' | 'regular'
-   learningMaterial: '',
-   visibility: null, // 'public' | 'users' | 'institution' | 'private'
-   projectOptions: {
-   gee: false,
-   extraPlotColumns: false,
-   plotConfidence: false,
-   autoGeo: false}});
-
-
-export const rulesAtom = atom([]);
 export const previewSelectedSampleIdAtom = atom(1);
 export const previewUserSamplesAtom = atom({});
-
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 const projectWizardDb = {
@@ -50,7 +28,11 @@ const projectWizardDb = {
   useTemplatePlots: false,
   useTemplateWidgets: false,
   invalidSteps: [],
-  // overview
+  availability: '',
+  publishedDate: '',
+  createdDate: '',
+  closedDate: '',
+    // overview
   'overview.projectName': '',
   'overview.projectDescription': '',
   'overview.projectType': 'regular',
@@ -85,16 +67,19 @@ const projectWizardDb = {
   'plots.referencePlotId': -1,
   'plots.similariyYears': null,
   'plots.designSettings': {
-    sampleGeometries : {points:   true,                                       
-                        lines:    true,
-                        polygons :true},
-    userAssignment:    {userMethod:  "none",
-                        users:      [],
-                        percents:   []},
-    qaqcAssignment:   {qaqcMethod:     "none",
-                       percent:        0,
-                       smes :          [],
-      timesToReview : 2}},
+    sampleGeometries: {
+      points:   true,
+      lines:    true,
+      polygons: true},
+    userAssignment: {
+      userMethod:  "none",
+      users:       [],
+      percents:    []},
+    qaqcAssignment: {
+      qaqcMethod:    "none",
+      percent:       0,
+      smes:          [],
+      timesToReview: 2}},
   'plots.plotSimilarityDetails': { referencePlotId: "", years: [] },
   // samples
   'samples.sampleDistribution': 'random',
@@ -247,6 +232,10 @@ export const sub_ids = {
   useTemplateWidgets: 'useTemplateWidgets',
   validStep: 'validStep',
   invalidSteps: 'invalidSteps',
+  availability: 'availability',
+  publishedDate: 'publishedDate',
+  createdDate: 'createdDate',
+  closedDate: 'closedDate',
   overview: {projectName: 'overview.projectName',
              projectDescription: 'overview.projectDescription',
              projectType: 'overview.projectType',
@@ -336,6 +325,10 @@ regSub(sub_ids.institutionId, sub_ids.institutionId);
 regSub(sub_ids.templateProjectId, sub_ids.templateProjectId);
 regSub(sub_ids.useTemplatePlots, sub_ids.useTemplatePlots);
 regSub(sub_ids.useTemplateWidgets, sub_ids.useTemplateWidgets);
+regSub(sub_ids.availability, sub_ids.availability);
+regSub(sub_ids.publishedDate, sub_ids.publishedDate);
+regSub(sub_ids.createdDate, sub_ids.createdDate);
+regSub(sub_ids.closedDate, sub_ids.closedDate);
 
 regSub(sub_ids.overview.projectType, sub_ids.overview.projectType);
 regSub(sub_ids.overview.projectName, sub_ids.overview.projectName);
@@ -612,6 +605,7 @@ regEvent(event_ids.validate, ({ draftDb }, step='wizard') => {
 regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
   
   const form = buildProject(draftDb, sub_ids);
+  const isSimplified = draftDb[sub_ids.overview.projectType] === 'simplified';
 
   switch (currentStep) {
   case 'overview' : {    
@@ -623,33 +617,33 @@ regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
     const errors = validateImagery(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['imagery', errors]]]) 
       : dispatch([event_ids.currentStep, 'boundary']) ;
-  break;}
+    break;}
   case 'boundary' : {
-    dispatch([event_ids.currentStep,  'plots']);
-  break;}
+    dispatch([event_ids.currentStep, isSimplified ? 'questions' : 'plots']);
+    break;}
   case 'plots' : {
     const errors = validatePlots(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['plots', errors]]]) 
       : dispatch([event_ids.currentStep, 'samples']);
-  break;}
+    break;}
   case 'samples' : {
     const errors = validateSamples(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['samples', errors]]]) 
       : dispatch([sub_ids.currentStep, 'questions']);
-  break;}
+    break;}
   case 'questions' : {
     const errors = validateQuestions(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['questions', errors]]]) 
-      : dispatch([sub_ids.currentStep, 'rules']);
-  break;}
+      : dispatch([sub_ids.currentStep, isSimplified ? 'review' : 'rules']);
+    break;}
   case 'rules' : {
     dispatch([sub_ids.currentStep, 'review']);
-  break;}
+    break;}
   case 'review' : {
     const errors = validateWizard(form);
     errors ? dispatch([event_ids.errors, errors])
       : draftDb[sub_ids.modal] = 'review';
-  break;}
+    break;}
   default : 
     dispatch([event_ids.errors, [['Navigation', ['Your browser experienced a client error. please refresh the page.']]]]);    
   }
@@ -687,7 +681,10 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   surveyQuestions,
   surveyRules = [],
   visibility = 'institution',
-  projectImageryList = [],
+  availability = '',
+  createdDate = '',
+  publishedDate = '',
+  closedDate = '',
 
 }) => {
   draftDb[sub_ids.overview.projectName] = name;
@@ -718,6 +715,11 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.samples.allowDrawnSamples] = allowDrawnSamples;
   draftDb[sub_ids.questions.questions] = surveyQuestions;
   draftDb[sub_ids.rules.rules] = surveyRules;
+  draftDb[sub_ids.availability] = availability;
+  draftDb[sub_ids.createdDate] = createdDate;
+  draftDb[sub_ids.publishedDate] = publishedDate;
+  draftDb[sub_ids.closedDate] = closedDate;
+
 });
 
 regEvent(event_ids.saveDraft, ({ draftDb }) => {
