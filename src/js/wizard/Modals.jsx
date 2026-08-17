@@ -215,14 +215,14 @@ function NewProjectModal () {
     importProject: ['Import Collect Earth Project',
                     'Import a project from the Collect Earth desktop application.']};
   const projectSource = useSubscription([sub_ids.projectSource]);
-
+  const institutionId = useSubscription([sub_ids.institutionId]);
   return (
     <Modal
       title='Project Setup'
       closeText=''
       confirmText='Get Started'
       onConfirm={()=>{handleNewProject(projectSource);}}
-      onClose={()=>{dispatch([event_ids.modal, 'newProject']);}}
+      onClose={()=>{window.location.assign(`/review-institution?institutionId=${institutionId}`);}}
       confirmDisabled={projectSource === null}>
       <div
         className="inputs">
