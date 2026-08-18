@@ -95,6 +95,9 @@ function TemplateProjectModal () {
   const projectType = useSubscription([sub_ids.overview.projectType]) || 'regular';
   const [templateProjectId, setTemplateProjectId] = useState(-1);
   const [templateProjects, setTemplateProjects] = useState([]);
+  const [filterProjectId, setFilterProjectId] = useState(-1);
+  const [filterProjectName, setFilterProjectName] = useState("");
+  const [filteredProjects, filterProjects] = useState([]);
 
   function setTemplateProject (templateProject) {dispatch([event_ids.templateProject, templateProject]);}
   function setUseTemplatePlots (useTemplatePlots) {dispatch([event_ids.overview.useTemplatePlots, useTemplatePlots]);}
@@ -118,7 +121,7 @@ function TemplateProjectModal () {
             users: [],
             percents: []}})
           : setDesignSettings(data.designSettings);
-        setTemplateProjectId(projectId);        
+        setTemplateProjectId(projectId);
         setImageryId(institutionImageryIds.includes(data.imageryId)
                      ? [data.imageryId]
                      : institutionImageryIds);
@@ -169,7 +172,9 @@ function TemplateProjectModal () {
         dispatch([event_ids.errors, [['Template Projects', ['Failed to load template projects']]]]);
         Promise.reject(error);
       });
-  }, []);  
+  }, []);
+
+  
   return (
     <Modal
       title='Select Template Project'
@@ -178,14 +183,50 @@ function TemplateProjectModal () {
       onConfirm={()=> {getTemplateProjects(templateProjectId);}}      
       onClose={()=>{ dispatch([event_ids.modal, 'newProject']);}}>
       <div>        
-        {templateProjects.length &&
-         <select
-           className="text-input"
-           onChange={(e)=>{
-             setTemplateProjectId(Number(e.target.value));}}>
-           <option value={-1} selected disabled hidden>Select Template Project:</option>
-           {templateProjects.map(e =>(<option key={e.id} value={e.id}>{e.name}</option>))}
-         </select>}
+        {templateProjects.length ?
+         <div>
+           <p>Filter Template Projects:</p>
+           <div style={{display: "flex",
+                        gap: "1rem",
+                        flexDirection: "row"}}>
+             <input
+               className="text-input"
+               style={{width: "20%"}}
+               type="text"
+               placeHolder="Id"
+               value={filterProjectId > 0 ? filterProjectId : null}
+               onKeyPress={(e)=>{
+                 const pattern = /^[0-9]+$/;
+                 const input = e.key;
+                 !pattern.test(input) && e.preventDefault();
+               }}
+               onChange={(e)=>{setFilterProjectId(e.target.value);}}
+             />
+             <input
+               placeholder="Project Name"
+               className="text-input"
+               style={{flexGrow: 2}}
+               type="text"
+               value={filterProjectName}
+               onChange={(e)=>{setFilterProjectName(e.target.value);}}
+             />
+             
+           </div>
+           <select
+             className="text-input"
+             onChange={(e)=>{
+               setTemplateProjectId(Number(e.target.value));}}>
+             <option value={-1} selected disabled hidden>Select Template Project:</option>
+             {templateProjects
+              .filter(({id, name}) => {
+                return ((id.toString().includes(filterProjectId.toString())) ||
+                        (name.includes(filterProjectName)));
+
+              })
+              .map(e =>(<option key={e.id} value={e.id}>{e.name}</option>))}
+         </select>
+         </div>
+         : <></>}
       </div>
     </Modal>
   );
