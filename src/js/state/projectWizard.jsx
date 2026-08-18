@@ -455,6 +455,7 @@ regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
           return Promise.resolve();
         } else {
           dispatch([event_ids.templateProject, data]);
+          draftDb[sub_ids.projectId] = projectId;
           return Promise.resolve();
         }
       }).catch(() => {
@@ -469,7 +470,6 @@ regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
           dispatch([event_ids.errors, [['server', ["Can't edit project" + projectId + "."]]]]);
           return Promise.resolve();
         } else {
-          console.log(data.map((i) => i.id));
           dispatch([event_ids.imagery.imageryList, data.map((i) => i.id)]);
           return Promise.resolve();
         }
@@ -479,6 +479,7 @@ regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
   }
   getProjectImagery(projectId);
   getProjectById(projectId);
+  draftDb[sub_ids.projectId] = projectId;
   dispatch([event_ids.modal, null]);
   dispatch([event_ids.currentStep, 'review']);
 });
@@ -747,11 +748,8 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
-        console.log('create project draft request result', data);
         if (data[0] && Number.isInteger(data[1].projectDraftId)) {
-          console.log('dispatch success response');
-          dispatch([event_ids.modal, 'draft-success']);
-          //dispatch([event_ids.successResponse, data[1]]);
+          dispatch([event_ids.successResponse, data[1]]);
           return Promise.resolve();
         } else {          
           let errs = Object.entries(data[1].params).map(([field, message])=>{return (field + "; " + message);});
@@ -767,7 +765,6 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
   }
 
   function saveProjectDraft () {
-    console.log('saving project draft...');
     fetch("/update-project-draft", {
       method: "POST",
       headers: {
@@ -785,7 +782,6 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
-        console.log('resolving project draft data');
         dispatch([event_ids.successResponse, ['Project Saved', data]]);
         return Promise.resolve();
       })
@@ -807,12 +803,43 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
   const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
   const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
   const similarityDetails = current(draftDb[sub_ids.plots.plotSimilarityDetails]) || {};
+  const existingProjectId = current(draftDb[sub_ids.projectId]);
   const referencePlotId = similarityDetails.referencePlotId;
   const similarityYears = similarityDetails.years;
   const form = buildProject(draftDb, sub_ids);
   const errors = validateWizard(form);
   
-  function submitForm () {
+  function updateForm () {
+    fetch("/update-project", {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+  //      append: this.context.append,
+        projectId: existingProjectId,
+//        overwrite: prompts.overwrite,
+        ...form,
+      }),
+    })
+      .then((response) => Promise.all([response.ok, response.json()]))
+      .then((data) => {
+        if (data[0] && data[1] === "") {
+          dispatch([event_ids.successResponse, data[1]]);
+          return Promise.resolve();
+        } else {
+          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
+          return Promise.reject(data[1]);
+        }
+      })
+      .catch((message) => {
+        dispatch([event_ids.errors [['server', [message]]]]);;
+      });
+  }
+  
+  
+  function submitForm () {    
     fetch("/create-project", {
       method: "POST",
       headers: {
@@ -852,7 +879,8 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
       })
       .catch((message) => dispatch([event_ids.errors [['server', [message]]]]));
   }
-  errors ? dispatch([event_ids.errors, errors]) : submitForm();
+  errors ? dispatch([event_ids.errors, errors]) :
+    (existingProjectId > 0) ? updateForm() : submitForm();
 });
 
 regEvent(event_ids.successResponse, ({ draftDb }, response) => {  

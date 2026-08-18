@@ -34,7 +34,8 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
   const institutionImagery = useSubscription([sub_ids.institution.imagery]);
   function setDraftProject (draftProject) {dispatch([event_ids.draftProject, draftProject]);};
   function setEditProject (project) {dispatch([event_ids.editProject, project]);};
-  function setPlotFeatures (plots) { dispatch([event_ids.plots.plotFeatures, plots]) };
+  function setPlotFeatures (plots) { dispatch([event_ids.plots.plotFeatures, plots]); };
+  function setProjectId (projectId) {dispatch([event_ids.projectId, projectId]);};
 
   // -------------------
   // HOOKS
