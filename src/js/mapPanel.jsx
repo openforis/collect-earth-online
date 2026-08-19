@@ -1,7 +1,7 @@
 import React, { useEffect, useState, //useMemo, useRef
               } from "react";
 import { mercator } from "./utils/mercator";
-
+import { useAtom } from 'jotai';
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 
@@ -59,6 +59,7 @@ function ProjectPopup ({clusterExtent, features, mapConfig}) {
       <button
         className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
         id="zoomToCluster"
+
         style={{
           alignItems: "center",
           cursor: "pointer",
@@ -73,18 +74,16 @@ function ProjectPopup ({clusterExtent, features, mapConfig}) {
       </button>
     </div>
   );
-
 }
 
-
-export default function MapPanel ({imagery = [], projects = []}) {
-  const [mapConfig, setMapConfig] = useState(null);
+export default function MapPanel ({imagery = [], projects = [], mapConfigAtom}) {
+  
   const [clusterExtent, setClusterExtent] = useState([]);
   const [clickedFeatures, setClickedFeatures] = useState([]);
   const [modal, setModal] = useState(null);
+  const [mapConfig, setMapConfig] = useAtom(mapConfigAtom);
 
   function initializeMap () {
-    console.log('initializing map');
     const homePageLayer =
           imagery.find((imagery) => imagery.title === "Mapbox Satellite w/ Labels") ||
           imagery[0];
@@ -94,7 +93,6 @@ export default function MapPanel ({imagery = [], projects = []}) {
   }
 
   function showProjectPopup(overlay, feature) {
-    console.log('showing project popup');
     if (mercator.isCluster(feature)) {
       overlay.setPosition(feature.get("features")[0].getGeometry().getCoordinates());
       setClusterExtent(mercator.getClusterExtent(feature));
@@ -107,7 +105,6 @@ export default function MapPanel ({imagery = [], projects = []}) {
   }
 
   function addProjectMarkers(mapConfig, projects, clusterDistance) {
-    console.log('adding project markers', projects);
     const projectSource = mercator.projectsToVectorSource(
       projects.filter((project) => project.centroid)
     );
@@ -142,41 +139,15 @@ export default function MapPanel ({imagery = [], projects = []}) {
   }
 
   useEffect(()=>{
-    console.log('prop imagery updated', imagery, imagery.length > 0, mapConfig === null);
     (imagery.length > 0 &&
      mapConfig === null) && initializeMap();
   }, [imagery]);
 
   useEffect(()=>{
-    console.log('prop projects updated', projects, mapConfig !== null, projects.length > 0);
     const clusterDistance = 40; // use null to disable clustering
     (mapConfig !== null && projects.length > 0) &&
       addProjectMarkers(mapConfig, projects, clusterDistance);
   }, [projects, mapConfig]);
-
-  /*
-    componentDidUpdate(prevProps, prevState) {
-    if (
-    this.state.mapConfig === null &&
-    this.props.imagery.length > 0 &&
-    prevProps.imagery.length === 0
-    ) {
-    this.initializeMap();
-    }
-
-    if (
-    this.state.mapConfig &&
-    this.props.projects.length > 0 &&
-    (!prevState.mapConfig || prevProps.projects.length === 0)
-    ) {
-    this.addProjectMarkers(this.state.mapConfig, this.props.projects, 40); // clusterDistance = 40, use null to disable clustering
-    }
-    }
-
-
-  */
-
-
 
   return (
     <div
@@ -190,11 +161,11 @@ export default function MapPanel ({imagery = [], projects = []}) {
          {modal.alert.alertMessage}
        </Modal>}
       <div className="full-height full-width" id="home-map-pane" style={{ maxWidth: "inherit" }} />
-      {/*      <ProjectPopup
+      <ProjectPopup
         clusterExtent={clusterExtent}
         features={clickedFeatures}
         mapConfig={mapConfig}
-      />*/}
+      />
     </div>
   );
 }

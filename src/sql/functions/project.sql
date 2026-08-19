@@ -638,20 +638,23 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
     description       text,
     centroid          text,
     num_plots         integer,
-    editable          boolean
+    editable          boolean,
+    institution_name  text
  ) AS $$
 
     SELECT project_uid,
         p.institution_rid,
-        name,
-        description,
+        p.name,
+        p.description,
         ST_AsGeoJSON(ST_Centroid(boundary)),
         num_plots,
-        (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable
+        (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable,
+        ins.name AS institution_name
     FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
+    JOIN institutions ins ON ins.institution_uid = p.institution_rid
     WHERE user_project(_user_id, role_rid, p.privacy_level, p.availability)
         AND valid_boundary(boundary) = TRUE
     ORDER BY project_uid

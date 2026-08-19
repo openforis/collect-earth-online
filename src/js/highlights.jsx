@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { atom, useAtom } from 'jotai';
 import SvgIcon from "./components/svg/SvgIcon";
-import { useAtom } from'jotai';
+//import { mercator } from './utils/mercator';
+import { zoomMapToPoint } from './utils/newMercator';
 import { stateAtom } from './utils/constants';
 import MapPanel from './mapPanel';
 import "../css/highlights.css";
@@ -8,6 +10,7 @@ import "../css/highlights.css";
 
 export default function Highlights ({userId, userRole}) {
   const [appState, setAppState] = useAtom(stateAtom);  
+  const mapConfigAtom = atom(null);
   
   function getProjects () {
     fetch("/get-home-projects")
@@ -135,61 +138,42 @@ export default function Highlights ({userId, userRole}) {
   };
 
   function Projects () {
-    const projects = [
-      {title: "Mekong River Region",
-       id: 1,
-       institution: "Spatial Informatics Group",
-       institutionId: 1,
-       tags: [{title: "Land Cover", id: 1}, {title: "Asia", id: 2}, {title: "Remote Sensing", id: 3}],
-       description: "This project focuses on monitoring land cover and ecological change across the Mekong River region. Contributors analyze satellite imagery to identify vegetation patterns, water boundaries, and signs of environmental impact. The data collected supports regional conservation planning and long-term environmental monitoring efforts.",
-       link: "/"},
-      {title: "Mekong River Region",
-       id: 2,
-       institutionId: 1,
-       institution: "Spatial Informatics Group",
-       tags: [{title: "Land Cover", id: 1}, {title: "Asia", id: 2}, {title: "Remote Sensing", id: 3}],
-       description: "This project focuses on monitoring land cover and ecological change across the Mekong River region. Contributors analyze satellite imagery to identify vegetation patterns, water boundaries, and signs of environmental impact. The data collected supports regional conservation planning and long-term environmental monitoring efforts.",
-       link: "/"},
-      {title: "Mekong River Region",
-       projectId: 3,
-       institution: "Spatial Informatics Group",
-       institutionId: 1,
-       tags: [{title: "Land Cover", id: 1}, {title: "Asia", id: 2}, {title: "Remote Sensing", id: 3}],
-       description: "This project focuses on monitoring land cover and ecological change across the Mekong River region. Contributors analyze satellite imagery to identify vegetation patterns, water boundaries, and signs of environmental impact. The data collected supports regional conservation planning and long-term environmental monitoring efforts.",
-       link: "/"}
-    ];
-
+    const [mapConfig, setMapConfig] = useAtom(mapConfigAtom);
     function Project ({project}) {
       return (
         <div className="project">
           <div className="project-info">
-            <span className="project-title">{project.title}</span>
+            <span className="project-title">{project.name}</span>
             <div className="project-attribution"
-                 onClick={()=>{console.log('go to institution page: ', project.institutionId);}}>
+              onClick={() => {window.location.href = `/review-institution?institutionId=${project.institutionId}`;}}>
               <SvgIcon icon="institution" size="1.2rem"/>
-              <span>{project.institution}</span>
+              <span>{project.institutionName}</span>
             </div>
             <div className="tags">
-              {project.tags.map((tag)=>{
+              {project.tags?.map((tag)=>{
                 return(
                   <Tag tag={tag}/>);})}
             </div>
             <div className="project-description">
               <span>{project.description}</span>
               <div className="expand-description"
-                onClick={()=>{console.log('expand project description', project.description);}}
+                   onClick={()=>{console.log('expand project description', project.description);}}
               ><span>See More</span></div>
             </div>
           </div>         
           <div className="project-controls">
             <div className="ghost-button">
-              <div>
+              <div
+                onClick={()=>{
+                  zoomMapToPoint(mapConfig.map, JSON.parse(project.centroid).coordinates, 9, 500);
+                }}
+              >
                 <SvgIcon icon="zoomIn" size="1rem"/>
                 <span>Zoom to Project on Map</span>
               </div>
             </div>
             <div className="primary-button"
-                 onClick={()=>{console.log('go to project splash page: ', project.projectId);}}>
+                 onClick={() => {window.location.href = `/review-project?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
               <div>
                 <span>Visit Project</span>
                 <SvgIcon icon="chevronRight" size="1.2rem"/>
@@ -203,13 +187,14 @@ export default function Highlights ({userId, userRole}) {
     return (
       <div id="projects">
         <div id="projects-column">
-          {projects.map((project)=>{return(<Project project={project}/>);})}
+          {appState.projects.map((project)=>{return(<Project project={project}/>);})}
         </div>
         <div id="projects-map-container">
           <div id="projects-map">
             <MapPanel
-            imagery={appState.imagery}
-            projects={appState.projects}/>
+              mapConfigAtom={mapConfigAtom}
+              imagery={appState.imagery}
+              projects={appState.projects}/>
           </div></div>
       </div>
     );

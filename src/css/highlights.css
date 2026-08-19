@@ -303,7 +303,6 @@
     position: relative;
     width: 100%;
     display: flex;
-
     padding-top: 1px;
     flex-direction: column;
     justify-content: center;
@@ -343,7 +342,7 @@
     border-radius: 4px;
     border: 1px solid var(--Primary-Standard-Green, #1F7067);
     background: var(--Neutral-White, #FFF);
-
+    cursor: pointer;
 }
 
 .ghost-button div{
@@ -396,8 +395,6 @@
     font-weight: 500;
     line-height: 16px; /* 114.286% */
     text-transform: capitalize;
-    
-
 }
 
 .primary-button div svg {
@@ -423,6 +420,7 @@
 }
 
 .project-attribution {
+    cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
