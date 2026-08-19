@@ -146,27 +146,21 @@ class HelpSlideDialog extends React.Component {
   }
 }
 
-export function NavSideBar () {
-  const [navIcon, setNavIcon] = useState("highlights");
-
+export function NavSideBar ({tab, setTab}) {
   function highlightsHandler() {
-    console.log("highlights!");
-    setNavIcon("highlights");
+    setTab('highlights');
   };
   function institutionsHandler() {
-    console.log("institutions!");
-    setNavIcon("institutions");
+    setTab('institutions');
   };
   function collectHandler() {
-    console.log("collect!");
-    setNavIcon("collect");
+    setTab('collect');
   };
   function manageHandler() {
-    console.log("manage!");
-    setNavIcon("manage");
+    setTab('manage');
   };
   
-  const navIcons = {
+  const navTabs = {
     highlights:
     {title: "Highlights",
      icon: "compass",
@@ -185,11 +179,11 @@ export function NavSideBar () {
      clickHandler: manageHandler},
   };
 
-  function NavIcon ({icon, clickHandler, title, navikey}) {
+  function NavTab ({icon, clickHandler, title, tabkey}) {
     return (
       <div onClick={clickHandler}
            className="sidebar-navicon"
-           style={navIcon === navikey ? {paddingLeft: "8px"} : null}>
+           style={tab === tabkey ? {paddingLeft: "8px"} : null}>
         <SvgIcon icon={icon} size="2rem" 
         />
         <p style={{color: "white"}}>{title}</p>
@@ -198,23 +192,21 @@ export function NavSideBar () {
   }
 
   return (
-        <div id="nav-sidebar" className="nav-sidebar">
-          {
-            Object.entries(navIcons).map(([navikey, {clickHandler, icon, title}])=>{
-              return (
-                <div
-                  key={navikey}
-                  style={navIcon === navikey
-                         ? {backgroundColor: "#001A19",
-                            width: "100px",
-                            borderLeft: "8px solid #15C1AE"}
-                         : null}>
-                  <NavIcon icon={icon} clickHandler={clickHandler} title={title} navikey={navikey}/>
-                </div>
-              );
-            })
-          }                              
-        </div>        
+    <div id="nav-sidebar" className="nav-sidebar">
+      {Object.entries(navTabs).map(([tabkey, {clickHandler, icon, title}])=>{
+        return (
+          <div
+            key={tabkey}
+            style={tab === tabkey
+                   ? {backgroundColor: "#001A19",
+                      width: "100px",
+                      borderLeft: "8px solid #15C1AE"}
+                   : null}>
+            <NavTab icon={icon} clickHandler={clickHandler} title={title} tabkey={tabkey}/>
+          </div>
+        );
+      })}                              
+    </div>        
   );
 }
 
@@ -354,10 +346,10 @@ export function NavTopBar ({version, userName, userId, children}) {
 }
 
 
-export function NavigationBar ({children, version, userName, userId}) {
+export function NavigationBar ({children, version, userName, userId, fxns}) {
   return(
     <>
-      <NavSideBar/>
+      <NavSideBar tab={fxns.tab.get} setTab={fxns.tab.set}/>
       <NavTopBar children={children} version={version} userName={userName} userId={userId}/>
     </>
   );
