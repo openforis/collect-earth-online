@@ -592,8 +592,7 @@ a:hover {
     background-color: #f1c00f;
 }
 .home-tab {
-    position: absolute;
-    left: 100px;
+    padding-left: 100px;
 }
 
 /***************/

@@ -89,16 +89,20 @@ export default function Highlights ({userId, userRole}) {
       <div id="blogs">
         {blogs.map((blog)=>{
           return (
-            <div className="blog">
-              <div>
+            <div className="blog-frame">
+              <div className="blog">
                 <div className="blog-graphic"
                      style={{background: `url(${blog.graphic}) lightgray 50% / cover no-repeat`}}></div>
                 <div className="blog-body">
-                  <div className="blog-date">{blog.date}</div>
+                  <div className="blog-date">
+                    <SvgIcon icon='calendar' size='1rem'/>
+                    <span>{blog.date}</span>
+                    </div>
                   <div className="blog-title-row">
                     <div className="blog-title">
                       <span>{blog.title}</span>
-                      <SvgIcon icon="rightCaret" size="1.2rem"
+                      <SvgIcon icon="chevronRight" size="1.2rem"
+                               color="#6A7282"
                                onClick={()=> {window.location.assign(blog.link);}}
                       />
                     </div>
@@ -107,7 +111,7 @@ export default function Highlights ({userId, userRole}) {
                   <div className="blog-tags">
                     {blog.tags.map((tag)=> {
                       return (
-                        <div classsName="blog-tag">
+                        <div className="blog-tag">
                           <span>{tag}</span>
                         </div>);
                     })}
@@ -165,7 +169,7 @@ export default function Highlights ({userId, userRole}) {
                   </div>
                   <div className="primary-button">
                     <label>Visit Project</label>
-                    <SvgIcon icon="rightCaret" size="1.2rem"
+                    <SvgIcon icon="chevronRight" size="1.2rem"
                              onClick={()=> {window.location.assign(project.link);}}/>
                   </div>
                 </div>
@@ -201,14 +205,13 @@ export default function Highlights ({userId, userRole}) {
           {Object.entries(highlights).map(([id, highlight])=>{
             return (
               <div className="highlight">
-                <div className="highlight-title-row">
-                  <div>
-                    <div className="highlight-title">{highlight.title}</div>
-                    <div>
-                      <div className="highlight-link">
-                        <SvgIcon icon="rightCaret" size="1.2rem"
-                                 onClick={()=>{window.location.assign(highlight.link);}}/>
-                      </div>
+                <div className="highlight-header">
+                  <div className="highlight-title">
+                    <p >{highlight.title}</p>
+                    <div className="highlight-link"
+                         onClick={()=>{window.location.assign(highlight.link);}}>
+                      <label>View All</label>
+                      <SvgIcon icon="chevronRight" size="1.2rem"/>
                     </div>
                   </div>
                   <div className="highlight-subtitle">{highlight.subtitle}</div>
@@ -220,6 +223,5 @@ export default function Highlights ({userId, userRole}) {
         </div>
       </div>
     </div>
-
   );
 };
