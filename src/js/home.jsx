@@ -584,7 +584,8 @@ function HomeTabs ({tab, session}) {
                 </div>
               </div>
             </div>);
-    case 'manage' :
+    
+  case 'manage' :
     return (<div id='manage-tab' className='home-tab'>
               <div className="header">
                 <div className="header-row">
@@ -593,6 +594,7 @@ function HomeTabs ({tab, session}) {
                 </div>
               </div>
             </div>);
+    
   default: return (<></>);
   }
 }

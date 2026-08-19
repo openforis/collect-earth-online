@@ -46,9 +46,9 @@ export default function Highlights ({userId, userRole}) {
                 ? data.filter((institution) => !userInstitutions.includes(institution))
                 : data;
           setAppState(prev => ({ ...prev,
-            institutions,
-            userInstitutions,
-          }));
+                                 institutions,
+                                 userInstitutions,
+                               }));
           return Promise.resolve();
         } else {
           return Promise.reject("No institutions found");
@@ -64,26 +64,40 @@ export default function Highlights ({userId, userRole}) {
       .finally(() => setAppState(prev => ({... prev, modalMessage: null })));
   }, []);
 
+  function Tag ({tag}) {
+    const {title, id} = tag;
+    return (
+      <div className="tag"
+           onClick={()=>{console.log('search for tags by tag-id:', id);}}>
+        <span>{title}</span>
+      </div>
+    );
+
+  }
+
   function Blogs () {
     const blogs = [
       {date: "March 2026",
-       tags: ["Land Cover", "Land Cover"],
+       blogId: 1,
+       tags: [{title:"Land Cover", id: 1}, {title:"Land Cover", id: 1}],
        title: "Collect Earth Online in 2025: Platform Updates, Partnerships, and Impact",
        subtitle: "2025 was a year of meaningful progress for Collect Earth Online, shaped by platform updates, partnerships, and impact.",
        link: "/",
        graphic: ""},
       {date: "March 2026",
-       tags: ["Land Cover", "Land Cover"],
+       blogId: 2,
+       tags: [{title:"Land Cover", id: 1}, {title:"Land Cover", id: 1}],
        title: "Collect Earth Online in 2025: Platform Updates, Partnerships, and Impact",
        subtitle: "2025 was a year of meaningful progress for Collect Earth Online, shaped by platform updates, partnerships, and impact.",
        link: "/",
        graphic: ""},
       {date: "March 2026",
-       tags: ["Land Cover", "Land Cover"],
+       blogId: 3,
+       tags: [{title:"Land Cover", id: 1}, {title:"Land Cover", id: 1}],
        title: "Collect Earth Online in 2025: Platform Updates, Partnerships, and Impact",
        subtitle: "2025 was a year of meaningful progress for Collect Earth Online, shaped by platform updates, partnerships, and impact.",
        link: "/",
-       graphic: ""}
+       graphic: ""},
     ];
     return (
       <div id="blogs">
@@ -97,23 +111,19 @@ export default function Highlights ({userId, userRole}) {
                   <div className="blog-date">
                     <SvgIcon icon='calendar' size='1rem'/>
                     <span>{blog.date}</span>
-                    </div>
+                  </div>
                   <div className="blog-title-row">
-                    <div className="blog-title">
+                    <div className="blog-title"
+                         onClick={()=> {console.log('see blog post: ', blog.blogId);}}>
                       <span>{blog.title}</span>
-                      <SvgIcon icon="chevronRight" size="1.2rem"
-                               color="#6A7282"
-                               onClick={()=> {window.location.assign(blog.link);}}
-                      />
+                      <SvgIcon icon="chevronRight" size="1.2rem" color="#1F7067"/>
                     </div>
                   </div>
                   <div className="blog-subtitle">{blog.subtitle}</div>
-                  <div className="blog-tags">
+                  <div className="tags">
                     {blog.tags.map((tag)=> {
                       return (
-                        <div className="blog-tag">
-                          <span>{tag}</span>
-                        </div>);
+                        <Tag tag={tag}/>);
                     })}
                   </div>
                 </div>
@@ -126,49 +136,52 @@ export default function Highlights ({userId, userRole}) {
   function Projects () {
     const projects = [
       {title: "Mekong River Region",
+       id: 1,
        institution: "Spatial Informatics Group",
-       tags: ["Land Cover", "Asia", "Remote Sensing"],
+       institutionId: 1,
+       tags: [{title: "Land Cover", id: 1}, {title: "Asia", id: 2}, {title: "Remote Sensing", id: 3}],
        description: "This project focuses on monitoring land cover and ecological change across the Mekong River region. Contributors analyze satellite imagery to identify vegetation patterns, water boundaries, and signs of environmental impact. The data collected supports regional conservation planning and long-term environmental monitoring efforts.",
        link: "/"},
       {title: "Mekong River Region",
+       id: 2,
+       institutionId: 1,
        institution: "Spatial Informatics Group",
-       tags: ["Land Cover", "Asia", "Remote Sensing"],
+       tags: [{title: "Land Cover", id: 1}, {title: "Asia", id: 2}, {title: "Remote Sensing", id: 3}],
        description: "This project focuses on monitoring land cover and ecological change across the Mekong River region. Contributors analyze satellite imagery to identify vegetation patterns, water boundaries, and signs of environmental impact. The data collected supports regional conservation planning and long-term environmental monitoring efforts.",
        link: "/"},
       {title: "Mekong River Region",
+       projectId: 3,
        institution: "Spatial Informatics Group",
-       tags: ["Land Cover", "Asia", "Remote Sensing"],
+       institutionId: 1,
+       tags: [{title: "Land Cover", id: 1}, {title: "Asia", id: 2}, {title: "Remote Sensing", id: 3}],
        description: "This project focuses on monitoring land cover and ecological change across the Mekong River region. Contributors analyze satellite imagery to identify vegetation patterns, water boundaries, and signs of environmental impact. The data collected supports regional conservation planning and long-term environmental monitoring efforts.",
-      link: "/"}
+       link: "/"}
     ];
 
     function Project ({project}) {
       return (
         <div className="project">
-
-          
           <div className="project-info">
             <span className="project-title">{project.title}</span>
-            <div className="project-attribution">
+            <div className="project-attribution"
+                 onClick={()=>{console.log('go to institution page: ', project.institutionId);}}>
               <SvgIcon icon="institution" size="1.2rem"/>
               <span>{project.institution}</span>
             </div>
-            <div className="project-tags">
+            <div className="tags">
               {project.tags.map((tag)=>{
                 return(
-                  <div className="project-tag">
-                    <span>{tag}</span>
-                  </div>);})}
+                  <Tag tag={tag}/>);})}
             </div>
             <div className="project-description">
-              <div>{project.description}</div>
-              <span
-                onClick={()=>{window.location.assign(project.link);}}
-              >See More</span>
+              <span>{project.description}</span>
+              <div className="expand-description"
+                onClick={()=>{console.log('expand project description', project.description);}}
+              >
+                <span>See More</span>
+              </div>
             </div>
-          </div>
-
-          
+          </div>         
           <div className="project-controls">
             <div className="ghost-button">
               <div>
@@ -176,16 +189,14 @@ export default function Highlights ({userId, userRole}) {
                 <span>Zoom to Project on Map</span>
               </div>
             </div>
-            <div className="primary-button">
+            <div className="primary-button"
+                 onClick={()=>{console.log('go to project splash page: ', project.projectId);}}>
               <div>
                 <span>Visit Project</span>
-                <SvgIcon icon="chevronRight" size="1.2rem"
-                       onClick={()=> {window.location.assign(project.link);}}/>
+                <SvgIcon icon="chevronRight" size="1.2rem"/>
               </div>
             </div>
-          </div>
-
-          
+          </div>          
         </div>
       );
     }
@@ -196,8 +207,7 @@ export default function Highlights ({userId, userRole}) {
           {projects.map((project)=>{return(<Project project={project}/>);})}
         </div>
         <div id="projects-map-container">
-          <div id="projects-map">
-            
+          <div id="projects-map">            
           </div></div>
       </div>
     );
@@ -233,7 +243,7 @@ export default function Highlights ({userId, userRole}) {
                   <div className="highlight-title">
                     <span>{highlight.title}</span>
                     <div className="highlight-link"
-                         onClick={()=>{window.location.assign(highlight.link);}}>
+                         onClick={()=>{console.log('view all highlights of type: ', highlight.title);}}>
                       <span>View All</span>
                       <SvgIcon icon="chevronRight" size="1.2rem"/>
                     </div>

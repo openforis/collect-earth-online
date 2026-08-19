@@ -228,7 +228,7 @@
 
 .blog-title svg {
     cursor: pointer;
-    color: white;
+    color: var(--Primary-Standard-Green, #1F7067);
 }
 
 .blog-title span {
@@ -257,13 +257,12 @@
     font-weight: 400;
     line-height: 22px; /* 157.143% */}
 
-.blog-tags {
+.tags {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-}
+    gap: 8px;}
 
-.blog-tag {
+.tag {
     display: flex;
     padding: 8px;
     justify-content: center;
@@ -271,9 +270,10 @@
     gap: 10px;
     border-radius: 8px;
     background: var(--Primary-Light-Green, #E9F1F0);
+    cursor: pointer;
 }
 
-.blog-tag span {
+.tag span {
     color: var(--Primary-Main-Green, #07443D);
     font-feature-settings: 'liga' off, 'clig' off;
     font-family: "Public Sans";
@@ -363,6 +363,7 @@
     text-transform: capitalize;}
 
 .primary-button {
+    cursor: pointer;
     display: flex;
     height: 44px;
     justify-content: center;
@@ -432,29 +433,6 @@
     line-height: 14px; /* 100% */    
 }
 
-.project-tags {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;}
-
-.project-tag {
-    display: flex;
-    padding: 8px;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    border-radius: 8px;
-    background: var(--Primary-Light-Green, #E9F1F0);
-}
-
-.project-tag label {
-    color: var(--Primary-Main-Green, #07443D);
-    font-feature-settings: 'liga' off, 'clig' off;
-    font-family: "Public Sans";
-    font-size: 12px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: 14px; /* 116.667% */}
 
 .project-description{
     display: flex;
@@ -464,7 +442,7 @@
     align-self: stretch;
 }
 
-.project-description div {
+.project-description span {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -482,12 +460,23 @@
     line-height: 22px; /* 157.143% */
 }
 
-.project-description span {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
+.expand-description {
+display: flex;
+align-items: center;
+gap: 8px;
+cursor: pointer;
 }
+
+.expand-description span {
+color: var(--Primary-Standard-Green, #1F7067);
+font-feature-settings: 'liga' off, 'clig' off;
+
+/* Link/Default */
+font-family: "Public Sans";
+font-size: 14px;
+font-style: normal;
+font-weight: 500;
+line-height: normal;}
 
 .project-controls {
     display: flex;

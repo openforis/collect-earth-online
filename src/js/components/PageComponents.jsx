@@ -173,10 +173,12 @@ export function NavSideBar ({tab, setTab}) {
     {title: "Collect",
      icon: "collect",
      clickHandler: collectHandler},
+    /*
     manage:
     {title: "Manage",
      icon: "settings",
      clickHandler: manageHandler},
+     */
   };
 
   function NavTab ({icon, clickHandler, title, tabkey}) {
