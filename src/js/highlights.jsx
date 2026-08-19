@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import SvgIcon from "./components/svg/SvgIcon";
 import { useAtom } from'jotai';
 import { stateAtom } from './utils/constants';
+import MapPanel from './mapPanel';
 import "../css/highlights.css";
 
 
@@ -177,9 +178,7 @@ export default function Highlights ({userId, userRole}) {
               <span>{project.description}</span>
               <div className="expand-description"
                 onClick={()=>{console.log('expand project description', project.description);}}
-              >
-                <span>See More</span>
-              </div>
+              ><span>See More</span></div>
             </div>
           </div>         
           <div className="project-controls">
@@ -207,7 +206,10 @@ export default function Highlights ({userId, userRole}) {
           {projects.map((project)=>{return(<Project project={project}/>);})}
         </div>
         <div id="projects-map-container">
-          <div id="projects-map">            
+          <div id="projects-map">
+            <MapPanel
+            imagery={appState.imagery}
+            projects={appState.projects}/>
           </div></div>
       </div>
     );

@@ -174,11 +174,11 @@ export function NavSideBar ({tab, setTab}) {
      icon: "collect",
      clickHandler: collectHandler},
     /*
-    manage:
-    {title: "Manage",
-     icon: "settings",
-     clickHandler: manageHandler},
-     */
+      manage:
+      {title: "Manage",
+      icon: "settings",
+      clickHandler: manageHandler},
+    */
   };
 
   function NavTab ({icon, clickHandler, title, tabkey}) {
@@ -258,100 +258,99 @@ export function NavTopBar ({version, userName, userId, children}) {
   },[]);
 
   return (
-      <>
-        {showHelpMenu && (
-          <HelpSlideDialog
-            closeHelpMenu={closeHelpMenu}
-            helpSlides={helpSlides}
-            page={page}
-          />
-        )}
-        <nav
-          className="navbar navbar-expand-lg navbar-light fixed-top py-0"
-          id="main-nav"
-          style={{ backgroundColor: "white", borderBottom: "1px solid black" }}
+    <>
+      {showHelpMenu && (
+        <HelpSlideDialog
+          closeHelpMenu={closeHelpMenu}
+          helpSlides={helpSlides}
+          page={page}
+        />
+      )}
+      <nav
+        className="navbar navbar-expand-lg navbar-light fixed-top py-0"
+        id="main-nav"
+        style={{ backgroundColor: "white", borderBottom: "1px solid black" }}
+      >
+        <a className="navbar-brand pt-1 pb-1" href="/home">
+          <div className="d-flex flex-column align-items-center justify-content-center">
+            <img
+              alt="Home"
+              className="img-fluid"
+              id="ceo-site-logo"
+              src="/img/ceo-logo.png"
+              style={{ maxHeight: "40px" }}
+            />
+            <div className="badge badge-pill badge-light" style={{ fontSize: "0.6rem" }}>
+              Version: {version}
+            </div>
+          </div>
+        </a>
+        <button
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+          className="navbar-toggler"
+          data-target="#navbarSupportedContent"
+          data-toggle="collapse"
+          type="button"
         >
-          <a className="navbar-brand pt-1 pb-1" href="/home">
-            <div className="d-flex flex-column align-items-center justify-content-center">
-              <img
-                alt="Home"
-                className="img-fluid"
-                id="ceo-site-logo"
-                src="/img/ceo-logo.png"
-                style={{ maxHeight: "40px" }}
-              />
-              <div className="badge badge-pill badge-light" style={{ fontSize: "0.6rem" }}>
-                Version: {version}
+          <span className="navbar-toggler-icon" />
+        </button>
+        <div className="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul className="navbar-nav mr-auto">
+            {[
+              { page: "CEO", link: "/home" },
+              { page: "Home", link: "https://collect.earth/" },
+              { page: "About", link: "https://collect.earth/about/" },
+              { page: "Support", link: "https://collect.earth/ceo-guides" },
+              { page: "Blog", link: "https://collect.earth/blog" },
+            ].map(({ page, link }) => (
+              <li
+                key={page}
+                className={"nav-item" + (page === "CEO" && uri === "/home" && " active")}
+              >
+                <a className="nav-link" href={link}>
+                  {page}
+                </a>
+              </li>
+            ))}
+            {!loggedOut && (
+              <li className={"nav-item" + (uri === "/account" && " active")}>
+                <a className="nav-link" href={"/account?accountId=" + userId}>
+                  Account
+                </a>
+              </li>
+            )}
+          </ul>
+          <ul className="navbar-nav mr-0" id="login-info">
+            <LogOutButton uri={uri} userName={userName} />
+          </ul>
+          <div className="ml-3" onClick={() => toggleHelpMenu(true)}>
+            {helpSlides.length > 0 && (
+              <div
+                className="tooltip_wrapper"
+                style={{
+                  animation: "glow 2s 6 alternate",
+                  animationDelay: "1s",
+                  borderRadius: "2rem",
+                }}
+              >
+                <SvgIcon color="purple" cursor="pointer" icon="help" size="2rem" />
+                <span className="tooltip_content">Help</span>
               </div>
-            </div>
-          </a>
-          <button
-            aria-controls="navbarSupportedContent"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-            className="navbar-toggler"
-            data-target="#navbarSupportedContent"
-            data-toggle="collapse"
-            type="button"
-          >
-            <span className="navbar-toggler-icon" />
-          </button>
-          <div className="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul className="navbar-nav mr-auto">
-              {[
-                { page: "CEO", link: "/home" },
-                { page: "Home", link: "https://collect.earth/" },
-                { page: "About", link: "https://collect.earth/about/" },
-                { page: "Support", link: "https://collect.earth/ceo-guides" },
-                { page: "Blog", link: "https://collect.earth/blog" },
-              ].map(({ page, link }) => (
-                <li
-                  key={page}
-                  className={"nav-item" + (page === "CEO" && uri === "/home" && " active")}
-                >
-                  <a className="nav-link" href={link}>
-                    {page}
-                  </a>
-                </li>
-              ))}
-              {!loggedOut && (
-                <li className={"nav-item" + (uri === "/account" && " active")}>
-                  <a className="nav-link" href={"/account?accountId=" + userId}>
-                    Account
-                  </a>
-                </li>
-              )}
-            </ul>
-            <ul className="navbar-nav mr-0" id="login-info">
-              <LogOutButton uri={uri} userName={userName} />
-            </ul>
-            <div className="ml-3" onClick={() => toggleHelpMenu(true)}>
-              {helpSlides.length > 0 && (
-                <div
-                  className="tooltip_wrapper"
-                  style={{
-                    animation: "glow 2s 6 alternate",
-                    animationDelay: "1s",
-                    borderRadius: "2rem",
-                  }}
-                >
-                  <SvgIcon color="purple" cursor="pointer" icon="help" size="2rem" />
-                  <span className="tooltip_content">Help</span>
-                </div>
-              )}
-            </div>
-          </div>          
-        </nav>
-        {children}
-      </>
-    );
+            )}
+          </div>
+        </div>          
+      </nav>
+      {children}
+    </>
+  );
 }
-
 
 export function NavigationBar ({children, version, userName, userId, fxns}) {
   return(
     <>
-      <NavSideBar tab={fxns.tab.get} setTab={fxns.tab.set}/>
+      {fxns && <NavSideBar tab={fxns.tab.get} setTab={fxns.tab.set}/>}
       <NavTopBar children={children} version={version} userName={userName} userId={userId}/>
     </>
   );
