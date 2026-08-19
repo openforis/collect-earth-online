@@ -24,6 +24,7 @@ import fileIcon from "./fileIcon.svg";
 import groupIcon from "./groupIcon.svg";
 import helpIcon from "./helpIcon.svg";
 import infoIcon from "./infoIcon.svg";
+import institutionIcon from './institutionIcon.svg';
 import leftArrowIcon from "./leftArrowIcon.svg";
 import leftArrowSlimIcon from "./leftArrowSlimIcon.svg";
 import leftDoubleIcon from "./leftDoubleIcon.svg";
@@ -82,6 +83,7 @@ export const iconMap = {
   group: groupIcon,
   help: helpIcon,
   info: infoIcon,
+  institution: institutionIcon,
   leftArrow: leftArrowIcon,
   leftArrowSlim: leftArrowSlimIcon,
   leftDouble: leftDoubleIcon,

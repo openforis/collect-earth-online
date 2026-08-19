@@ -593,7 +593,6 @@ function HomeTabs ({tab, session}) {
                 </div>
               </div>
             </div>);
-    
   default: return (<></>);
   }
 }
@@ -604,7 +603,6 @@ function Home ({params, session}) {
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}
                    fxns={{tab: {get: tab, set: setTab}}}>
       <HomeTabs tab={tab} session={session}/>
-      {/* <Home userId={session.userId || -1} userRole={session.userRole || ""} /> */}
     </NavigationBar>);
 }
 

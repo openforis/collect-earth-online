@@ -70,13 +70,13 @@ export default function Highlights ({userId, userRole}) {
        tags: ["Land Cover", "Land Cover"],
        title: "Collect Earth Online in 2025: Platform Updates, Partnerships, and Impact",
        subtitle: "2025 was a year of meaningful progress for Collect Earth Online, shaped by platform updates, partnerships, and impact.",
-       link: "",
+       link: "/",
        graphic: ""},
       {date: "March 2026",
        tags: ["Land Cover", "Land Cover"],
        title: "Collect Earth Online in 2025: Platform Updates, Partnerships, and Impact",
        subtitle: "2025 was a year of meaningful progress for Collect Earth Online, shaped by platform updates, partnerships, and impact.",
-       link: "",
+       link: "/",
        graphic: ""},
       {date: "March 2026",
        tags: ["Land Cover", "Land Cover"],
@@ -125,79 +125,103 @@ export default function Highlights ({userId, userRole}) {
 
   function Projects () {
     const projects = [
-      {title: "",
-       institution: "",
+      {title: "Mekong River Region",
+       institution: "Spatial Informatics Group",
+       tags: ["Land Cover", "Asia", "Remote Sensing"],
+       description: "This project focuses on monitoring land cover and ecological change across the Mekong River region. Contributors analyze satellite imagery to identify vegetation patterns, water boundaries, and signs of environmental impact. The data collected supports regional conservation planning and long-term environmental monitoring efforts.",
+       link: "/"},
+      {title: "Mekong River Region",
+       institution: "Spatial Informatics Group",
+       tags: ["Land Cover", "Asia", "Remote Sensing"],
+       description: "This project focuses on monitoring land cover and ecological change across the Mekong River region. Contributors analyze satellite imagery to identify vegetation patterns, water boundaries, and signs of environmental impact. The data collected supports regional conservation planning and long-term environmental monitoring efforts.",
+       link: "/"},
+      {title: "Mekong River Region",
+       institution: "Spatial Informatics Group",
        tags: ["Land Cover", "Asia", "Remote Sensing"],
        description: "This project focuses on monitoring land cover and ecological change across the Mekong River region. Contributors analyze satellite imagery to identify vegetation patterns, water boundaries, and signs of environmental impact. The data collected supports regional conservation planning and long-term environmental monitoring efforts.",
       link: "/"}
     ];
 
+    function Project ({project}) {
+      return (
+        <div className="project">
+
+          
+          <div className="project-info">
+            <span className="project-title">{project.title}</span>
+            <div className="project-attribution">
+              <SvgIcon icon="institution" size="1.2rem"/>
+              <span>{project.institution}</span>
+            </div>
+            <div className="project-tags">
+              {project.tags.map((tag)=>{
+                return(
+                  <div className="project-tag">
+                    <span>{tag}</span>
+                  </div>);})}
+            </div>
+            <div className="project-description">
+              <div>{project.description}</div>
+              <span
+                onClick={()=>{window.location.assign(project.link);}}
+              >See More</span>
+            </div>
+          </div>
+
+          
+          <div className="project-controls">
+            <div className="ghost-button">
+              <div>
+                <SvgIcon icon="zoomIn" size="1rem"/>
+                <span>Zoom to Project on Map</span>
+              </div>
+            </div>
+            <div className="primary-button">
+              <div>
+                <span>Visit Project</span>
+                <SvgIcon icon="chevronRight" size="1.2rem"
+                       onClick={()=> {window.location.assign(project.link);}}/>
+              </div>
+            </div>
+          </div>
+
+          
+        </div>
+      );
+    }
+
     return (
       <div id="projects">
         <div id="projects-column">
-          {projects.map((project)=>{
-            return(
-              <div className="project">
-                <div className="project-info">
-                  <div className="project-title">{project.title}</div>
-                  <div className="project-institution">
-                    <SvgIcon icon="alert" size="1.2rem"/>
-                    <label>
-                      {project.institution}
-                    </label>
-                  </div>
-                  <div className="project-tags">
-                    {project.tags.map((tag)=>{
-                      return(
-                        <div className="project-tag">
-                          <label>{tag}</label>
-                        </div>);})}
-                  </div>
-                  <div className="project-description">
-                    <div>{project.description}</div>
-                    <p
-                      onClick={()=>{window.location.assign(project.link);}}
-                    >See More</p>
-                  </div>
-                </div>
-                <div className="project-controls">
-                  <div className="ghost-button">
-                    <div>
-                      <SvgIcon icon="search" size="1.2rem"/>
-                      <label>Zoom to Project on Map</label>
-                    </div>
-                  </div>
-                  <div className="primary-button">
-                    <label>Visit Project</label>
-                    <SvgIcon icon="chevronRight" size="1.2rem"
-                             onClick={()=> {window.location.assign(project.link);}}/>
-                  </div>
-                </div>
-              </div>);
-          })}
+          {projects.map((project)=>{return(<Project project={project}/>);})}
         </div>
-        <div id="projects-map"></div>
+        <div id="projects-map-container">
+          <div id="projects-map">
+            
+          </div></div>
       </div>
     );
   };
   
   const highlights = {
-    blogs: {title: "Featured Blogs",
-            subtitle: "Read the latest stories, updates, and insights from the Collect Earth community.",
-            children: <Blogs/>,
-            link: "/"},
-    projects: {title: "Featured Projects",
-               subtitle: "Browse active projects from institutions around the world.",
-               children: <Projects/>,
-               link: "/"}
+    blogs: {
+      title: "Featured Blogs",
+      subtitle: "Read the latest stories, updates, and insights from the Collect Earth community.",
+      children: <Blogs/>,
+      link: "/"},
+    projects: {
+      title: "Featured Projects",
+      subtitle: "Browse active projects from institutions around the world.",
+      children: <Projects/>,
+      link: "/"}
   };
   
   return (
     <div id="highlights-tab" className="home-tab">
       <div className="header">
         <div className="header-row">
-          <p className="header-title">Highlights</p>
-          <p className="header-subtitle">Explore the latest blogs and selected projects from the Collect Earth Online community.</p>
+          <span className="header-title">Highlights</span>
+          <span className="header-subtitle">Explore the latest blogs and selected projects from the Collect Earth Online community.</span>
         </div>
       </div>
       <div className="highlights-body">
@@ -207,10 +231,10 @@ export default function Highlights ({userId, userRole}) {
               <div className="highlight">
                 <div className="highlight-header">
                   <div className="highlight-title">
-                    <p >{highlight.title}</p>
+                    <span>{highlight.title}</span>
                     <div className="highlight-link"
                          onClick={()=>{window.location.assign(highlight.link);}}>
-                      <label>View All</label>
+                      <span>View All</span>
                       <SvgIcon icon="chevronRight" size="1.2rem"/>
                     </div>
                   </div>

@@ -29,7 +29,7 @@
     align-items: center;
     gap: 4px;
 }
-.header-link label {
+.header-link span {
     color: var(--Primary-Standard-Green, #1F7067);
     text-align: justify;
     font-family: "Public Sans";
@@ -117,7 +117,7 @@
     line-height: 22px; /* 157.143% */
 }
 
-.highlight-title p {
+.highlight-title span {
     color: var(--Neutral-Black, #000);
     font-feature-settings: 'liga' off, 'clig' off;
 
@@ -130,12 +130,14 @@
 }
 
 .highlight-link {
-    cursor:pointer;
+    color: var(--Primary-Standard-Green, #1F7067);
+    cursor: pointer;
     display: flex;
     gap: 4px;
+    align-items: center;
 }
 
-.highlight-link label {
+.highlight-link span {
     cursor: pointer;
     color: var(--Primary-Standard-Green, #1F7067);
     text-align: justify;
@@ -286,12 +288,25 @@
     align-items: flex-start;
     gap: 16px;}
 
-#projects-map {
+#projects-map-container {
     display: flex;
     width: 480px;
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+}
+
+#projects-map {
+    display: flex;
+    height: 860px;
+    padding-top: 1px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    align-self: stretch;
+    border-radius: 8px;
+    background: var(--Neutral-White, #FFF);
 }
 
 #projects-column{
@@ -303,7 +318,7 @@
     gap: 16px;
 }
 
-.project{
+.project {
     display: flex;
     padding: 16px;
     flex-direction: column;
@@ -314,7 +329,7 @@
     border: 1px solid var(--Primary-Highlight-Green, #A0CAC6);
     background: var(--Neutral-White, #FFF);}
 
-.ghost-button{
+.ghost-button {
     display: flex;
     height: 44px;
     justify-content: center;
@@ -331,9 +346,11 @@
     padding: 10px 14px;
     justify-content: center;
     align-items: center;
-    gap: 8px;}
+    gap: 8px;
+    color: var(--Primary-Standard-Green, #1F7067);}
 
-.ghost-button div label {
+
+.ghost-button div span {
 
     color: var(--Primary-Standard-Green, #1F7067);
 
@@ -355,12 +372,38 @@
 
 }
 
-.primary-button label {
+.primary-button div {
     display: flex;
     padding: 12px 14px;
     justify-content: center;
     align-items: center;
     gap: 8px;
+}
+
+.primary-button div span {
+    color: var(--Neutral-White, #FFF);
+
+    /* Buttons/Light */
+    font-family: "Public Sans";
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 16px; /* 114.286% */
+    text-transform: capitalize;
+    
+
+}
+
+.primary-button div svg {
+    fill: var(--Neutral-White, #FFF);
+}
+
+.project-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    align-self: stretch;
 }
 
 .project-title  {
@@ -373,12 +416,13 @@
     line-height: 24px; /* 150% */
 }
 
-.project-institution {
+.project-attribution {
     display: flex;
     align-items: center;
     gap: 8px;
+    color:#FFF;
 }
-.project-institution label{
+.project-attribution span {
     color: var(--Primary-Main-Green, #07443D);
     font-feature-settings: 'liga' off, 'clig' off;
     font-family: "Public Sans";
@@ -438,9 +482,17 @@
     line-height: 22px; /* 157.143% */
 }
 
-.project-description p {
+.project-description span {
     display: flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
 }
+
+.project-controls {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+
