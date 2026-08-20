@@ -53,15 +53,15 @@ export const ProjectsTab = ({
         },
         grow: 2,
         cell: (row) => (
-			<a
-			className="projects-table-name"
-			href={
-			  isAdmin ?
-			    `/review-project?projectId=${row.id}&institutionId=${institutionId}` 
-			    : `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
-			{row.name}
-			</a>
-			),
+	  <a
+	    className="projects-table-name"
+	    href={
+	      isAdmin ?
+		`/review-project?projectId=${row.id}&institutionId=${institutionId}` 
+		: `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
+	    {row.name}
+	  </a>
+	),
       },
       {
         name: "Date Created",
@@ -150,8 +150,8 @@ export const ProjectsTab = ({
     console.log('handle delete projects', selectedProjects);
     console.log('handle delete drafts', selectedDrafts);
     if (selectedRows.length === 0) return;
-    selectedProjects.length && deleteProjectsBulk(selectedRows.map((r) => !r.isDraft && r.id));
-    selectedDrafts.length && deleteDraftProjects(selectedRows.map((r) => r.isDraft && r.draftId));
+    selectedProjects.length && deleteProjectsBulk(selectedRows.map((r) => !r.isDraft && r.id).filter((e)=>e));
+    selectedDrafts.length && deleteDraftProjects(selectedRows.map((r) => r.isDraft && r.draftId).filter((e)=>e));
   };
 
   const handleDownload = (selectedFiles) => {
@@ -166,10 +166,10 @@ export const ProjectsTab = ({
         borderLeft: '4px solid #9286D3',
       },
     },
-    { // Draft Project: Red?
+    { // Draft Project: blank border
       when: row => row.isDraft,
       style: {
-        borderLeft: '4px solid #D98EB2'}},
+        borderLeft: 'none'}},
     { // No Plots Collected: Red
       when: row => row.type !== "simplified" && row.percentComplete == 0,
       style: {
