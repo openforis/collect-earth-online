@@ -495,6 +495,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         <SamplesCard/>
         <RulesCard/>
       </div>
+      {projectId ? (
       <div
         className="wizard-sidebar"
         style={{
@@ -504,6 +505,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           paddingBottom: '100px' }}>
         <ProjectActionsCard/>
       </div>
+      ) : null}
     </div>
   );
 }
