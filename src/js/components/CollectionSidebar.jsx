@@ -342,7 +342,6 @@ export const NewPlotNavigation = ({userEmail}) => {
               Go To Plot
             </label>
           </div>
-          <br />
           {navigationMode === "similar" && (
             <div className="sidebar-mode">
               <span>Reference Plot: {currentProject?.plotSimilarityDetails?.referencePlotId}</span>
