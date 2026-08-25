@@ -290,8 +290,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
           })
       )
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((data) => {
-          console.log(data[0]);          
+        .then((data) => {          
           if (data === "not-found") {
             const err = (direction === "id" ? "Plot not" : "No more plots") +
                   " found for this navigation mode.";
@@ -471,8 +470,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
         projectId: state.currentProject.id,
       }),
     }).then((response) => {	
-      if (!response.ok) {	
-        console.log(response);	
+      if (!response.ok) {        
         setState (s => ({...s, modal: {alert: {alertType: "Plot Lock Error", alertMessage: "Error maintaining plot lock. Your work may get overwritten. See console for details."}}}));	
       }	
     });	

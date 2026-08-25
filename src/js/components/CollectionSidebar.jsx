@@ -696,19 +696,7 @@ export const SidebarFooter = ({ processModal }) => {
           },
         },
       }));
-      return false;
-    } else if (!allAnswered) {
-      setAppState((prev) => ({
-        ...prev,
-        modal: {
-          alert: {
-            alertType: "Review Mode Alert",
-            alertMessage:
-            "All questions must be answered to save the collection.",
-          },
-        },
-      }));
-      return false;
+      return false;    
     } else if (collectConfidence && !confidence) {
       setAppState((prev) => ({
         ...prev,
