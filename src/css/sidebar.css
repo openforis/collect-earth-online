@@ -44,6 +44,8 @@
   align-items: center;
   /* justify-content: space-between; */
   padding: 1rem;
+  border: none;
+  padding: 0;
 }
 
 .sidebar-title {

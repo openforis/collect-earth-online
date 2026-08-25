@@ -45,7 +45,7 @@ import {
 import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
-export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
+export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
   // INIT COLLECTION EFFECT
