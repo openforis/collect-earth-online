@@ -45,7 +45,7 @@ import {
 import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
-export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
+export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
   // INIT COLLECTION EFFECT
@@ -728,7 +728,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
         <div className="d-flex flex-column flex-grow-1">
           <ImageAnalysisPane />
         </div>
-        <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
+        <div className="col-lg-4 col-md-4 d-flex flex-column border-left full-height">
           <CollectionSidebar processModal={processModal} userEmail={userEmail}></CollectionSidebar>
         </div>
         {state.messageBox && (
@@ -787,7 +787,7 @@ function ImageAnalysisPane({}) {
       <div className="map-controls"
            style={{position: 'absolute',
                    bottom: '3.5em',
-                   right: '10.2vw',
+                   right: '2vw',
                    zIndex: 1}}>
         <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '0.8rem' }}>
           <input
