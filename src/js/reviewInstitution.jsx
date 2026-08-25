@@ -856,7 +856,7 @@ class NewImagery extends React.Component {
   getImageryParams = (type, imageryParams) => {
     // TODO, this should be made generic based on parent / child relationship
     // SecureWatch is not defined in imageryOptions in a way that will facilitate this.
-    if (type === "GeoServer") {
+    if (type === "GeoServer" || "WMTS") {
       const {
         geoserverUrl,
         geoserverParams: { LAYERS, ...cleanGeoserverParams },
@@ -919,9 +919,7 @@ class NewImagery extends React.Component {
       if (this.state.imageryTitle.length === 0 ||
           (this.state.imageryAttribution.length === 0 && this.state.selectedType !== "14")) {
         this.setState ({modal: {alert: {alertType: "Imagery Upload Error", alertMessage: "You must include a title and attribution."}}});
-      } else if (this.props.titleIsTaken(this.state.imageryTitle, this.props.imageryToEdit.id)) {
-        this.setState ({modal: {alert: {alertType: "Imagery Upload Error", alertMessage: "The title '" + this.state.imageryTitle + "' is already taken."}}});
-      } else {
+      }  else {
         fetch(isNew ? "/add-institution-imagery" : "/update-institution-imagery", {
           method: "POST",
           headers: {
