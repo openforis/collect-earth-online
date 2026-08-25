@@ -21,6 +21,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const projectVisibility = useSubscription([sub_ids.overview.visibility]);
     const dataLicenseType = "Public-Open Use"; //useSubscription([sub_ids.overview.license])
     const showGee = useSubscription([sub_ids.overview.projectOptions.gee]);
+    const projectType = useSubscription([sub_ids.overview.projectType]);
     const extraPlotColumns = useSubscription([sub_ids.overview.projectOptions.extraPlotColumns]);
     const plotConfidence = useSubscription([sub_ids.overview.projectOptions.plotConfidence]);
     const autoGeo = useSubscription([sub_ids.overview.projectOptions.autoGeo]);
@@ -490,10 +491,14 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         <OverviewCard/>
         <BoundaryCard/>
         <ImageryCard/>
-        <PlotsCard/>
         <QuestionsCard/>
-        <SamplesCard/>
-        <RulesCard/>
+        {projectType === 'regular' ? (
+          <>
+            <PlotsCard/>
+            <SamplesCard/>
+            <RulesCard/>
+          </>
+        ) : null}
       </div>
       {projectId ? (
       <div
