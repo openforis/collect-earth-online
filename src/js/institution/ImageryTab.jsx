@@ -48,14 +48,12 @@ of project visibility`;
     () => [
       {
         name: "Visibility",
-        width: "120px",
         selector: (row) => row.visibility || "—",
         sortable: true,
         grow: 0.8,
       },
       {
         name: "Title",
-//        width: "360px",
         selector: (row) => row.title,
         sortable: true,
         sortFunction: (rowA, rowB) => {
@@ -69,7 +67,6 @@ of project visibility`;
       },
       {
         name: "Created Date",
-        width: "240px",
         selector: (row) => row.createdDate || row.createDate || "—",
         sortable: true,
         grow: 1.2,
@@ -78,7 +75,6 @@ of project visibility`;
         ? [
             {
               name: "Actions",
-              width: "120px",
               cell: (row) => (
                 <button
                   style={{

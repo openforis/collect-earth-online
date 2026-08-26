@@ -38,7 +38,6 @@ export const UsersTab = ({
         name: "Role",
         selector: (row) => row.institutionRole || "—",
         sortable: true,
-        width: "120px",
         grow: 1,
         cell: (row) => (
           <span style={{ textTransform: "capitalize" }}>
@@ -49,7 +48,6 @@ export const UsersTab = ({
       {
         omit: !isAdmin,
         name: "Actions",
-        width: "120px",
         cell: (row) => (
           <button
             className="outlined-btn"
