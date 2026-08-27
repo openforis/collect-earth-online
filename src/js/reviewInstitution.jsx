@@ -167,7 +167,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
         getProjectList();
         showAlert({
           title: "Project Info",
-          body: "Selected project draftss have been deleted.",
+          body: "Selected project drafts have been deleted.",
         });
       } else {
         console.error(response);
