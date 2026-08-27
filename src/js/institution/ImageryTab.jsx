@@ -25,8 +25,8 @@ export const ImageryTab = ({
 can view the project. Private Institution Imagery is visible only to institution members, regardless
 of project visibility`;
   const visibilityOptions = [
-    { value: "private", label: "Public Institution Imagery" },
-    { value: "public", label: "Private Institution Imagery" },
+    { value: "private", label: "Private Institution Imagery" },
+    { value: "public", label: "Public Institution Imagery" },
   ];
 
   const filteredImagery = useMemo(() => {
@@ -48,12 +48,14 @@ of project visibility`;
     () => [
       {
         name: "Visibility",
+        width: "120px",
         selector: (row) => row.visibility || "—",
         sortable: true,
         grow: 0.8,
       },
       {
         name: "Title",
+//        width: "360px",
         selector: (row) => row.title,
         sortable: true,
         sortFunction: (rowA, rowB) => {
@@ -67,6 +69,7 @@ of project visibility`;
       },
       {
         name: "Created Date",
+        width: "240px",
         selector: (row) => row.createdDate || row.createDate || "—",
         sortable: true,
         grow: 1.2,
@@ -75,6 +78,7 @@ of project visibility`;
         ? [
             {
               name: "Actions",
+              width: "120px",
               cell: (row) => (
                 <button
                   style={{
@@ -392,7 +396,6 @@ export const NewImagery = ({
       });
       return;
     }
-
     const sourceConfig = buildSecureWatch(stackParams(sanitized));
     if (imageryTitle.length === 0 || (imageryAttribution.length === 0 && selectedType !== "14")) {
       setModal({
@@ -483,7 +486,7 @@ export const NewImagery = ({
 
         {formInput("Title", "text", imageryTitle, setImageryTitle, true)}
 
-        {["GeoServer", "xyz"].includes(type) &&
+        {["GeoServer", "xyz", "WMTS"].includes(type) &&
          formInput("Attribution", "text", imageryAttribution, setImageryAttribution, true)}
 
         {displayParams.map((o) => formTemplate(o))}

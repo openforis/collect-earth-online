@@ -13,16 +13,22 @@ const projectSteps = [
   {id: 'samples', label: 'Sample Design'},
   {id: 'questions', label: 'Survey Questions'},
   {id: 'rules', label: 'Survey Rules'},
-  {id: 'review', label: 'Review & Publish'}
+  {id: 'review', label: 'Review Project'}
 ];
 
 export default function NavButtons () {
   const currentStep = useSubscription([sub_ids.currentStep]);
-  const stepIdx = projectSteps.map((e)=>e.id).indexOf(currentStep);  
+  const projectType = useSubscription([sub_ids.overview.projectType]);
+  
+  const activeSteps = projectType === 'simplified' 
+    ? projectSteps.filter(s => !['plots', 'samples', 'rules'].includes(s.id))
+    : projectSteps;
+
+  const stepIdx = activeSteps.map((e)=>e.id).indexOf(currentStep);  
   function continueHandler () {dispatch([event_ids.continueHandler, currentStep]);}
   function saveDraftHandler () {dispatch([event_ids.saveDraft]);};
 
-  function navBackHandler () { dispatch([event_ids.currentStep, projectSteps[stepIdx - 1].id]);}
+  function navBackHandler () { dispatch([event_ids.currentStep, activeSteps[stepIdx - 1].id]);}
 
   return (<div className="nav-buttons">
             <button
@@ -31,30 +37,35 @@ export default function NavButtons () {
 
             >Exit</button>
             {stepIdx > 0 &&
-             (<button
-              className={'btn btn-sm'}
-              style={{backgroundColor: "#2d6f74",
-                      color: "#fff"}}
-              onClick={()=>navBackHandler()}
-            >Back</button>)}
+              (<button
+                 className={'btn btn-sm'}
+                 style={{backgroundColor: "#2d6f74",
+                   color: "#fff"}}
+                 onClick={()=>navBackHandler()}
+              >Back</button>)}
             <button
               className={'btn btn-sm'}
               style={{backgroundColor: "#2d6f74",
-                      color: "#fff"}}
+                color: "#fff"}}
               onClick={()=>saveDraftHandler()}
             >Save Draft</button>
             <button
               className={'btn btn-sm'}
               onClick={()=>continueHandler()}
               style={{backgroundColor: "#2d6f74",
-                      color: "#fff"}}
-            >Save & {currentStep === 'review' ? 'Publish' : 'Continue'}</button>
+                color: "#fff"}}
+            >Save & {currentStep === 'review' ? 'Create' : 'Continue'}</button>
           </div>);
 };
 
 export function ProjectWizardNavigator () {
   const currentStep = useSubscription([sub_ids.currentStep]);
   const invalidSteps = useSubscription([sub_ids.invalidSteps]);
+  const projectType = useSubscription([sub_ids.overview.projectType]);
+
+  const activeSteps = projectType === 'simplified' 
+    ? projectSteps.filter(s => !['plots', 'samples', 'rules'].includes(s.id))
+    : projectSteps;
 
   function navWidth () {
     if (screen.width > 1426) {
@@ -63,13 +74,13 @@ export function ProjectWizardNavigator () {
       return "20px";
     } else {
       return "10px";
-    }    
+    }   
   }
 
   return (
     <div
       className="project-wizard-navigator">
-      {projectSteps.map(({id, label}, index)=>{
+      {activeSteps.map(({id, label}, index)=>{
         return(
           <>
             <div
@@ -79,7 +90,7 @@ export function ProjectWizardNavigator () {
                 cursor: 'pointer'}}
               onClick={() => dispatch([event_ids.currentStep, id])}
             >
-              {((projectSteps.map(({id})=>id).indexOf(currentStep) > index)
+              {((activeSteps.map(({id})=>id).indexOf(currentStep) > index)
                 && !invalidSteps.includes(id)) ?                
                 (<SvgIcon icon='checkFilled' size='1.2rem' style={{marginTop: '.2rem'}}/>) :
                 (<span className={currentStep === id && "selected"}
@@ -87,7 +98,7 @@ export function ProjectWizardNavigator () {
 
               <label style={{lineHeight: 1.1}}>{label}</label>
             </div>
-            {index + 1 < projectSteps.length && (
+            {index + 1 < activeSteps.length && (
               <div
                 className="nav-separator"
                 style={{

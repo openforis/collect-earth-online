@@ -24,9 +24,9 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const extraPlotColumns = useSubscription([sub_ids.overview.projectOptions.extraPlotColumns]);
     const plotConfidence = useSubscription([sub_ids.overview.projectOptions.plotConfidence]);
     const autoGeo = useSubscription([sub_ids.overview.projectOptions.autoGeo]);
-    
+
     return (
-      <div className='projectWizardCard'>
+      <div className='wizard-card'>
         <div className='review-card-header'>
           <p className="card-title">OVERVIEW</p>
           <div onClick={()=>{dispatch([event_ids.currentStep, 'overview']);}}>
@@ -41,11 +41,11 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
 
         <p className='hyperlink' >See the full agreement here.</p>
 
-        <p > Project Options:</p>
-        <b > {!showGee && "Don't "} Show GEE Script Link on Collection Page</b>
-        <b > {!extraPlotColumns && "Don't "} Show Extra Plot Columns on Collection Page</b>
-        <b > {!plotConfidence && "Don't "} Collect Plot Confidence</b>
-        <b > {!autoGeo && "Don't "} Auto-launch Geo-Dash Window</b>
+        <p > <b>Project Options: </b></p>
+        <p > {!showGee && "Don't "} Show GEE Script Link on Collection Page</p>
+        <p > {!extraPlotColumns && "Don't "} Show Extra Plot Columns on Collection Page</p>
+        <p > {!plotConfidence && "Don't "} Collect Plot Confidence</p>
+        <p > {!autoGeo && "Don't "} Auto-launch Geo-Dash Window</p>
                 
       </div>
     );
@@ -76,17 +76,17 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     }, [previewId, setActiveMapLayers]);
 
     return (
-      <div className='projectWizardCard'>
+      <div className='wizard-card'>
         <div className='review-card-header'>
           <p className="card-title">IMAGERY</p>
           <div onClick={()=>{dispatch([event_ids.currentStep, 'imagery']);}}>
             <SvgIcon icon='edit' size='2rem'/>
           </div>
         </div>
-        <p >Imagery Used:</p>
+        <b >Imagery Used:</b>
         {selectedImagery.map((i)=>{
           return (
-            <b > {imageryList[0] ? imageryList.filter(({id})=> id === i)[0].title : null} </b>
+            <p > {imageryList[0] ? imageryList.filter(({id})=> id === i)[0].title : null} </p>
           );
         })}
       </div>
@@ -97,7 +97,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
 
     return (
-      <div className='projectWizardCard' style={{ display: 'flex', flexDirection: 'column', height: '420px', boxSizing: 'border-box' }}>
+      <div className='wizard-card' style={{ display: 'flex', flexDirection: 'column', height: '420px', boxSizing: 'border-box' }}>
         <div className='review-card-header'>
           <p className="card-title">BOUNDARY</p>
           <div style={{ cursor: 'pointer' }} onClick={()=>{dispatch([event_ids.currentStep, 'boundary']);}}>
@@ -131,7 +131,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const plotSize = useSubscription([sub_ids.plots.plotSize]);
 
     return (
-      <div className='projectWizardCard'>
+      <div className='wizard-card'>
         <div className='review-card-header'>
           <p className="card-title">SURVEY PLOTS</p>
           <div onClick={()=>{dispatch([event_ids.currentStep, 'plots']);}}>
@@ -155,7 +155,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const numPlots = useSubscription([sub_ids.plots.numPlots]);
 
     return (
-      <div className='projectWizardCard'>
+      <div className='wizard-card'>
         <div className='review-card-header'>
           <p className="card-title">PLOT SAMPLES</p>
           <div  onClick={()=>{dispatch([event_ids.currentStep, 'samples']);}}>
@@ -174,7 +174,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const questions = useSubscription([sub_ids.questions.questions]);
 
     return (
-      <div className='projectWizardCard'>
+      <div className='wizard-card'>
         <div className='review-card-header'>
           <p className="card-title">SURVEY QUESTIONS</p>
           <div 
@@ -193,7 +193,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const rules = useSubscription([sub_ids.rules.rules]);
 
     return (
-      <div className='projectWizardCard'>
+      <div className='wizard-card'>
         <div className='review-card-header'>
           <p className="card-title">SURVEY RULES</p>
           <div onClick={()=>{dispatch([event_ids.currentStep, 'rules']);}}>
@@ -280,7 +280,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
 
         fetch(url, { method: "POST" })
           .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-          .then((data) => window.location.assign(`/review-project?projectId=${data.projectId}&institutionId=${institutionId}`));
+          .then((data) => window.location.assign(`/create-project?projectId=${data.projectId}&institutionId=${institutionId}`));
       }
     };
 
@@ -343,7 +343,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     };
 
     return (
-      <div className="projectWizardCard w-100">
+      <div className="wizard-card w-100">
         <div className="review-card-header">
           <p className="card-title">PROJECT ACTIONS</p>
         </div>
@@ -495,6 +495,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         <SamplesCard/>
         <RulesCard/>
       </div>
+      {projectId ? (
       <div
         className="wizard-sidebar"
         style={{
@@ -504,6 +505,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           paddingBottom: '100px' }}>
         <ProjectActionsCard/>
       </div>
+      ) : null}
     </div>
   );
 }

@@ -18,11 +18,11 @@ import '../../css/sidebar.css';
 import '../../css/survey.css';
 
 
-export const SurveyQuestions = ({
+export function SurveyQuestions ({
   preview = false,
   surveyQuestions = null,
   showHeader
-}) => {
+}) {
   const {
     currentProject,
     currentPlot,
@@ -113,8 +113,9 @@ export const SurveyQuestions = ({
 
   const setCurrentValue = (questionId, answerId, answerText) => {
     const sampleIds = getSelectedSampleIds(questionId);
+    if (!preview && !checkSelection(sampleIds, questionId)) return;
+
     if (preview) {
-      // Logic for updating the FAKE sample state
       setPreviewUserSamples((prev) => {
         const newSamples = sampleIds.reduce((acc, sampleId) => {
           if (answerText == null) return acc;
@@ -136,12 +137,11 @@ export const SurveyQuestions = ({
 
         return { ...prev, ...newSamples };
       });
+
+      syncOpenChildren(questionId, answerId, answerText);
       return;
     }
-
-    // ORIGINAL LOGIC FOR GLOBAL STATE
     setAppState((prev) => {
-      if (!checkSelection(sampleIds, questionId)) return prev;
       const childQuestionIds = getChildQuestionIds(questionId);
 
       const newSamples = sampleIds.reduce((acc, sampleId) => {
@@ -157,30 +157,68 @@ export const SurveyQuestions = ({
         return acc;
       }, {});
 
+      if (!Object.keys(newSamples).length) return prev;
+
       const newUserImages = sampleIds.reduce((acc, sampleId) => {
         acc[sampleId] = {
           id: prev.currentImagery.id,
           attributes:
-          prev.currentImagery?.sourceConfig?.type === "PlanetDaily"
-            ? {
-              ...prev.imageryAttributes,
-              imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(
-                prev.mapConfig,
-                prev.currentImagery.id
-              ),
-            }
-          : prev.imageryAttributes,
+            prev.currentImagery?.sourceConfig?.type === "PlanetDaily"
+              ? {
+                ...prev.imageryAttributes,
+                imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(
+                  prev.mapConfig,
+                  prev.currentImagery.id
+                ),
+              }
+              : prev.imageryAttributes,
         };
         return acc;
       }, {});
-
-      if (!Object.keys(newSamples).length) return prev;
 
       return {
         ...prev,
         userSamples: { ...(prev.userSamples || {}), ...newSamples },
         userImages:  { ...(prev.userImages  || {}), ...newUserImages },
       };
+    });
+    syncOpenChildren(questionId, answerId, answerText);
+  };
+
+  const getOpenChildren = (questionId, answerId, answerText) => {
+    const parent = surveyData?.[questionId];
+    if (!parent) return [];
+
+    return childrenOf(questionId, surveyData).filter((child) => {
+      if (parent.componentType === 'input') {
+        return String(answerText ?? '').length > 0;
+      }
+      const allowed = Array.isArray(child.parentAnswerIds) ? child.parentAnswerIds : [];
+      return allowed.length === 0 || allowed.includes(Number(answerId));
+    });
+  };
+
+  const getDescendantIds = (questionId) =>
+    childrenOf(questionId, surveyData).reduce(
+      (acc, child) => [...acc, child.id, ...getDescendantIds(child.id)],
+      []
+    );
+
+  const syncOpenChildren = (questionId, answerId, answerText) => {
+    if (answerText == null) return;
+
+    const triggered = getOpenChildren(questionId, answerId, answerText);
+    const descendants = getDescendantIds(questionId);
+
+    setOpenByParent((prev) => {
+      const next = { ...prev };
+      descendants.forEach((id) => delete next[id]);
+      if (triggered.length > 0) {
+        next[questionId] = triggered[0].id;
+      } else {
+        delete next[questionId];
+      }
+      return next;
     });
   };
 
@@ -453,7 +491,7 @@ export const SurveyQuestions = ({
           <input
             className="sq-input"
             type={q.dataType}
-            placeholder={val}
+            placeholder={val || q.questionLabel}
             defaultValue={val}
             onBlur={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value)}
             onKeyDown={(e) => {
@@ -1101,14 +1139,14 @@ export const DrawingTool = () => {
         <RenderDrawTools />
         <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
           <button
-            className="btn btn-outline-lightgreen"
+            className="btn btn-outline-darkgreen"
             onClick={featuresToSampleLayer}
             title="Save drawn features back to sample list"
           >
             Save samples
           </button>
           <button
-            className="btn btn-outline-lightgreen"
+            className="btn btn-outline-darkgreen"
             onClick={() => clearAll()}
             title="Exit draw mode and return to answering"
           >

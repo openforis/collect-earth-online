@@ -281,6 +281,12 @@
    [:get  "/get-tile"]                      {:handler     proxy/proxy-imagery
                                              :auth-type   :no-cross
                                              :auth-action :block}
+   [:get  "/get-wmts-capabilities"]         {:handler     proxy/get-wmts-capabilities
+                                             :auth-type   :no-cross
+                                             :auth-action :block}
+   [:get  "/get-wmts-tiles"]                {:handler     #'proxy/get-wmts-tiles
+                                             :auth-type   :no-cross
+                                             :auth-action :block}
    [:get  "/get-securewatch-dates"]         {:handler     proxy/get-securewatch-dates
                                              :auth-type   :no-cross
                                              :auth-action :block}

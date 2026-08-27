@@ -1,41 +1,19 @@
-import { atom } from "jotai";
 import _ from 'lodash';
+import { atom } from 'jotai';
 import { initAppDb , regEvent , regEffect , dispatch , regSub , current } from '@flexsurfer/reflex';
 
-import { validateOverview,
-         validateImagery,
-         validatePlots,
-         validateSamples,
-         validateQuestions,
-         validateWizard,
-         validateStep,
-       } from "../wizard/validation";
+import {
+  validateOverview,
+  validateImagery,
+  validatePlots,
+  validateSamples,
+  validateQuestions,
+  validateWizard,
+  validateStep,
+} from "../wizard/validation";
 
-
-
-//TODO: Delete unused jotai-style atoms
-//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-export const projectSourceAtom = atom(null);
-export const currentStepAtom = atom("overview");
-export const projectOverviewAtom = atom (
-  {projectName: '',
-   projectDescription: '',
-   projectType: null, // 'simplified' | 'regular'
-   learningMaterial: '',
-   visibility: null, // 'public' | 'users' | 'institution' | 'private'
-   projectOptions: {
-   gee: false,
-   extraPlotColumns: false,
-   plotConfidence: false,
-   autoGeo: false}});
-
-
-export const rulesAtom = atom([]);
 export const previewSelectedSampleIdAtom = atom(1);
 export const previewUserSamplesAtom = atom({});
-
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 const projectWizardDb = {
@@ -89,16 +67,19 @@ const projectWizardDb = {
   'plots.referencePlotId': -1,
   'plots.similariyYears': null,
   'plots.designSettings': {
-    sampleGeometries : {points:   true,                                       
-                        lines:    true,
-                        polygons :true},
-    userAssignment:    {userMethod:  "none",
-                        users:      [],
-                        percents:   []},
-    qaqcAssignment:   {qaqcMethod:     "none",
-                       percent:        0,
-                       smes :          [],
-      timesToReview : 2}},
+    sampleGeometries: {
+      points:   true,
+      lines:    true,
+      polygons: true},
+    userAssignment: {
+      userMethod:  "none",
+      users:       [],
+      percents:    []},
+    qaqcAssignment: {
+      qaqcMethod:    "none",
+      percent:       0,
+      smes:          [],
+      timesToReview: 2}},
   'plots.plotSimilarityDetails': { referencePlotId: "", years: [] },
   // samples
   'samples.sampleDistribution': 'random',
@@ -474,6 +455,7 @@ regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
           return Promise.resolve();
         } else {
           dispatch([event_ids.templateProject, data]);
+          draftDb[sub_ids.projectId] = projectId;
           return Promise.resolve();
         }
       }).catch(() => {
@@ -488,7 +470,6 @@ regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
           dispatch([event_ids.errors, [['server', ["Can't edit project" + projectId + "."]]]]);
           return Promise.resolve();
         } else {
-          console.log(data.map((i) => i.id));
           dispatch([event_ids.imagery.imageryList, data.map((i) => i.id)]);
           return Promise.resolve();
         }
@@ -498,6 +479,7 @@ regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
   }
   getProjectImagery(projectId);
   getProjectById(projectId);
+  draftDb[sub_ids.projectId] = projectId;
   dispatch([event_ids.modal, null]);
   dispatch([event_ids.currentStep, 'review']);
 });
@@ -529,7 +511,11 @@ export function buildProject (draftDb, sub_ids) {
   const projectImageryList = current(draftDb[sub_ids.imagery.imageryList]);
   const aoiFileName = current(draftDb[sub_ids.boundary.aoiFileName]);
   const type = current(draftDb[sub_ids.overview.projectType]);
-  const projectOptions = current(draftDb[sub_ids.overview.projectOptions]);
+  const gee = current(draftDb[sub_ids.overview.projectOptions.gee]);
+  const extraPlotColumns = current(draftDb[sub_ids.overview.projectOptions.gee]);
+  const plotConfidence = current(draftDb[sub_ids.overview.projectOptions.gee]);
+  const autoGeo = current(draftDb[sub_ids.overview.projectOptions.gee]);
+  const projectOptions = {gee, extraPlotColumns, plotConfidence, autoGeo}
   const plotSpacing = Number(current(draftDb[sub_ids.plots.plotSpacing]));
   const shufflePlots = current(draftDb[sub_ids.plots.shufflePlots]);
   const surveyRules = current(draftDb[sub_ids.rules.rules]);
@@ -624,6 +610,7 @@ regEvent(event_ids.validate, ({ draftDb }, step='wizard') => {
 regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
   
   const form = buildProject(draftDb, sub_ids);
+  const isSimplified = draftDb[sub_ids.overview.projectType] === 'simplified';
 
   switch (currentStep) {
   case 'overview' : {    
@@ -635,33 +622,33 @@ regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
     const errors = validateImagery(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['imagery', errors]]]) 
       : dispatch([event_ids.currentStep, 'boundary']) ;
-  break;}
+    break;}
   case 'boundary' : {
-    dispatch([event_ids.currentStep,  'plots']);
-  break;}
+    dispatch([event_ids.currentStep, isSimplified ? 'questions' : 'plots']);
+    break;}
   case 'plots' : {
     const errors = validatePlots(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['plots', errors]]]) 
       : dispatch([event_ids.currentStep, 'samples']);
-  break;}
+    break;}
   case 'samples' : {
     const errors = validateSamples(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['samples', errors]]]) 
       : dispatch([sub_ids.currentStep, 'questions']);
-  break;}
+    break;}
   case 'questions' : {
     const errors = validateQuestions(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['questions', errors]]]) 
-      : dispatch([sub_ids.currentStep, 'rules']);
-  break;}
+      : dispatch([sub_ids.currentStep, isSimplified ? 'review' : 'rules']);
+    break;}
   case 'rules' : {
     dispatch([sub_ids.currentStep, 'review']);
-  break;}
+    break;}
   case 'review' : {
     const errors = validateWizard(form);
     errors ? dispatch([event_ids.errors, errors])
       : draftDb[sub_ids.modal] = 'review';
-  break;}
+    break;}
   default : 
     dispatch([event_ids.errors, [['Navigation', ['Your browser experienced a client error. please refresh the page.']]]]);    
   }
@@ -683,12 +670,12 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   designSettings = {},
   learningMaterial = '',
   name,
-  numPlots = 0, //?
+  numPlots = 0,
   plotDistribution,
   plotfileName,
   plotShape,
   plotSize,
-  plotSpacing = -1, //?
+  plotSpacing = -1,
   projectOptions = {gee : false, extraPlotColumns: false, plotConfidence: false, autoGeo: false},
   projectType = 'regular',
   referencePlot = -1,
@@ -710,10 +697,12 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.overview.projectType] = projectType;
   draftDb[sub_ids.overview.learningMaterial] = learningMaterial;
   draftDb[sub_ids.overview.visibility] = visibility;
-  draftDb[sub_ids.projectOptions] = {gee:projectOptions.showGEEScript, 
-                                     extraPlotColumns: projectOptions.showPlotInformation,
-                                     plotConfidence: projectOptions.collectConfidence,
-    autoGeo: projectOptions.autoLaunchGeoDash};
+  draftDb[sub_ids.projectOptions] = {
+    gee:projectOptions.showGEEScript, 
+    extraPlotColumns: projectOptions.showPlotInformation,
+    plotConfidence: projectOptions.collectConfidence,
+    autoGeo: projectOptions.autoLaunchGeoDash
+  };
   draftDb[sub_ids.boundary.generationMethod] = 'manual';
   draftDb[sub_ids.boundary.aoiFeatures] = aoiFeatures;
   draftDb[sub_ids.boundary.aoiFileName] = aoiFileName;
@@ -765,11 +754,8 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
-        console.log('create project draft request result', data);
         if (data[0] && Number.isInteger(data[1].projectDraftId)) {
-          console.log('dispatch success response');
-          dispatch([event_ids.modal, 'draft-success']);
-          //dispatch([event_ids.successResponse, data[1]]);
+          dispatch([event_ids.successResponse, data[1]]);
           return Promise.resolve();
         } else {          
           let errs = Object.entries(data[1].params).map(([field, message])=>{return (field + "; " + message);});
@@ -785,7 +771,6 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
   }
 
   function saveProjectDraft () {
-    console.log('saving project draft...');
     fetch("/update-project-draft", {
       method: "POST",
       headers: {
@@ -803,7 +788,6 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
-        console.log('resolving project draft data');
         dispatch([event_ids.successResponse, ['Project Saved', data]]);
         return Promise.resolve();
       })
@@ -825,12 +809,41 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
   const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
   const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
   const similarityDetails = current(draftDb[sub_ids.plots.plotSimilarityDetails]) || {};
+  const existingProjectId = current(draftDb[sub_ids.projectId]);
   const referencePlotId = similarityDetails.referencePlotId;
   const similarityYears = similarityDetails.years;
   const form = buildProject(draftDb, sub_ids);
   const errors = validateWizard(form);
   
-  function submitForm () {
+  function updateForm () {
+    fetch("/update-project", {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        projectId: existingProjectId,
+        ...form,
+      }),
+    })
+      .then((response) => Promise.all([response.ok, response.json()]))
+      .then((data) => {
+        if (data[0] && data[1] === "") {
+          dispatch([event_ids.successResponse, data[1]]);
+          return Promise.resolve();
+        } else {
+          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
+          return Promise.reject(data[1]);
+        }
+      })
+      .catch((message) => {
+        dispatch([event_ids.errors [['server', [message]]]]);;
+      });
+  }
+  
+  
+  function submitForm () {    
     fetch("/create-project", {
       method: "POST",
       headers: {
@@ -861,7 +874,6 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
             })
           });
           dispatch([event_ids.successResponse, data[1]]);
-          // window.location = `/review-project?projectId=${data[1].projectId}&institutionId=${this.context.institutionId}`;
           return Promise.resolve();
         } else {
           dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
@@ -870,7 +882,8 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
       })
       .catch((message) => dispatch([event_ids.errors [['server', [message]]]]));
   }
-  errors ? dispatch([event_ids.errors, errors]) : submitForm();
+  errors ? dispatch([event_ids.errors, errors]) :
+    (existingProjectId > 0) ? updateForm() : submitForm();
 });
 
 regEvent(event_ids.successResponse, ({ draftDb }, response) => {  

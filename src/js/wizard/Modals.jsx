@@ -95,6 +95,9 @@ function TemplateProjectModal () {
   const projectType = useSubscription([sub_ids.overview.projectType]) || 'regular';
   const [templateProjectId, setTemplateProjectId] = useState(-1);
   const [templateProjects, setTemplateProjects] = useState([]);
+  const [filterProjectId, setFilterProjectId] = useState(-1);
+  const [filterProjectName, setFilterProjectName] = useState("");
+  const [filteredProjects, filterProjects] = useState([]);
 
   function setTemplateProject (templateProject) {dispatch([event_ids.templateProject, templateProject]);}
   function setUseTemplatePlots (useTemplatePlots) {dispatch([event_ids.overview.useTemplatePlots, useTemplatePlots]);}
@@ -118,7 +121,7 @@ function TemplateProjectModal () {
             users: [],
             percents: []}})
           : setDesignSettings(data.designSettings);
-        setTemplateProjectId(projectId);        
+        setTemplateProjectId(projectId);
         setImageryId(institutionImageryIds.includes(data.imageryId)
                      ? [data.imageryId]
                      : institutionImageryIds);
@@ -169,7 +172,9 @@ function TemplateProjectModal () {
         dispatch([event_ids.errors, [['Template Projects', ['Failed to load template projects']]]]);
         Promise.reject(error);
       });
-  }, []);  
+  }, []);
+
+  
   return (
     <Modal
       title='Select Template Project'
@@ -178,14 +183,50 @@ function TemplateProjectModal () {
       onConfirm={()=> {getTemplateProjects(templateProjectId);}}      
       onClose={()=>{ dispatch([event_ids.modal, 'newProject']);}}>
       <div>        
-        {templateProjects.length &&
-         <select
-           className="text-input"
-           onChange={(e)=>{
-             setTemplateProjectId(Number(e.target.value));}}>
-           <option value={-1} selected disabled hidden>Select Template Project:</option>
-           {templateProjects.map(e =>(<option key={e.id} value={e.id}>{e.name}</option>))}
-         </select>}
+        {templateProjects.length ?
+         <div>
+           <p>Filter Template Projects:</p>
+           <div style={{display: "flex",
+                        gap: "1rem",
+                        flexDirection: "row"}}>
+             <input
+               className="text-input"
+               style={{width: "20%"}}
+               type="text"
+               placeHolder="Id"
+               value={filterProjectId > 0 ? filterProjectId : null}
+               onKeyPress={(e)=>{
+                 const pattern = /^[0-9]+$/;
+                 const input = e.key;
+                 !pattern.test(input) && e.preventDefault();
+               }}
+               onChange={(e)=>{setFilterProjectId(e.target.value);}}
+             />
+             <input
+               placeholder="Project Name"
+               className="text-input"
+               style={{flexGrow: 2}}
+               type="text"
+               value={filterProjectName}
+               onChange={(e)=>{setFilterProjectName(e.target.value);}}
+             />
+             
+           </div>
+           <select
+             className="text-input"
+             onChange={(e)=>{
+               setTemplateProjectId(Number(e.target.value));}}>
+             <option value={-1} selected disabled hidden>Select Template Project:</option>
+             {templateProjects
+              .filter(({id, name}) => {
+                return ((id.toString().includes(filterProjectId.toString())) ||
+                        (name.toLocaleLowerCase().includes(filterProjectName.toLocaleLowerCase()))
+                       );
+              })
+              .map(e =>(<option key={e.id} value={e.id}>{e.name}</option>))}
+         </select>
+         </div>
+         : <></>}
       </div>
     </Modal>
   );
@@ -215,14 +256,14 @@ function NewProjectModal () {
     importProject: ['Import Collect Earth Project',
                     'Import a project from the Collect Earth desktop application.']};
   const projectSource = useSubscription([sub_ids.projectSource]);
-
+  const institutionId = useSubscription([sub_ids.institutionId]);
   return (
     <Modal
       title='Project Setup'
       closeText=''
       confirmText='Get Started'
       onConfirm={()=>{handleNewProject(projectSource);}}
-      onClose={()=>{dispatch([event_ids.modal, 'newProject']);}}
+      onClose={()=>{window.location.assign(`/review-institution?institutionId=${institutionId}`);}}
       confirmDisabled={projectSource === null}>
       <div
         className="inputs">
@@ -289,15 +330,23 @@ function DraftSuccessModal () {
   );
 }
 
-function SuccessModal () {  
+function SuccessModal () {
+  const institutionId = useSubscription([sub_ids.institutionId]);
+  const { projectId } = useSubscription([sub_ids.successResponse]);
+  const redirectUrl = projectId ? `/project-wizard?institutionId=${institutionId}&projectId=${projectId}` : null;
   return (
     <Modal
       title=''
       closeText=''
       confirmText='Close'
-      onConfirm={()=>{dispatch([event_ids.modal, null]);}}
-      onClose={()=>{dispatch([event_ids.modal, null]);}}>
-
+      onConfirm={()=>{
+        dispatch([event_ids.modal, null]);
+        if(redirectUrl) window.location.href = redirectUrl;
+      }}
+      onClose={()=>{
+        dispatch([event_ids.modal, null]);
+        if(redirectUrl) window.location.href = redirectUrl;
+      }}>
       <div className="success-icon">
         <SvgIcon  icon='check' size='2rem'/>
       </div>
@@ -383,7 +432,6 @@ function ExitModal () {
 export default function ProjectWizardModal () {
   // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
   const modal = useSubscription([sub_ids.modal]);
-  
   switch (modal) {
   case 'template'    : return (<TemplateProjectModal/>);
   case 'import'      : return (<ImportProjectModal/>);
