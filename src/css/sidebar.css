@@ -45,6 +45,7 @@
   align-items: center;
   /* justify-content: space-between; */
   padding: 1rem;
+  border: none;
 }
 
 .sidebar-title {
@@ -58,7 +59,7 @@
 }
 
 .sidebar-label {
-  font-size: 12px;
+  font-size: 16px;
   color: #888;
   display: block;
   margin-bottom: 4px;

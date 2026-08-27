@@ -40,6 +40,7 @@ export const ProjectsTab = ({
         name: "Visibility",
         selector: (row) => row.isDraft ? 'draft' : row.privacyLevel || "—",
         sortable: true,
+        width: "120px",
         grow: 0.8,
       },
       {
@@ -53,18 +54,19 @@ export const ProjectsTab = ({
         },
         grow: 2,
         cell: (row) => (
-			<a
-			className="projects-table-name"
-			href={
-			  isAdmin ?
-			    `/review-project?projectId=${row.id}&institutionId=${institutionId}` 
-			    : `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
-			{row.name}
-			</a>
-			),
+	  <a
+	    className="projects-table-name"
+	    href={
+	      isAdmin ?
+		`/review-project?projectId=${row.id}&institutionId=${institutionId}` 
+		: `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
+	    {row.name}
+	  </a>
+	),
       },
       {
         name: "Date Created",
+        width: "160px",
         selector: (row) => row.createdDate,
         sortable: true,
         cell: (row) =>
@@ -74,12 +76,14 @@ export const ProjectsTab = ({
       },
       {
         name: "Total Plots",
+        width: "140px",
         selector: (row) => row.numPlots ?? 0,
         sortable: true,
         right: true,
       },
       {
         name: "Completion %",
+        width: "160px",
         selector: (row) => row.percentComplete ?? -1, 
         sortable: true,
         right: true,
@@ -94,12 +98,14 @@ export const ProjectsTab = ({
       },
       {
         name: "Publication",
+        width: "140px",
         selector: (row) => row.isDraft ? 'draft' : row.availability ?? "Unpublished",
         sortable: true,
       },
       
       {
         omit: !isAdmin,
+        width: "60px",
         name: "Edit",
         grow: .2,
         cell: (row)=> <div
@@ -115,7 +121,8 @@ export const ProjectsTab = ({
                         <SvgIcon icon="edit" size="1.2rem"/>
                       </div>
       },
-      {cell: (row)=> !row.isDraft &&
+      {width: "120px",
+       cell: (row)=> !row.isDraft &&
        <input
             className="btn btn-outline-darkgreen btn-sm w-100"
             onClick={() => window.open(`/collection?projectId=${row.id}&institutionId=${institutionId}`)
@@ -150,8 +157,8 @@ export const ProjectsTab = ({
     console.log('handle delete projects', selectedProjects);
     console.log('handle delete drafts', selectedDrafts);
     if (selectedRows.length === 0) return;
-    selectedProjects.length && deleteProjectsBulk(selectedRows.map((r) => !r.isDraft && r.id));
-    selectedDrafts.length && deleteDraftProjects(selectedRows.map((r) => r.isDraft && r.draftId));
+    selectedProjects.length && deleteProjectsBulk(selectedRows.map((r) => !r.isDraft && r.id).filter((e)=>e));
+    selectedDrafts.length && deleteDraftProjects(selectedRows.map((r) => r.isDraft && r.draftId).filter((e)=>e));
   };
 
   const handleDownload = (selectedFiles) => {
@@ -166,10 +173,10 @@ export const ProjectsTab = ({
         borderLeft: '4px solid #9286D3',
       },
     },
-    { // Draft Project: Red?
+    { // Draft Project: blank border
       when: row => row.isDraft,
       style: {
-        borderLeft: '4px solid #D98EB2'}},
+        borderLeft: 'none'}},
     { // No Plots Collected: Red
       when: row => row.type !== "simplified" && row.percentComplete == 0,
       style: {

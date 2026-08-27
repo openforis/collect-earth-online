@@ -18,11 +18,11 @@ import '../../css/sidebar.css';
 import '../../css/survey.css';
 
 
-export const SurveyQuestions = ({
+export function SurveyQuestions ({
   preview = false,
   surveyQuestions = null,
   showHeader
-}) => {
+}) {
   const {
     currentProject,
     currentPlot,
@@ -453,7 +453,7 @@ export const SurveyQuestions = ({
           <input
             className="sq-input"
             type={q.dataType}
-            placeholder={val}
+            placeholder={val || q.questionLabel}
             defaultValue={val}
             onBlur={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value)}
             onKeyDown={(e) => {

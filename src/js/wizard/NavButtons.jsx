@@ -13,7 +13,7 @@ const projectSteps = [
   {id: 'samples', label: 'Sample Design'},
   {id: 'questions', label: 'Survey Questions'},
   {id: 'rules', label: 'Survey Rules'},
-  {id: 'review', label: 'Review & Publish'}
+  {id: 'review', label: 'Review Project'}
 ];
 
 export default function NavButtons () {
@@ -54,7 +54,7 @@ export default function NavButtons () {
               onClick={()=>continueHandler()}
               style={{backgroundColor: "#2d6f74",
                 color: "#fff"}}
-            >Save & {currentStep === 'review' ? 'Publish' : 'Continue'}</button>
+            >Save & {currentStep === 'review' ? 'Create' : 'Continue'}</button>
           </div>);
 };
 

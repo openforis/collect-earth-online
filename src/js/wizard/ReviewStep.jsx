@@ -26,7 +26,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const autoGeo = useSubscription([sub_ids.overview.projectOptions.autoGeo]);
 
     return (
-      <div className='projectWizardCard'>
+      <div className='wizard-card'>
         <div className='review-card-header'>
           <p className="card-title">OVERVIEW</p>
           <div onClick={()=>{dispatch([event_ids.currentStep, 'overview']);}}>
@@ -76,7 +76,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     }, [previewId, setActiveMapLayers]);
 
     return (
-      <div className='projectWizardCard'>
+      <div className='wizard-card'>
         <div className='review-card-header'>
           <p className="card-title">IMAGERY</p>
           <div onClick={()=>{dispatch([event_ids.currentStep, 'imagery']);}}>
@@ -97,7 +97,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
 
     return (
-      <div className='projectWizardCard' style={{ display: 'flex', flexDirection: 'column', height: '420px', boxSizing: 'border-box' }}>
+      <div className='wizard-card' style={{ display: 'flex', flexDirection: 'column', height: '420px', boxSizing: 'border-box' }}>
         <div className='review-card-header'>
           <p className="card-title">BOUNDARY</p>
           <div style={{ cursor: 'pointer' }} onClick={()=>{dispatch([event_ids.currentStep, 'boundary']);}}>
@@ -131,7 +131,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const plotSize = useSubscription([sub_ids.plots.plotSize]);
 
     return (
-      <div className='projectWizardCard'>
+      <div className='wizard-card'>
         <div className='review-card-header'>
           <p className="card-title">SURVEY PLOTS</p>
           <div onClick={()=>{dispatch([event_ids.currentStep, 'plots']);}}>
@@ -155,7 +155,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const numPlots = useSubscription([sub_ids.plots.numPlots]);
 
     return (
-      <div className='projectWizardCard'>
+      <div className='wizard-card'>
         <div className='review-card-header'>
           <p className="card-title">PLOT SAMPLES</p>
           <div  onClick={()=>{dispatch([event_ids.currentStep, 'samples']);}}>
@@ -174,7 +174,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const questions = useSubscription([sub_ids.questions.questions]);
 
     return (
-      <div className='projectWizardCard'>
+      <div className='wizard-card'>
         <div className='review-card-header'>
           <p className="card-title">SURVEY QUESTIONS</p>
           <div 
@@ -193,7 +193,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const rules = useSubscription([sub_ids.rules.rules]);
 
     return (
-      <div className='projectWizardCard'>
+      <div className='wizard-card'>
         <div className='review-card-header'>
           <p className="card-title">SURVEY RULES</p>
           <div onClick={()=>{dispatch([event_ids.currentStep, 'rules']);}}>
@@ -343,7 +343,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     };
 
     return (
-      <div className="projectWizardCard w-100">
+      <div className="wizard-card w-100">
         <div className="review-card-header">
           <p className="card-title">PROJECT ACTIONS</p>
         </div>
@@ -495,6 +495,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         <SamplesCard/>
         <RulesCard/>
       </div>
+      {projectId ? (
       <div
         className="wizard-sidebar"
         style={{
@@ -504,6 +505,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           paddingBottom: '100px' }}>
         <ProjectActionsCard/>
       </div>
+      ) : null}
     </div>
   );
 }

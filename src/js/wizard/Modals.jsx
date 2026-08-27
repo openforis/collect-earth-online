@@ -220,8 +220,8 @@ function TemplateProjectModal () {
              {templateProjects
               .filter(({id, name}) => {
                 return ((id.toString().includes(filterProjectId.toString())) ||
-                        (name.includes(filterProjectName)));
-
+                        (name.toLocaleLowerCase().includes(filterProjectName.toLocaleLowerCase()))
+                       );
               })
               .map(e =>(<option key={e.id} value={e.id}>{e.name}</option>))}
          </select>

@@ -433,9 +433,9 @@ export const PlotSimilarityCard = ({ plotIdList = [] }) => {
   };
 
   return (
-    <div className="card" style={{ width: '100%', padding: '20px', marginTop: '20px' }}>
-      <h5 className="card-title" style={{ color: 'var(--Neutral-Dark-gray)', marginBottom: '15px', textTransform: 'uppercase' }}>
-        Plot Similarity Configuration
+    <div className="wizard-card" style={{ marginTop: '20px' }}>
+      <h5 className="card-title" style={{ marginBottom: '15px' }}>
+        PLOT SIMILARITY CONFIGURATION
       </h5>
       <div
         className="form-check mb-3"
@@ -538,8 +538,8 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
   };
 
   return (
-    <div className="card" style={{ width: '100%', padding: '20px', marginTop: '20px' }}>
-      <h5 className="card-title" style={{ color: 'var(--Neutral-Dark-gray)', marginBottom: '15px' }}>ASSIGN PLOTS</h5>
+    <div className="wizard-card" style={{ marginTop: '20px' }}>
+      <h5 className="card-title" style={{ marginBottom: '15px' }}>ASSIGN PLOTS</h5>
       
       <div className="form-group mb-3">
         <Select 
@@ -624,8 +624,8 @@ export const QualityControlCard = ({ institutionUserList = [], totalPlots, allow
   };
 
   return (
-    <div className="card" style={{ width: '100%', padding: '20px', marginTop: '20px' }}>
-      <h5 className="card-title" style={{ color: 'var(--Neutral-Dark-gray)', marginBottom: '15px' }}>QUALITY CONTROL</h5>
+    <div className="wizard-card" style={{  marginTop: '20px' }}>
+      <h5 className="card-title" style={{  marginBottom: '15px' }}>QUALITY CONTROL</h5>
       
       <div className="form-group mb-3">
         <Select

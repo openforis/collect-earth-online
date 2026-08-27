@@ -294,10 +294,10 @@ export const SurveyQuestionsStep = () => {
       },
     };    
     const duplicateQuestions =   Object.values(questions)
-          .map(({questionLabel})=> questionLabel.split(/\(\d\)/)[0] == questionToAdd.questionLabel.split(/\(\d\)/)[0]);
+          .map(({question})=> question.split(/\(\d\)/)[0] == questionToAdd.question.split(/\(\d\)/)[0]);
     duplicateQuestions.some((e)=>e) && !duplicateWarning ? errors(
-      [`Warning: This is a duplicate name.  It will be added as "${questionToAdd.questionLabel.split(/\(\d\)/)[0] + "(" + duplicateQuestions.length + ")"}" in design mode.`])
-      : setQuestions({ ...questions, [nextId]: duplicateQuestions.some((e)=>e) ? {... questionToAdd, questionLabel: questionToAdd.questionLabel.split(/\(\d\)/)[0] + "(" + duplicateQuestions.length + ")"}
+      [`Warning: This is a duplicate name.  It will be added as "${questionToAdd.question.split(/\(\d\)/)[0] + "(" + duplicateQuestions.length + ")"}" in design mode.`])
+      : setQuestions({ ...questions, [nextId]: duplicateQuestions.some((e)=>e) ? {... questionToAdd, question: questionToAdd.question.split(/\(\d\)/)[0] + "(" + duplicateQuestions.length + ")"}
                        : questionToAdd });
     setNewQuestion(newDefaultQuestion);
   };
