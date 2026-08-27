@@ -1,6 +1,7 @@
 import React, { useEffect, useState , useContext} from "react";
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
-import {  event_ids,  sub_ids } from "../state/projectWizard";
+import { event_ids,  sub_ids } from "../state/projectWizard";
+import { InfoTooltip } from "../components/PageComponents";
 
 import SvgIcon from "../components/svg/SvgIcon";
 
@@ -35,59 +36,78 @@ export default function OverviewStep () {
 
     return (
       <div className="wizard-card" style={{ marginBottom: "15px" }}>
-          <p className="card-title">General Information</p>
-          <p className="text-label"
-          >Project Type<span style={{color: "red"}}>*</span>
-            <SvgIcon icon="info" size="1.2rem" /></p>
-          <div style={{width: '100%'}}>
-            <div style={{display: "inline-flex", gap:"12px"}}>
-              {Object.entries(projectTypeOptions).map(([type, label]) => {
-                return (
-                  <div
-                    className="labeled-input"                       
-                    key={type}
-                    onClick={()=> {
-                      changeProjectType(type);
-                    }}>
-                    <span>{ projectType === type
-                      ? <SvgIcon icon="radioChecked" size="1.2rem" />    
-                      : <SvgIcon icon="radio" size="1.2rem"/>}</span>
-                    <span
-                      className="text-label"
-                      style={projectType == type ? {fontWeight: "bold"} : {}}
-                    >{ label }</span>
-                  </div>);                  
-              })}</div>
-            <div>
-              <label className="text-label"
-              >Project Name<span style={{color: "red"}}>*</span></label>
-              <input type="text"
-                className="text-input"
-                id="project-name"
-                value={projectName}            
-                onChange={(e)=> {dispatch([event_ids.overview.projectName, e.target.value]);}} 
-                placeholder="Enter Text"></input>
-            </div>
-            <div>
-              <label className="text-label"
-              >Project Description<span style={{color: "red"}}>*</span></label>
-              <input type="text"
-                className="text-input"
-                id="project-description"
-                onChange={(e)=>dispatch([event_ids.overview.projectDescription, e.target.value])}
-                value={projectDescription}                         
-                placeholder="Enter Text"/>
-            </div>
-            <div>
-              <label className="text-label"
-              >Learning Material (Optional)<SvgIcon icon="info" size="1.2rem" /></label>
-              <input type="text"
-                className="text-input"
-                value={learningMaterial}
-                onChange={(e)=>dispatch([event_ids.overview.learningMaterial, e.target.value])}
-                id="learning-material"
-                placeholder="Enter URL"/>
-            </div>
+        <p className="card-title">General Information</p>
+        <p className="text-label"
+        >Project Type {' '}<span style={{color: "red"}}>*</span>
+          <InfoTooltip
+            title={"Project Type"}
+            text={
+              <>
+                Simplified Projects have fewer steps and less complexity.
+                They are most useful for collecting training data for machine learning and model output feedback.
+                <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/simplifiedproject.html" target="_blank" rel="noreferrer"> Learn more</a>
+              </>
+            } />
+        </p>
+        <div style={{width: '100%'}}>
+          <div style={{display: "inline-flex", gap:"12px"}}>
+            {Object.entries(projectTypeOptions).map(([type, label]) => {
+              return (
+                <div
+                  className="labeled-input"
+                  key={type}
+                  onClick={()=> {
+                    changeProjectType(type);
+                  }}>
+                  <span>{ projectType === type
+                    ? <SvgIcon icon="radioChecked" size="1.2rem" />
+                    : <SvgIcon icon="radio" size="1.2rem"/>}</span>
+                  <span
+                    className="text-label"
+                    style={projectType == type ? {fontWeight: "bold"} : {}}
+                  >{ label }</span>
+                </div>);
+            })}</div>
+          <div>
+            <label className="text-label"
+            >Project Name<span style={{color: "red"}}>*</span></label>
+            <input type="text"
+              className="text-input"
+              id="project-name"
+              value={projectName}
+              onChange={(e)=> {dispatch([event_ids.overview.projectName, e.target.value]);}}
+              placeholder="Enter Text"></input>
+          </div>
+          <div>
+            <label className="text-label"
+            >Project Description<span style={{color: "red"}}>*</span></label>
+            <input type="text"
+              className="text-input"
+              id="project-description"
+              onChange={(e)=>dispatch([event_ids.overview.projectDescription, e.target.value])}
+              value={projectDescription}
+              placeholder="Enter Text"/>
+          </div>
+          <div>
+            <label className="text-label"
+            >Learning Material (Optional)
+              <InfoTooltip
+                title={"Project Type"}
+                text={
+                  <>
+                    Provide collectors with more detailed instructions. Material can include links to websites or files.
+                    <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/projectoverview.html#learning-material" target="_blank" rel="noreferrer"> Learn more</a>
+                  </>
+                } />
+            </label>
+            <input
+              type="textarea"
+              className="text-input"
+              value={learningMaterial}
+              onChange={(e)=>dispatch([event_ids.overview.learningMaterial, e.target.value])}
+              id="learning-material"
+              placeholder="Enter your markdown."/>
+          </div>
         </div>
       </div>);
   };
@@ -101,7 +121,15 @@ export default function OverviewStep () {
     return (
       <div className="wizard-card" style={{ marginBottom: "15px"}}>
         <p className="card-title">Visibility<span style={{color:"red"}}>*</span>
-          <SvgIcon icon="info" size="1.2rem" /></p>
+          <InfoTooltip
+            title={"Project Type"}
+            text={
+              <>
+                Who can view your project, contribute to data collection, and whether admins from other institutions can use it as a template.
+                <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/projectoverview.html#visibility" rel="noreferrer"> Learn more</a>
+              </>
+            } />
+        </p>
         {Object.entries(visibilityOptions).map(([id, label])=>{
 	  return (
             <div className="labeled-input"
