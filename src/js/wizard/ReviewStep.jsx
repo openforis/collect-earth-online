@@ -280,7 +280,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
 
         fetch(url, { method: "POST" })
           .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-          .then((data) => window.location.assign(`/review-project?projectId=${data.projectId}&institutionId=${institutionId}`));
+          .then((data) => window.location.assign(`/create-project?projectId=${data.projectId}&institutionId=${institutionId}`));
       }
     };
 
