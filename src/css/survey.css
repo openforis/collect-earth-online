@@ -156,7 +156,17 @@
     justify-content: start;
 }
 
+.sq-answers::before {
+  content: "";
+  position: absolute;
   left: 4px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: #00000080;
+  border-radius: 1px;
+}
+
 .sq-pill {
   display: inline-flex;
   align-items: center;
