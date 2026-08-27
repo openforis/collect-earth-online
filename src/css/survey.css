@@ -156,6 +156,7 @@
     justify-content: start;
 }
 
+  left: 4px;
 .sq-pill {
   display: inline-flex;
   align-items: center;
