@@ -25,8 +25,8 @@ export const ImageryTab = ({
 can view the project. Private Institution Imagery is visible only to institution members, regardless
 of project visibility`;
   const visibilityOptions = [
-    { value: "private", label: "Public Institution Imagery" },
-    { value: "public", label: "Private Institution Imagery" },
+    { value: "private", label: "Private Institution Imagery" },
+    { value: "public", label: "Public Institution Imagery" },
   ];
 
   const filteredImagery = useMemo(() => {
@@ -396,7 +396,6 @@ export const NewImagery = ({
       });
       return;
     }
-
     const sourceConfig = buildSecureWatch(stackParams(sanitized));
     if (imageryTitle.length === 0 || (imageryAttribution.length === 0 && selectedType !== "14")) {
       setModal({
@@ -487,7 +486,7 @@ export const NewImagery = ({
 
         {formInput("Title", "text", imageryTitle, setImageryTitle, true)}
 
-        {["GeoServer", "xyz"].includes(type) &&
+        {["GeoServer", "xyz", "WMTS"].includes(type) &&
          formInput("Attribution", "text", imageryAttribution, setImageryAttribution, true)}
 
         {displayParams.map((o) => formTemplate(o))}

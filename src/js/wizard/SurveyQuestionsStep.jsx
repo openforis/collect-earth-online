@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useAtom } from 'jotai';
 import { dispatch, useSubscription } from '@flexsurfer/reflex';
 import { SurveyQuestions } from '../components/SurveyQuestions';
 import SvgIcon from '../components/svg/SvgIcon';
 import { event_ids, sub_ids } from '../state/projectWizard';
-import { mapObjectArray } from '../utils/sequence';
 
 
 export const QuestionCard = ({
@@ -332,8 +330,7 @@ export const SurveyQuestionsStep = () => {
   return (
     <div className="wizard-step-layout">
       <div className="wizard-sidebar">
-        
-        <div className="card" style={{ width: '100%', border: '1px solid #2d6f74', padding: '20px' }}>
+        <div className="wizard-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
             <p className="card-title">
               QUESTIONS TO BE ANSWERED DURING COLLECTION <span style={{ color: 'red' }}>*</span>
@@ -507,8 +504,7 @@ export const SurveyQuestionsStep = () => {
 
       <div
         className="wizard-preview-body"
-        style={{ padding: "20px" }}
-      >
+        style={{paddingRight: '20px'}}>
         <div>
           <SurveyQuestions
             preview={true}

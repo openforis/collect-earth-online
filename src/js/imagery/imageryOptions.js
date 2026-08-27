@@ -62,8 +62,8 @@ export const imageryOptions = [
           !urlValidator(value)
             ? "The server address (URL) is not valid."
             : /\?.+/.test(value)
-            ? 'The field "WMS Url" should not contain the query string. Please put those values in the field "Additional WMS Params (as JSON object)".'
-            : "",
+              ? 'The field "WMS Url" should not contain the query string. Please put those values in the field "Additional WMS Params (as JSON object)".'
+              : "",
       },
       { key: "LAYERS", display: "WMS Layer Name", parent: "geoserverParams" },
       {
@@ -75,11 +75,42 @@ export const imageryOptions = [
           !isValidJSON(value)
             ? 'Invalid JSON in the "Visualization Parameters" field.'
             : !olProjectionValidator(value)
-            ? "SRS/CRS is not valid. OpenLayers will automatically use EPSG:3857."
-            : "",
+              ? "SRS/CRS is not valid. OpenLayers will automatically use EPSG:3857."
+              : "",
       },
     ],
     // FIXME, add url if help document is created.
+  },
+  {
+    type: "WMTS",
+    label: "WMTS Imagery",
+    optionalProxy: true,
+    defaultProxy: false,
+    params: [
+      {
+        key: "geoserverUrl",
+        display: "WMTS URL",
+        sanitizer: (value) => (value.endsWith("?") ? value.slice(0, -1) : value),
+        validator: (value) =>
+          !urlValidator(value)
+            ? "The server address (URL) is not valid."
+            : "",
+      },
+      { key: "LAYERS", display: "WMTS Layer Name", parent: "geoserverParams" },
+      { key: "accessToken", display: "Access Token", required: false },
+      {
+        key: "geoserverParams",
+        display: "Additional WMTS Params (JSON format)",
+        required: false,
+        type: "JSON",
+        validator: (value) =>
+          !isValidJSON(value)
+            ? 'Invalid JSON in the "Visualization Parameters" field.'
+            : !olProjectionValidator(value)
+              ? "SRS/CRS is not valid. OpenLayers will automatically use EPSG:3857."
+              : "",
+      },
+    ],
   },
   {
     type: "xyz",
@@ -94,19 +125,19 @@ export const imageryOptions = [
           !urlValidator(value)
             ? "The server address (URL) is not valid."
             : !/.*(?=.*{-?x})(?=.*{-?z})(?=.*{-?y}).*/gi.test(value)
-            ? "The URL for an XYZ imagery type must include {x}, {y}, and {z}."
-            : "",
+              ? "The URL for an XYZ imagery type must include {x}, {y}, and {z}."
+              : "",
       },
     ],
   },
   {type: "DynamicWorld",
-   label: "Dynamic World",
-   optionalProxy: false,
-   defaultProxy: false,
-   params: [
-     { key: "startDate", display: "Start Date", type: "date" },
-     { key: "endDate", display: "End Date", type: "date" }
-   ]},
+    label: "Dynamic World",
+    optionalProxy: false,
+    defaultProxy: false,
+    params: [
+      { key: "startDate", display: "Start Date", type: "date" },
+      { key: "endDate", display: "End Date", type: "date" }
+    ]},
   {
     type: "BingMaps",
     label: "Bing Maps",

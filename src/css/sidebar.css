@@ -67,10 +67,10 @@
 
 .sidebar-select {
   width: 100%;
-  padding: 8px;
+  padding: 4px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .sidebar-mode {
@@ -197,7 +197,7 @@
 
 .sidebar-card {
   background: #fff;
-  border: 1px solid #A4AAE0;
+  border: 1px solid var(--Primary-Highlight-Green);
   border-radius: 8px;
   padding: 1rem;
   font-family: 'Public Sans', sans-serif;
@@ -216,7 +216,7 @@
 .ext-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 7px;
 }
 
 .ext-btn {
@@ -224,7 +224,7 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 6px 7px;
   border: 1px solid #3D7F7A;
   color: #3D7F7A;
   background: transparent;
