@@ -76,11 +76,27 @@ const StatsCard = ({}) => {
   );
 };
 
-export const CollectionSidebar = ({ processModal, userEmail }) => {
+export function OverviewCard ({}) {
+  const { currentProject } = useAtomValue(stateAtom);
+  console.log('overview card: ', currentProject);
+  return (
+    <SidebarCard
+         title="Project Description"
+       >
+         <div id="overview-card">
+           <span>{currentProject.description}</span>
+         </div>         
+       </SidebarCard>
+  );
+
+}
+
+export function CollectionSidebar ({ processModal, userEmail }) {
   const { currentPlot, currentProject } = useAtomValue(stateAtom);
   const content = (
     <>
       <NewPlotNavigation userEmail={userEmail}/>
+      <OverviewCard/>
       <StatsCard/>
       {currentPlot.id > 0 && (
         <>
@@ -695,19 +711,7 @@ export const SidebarFooter = ({ processModal }) => {
           },
         },
       }));
-      return false;
-    } else if (!allAnswered) {
-      setAppState((prev) => ({
-        ...prev,
-        modal: {
-          alert: {
-            alertType: "Review Mode Alert",
-            alertMessage:
-            "All questions must be answered to save the collection.",
-          },
-        },
-      }));
-      return false;
+      return false;    
     } else if (collectConfidence && !confidence) {
       setAppState((prev) => ({
         ...prev,
