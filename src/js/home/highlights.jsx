@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { atom, useAtom } from 'jotai';
-import SvgIcon from "./components/svg/SvgIcon";
+import SvgIcon from "../components/svg/SvgIcon";
 //import { mercator } from './utils/mercator';
-import { zoomMapToPoint } from './utils/newMercator';
-import { stateAtom } from './utils/constants';
-import MapPanel from './mapPanel';
-import "../css/highlights.css";
+import { zoomMapToPoint } from '../utils/newMercator';
+import { stateAtom } from '../utils/constants';
+import MapPanel from '../mapPanel';
+import "../../css/highlights.css";
 
 
 export default function Highlights ({userId, userRole}) {
