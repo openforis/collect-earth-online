@@ -511,7 +511,11 @@ export function buildProject (draftDb, sub_ids) {
   const projectImageryList = current(draftDb[sub_ids.imagery.imageryList]);
   const aoiFileName = current(draftDb[sub_ids.boundary.aoiFileName]);
   const type = current(draftDb[sub_ids.overview.projectType]);
-  const projectOptions = current(draftDb[sub_ids.overview.projectOptions]);
+  const gee = current(draftDb[sub_ids.overview.projectOptions.gee]);
+  const extraPlotColumns = current(draftDb[sub_ids.overview.projectOptions.gee]);
+  const plotConfidence = current(draftDb[sub_ids.overview.projectOptions.gee]);
+  const autoGeo = current(draftDb[sub_ids.overview.projectOptions.gee]);
+  const projectOptions = {gee, extraPlotColumns, plotConfidence, autoGeo}
   const plotSpacing = Number(current(draftDb[sub_ids.plots.plotSpacing]));
   const shufflePlots = current(draftDb[sub_ids.plots.shufflePlots]);
   const surveyRules = current(draftDb[sub_ids.rules.rules]);
@@ -666,12 +670,12 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   designSettings = {},
   learningMaterial = '',
   name,
-  numPlots = 0, //?
+  numPlots = 0,
   plotDistribution,
   plotfileName,
   plotShape,
   plotSize,
-  plotSpacing = -1, //?
+  plotSpacing = -1,
   projectOptions = {gee : false, extraPlotColumns: false, plotConfidence: false, autoGeo: false},
   projectType = 'regular',
   referencePlot = -1,
@@ -693,10 +697,12 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.overview.projectType] = projectType;
   draftDb[sub_ids.overview.learningMaterial] = learningMaterial;
   draftDb[sub_ids.overview.visibility] = visibility;
-  draftDb[sub_ids.projectOptions] = {gee:projectOptions.showGEEScript, 
-                                     extraPlotColumns: projectOptions.showPlotInformation,
-                                     plotConfidence: projectOptions.collectConfidence,
-    autoGeo: projectOptions.autoLaunchGeoDash};
+  draftDb[sub_ids.projectOptions] = {
+    gee:projectOptions.showGEEScript, 
+    extraPlotColumns: projectOptions.showPlotInformation,
+    plotConfidence: projectOptions.collectConfidence,
+    autoGeo: projectOptions.autoLaunchGeoDash
+  };
   draftDb[sub_ids.boundary.generationMethod] = 'manual';
   draftDb[sub_ids.boundary.aoiFeatures] = aoiFeatures;
   draftDb[sub_ids.boundary.aoiFileName] = aoiFileName;
