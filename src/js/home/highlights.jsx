@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { atom, useAtom } from 'jotai';
 import SvgIcon from "../components/svg/SvgIcon";
-//import { mercator } from './utils/mercator';
 import { zoomMapToPoint } from '../utils/newMercator';
 import { stateAtom } from '../utils/constants';
 import MapPanel from '../mapPanel';
