@@ -544,6 +544,13 @@ a:hover {
 #home-map-pane .ol-attribution {
     position: fixed;
 }
+
+#image-analysis-pane {
+    position: relative;
+    height: calc(100% - 56px);
+    top: 56px;
+}
+
 #image-analysis-pane .ol-attribution {
     right: 10vw;
 }

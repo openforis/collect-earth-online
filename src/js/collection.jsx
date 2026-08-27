@@ -777,7 +777,7 @@ function ImageAnalysisPane({}) {
   };
   
   return (
-    <div className="pl-0 pr-0 full-height" id="image-analysis-pane" style={{position: 'relative'}}>
+    <div className="pl-0 pr-0 full-height" id="image-analysis-pane">
       <div className="row" id="imagery-info" style={{ justifyContent: "center" }}>
         <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{state.imageryAttribution}</p>
       </div>
