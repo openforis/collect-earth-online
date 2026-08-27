@@ -823,9 +823,7 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
         "Content-Type": "application/json; charset=utf-8",
       },
       body: JSON.stringify({
-  //      append: this.context.append,
         projectId: existingProjectId,
-//        overwrite: prompts.overwrite,
         ...form,
       }),
     })

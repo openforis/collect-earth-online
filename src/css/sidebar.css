@@ -196,7 +196,7 @@
 
 .sidebar-card {
   background: #fff;
-  border: 1px solid #A4AAE0;
+  border: 1px solid var(--Primary-Highlight-Green);
   border-radius: 8px;
   padding: 1rem;
   font-family: 'Public Sans', sans-serif;

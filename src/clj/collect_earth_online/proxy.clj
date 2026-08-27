@@ -1,6 +1,7 @@
 (ns collect-earth-online.proxy
   (:require [clojure.data.json :as json]
             [clojure.string    :as str]
+            [clojure.xml       :as xml]
             [clj-http.client   :as client]
             [triangulum.type-conversion :as tc]
             [triangulum.database        :refer [call-sql]]
@@ -59,6 +60,22 @@
     (map :name $)
     (filterv #(str/includes? % "normalized") $)
     (reverse $)))
+
+;;; Utils
+
+(defn- apply-default-styles [params]
+  (update params :STYLES #(if (= "" %)
+                            (str/join "," (map (constantly "") (str/split (:LAYERS params) #",")))
+                            %)))
+
+(defn- remove-extra-params [params]
+  (cond-> params
+    (= "" (:FEATUREPROFILE params)) (dissoc :FEATUREPROFILE) ; TODO verify that this is no longer needed and remove.
+    :always (dissoc :IMAGERYID)))
+
+(defn upcase-key [[key val]]
+  [(keyword (str/upper-case (name key))) val])
+
 
 ;;; URL Helpers
 (defn- append-query
@@ -318,19 +335,6 @@
          year "_" month
          "_mosaic/gmap/" z "/" x "/" y ".png?api_key="
          (:accessToken source-config))))
-
-(defn- apply-default-styles [params]
-  (update params :STYLES #(if (= "" %)
-                            (str/join "," (map (constantly "") (str/split (:LAYERS params) #",")))
-                            %)))
-
-(defn- remove-extra-params [params]
-  (cond-> params
-    (= "" (:FEATUREPROFILE params)) (dissoc :FEATUREPROFILE) ; TODO verify that this is no longer needed and remove.
-    :always (dissoc :IMAGERYID)))
-
-(defn upcase-key [[key val]]
-  [(keyword (str/upper-case (name key))) val])
 
 (defn- wms-url [source-config query-params]
   (let [geoserver-params (u/mapm upcase-key (:geoserverParams source-config))
