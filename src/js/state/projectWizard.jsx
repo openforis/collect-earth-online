@@ -870,7 +870,6 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
             })
           });
           dispatch([event_ids.successResponse, data[1]]);
-          // window.location = `/review-project?projectId=${data[1].projectId}&institutionId=${this.context.institutionId}`;
           return Promise.resolve();
         } else {
           dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
