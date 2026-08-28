@@ -16,13 +16,12 @@
              (assoc m tag (->> content first (re-seq #"<p>(.*?)</p>") first second) )
              (assoc m tag (first content))))
      ) {} xml-item))
-
-(defn- format-xml-item [{xml-item :content}]
+ 
+#_(defn- format-xml-item [{xml-item :content}]
   (let [img-regex #"<img(.*?) />"
         src-regex #"src=\"(.*?)\""
-        img-src (when-let [img (->> xml-item (filter (fn [{:keys [tag]}] (= tag :encoded)))
-                                    first :content first (re-seq img-regex) first second)]
-                  (->> img (re-seq src-regex) first second))]
+        img-src (when-let [img (->> xml-item (filter (fn [{:keys [tag]}] (= tag :encoded))) first :content first (re-seq img-regex) first second)] (->> img (re-seq src-regex) first second))
+        ]
     (reduce 
      (fn [m {:keys [tag content]}] 
        (if-let [tag-content (get m tag)] 
