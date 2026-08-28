@@ -2,7 +2,6 @@ import React from "react";
 
 import {dispatch, useSubscription} from '@flexsurfer/reflex';
 import {event_ids, sub_ids} from '../state/projectWizard';
-
 import { isNumber } from "../utils/generalUtils";
 import SvgIcon from "../components/svg/SvgIcon";
 import {
@@ -12,7 +11,7 @@ import {
   mapObjectArray,
   sameContents,
 } from "../utils/sequence";
-import { ProjectContext } from "../project/constants";
+import { InfoTooltip } from '../components/PageComponents';
 import Modal from "../components/Modal";
 
 
@@ -860,7 +859,10 @@ export default function NewRuleDesigner () {
             <div className='new-rule-input' style={{width: '50%'}}>
               <div style={{display: 'flex', flexDirection: 'row', gap: '1rem'}}>
                 <label>Enter Rule Label </label>
-                <SvgIcon icon='info' size='1.2rem'/>
+                <InfoTooltip
+                  title="Survey Rule Label"
+                  text="Use labels to organize your Rules. Simple, one-word labels are best."
+                />
               </div>
               <input
                 className="rule-input"

@@ -538,6 +538,21 @@ a:hover {
 /* Home Page */
 /*************/
 
+#home-map-pane {
+    width: 75%;
+    position: fixed;
+}
+#home-map-pane .ol-attribution {
+    position: fixed;
+}
+
+#image-analysis-pane {
+    position: relative;
+    height: calc(100% - 56px);
+    top: 56px;
+}
+
+
 #image-analysis-pane .ol-attribution {
     right: 10vw;
 }
@@ -1416,4 +1431,73 @@ body {
     color: #2f615e;
     text-decoration: none;
     font-weight: 600;
+}
+
+.info-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.info-tooltip__trigger {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  color: inherit;
+  line-height: 0;
+  border-radius: 50%;
+  outline-offset: 2px;
+}
+
+.info-tooltip__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  background: transparent;
+}
+
+.info-tooltip__box {
+  position: absolute;
+  top: calc(100% + 6px);
+  z-index: 2147483647;
+  min-width: 14rem;
+  max-width: 20rem;
+  padding: 0.75rem 0.875rem;
+  background: #fff;
+  color: #1f2933;
+  border: 1px solid #d9dee3;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+}
+
+.info-tooltip__box--start {
+  left: 0;
+}
+
+.info-tooltip__box--end {
+  right: 0;
+}
+
+.info-tooltip__title {
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.info-tooltip__text {
+  color: #3e4c59;
+  font-weight: 400;  
+}
+
+.info-tooltip__text a {
+  color: #2d6f74;
+  font-weight: 500;
 }

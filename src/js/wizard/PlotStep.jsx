@@ -20,6 +20,8 @@ import {
   event_ids,
   sub_ids
 } from '../state/projectWizard';
+import { InfoTooltip } from '../components/PageComponents';
+
 
 export const PlotStep = ({ imageryList = [] }) => {
   const boundaryMethod = useSubscription([sub_ids.boundary.generationMethod]) || "manual";
@@ -246,10 +248,10 @@ export const PlotStep = ({ imageryList = [] }) => {
           const regex = /^[0-9]*\.?[0-9]*$/;
           const input = e.target.value;                   
           dispatch([event_ids.plots.plotSize,
-                    input !== "" &&                              
-                    regex.test(input) ? input
-                    : input.slice(0, input.length - 1)]);
-                 }}
+            input !== "" &&
+              regex.test(input) ? input
+              : input.slice(0, input.length - 1)]);
+        }}
       />
     </div>
   );
@@ -357,8 +359,16 @@ export const PlotStep = ({ imageryList = [] }) => {
       <div className="wizard-sidebar">
         <div className="wizard-card">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="card-title" style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Plot Generation</h5>
-            <SvgIcon icon="info" size="1.2rem" color="#666" />
+            <h5 className="card-title">PLOT GENERATION</h5>
+            <InfoTooltip
+              title="Plot Generation"
+              align="end"
+              text={
+                <>
+                  Plot designs are areas where you will then have samples to provide an unbiased estimate of some population measure.
+                  <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/plotsample.html" target="_blank"> Learn more</a>
+                </>
+              } />
           </div>
 
           {activeAreaGeometry && (
@@ -434,9 +444,21 @@ export const PlotSimilarityCard = ({ plotIdList = [] }) => {
 
   return (
     <div className="wizard-card" style={{ marginTop: '20px' }}>
-      <h5 className="card-title" style={{ marginBottom: '15px' }}>
-        PLOT SIMILARITY CONFIGURATION
-      </h5>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+
+        <h5 className="card-title">
+          PLOT SIMILARITY CONFIGURATION
+        </h5>
+        <InfoTooltip
+          title="Plot Similarity"
+          align="end"
+          text={
+            <>
+              Use this feature to let data collectors navigate based on similar plot features.
+              <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/plotsample.html" target="_blank"> Learn more</a>
+            </>
+          } />
+      </div>
       <div
         className="form-check mb-3"
         style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}

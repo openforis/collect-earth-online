@@ -5,6 +5,7 @@ import { sub_ids, event_ids } from '../state/projectWizard';
 import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
 import { NewMap } from '../components/NewMap';
 import SvgIcon from '../components/svg/SvgIcon';
+import { InfoTooltip } from '../components/PageComponents';
 
 export const ImageryStep = ({ imageryList = [] }) => {
 //  const [previewId, setPreviewId] = useState("");
@@ -42,14 +43,22 @@ export const ImageryStep = ({ imageryList = [] }) => {
     return acc;
   }, {});
 
-  const VisibilitySection = ({ title, type }) => {
+  const VisibilitySection = ({ title, type, tooltip }) => {
     const items = groupedImagery[type] || [];        
     return (
       <div className="visibility-section" style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
           <SvgIcon icon="downCaret" size="0.8rem" /> 
           <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{title} Imagery</span>
-          <SvgIcon icon="info" size="1rem" color="#666" />
+          <InfoTooltip
+            title={title + " Imagery"}
+            placement="left"
+            text={
+              <>
+                {tooltip}
+                <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/imageryselection.html#imagery-selection" target="_blank"> Learn more</a>
+              </>
+            } />
         </div>
         <div style={{ paddingLeft: '20px' }}>
           {items.length > 0 ? (
@@ -127,9 +136,18 @@ export const ImageryStep = ({ imageryList = [] }) => {
               {selectedIds.length} Selected
             </p>
             
-            <VisibilitySection title="CEO Platform" type="platform" />
-            <VisibilitySection title="Institution" type="private" />
-            <VisibilitySection title="Public" type="public" />
+            <VisibilitySection
+              title="CEO Platform"
+              type="platform"
+              tooltip="This imagery is available for all Institutions. All users, including those not logged in, can see this imagery."/>
+            <VisibilitySection
+              title="Institution"
+              type="private"
+              tooltip="This imagery is only visible to Institution members, even if a project is set to public."/>
+            <VisibilitySection
+              title="Public"
+              type="public"
+              tooltip="This imagery is visible to all CEO users who have access to your project."/>
           </section>
         </div>
       </div>
