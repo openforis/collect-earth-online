@@ -152,18 +152,20 @@
 
 #blogs {
     display: flex;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 16px;
     align-self: stretch;
+    overflow-x: scroll;
 }
 
 .blog-frame {
     display: flex;
-    flex-direction: column;
+    /* flex-direction: column; */
     justify-content: center;
     align-items: flex-start;
     gap: 20px;
-    flex: 1 0 0;
+    /* flex: 1 0 0; */
+    min-width: 48rem;
 }
 
 .blog {
@@ -174,6 +176,7 @@
     border-radius: 8px;
     border: 1px solid var(--Primary-Highlight-Green, #A0CAC6);
     background: #FFF;
+    width: 100%;
 }
 
 .blog-graphic {
@@ -262,7 +265,8 @@
 .tags {
     display: flex;
     align-items: flex-start;
-    gap: 8px;}
+    gap: 8px;
+    overflow-x: scroll;}
 
 .tag {
     display: flex;
@@ -273,6 +277,7 @@
     border-radius: 8px;
     background: var(--Primary-Light-Green, #E9F1F0);
     cursor: pointer;
+    min-width: fit-content;
 }
 
 .tag span {
@@ -489,8 +494,8 @@
 
 
 #home-map-pane {
-    width: 100%;
-    position: absolute;
+    width: 100% !important ;
+    position: absolute !important ;
 }
 #home-map-pane .ol-attribution {
     position: fixed;

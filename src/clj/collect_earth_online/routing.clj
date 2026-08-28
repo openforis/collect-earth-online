@@ -15,6 +15,7 @@
             [collect-earth-online.db.users        :as users]            
             [collect-earth-online.handlers :refer [crumb-data]]
             [collect-earth-online.proxy           :as proxy]
+            [collect-earth-online.utils.rss       :as rss]
             [triangulum.views                     :refer [render-page]]))
 
 (def routes
@@ -114,6 +115,7 @@
                                               :auth-type   :admin
                                               :auth-action :block}
    [:get  "/get-home-projects"]              {:handler projects/get-home-projects}
+   [:get  "/get-highlight-projects"]         {:handler projects/get-highlight-projects}
    [:get  "/get-institution-projects"]       {:handler projects/get-institution-projects}
    [:get  "/get-institution-dash-projects"]  {:handler projects/get-institution-dash-projects}
    [:get  "/get-project-by-id"]              {:handler projects/get-project-by-id}
@@ -309,8 +311,9 @@
                                                :auth-type   :metrics
                                                :auth-action :block}
    [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}
-   [:post "/gcloud-listener"]                  {:handler gcloud/gcloud-handler}
-   [:get  "/open-socket"]                      {:handler sse/sse-handler}
-   [:post "/crumb-data"]                       {:handler crumb-data}
+   [:post "/gcloud-listener"]                 {:handler gcloud/gcloud-handler}
+   [:get  "/open-socket"]                     {:handler sse/sse-handler}
+   [:post "/crumb-data"]                      {:handler crumb-data}
+   [:get  "/get-blog-feed"]                   {:handler rss/get-blog-feed}
    }
   )

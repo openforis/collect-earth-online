@@ -53,6 +53,18 @@
                                           :smes          []
                                           :timesToReview 2}})
 
+(defn get-highlight-projects [{:keys [session]}]
+  (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable institution_name]}]
+                         {:id            project_id
+                          :institutionId institution_id
+                          :name          name
+                          :description   description
+                          :numPlots      num_plots
+                          :centroid      centroid
+                          :editable      editable
+                          :institutionName institution_name})
+                       (call-sql "get_highlight_projects" (:userId session -1)))))
+
 (defn get-home-projects [{:keys [session]}]
   (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable institution_name]}]
                          {:id            project_id
