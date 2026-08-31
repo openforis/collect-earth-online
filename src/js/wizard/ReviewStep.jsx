@@ -14,6 +14,8 @@ import "../../css/project-wizard.css";
 
 
 export default function ReviewStep ({imageryList = [], projectId, institutionId}) {
+  const projectType = useSubscription([sub_ids.overview.projectType]);
+
 
   function OverviewCard () {
     const projectName = useSubscription([sub_ids.overview.projectName]);
@@ -21,7 +23,6 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const projectVisibility = useSubscription([sub_ids.overview.visibility]);
     const dataLicenseType = "Public-Open Use"; //useSubscription([sub_ids.overview.license])
     const showGee = useSubscription([sub_ids.overview.projectOptions.gee]);
-    const projectType = useSubscription([sub_ids.overview.projectType]);
     const extraPlotColumns = useSubscription([sub_ids.overview.projectOptions.extraPlotColumns]);
     const plotConfidence = useSubscription([sub_ids.overview.projectOptions.plotConfidence]);
     const autoGeo = useSubscription([sub_ids.overview.projectOptions.autoGeo]);
@@ -96,6 +97,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
 
   function BoundaryCard () {
     const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
+    const plotsToShow = useSubscription([sub_ids.plots.plotFeatures]) || [];
 
     return (
       <div className='wizard-card' style={{ display: 'flex', flexDirection: 'column', height: '420px', boxSizing: 'border-box' }}>
@@ -117,6 +119,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           <NewMap 
             pan={false}
             aoiToShow={aoiFeatures}
+            plotsToShow={plotsToShow}
             initZoom={4}
             preview={true}
           />

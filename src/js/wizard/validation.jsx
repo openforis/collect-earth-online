@@ -48,14 +48,14 @@ export function validatePlots({
      "A plot SHP (.zip) file is required.",
      (totalPlots > plotLimit) &&
      "The plot size limit has been exceeded. Check the Plot Design section for detailed info.",
-     ((["equal", "percent"].includes(userMethod) && users.length) === 0) &&
+     (["equal", "percent"].includes(userMethod) && users.length === 0) &&
      "At least one user must be added to the plot assignment.",
      (userMethod === "percent" && percents.reduce((acc, p) => acc + p, 0) !== 100) &&
      "The assigned plot percentages must equal 100%.",
      userMethod === "percent" &&
      (percents.reduce((acc, p) => acc || p === 0, false)) &&
      "All plot assignment percentages must be greater than 0%.",
-     (["overlap", "sme"].includes(qaqcMethod) && percent) === 0 && 
+     ["overlap", "sme"].includes(qaqcMethod) && percent === 0 && 
      "The assigned Quality Control percentage must be greater than 0%.",
      (["random", "gridded"].includes(plotDistribution) && qaqcMethod === "sme" && smes.length === 0) &&
      "At least one user must be added as an SME.",
@@ -129,18 +129,15 @@ export const validateStep = {
 };
 
 export function validateWizard (form) {
-
+  const isSimplified = form.type === 'simplified';
   const errors = [
     ['overview', validateOverview(form)],
     ['imagery', validateImagery(form)],
-    ['plots', validatePlots(form)],
-    ['samples', validateSamples(form)],
+    ...(isSimplified ? [] : [
+      ['plots', validatePlots(form)],
+      ['samples', validateSamples(form)],
+    ]),
     ['questions', validateQuestions(form)]
-  ].filter(([name, e])=>e.length);
-  
+  ].filter(([name, e]) => e.length);
   return (errors.length ? errors : false);
-};
-
-
-
-
+}
