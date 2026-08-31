@@ -4,7 +4,7 @@ import { Map, View } from 'ol';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
 import { defaults as defaultInteractions } from 'ol/interaction';
-import { fromLonLat } from 'ol/proj';
+import { fromLonLat, get as getProjection } from 'ol/proj';
 import GeoJSON from 'ol/format/GeoJSON';
 import { Style, Stroke, Fill, Circle as CircleStyle } from 'ol/style';
 import Point from 'ol/geom/Point';
@@ -89,7 +89,12 @@ export const NewMap = ({
         new VectorLayer({ source: samplesSourceRef.current, style: samplePointStyle, zIndex: 1200 })
       ],
       interactions: defaultInteractions({ dragPan: pan, mouseWheelZoom: true, doubleClickZoom: true }),
-      view: new View({ center: fromLonLat(initCenter), zoom: initZoom, projection: 'EPSG:3857' }),
+      view: new View({
+        center: fromLonLat(initCenter),
+        zoom: initZoom,
+        projection: 'EPSG:3857',
+        extent: getProjection('EPSG:3857').getExtent(),
+        }),
       controls: []
     });
 

@@ -330,15 +330,23 @@ function DraftSuccessModal () {
   );
 }
 
-function SuccessModal () {  
+function SuccessModal () {
+  const institutionId = useSubscription([sub_ids.institutionId]);
+  const { projectId } = useSubscription([sub_ids.successResponse]);
+  const redirectUrl = projectId ? `/project-wizard?institutionId=${institutionId}&projectId=${projectId}` : null;
   return (
     <Modal
       title=''
       closeText=''
       confirmText='Close'
-      onConfirm={()=>{dispatch([event_ids.modal, null]);}}
-      onClose={()=>{dispatch([event_ids.modal, null]);}}>
-
+      onConfirm={()=>{
+        dispatch([event_ids.modal, null]);
+        if(redirectUrl) window.location.href = redirectUrl;
+      }}
+      onClose={()=>{
+        dispatch([event_ids.modal, null]);
+        if(redirectUrl) window.location.href = redirectUrl;
+      }}>
       <div className="success-icon">
         <SvgIcon  icon='check' size='2rem'/>
       </div>
@@ -424,7 +432,6 @@ function ExitModal () {
 export default function ProjectWizardModal () {
   // this is the container for any modal related to this page. based on state, this actually renders modals as they are explicitly defined above., provided through "children" value of modal map"
   const modal = useSubscription([sub_ids.modal]);
-  
   switch (modal) {
   case 'template'    : return (<TemplateProjectModal/>);
   case 'import'      : return (<ImportProjectModal/>);

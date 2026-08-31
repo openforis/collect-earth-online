@@ -42,11 +42,11 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
 
         <p className='hyperlink' >See the full agreement here.</p>
 
-        <p > Project Options:</p>
-        <b > {!showGee && "Don't "} Show GEE Script Link on Collection Page</b>
-        <b > {!extraPlotColumns && "Don't "} Show Extra Plot Columns on Collection Page</b>
-        <b > {!plotConfidence && "Don't "} Collect Plot Confidence</b>
-        <b > {!autoGeo && "Don't "} Auto-launch Geo-Dash Window</b>
+        <p > <b>Project Options: </b></p>
+        <p > {!showGee && "Don't "} Show GEE Script Link on Collection Page</p>
+        <p > {!extraPlotColumns && "Don't "} Show Extra Plot Columns on Collection Page</p>
+        <p > {!plotConfidence && "Don't "} Collect Plot Confidence</p>
+        <p > {!autoGeo && "Don't "} Auto-launch Geo-Dash Window</p>
                 
       </div>
     );
@@ -84,10 +84,10 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
             <SvgIcon icon='edit' size='2rem'/>
           </div>
         </div>
-        <p >Imagery Used:</p>
+        <b >Imagery Used:</b>
         {selectedImagery.map((i)=>{
           return (
-            <b > {imageryList[0] ? imageryList.filter(({id})=> id === i)[0].title : null} </b>
+            <p > {imageryList[0] ? imageryList.filter(({id})=> id === i)[0].title : null} </p>
           );
         })}
       </div>
@@ -281,7 +281,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
 
         fetch(url, { method: "POST" })
           .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-          .then((data) => window.location.assign(`/review-project?projectId=${data.projectId}&institutionId=${institutionId}`));
+          .then((data) => window.location.assign(`/create-project?projectId=${data.projectId}&institutionId=${institutionId}`));
       }
     };
 

@@ -40,6 +40,7 @@ export const ProjectsTab = ({
         name: "Visibility",
         selector: (row) => row.isDraft ? 'draft' : row.privacyLevel || "—",
         sortable: true,
+        width: "120px",
         grow: 0.8,
       },
       {
@@ -57,7 +58,7 @@ export const ProjectsTab = ({
 	    className="projects-table-name"
 	    href={
 	      isAdmin ?
-		`/review-project?projectId=${row.id}&institutionId=${institutionId}` 
+		`/create-project?projectId=${row.id}&institutionId=${institutionId}` 
 		: `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
 	    {row.name}
 	  </a>
@@ -65,6 +66,7 @@ export const ProjectsTab = ({
       },
       {
         name: "Date Created",
+        width: "160px",
         selector: (row) => row.createdDate,
         sortable: true,
         cell: (row) =>
@@ -74,12 +76,14 @@ export const ProjectsTab = ({
       },
       {
         name: "Total Plots",
+        width: "140px",
         selector: (row) => row.numPlots ?? 0,
         sortable: true,
         right: true,
       },
       {
         name: "Completion %",
+        width: "160px",
         selector: (row) => row.percentComplete ?? -1, 
         sortable: true,
         right: true,
@@ -94,12 +98,14 @@ export const ProjectsTab = ({
       },
       {
         name: "Publication",
+        width: "140px",
         selector: (row) => row.isDraft ? 'draft' : row.availability ?? "Unpublished",
         sortable: true,
       },
       
       {
         omit: !isAdmin,
+        width: "60px",
         name: "Edit",
         grow: .2,
         cell: (row)=> <div
@@ -115,7 +121,8 @@ export const ProjectsTab = ({
                         <SvgIcon icon="edit" size="1.2rem"/>
                       </div>
       },
-      {cell: (row)=> !row.isDraft &&
+      {width: "120px",
+       cell: (row)=> !row.isDraft &&
        <input
             className="btn btn-outline-darkgreen btn-sm w-100"
             onClick={() => window.open(`/collection?projectId=${row.id}&institutionId=${institutionId}`)

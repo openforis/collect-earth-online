@@ -45,7 +45,7 @@ import {
 import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
-export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
+export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
   // INIT COLLECTION EFFECT
@@ -290,8 +290,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
           })
       )
         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-        .then((data) => {
-          console.log(data[0]);          
+        .then((data) => {          
           if (data === "not-found") {
             const err = (direction === "id" ? "Plot not" : "No more plots") +
                   " found for this navigation mode.";
@@ -471,8 +470,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
         projectId: state.currentProject.id,
       }),
     }).then((response) => {	
-      if (!response.ok) {	
-        console.log(response);	
+      if (!response.ok) {        
         setState (s => ({...s, modal: {alert: {alertType: "Plot Lock Error", alertMessage: "Error maintaining plot lock. Your work may get overwritten. See console for details."}}}));	
       }	
     });	
@@ -728,7 +726,7 @@ export const Collection = ({ projectId, acceptedTerms, plotId, userEmail }) => {
         <div className="d-flex flex-column flex-grow-1">
           <ImageAnalysisPane />
         </div>
-        <div className="col-lg-3 col-md-3 d-flex flex-column border-left full-height">
+        <div className="col-lg-4 col-md-4 d-flex flex-column border-left full-height">
           <CollectionSidebar processModal={processModal} userEmail={userEmail}></CollectionSidebar>
         </div>
         {state.messageBox && (
@@ -779,7 +777,7 @@ function ImageAnalysisPane({}) {
   };
   
   return (
-    <div className="pl-0 pr-0 full-height" id="image-analysis-pane" style={{position: 'relative'}}>
+    <div className="pl-0 pr-0 full-height" id="image-analysis-pane">
       <div className="row" id="imagery-info" style={{ justifyContent: "center" }}>
         <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{state.imageryAttribution}</p>
       </div>
@@ -787,7 +785,7 @@ function ImageAnalysisPane({}) {
       <div className="map-controls"
            style={{position: 'absolute',
                    bottom: '3.5em',
-                   right: '10.2vw',
+                   right: '2vw',
                    zIndex: 1}}>
         <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '0.8rem' }}>
           <input

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useAtom } from 'jotai';
 import { dispatch, useSubscription } from '@flexsurfer/reflex';
 import { SurveyQuestions } from '../components/SurveyQuestions';
 import SvgIcon from '../components/svg/SvgIcon';
 import { event_ids, sub_ids } from '../state/projectWizard';
-import { mapObjectArray } from '../utils/sequence';
+import { InfoTooltip } from '../components/PageComponents';
 
 
 export const QuestionCard = ({
@@ -332,13 +331,20 @@ export const SurveyQuestionsStep = () => {
   return (
     <div className="wizard-step-layout">
       <div className="wizard-sidebar">
-        
-        <div className="card" style={{ width: '100%', border: '1px solid #2d6f74', padding: '20px' }}>
+        <div className="wizard-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
             <p className="card-title">
               QUESTIONS TO BE ANSWERED DURING COLLECTION <span style={{ color: 'red' }}>*</span>
             </p>
-            <SvgIcon icon="info" size="1.2rem" />
+            <InfoTooltip
+              title="Survey Questions"
+              align="end"
+              text={
+                <>
+                  Design questions your collectors will answer for each plot. Each question creates a column of data.
+                  <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/survey.html" target="_blank"> Learn more</a>
+                </>
+              } />
           </div>
 
           <label className="text-label-sm">
@@ -355,7 +361,11 @@ export const SurveyQuestionsStep = () => {
           />
 
           <label className="text-label-sm">
-            Question Label (Optional) <SvgIcon icon="info" size="0.8rem" />
+            Question Label (Optional)
+            <InfoTooltip
+              title="Question Label"
+              text="Use labels to organize your questions. Simple, one-word labels are best. "
+            />
           </label>
           <input
             className="text-input"
@@ -507,8 +517,7 @@ export const SurveyQuestionsStep = () => {
 
       <div
         className="wizard-preview-body"
-        style={{ padding: "20px" }}
-      >
+        style={{paddingRight: '20px'}}>
         <div>
           <SurveyQuestions
             preview={true}

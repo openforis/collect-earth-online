@@ -630,6 +630,12 @@ export function pageInit(params, session) {
         <>
           <BreadCrumbs
             crumbs={[
+              {display: "Institution",
+               id: "institution",
+               query: ["institution", params.institutionId],
+               onClick:()=>{
+                 window.location.assign(`/review-institution?institutionId=${params.institutionId}`);  
+               }},
               {display: "Widget Layout Editor",
                id: "widget-layout-editor"}]}
           />
