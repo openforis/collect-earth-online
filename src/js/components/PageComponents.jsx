@@ -1,6 +1,5 @@
-import "../../css/custom.css";
-
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import ReactMarkdown from 'react-markdown';
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
@@ -10,6 +9,8 @@ import SvgIcon from "./svg/SvgIcon";
 import { getLanguage, capitalizeFirst } from "../utils/generalUtils";
 import { getPreference, setPreference } from "../utils/preferences";
 import { stateAtom } from "../utils/constants";
+import "../../css/custom.css";
+
 
 import '../../css/navsidebar.css';
 
@@ -984,3 +985,45 @@ export const BreadCrumbs = ({crumbs}) => {
       {breadCrumbs.map(renderCrumb)}
     </div>);
 };
+
+
+export const InfoTooltip = ({
+  title = "Information",
+  text = "",
+  align = "start" }) => {
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+
+  return (
+    <span className="info-tooltip">
+      <button
+        type="button"
+        className="info-tooltip__trigger"
+        onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => e.key === "Escape" && close()}
+        aria-label={title}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+      >
+        <SvgIcon icon="info" size="1.2rem" />
+      </button>
+      {open && (
+        <>
+          {createPortal(
+            <div className="info-tooltip__backdrop" onClick={close} aria-hidden="true" />,
+            document.body
+          )}
+          <div
+            role="dialog"
+            aria-label={title}
+            className={`info-tooltip__box info-tooltip__box--${align}`}
+            onClick={close}
+          >
+            <div className="info-tooltip__title">{title}</div>
+            <div className="info-tooltip__text">{text}</div>
+          </div>
+        </>
+      )}
+    </span>
+  );
+}

@@ -14,6 +14,8 @@ import "../../css/project-wizard.css";
 
 
 export default function ReviewStep ({imageryList = [], projectId, institutionId}) {
+  const projectType = useSubscription([sub_ids.overview.projectType]);
+
 
   function OverviewCard () {
     const projectName = useSubscription([sub_ids.overview.projectName]);
@@ -95,6 +97,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
 
   function BoundaryCard () {
     const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
+    const plotsToShow = useSubscription([sub_ids.plots.plotFeatures]) || [];
 
     return (
       <div className='wizard-card' style={{ display: 'flex', flexDirection: 'column', height: '420px', boxSizing: 'border-box' }}>
@@ -116,6 +119,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           <NewMap 
             pan={false}
             aoiToShow={aoiFeatures}
+            plotsToShow={plotsToShow}
             initZoom={4}
             preview={true}
           />
@@ -490,10 +494,14 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         <OverviewCard/>
         <BoundaryCard/>
         <ImageryCard/>
-        <PlotsCard/>
         <QuestionsCard/>
-        <SamplesCard/>
-        <RulesCard/>
+        {projectType === 'regular' ? (
+          <>
+            <PlotsCard/>
+            <SamplesCard/>
+            <RulesCard/>
+          </>
+        ) : null}
       </div>
       {projectId ? (
       <div

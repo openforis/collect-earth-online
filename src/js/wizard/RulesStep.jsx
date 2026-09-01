@@ -4,7 +4,6 @@ import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import SurveyRulesList from "../survey/SurveyRulesList";
 import NewRuleDesigner from "../wizard/NewRuleDesigner";
 import { SurveyQuestions } from '../components/SurveyQuestions';
-
 import { event_ids,  sub_ids} from "../state/projectWizard";
 
 import "../../css/project-wizard.css";

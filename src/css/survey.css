@@ -41,7 +41,7 @@
 }
 
 .sq-list {
-  border-top: 1px solid #e6efef;
+  /* border-top: 1px solid #e6efef; */
 }
 
 .sq-item {
@@ -96,6 +96,7 @@
   margin-left: 4px;
   padding-left: 8px;
 }
+/*
 .sq-children::before {
   content: "";
   position: absolute;
@@ -106,7 +107,7 @@
   background: #00000080;
   border-radius: 1px;
 }
-
+*/
 .depth-1  { background: #f9fdfd; }
 .depth-2  { background: #f2fafa; }
 .depth-3  { background: #ebf7f7; }
@@ -177,7 +178,7 @@
   border: 2px solid #2d6f74;
   border-radius: 10px;
   background: #fff;
-  color: #2d6f74;
+  color: inherit;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;

@@ -10,6 +10,7 @@
   background-color: #e6efef;
   border-left: 1px solid #c9d6d6;
   z-index: 500;
+  padding: 0px 0px 60px 0px;
 }
 
 .sidebar-content {
@@ -24,10 +25,10 @@
 .sidebar-footer {
   position: sticky;
   bottom: 0;
-  height: 90px;
+  height: 74px;
   background-color: #fff;
   border-top: 1px solid #c9d6d6;
-  padding: 16px 0;
+  padding: 8px 0;
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
   width: 100%;
 }
@@ -50,7 +51,8 @@
 
 .sidebar-title {
   font-weight: bold;
-  font-size: 18px;
+  font-size: 16px;
+  text-transform: uppercase;
 }
 
 .sidebar-subtitle {
@@ -201,6 +203,7 @@
   border-radius: 8px;
   padding: 1rem;
   font-family: 'Public Sans', sans-serif;
+  margin: 0px 16px;
 }
 
 .sidebar-info-button {

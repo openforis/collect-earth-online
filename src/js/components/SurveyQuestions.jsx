@@ -50,7 +50,7 @@ export function SurveyQuestions ({
     ? previewSelectedId
     : globalSelectedId;
 
-  const [openTopId, setOpenTopId] = useState(null);
+  const [openTopId, setOpenTopId] = useState(1);
   const [openByParent, setOpenByParent] = useState({});
   const [showLearningMaterial, setShowLearningMaterial] = useState(false);
 
@@ -391,7 +391,7 @@ export function SurveyQuestions ({
             )}
           </span>
           <span className="sq-text">{question.question}</span>
-          <span className={`sq-chevron ${isOpen ? 'up' : 'down'}`} aria-hidden="true">▾</span>
+          <SvgIcon icon={isOpen ? "upCaret" : "downCaret"} size="1rem" />
         </button>
 
         {isOpen && (
@@ -421,6 +421,7 @@ export function SurveyQuestions ({
                 key={id}
                 style={{
                   borderColor: a.color || '#2d6f74',
+                  color: a.color || '#2d6f74',
                   borderWidth: '2px',
                   boxShadow: isActive ? `0 0 0 2px ${a.color}` : 'none',
                   fontWeight: isActive ? 'bold' : 'normal'
@@ -884,7 +885,7 @@ const ConfidenceItem = ({ isOpen, onToggle }) => {
             )}
         </span>
         <span className="sq-text">Plot Confidence</span>
-        <span className={`sq-chevron ${isOpen ? 'up' : 'down'}`} aria-hidden="true">▾</span>
+        <SvgIcon icon={isOpen ? "upCaret" : "downCaret"} size="1rem" />
       </button>
 
       {isOpen && (
