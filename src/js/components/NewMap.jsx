@@ -94,6 +94,7 @@ export const NewMap = ({
         zoom: initZoom,
         projection: 'EPSG:3857',
         extent: getProjection('EPSG:3857').getExtent(),
+        constrainOnlyCenter: true,
         }),
       controls: []
     });
