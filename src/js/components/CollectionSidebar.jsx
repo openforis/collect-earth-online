@@ -78,7 +78,6 @@ const StatsCard = ({}) => {
 
 export function OverviewCard ({}) {
   const { currentProject } = useAtomValue(stateAtom);
-  console.log('overview card: ', currentProject);
   return (
     <SidebarCard
          title="Project Description"
@@ -298,7 +297,7 @@ export const NewPlotNavigation = ({userEmail}) => {
       onInfoClick={()=>{setAppState((s) => ({... s, showInfoModal: !s.showInfoModal}));}}
       title={
         <>         
-          {currentProject?.name}
+          <span style={{textTransform: "none"}}> {currentProject?.name} </span>
           <span className="sidebar-subtitle"> ({currentProject?.numPlots} Plots)</span>
         </>
       }
@@ -407,7 +406,6 @@ export const ExternalTools = () => {
     currentProject,
     KMLFeatures,
   } = useAtomValue(stateAtom);
-
   const loadGEEScript = () => {
     let urlParams="";
     if(currentPlot?.plotGeom){
@@ -449,6 +447,10 @@ export const ExternalTools = () => {
     const url = `https://earth.google.com/web/@${lat},${lng},1000a,100d,35y,0h,0t,0r`;
     window.open(url, "_blank");
   };
+
+  function openLearningMaterial () {
+    window.open(currentProject.learningMaterial);
+  }
 
   const showGeoDash = () => {
     const plotRadius = currentProject?.plotSize
@@ -494,9 +496,11 @@ export const ExternalTools = () => {
           <span>Download Plot KML</span>
         </button>
 
-        <button className="ext-btn" onClick={loadGEEScript}>
-          <span>Go To GEE Script</span>
-        </button>
+        {currentProject.referencePlotId ?
+         <button className="ext-btn" onClick={loadGEEScript}>
+           <span>Go To GEE Script</span>
+         </button>
+         : <></>}
 
         <button className="ext-btn" onClick={showGeoDash}>
           <span>Open GeoDash</span>
@@ -505,6 +509,12 @@ export const ExternalTools = () => {
         <button className="ext-btn" onClick={openInGoogleEarth}>
           <span>Go To Google Earth Web</span>
         </button>
+
+        {currentProject.learningMaterial ?
+         <button className="ext-btn" onClick={openLearningMaterial}>
+           <span>Learning Material</span>
+         </button> 
+         : <></>}
       </div>
     </SidebarCard>
   );
@@ -883,18 +893,18 @@ export const ImageryOptions = () => {
 
          return byType[imagery.sourceConfig.type] || null;
        })}
-
-      <div className="sq-field" style={{ marginTop: 12 }}>
-        <label className="sq-switch">
+      <div className="sidebar-mode">
+        <label className="sidebar-switch">
           <input
             type="checkbox"
             checked={enableGrid}
             onChange={toggleGrid}
           />
-          <span className="sq-switch-slider" />
-          <span className="sq-switch-label">Enable map grid</span>
-        </label>
-      </div>
+          <span className="sidebar-slider round"></span>
+            </label>
+            <span className="mode-label">Enable map grid</span>
+          </div>
+
     </SidebarCard>
   );
 };

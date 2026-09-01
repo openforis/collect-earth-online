@@ -20,132 +20,209 @@ import {
   event_ids,
   sub_ids
 } from '../state/projectWizard';
+import { InfoTooltip } from '../components/PageComponents';
+
+// -------------------
+// CONSTANTS
+// -------------------
+
+const PLOT_LIMIT = 5000;
+
+const FILE_DISTRIBUTIONS = ['shp', 'geojson', 'csv'];
+
+const GENERATED_DISTRIBUTIONS = ['random', 'gridded'];
+
+const ACCEPTED_MIME_TYPES = {
+  csv: 'text/csv',
+  shp: 'application/zip',
+  geojson: 'application/json',
+};
+
+const PLOT_ID_KEYS = ['visible_id', 'plotid', 'plot_id', 'PlotID', 'plotId', 'PLOTID'];
+
+// -------------------
+// PURE HELPERS
+// -------------------
+
+// Keeps only digit/decimal input; otherwise drops the last typed character.
+const sanitizeDecimal = (value) =>
+  value !== '' && /^[0-9]*\.?[0-9]*$/.test(value) ? value : value.slice(0, -1);
+
+// Keeps only integer input within (0, PLOT_LIMIT]; otherwise drops the last typed character.
+const sanitizePlotCount = (value) =>
+  /^[0-9]*$/.test(value) && Number(value) > 0 && Number(value) <= PLOT_LIMIT
+    ? value
+    : value.slice(0, -1);
+
+// Decides what the debounced generation should do. Returns one of:
+//   { kind: 'plots', plots }   -> plots generated
+//   { kind: 'error', message } -> limit exceeded, clear stored plots
+//   { kind: 'clear' }          -> inputs partially filled, clear stored plots
+//   { kind: 'noop' }           -> nothing to do
+const computePlotGeneration = ({ distribution, numPlots, plotSpacing, plotSize, aoi }) => {
+  if (distribution === 'random' && numPlots > 0 && plotSize > 0) {
+    return numPlots > PLOT_LIMIT
+      ? { kind: 'error', message: 'A maximum of 5,000 plots is allowed for random distribution.' }
+      : { kind: 'plots', plots: generateRandomPlots(aoi, numPlots) };
+  }
+
+  if (distribution === 'gridded' && plotSpacing > 0 && plotSize > 0) {
+    const estimatedCount = estimateGriddedPlotCount(aoi, plotSpacing);
+    if (estimatedCount > PLOT_LIMIT) {
+      return {
+        kind: 'error',
+        message: `Current spacing results in ~${formatNumberWithCommas(estimatedCount)} plots (Max 5,000). Please increase plot spacing.`
+      };
+    }
+    const plots = generateGriddedPlots(aoi, plotSpacing, plotSize);
+    return plots.length > PLOT_LIMIT
+      ? {
+        kind: 'error',
+        message: `Generated ${formatNumberWithCommas(plots.length)} plots (Max 5,000). Please slightly increase plot spacing.`
+      }
+      : { kind: 'plots', plots };
+  }
+
+  return (numPlots > 0 || plotSpacing > 0) && plotSize > 0
+    ? { kind: 'clear' }
+    : { kind: 'noop' };
+};
+
+// Extracts user-visible plot ids from an uploaded file's plots.
+const extractPlotIds = (plots) =>
+  plots
+    .map((plot) => {
+      const props = plot.properties || plot;
+      const idKey = Object.keys(props).find((key) => PLOT_ID_KEYS.includes(key));
+      return idKey ? props[idKey] : undefined;
+    })
+    .filter((id) => id != null);
+
+// Extracts geometries from an uploaded file's plots.
+const extractPlotGeometries = (plots) =>
+  plots
+    .map((plot) => (plot ? (plot.type ? plot : plot.plot_geom || plot.plotGeom) : null))
+    .filter(Boolean);
+
+// Builds a rectangular AOI polygon from a file's [[lonMin, latMin], [lonMax, latMax]] extent.
+const boundaryBoxFromExtent = ([[lonMin, latMin], [lonMax, latMax]]) => [
+  {
+    type: 'Polygon',
+    coordinates: [
+      [
+        [lonMin, latMax],
+        [lonMax, latMax],
+        [lonMax, latMin],
+        [lonMin, latMin],
+        [lonMin, latMax]
+      ]
+    ]
+  }
+];
+
+// -------------------
+// PLOT STEP
+// -------------------
 
 export const PlotStep = ({ imageryList = [] }) => {
-  const boundaryMethod = useSubscription([sub_ids.boundary.generationMethod]) || "manual";
+  const boundaryMethod = useSubscription([sub_ids.boundary.generationMethod]) || 'manual';
   const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
   const plotFeatures = useSubscription([sub_ids.plots.plotFeatures]) || [];
   const institutionUsers = useSubscription([sub_ids.institution.users]) || [];
-  const plotDistribution = useSubscription([sub_ids.plots.plotDistribution]) || "random";
-  const numPlots = useSubscription([sub_ids.plots.numPlots]) || "";
-  const plotSize = useSubscription([sub_ids.plots.plotSize]) || "";
-  const plotShape = useSubscription([sub_ids.plots.plotShape]) || "circle";
-  const plotSpacing = useSubscription([sub_ids.plots.plotSpacing]) || "";
+  const plotDistribution = useSubscription([sub_ids.plots.plotDistribution]) || 'random';
+  const numPlots = useSubscription([sub_ids.plots.numPlots]) || '';
+  const plotSize = useSubscription([sub_ids.plots.plotSize]) || '';
+  const plotShape = useSubscription([sub_ids.plots.plotShape]) || 'circle';
+  const plotSpacing = useSubscription([sub_ids.plots.plotSpacing]) || '';
   const shufflePlots = useSubscription([sub_ids.plots.shufflePlots]) || false;
   const totalPlotsCalculated = useSubscription([sub_ids.plots.totalPlots]) || 0;
-  const plotFileName = useSubscription([sub_ids.plots.plotFileName]) || "";
+  const plotFileName = useSubscription([sub_ids.plots.plotFileName]) || '';
   const modal = useSubscription([sub_ids.modal]);
   const designSettings = useSubscription([sub_ids.plots.designSettings]) || {};
-  const activeAreaGeometry = aoiFeatures[0];
-  const [plotLimitError, setPlotLimitError] = useState("");
+  const plotsSource = useSubscription([sub_ids.plots.plotsSource]);
+  const [plotLimitError, setPlotLimitError] = useState('');
   const [uploadedPlotIds, setUploadedPlotIds] = useState([]);
-  const isBoundaryFileDriven = boundaryMethod === "plotFile" || boundaryMethod === "shpFile";
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
   const initializedMap = useRef(false);
 
-  const acceptedMimeTypes = {
-    csv: "text/csv",
-    shp: "application/zip",
-    geojson: "application/json",
-  };
+  const activeAreaGeometry = aoiFeatures[0];
+  const isBoundaryFileDriven = boundaryMethod === 'plotFile' || boundaryMethod === 'shpFile';
 
   useEffect(() => {
     setMapLibrary(imageryList);
     if (imageryList && imageryList.length > 0 && !initializedMap.current) {
-      const platformItems = imageryList.filter(img => img.visibility === 'platform');
-      const defaultImagery = platformItems[0];
+      const [defaultImagery] = imageryList.filter((img) => img.visibility === 'platform');
       setActiveMapLayers(new Set([defaultImagery]));
       initializedMap.current = true;
     }
   }, [imageryList]);
 
-  const plotIdList = useMemo(() => {
-    if (['random', 'gridded'].includes(plotDistribution)) {
-      if (totalPlotsCalculated === 0) return [];
-      return Array.from({ length: Math.min(totalPlotsCalculated, 5000) }, (_, i) => i + 1);
-    } else {
-      return uploadedPlotIds;
-    }
-  }, [plotDistribution, totalPlotsCalculated, uploadedPlotIds]);
+  const plotIdList = useMemo(
+    () =>
+      GENERATED_DISTRIBUTIONS.includes(plotDistribution)
+        ? Array.from(
+          { length: Math.min(totalPlotsCalculated, PLOT_LIMIT) },
+          (_, i) => i + 1
+        )
+        : uploadedPlotIds,
+    [plotDistribution, totalPlotsCalculated, uploadedPlotIds]
+  );
 
+  // Debounced plot generation. Skipped entirely while the plots in the db came
+  // from the server (edit mode) so we never overwrite real collected plots;
+  // any user change to the design parameters flips plotsSource to 'generated'
+  // (see the state file's plot events) and re-enables generation.
   useEffect(() => {
-    if (!activeAreaGeometry || ["shp", "geojson", "csv"].includes(plotDistribution)) {
-      setPlotLimitError("");
-      return;
+    if (plotsSource === 'server') return undefined;
+    if (!activeAreaGeometry || FILE_DISTRIBUTIONS.includes(plotDistribution)) {
+      setPlotLimitError('');
+      return undefined;
     }
 
-    const handler = setTimeout(() => {
-      let generatedPlots = [];
-      setPlotLimitError("");
+    const applyGeneration = () => {
+      const result = computePlotGeneration({
+        distribution: plotDistribution,
+        numPlots,
+        plotSpacing,
+        plotSize,
+        aoi: activeAreaGeometry
+      });
 
-      if (plotDistribution === "random" && numPlots > 0 && plotSize > 0) {
-        if (numPlots > 5000) {
-          setPlotLimitError("A maximum of 5,000 plots is allowed for random distribution.");
-          dispatch([event_ids.plots.totalPlots, 0]);
-          dispatch([event_ids.plots.plotFeatures, []]);
-          return;
-        }
-        generatedPlots = generateRandomPlots(activeAreaGeometry, numPlots);
-      } else if (plotDistribution === "gridded" && plotSpacing > 0 && plotSize > 0) {
-        const estimatedCount = estimateGriddedPlotCount(activeAreaGeometry, plotSpacing);
-        if (estimatedCount > 5000) {
-          setPlotLimitError(`Current spacing results in ~${formatNumberWithCommas(estimatedCount)} plots (Max 5,000). Please increase plot spacing.`);
-          dispatch([event_ids.plots.totalPlots, 0]);
-          dispatch([event_ids.plots.plotFeatures, []]);
-          return;
-        }
-        generatedPlots = generateGriddedPlots(activeAreaGeometry, plotSpacing, plotSize);
+      setPlotLimitError(result.kind === 'error' ? result.message : '');
 
-        if (generatedPlots.length > 5000) {
-          setPlotLimitError(`Generated ${formatNumberWithCommas(generatedPlots.length)} plots (Max 5,000). Please slightly increase plot spacing.`);
-          dispatch([event_ids.plots.totalPlots, 0]);
-          dispatch([event_ids.plots.plotFeatures, []]);
-          return;
-        }
-      }
-
-      if (generatedPlots.length > 0) {
-        dispatch([event_ids.plots.totalPlots, generatedPlots.length]);
-        dispatch([event_ids.plots.plotFeatures, generatedPlots]);
-      } else if ((numPlots > 0 || plotSpacing > 0) && plotSize > 0) {
+      if (result.kind === 'plots' && result.plots.length > 0) {
+        dispatch([event_ids.plots.totalPlots, result.plots.length]);
+        dispatch([event_ids.plots.plotFeatures, result.plots]);
+      } else if (result.kind !== 'noop') {
         dispatch([event_ids.plots.totalPlots, 0]);
         dispatch([event_ids.plots.plotFeatures, []]);
       }
-    }, 600);
+    };
 
+    const handler = setTimeout(applyGeneration, 600);
     return () => clearTimeout(handler);
-  }, [plotDistribution, numPlots, plotSpacing, plotSize, activeAreaGeometry]);
+  }, [plotDistribution, numPlots, plotSpacing, plotSize, activeAreaGeometry, plotsSource]);
 
+  // Keeps the distribution compatible with how the boundary was defined:
+  // file-driven boundaries require file distributions and vice versa.
   useEffect(() => {
-    const randomDisabled = isBoundaryFileDriven;
-    const fileDisabled = !isBoundaryFileDriven;
+    const nextDistribution =
+      GENERATED_DISTRIBUTIONS.includes(plotDistribution) && isBoundaryFileDriven
+        ? 'shp'
+        : FILE_DISTRIBUTIONS.includes(plotDistribution) && !isBoundaryFileDriven
+          ? 'random'
+          : null;
 
-    if (plotDistribution === "random" || plotDistribution === "gridded") {
-      if (randomDisabled) {
-        dispatch([event_ids.plots.plotDistribution, "shp"]);
-      }
-    } else if (["shp", "geojson", "csv"].includes(plotDistribution)) {
-      if (fileDisabled) {
-        dispatch([event_ids.plots.plotDistribution, "random"]);
-      }
-    }
+    nextDistribution && dispatch([event_ids.plots.plotDistribution, nextDistribution]);
   }, [boundaryMethod, plotDistribution, isBoundaryFileDriven]);
 
-  useEffect(() => {
-    dispatch([event_ids.plots.plotFeatures, []]);
-    dispatch([event_ids.plots.plotFileName, ""]);
-    dispatch([event_ids.plots.totalPlots, 0]);
-    setPlotLimitError("");
-    setUploadedPlotIds([]);
-  }, [plotDistribution]);
-
   const checkUploadedPlotFile = (fileType, fileName, base64Payload) => {
-    fetch("/check-plot-file", {
-      method: "POST",
+    fetch('/check-plot-file', {
+      method: 'POST',
       headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         plotFileType: fileType,
@@ -158,47 +235,19 @@ export const PlotStep = ({ imageryList = [] }) => {
       .then((data) => {
         dispatch([event_ids.plots.totalPlots, data.plots?.length]);
         dispatch([event_ids.plots.plotFileName, fileName]);
+        dispatch([event_ids.plots.plotFileBase64, base64Payload]);
         dispatch([event_ids.plots.designSettings, {
           ...designSettings,
           userAssignment: data.userAssignment,
           qaqcAssignment: data.qaqcAssignment
         }]);
-        
-        if (data.fileBoundary) {
-          const [[lonMin, latMin], [lonMax, latMax]] = data.fileBoundary;
-          const boundaryBox = [
-            {
-              type: "Polygon",
-              coordinates: [
-                [
-                  [lonMin, latMax],
-                  [lonMax, latMax],
-                  [lonMax, latMin],
-                  [lonMin, latMin],
-                  [lonMin, latMax]
-                ]
-              ]
-            }
-          ];
-          dispatch([event_ids.boundary.aoiFeatures, boundaryBox]);
-        }
+
+        data.fileBoundary &&
+          dispatch([event_ids.boundary.aoiFeatures, boundaryBoxFromExtent(data.fileBoundary)]);
 
         if (data.plots && data.plots.length > 0) {
-          const extractedIds = data.plots.map(p => {
-            const props = p.properties || p;
-            const keys = Object.keys(props);
-            const k = keys.find((key) => ["visible_id", "plotid", "plot_id", "PlotID", "plotId", "PLOTID"].includes(key));
-            return k ? props[k] : undefined;
-          }).filter(v => v != null);
-
-          setUploadedPlotIds(extractedIds);
-
-          const parsedGeometries = data.plots.map(p => {
-            if (!p) return null;
-            return p.type ? p : (p.plot_geom || p.plotGeom);
-          }).filter(Boolean);
-
-          dispatch([event_ids.plots.plotFeatures, parsedGeometries]);
+          setUploadedPlotIds(extractPlotIds(data.plots));
+          dispatch([event_ids.plots.plotFeatures, extractPlotGeometries(data.plots)]);
         }
       })
       .catch((err) => {
@@ -208,15 +257,13 @@ export const PlotStep = ({ imageryList = [] }) => {
   };
 
   const processIncomingDataFile = (e, fileType) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    readFileAsBase64Url(file, (base64String) => {
+    const [file] = e.target.files;
+    file && readFileAsBase64Url(file, (base64String) => {
       checkUploadedPlotFile(fileType, file.name, base64String);
     });
   };
 
-  const labelPlotDimensionUnits = plotShape === "circle" ? "Plot Diameter (m)" : "Plot Width (m)";
+  const labelPlotDimensionUnits = plotShape === 'circle' ? 'Plot Diameter (m)' : 'Plot Width (m)';
 
   const renderPlotShapeInput = () => (
     <div className="form-group mb-3">
@@ -242,14 +289,7 @@ export const PlotStep = ({ imageryList = [] }) => {
         className="text-input"
         placeholder="Enter Number"
         value={plotSize}
-        onChange={(e) => {
-          const regex = /^[0-9]*\.?[0-9]*$/;
-          const input = e.target.value;                   
-          dispatch([event_ids.plots.plotSize,
-                    input !== "" &&                              
-                    regex.test(input) ? input
-                    : input.slice(0, input.length - 1)]);
-                 }}
+        onChange={(e) => dispatch([event_ids.plots.plotSize, sanitizeDecimal(e.target.value)])}
       />
     </div>
   );
@@ -258,18 +298,12 @@ export const PlotStep = ({ imageryList = [] }) => {
     <>
       <div className="form-group mb-3">
         <label className="text-label-sm">Number of Plots this project will contain <span style={{ color: 'red' }}>*</span></label>
-        <input 
-          type="text" 
-          className="text-input" 
+        <input
+          type="text"
+          className="text-input"
           placeholder="Enter Number (Max 5000)"
           value={numPlots}
-          onChange={(e) =>{
-            const regex = /^[0-9]*$/;
-            const input = e.target.value;
-            function inRange (n) {return (0 < Number(n) && Number(n) < 5001);};
-            const value = (regex.test(input) && inRange(input)) ? input : input.slice(0, input.length - 1);
-            dispatch([event_ids.plots.numPlots, value]);
-          }}
+          onChange={(e) => dispatch([event_ids.plots.numPlots, sanitizePlotCount(e.target.value)])}
         />
       </div>
       {renderPlotSizeInput()}
@@ -280,9 +314,9 @@ export const PlotStep = ({ imageryList = [] }) => {
     <>
       <div className="form-group mb-3">
         <label className="text-label-sm">Plot Spacing (m) <span style={{ color: 'red' }}>*</span></label>
-        <input 
-          type="number" 
-          className="text-input" 
+        <input
+          type="number"
+          className="text-input"
           placeholder="Enter Number"
           value={plotSpacing}
           onChange={(e) => dispatch([event_ids.plots.plotSpacing, Number(e.target.value)])}
@@ -306,17 +340,17 @@ export const PlotStep = ({ imageryList = [] }) => {
           UPLOAD PLOT FILE <span style={{ color: 'red' }}>*</span>
         </label>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
-          <label 
+          <label
             className="btn btn-sm btn-outline-lightgreen py-2 px-3 text-nowrap"
             htmlFor="plot-file-upload-input"
             style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}
           >
             <SvgIcon icon="plus" size="0.9rem" />
             Upload {fileType.toUpperCase()} file
-            <input 
+            <input
               type="file"
               id="plot-file-upload-input"
-              accept={acceptedMimeTypes[fileType]}
+              accept={ACCEPTED_MIME_TYPES[fileType]}
               style={{ display: 'none' }}
               onChange={(e) => processIncomingDataFile(e, fileType)}
             />
@@ -357,8 +391,16 @@ export const PlotStep = ({ imageryList = [] }) => {
       <div className="wizard-sidebar">
         <div className="wizard-card">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="card-title" style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Plot Generation</h5>
-            <SvgIcon icon="info" size="1.2rem" color="#666" />
+            <h5 className="card-title">PLOT GENERATION</h5>
+            <InfoTooltip
+              title="Plot Generation"
+              align="end"
+              text={
+                <>
+                  Plot designs are areas where you will then have samples to provide an unbiased estimate of some population measure.
+                  <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/plotsample.html" target="_blank"> Learn more</a>
+                </>
+              } />
           </div>
 
           {activeAreaGeometry && (
@@ -386,7 +428,7 @@ export const PlotStep = ({ imageryList = [] }) => {
 
           {distributionStrategies[plotDistribution]?.renderer()}
 
-          {["random", "gridded"].includes(plotDistribution) && renderPlotShapeInput()}
+          {GENERATED_DISTRIBUTIONS.includes(plotDistribution) && renderPlotShapeInput()}
 
           {plotLimitError && (
             <div className="mt-3 p-3 rounded" style={{ backgroundColor: '#fff0f0', border: '1px solid #ffcccc' }}>
@@ -411,7 +453,7 @@ export const PlotStep = ({ imageryList = [] }) => {
 
       <div className="map-area">
         <div className="map-title-overlay">PLOT PREVIEW</div>
-        <NewMap 
+        <NewMap
           pan={false}
           allowDrawing={false}
           preview={true}
@@ -428,15 +470,26 @@ export const PlotSimilarityCard = ({ plotIdList = [] }) => {
   const plotSimilarityDetails = useSubscription([sub_ids.plots.plotSimilarityDetails]) || { referencePlotId: "", years: [] };
   const { referencePlotId, years } = plotSimilarityDetails;
 
-  const setPlotSimilarityDetails = (updates) => {
+  const setPlotSimilarityDetails = (updates) =>
     dispatch([event_ids.plots.plotSimilarityDetails, { ...plotSimilarityDetails, ...updates }]);
-  };
 
   return (
     <div className="wizard-card" style={{ marginTop: '20px' }}>
-      <h5 className="card-title" style={{ marginBottom: '15px' }}>
-        PLOT SIMILARITY CONFIGURATION
-      </h5>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+
+        <h5 className="card-title">
+          PLOT SIMILARITY CONFIGURATION
+        </h5>
+        <InfoTooltip
+          title="Plot Similarity"
+          align="end"
+          text={
+            <>
+              Use this feature to let data collectors navigate based on similar plot features.
+              <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/plotsample.html" target="_blank"> Learn more</a>
+            </>
+          } />
+      </div>
       <div
         className="form-check mb-3"
         style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
@@ -509,19 +562,17 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
     ),
   ];
 
-  const setUserAssignment = (updates) => {
+  const setUserAssignment = (updates) =>
     dispatch([event_ids.plots.designSettings, {
       ...designSettings,
       userAssignment: { ...userAssignment, ...updates }
     }]);
-  };
 
-  const addUser = (userId) => {
-    setUserAssignment({ 
-      users: [userId, ...users], 
-      percents: [0, ...percents] 
+  const addUser = (userId) =>
+    setUserAssignment({
+      users: [userId, ...users],
+      percents: [0, ...percents]
     });
-  };
 
   const removeUser = (userId) => {
     const idx = users.indexOf(userId);
@@ -531,18 +582,17 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
     });
   };
 
-  const updatePercent = (idx, val) => {
-    const newPercents = [...percents];
-    newPercents[idx] = parseInt(val) || 0;
-    setUserAssignment({ percents: newPercents });
-  };
+  const updatePercent = (idx, val) =>
+    setUserAssignment({
+      percents: percents.map((p, i) => (i === idx ? parseInt(val) || 0 : p))
+    });
 
   return (
     <div className="wizard-card" style={{ marginTop: '20px' }}>
       <h5 className="card-title" style={{ marginBottom: '15px' }}>ASSIGN PLOTS</h5>
-      
+
       <div className="form-group mb-3">
-        <Select 
+        <Select
           id="user-assignment"
           label="User Assignment"
           options={methods}
@@ -553,21 +603,20 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
       </div>
 
       {(userMethod === "equal" || userMethod === "percent") && (
-        <UserSelect 
-          addUser={addUser} 
-          possibleUsers={possibleUsers} 
+        <UserSelect
+          addUser={addUser}
+          possibleUsers={possibleUsers}
           label="Assigned Users"
         />
       )}
 
       {users.map((userId, idx) => {
         const user = institutionUserList.find(u => u.id === userId);
-        if (!user) return null;
-        return (
+        return user && (
           <div key={userId} className="d-flex align-items-center mb-2">
             {userMethod === "percent" && (
               <div className="d-flex flex-column" style={{ marginRight: '10px' }}>
-                <input 
+                <input
                   type="number" className="text-input" style={{ width: '60px' }}
                   value={percents[idx]} onChange={(e) => updatePercent(idx, e.target.value)}
                 />
@@ -577,11 +626,11 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
               </div>
             )}
             <span className="flex-grow-1" style={{ fontSize: '0.9rem' }}>{user.email}</span>
-            <button 
+            <button
               className="btn btn-sm"
-              style={{ 
-                backgroundColor: 'transparent', 
-                border: '1px solid var(--Primary-Red)', 
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid var(--Primary-Red)',
                 color: 'var(--Primary-Red)'
               }}
               onClick={() => removeUser(userId)}
@@ -616,17 +665,16 @@ export const QualityControlCard = ({ institutionUserList = [], totalPlots, allow
     ...institutionUserList.filter((u) => !users.includes(u.id) && !smes.includes(u.id)),
   ];
 
-  const setQaqcAssignment = (updates) => {
+  const setQaqcAssignment = (updates) =>
     dispatch([event_ids.plots.designSettings, {
       ...designSettings,
       qaqcAssignment: { ...qaqcAssignment, ...updates }
     }]);
-  };
 
   return (
     <div className="wizard-card" style={{  marginTop: '20px' }}>
       <h5 className="card-title" style={{  marginBottom: '15px' }}>QUALITY CONTROL</h5>
-      
+
       <div className="form-group mb-3">
         <Select
           disabled={allowDrawnSamples || userMethod === "none" || qaqcMethod === "file"}
@@ -673,7 +721,7 @@ export const QualityControlCard = ({ institutionUserList = [], totalPlots, allow
           {assignedSMEs.map(sme => (
             <div key={sme.id} className="d-flex align-items-center mb-2">
               <span className="flex-grow-1" style={{ fontSize: '0.9rem' }}>{sme.email}</span>
-              <button 
+              <button
                 className="btn btn-sm"
                 style={{ border: '1px solid var(--Primary-Red)', color: 'var(--Primary-Red)' }}
                 onClick={() => setQaqcAssignment({ smes: smes.filter(id => id !== sme.id) })}
