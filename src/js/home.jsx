@@ -6,7 +6,7 @@ import { sortAlphabetically } from "./utils/generalUtils";
 import SvgIcon from "./components/svg/SvgIcon";
 import Modal from "./components/Modal";
 import { Sidebar, SidebarCard } from "./components/Sidebar";
-
+import Highlights from "./highlights";
 import { useAtom, useAtomValue } from'jotai';
 import { stateAtom } from './utils/constants';
 
@@ -285,6 +285,7 @@ export const InstitutionSidebar = ({
   );
 };
 
+/*
 function Home ({ userRole, userId }) {
   const [appState, setAppState] = useAtom(stateAtom);  
   
@@ -369,7 +370,7 @@ function Home ({ userRole, userId }) {
         </div>
       </div>     
       {appState.modal?.alert &&
-       <Modal title={appState.modal.alert.alertType}
+      <Modal title={appState.modal.alert.alertType}
               onClose={()=>{setAppState({ ... appState, modal: null});}}>
          {appState.modal.alert.alertMessage}
        </Modal>}
@@ -377,196 +378,56 @@ function Home ({ userRole, userId }) {
     </div>
   );
 }
+*/
 
-class MapPanel extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      mapConfig: null,
-      clusterExtent: [],
-      clickedFeatures: [],
-      modal: null,
-    };
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      this.state.mapConfig === null &&
-        this.props.imagery.length > 0 &&
-        prevProps.imagery.length === 0
-    ) {
-      this.initializeMap();
-    }
-
-    if (
-      this.state.mapConfig &&
-        this.props.projects.length > 0 &&
-        (!prevState.mapConfig || prevProps.projects.length === 0)
-    ) {
-      this.addProjectMarkers(this.state.mapConfig, this.props.projects, 40); // clusterDistance = 40, use null to disable clustering
-    }
-  }
-
-  initializeMap = () => {
-    const homePageLayer =
-          this.props.imagery.find((imagery) => imagery.title === "Mapbox Satellite w/ Labels") ||
-          this.props.imagery[0];
-    const mapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
-    mercator.setVisibleLayer(mapConfig, homePageLayer.id);
-    this.setState({ mapConfig });
-  };
-
-  addProjectMarkers(mapConfig, projects, clusterDistance) {
-    const projectSource = mercator.projectsToVectorSource(
-      projects.filter((project) => project.centroid)
-    );
-    if (clusterDistance == null) {
-      mercator.addVectorLayer(
-        mapConfig,
-        "projectMarkers",
-        projectSource,
-        mercator.ceoMapStyles("cluster", 0)
-      );
-    } else {
-      mercator.addVectorLayer(
-        mapConfig,
-        "projectMarkers",
-        mercator.makeClusterSource(projectSource, clusterDistance),
-        (feature) => mercator.ceoMapStyles("cluster", feature.get("features").length)
-      );
-    }
-    mercator.addOverlay(mapConfig, "projectPopup", document.getElementById("projectPopUp"));
-    const overlay = mercator.getOverlayByTitle(mapConfig, "projectPopup");
-    mapConfig.map.on("click", (event) => {
-      if (mapConfig.map.hasFeatureAtPixel(event.pixel)) {
-        const clickedFeatures = [];
-        mapConfig.map.forEachFeatureAtPixel(event.pixel, (feature) =>
-          clickedFeatures.push(feature)
-        );
-        this.showProjectPopup(overlay, clickedFeatures[0]);
-      } else {
-        overlay.setPosition(undefined);
-      }
-    });
-  }
-
-  showProjectPopup(overlay, feature) {
-    if (mercator.isCluster(feature)) {
-      overlay.setPosition(feature.get("features")[0].getGeometry().getCoordinates());
-      this.setState({
-        clusterExtent: mercator.getClusterExtent(feature),
-        clickedFeatures: feature.get("features"),
-      });
-    } else {
-      overlay.setPosition(feature.getGeometry().getCoordinates());
-      this.setState({
-        clusterExtent: [],
-        clickedFeatures: feature.get("features"),
-      });
-    }
-  }
-
-  render() {
-    return (
-      <div
-        className="full-height"
-        id="mapPanel"
-        style={{ marginLeft: "30vw" }}
-      >
-        {this.state.modal?.alert &&
-         <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
-           {this.state.modal.alert.alertMessage}
-         </Modal>}
-        <div className="full-height full-width" id="home-map-pane" style={{ maxWidth: "inherit" }} />
-        <ProjectPopup
-          clusterExtent={this.state.clusterExtent}
-          features={this.state.clickedFeatures}
-          mapConfig={this.state.mapConfig}
-        />
-      </div>
-    );
+function HomeTabs ({tab, session}) {
+  switch (tab) {
+  case 'highlights':
+    return (<Highlights userId={session.userId} userRole={session.userRole}/>);
+  case 'institutions' :
+    return (<div id='institutions-tab' className='home-tab'>
+              <div className="header">
+                <div className="header-row">
+                  <p className="header-title">Institutions</p>
+                  <p className="header-subtitle"></p>
+                </div>
+              </div>
+            </div>);
+  case 'collect' :
+    return (<div id='collect-tab' className='home-tab'>
+              <div className="header">
+                <div className="header-row">
+                  <p className="header-title">Collect</p>
+                  <p className="header-subtitle"></p>
+                </div>
+              </div>
+            </div>);
+    case 'manage' :
+    return (<div id='manage-tab' className='home-tab'>
+              <div className="header">
+                <div className="header-row">
+                  <p className="header-title">Manage</p>
+                  <p className="header-subtitle"></p>
+                </div>
+              </div>
+            </div>);
+    default: return (<></>);
   }
 }
 
-class ProjectPopup extends React.Component {
-  componentDidMount() {
-    // There is some kind of bug in attaching this onClick handler directly to its button in render().
-    document.getElementById("zoomToCluster").onclick = () => {
-      mercator.zoomMapToExtent(this.props.mapConfig, this.props.clusterExtent, 128);
-      mercator.getOverlayByTitle(this.props.mapConfig, "projectPopup").setPosition(undefined);
-    };
-  }
-  
-  render() {
-    return (
-      <div className="d-flex flex-column" id="projectPopUp" style={{ maxHeight: "40vh" }}>
-        <div className="cTitle">
-          <h1>{this.props.features.length > 1 ? "Cluster info" : "Project info"}</h1>
-        </div>
-        <div className="cContent" style={{ padding: "10px", overflow: "auto" }}>
-          <table className="table table-sm" style={{ tableLayout: "fixed" }}>
-            <tbody>
-              {this.props.features.map((feature) => (
-                <React.Fragment key={feature.get("projectId")}>
-                  <tr className="d-flex" style={{ borderTop: "1px solid gray" }}>
-                    <td className="small col-6 px-0 my-auto">Name</td>
-                    <td className="small col-6 pr-0">
-                      <a
-                        className="btn btn-sm btn-block btn-outline-lightgreen"
-                        href={`/collection?projectId=${feature.get("projectId")}&institutionId=${feature.get("institutionId")}`}
-                        style={{
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {feature.get("name")}
-                      </a>
-                    </td>
-                  </tr>
-                  <tr className="d-flex">
-                    <td className="small col-6 px-0 my-auto">Description</td>
-                    <td className="small col-6 pr-0" style={{ wordBreak: "break-all" }}>
-                      {feature.get("description")}
-                    </td>
-                  </tr>
-                  <tr className="d-flex" style={{ borderBottom: "1px solid gray" }}>
-                    <td className="small col-6 px-0 my-auto">Number of plots</td>
-                    <td className="small col-6 pr-0">{feature.get("numPlots")}</td>
-                  </tr>
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <button
-          className="mt-0 mb-0 btn btn-sm btn-block btn-outline-yellow"
-          id="zoomToCluster"
-          style={{
-            alignItems: "center",
-            cursor: "pointer",
-            justifyContent: "center",
-            minWidth: "350px",
-            display: this.props.features.length > 1 ? "flex" : "none",
-          }}
-          type="button"
-        >
-          <SvgIcon icon="zoomIn" size="1rem" />
-          <span style={{ marginLeft: "0.4rem" }}>Zoom to cluster</span>
-        </button>
-      </div>
-    );
-  }
+function Home ({params, session}) {
+  const [tab, setTab] = useState('highlights');
+  return (
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}
+                   fxns={{tab: {get: tab, set: setTab}}}>
+      <HomeTabs tab={tab} session={session}/>
+    </NavigationBar>
+  );
 }
-
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>      
-      <Home userId={session.userId || -1} userRole={session.userRole || ""} />
-    </NavigationBar>,
-    
+    <Home params={params} session={session}/>,
     document.getElementById("app")
   );
 }
