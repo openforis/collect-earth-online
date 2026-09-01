@@ -856,12 +856,14 @@ class NewImagery extends React.Component {
   getImageryParams = (type, imageryParams) => {
     // TODO, this should be made generic based on parent / child relationship
     // SecureWatch is not defined in imageryOptions in a way that will facilitate this.
-    if (type === "GeoServer" || "WMTS") {
+    if (type === "GeoServer" || type === "WMTS") {
       const {
         geoserverUrl,
         geoserverParams: { LAYERS, ...cleanGeoserverParams },
+        ...rest
       } = imageryParams;
       return {
+        ...rest,
         geoserverUrl,
         LAYERS,
         geoserverParams: JSON.stringify(cleanGeoserverParams),
@@ -1115,6 +1117,7 @@ class NewImagery extends React.Component {
     const { title, attribution, isProxied, sourceConfig } = this.props.imageryToEdit;
     const { type, ...imageryParams } = sourceConfig;
     const selectedType = imageryOptions.findIndex((io) => io.type === type);
+    console.log(sourceConfig);
     this.setState({
       selectedType,
       imageryTitle: title,
