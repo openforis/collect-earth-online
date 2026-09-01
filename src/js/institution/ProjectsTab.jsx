@@ -58,7 +58,7 @@ export const ProjectsTab = ({
 	    className="projects-table-name"
 	    href={
 	      isAdmin ?
-		`/create-project?projectId=${row.id}&institutionId=${institutionId}` 
+		`/project-wizard?projectId=${row.id}&institutionId=${institutionId}`
 		: `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
 	    {row.name}
 	  </a>

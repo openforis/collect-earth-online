@@ -60,6 +60,7 @@ const projectWizardDb = {
   'plots.plotShape': 'circle',
   'plots.plotSpacing': null,
   'plots.shufflePlots': false,
+  'plots.plotsSource': null,
   'plots.totalPlots': 0,
   'plots.plotFeatures': [],
   'plots.plotFileName': '',
@@ -170,7 +171,9 @@ export const event_ids = {
     plotFileName: 'plots.plotFileName',
     plotFileBase64: 'plots.plotFileBase64',
     designSettings: 'plots.designSettings',
-    plotSimilarityDetails: 'plots.plotSimilarityDetails'
+    plotSimilarityDetails: 'plots.plotSimilarityDetails',
+    plotsSource: 'plots.plotsSource',
+    serverPlots: 'plots.serverPlots',
   },
   samples: {
     sampleDistribution: 'samples.sampleDistribution',
@@ -272,7 +275,8 @@ export const sub_ids = {
     plotFileName: 'plots.plotFileName',
     plotFileBase64: 'plots.plotFileBase64',
     designSettings: 'plots.designSettings',
-    plotSimilarityDetails: 'plots.plotSimilarityDetails'
+    plotSimilarityDetails: 'plots.plotSimilarityDetails',
+    plotsSource: 'plots.plotsSource',
   },
   samples: {
     sampleDistribution: 'samples.sampleDistribution',
@@ -357,6 +361,7 @@ regSub(sub_ids.plots.plots, sub_ids.plots.plots);
 regSub(sub_ids.plots.plotDistribution, sub_ids.plots.plotDistribution);
 regSub(sub_ids.plots.numPlots, sub_ids.plots.numPlots);
 regSub(sub_ids.plots.plotSize, sub_ids.plots.plotSize);
+regSub(sub_ids.plots.plotsSource, sub_ids.plots.plotsSource);
 regSub(sub_ids.plots.plotShape, sub_ids.plots.plotShape);
 regSub(sub_ids.plots.plotSpacing, sub_ids.plots.plotSpacing);
 regSub(sub_ids.plots.shufflePlots, sub_ids.plots.shufflePlots);
@@ -436,7 +441,7 @@ regEvent(event_ids.draftProject, ({ draftDb }, draftId) => {
           return Promise.resolve();
         }
       }).catch(() => {
-        dispatch([event_ids.errors [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
+        dispatch([event_ids.errors, [['server', ["No draft found with ID " + projectDraftId + "."]]]]);
         
       });
   }
@@ -455,11 +460,10 @@ regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
           return Promise.resolve();
         } else {
           dispatch([event_ids.templateProject, data]);
-          draftDb[sub_ids.projectId] = projectId;
           return Promise.resolve();
         }
       }).catch(() => {
-        dispatch([event_ids.errors [['server', ["Can't edit project " + projectId + "."]]]]);
+        dispatch([event_ids.errors, [['server', ["Can't edit project " + projectId + "."]]]]);
       });
   }
   function getProjectImagery(projectId) {
@@ -474,7 +478,7 @@ regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
           return Promise.resolve();
         }
       }).catch(() => {
-        dispatch([event_ids.errors [['server', ["Can't edit project " + projectId + "."]]]]);
+        dispatch([event_ids.errors, [['server', ["Can't edit project " + projectId + "."]]]]);
       });
   }
   getProjectImagery(projectId);
@@ -512,9 +516,9 @@ export function buildProject (draftDb, sub_ids) {
   const aoiFileName = current(draftDb[sub_ids.boundary.aoiFileName]);
   const type = current(draftDb[sub_ids.overview.projectType]);
   const gee = current(draftDb[sub_ids.overview.projectOptions.gee]);
-  const extraPlotColumns = current(draftDb[sub_ids.overview.projectOptions.gee]);
-  const plotConfidence = current(draftDb[sub_ids.overview.projectOptions.gee]);
-  const autoGeo = current(draftDb[sub_ids.overview.projectOptions.gee]);
+  const extraPlotColumns = current(draftDb[sub_ids.overview.projectOptions.extraPlotColumns]);
+  const plotConfidence = current(draftDb[sub_ids.overview.projectOptions.plotConfidence]);
+  const autoGeo = current(draftDb[sub_ids.overview.projectOptions.autoGeo]);
   const projectOptions = {gee, extraPlotColumns, plotConfidence, autoGeo}
   const plotSpacing = Number(current(draftDb[sub_ids.plots.plotSpacing]));
   const shufflePlots = current(draftDb[sub_ids.plots.shufflePlots]);
@@ -549,25 +553,34 @@ export function buildProject (draftDb, sub_ids) {
 	  designSettings,
 	  totalPlots,
           plotSize,
-	  plotFileNeeded ,
-	  allowDrawnSamples  ,
+	  plotFileNeeded,
+          allowDrawnSamples,
 	  samplesPerPlot,
-	  plotShape ,
-	  sampleDistribution ,
-	  sampleFileName ,
-	  sampleResolution  ,
+	  plotShape,
+	  sampleDistribution,
+          sampleFileName,
+          sampleResolution,
+          plotLimit: 5000,
+          sampleLimit: 35000,
+          perPlotLimit: 200,
 	  surveyQuestions: Object.entries(surveyQuestions).reduce((acc, [idx, val])=>{
             return {...acc, [idx]: val};
-          }, {}) };
+          },
+            {}) };
 }
 
 regEvent(event_ids.currentStep, ({ draftDb }, currentStep) => {
-  let prevStep = draftDb[sub_ids.currentStep];
-  let validStep = prevStep && validateStep[prevStep].call(this, buildProject(draftDb, sub_ids));
-  validStep && draftDb[sub_ids.invalidSteps].push(prevStep);
+  const prevStep = draftDb[sub_ids.currentStep];
+  if (prevStep && validateStep[prevStep]) {
+    const errors = validateStep[prevStep](buildProject(draftDb, sub_ids));
+    const invalid = (errors || []).length > 0;
+    const list = current(draftDb[sub_ids.invalidSteps]);
+    draftDb[sub_ids.invalidSteps] = invalid
+      ? [...new Set([...list, prevStep])]
+      : list.filter((s) => s !== prevStep);
+  }
   draftDb[sub_ids.currentStep] = currentStep;
 });
-
 
 regEvent(event_ids.validate, ({ draftDb }, step='wizard') => {
   const form = buildProject(draftDb, sub_ids);
@@ -634,15 +647,15 @@ regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
   case 'samples' : {
     const errors = validateSamples(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['samples', errors]]]) 
-      : dispatch([sub_ids.currentStep, 'questions']);
+      : dispatch([event_ids.currentStep, 'questions']);
     break;}
   case 'questions' : {
     const errors = validateQuestions(form).filter((e)=>e);
     errors.length ? dispatch([event_ids.errors, [['questions', errors]]]) 
-      : dispatch([sub_ids.currentStep, isSimplified ? 'review' : 'rules']);
+      : dispatch([event_ids.currentStep, isSimplified ? 'review' : 'rules']);
     break;}
   case 'rules' : {
-    dispatch([sub_ids.currentStep, 'review']);
+    dispatch([event_ids.currentStep, 'review']);
     break;}
   case 'review' : {
     const errors = validateWizard(form);
@@ -703,7 +716,8 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
     plotConfidence: projectOptions.collectConfidence,
     autoGeo: projectOptions.autoLaunchGeoDash
   };
-  draftDb[sub_ids.boundary.generationMethod] = 'manual';
+  draftDb[sub_ids.boundary.generationMethod] =
+  ['shp', 'geojson', 'csv'].includes(plotDistribution) ? 'plotFile' : 'manual';
   draftDb[sub_ids.boundary.aoiFeatures] = aoiFeatures;
   draftDb[sub_ids.boundary.aoiFileName] = aoiFileName;
   draftDb[sub_ids.plots.plotDistribution] = plotDistribution;
@@ -986,12 +1000,18 @@ regEvent(event_ids.plots.plots, ({ draftDb }, plots) => {
 });
 
 regEvent(event_ids.plots.plotDistribution, ({ draftDb }, distribution) => {
+  if (draftDb[sub_ids.plots.plotDistribution] === distribution) return;
   draftDb[sub_ids.plots.plotDistribution] = distribution;
+  draftDb[sub_ids.plots.plotFeatures] = [];
+  draftDb[sub_ids.plots.plotFileName] = '';
+  draftDb[sub_ids.plots.totalPlots] = 0;
+  draftDb[sub_ids.plots.plotsSource] = 'generated';
 });
 
 regEvent(event_ids.plots.numPlots, ({ draftDb }, count) => {
   draftDb[sub_ids.plots.numPlots] = count;
-  draftDb[sub_ids.plots.totalPlots] = count; 
+  draftDb[sub_ids.plots.totalPlots] = count;
+  draftDb[sub_ids.plots.plotsSource] = 'generated';
 });
 
 regEvent(event_ids.plots.plotSize, ({ draftDb }, size) => {
@@ -1020,6 +1040,13 @@ regEvent(event_ids.plots.plotFeatures, ({ draftDb }, features) => {
 
 regEvent(event_ids.plots.plotFileName, ({ draftDb }, plotFileName) => {
   draftDb[sub_ids.plots.plotFileName] = plotFileName;
+});
+
+regEvent(event_ids.plots.serverPlots, ({ draftDb }, { features, count }) => {
+  console.log('[event]', features?.length);
+  draftDb[sub_ids.plots.plotFeatures] = features;
+  draftDb[sub_ids.plots.totalPlots] = count;
+  draftDb[sub_ids.plots.plotsSource] = 'server';
 });
 
 regEvent(event_ids.plots.plotFileBase64, ({ draftDb }, plotFileBase64) => {

@@ -49,7 +49,13 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
     projectId && (
       fetch(`/get-project-plots?projectId=${projectId}`)
         .then(res => res.json())
-        .then(data => setPlotFeatures(data))
+        .then(data => {
+          const geoms = (data || [])
+            .map(p => (typeof p.center === 'string' ? JSON.parse(p.center) : p.center))
+            .filter(g => g && g.type);
+          console.log('[fetch]', geoms.length);
+          dispatch([event_ids.plots.serverPlots, { features: geoms, count: data.length }]);
+        })
         .catch(err => console.error("could not load plots", err))
     );
     fetch(`/get-institution-imagery?institutionId=${institutionId}`)
