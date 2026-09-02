@@ -206,7 +206,7 @@ function SumOfAnswersForm () {
 
   const availableQuestions = filterObject(
     surveyQuestions,
-    ([_id, sq]) => sq.componentType === "input" && sq.dataType === "number"
+    ([_id, sq]) => sq.dataType === "number"
   );
 
   function addSurveyRule () {

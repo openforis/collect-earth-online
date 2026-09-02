@@ -4,7 +4,6 @@ import { useAtom, useSetAtom } from 'jotai';
 import { stateAtom } from './utils/constants';
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import _ from "lodash";
-
 import {
   NavigationBar,
   AcceptTermsModal,
