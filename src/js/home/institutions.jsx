@@ -24,9 +24,6 @@ export default function Institutions ({userId, userRole}) {
   }) {
     const [activeTab, setActiveTab] = useState("affiliations");
     const [search, setSearch] = useState("");
-    const [filterType, setFilterType] = useState("institution");
-    const [showEmpty, setShowEmpty] = useState(true);
-    const [matchBeginning, setMatchBeginning] = useState(false);
     const [sortType, setSortType] = useState("projects");
 
     const otherInstitutions = useMemo(() => {
@@ -44,39 +41,13 @@ export default function Institutions ({userId, userRole}) {
     }, [projects]);
 
     const visibleInstitutions = useMemo(() => {
-      const list = activeTab === "affiliations" ? userInstitutions : otherInstitutions;
-
-      return list.filter((inst) => {
-        if (!inst || !inst.name) return false;
-
-        const projectsForInst = projectsByInstitution[inst.id] || [];
-        const hasProjects = projectsForInst.length > 0;
-
-        const matchFn =
-              filterType === "institution"
-              ? matchBeginning
-              ? inst.name.toLowerCase().startsWith(search.toLowerCase())
-              : inst.name.toLowerCase().includes(search.toLowerCase())
-              : projectsForInst.some((p) => {
-                if (!p.name) return false;
-                const name = p.name.toLowerCase();
-                return matchBeginning
-                  ? name.startsWith(search.toLowerCase())
-                  : name.includes(search.toLowerCase());
-              });
-
-        if (!showEmpty && !hasProjects) return false;
-        return matchFn;
-      });
+      return activeTab === "affiliations" ? userInstitutions : otherInstitutions;
     }, [
       activeTab,
       userInstitutions,
       otherInstitutions,
       search,
-      matchBeginning,
-      showEmpty,
       projectsByInstitution,
-      filterType,
     ]);
     
     function sortedInstitutions (institutions, sortType) {
@@ -96,89 +67,47 @@ export default function Institutions ({userId, userRole}) {
     
     return (
       <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "30vw", position: "fixed" }}>
-        <SidebarCard title="FILTERS">
-          <div className="filter-section">
-            <input
-              className="form-control search-input"
-              type="text"
-              placeholder="Search by name"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ marginBottom: 10 }}
-            />
+        <SidebarCard title="Institutions">
 
-            <div className="filter-row" style={{ marginBottom: 8 }}>
-              <label style={{ marginRight: 14, marginLeft: 4 }}>
-                <input
-                  type="radio"
-                  name="filterType"
-                  value="institution"
-                  checked={filterType === "institution"}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  style={{ marginRight: 4 }}
-                />
-                Institution
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="filterType"
-                  value="project"
-                  checked={filterType === "project"}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  style={{ marginRight: 4 }}
-                />
-                Project
-              </label>
+          <div className="search-bar">
+            <div className="search-label">
+              <SvgIcon icon="search" size="1rem"/>
+              <input
+                type="text"
+                placeholder="Search by name"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
-
-            <div className="filter-row" style={{ marginBottom: 12 }}>
-              <label style={{ marginRight: 18 }}>
-                <input
-                  type="checkbox"
-                  checked={matchBeginning}
-                  onChange={() => setMatchBeginning(!matchBeginning)}
-                  style={{ marginRight: 4 }}
-                />
-                Match from Beginning
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={showEmpty}
-                  onChange={() => setShowEmpty(!showEmpty)}
-                  style={{ marginRight: 4 }}
-                />
-                Show Empty Institutions
-              </label>
-            </div>
-
-            <div className="filter-actions" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div className="sort-dropdown" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <label style={{ fontWeight: "500" }}>Sort by:</label>
-                <select
-                  className="form-control form-control-sm"
-                  onChange={(e) => setSortType(e.target.value)}
-                  value={sortType}
-                  style={{ flexGrow: 1 }}
-                >
-                  <option value="projects">Number of Projects</option>
-                  <option value="alphabetical">Alphabetical</option>
-                </select>
+          </div>
+          <div className="cta-sort-row">
+            <div className="create-institution"
+                 onClick={()=>{window.location.href="/create-institution";}}
+            >
+              <div className="create-institution-label">
+                <SvgIcon icon="plus" size="1rem"/>
+                <span>Add New Institution</span>
               </div>
-              <a
-                className="create-institution btn btn-md"
-                href="/create-institution"
-                style={{
-                  alignItems: "center",
-                  display: "flex",
-                  justifyContent: "center",
-                  background: "#3D7F7A",
-                  color: "#FFFFFF"
-                }}
-              > Add New Institution </a>
             </div>
+            
 
+              
+              <div className="filter-actions" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div className="sort-dropdown" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <label style={{ fontWeight: "500", minWidth: "fit-content"}}>Sort by:</label>
+                  <select
+                    className="form-control form-control-sm"
+                    onChange={(e) => setSortType(e.target.value)}
+                    value={sortType}
+                    style={{ flexGrow: 1 }}
+                  >
+                    <option value="projects">Number of Projects</option>
+                    <option value="alphabetical">Alphabetical</option>
+                  </select>
+                </div>
+                
+              </div>
+            </div>
             <div
               className="tab-row"
               style={{
@@ -221,7 +150,7 @@ export default function Institutions ({userId, userRole}) {
                 Other Institutions ({otherInstitutions.length})
               </button>
             </div>
-          </div>
+
         </SidebarCard>
 
         {sortedInstitutions(visibleInstitutions, sortType).map((inst) => {
@@ -291,14 +220,6 @@ export default function Institutions ({userId, userRole}) {
 
   return (
     <div id='institutions-tab' className='home-tab'>
-      <div id='institutions-tab' className='home-tab'>
-              <div className="header">
-                <div className="header-row">
-                  <p className="header-title">Institutions</p>
-                  <p className="header-subtitle"></p>
-                </div>
-              </div>
-            </div>
       <div className="row tog-effect"
            style={{flexWrap: 'nowrap'}}>
         <InstitutionSidebar
@@ -315,8 +236,6 @@ export default function Institutions ({userId, userRole}) {
           mapConfigAtom={mapConfigAtom}
         />
       </div>
-      {/* <div id='institution-sidebar'></div> */}
-      {/* <div id='institution-map'></div> */}
     </div>
   );
 }
