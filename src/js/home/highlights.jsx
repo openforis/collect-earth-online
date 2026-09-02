@@ -10,9 +10,24 @@ import "../../css/highlights.css";
 export default function Highlights ({userId, userRole}) {
   const [appState, setAppState] = useAtom(stateAtom);  
   const mapConfigAtom = atom(null);
+
+  function getBlogs () {
+    const blogUrl = "http://collect.earth/feed";
+    const blogLimit = 7;
+    fetch(`/get-blog-feed?url=${blogUrl}&limit=${blogLimit}`)
+      .then((response)=> (response.ok? response.json() : Promise.reject(response)))
+      .then((data) => {
+        if (data.length > 0) {
+          setAppState(prev => ({ ... prev,  blogs: data }));
+          return Promise.resolve();
+        } else {
+          return Promise.reject("No Blogs found");
+        }
+      });
+  }
   
   function getProjects () {
-    fetch("/get-home-projects")
+    fetch("/get-highlight-projects")
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
@@ -60,7 +75,7 @@ export default function Highlights ({userId, userRole}) {
   }
   
   useEffect(()=>{
-    Promise.all([getImagery(), getInstitutions(), getProjects()])
+    Promise.all([getImagery(), getInstitutions(), getProjects(), getBlogs()])
       .catch((response) => {
         setAppState (prev => ({ ... prev, modal: {alert: {alertType: "Collection Alert", alertMessage: "Error retrieving the collection data. See console for details."}}}));
       })
@@ -68,43 +83,22 @@ export default function Highlights ({userId, userRole}) {
   }, []);
 
   function Tag ({tag}) {
-    const {title, id} = tag;
     return (
       <div className="tag"
-           onClick={()=>{console.log('search for tags by tag-id:', id);}}>
-        <span>{title}</span>
+           onClick={()=>{console.log('search for tags by tag-id:', tag);}}>
+        <span>{tag}</span>
       </div>
     );
-
   }
 
   function Blogs () {
-    const blogs = [
-      {date: "March 2026",
-       blogId: 1,
-       tags: [{title:"Land Cover", id: 1}, {title:"Land Cover", id: 1}],
-       title: "Collect Earth Online in 2025: Platform Updates, Partnerships, and Impact",
-       subtitle: "2025 was a year of meaningful progress for Collect Earth Online, shaped by platform updates, partnerships, and impact.",
-       link: "/",
-       graphic: ""},
-      {date: "March 2026",
-       blogId: 2,
-       tags: [{title:"Land Cover", id: 1}, {title:"Land Cover", id: 1}],
-       title: "Collect Earth Online in 2025: Platform Updates, Partnerships, and Impact",
-       subtitle: "2025 was a year of meaningful progress for Collect Earth Online, shaped by platform updates, partnerships, and impact.",
-       link: "/",
-       graphic: ""},
-      {date: "March 2026",
-       blogId: 3,
-       tags: [{title:"Land Cover", id: 1}, {title:"Land Cover", id: 1}],
-       title: "Collect Earth Online in 2025: Platform Updates, Partnerships, and Impact",
-       subtitle: "2025 was a year of meaningful progress for Collect Earth Online, shaped by platform updates, partnerships, and impact.",
-       link: "/",
-       graphic: ""},
-    ];
-    return (
+    function blogDate (date) {
+      const newDate = new Date(date);
+      return newDate.toDateString();
+    }
+    return appState.blogs.length > 0  ? (
       <div id="blogs">
-        {blogs.map((blog)=>{
+        {appState.blogs.map((blog)=>{
           return (
             <div className="blog-frame">
               <div className="blog">
@@ -113,18 +107,18 @@ export default function Highlights ({userId, userRole}) {
                 <div className="blog-body">
                   <div className="blog-date">
                     <SvgIcon icon='calendar' size='1rem'/>
-                    <span>{blog.date}</span>
+                    <span>{blogDate(blog.pubDate)}</span>
                   </div>
                   <div className="blog-title-row">
                     <div className="blog-title"
-                         onClick={()=> {console.log('see blog post: ', blog.blogId);}}>
+                         onClick={()=> {window.location.href = blog.link;}}>
                       <span>{blog.title}</span>
                       <SvgIcon icon="chevronRight" size="1.2rem" color="#1F7067"/>
                     </div>
                   </div>
-                  <div className="blog-subtitle">{blog.subtitle}</div>
+                  <div className="blog-subtitle">{blog.description}</div>
                   <div className="tags">
-                    {blog.tags.map((tag)=> {
+                    {blog.category.map((tag)=> {
                       return (
                         <Tag tag={tag}/>);
                     })}
@@ -132,8 +126,10 @@ export default function Highlights ({userId, userRole}) {
                 </div>
               </div>
             </div>);
+          
         })}
-      </div>);
+      </div>)
+      : (<div></div>);
   };
 
   function Projects () {
@@ -204,7 +200,7 @@ export default function Highlights ({userId, userRole}) {
       title: "Featured Blogs",
       subtitle: "Read the latest stories, updates, and insights from the Collect Earth community.",
       children: <Blogs/>,
-      link: "/"},
+      link: "http://collect.earth/blog"},
     projects: {
       title: "Featured Projects",
       subtitle: "Browse active projects from institutions around the world.",

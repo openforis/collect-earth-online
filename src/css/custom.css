@@ -537,6 +537,7 @@ a:hover {
 /*************/
 /* Home Page */
 /*************/
+
 #home-map-pane {
     width: 75%;
     position: fixed;
@@ -550,6 +551,7 @@ a:hover {
     height: calc(100% - 56px);
     top: 56px;
 }
+
 
 #image-analysis-pane .ol-attribution {
     right: 10vw;
