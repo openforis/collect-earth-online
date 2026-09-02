@@ -40,10 +40,10 @@ const projectWizardDb = {
   'overview.learningMaterial': '',
   'overview.visibility': 'institution',
   // overview.projectOptions
-  'overview.projectOptions.gee': false,
-  'overview.projectOptions.extraPlotColumns': false,
-  'overview.projectOptions.plotConfidence': false,
-  'overview.projectOptions.autoGeo': true,
+  'overview.projectOptions.showGEEScript': false,
+  'overview.projectOptions.showPlotInformation': false,
+  'overview.projectOptions.collectConfidence': false,
+  'overview.projectOptions.autoLaunchGeoDash': true,
   'overview.projectOptions.plotSimilarity': false,
   'overview.useTemplatePlots': false,
   'imagery.imageryList': [],
@@ -149,10 +149,10 @@ export const event_ids = {
              useTemplatePlots: 'overview.useTemplatePlots',
              useTemplateWidgets: 'overview.useTemplateWidgets',
              projectOptions: {
-               gee: 'overview.projectOptions.gee',
-               extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
-               plotConfidence: 'overview.projectOptions.plotConfidence',
-               autoGeo: 'overview.projectOptions.autoGeo',
+               showGEEScript: 'overview.projectOptions.showGEEScript',
+               showPlotInformation: 'overview.projectOptions.showPlotInformation',
+               collectConfidence: 'overview.projectOptions.collectConfidence',
+               autoLaunchGeoDash: 'overview.projectOptions.autoLaunchGeoDash',
                plotSimilarity: 'overview.projectOptions.plotSimilarity',
              }},
   projectDetails: 'projectDetails',
@@ -264,10 +264,10 @@ export const sub_ids = {
              useTemplatePlots: 'overview.useTemplatePlots',
              useTemplateWidgets: 'overview.useTemplateWidgets',
              projectOptions: {
-               gee: 'overview.projectOptions.gee',
-               extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
-               plotConfidence: 'overview.projectOptions.plotConfidence',
-               autoGeo: 'overview.projectOptions.autoGeo',
+               showGEEScript: 'overview.projectOptions.showGEEScript',
+               showPlotInformation: 'overview.projectOptions.showPlotInformation',
+               collectConfidence: 'overview.projectOptions.collectConfidence',
+               autoLaunchGeoDash: 'overview.projectOptions.autoLaunchGeoDash',
                plotSimilarity: 'overview.projectOptions.plotSimilarity',
              }},
   projectDetails: 'projectDetails',
@@ -364,10 +364,10 @@ regSub(sub_ids.overview.projectName, sub_ids.overview.projectName);
 regSub(sub_ids.overview.projectDescription, sub_ids.overview.projectDescription);
 regSub(sub_ids.overview.learningMaterial, sub_ids.overview.learningMaterial);
 regSub(sub_ids.overview.visibility, sub_ids.overview.visibility);
-regSub(sub_ids.overview.projectOptions.gee, sub_ids.overview.projectOptions.gee);
-regSub(sub_ids.overview.projectOptions.extraPlotColumns, sub_ids.overview.projectOptions.extraPlotColumns);
-regSub(sub_ids.overview.projectOptions.plotConfidence, sub_ids.overview.projectOptions.plotConfidence);
-regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.autoGeo);
+regSub(sub_ids.overview.projectOptions.showGEEScript, sub_ids.overview.projectOptions.showGEEScript);
+regSub(sub_ids.overview.projectOptions.showPlotInformation, sub_ids.overview.projectOptions.showPlotInformation);
+regSub(sub_ids.overview.projectOptions.collectConfidence, sub_ids.overview.projectOptions.collectConfidence);
+regSub(sub_ids.overview.projectOptions.autoLaunchGeoDash, sub_ids.overview.projectOptions.autoLaunchGeoDash);
 regSub(sub_ids.overview.useTemplatePlots, sub_ids.overview.useTemplatePlots);
 regSub(sub_ids.overview.useTemplateWidgets, sub_ids.overview.useTemplateWidgets);
 regSub(sub_ids.overview.projectOptions.plotSimilarity, sub_ids.overview.projectOptions.plotSimilarity);
@@ -552,11 +552,18 @@ export function buildProject (draftDb, sub_ids) {
   const projectImageryList = current(draftDb[sub_ids.imagery.imageryList]);
   const aoiFileName = current(draftDb[sub_ids.boundary.aoiFileName]);
   const type = current(draftDb[sub_ids.overview.projectType]);
-  const gee = current(draftDb[sub_ids.overview.projectOptions.gee]);
-  const extraPlotColumns = current(draftDb[sub_ids.overview.projectOptions.extraPlotColumns]);
-  const plotConfidence = current(draftDb[sub_ids.overview.projectOptions.plotConfidence]);
-  const autoGeo = current(draftDb[sub_ids.overview.projectOptions.autoGeo]);
-  const projectOptions = {gee, extraPlotColumns, plotConfidence, autoGeo}
+  const gee = current(draftDb[sub_ids.overview.projectOptions.showGEEScript]);
+  const showPlotInformation = current(draftDb[sub_ids.overview.projectOptions.showPlotInformation]);
+  const collectConfidence = current(draftDb[sub_ids.overview.projectOptions.collectConfidence]);
+  const autoLaunchGeoDash = current(draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash]);
+  const plotSimilarity = current(draftDb[sub_ids.overview.projectOptions.plotSimilarity]);
+  const projectOptions = {
+    showGEEScript: gee,
+    showPlotInformation: showPlotInformation,
+    collectConfidence: collectConfidence,
+    autoLaunchGeoDash: autoLaunchGeoDash,
+    plotSimilarity,
+  };
   const plotSpacing = Number(current(draftDb[sub_ids.plots.plotSpacing]));
   const shufflePlots = current(draftDb[sub_ids.plots.shufflePlots]);
   const surveyRules = current(draftDb[sub_ids.rules.rules]);
@@ -744,7 +751,7 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   plotShape,
   plotSize,
   plotSpacing = -1,
-  projectOptions = {gee : false, extraPlotColumns: false, plotConfidence: false, autoGeo: false},
+  projectOptions = {showGEEScript : false, showPlotInformation: false, collectConfidence: false, autoLaunchGeoDash: false},
   projectType = 'regular',
   referencePlot = -1,
   sampleDistribution,
@@ -765,12 +772,11 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.overview.projectType] = projectType;
   draftDb[sub_ids.overview.learningMaterial] = learningMaterial;
   draftDb[sub_ids.overview.visibility] = visibility;
-  draftDb[sub_ids.projectOptions] = {
-    gee:projectOptions.showGEEScript, 
-    extraPlotColumns: projectOptions.showPlotInformation,
-    plotConfidence: projectOptions.collectConfidence,
-    autoGeo: projectOptions.autoLaunchGeoDash
-  };
+  draftDb[sub_ids.overview.projectOptions.showGEEScript] = projectOptions.showGEEScript;
+  draftDb[sub_ids.overview.projectOptions.showPlotInformation] = projectOptions.showPlotInformation;
+  draftDb[sub_ids.overview.projectOptions.collectConfidence] = projectOptions.collectConfidence;
+  draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash] = projectOptions.autoLaunchGeoDash;
+  draftDb[sub_ids.overview.projectOptions.plotSimilarity] = projectOptions.plotSimilarity ?? false;
   draftDb[sub_ids.boundary.generationMethod] =
   ['shp', 'geojson', 'csv'].includes(plotDistribution) ? 'plotFile' : 'manual';
   draftDb[sub_ids.boundary.aoiFeatures] = aoiFeatures;
@@ -992,20 +998,20 @@ regEvent(event_ids.overview.visibility, ({ draftDb }, visibility) => {
   draftDb[sub_ids.overview.visibility] = visibility;
 });
 
-regEvent(event_ids.overview.projectOptions.gee, ({ draftDb }) => {
-  draftDb[sub_ids.overview.projectOptions.gee] = !draftDb[sub_ids.overview.projectOptions.gee];
+regEvent(event_ids.overview.projectOptions.showGEEScript, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.showGEEScript] = !draftDb[sub_ids.overview.projectOptions.showGEEScript];
 });
 
-regEvent(event_ids.overview.projectOptions.extraPlotColumns, ({ draftDb }) => {
-  draftDb[sub_ids.overview.projectOptions.extraPlotColumns] = !draftDb[sub_ids.overview.projectOptions.extraPlotColumns];
+regEvent(event_ids.overview.projectOptions.showPlotInformation, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.showPlotInformation] = !draftDb[sub_ids.overview.projectOptions.showPlotInformation];
 });
 
-regEvent(event_ids.overview.projectOptions.plotConfidence, ({ draftDb }) => {
-  draftDb[sub_ids.overview.projectOptions.plotConfidence] = !draftDb[sub_ids.overview.projectOptions.plotConfidence];
+regEvent(event_ids.overview.projectOptions.collectConfidence, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.collectConfidence] = !draftDb[sub_ids.overview.projectOptions.collectConfidence];
 });
 
-regEvent(event_ids.overview.projectOptions.autoGeo, ({ draftDb }) => {
-  draftDb[sub_ids.overview.projectOptions.autoGeo] = !draftDb[sub_ids.overview.projectOptions.autoGeo];
+regEvent(event_ids.overview.projectOptions.autoLaunchGeoDash, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash] = !draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash];
 });
 
 regEvent(event_ids.overview.useTemplatePlots, ({ draftDb }, useTemplatePlots)=>{

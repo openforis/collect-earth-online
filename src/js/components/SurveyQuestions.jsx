@@ -496,7 +496,7 @@ export function SurveyQuestions ({
             defaultValue={val}
             onBlur={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') setCurrentValue(q.id, 0, e.currentTarget.value);
+              if (e.key === 'Enter') validateAndSetCurrentValue(q.id, 0, e.currentTarget.value);
             }}
           />
         </div>

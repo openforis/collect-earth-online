@@ -101,7 +101,7 @@ export function CollectionSidebar ({ processModal, userEmail }) {
         <>
           <ExternalTools />
           {currentProject?.type !== "simplified" && <ImageryOptions />}
-          <SurveyQuestions />
+          <SurveyQuestions showHeader={true} />
           {currentProject.allowDrawnSamples && <DrawingTool />}
         </>
       )}

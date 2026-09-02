@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
-
 import { useAtom, useSetAtom } from 'jotai';
 import { stateAtom } from './utils/constants';
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-
 import _ from "lodash";
 
 import {
-  LoadingModal,
   NavigationBar,
-  LearningMaterialModal,
   AcceptTermsModal,
   ImageryLayerOptions,
   BreadCrumbs
@@ -26,21 +22,14 @@ import {
 } from "./imagery/collectionMenuControls";
 import { CollapsibleTitle } from "./components/FormComponents";
 import Modal from "./components/Modal";
-import RadioButton from "./components/RadioButton";
-import Select from "./components/Select";
 import SvgIcon from "./components/svg/SvgIcon";
 import { CollectionSidebar } from "./components/CollectionSidebar";
 
-import { getQueryString, isNumber, asPercentage, isArray } from "./utils/generalUtils";
+import { getQueryString } from "./utils/generalUtils";
 import {
-  everyObject,
-  findObject,
   firstEntry,
   lengthObject,
   mapObject,
-  safeLength,
-  mapObjectArray,
-  filterObject,
 } from "./utils/sequence";
 import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";

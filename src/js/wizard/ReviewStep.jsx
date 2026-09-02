@@ -22,10 +22,10 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const projectDescription = useSubscription([sub_ids.overview.projectDescription]);
     const projectVisibility = useSubscription([sub_ids.overview.visibility]);
     const dataLicenseType = "Public-Open Use"; //useSubscription([sub_ids.overview.license])
-    const showGee = useSubscription([sub_ids.overview.projectOptions.gee]);
-    const extraPlotColumns = useSubscription([sub_ids.overview.projectOptions.extraPlotColumns]);
-    const plotConfidence = useSubscription([sub_ids.overview.projectOptions.plotConfidence]);
-    const autoGeo = useSubscription([sub_ids.overview.projectOptions.autoGeo]);
+    const showGee = useSubscription([sub_ids.overview.projectOptions.showGEEScript]);
+    const extraPlotColumns = useSubscription([sub_ids.overview.projectOptions.showPlotInformation]);
+    const plotConfidence = useSubscription([sub_ids.overview.projectOptions.collectConfidence]);
+    const autoGeo = useSubscription([sub_ids.overview.projectOptions.autoLaunchGeoDash]);
 
     return (
       <div className='wizard-card'>

@@ -148,15 +148,15 @@ export default function OverviewStep () {
   };
   
   const ProjectOptionsCard = () => {    
-    const projectOptionsMap={gee: "Show GEE Script Link on Collection Page",
-                             extraPlotColumns: "Show Extra Plot Columns on Collection Page",
-                             plotConfidence: "Collect Plot Confidence on Collection Page",
-                             autoGeo: "Auto-launch Geo-Dash"};
+    const projectOptionsMap={showGEEScript: "Show GEE Script Link on Collection Page",
+                             showPlotInformation: "Show Extra Plot Columns on Collection Page",
+                             collectConfidence: "Collect Plot Confidence on Collection Page",
+                             autoLaunchGeoDash: "Auto-launch Geo-Dash"};
     
-    const projectOptions = {gee: useSubscription([sub_ids.overview.projectOptions.gee]),
-                            extraPlotColumns: useSubscription([sub_ids.overview.projectOptions.extraPlotColumns]),
-                            plotConfidence: useSubscription([sub_ids.overview.projectOptions.plotConfidence]),
-                            autoGeo: useSubscription([sub_ids.overview.projectOptions.autoGeo])
+    const projectOptions = {showGEEScript: useSubscription([sub_ids.overview.projectOptions.showGEEScript]),
+                            showPlotInformation: useSubscription([sub_ids.overview.projectOptions.showPlotInformation]),
+                            collectConfidence: useSubscription([sub_ids.overview.projectOptions.collectConfidence]),
+                            autoLaunchGeoDash: useSubscription([sub_ids.overview.projectOptions.autoLaunchGeoDash])
                            };
     
     return(
