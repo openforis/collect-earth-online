@@ -27,6 +27,7 @@ const projectWizardDb = {
   projectDraftId: -1,
   useTemplatePlots: false,
   useTemplateWidgets: false,
+  originalProject: {},
   invalidSteps: [],
   availability: '',
   publishedDate: '',
@@ -82,6 +83,13 @@ const projectWizardDb = {
       smes:          [],
       timesToReview: 2}},
   'plots.plotSimilarityDetails': { referencePlotId: "", years: [] },
+  'plots.newPlotDistribution': 'csv',
+  'plots.newPlotSize': '',
+  'plots.newPlotShape': 'circle',
+  'plots.newTotalPlots': 0,
+  'plots.newPlotFeatures': [],
+  'plots.newPlotFileName': '',
+  'plots.newPlotFileBase64': '',
   // samples
   'samples.sampleDistribution': 'random',
   'samples.samplesPerPlot': 1,
@@ -121,6 +129,7 @@ initAppDb(projectWizardDb);
 export const event_ids = {
   institutionId: 'institutionId',
   templateProject: 'templateProject',
+  projectId: 'projectId',
   draftProject: 'draftProject',
   editProject: 'editProject',
   submitForm: 'submitForm',
@@ -174,6 +183,13 @@ export const event_ids = {
     plotSimilarityDetails: 'plots.plotSimilarityDetails',
     plotsSource: 'plots.plotsSource',
     serverPlots: 'plots.serverPlots',
+    newPlotDistribution: 'plots.newPlotDistribution',
+    newPlotSize: 'plots.newPlotSize',
+    newPlotShape: 'plots.newPlotShape',
+    newTotalPlots: 'plots.newTotalPlots',
+    newPlotFeatures: 'plots.newPlotFeatures',
+    newPlotFileName: 'plots.newPlotFileName',
+    newPlotFileBase64: 'plots.newPlotFileBase64',
   },
   samples: {
     sampleDistribution: 'samples.sampleDistribution',
@@ -233,6 +249,7 @@ export const sub_ids = {
   templateProjectId: 'templateProjectId',
   useTemplatePlots: 'useTemplatePlots',
   useTemplateWidgets: 'useTemplateWidgets',
+  originalProject: 'originalProject',
   validStep: 'validStep',
   invalidSteps: 'invalidSteps',
   availability: 'availability',
@@ -277,6 +294,13 @@ export const sub_ids = {
     designSettings: 'plots.designSettings',
     plotSimilarityDetails: 'plots.plotSimilarityDetails',
     plotsSource: 'plots.plotsSource',
+    newPlotDistribution: 'plots.newPlotDistribution',
+    newPlotSize: 'plots.newPlotSize',
+    newPlotShape: 'plots.newPlotShape',
+    newTotalPlots: 'plots.newTotalPlots',
+    newPlotFeatures: 'plots.newPlotFeatures',
+    newPlotFileName: 'plots.newPlotFileName',
+    newPlotFileBase64: 'plots.newPlotFileBase64',
   },
   samples: {
     sampleDistribution: 'samples.sampleDistribution',
@@ -320,6 +344,7 @@ export const sub_ids = {
 
 export const effects = {};
 
+regSub(sub_ids.projectId, sub_ids.projectId);
 regSub(sub_ids.currentStep, sub_ids.currentStep);
 regSub(sub_ids.modal, sub_ids.modal);
 regSub(sub_ids.projectSource, sub_ids.projectSource);
@@ -371,6 +396,13 @@ regSub(sub_ids.plots.plotFileName, sub_ids.plots.plotFileName);
 regSub(sub_ids.plots.plotFileBase64, sub_ids.plots.plotFileBase64);
 regSub(sub_ids.plots.designSettings, sub_ids.plots.designSettings);
 regSub(sub_ids.plots.plotSimilarityDetails, sub_ids.plots.plotSimilarityDetails);
+regSub(sub_ids.plots.newPlotDistribution, sub_ids.plots.newPlotDistribution);
+regSub(sub_ids.plots.newPlotSize, sub_ids.plots.newPlotSize);
+regSub(sub_ids.plots.newPlotShape, sub_ids.plots.newPlotShape);
+regSub(sub_ids.plots.newTotalPlots, sub_ids.plots.newTotalPlots);
+regSub(sub_ids.plots.newPlotFeatures, sub_ids.plots.newPlotFeatures);
+regSub(sub_ids.plots.newPlotFileName, sub_ids.plots.newPlotFileName);
+regSub(sub_ids.plots.newPlotFileBase64, sub_ids.plots.newPlotFileBase64);
 
 // samples
 regSub(sub_ids.samples.sampleDistribution, sub_ids.samples.sampleDistribution);
@@ -409,13 +441,19 @@ regSub(sub_ids.rules.newRule.incompatAnswerId, sub_ids.rules.newRule.incompatAns
 // institution
 regSub(sub_ids.institution.users, sub_ids.institution.users);
 regSub(sub_ids.institution.imagery, sub_ids.institution.imagery);
-
 regSub(sub_ids.invalidSteps, sub_ids.invalidSteps);
+
+
+
+// EVENTS
+
+regEvent(event_ids.projectId, ({ draftDb }, projectId) => {
+  draftDb[sub_ids.projectId] = projectId;
+});
 
 regEvent(event_ids.projectDetails, ({ draftDb }, projectDetails) => {
   draftDb[sub_ids.projectDetails] = projectDetails;
 });
-
 
 regEvent(event_ids.errors, ({ draftDb }, errors) => {
   draftDb[sub_ids.errors] = errors;
@@ -488,11 +526,10 @@ regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
   dispatch([event_ids.currentStep, 'review']);
 });
 
-
 export function buildProject (draftDb, sub_ids) {
-  const projectId = -1; //TODO
+  const projectId = current(draftDb[sub_ids.projectId]);
   const plotDistribution = current(draftDb[sub_ids.plots.plotDistribution]);
-  const originalProject = {plotDistribution: ''}; //TODO
+  const originalProject = current(draftDb[sub_ids.originalProject]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
   const plotFileNeeded = !useTemplatePlots &&
         (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
@@ -526,47 +563,65 @@ export function buildProject (draftDb, sub_ids) {
   const plotFileName = current(draftDb[sub_ids.plots.plotFileName]);
   const plotFileBase64 = current(draftDb[sub_ids.plots.plotFileBase64]);
   const sampleFileBase64 = current(draftDb[sub_ids.samples.sampleFileBase64]);
+  const availability = current(draftDb[sub_ids.availability]);
+  const isPublished = availability === 'published';
+  const newPlotDistribution = current(draftDb[sub_ids.plots.newPlotDistribution]);
+  const newPlotSize = current(draftDb[sub_ids.plots.newPlotSize]);
+  const newPlotShape = current(draftDb[sub_ids.plots.newPlotShape]);
+  const newTotalPlots = current(draftDb[sub_ids.plots.newTotalPlots]);
+  const newPlotFileName = current(draftDb[sub_ids.plots.newPlotFileName]);
+  const newPlotFileBase64 = current(draftDb[sub_ids.plots.newPlotFileBase64]);
 
-  return {name ,
-	  description,
-	  privacyLevel,
-	  imageryId,
-	  aoiFeatures,
-	  plotDistribution,
-	  numPlots,
+  return {
+    name,
+    description,
+    privacyLevel,
+    imageryId,
+    aoiFeatures,
+    plotDistribution,
+    numPlots,
 
-          projectImageryList,
-          aoiFileName,
-          type,
-          projectOptions,
-          plotSpacing,
-          shufflePlots,
-          surveyRules,
-          plotFileName,
-          plotFileBase64,
-          sampleFileBase64,
+    projectImageryList,
+    aoiFileName,
+    type,
+    projectOptions,
+    plotSpacing,
+    shufflePlots,
+    surveyRules,
+    plotFileName,
+    plotFileBase64,
+    sampleFileBase64,
           
-          //TODO: are we using these values for validation?
-	  useTemplatePlots,
-          //originalProject: TODO!!!
+    //TODO: are we using these values for validation?
+    useTemplatePlots,
+    //originalProject: TODO!!!
           
-	  designSettings,
-	  totalPlots,
-          plotSize,
-	  plotFileNeeded,
-          allowDrawnSamples,
-	  samplesPerPlot,
-	  plotShape,
-	  sampleDistribution,
-          sampleFileName,
-          sampleResolution,
-          plotLimit: 5000,
-          sampleLimit: 35000,
-          perPlotLimit: 200,
-	  surveyQuestions: Object.entries(surveyQuestions).reduce((acc, [idx, val])=>{
-            return {...acc, [idx]: val};
-          },
-            {}) };
+    designSettings,
+    totalPlots,
+    plotSize,
+    plotFileNeeded,
+    allowDrawnSamples,
+    samplesPerPlot,
+    plotShape,
+    sampleDistribution,
+    sampleFileName,
+    sampleResolution,
+    plotLimit: 5000,
+    sampleLimit: 35000,
+    perPlotLimit: 200,
+    ...(isPublished && newPlotFileName && {
+      append: true,
+      newPlotDistribution,
+      newPlotFileName,
+      newPlotFileBase64,
+      plotShape: newPlotShape,
+      plotSize: newPlotSize,
+      totalPlots: newTotalPlots,
+    }),
+      surveyQuestions: Object.entries(surveyQuestions).reduce((acc, [idx, val])=>{
+        return {...acc, [idx]: val};
+      },{}),
+  };
 }
 
 regEvent(event_ids.currentStep, ({ draftDb }, currentStep) => {
@@ -740,6 +795,7 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.createdDate] = createdDate;
   draftDb[sub_ids.publishedDate] = publishedDate;
   draftDb[sub_ids.closedDate] = closedDate;
+  draftDb[sub_ids.originalProject] = { plotDistribution };
 
 });
 
@@ -1059,6 +1115,40 @@ regEvent(event_ids.plots.designSettings, ({ draftDb }, designSettings) => {
 
 regEvent(event_ids.plots.plotSimilarityDetails, ({ draftDb }, details) => {
   draftDb[sub_ids.plots.plotSimilarityDetails] = details;
+});
+
+// NEW PLOT GENERATION EVENTS (post-publish append)
+regEvent(event_ids.plots.newPlotDistribution, ({ draftDb }, distribution) => {
+  if (draftDb[sub_ids.plots.newPlotDistribution] === distribution) return;
+  draftDb[sub_ids.plots.newPlotDistribution] = distribution;
+  draftDb[sub_ids.plots.newPlotFeatures] = [];
+  draftDb[sub_ids.plots.newPlotFileName] = '';
+  draftDb[sub_ids.plots.newPlotFileBase64] = '';
+  draftDb[sub_ids.plots.newTotalPlots] = 0;
+});
+
+regEvent(event_ids.plots.newPlotSize, ({ draftDb }, size) => {
+  draftDb[sub_ids.plots.newPlotSize] = size;
+});
+
+regEvent(event_ids.plots.newPlotShape, ({ draftDb }, shape) => {
+  draftDb[sub_ids.plots.newPlotShape] = shape;
+});
+
+regEvent(event_ids.plots.newTotalPlots, ({ draftDb }, total) => {
+  draftDb[sub_ids.plots.newTotalPlots] = total;
+});
+
+regEvent(event_ids.plots.newPlotFeatures, ({ draftDb }, features) => {
+  draftDb[sub_ids.plots.newPlotFeatures] = features;
+});
+
+regEvent(event_ids.plots.newPlotFileName, ({ draftDb }, fileName) => {
+  draftDb[sub_ids.plots.newPlotFileName] = fileName;
+});
+
+regEvent(event_ids.plots.newPlotFileBase64, ({ draftDb }, base64) => {
+  draftDb[sub_ids.plots.newPlotFileBase64] = base64;
 });
 
 // SAMPLE GENERATION EVENTS

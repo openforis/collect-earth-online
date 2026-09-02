@@ -2,7 +2,7 @@ import { useSubscription, dispatch } from '@flexsurfer/reflex';
 
 import SvgIcon from '../components/svg/SvgIcon';
 
-import { event_ids,  sub_ids } from "../state/projectWizard";
+import { event_ids, sub_ids } from "../state/projectWizard";
 
 
 const projectSteps = [
@@ -16,15 +16,22 @@ const projectSteps = [
   {id: 'review', label: 'Review Project'}
 ];
 
-export default function NavButtons () {
+const continueLabel = (currentStep, isEditing) =>
+  currentStep === 'review'
+    ? (isEditing ? 'Update' : 'Create')
+    : (isEditing ? 'Continue' : 'Continue');
+
+export const NavButtons = () => {
   const currentStep = useSubscription([sub_ids.currentStep]);
   const projectType = useSubscription([sub_ids.overview.projectType]);
-  
-  const activeSteps = projectType === 'simplified' 
+  const projectId = useSubscription([sub_ids.projectId]) || -1;
+  const isEditing = projectId > 0;
+
+  const activeSteps = projectType === 'simplified'
     ? projectSteps.filter(s => !['plots', 'samples', 'rules'].includes(s.id))
     : projectSteps;
 
-  const stepIdx = activeSteps.map((e)=>e.id).indexOf(currentStep);  
+  const stepIdx = activeSteps.map((e)=>e.id).indexOf(currentStep);
   function continueHandler () {dispatch([event_ids.continueHandler, currentStep]);}
   function saveDraftHandler () {dispatch([event_ids.saveDraft]);};
 
@@ -43,27 +50,28 @@ export default function NavButtons () {
                    color: "#fff"}}
                  onClick={()=>navBackHandler()}
               >Back</button>)}
-            <button
-              className={'btn btn-sm'}
-              style={{backgroundColor: "#2d6f74",
-                color: "#fff"}}
-              onClick={()=>saveDraftHandler()}
-            >Save Draft</button>
+            {!isEditing &&
+              (<button
+                 className={'btn btn-sm'}
+                 style={{backgroundColor: "#2d6f74",
+                   color: "#fff"}}
+                 onClick={()=>saveDraftHandler()}
+              >Save Draft</button>)}
             <button
               className={'btn btn-sm'}
               onClick={()=>continueHandler()}
               style={{backgroundColor: "#2d6f74",
                 color: "#fff"}}
-            >Save & {currentStep === 'review' ? 'Create' : 'Continue'}</button>
+            >{continueLabel(currentStep, isEditing)}</button>
           </div>);
 };
 
-export function ProjectWizardNavigator () {
+export const ProjectWizardNavigator = () => {
   const currentStep = useSubscription([sub_ids.currentStep]);
   const invalidSteps = useSubscription([sub_ids.invalidSteps]);
   const projectType = useSubscription([sub_ids.overview.projectType]);
 
-  const activeSteps = projectType === 'simplified' 
+  const activeSteps = projectType === 'simplified'
     ? projectSteps.filter(s => !['plots', 'samples', 'rules'].includes(s.id))
     : projectSteps;
 
@@ -74,7 +82,7 @@ export function ProjectWizardNavigator () {
       return "20px";
     } else {
       return "10px";
-    }   
+    }
   }
 
   return (
@@ -91,7 +99,7 @@ export function ProjectWizardNavigator () {
               onClick={() => dispatch([event_ids.currentStep, id])}
             >
               {((activeSteps.map(({id})=>id).indexOf(currentStep) > index)
-                && !invalidSteps.includes(id)) ?                
+                && !invalidSteps.includes(id)) ?
                 (<SvgIcon icon='checkFilled' size='1.2rem' style={{marginTop: '.2rem'}}/>) :
                 (<span className={currentStep === id && "selected"}
                 >{index + 1}</span>)}

@@ -32,7 +32,23 @@ export function validatePlots({
   smes,
   timesToReview,
   numPlots,
+  append,
+  newPlotDistribution,
+  newPlotFileName
 }) {
+  if (append) {
+    if (!newPlotFileName) return [];
+    return [
+      (newPlotDistribution === "csv" && !(newPlotFileName || "").includes(".csv")) &&
+        "A plot CSV (.csv) file is required.",
+      (newPlotDistribution === "shp" && !(newPlotFileName || "").includes(".zip")) &&
+        "A plot SHP (.zip) file is required.",
+      (newPlotDistribution === "csv" && (!plotSize || plotSize === 0)) &&
+        "A plot size is required.",
+      (totalPlots > plotLimit) &&
+        "The plot size limit has been exceeded. Check the Plot Design section for detailed info.",
+    ].filter((e) => e);
+  }
   return (
     [(["random", "gridded"].includes(plotDistribution) && !aoiFeatures.length) &&
      "Please select a valid boundary.",

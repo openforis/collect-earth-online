@@ -633,7 +633,7 @@
                                  allow-drawn-samples?
                                  (call-sql "get_plot_centers_by_project" project-id))))))
 
-(defn update-project! [{:keys [params]}] 
+(defn update-project! [{:keys [params]}]
   (let [project-id           (tc/val->int (:projectId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
@@ -646,7 +646,10 @@
                                                          (tc/val->double (:lonMax params))
                                                          (tc/val->double (:latMax params)))])
         aoi-file-name        (:aoiFileName params)
-        plot-distribution    (:plotDistribution params)
+        append-plots?        (:append params)
+        plot-distribution    (if append-plots?
+                               (:newPlotDistribution params)
+                               (:plotDistribution params))
         num-plots            (tc/val->int (:numPlots params))
         plot-spacing         (tc/val->float (:plotSpacing params))
         plot-shape           (:plotShape params)
@@ -661,8 +664,12 @@
         survey-rules         (tc/clj->jsonb (:surveyRules params))
         project-options      (tc/clj->jsonb (:projectOptions params default-options))
         design-settings      (:designSettings params default-settings)
-        plot-file-name       (:plotFileName params)
-        plot-file-base64     (:plotFileBase64 params)
+        plot-file-name       (if append-plots?
+                               (:newPlotFileName params)
+                               (:plotFileName params))
+        plot-file-base64     (if append-plots?
+                               (:newPlotFileBase64 params)
+                               (:plotFileBase64 params))
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
         type                 (:type params)
@@ -678,7 +685,7 @@
                                       :componentType "button",
                                       :parentAnswerIds [],
                                       :parentQuestionId -1
-                                      :answers {"0" {:hide false, :color "#00ff4c", :answer "!"}}}))]    
+                                      :answers {"0" {:hide false, :color "#00ff4c", :answer "!"}}}))]
     (if original-project
       (try
         (call-sql "update_project"
@@ -711,7 +718,6 @@
         (when-let [imagery-list (:projectImageryList params)]
           (call-sql "delete_project_imagery" project-id)
           (insert-project-imagery! project-id imagery-list))
-        
         (cond
           (#{"closed" "archived"} (:availability original-project))
           nil
@@ -726,7 +732,7 @@
                     (not= plot-spacing   (:plot_spacing original-project))
                     (not= shuffle-plots? (:shuffle_plots original-project)))))
           (doall
-           (call-sql "delete_plots_by_project" project-id)
+           (when-not append-plots? (call-sql "delete_plots_by_project" project-id))
            (create-project-plots! project-id
                                   plot-distribution
                                   num-plots
@@ -768,7 +774,7 @@
                                            sample-file-base64
                                            allow-drawn-samples?
                                            (call-sql "get_plot_centers_by_project" project-id)))
-                #_(reset-collected-samples! project-id)))
+                (reset-collected-samples! project-id)))
             ;; Redo assignments if they changed
             (when (not= design-settings (tc/jsonb->clj (:design_settings original-project)))
               (call-sql "delete_plot_assignments_by_project" project-id)
@@ -1179,11 +1185,11 @@
         distribution     (:plotFileType params)
         
         plots         (external-file/load-external-data! project-id
-                                                            distribution
-                                                            plot-file-name
-                                                            plot-file-base64
-                                                            "plot"
-                                                            [:visible_id])
+                                                         distribution
+                                                         plot-file-name
+                                                         plot-file-base64
+                                                         "plot"
+                                                         [:visible_id])
         sanitized-plots  (mapv #(sanitize-plot-geom distribution %) plots)
         file-bounds      (update-bounds-by-file distribution project-id plots)
         file-aoi         (fit-aoi-to-file distribution project-id plots)
