@@ -12,7 +12,6 @@ import {
   mapObjectArray,
   intersection,
 } from '../utils/sequence';
-import { LearningMaterialModal } from "./PageComponents";
 
 import '../../css/sidebar.css';
 import '../../css/survey.css';
@@ -41,18 +40,14 @@ export function SurveyQuestions ({
   const surveyData = useMemo(() => {
     return preview ? surveyQuestions : currentProject?.surveyQuestions;
   }, [preview, surveyQuestions, currentProject?.surveyQuestions]);
-
   const userSamples = preview
     ? previewUserSamples
     : globalUserSamples;
-
   const selectedSampleId = preview
     ? previewSelectedId
     : globalSelectedId;
-
   const [openTopId, setOpenTopId] = useState(1);
   const [openByParent, setOpenByParent] = useState({});
-  const [showLearningMaterial, setShowLearningMaterial] = useState(false);
 
   const entries = (obj = {}) => Object.entries(obj || {});
   const visibleAnswers = (q) => entries(q.answers).filter(([, a]) => !a?.hide);
@@ -61,7 +56,7 @@ export function SurveyQuestions ({
   }, [surveyData, userSamples]);
 
   const getSelectedSampleIds = (questionId) => {
-    // If preview, we just return the ID of our 1 fake sample
+    // If preview, return the ID of our 1 fake sample
     if (preview) return [selectedSampleId];
     
     const answered = surveyData?.[questionId]?.answered || [];
@@ -509,10 +504,6 @@ export function SurveyQuestions ({
     return render ? render(q) : null;
   };
 
-  const toggleLearningMaterial = () => {
-    setShowLearningMaterial((prev) => !prev);
-  };
-
   // MEMOIZATION
   const parents = useMemo(() => {
     return Object.entries(surveyData)
@@ -835,12 +826,6 @@ export function SurveyQuestions ({
             }
           />
         </div>
-      )}
-      {showLearningMaterial && (
-        <LearningMaterialModal
-          learningMaterial={currentProject?.learningMaterial}
-          onClose={toggleLearningMaterial}
-        />
       )}
     </SidebarCard>
   );

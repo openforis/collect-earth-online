@@ -578,11 +578,13 @@ export function buildProject (draftDb, sub_ids) {
   const newTotalPlots = current(draftDb[sub_ids.plots.newTotalPlots]);
   const newPlotFileName = current(draftDb[sub_ids.plots.newPlotFileName]);
   const newPlotFileBase64 = current(draftDb[sub_ids.plots.newPlotFileBase64]);
+  const learningMaterial = current(draftDb[sub_ids.overview.learningMaterial]);
 
   return {
     name,
     description,
     privacyLevel,
+    learningMaterial,
     imageryId,
     aoiFeatures,
     plotDistribution,
