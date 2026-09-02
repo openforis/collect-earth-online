@@ -45,7 +45,7 @@ export default function OverviewStep () {
               <>
                 Simplified Projects have fewer steps and less complexity.
                 They are most useful for collecting training data for machine learning and model output feedback.
-                <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/simplifiedproject.html" target="_blank" rel="noreferrer"> Learn more</a>
+                <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/simplifiedproject.html" target="_blank"> Learn more</a>
               </>
             } />
         </p>
@@ -92,11 +92,11 @@ export default function OverviewStep () {
             <label className="text-label"
             >Learning Material (Optional)
               <InfoTooltip
-                title={"Project Type"}
+                title={"Learning Material"}
                 text={
                   <>
                     Provide collectors with more detailed instructions. Material can include links to websites or files.
-                    <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/projectoverview.html#learning-material" target="_blank" rel="noreferrer"> Learn more</a>
+                    <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/projectoverview.html#learning-material" target="_blank"> Learn more</a>
                   </>
                 } />
             </label>
@@ -122,11 +122,11 @@ export default function OverviewStep () {
       <div className="wizard-card" style={{ marginBottom: "15px"}}>
         <p className="card-title">Visibility<span style={{color:"red"}}>*</span>
           <InfoTooltip
-            title={"Project Type"}
+            title={"Visibility"}
             text={
               <>
                 Who can view your project, contribute to data collection, and whether admins from other institutions can use it as a template.
-                <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/projectoverview.html#visibility" rel="noreferrer"> Learn more</a>
+                <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/projectoverview.html#visibility" target="_blank"> Learn more</a>
               </>
             } />
         </p>

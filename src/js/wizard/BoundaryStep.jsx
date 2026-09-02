@@ -158,7 +158,7 @@ export const BoundaryStep = ({ imageryList = [] }) => {
               <div className="d-flex flex-column">
                 <p className="font-italic" style={{ fontSize: '0.85rem', color: '#666' }}>
                   - Upload a polygon shapefile of the boundary of your entire project area. Requires a zip of SHP, SHX, DBF, and PRJ files. Define plots in the next step.
-                  <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/imageryselection.html#imagery-selection" target="_blank"> Learn more</a>
+                  <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/plotsample.html" target="_blank"> Learn more</a>
                 </p>
 
                 <label className="text-label-sm" style={{ marginBottom: '8px', fontWeight: 'bold' }}>
