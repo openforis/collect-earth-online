@@ -893,18 +893,17 @@ export const ImageryOptions = () => {
 
          return byType[imagery.sourceConfig.type] || null;
        })}
-      <div className="sidebar-mode">
-        <label className="sidebar-switch">
+      <div className="sidebar-mode" style={{ marginTop: '5px' }}>
+        <label className="sidebar-switch" style={{ marginBottom: '0px' }}>
           <input
             type="checkbox"
             checked={enableGrid}
             onChange={toggleGrid}
           />
           <span className="sidebar-slider round"></span>
-            </label>
-            <span className="mode-label">Enable map grid</span>
-          </div>
-
+        </label>
+        <span className="mode-label">Enable map grid</span>
+      </div>
     </SidebarCard>
   );
 };
