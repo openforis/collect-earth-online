@@ -363,7 +363,7 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
 
   const renderPlotShapeInput = () => (
     <div className="form-group mb-3">
-      <label className="text-label-sm">Plot Shape <span style={{ color: 'red' }}>*</span></label>
+      <label>Plot Shape <span style={{ color: 'red' }}>*</span></label>
       <div style={{ display: 'flex', gap: '20px', marginTop: '6px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => dispatch([event_ids.plots.plotShape, "circle"])}>
           <SvgIcon icon={plotShape === "circle" ? "radioChecked" : "radio"} size="1.2rem" />
@@ -393,7 +393,7 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
   const renderRandomLayout = () => (
     <>
       <div className="form-group mb-3">
-        <label className="text-label-sm">Number of Plots this project will contain <span style={{ color: 'red' }}>*</span></label>
+        <label>Number of Plots <span style={{ color: 'red' }}>*</span></label>
         <input
           type="text"
           className="text-input"
@@ -508,14 +508,17 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
 
       {activeAreaGeometry && (
         <div className="mb-3 text-secondary small" style={{ fontWeight: '500' }}>
-          Plot Properties: <span style={{ color: '#333' }}>Strata 1: Area {formatNumberWithCommas(Math.round(calculateGeoJsonArea(activeAreaGeometry)))} ha</span>
+          Plot Properties:
+          <span>
+            Strata 1: Area {formatNumberWithCommas(Math.round(calculateGeoJsonArea(activeAreaGeometry)))} ha
+          </span>
         </div>
       )}
 
       <div className="form-group mb-4">
         <Select
           id="spatial-distribution"
-          label="Spatial Distribution *"
+          label="Spatial Distribution"
           options={distributionOptions}
           value={plotDistribution}
           onChange={(e) => dispatch([mode.events.distribution, e.target.value])}
