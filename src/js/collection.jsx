@@ -10,16 +10,6 @@ import {
   ImageryLayerOptions,
   BreadCrumbs
 } from "./components/PageComponents";
-import {
-  PlanetMenu,
-  PlanetDailyMenu,
-  PlanetTFOMenu,
-  SecureWatchMenu,
-  SentinelMenu,
-  GEEImageMenu,
-  GEEImageCollectionMenu,
-} from "./imagery/collectionMenuControls";
-import { CollapsibleTitle } from "./components/FormComponents";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 import { CollectionSidebar } from "./components/CollectionSidebar";
@@ -182,8 +172,8 @@ export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
   }, [state.getNewPlot]);
 
   // UPDATE MAP WHEN STATE CHANGES — samples redraw (question/answers/visibility)
-  useEffect(() => {    
-    if (!state.currentPlot?.id) return;
+  useEffect(() => {
+    if (!state.currentPlot?.id || state.answerMode === "draw") return;
 
     const selectedQuestion = state.currentProject?.surveyQuestions?.[state.selectedQuestionId];
     if (selectedQuestion?.visible) {
@@ -199,6 +189,7 @@ export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
     state.currentProject?.surveyQuestions?.[state.selectedQuestionId]?.visible,
     state.showSamples,
     state.showBoundary,
+    state.answerMode,
   ]);
 
   // UPDATE QUESTION STATUS
@@ -742,7 +733,7 @@ export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
     </div>
   );
 };
-    
+
 function ImageAnalysisPane({}) {
   const [state, setState] = useAtom(stateAtom);
   
@@ -815,107 +806,6 @@ function ImageAnalysisPane({}) {
       </div>
     </div>
   );
-}
-
-
-class ImageryOptions extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      showImageryOptions: true,
-      enableGrid: false,
-    };
-  }
-
-  enableGrid() {
-    this.setState({ enableGrid: !this.state.enableGrid });
-    return mercator.addGridLayer(this.props.mapConfig, !this.state.enableGrid);
-  }
-
-  render() {
-    const { props } = this;
-    const commonProps = {
-      mapConfig: props.mapConfig,
-      setImageryAttribution: props.setImageryAttribution,
-      setImageryAttributes: props.setImageryAttributes,
-      currentPlot: props.currentPlot,
-      currentProjectBoundary: props.currentProjectBoundary,
-      extent:
-      props.currentPlot.id && props.currentProject.id
-        ? props.currentPlot.plotGeom.includes("Point")
-        ? mercator
-        .getPlotPolygon(
-          props.currentPlot.plotGeom,
-          props.currentProject.plotSize,
-          props.currentProject.plotShape
-        )
-        .getExtent()
-        : mercator.parseGeoJson(props.currentPlot.plotGeom, true).getExtent()
-      : [],
-    };
-
-    return (
-      <div className="justify-content-center text-center">
-        <CollapsibleTitle
-          showGroup={this.state.showImageryOptions}
-          title="Imagery Options"
-          toggleShow={() => this.setState({ showImageryOptions: !this.state.showImageryOptions })}
-        />
-        <div className="mx-1">
-          {props.loadingImages && <h3>Loading imagery data...</h3>}
-          {this.state.showImageryOptions && !props.loadingImages && props.currentImageryId && (
-            <select
-              className="form-control form-control-sm mb-2"
-              id="base-map-source"
-              name="base-map-source"
-              onChange={(e) => props.setBaseMapSource(parseInt(e.target.value))}
-              size="1"
-              value={props.currentImageryId}
-            >
-              {props.imageryList.map((imagery) => (
-                <option key={imagery.id} value={imagery.id}>
-                  {imagery.title}
-                </option>
-              ))}
-            </select>
-          )}
-          {props.currentImageryId &&
-           props.imageryList.map((imagery) => {
-             const individualProps = {
-               ...commonProps,
-               key: imagery.id,
-               thisImageryId: imagery.id,
-               sourceConfig: imagery.sourceConfig,
-               visible: props.currentImageryId === imagery.id && this.state.showImageryOptions,
-             };
-             return (
-               imagery.sourceConfig &&
-                 {
-                   Planet: <PlanetMenu {...individualProps} />,
-                   PlanetDaily: <PlanetDailyMenu {...individualProps} />,
-                   PlanetTFO: <PlanetTFOMenu {...individualProps} />,
-                   SecureWatch: <SecureWatchMenu {...individualProps} />,
-                   Sentinel1: <SentinelMenu {...individualProps} />,
-                   Sentinel2: <SentinelMenu {...individualProps} />,
-                   GEEImage: <GEEImageMenu {...individualProps} />,
-                   GEEImageCollection: <GEEImageCollectionMenu {...individualProps} />,
-                 }[imagery.sourceConfig.type]
-             );
-           })}
-          <input
-            checked={this.state.enableGrid}
-            id="grid-check"
-            onChange={() => this.enableGrid()}
-            type="checkbox"
-            style={{"margin-right": "10px"}}
-          />
-          <label className="form-check-label" htmlFor="grid-check">
-            Enable Map Grid
-          </label>
-        </div>
-      </div>
-    );
-  }
 }
 
 // remains hidden, shows a styled menu when the quit button is clicked

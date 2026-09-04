@@ -1026,33 +1026,26 @@ export const DrawingTool = () => {
     setAnswerMode("draw", type);
   };
 
-  const clearAll = (tool = drawTool) => {
-    if (answerMode === "draw" && window.confirm("Do you want to clear all samples from the draw area?")) {
-      mercator.disableDrawing(mapConfig);
-      mercator.removeLayerById(mapConfig, "currentSamples");
-      mercator.removeLayerById(mapConfig, "drawLayer");
+  const discardDrawnSamples = () => {
+    if (!window.confirm("Discard all samples drawn in this session? Samples from the database will be kept.")) return;
 
-      // re-add an empty draw layer and re-enable drawing
-      mercator.addVectorLayer(
-        mapConfig,
-        "drawLayer",
-        null,
-        mercator.ceoMapStyles("draw", "orange"),
-        9999
-      );
-      mercator.enableDrawing(mapConfig, "drawLayer", tool);
-    } else if (window.confirm("Do you want to clear all answers?")) {
-      if (typeof resetPlotValues === "function") {
-        resetPlotValues();
-      } else {
-        // fallback: clear in-app answers if no handler provided
-        setAppState((s) => ({
-          ...s,
-          userSamples: {},
-          userImages: {},
-        }));
-      }
-    }
+    mercator.disableDrawing(mapConfig);
+    mercator.removeLayerById(mapConfig, "drawLayer");
+
+    setAppState((prev) => {
+      const dbSamples = (prev.currentPlot?.samples || []).filter((s) => s.visibleId != null);
+      const keep = new Set(dbSamples.map((s) => s.id));
+      const pick = (obj) =>
+        Object.fromEntries(Object.entries(obj || {}).filter(([id]) => keep.has(Number(id))));
+
+      return {
+        ...prev,
+        answerMode: "answer",
+        currentPlot: { ...prev.currentPlot, samples: dbSamples },
+        userSamples: pick(prev.userSamples),
+        userImages: pick(prev.userImages),
+      };
+    });
   };
 
   const RenderDrawTool = ({ icon, title, type }) => (
@@ -1132,7 +1125,7 @@ export const DrawingTool = () => {
           </button>
           <button
             className="btn btn-outline-darkgreen"
-            onClick={() => clearAll()}
+            onClick={discardDrawnSamples}
             title="Exit draw mode and return to answering"
           >
             Discard samples
