@@ -705,7 +705,7 @@ CREATE OR REPLACE FUNCTION get_plot_shapes(_project_id integer)
                                     END AS plot_boundary
                              FROM plot_geoms)
 
-      SELECT project_rid, plot_visible_id, ST_Transform(plot_geom, 4326) AS plot_geom
+      SELECT project_rid, plot_visible_id, ST_Transform(plot_boundary, 4326) AS plot_geom
       FROM plot_geoms
       INNER JOIN plot_boundaries
       USING (plot_uid)
@@ -742,6 +742,132 @@ CREATE OR REPLACE FUNCTION get_sample_shapes(_project_id integer)
        INNER JOIN plots pl
        ON pl.plot_uid = s.plot_rid
        WHERE pl.project_rid = _project_id)
+
+$$ LANGUAGE SQL;
+
+-- Get sample shapes for specific geom types
+CREATE OR REPLACE FUNCTION get_sample_shapes_points(_project_id integer)
+ RETURNS TABLE (
+   project_id         integer,
+   plot_id            integer,
+   sample_id          integer,
+   sample_internal_id integer,
+   sample_geom        geometry(Point, 4326)
+ ) AS $$
+
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'POINT')
+   UNION
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM ext_samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'POINT')
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_sample_shapes_lines(_project_id integer)
+ RETURNS TABLE (
+   project_id         integer,
+   plot_id            integer,
+   sample_id          integer,
+   sample_internal_id integer,
+   sample_geom        geometry(LineString, 4326)
+ ) AS $$
+
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'LINESTRING')
+   UNION
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM ext_samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'LINESTRING')
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_sample_shapes_polygons(_project_id integer)
+ RETURNS TABLE (
+   project_id         integer,
+   plot_id            integer,
+   sample_id          integer,
+   sample_internal_id integer,
+   sample_geom        geometry(Polygon, 4326)
+ ) AS $$
+
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'POLYGON')
+   UNION
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM ext_samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'POLYGON')
+
+$$ LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION get_sample_shapes_multipolygons(_project_id integer)
+ RETURNS TABLE (
+   project_id         integer,
+   plot_id            integer,
+   sample_id          integer,
+   sample_internal_id integer,
+   sample_geom        geometry(MultiPolygon, 4326)
+ ) AS $$
+
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'MULTIPOLYGON')
+   UNION
+   (SELECT project_rid,
+           pl.visible_id,
+           s.visible_id,
+           sample_uid,
+           sample_geom
+    FROM ext_samples s
+    INNER JOIN plots pl ON pl.plot_uid = s.plot_rid
+    WHERE pl.project_rid = _project_id
+      AND geometrytype(sample_geom) = 'MULTIPOLYGON')
 
 $$ LANGUAGE SQL;
 
