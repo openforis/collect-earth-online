@@ -15,6 +15,26 @@ import {
 export const previewSelectedSampleIdAtom = atom(1);
 export const previewUserSamplesAtom = atom({});
 
+const newRuleDefaults = {
+  'rules.newRule.label': null,
+  'rules.newRule.regex': "",
+  'rules.newRule.questionId': -1,
+  'rules.newRule.min': 0,
+  'rules.newRule.max': 0,
+  'rules.newRule.validSum': 0,
+  'rules.newRule.questionIds': [],
+  'rules.newRule.questionIds1': [],
+  'rules.newRule.questionIds2': [],
+  'rules.newRule.questionId1': -1,
+  'rules.newRule.questionId2': -1,
+  'rules.newRule.incompatQuestionId': -1,
+  'rules.newRule.incompatAnswerId': -1,
+  'rules.newRule.tempQuestionId': -1,
+  'rules.newRule.tempAnswerId': -1,
+  'rules.newRule.answerId1': -1,
+  'rules.newRule.answerId2': -1,
+  'rules.newRule.answers': [],
+};
 
 const projectWizardDb = {
   institutionId: -1,
@@ -103,24 +123,7 @@ const projectWizardDb = {
   'rules.search': null,
   'rules.filter': null,
   'rules.selectedRuleType': null,
-  'rules.newRule.label': null,
-  'rules.newRule.regex': "",
-  'rules.newRule.questionId': -1,
-  'rules.newRule.min': 0,
-  'rules.newRule.max': 0,
-  'rules.newRule.validSum': 0,
-  'rules.newRule.questionIds': [],
-  'rules.newRule.questionIds1': [],
-  'rules.newRule.questionIds2': [],
-  'rules.newRule.questionId1': -1,
-  'rules.newRule.questionId2': -1,
-  'rules.newRule.incompatQuestionId': -1,
-  'rules.newRule.incompatAnswerId': -1,
-  'rules.newRule.tempQuestionId': -1,
-  'rules.newRule.tempAnswerId': -1,
-  'rules.newRule.answerId1': -1,
-  'rules.newRule.answerId2': -1,
-  'rules.newRule.answers': [],
+  ...newRuleDefaults,
   'institution.users': []
 };
 
@@ -212,6 +215,7 @@ export const event_ids = {
     filter: 'rules.filter',
     selectedRuleType: 'rules.selectedRuleType',
     newRule: {
+      reset: 'rules.newRule.reset',
       label: 'rules.newRule.label',
       answers: 'rules.newRule.answers',
       addAnswer: 'rules.newRule.addAnswer',
@@ -1220,13 +1224,25 @@ regEvent(event_ids.questions.moveQuestion, ({ draftDb }, id, targetQ, nextId, ne
 
 // RULES EVENTS
 
+
+function resetNewRule (draftDb) {
+  Object.entries(_.cloneDeep(newRuleDefaults)).forEach(([key, value]) => {
+    draftDb[key] = value;
+  });
+}
+
+regEvent(event_ids.rules.newRule.reset, ({ draftDb }) => {
+  resetNewRule(draftDb);
+});
+
 regEvent(event_ids.rules.selectedRuleType, ({ draftDb }, selectedRuleType) => {
   draftDb[sub_ids.rules.selectedRuleType] = selectedRuleType;
+  resetNewRule(draftDb);
 });
 
 regEvent(event_ids.rules.rules, ({ draftDb }, newRule) => {
-  
   draftDb[sub_ids.rules.rules].push({...newRule, label: draftDb[sub_ids.rules.newRule.label]});
+  resetNewRule(draftDb);
 });
 
 regEvent(event_ids.rules.removeRule, ({ draftDb }, rid ) => {

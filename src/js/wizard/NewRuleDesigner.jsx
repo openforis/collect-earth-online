@@ -397,7 +397,7 @@ function MatchingSumsForm () {
   );
 }
 
-function  IncompatibleAnswersForm () {//WORKSN'T
+function  IncompatibleAnswersForm () {
   function  checkPair (q1, a1, q2, a2) {return (q1 === q2 && a1 === a2);};
   function checkEquivalent (q1, a1, q2, a2, q3, a3, q4, a4) 
   {return(

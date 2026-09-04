@@ -415,8 +415,7 @@ export function SurveyQuestions ({
               <button
                 key={id}
                 style={{
-                  borderColor: a.color || '#2d6f74',
-                  color: a.color || '#2d6f74',
+                  borderColor: isActive ? a.color : '#3d7f7a',
                   borderWidth: '2px',
                   boxShadow: isActive ? `0 0 0 2px ${a.color}` : 'none',
                   fontWeight: isActive ? 'bold' : 'normal'
