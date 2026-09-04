@@ -364,12 +364,17 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
   const renderPlotShapeInput = () => (
     <div className="form-group mb-3">
       <label>Plot Shape <span style={{ color: 'red' }}>*</span></label>
-      <div style={{ display: 'flex', gap: '20px', marginTop: '6px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => dispatch([event_ids.plots.plotShape, "circle"])}>
+      <div
+        style={{ display: 'flex', gap: '20px', marginTop: '6px' }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+          onClick={() => dispatch([mode.events.plotShape, "circle"])}>
           <SvgIcon icon={plotShape === "circle" ? "radioChecked" : "radio"} size="1.2rem" />
           <span className="text-label-sm" style={{ margin: 0 }}>Circle</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }} onClick={() => dispatch([event_ids.plots.plotShape, "square"])}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+          onClick={() => dispatch([mode.events.plotShape, "square"])}>
           <SvgIcon icon={plotShape === "square" ? "radioChecked" : "radio"} size="1.2rem" />
           <span className="text-label-sm" style={{ margin: 0 }}>Square</span>
         </div>
@@ -379,13 +384,13 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
 
   const renderPlotSizeInput = () => (
     <div className="form-group mb-3">
-      <label className="text-label-sm">{labelPlotDimensionUnits} <span style={{ color: 'red' }}>*</span></label>
+      <label>{labelPlotDimensionUnits} <span style={{ color: 'red' }}>*</span></label>
       <input
         type="text"
         className="text-input"
         placeholder="Enter Number"
         value={plotSize}
-        onChange={(e) => dispatch([event_ids.plots.plotSize, sanitizeDecimal(e.target.value)])}
+        onChange={(e) => dispatch([mode.events.plotSize, sanitizeDecimal(e.target.value)])}
       />
     </div>
   );
