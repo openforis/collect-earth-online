@@ -88,7 +88,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         <b >Imagery Used:</b>
         {selectedImagery.map((i)=>{
           return (
-            <p > {imageryList[0] ? imageryList.filter(({id})=> id === i)[0].title : null} </p>
+            <p> {imageryList[0] ? imageryList.filter(({id})=> id === i)[0]?.title : null} </p>
           );
         })}
       </div>

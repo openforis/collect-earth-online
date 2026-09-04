@@ -517,6 +517,7 @@ export const SidebarTabs = ({
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showUpdateInstitution, setShowUpdateInstitution] = useState(false);
+  const [showDeleteInstitution, setShowDeleteInstitution] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -526,6 +527,28 @@ export const SidebarTabs = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const archiveInstitution = () => {
+    fetch(`/archive-institution?institutionId=${institutionId}`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => Promise.all([response.ok, response.json()]))
+      .then(([ok, data]) => {
+        if (ok) {
+          window.confirm("Institution successfully deleted");
+          window.location=`/`;
+        } else {
+          window.confirm("Failed trying to delete institution.");
+        }
+      })
+      .catch(() => {
+        console.error("Error deleting the institution");
+      });
+  }
+
   const onSaveInstitution = (params) => {
     onUpdateInstitution(params);
     setShowUpdateInstitution(false);
@@ -534,6 +557,16 @@ export const SidebarTabs = ({
   const onCloseEditInstitution = () => {
     setShowUpdateInstitution(false);
   }
+
+  const onDeleteInstitution = () => {
+    archiveInstitution();
+    setShowDeleteInstitution(false);
+  }
+  
+  const onCloseDeleteInstitution = () => {
+    setShowDeleteInstitution(false);
+  }
+
 
   return (
     <div className="sidebar-tabs">
@@ -577,6 +610,18 @@ export const SidebarTabs = ({
                   <SvgIcon icon="folder" size="1rem" />
                   View Institution Dashboard
                 </button>
+                <button
+                  style={{color: "#c42121"}}
+                  className="menu-item"
+                  onClick={() => {
+                    setShowMenu(false);
+                    setShowDeleteInstitution(true);
+                  }}
+                >
+                  <SvgIcon icon="trash" size="1rem" />
+                  Delete Institution
+                </button>
+
               </div>
             )}
           </div>
@@ -608,15 +653,32 @@ export const SidebarTabs = ({
       })}
       
       {showUpdateInstitution &&
-       createPortal(
-         <EditInstitutionModal
-           onClose={onCloseEditInstitution}
-           onSave={onSaveInstitution}
-         />,
-         document.body
-       )}
+        createPortal(
+          <EditInstitutionModal
+            onClose={onCloseEditInstitution}
+            onSave={onSaveInstitution}
+          />,
+          document.body
+        )}
+      {showDeleteInstitution &&
+        createPortal(
+          <Modal
+            title="Delete Institution"
+            closeText="Cancel"
+            confirmText="Delete Institution"
+            onClose={onCloseDeleteInstitution}
+            onConfirm={onDeleteInstitution}
+          >
+            <div>
+              <p>This action will also delete all of the projects associated with this institution.</p>
+              <p>This action is irreversible.</p>
+              <p>Do you REALLY want to delete this institution? </p>
+            </div>
+          </Modal>,
+          document.body
+        )
+      }
     </div>
-
   );
 };
 

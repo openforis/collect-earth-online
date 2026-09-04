@@ -140,18 +140,18 @@ export const QuestionCard = ({
             </label>
             <input
               className="text-input"
-              value={question.question}
+              defaultValue={question.question}
               placeholder="Enter Text"
-              onChange={(e) => updateQuestion('question', e.target.value)}
+              onBlue={(e) => updateQuestion('question', e.target.value)}
             />
             <label className="text-label-sm">
               Question Label (Optional) <SvgIcon icon="info" size="0.8rem" />
             </label>
             <input
               className="text-input"
-              value={question.questionLabel || ''}
+              defaultValue={question.questionLabel || ''}
               placeholder="Enter Label"
-              onChange={(e) => updateQuestion('questionLabel', e.target.value)}
+              onBlur={(e) => dispatch([event_ids.overview.projectName, e.target.value])}
             />
             
             <div className="question-metadata-row">

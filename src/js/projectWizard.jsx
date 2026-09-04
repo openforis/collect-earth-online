@@ -4,7 +4,6 @@ import { useSubscription, dispatch } from '@flexsurfer/reflex';
 
 import { BreadCrumbs, NavigationBar } from "./components/PageComponents";
 
-import SvgIcon from "./components/svg/SvgIcon";
 import { ImageryStep } from "./wizard/ImageryStep";
 import { BoundaryStep } from "./wizard/BoundaryStep";
 import { PlotStep } from "./wizard/PlotStep";
