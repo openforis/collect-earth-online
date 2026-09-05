@@ -147,7 +147,7 @@ class HelpSlideDialog extends React.Component {
   }
 }
 
-export function NavSideBar ({tab, setTab}) {
+export function NavSideBar ({tab, setTab, userId}) {
   function highlightsHandler() {
     setTab('highlights');
   };
@@ -170,10 +170,11 @@ export function NavSideBar ({tab, setTab}) {
     {title: "Institutions",
      icon: "group",
      clickHandler: institutionsHandler},
-    collect:
-    {title: "Collect",
-     icon: "collect",
-     clickHandler: collectHandler},
+    ... (userId && //must be logged in to see collection tab
+         {collect: 
+          {title: "Collect",
+           icon: "collect",
+           clickHandler: collectHandler}}),
     /*
       manage:
       {title: "Manage",
@@ -351,7 +352,7 @@ export function NavTopBar ({version, userName, userId, children}) {
 export function NavigationBar ({children, version, userName, userId, fxns}) {
   return(
     <>
-      {fxns && <NavSideBar tab={fxns.tab.get} setTab={fxns.tab.set}/>}
+      {fxns && <NavSideBar tab={fxns.tab.get} setTab={fxns.tab.set} userId={userId}/>}
       <NavTopBar children={children} version={version} userName={userName} userId={userId}/>
     </>
   );
