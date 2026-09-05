@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { NavigationBar } from "./components/PageComponents";
 import HomeTabs from "./home/components";
@@ -6,7 +6,8 @@ import HomeTabs from "./home/components";
 
 function Home ({params, session}) {
   const [tab, setTab] = useState('highlights');
-  return (
+  
+    return (
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}
                    fxns={{tab: {get: tab, set: setTab}}}>
       <HomeTabs tab={tab} session={session}/>
