@@ -99,13 +99,11 @@ export default function Highlights ({userId, userRole}) {
     return appState.blogs.length > 0  ? (
       <div id="blogs">
         {appState.blogs.map((blog)=>{
-          console.log(blog);
           return (
             <div className="blog-frame">
               <div className="blog">
                 <div className="blog-graphic"
-                     style={{background: ""
-                            // `url(${blog.graphic}) lightgray 50% / cover no-repeat`
+                     style={{background: `url(${blog.img}) lightgray 50% / cover no-repeat`
                             }}
                 ></div>
                 <div className="blog-body">
