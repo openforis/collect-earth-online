@@ -69,6 +69,13 @@ export default function Collect ({projects}) {
     return (
       <div id="projects">
         <div id="projects-column">
+          <div className="header">
+            <div className="header-row">
+              <p className="header-title">Collect</p>
+              <p className="header-subtitle"></p>
+            </div>
+            
+          </div>
           {projects.map((project)=>{return(<Project project={project}/>);})}
         </div>
         <div id="projects-map-container">
@@ -84,12 +91,6 @@ export default function Collect ({projects}) {
   
   return (
     <div id='collect-tab' className='home-tab'>
-      <div className="header">
-        <div className="header-row">
-          <p className="header-title">Collect</p>
-          <p className="header-subtitle"></p>
-        </div>
-        <Projects />
-      </div>
+      <Projects />
     </div>);
 }

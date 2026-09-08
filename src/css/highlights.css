@@ -605,5 +605,7 @@ font-weight: 600;
 line-height: 14px; /* 100% */
 }
 
-.sort-select {
+#projects-column .header-row {
+    padding: 1rem !important ;
+    border-bottom: none;
 }
