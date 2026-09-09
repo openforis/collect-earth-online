@@ -685,13 +685,13 @@ export const SidebarFooter = ({ processModal }) => {
 
   const checkCanSave = () => {
     const { surveyQuestions, collectConfidence } = currentProject;
-    const { confidence } = currentPlot;
+    const { confidence } = currentPlot;    
     const visibleSurveyQuestions = filterObject(surveyQuestions, ([_id, val]) => val.hideQuestion != true);
+    const requiredQuestions = filterObject(visibleSurveyQuestions, ([_id, val]) => val.required);
     const noneAnswered = everyObject(visibleSurveyQuestions, ([_id, sq]) => safeLength(sq.answered) === 0);
     const hasSamples = safeLength(currentPlot.samples) > 0;
     const allAnswered = everyObject(
-      visibleSurveyQuestions,
-      ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered));
+      requiredQuestions, ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered));
     if(currentPlot.flagged) {
       return true;
     } else if (inReviewMode) {
@@ -721,7 +721,19 @@ export const SidebarFooter = ({ processModal }) => {
           },
         },
       }));
-      return false;    
+      return false;
+    } else if (!allAnswered) {
+      setAppState((prev) => ({
+        ...prev,
+        modal: {
+          alert: {
+            alertType: "Review Mode Alert",
+            alertMessage:
+            "All required questions must be answered to save the collection.",
+          },
+        },
+      }));
+      return false;
     } else if (collectConfidence && !confidence) {
       setAppState((prev) => ({
         ...prev,
@@ -751,7 +763,7 @@ export const SidebarFooter = ({ processModal }) => {
   };
 
   const toggleFlagged = () => setAppState(s => ({...s, currentPlot: {...s.currentPlot, flagged: !s.currentPlot.flagged}}));
-  const collecting = Object.keys(currentPlot).length === 0;
+  const collecting = Object.keys(currentPlot).length === 0;  
   return (
     <div className="sidebar-footer-buttons">
       {!collecting &&

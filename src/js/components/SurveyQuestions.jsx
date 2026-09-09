@@ -374,7 +374,6 @@ export function SurveyQuestions ({
       }
       setAppState(s => ({ ...s, selectedQuestionId: question.id }));
     };
-
     return (
       <div key={question.id} className={`sq-item ${isOpen ? 'open' : ''} ${depth ? 'sq-item--child' : ''} depth-${depth}`}>
         <button className="sq-item-head" onClick={handleToggle}>
@@ -390,7 +389,8 @@ export function SurveyQuestions ({
               </svg>
             )}
           </span>
-          <span className="sq-text">{question.question}</span>
+          <span className="sq-text">{question.question}{question.required && (
+            <span style={{ color: 'red' }}>*</span>)}</span>
           <SvgIcon icon={isOpen ? "upCaret" : "downCaret"} size="1rem" />
         </button>
 
