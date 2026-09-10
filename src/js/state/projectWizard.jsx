@@ -829,7 +829,6 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
   const errors = validateWizard(form);
   
   function updateForm () {
-    console.log('updating existing project');
     fetch("/update-project", {
       method: "POST",
       headers: {
@@ -845,7 +844,6 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
       .then((data) => {
         if (data[0] && data[1] === "") {
           dispatch([event_ids.modal, 'review']);
-          //          dispatch([event_ids.successResponse, data[1]]);
           return Promise.resolve();
         } else {
           dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
@@ -859,7 +857,6 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
   
   
   function submitForm () {
-    console.log('creating new project');
     fetch("/create-project", {
       method: "POST",
       headers: {
@@ -889,7 +886,6 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
               similarityYears,
             })
           });
-          //dispatch([event_ids.successResponse, data[1]]);
           dispatch([event_ids.modal, 'review']);
           return Promise.resolve();
         } else {
@@ -899,7 +895,6 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
       })
       .catch((message) => dispatch([event_ids.errors [['server', [message]]]]));
   }
-  console.log('attempting to save project', errors, existingProjectId);
   errors ? dispatch([event_ids.errors, errors]) :
     (existingProjectId > 0) ? updateForm() : submitForm();
 });
