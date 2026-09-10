@@ -414,7 +414,7 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
   const renderGriddedLayout = () => (
     <>
       <div className="form-group mb-3">
-        <label className="text-label-sm">Plot Spacing (m) <span style={{ color: 'red' }}>*</span></label>
+        <label>Plot Spacing (m) <span style={{ color: 'red' }}>*</span></label>
         <input
           type="number"
           className="text-input"
@@ -578,12 +578,10 @@ export const PlotSimilarityCard = ({ plotIdList = [] }) => {
           } />
       </div>
       <div
-        className="form-check mb-3"
-        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
         onClick={() => dispatch([event_ids.overview.projectOptions.plotSimilarity])}
       >
         <SvgIcon icon={plotSimilarity ? "checkboxChecked" : "checkboxUnchecked"} size="1.2rem" />
-        <label className="text-label-sm" style={{ margin: 0, cursor: 'pointer' }}>
+        <label style={{ cursor: 'pointer' }}>
           Enable navigation by similarity
         </label>
       </div>
