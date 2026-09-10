@@ -37,6 +37,8 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
   function setPlotFeatures (plots) { dispatch([event_ids.plots.plotFeatures, plots]); };
   function setProjectId (projectId) {dispatch([event_ids.projectId, projectId]);};
 
+  draftId && console.log('this is a draft project');
+
   // -------------------
   // HOOKS
   // ------------------

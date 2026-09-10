@@ -56,7 +56,7 @@ export const ProjectsTab = ({
         cell: (row) => (
 	  <a
 	    className="projects-table-name"
-	    href={row.isDraft ? `/project-wizard?projectId=${row.draftId}&institutionId=${institutionId}` :
+	    href={row.isDraft ? `/project-wizard?draftId=${row.draftId}&institutionId=${institutionId}` :
 	          isAdmin ?
 		  `/project-wizard?projectId=${row.id}&institutionId=${institutionId}`
 		  : `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
@@ -194,7 +194,6 @@ export const ProjectsTab = ({
       },
     },  
   ];
-  console.log('filtered projects: ', filteredProjects);
   return (
     <div className="tab-container">
       <div className="tab-header">
