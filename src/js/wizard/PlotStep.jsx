@@ -258,11 +258,12 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
   const plotShape = useSubscription([mode.subs.plotShape]) || 'circle';
   const totalPlotsCalculated = useSubscription([mode.subs.totalPlots]) || 0;
   const plotFileName = useSubscription([mode.subs.plotFileName]) || '';
-
   const [plotLimitError, setPlotLimitError] = useState('');
-
   const activeAreaGeometry = aoiFeatures[0];
   const isBoundaryFileDriven = boundaryMethod === 'plotFile' || boundaryMethod === 'shpFile';
+  const maxId = useSubscription([sub_ids.plots.maxId]);
+
+  console.log(maxId);
 
   // Debounced random/gridded generation — standard mode only.
   useEffect(() => {
@@ -426,7 +427,7 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
       {renderPlotSizeInput()}
       <div className="form-check mb-3" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => dispatch([event_ids.plots.shufflePlots, !shufflePlots])}>
         <SvgIcon icon={shufflePlots ? "checkboxChecked" : "checkboxUnchecked"} size="1.2rem" />
-        <label className="text-label-sm" style={{ margin: 0, cursor: 'pointer' }}>Shuffle plot distribution matrix order</label>
+        <label className="text-label-sm"> Shuffle plots</label>
       </div>
     </>
   );
@@ -442,9 +443,9 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
         </label>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
           <label
-            className="btn btn-sm btn-outline-darkgreen py-2 px-3 text-nowrap"
+            className="btn btn-sm btn-outline-darkgreen"
             htmlFor="plot-file-upload-input"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px'}}
           >
             <SvgIcon icon="plus" size="0.9rem" />
             Upload {fileType.toUpperCase()} file
@@ -498,7 +499,7 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
   
   return (
     <div className="wizard-card">
-      <div className="d-flex justify-content-between align-items-center mb-3">
+      <div className="d-flex justify-content-between">
         <h5 className="card-title">{mode.title}</h5>
         <InfoTooltip
           title="Plot Generation"
@@ -511,6 +512,13 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
           } />
       </div>
 
+      {isPublished && (
+        <div className="mb-3 text-secondary small" style={{ fontWeight: '500' }}>
+          <span>
+            WARNING: New Plot ID’s must be higher than {maxId}
+          </span>
+        </div>
+      )}
       {activeAreaGeometry && (
         <div className="mb-3 text-secondary small" style={{ fontWeight: '500' }}>
           Plot Properties:
@@ -563,7 +571,7 @@ export const PlotSimilarityCard = ({ plotIdList = [] }) => {
 
   return (
     <div className="wizard-card" style={{ marginTop: '10px' }}>
-      <div className="d-flex justify-content-between align-items-center mb-3">
+      <div className="d-flex justify-content-between">
         <h5 className="card-title">
           PLOT SIMILARITY CONFIGURATION
         </h5>
@@ -863,7 +871,7 @@ export const ExistingPlotsCard = () => {
 
   return (
     <div className="wizard-card" style={{marginBottom: '10px'}}>
-      <div className="d-flex justify-content-between align-items-center mb-3">
+      <div className="d-flex justify-content-between">
         <h5 className="card-title">EXISTING PLOTS</h5>
         <InfoTooltip
           title="Existing Plots"
@@ -871,12 +879,12 @@ export const ExistingPlotsCard = () => {
           text="These plots belong to the published project and cannot be modified. New plots added below will be appended to them."
         />
       </div>
-      {rows.map(([label, value]) => (
-        <div key={label} className="d-flex justify-content-between mb-2">
-          <span className="text-label-sm" style={{ color: 'var(--Neutral-Text-gray)', margin: 0 }}>{label}</span>
-          <span className="text-label-sm" style={{ color: '#333', fontWeight: 500, margin: 0 }}>{value}</span>
-        </div>
-      ))}
+        {rows.map(([label, value]) => (
+          <div key={label} className="d-flex justify-content-between mb-2">
+            <span className="text-label-sm" style={{ color: 'var(--Neutral-Text-gray)', margin: 0 }}>{label}</span>
+            <span className="text-label-sm" style={{ color: '#333', fontWeight: 500, margin: 0 }}>{value}</span>
+          </div>
+        ))}
     </div>
   );
 };

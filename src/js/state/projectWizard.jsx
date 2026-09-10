@@ -110,6 +110,7 @@ const projectWizardDb = {
   'plots.newPlotFeatures': [],
   'plots.newPlotFileName': '',
   'plots.newPlotFileBase64': '',
+  'plots.maxId': null,
   // samples
   'samples.sampleDistribution': 'random',
   'samples.samplesPerPlot': 1,
@@ -305,6 +306,7 @@ export const sub_ids = {
     newPlotFeatures: 'plots.newPlotFeatures',
     newPlotFileName: 'plots.newPlotFileName',
     newPlotFileBase64: 'plots.newPlotFileBase64',
+    maxId: 'plots.maxId',
   },
   samples: {
     sampleDistribution: 'samples.sampleDistribution',
@@ -407,6 +409,7 @@ regSub(sub_ids.plots.newTotalPlots, sub_ids.plots.newTotalPlots);
 regSub(sub_ids.plots.newPlotFeatures, sub_ids.plots.newPlotFeatures);
 regSub(sub_ids.plots.newPlotFileName, sub_ids.plots.newPlotFileName);
 regSub(sub_ids.plots.newPlotFileBase64, sub_ids.plots.newPlotFileBase64);
+regSub(sub_ids.plots.maxId, sub_ids.plots.maxId);
 
 // samples
 regSub(sub_ids.samples.sampleDistribution, sub_ids.samples.sampleDistribution);
@@ -1110,11 +1113,11 @@ regEvent(event_ids.plots.plotFileName, ({ draftDb }, plotFileName) => {
   draftDb[sub_ids.plots.plotFileName] = plotFileName;
 });
 
-regEvent(event_ids.plots.serverPlots, ({ draftDb }, { features, count }) => {
-  console.log('[event]', features?.length);
+regEvent(event_ids.plots.serverPlots, ({ draftDb }, { features, count, maxId }) => {
   draftDb[sub_ids.plots.plotFeatures] = features;
   draftDb[sub_ids.plots.totalPlots] = count;
   draftDb[sub_ids.plots.plotsSource] = 'server';
+  draftDb[sub_ids.plots.maxId] = maxId;
 });
 
 regEvent(event_ids.plots.plotFileBase64, ({ draftDb }, plotFileBase64) => {
