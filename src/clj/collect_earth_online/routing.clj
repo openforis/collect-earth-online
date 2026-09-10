@@ -52,7 +52,8 @@
                                               :auth-type   :admin
                                               :auth-action :redirect}
    [:get "/project-wizard"]                  {:handler (render-page "/project-wizard")
-                                              :auth-type   :admin
+                                              
+                                              #_:auth-type   #_:admin
                                               :auth-action :redirect}
    [:get  "/register"]                       {:handler (render-page "/register")}
    [:get  "/review-institution"]             {:handler (render-page "/review-institution")}

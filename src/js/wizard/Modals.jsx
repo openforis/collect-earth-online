@@ -296,16 +296,26 @@ function NewProjectModal () {
 };
 
 function SubmitProjectModal () {
+  const institutionId = useSubscription([sub_ids.institutionId]);
+  const [TOS, setTOS] = useState(false);
   return (
     <Modal
-      title='Ready to publish this project?'
-      closeText='Cancel'
+      title='Project Saved'
+      closeText='Return to Institution'
       confirmText='Publish Project'
-      onConfirm={()=>{dispatch ([event_ids.submitForm]); }}
-      //confirmDisabled={confirmDisabled()}
-      onClose={()=>{dispatch([event_ids.modal, null]);}}>
+      onConfirm={()=>{
+        dispatch ([event_ids.publishProject]); }}
+      confirmDisabled={!TOS}
+      onClose={()=>{window.location=`/review-institution?institutionId=${institutionId}`;}}>
       <div>
         <p >You are about to publish this project. Once published it will be added to your institution. You’ll still be able to make changes later from the project page within your institution.</p>
+        <div>
+          <input type='checkbox'
+                 checked={TOS}
+                 onChange={(e)=>setTOS(e.target.checked)}/>
+          <label>Accept <a href="/">Terms of Service</a><span style={{color: 'red'}}>*</span></label>
+          
+        </div>
         <p > Are you sure you want to continue?</p>
       </div>
     </Modal>
@@ -358,6 +368,32 @@ function SuccessModal () {
 
   );
 };
+
+function PublishModal () {
+  const institutionId = useSubscription([sub_ids.institutionId]);
+  const { projectId } = useSubscription([sub_ids.successResponse]);
+  const redirectUrl = projectId ? `/project-wizard?institutionId=${institutionId}&projectId=${projectId}` : null;
+  return (
+    <Modal
+      title='Project Published!'
+      closeText='Close'
+      confirmText='Return to Institution'
+      onConfirm={()=>{
+        window.location=`/review-institution?institutionId=${institutionId}`;
+      }} 
+      onClose={()=>{dispatch([event_ids.modal, null]);}}>
+      <div className="success-icon">
+        <SvgIcon  icon='check' size='2rem'/>
+      </div>
+      <br/>
+      <b>Your Project has been published! </b>
+      <p >The Published Project can now be viewed in your Institutions Project Page.</p>
+
+    </Modal>
+
+  );
+};
+
 
 function ErrorModal () {
   const errors = useSubscription([sub_ids.errors]);
@@ -441,6 +477,7 @@ export default function ProjectWizardModal () {
   case 'error'       : return (<ErrorModal/>);
   case 'draft-success' : return (<DraftSuccessModal/>);
   case 'exit'        : return (<ExitModal/>);
+  case 'published' : return (<PublishModal/>);
     
   default : break;
   }

@@ -125,6 +125,8 @@ export const event_ids = {
   editProject: 'editProject',
   submitForm: 'submitForm',
   saveDraft: 'saveDraft',
+  saveProject: 'saveProject',
+  publishProject: 'publishProject',
   errors: 'errors',
   continueHandler: 'continueHandler',
   validate: 'validate',
@@ -132,6 +134,7 @@ export const event_ids = {
   modal: 'modal',
   projectSource: 'projectSource',
   successResponse: 'successReponse',
+  draftSuccess:'draftSuccess', 
   overview: {projectName: 'overview.projectName',
              projectDescription: 'overview.projectDescription',
              projectType: 'overview.projectType',
@@ -657,11 +660,6 @@ regEvent(event_ids.continueHandler, ({ draftDb }, currentStep) => {
   case 'rules' : {
     dispatch([event_ids.currentStep, 'review']);
     break;}
-  case 'review' : {
-    const errors = validateWizard(form);
-    errors ? dispatch([event_ids.errors, errors])
-      : draftDb[sub_ids.modal] = 'review';
-    break;}
   default : 
     dispatch([event_ids.errors, [['Navigation', ['Your browser experienced a client error. please refresh the page.']]]]);    
   }
@@ -769,7 +767,7 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && Number.isInteger(data[1].projectDraftId)) {
-          dispatch([event_ids.successResponse, data[1]]);
+          dispatch([event_ids.draftSuccess, ['Draft Saved', data[1]]]);          
           return Promise.resolve();
         } else {          
           let errs = Object.entries(data[1].params).map(([field, message])=>{return (field + "; " + message);});
@@ -802,7 +800,7 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
-        dispatch([event_ids.successResponse, ['Project Saved', data]]);
+        dispatch([event_ids.draftSuccess, ['Draft Saved', data]]);
         return Promise.resolve();
       })
       .catch((message) => {
@@ -816,7 +814,113 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
     : createProjectDraft();           
 });
 
+
+regEvent(event_ids.saveProject, ({ draftDb }) => {
+  const institutionId = Number(current(draftDb[sub_ids.institutionId]));
+  const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
+  const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
+  const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
+  const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
+  const similarityDetails = current(draftDb[sub_ids.plots.plotSimilarityDetails]) || {};
+  const existingProjectId = current(draftDb[sub_ids.projectId]);
+  const referencePlotId = similarityDetails.referencePlotId;
+  const similarityYears = similarityDetails.years;
+  const form = buildProject(draftDb, sub_ids);
+  const errors = validateWizard(form);
+  
+  function updateForm () {
+    console.log('updating existing project');
+    fetch("/update-project", {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        projectId: existingProjectId,
+        ...form,
+      }),
+    })
+      .then((response) => Promise.all([response.ok, response.json()]))
+      .then((data) => {
+        if (data[0] && data[1] === "") {
+          dispatch([event_ids.modal, 'review']);
+          //          dispatch([event_ids.successResponse, data[1]]);
+          return Promise.resolve();
+        } else {
+          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
+          return Promise.reject(data[1]);
+        }
+      })
+      .catch((message) => {
+        dispatch([event_ids.errors [['server', [message]]]]);;
+      });
+  }
+  
+  
+  function submitForm () {
+    console.log('creating new project');
+    fetch("/create-project", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        institutionId,
+        projectTemplate: templateProjectId,
+        useTemplatePlots,
+        useTemplateWidgets,
+        ...form,
+      }),
+    })
+      .then((response) => Promise.all([response.ok, response.json()]))
+      .then((data) => {
+        if (data[0] && Number.isInteger(data[1].projectId)) {
+          (referencePlotId > 0) && fetch("/start-plot-similarity", {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json; charset=utf-8",
+            },
+            body: JSON.stringify({
+              projectId: data[1].projectId,
+              referencePlotId,
+              similarityYears,
+            })
+          });
+          //dispatch([event_ids.successResponse, data[1]]);
+          dispatch([event_ids.modal, 'review']);
+          return Promise.resolve();
+        } else {
+          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
+          return Promise.reject(data[1]);
+        }
+      })
+      .catch((message) => dispatch([event_ids.errors [['server', [message]]]]));
+  }
+  console.log('attempting to save project', errors, existingProjectId);
+  errors ? dispatch([event_ids.errors, errors]) :
+    (existingProjectId > 0) ? updateForm() : submitForm();
+});
+
+regEvent(event_ids.publishProject, ({ draftDb }) => {
+  const availability = draftDb[sub_ids.availability];
+  const unpublished = availability === "unpublished";
+  const institutionId = draftDb[sub_ids.institutionId];
+  const projectId = draftDb[sub_ids.projectId];
+
+  fetch(`/publish-project?projectId=${projectId}&clearSaved=${unpublished}`, { method: "POST" })
+    .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    .then((data) => {dispatch([event_ids.modal, 'published']);})
+    .catch((error) => {
+      console.log(error);
+      window.alert("Error publishing project. See console for details.");
+    });
+});
+
 regEvent(event_ids.submitForm, ({ draftDb }) => {
+  //TODO: this is crufty and not neat. do we need this after saveProject?
   const institutionId = Number(current(draftDb[sub_ids.institutionId]));
   const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
@@ -844,6 +948,7 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && data[1] === "") {
+          dispatch([event_ids.modal, 'review']);
           dispatch([event_ids.successResponse, data[1]]);
           return Promise.resolve();
         } else {
@@ -887,7 +992,8 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
               similarityYears,
             })
           });
-          dispatch([event_ids.successResponse, data[1]]);
+          //dispatch([event_ids.successResponse, data[1]]);
+          dispatch([event_ids.modal, 'review']);
           return Promise.resolve();
         } else {
           dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
@@ -898,6 +1004,11 @@ regEvent(event_ids.submitForm, ({ draftDb }) => {
   }
   errors ? dispatch([event_ids.errors, errors]) :
     (existingProjectId > 0) ? updateForm() : submitForm();
+});
+
+regEvent(event_ids.draftSuccess, ({ draftDb }, response) => {
+  draftDb[sub_ids.successResponse] = response;
+  draftDb[sub_ids.modal] = 'draft-success';
 });
 
 regEvent(event_ids.successResponse, ({ draftDb }, response) => {  
@@ -1043,7 +1154,6 @@ regEvent(event_ids.plots.plotFileName, ({ draftDb }, plotFileName) => {
 });
 
 regEvent(event_ids.plots.serverPlots, ({ draftDb }, { features, count }) => {
-  console.log('[event]', features?.length);
   draftDb[sub_ids.plots.plotFeatures] = features;
   draftDb[sub_ids.plots.totalPlots] = count;
   draftDb[sub_ids.plots.plotsSource] = 'server';

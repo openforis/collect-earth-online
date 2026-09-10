@@ -27,7 +27,7 @@ export default function NavButtons () {
   const stepIdx = activeSteps.map((e)=>e.id).indexOf(currentStep);  
   function continueHandler () {dispatch([event_ids.continueHandler, currentStep]);}
   function saveDraftHandler () {dispatch([event_ids.saveDraft]);};
-
+  function saveProjectHandler () {dispatch([event_ids.saveProject]);};
   function navBackHandler () { dispatch([event_ids.currentStep, activeSteps[stepIdx - 1].id]);}
 
   return (<div className="nav-buttons">
@@ -51,7 +51,10 @@ export default function NavButtons () {
             >Save Draft</button>
             <button
               className={'btn btn-sm'}
-              onClick={()=>continueHandler()}
+              onClick={()=>
+                currentStep === 'review' ?
+                  saveProjectHandler() : 
+                  continueHandler()}
               style={{backgroundColor: "#2d6f74",
                 color: "#fff"}}
             >Save & {currentStep === 'review' ? 'Create' : 'Continue'}</button>
