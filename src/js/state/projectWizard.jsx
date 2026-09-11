@@ -130,6 +130,7 @@ export const event_ids = {
   validate: 'validate',
   currentStep: 'currentStep',
   modal: 'modal',
+  availability: 'availability',
   projectSource: 'projectSource',
   successResponse: 'successReponse',
   overview: {projectName: 'overview.projectName',
@@ -425,7 +426,9 @@ regEvent(event_ids.errors, ({ draftDb }, errors) => {
 regEvent(event_ids.institutionId, ({ draftDb }, institutionId )=> {
   draftDb[sub_ids.institutionId] = institutionId;
 });
-
+regEvent(event_ids.availability, ({ draftDb }, availability ) => {
+  draftDb[sub_ids.availability] = availability;
+});
 // PROJECT WIZARD EVENTS
 
 regEvent(event_ids.draftProject, ({ draftDb }, draftId) => {
@@ -1043,7 +1046,6 @@ regEvent(event_ids.plots.plotFileName, ({ draftDb }, plotFileName) => {
 });
 
 regEvent(event_ids.plots.serverPlots, ({ draftDb }, { features, count }) => {
-  console.log('[event]', features?.length);
   draftDb[sub_ids.plots.plotFeatures] = features;
   draftDb[sub_ids.plots.totalPlots] = count;
   draftDb[sub_ids.plots.plotsSource] = 'server';
