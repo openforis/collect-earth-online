@@ -230,11 +230,13 @@ export default function Institutions ({userId, userRole}) {
           userRole={userRole}
           stateAtom={stateAtom}
         />
+        <div id="institutions-map-container">
         <MapPanel
           imagery={appState.imagery}
           projects={appState.projects}
           mapConfigAtom={mapConfigAtom}
-        />
+      />
+    </div>
       </div>
     </div>
   );

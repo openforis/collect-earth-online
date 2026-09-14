@@ -1,3 +1,4 @@
+
 -- NAMESPACE: project
 -- REQUIRES: clear
 
@@ -621,7 +622,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION user_project(_user_id integer, _role_id integer, _privacy_level text, _availability text)
  RETURNS boolean AS $$
 
-    SELECT (_role_id = 1 AND _availability <> 'archived')
+    SELECT (_role_id = 1 AND _availability <> 'archived')           
             OR (_availability = 'published'
                 AND (_privacy_level = 'public'
                     OR (_user_id > 0 AND _privacy_level = 'users')
@@ -686,8 +687,7 @@ CREATE OR REPLACE FUNCTION get_highlight_projects(_user_id integer)
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
     JOIN institutions ins ON ins.institution_uid = p.institution_rid
-    WHERE user_project(_user_id, role_rid, p.privacy_level, p.availability)
-        AND valid_boundary(boundary) = TRUE
+        WHERE valid_boundary(boundary) = TRUE
         AND p.highlight = TRUE
     ORDER BY project_uid
 

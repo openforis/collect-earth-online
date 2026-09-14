@@ -1,8 +1,10 @@
 @import "./colors.css";
 
 #highlights-tab {
+    height: 167vh ;
     width: 100%;
     font-family: "Public-Sans";
+    background-color: var(--Primary-Light-Green, #E9F1F0) !important;
 }
 
 .header {
@@ -290,41 +292,24 @@
     line-height: 14px; /* 116.667% */}
 
 #projects {
-    display: flex;
-    height: 876px;
-    align-items: flex-start;
+    display: inherit;
     gap: 16px;
     width: 100%;}
 
+
 #projects-map-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-    flex-grow: 1;
+    width: inherit;
+    position: absolute;
 }
+
 
 #projects-map {
-    position: relative;
-    width: 100%;
-    display: flex;
-    padding-top: 1px;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    flex-shrink: 0;
-    align-self: stretch;
-    border-radius: 8px;
-    background: var(--Neutral-White, #FFF);
+    position: absolute;
 }
 
+
 #projects-column{
-    display: flex;
-    width: 780px;
-    height: 860px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+    width: 29vw;
 }
 
 .project {
@@ -492,18 +477,19 @@
     gap: 16px;
 }
 
-
-#home-map-pane {
-    width: 100% !important ;
-    position: absolute !important ;
+#projects-map #mapPanel {
+    margin-left: 0;
 }
+
+
+#projects-map #mapPanel #home-map-pane {
+    width: 70vw;
+    position: inherit;
+}
+
 #home-map-pane .ol-attribution {
     position: fixed;
 }
-
-#mapPanel {
-    flex-grow: 1;}
-
 
 .search-bar {
 display: flex;
