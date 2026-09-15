@@ -56,10 +56,10 @@ export const ProjectsTab = ({
         cell: (row) => (
 	  <a
 	    className="projects-table-name"
-	    href={
-	      isAdmin ?
-		`/project-wizard?projectId=${row.id}&institutionId=${institutionId}`
-		: `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
+	    href={row.isDraft ? `/project-wizard?draftId=${row.draftId}&institutionId=${institutionId}` :
+	          isAdmin ?
+		  `/project-wizard?projectId=${row.id}&institutionId=${institutionId}`
+		  : `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
 	    {row.name}
 	  </a>
 	),
@@ -154,8 +154,6 @@ export const ProjectsTab = ({
     
     const selectedProjects = selectedRows.map((r) => !r.isDraft && r.id).filter((e)=>e);
     const selectedDrafts = selectedRows.map((r) => r.isDraft && r.draftId).filter((e)=>e);
-    console.log('handle delete projects', selectedProjects);
-    console.log('handle delete drafts', selectedDrafts);
     if (selectedRows.length === 0) return;
     selectedProjects.length && deleteProjectsBulk(selectedRows.map((r) => !r.isDraft && r.id).filter((e)=>e));
     selectedDrafts.length && deleteDraftProjects(selectedRows.map((r) => r.isDraft && r.draftId).filter((e)=>e));
@@ -196,7 +194,6 @@ export const ProjectsTab = ({
       },
     },  
   ];
-  
   return (
     <div className="tab-container">
       <div className="tab-header">

@@ -263,6 +263,7 @@ export const SurveyQuestionsStep = () => {
     parentQuestionId: "-1",
     parentAnswerIds: [],
     answers: null,
+    required: false,
   };
 
   function setQuestions (questions) {dispatch([event_ids.questions.setQuestions, questions]);}
@@ -272,6 +273,7 @@ export const SurveyQuestionsStep = () => {
                             confirmDuplicateWarning(true);}
   
   const addQuestion = () => {
+    
     if (!newQuestion.questionText) return;
 
     const nextId = (Math.max(...Object.keys(questions).map(Number), 0) + 1).toString();
@@ -291,6 +293,7 @@ export const SurveyQuestionsStep = () => {
       answers: newQuestion.answers || {
         "1": { answer: defaultAnswer, color: "#109844" },
       },
+      required: newQuestion.required,
     };    
     const duplicateQuestions =   Object.values(questions)
           .map(({question})=> question.split(/\(\d\)/)[0] == questionToAdd.question.split(/\(\d\)/)[0]);
@@ -379,14 +382,16 @@ export const SurveyQuestionsStep = () => {
 
           <div style={{ display: 'flex', gap: '15px', flexDirection: 'column' }}>
             <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-              <div style={{ flex: newQuestion.componentType === 'copy' ? '1 1 calc(50% - 15px)' : '1' }}>
+              <div style={{ flex: newQuestion.componentType === 'copy' ? '1 1 calc(50% - 15px)' :
+                            newQuestion.componentType === 'input' ? '1 1 calc(80% - 15px)':
+                            '1' }}>
                 <label className="text-label-sm">
                   Component Type <span style={{ color: 'red' }}>*</span>
                 </label>
                 <select
                   className="text-input"
                   value={`${newQuestion.componentType}-${newQuestion.dataType}`}
-                  onChange={(e) => {
+                  onChange={(e) => {                    
                     const [comp, data] = e.target.value.split('-');
                     setNewQuestion({
                       ...newQuestion,
@@ -406,7 +411,18 @@ export const SurveyQuestionsStep = () => {
                   <option value="copy-none">Copy Existing Question</option>
                 </select>
               </div>
-
+              {newQuestion.componentType === 'input' && (
+                <div style={{
+                  alignContent: 'center',
+                  flex: '1 1 calc(20% - 15px)' }}>
+                  <input
+                    type="checkbox"
+                    checked={newQuestion.required || false}
+                    onChange={(e) => setNewQuestion({... newQuestion, required: e.target.checked})}
+                  />
+                  <span style={{alignContent: 'center'}}> Input text required? </span>
+                  
+                </div>)}
               {newQuestion.componentType === 'copy' && (
                 <div style={{ flex: '1 1 calc(50% - 15px)' }}>
                   <label className="text-label-sm">
@@ -436,7 +452,6 @@ export const SurveyQuestionsStep = () => {
                   </select>
                 </div>
               )}
-
               <div style={{ flex: newQuestion.componentType === 'copy' ? '1 1 100%' : '1' }}>
                 <label className="text-label-sm">Parent Question</label>
                 <select
@@ -457,7 +472,6 @@ export const SurveyQuestionsStep = () => {
                 </select>
               </div>
             </div>
-
             <div style={{ width: '100%' }}>
               <label className="text-label-sm">
                 Parent Answer

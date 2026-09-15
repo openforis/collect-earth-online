@@ -34,6 +34,8 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
   function setEditProject (project) {dispatch([event_ids.editProject, project]);};
   function setProjectId (projectId) {dispatch([event_ids.projectId, projectId]);};
 
+  draftId && console.log('this is a draft project');
+
   // -------------------
   // HOOKS
   // ------------------
@@ -44,7 +46,7 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
     draftId && setDraftProject(draftId);
     projectId && setEditProject(projectId);
     projectId && setProjectId(projectId);
-    projectId && (
+    projectId && !draftId && (
       fetch(`/get-project-plots?projectId=${projectId}`)
         .then(res => res.json())
         .then(data => {
