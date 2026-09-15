@@ -34,7 +34,7 @@ export const NavButtons = () => {
   const stepIdx = activeSteps.map((e)=>e.id).indexOf(currentStep);
   function continueHandler () {dispatch([event_ids.continueHandler, currentStep]);}
   function saveDraftHandler () {dispatch([event_ids.saveDraft]);};
-  function saveProjectHandler () {dispatch([event_ids.saveProject]);};
+  function saveProjectHandler () {dispatch([event_ids.modal, 'review']);};
   function navBackHandler () { dispatch([event_ids.currentStep, activeSteps[stepIdx - 1].id]);}
 
   return (<div className="nav-buttons">
@@ -73,6 +73,8 @@ export const ProjectWizardNavigator = () => {
   const currentStep = useSubscription([sub_ids.currentStep]);
   const invalidSteps = useSubscription([sub_ids.invalidSteps]);
   const projectType = useSubscription([sub_ids.overview.projectType]);
+
+  console.log(projectType);
 
   const activeSteps = projectType === 'simplified'
     ? projectSteps.filter(s => !['plots', 'samples', 'rules'].includes(s.id))

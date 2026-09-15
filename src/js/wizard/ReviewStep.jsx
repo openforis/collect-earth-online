@@ -238,6 +238,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           .then((response) => (response.ok ? response.json() : Promise.reject(response)))
           .then((data) => {
             dispatch([event_ids.projectDetails, data]);
+            window.location(`project-wizard?projectId=${projectId}&institutionId=${institutionId}`);
           })
           .catch((error) => {
             console.log(error);

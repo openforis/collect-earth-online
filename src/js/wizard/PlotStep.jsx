@@ -739,6 +739,14 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
           </div>
         );
       })}
+      {userMethod === "percent" && users.length > 0 && percentTotal !== 100 && (
+        <div
+          className="d-flex align-items-center"
+          style={{ color: 'var(--Primary-Red)', fontSize: '0.85rem', marginTop: '5px' }}
+        >
+          Percentages must add up to 100% (currently {percentTotal}%)
+        </div>
+      )}
     </div>
   );
 };

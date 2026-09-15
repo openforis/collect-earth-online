@@ -759,7 +759,7 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   plotSize,
   plotSpacing = -1,
   projectOptions = {showGEEScript : false, showPlotInformation: false, collectConfidence: false, autoLaunchGeoDash: false},
-  projectType = 'regular',
+  type = 'regular',
   referencePlot = -1,
   sampleDistribution,
   sampleFileName,
@@ -776,7 +776,7 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
 }) => {
   draftDb[sub_ids.overview.projectName] = name;
   draftDb[sub_ids.overview.projectDescription] = description;
-  draftDb[sub_ids.overview.projectType] = projectType;
+  draftDb[sub_ids.overview.projectType] = type;
   draftDb[sub_ids.overview.learningMaterial] = learningMaterial;
   draftDb[sub_ids.overview.visibility] = visibility;
   draftDb[sub_ids.overview.projectOptions.showGEEScript] = projectOptions.showGEEScript;
@@ -899,7 +899,7 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
   const form = buildProject(draftDb, sub_ids);
   const errors = validateWizard(form);
   
-  function updateForm () {
+  function updateProject () {
     fetch("/update-project", {
       method: "POST",
       headers: {
@@ -914,7 +914,6 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && data[1] === "") {
-          dispatch([event_ids.modal, 'review']);
           return Promise.resolve();
         } else {
           dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
@@ -926,8 +925,7 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
       });
   }
   
-  
-  function submitForm () {
+  function createProject () {
     fetch("/create-project", {
       method: "POST",
       headers: {
@@ -957,17 +955,17 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
               similarityYears,
             })
           });
-          dispatch([event_ids.modal, 'review']);
           return Promise.resolve();
         } else {
-          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
+          dispatch([event_ids.errors [['server',
+            Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
           return Promise.reject(data[1]);
         }
       })
       .catch((message) => dispatch([event_ids.errors [['server', [message]]]]));
   }
   errors ? dispatch([event_ids.errors, errors]) :
-    (existingProjectId > 0) ? updateForm() : submitForm();
+    (existingProjectId > 0) ? updateProject() : createProject();
 });
 
 regEvent(event_ids.publishProject, ({ draftDb }) => {

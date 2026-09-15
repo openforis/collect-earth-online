@@ -302,11 +302,13 @@ function SubmitProjectModal () {
     <Modal
       title='Project Saved'
       closeText='Return to Institution'
-      confirmText='Publish Project'
+      confirmText='Create Project'
       onConfirm={()=>{
-        dispatch ([event_ids.publishProject]); }}
+        dispatch([event_ids.saveProject]);
+        window.location=`/project-wizard?institutionId=${institutionId}`;
+      }}
       confirmDisabled={!TOS}
-      onClose={()=>{window.location=`/review-institution?institutionId=${institutionId}`;}}>
+      onClose={()=>{window.location=`/project-wizard?institutionId=${institutionId}`;}}>
       <div>
         <p >You are about to publish this project. Once published it will be added to your institution. You’ll still be able to make changes later from the project page within your institution.</p>
         <div>
