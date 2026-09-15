@@ -762,10 +762,10 @@ function ImageAnalysisPane({}) {
       </div>
       
       <div className="map-controls"
-           style={{position: 'absolute',
-                   bottom: '3.5em',
-                   right: '2vw',
-                   zIndex: 1}}>
+        style={{position: 'absolute',
+          bottom: '3.5em',
+          right: '2vw',
+          zIndex: 1}}>
         <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '0.8rem' }}>
           <input
             className="btn btn-outline-lightgreen btn-sm"
@@ -774,35 +774,36 @@ function ImageAnalysisPane({}) {
             value="Re-Zoom"
           />
           <input
-    className={`btn btn-outline-${state.showSamples ? "red" : "lightgreen"} btn-sm`}
+            className={`btn btn-outline-${state.showSamples ? "red" : "lightgreen"} btn-sm`}
 
             onClick={toggleShowSamples}
             type="button"
             value={`${state.showSamples ? "Hide" : "Show"} Samples`}
           />
           <input
-    className={`btn btn-outline-${state.showBoundary ? "red" : "lightgreen"} btn-sm`} 
+            className={`btn btn-outline-${state.showBoundary ? "red" : "lightgreen"} btn-sm`} 
             onClick={toggleShowBoundary}
             type="button"
             value={`${state.showBoundary ? "Hide" : "Show"} Boundary`}
           />
-          <div className="d-flex flex-column">
+          <div className="d-flex flex-column" style={{ gap: '0.1rem' }}>
             <button className="btn btn-sm"
-                  style={{backgroundColor: 'white',
-                          borderRadius: '25%',
-                          margin: 'auto 0 auto auto'}}
-                    onClick={() => zoom(1)}
+              style={{backgroundColor: 'white',
+                borderRadius: '25%',
+                margin: 'auto 0 auto auto'}}
+              onClick={() => zoom(1)}>
+		  <SvgIcon icon="plus" size="0.9rem" />
+            </button>
+            <br/>
+            <button className="btn btn-sm"
+              style={{backgroundColor: 'white',
+                borderRadius: '25%',
+                margin: 'auto 0 auto auto'}}
+              onClick={() => zoom(-1)}
             >
-		  <SvgIcon icon="plus" size="0.9rem" /></button>
-          <button className="btn btn-sm"
-                  style={{backgroundColor: 'white',
-                          borderRadius: '25%',
-                          margin: 'auto 0 auto auto'}}
-                  onClick={() => zoom(-1)}
-          >
-            <SvgIcon icon="minus" size="0.9rem" /></button>
+              <SvgIcon icon="minus" size="0.9rem" /></button>
           </div>
-             </div>
+        </div>
       </div>
     </div>
   );
