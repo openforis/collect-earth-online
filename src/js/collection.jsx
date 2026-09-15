@@ -786,7 +786,7 @@ function ImageAnalysisPane({}) {
             type="button"
             value={`${state.showBoundary ? "Hide" : "Show"} Boundary`}
           />
-          <div className="d-flex flex-column" style={{ gap: '0.1rem' }}>
+          <div className="d-flex flex-column" style={{ gap: '2px' }}>
             <button className="btn btn-sm"
               style={{backgroundColor: 'white',
                 borderRadius: '25%',

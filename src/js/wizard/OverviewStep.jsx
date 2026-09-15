@@ -171,13 +171,15 @@ const GeneralInformationCard = () => {
                 </>
               } />
           </label>
-          <input
-            type="textarea"
-            className="text-input"
-            value={learningMaterial}
-            onChange={(e)=>dispatch([event_ids.overview.learningMaterial, e.target.value])}
+          <textarea
+            className="form-control form-control-sm"
             id="learning-material"
-            placeholder="Enter your markdown."/>
+            maxLength="2000"
+            rows={6}
+            style={{ height: 'auto', minHeight: '120px', resize: 'vertical' }}
+            onBlur={(e)=>dispatch([event_ids.overview.learningMaterial, e.target.value])}
+            defaultValue={learningMaterial}
+          />
         </div>
       </div>
     </div>);
