@@ -3,6 +3,7 @@ import { atom, useAtom } from 'jotai';
 import SvgIcon from "../components/svg/SvgIcon";
 import { stateAtom } from '../utils/constants';
 import MapPanel from '../mapPanel';
+import { Sidebar, SidebarCard } from "../components/Sidebar";
 import "../../css/highlights.css";
 
 export default function Collect ({projects}) {
@@ -65,26 +66,26 @@ export default function Collect ({projects}) {
         </div>
       );
     }
+
+    function CollectionSidebar () {
+      return (
+        <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "30vw", position: "fixed"}}>
+          <SidebarCard title="Collection">
+        
+          </SidebarCard>
+        </Sidebar>
+      );
+    }
     
     return (
-      <div id="projects">
-        <div id="projects-column">
-          <div className="header">
-            <div className="header-row">
-              <p className="header-title">Collect</p>
-              <p className="header-subtitle"></p>
-            </div>
-            
+      <div id="collect-projects">
+        <div className="collect-header">
+          <div className="header-row">
+            <p className="header-title">Collect</p>
+            <p className="header-subtitle">Your projects to collect or review</p>
           </div>
-          {projects.map((project)=>{return(<Project project={project}/>);})}
-        </div>
-        <div id="projects-map-container">
-          <div id="projects-map">
-            <MapPanel
-              mapConfigAtom={mapConfigAtom}
-              imagery={appState.imagery}
-              projects={projects}/>
-          </div></div>
+        </div>            
+        {projects.map((project)=>{return(<Project project={project}/>);})}
       </div>
     );
   }
@@ -92,5 +93,11 @@ export default function Collect ({projects}) {
   return (
     <div id='collect-tab' className='home-tab'>
       <Projects />
+      <div id="collect-map-container">
+          <MapPanel
+            mapConfigAtom={mapConfigAtom}
+            imagery={appState.imagery}
+            projects={projects}/>
+        </div>
     </div>);
 }

@@ -294,7 +294,8 @@
 #projects {
     display: inherit;
     gap: 16px;
-    width: 100%;}
+    width: 100%;
+}
 
 
 #projects-map-container {
@@ -594,4 +595,41 @@ line-height: 14px; /* 100% */
 #projects-column .header-row {
     padding: 1rem !important ;
     border-bottom: none;
+}
+
+#collect-earth {
+    height: 1000vh;
+    background-color: var(--Primary-Light-Green);
+}
+
+#collect-tab {
+    display: inline-block;
+    width: 100vw;
+    background-color: var(--Primary-Light-Green);
+    height: 100vh;
+    
+}
+
+#collect-map-container {
+    display: inherit;
+    /* width: 70vw; */
+    position: absolute;
+}
+
+#collect-projects {
+    width: 30vw;
+    display: inherit;
+    gap: 16px;
+    padding: 1rem;
+}
+
+.collect-header {
+    border: 1px solid var(--Primary-Highlight-Green, #A0CAC6);
+     padding: 1rem;
+     border-radius: 8px;
+     background: var(--Neutral-White, #FFF);
+}
+
+#collect-map-container #mapPanel #home-map-pane {
+    width: 66vw;
 }

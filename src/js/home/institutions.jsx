@@ -220,8 +220,6 @@ export default function Institutions ({userId, userRole}) {
 
   return (
     <div id='institutions-tab' className='home-tab'>
-      <div className="row tog-effect"
-           style={{flexWrap: 'nowrap'}}>
         <InstitutionSidebar
           institutions={appState.institutions}
           projects={appState.projects}
@@ -238,6 +236,5 @@ export default function Institutions ({userId, userRole}) {
       />
     </div>
       </div>
-    </div>
   );
 }
