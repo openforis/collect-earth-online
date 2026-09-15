@@ -635,21 +635,25 @@ export const PlotSimilarityCard = ({ plotIdList = [] }) => {
   );
 };
 
-export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
+export const AssignPlotsCard = ({ totalPlots, institutionUserList = [] }) => {
   const designSettings = useSubscription([sub_ids.plots.designSettings]) || {};
+  const plotDistribution = useSubscription([sub_ids.plots.plotDistribution]) || '';
+  const availability = useSubscription([sub_ids.availability]) || '';
+  const isPublished = availability === 'published';
+
   const userAssignment = designSettings.userAssignment || { userMethod: "none", users: [], percents: [] };
-  const { userMethod, users, percents } = userAssignment;
+  const { userMethod, users = [], percents = [], fileAssignments = {} } = userAssignment;
   const { qaqcAssignment } = designSettings;
   const qaqcMethod = qaqcAssignment?.qaqcMethod || "none";
   const smes = qaqcAssignment?.smes || [];
-  const availability = useSubscription([sub_ids.availability]) || '';
-  const isPublished = availability === 'published';
 
   const methods = [
     ["none", "No assignments", false],
     ["equal", "Equal assignments", false],
     ["percent", "Percentage of plots", false],
+    ["file", "File", true],
   ];
+
   const possibleUsers = [
     { id: -1, email: "Select user..." },
     ...institutionUserList.filter(u =>
@@ -657,37 +661,110 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
     ),
   ];
 
-  const setUserAssignment = (updates) =>
+  const setUserAssignment = (userUpdates, qaqcUpdates = null) =>
     dispatch([event_ids.plots.designSettings, {
       ...designSettings,
-      userAssignment: { ...userAssignment, ...updates }
+      userAssignment: { ...userAssignment, ...userUpdates },
+      ...(qaqcUpdates && { qaqcAssignment: { ...qaqcAssignment, ...qaqcUpdates } }),
     }]);
 
+  const setMethod = (newMethod) =>
+    setUserAssignment(
+      { userMethod: newMethod },
+      newMethod === "none" ? { qaqcMethod: "none" } : null
+    );
+
   const addUser = (userId) =>
-    setUserAssignment({
-      users: [userId, ...users],
-      percents: [0, ...percents]
-    });
+    setUserAssignment({ users: [userId, ...users], percents: [0, ...percents] });
 
   const removeUser = (userId) => {
     const idx = users.indexOf(userId);
     setUserAssignment({
       users: users.filter(u => u !== userId),
-      percents: percents.filter((_, i) => i !== idx)
+      percents: percents.filter((_, i) => i !== idx),
     });
   };
 
   const updatePercent = (idx, val) =>
     setUserAssignment({
-      percents: percents.map((p, i) => (i === idx ? parseInt(val) || 0 : p))
+      percents: percents.map((p, i) => (i === idx ? parseInt(val) || 0 : p)),
     });
+
+  const percentTotal = percents.reduce((sum, p) => sum + (Number(p) || 0), 0);
+  const isFileDistribution = FILE_DISTRIBUTIONS.includes(plotDistribution);
+
+  const warnedInvalidIds = useRef('');
+  useEffect(() => {
+    if (institutionUserList.length === 0) return;
+    const invalidIds = users.filter(id => !institutionUserList.some(u => u.id === id));
+    const key = invalidIds.join(',');
+    if (key && key !== warnedInvalidIds.current) {
+      warnedInvalidIds.current = key;
+      dispatch([event_ids.modal, {
+        title: "CSV User Alert",
+        message: "A user in the CSV is not a valid user for this institution. Please fix this issue before proceeding.",
+      }]);
+    }
+  }, [users, institutionUserList]);
+
+  const renderUserRow = (idx, userId, email) => (
+    <>
+    <div key={userId} className="d-flex align-items-center mb-2">
+      {userMethod === "percent" && (
+        <div className="d-flex flex-column" style={{ marginRight: '10px' }}>
+          <input
+            type="number" className="text-input" min="0" max="100" placeholder="%"
+            style={{ width: '90px', height: '28px', padding: '2px 8px', fontSize: '0.85rem' }}
+            value={percents[idx]}
+            onChange={(e) => updatePercent(idx, e.target.value)}
+          />
+        </div>
+      )}
+      {userMethod === "file" && (
+        <div className="d-flex flex-column" style={{ marginRight: '10px' }}>
+          <input
+            type="number" className="text-input" disabled
+            style={{ width: '60px' }}
+            value={(fileAssignments[email] || []).length}
+          />
+          <small style={{ color: 'var(--Neutral-Text-gray)' }}>plots assigned to</small>
+        </div>
+      )}
+
+      <span className="flex-grow-1" style={{ fontSize: '0.9rem' }}>{email}</span>
+
+      {userMethod !== "file" && (
+        <button
+          className="btn btn-sm"
+          title={`Remove ${email}`}
+          style={{
+            backgroundColor: 'transparent',
+            border: '1px solid var(--Primary-Red)',
+            color: 'var(--Primary-Red)',
+          }}
+          onClick={() => removeUser(userId)}
+        >
+          <SvgIcon icon="minus" size="0.8rem" color="var(--Primary-Red)" />
+        </button>
+      )}
+    </div>
+      {userMethod === 'percent' && (
+      <small style={{ color: 'var(--Neutral-Text-gray)' }}>
+        ~{formatNumberWithCommas(Math.round(((percents[idx] || 0) / 100) * totalPlots))} plots
+      </small>
+      )}
+    </>
+  );
 
   return (
     <div
       className="wizard-card"
       aria-disabled={isPublished}
-      style={{ marginTop: '10px',
-        ...(isPublished && { opacity: 0.55, pointerEvents: 'none', userSelect: 'none' })}}>
+      style={{
+        marginTop: '10px',
+        ...(isPublished && { opacity: 0.55, pointerEvents: 'none', userSelect: 'none' }),
+      }}
+    >
       <h5 className="card-title" style={{ marginBottom: '15px' }}>ASSIGN PLOTS</h5>
 
       <div className="form-group mb-3">
@@ -696,56 +773,48 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList }) => {
           label="User Assignment"
           options={methods}
           value={userMethod}
-          onChange={(e) => setUserAssignment({ userMethod: e.target.value })}
+          disabled={userMethod === "file"}
+          onChange={(e) => setMethod(e.target.value)}
           colSize="text-input"
         />
       </div>
 
-      {(userMethod === "equal" || userMethod === "percent") && (
-        <UserSelect
-          addUser={addUser}
-          possibleUsers={possibleUsers}
-          label="Assigned Users"
-        />
-      )}
+      {userMethod !== "none" && (
+        <>
+          {(userMethod === "equal" || userMethod === "percent") && (
+            <UserSelect
+              addUser={addUser}
+              id="assigned-users"
+              label="Assigned Users "
+              possibleUsers={possibleUsers}
+            />
+          )}
 
-      {users.map((userId, idx) => {
-        const user = institutionUserList.find(u => u.id === userId);
-        return user && (
-          <div key={userId} className="d-flex align-items-center mb-2">
-            {userMethod === "percent" && (
-              <div className="d-flex flex-column" style={{ marginRight: '10px' }}>
-                <input
-                  type="number" className="text-input" style={{ width: '60px' }}
-                  value={percents[idx]} onChange={(e) => updatePercent(idx, e.target.value)}
-                />
-                <small style={{ color: 'var(--Neutral-Text-gray)' }}>
-                  ~{formatNumberWithCommas(Math.round((percents[idx] / 100) * totalPlots))} plots
-                </small>
-              </div>
-            )}
-            <span className="flex-grow-1" style={{ fontSize: '0.9rem' }}>{user.email}</span>
-            <button
-              className="btn btn-sm"
+          {users.map((userId, idx) => {
+            const user = institutionUserList.find(u => u.id === userId);
+            return user ? renderUserRow(idx, userId, user.email) : null;
+          })}
+
+          {userMethod === "percent" && users.length > 0 && (
+            <small
+              className="d-block mt-1"
               style={{
-                backgroundColor: 'transparent',
-                border: '1px solid var(--Primary-Red)',
-                color: 'var(--Primary-Red)'
+                fontStyle: 'italic',
+                color: percentTotal === 100 ? 'var(--Primary-Green)' : 'var(--Primary-Red)',
               }}
-              onClick={() => removeUser(userId)}
             >
-              <SvgIcon icon="minus" size="0.8rem" color="var(--Primary-Red)" />
-            </button>
-          </div>
-        );
-      })}
-      {userMethod === "percent" && users.length > 0 && percentTotal !== 100 && (
-        <div
-          className="d-flex align-items-center"
-          style={{ color: 'var(--Primary-Red)', fontSize: '0.85rem', marginTop: '5px' }}
-        >
-          Percentages must add up to 100% (currently {percentTotal}%)
-        </div>
+              {percentTotal}% of the plots are assigned.
+            </small>
+          )}
+
+          {userMethod === "equal" && users.length > 0 && (
+            <small className="d-block mt-1" style={{ fontStyle: 'italic' }}>
+              {isFileDistribution
+                ? "- CEO will use the file plot distribution information for plot assignment."
+                : `- Each user will be assigned ~${formatNumberWithCommas(Math.round(totalPlots / users.length))} plots.`}
+            </small>
+          )}
+        </>
       )}
     </div>
   );
