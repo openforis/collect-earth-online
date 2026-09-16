@@ -280,7 +280,7 @@ export const UserDrawnSamplesCard = () => {
     ]);
 
   return (
-    <div className="wizard-card">
+    <div className="wizard-card" style={{ marginTop: '10px' }}>
       <h5 className="card-title">USER DRAWN SAMPLES</h5>
       <div className="form-check mb-2">
         <input

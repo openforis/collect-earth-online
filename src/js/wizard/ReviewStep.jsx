@@ -100,7 +100,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const plotsToShow = useSubscription([sub_ids.plots.plotFeatures]) || [];
 
     return (
-      <div className='wizard-card' style={{ display: 'flex', flexDirection: 'column', height: '420px', boxSizing: 'border-box' }}>
+      <div className='wizard-card' style={{ display: 'flex', flexDirection: 'column', height: '555px', boxSizing: 'border-box' }}>
         <div className='review-card-header'>
           <p className="card-title">BOUNDARY</p>
           <div style={{ cursor: 'pointer' }} onClick={()=>{dispatch([event_ids.currentStep, 'boundary']);}}>
