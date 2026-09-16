@@ -296,26 +296,29 @@ function NewProjectModal () {
 };
 
 function SubmitProjectModal () {
-  const institutionId = useSubscription([sub_ids.institutionId]);
   const [TOS, setTOS] = useState(false);
+  const update = Number(useSubscription([sub_ids.projectId]));
   return (
     <Modal
-      title='Project Saved'
-      closeText='Return to Institution'
-      confirmText='Create Project'
+      title={update < 0 ? 'Create Project' : 'Update Project'}
+      closeText='Return to editing'
+      confirmText={update < 0 ? 'Create Project' : 'Update Project'}
       onConfirm={()=>{
         dispatch([event_ids.saveProject]);
-        window.location=`/project-wizard?institutionId=${institutionId}`;
       }}
       confirmDisabled={!TOS}
-      onClose={()=>{window.location=`/project-wizard?institutionId=${institutionId}`;}}>
+      onClose={()=>{dispatch([event_ids.modal, null])}}>
       <div>
-        <p >You are about to publish this project. Once published it will be added to your institution. You’ll still be able to make changes later from the project page within your institution.</p>
+        <p >You will be able to continue to make changes to the project after creating/updating it.
+          Once satisfied with the project, click publish to begin final collection.</p>
         <div>
           <input type='checkbox'
                  checked={TOS}
                  onChange={(e)=>setTOS(e.target.checked)}/>
-          <label>Accept <a href="/">Terms of Service</a><span style={{color: 'red'}}>*</span></label>
+          <label>Accept
+            <a href="https://app.collect.earth/terms-of-service">Terms of Service</a>
+            <span style={{color: 'red'}}>*</span>
+          </label>
           
         </div>
         <p > Are you sure you want to continue?</p>

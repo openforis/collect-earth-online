@@ -891,7 +891,6 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
   const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
   const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
-  const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
   const similarityDetails = current(draftDb[sub_ids.plots.plotSimilarityDetails]) || {};
   const existingProjectId = current(draftDb[sub_ids.projectId]);
   const referencePlotId = similarityDetails.referencePlotId;
@@ -913,7 +912,8 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
-        if (data[0] && data[1] === "") {
+        if (data[0]) {
+          window.location.assign(`/project-wizard?projectId=${existingProjectId}&institutionId=${institutionId}`);
           return Promise.resolve();
         } else {
           dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
@@ -955,6 +955,7 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
               similarityYears,
             })
           });
+          window.location.assign(`/project-wizard?projectId=${data[1].projectId}&institutionId=${institutionId}`);
           return Promise.resolve();
         } else {
           dispatch([event_ids.errors [['server',

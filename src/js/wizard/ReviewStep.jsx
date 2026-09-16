@@ -133,6 +133,40 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const numPlots = useSubscription([sub_ids.plots.numPlots]);
     const plotShape = useSubscription([sub_ids.plots.plotShape]);
     const plotSize = useSubscription([sub_ids.plots.plotSize]);
+    const institutionUsers = useSubscription([sub_ids.institution.users]) ?? [];
+    const designSettings = useSubscription([sub_ids.plots.designSettings]);
+    const userMethod = designSettings?.userAssignment?.userMethod ?? 'none';
+    const usersAssigned = designSettings?.userAssignment?.users ?? [];
+    const qaqcMethod = designSettings?.qaqcAssignment?.qaqcMethod ?? 'none';
+    const timesToReview = designSettings?.qaqcAssignment?.timesToReview;
+    const smes = designSettings?.qaqcAssignment?.smes ?? [];
+
+    // String() on both sides so it works whether ids arrive as numbers or strings
+    const emailsFor = (ids) =>
+      ids.map((id) => institutionUsers.find((u) => String(u.id) === String(id))?.email ?? id);
+
+    const userAssignmentText = userMethod === 'none'
+      ? 'N/A'
+      : usersAssigned.length > 0
+        ? `${userMethod} (${emailsFor(usersAssigned).join(', ')})`
+        : userMethod;
+
+    const reviewText = `${timesToReview} review${timesToReview === 1 ? '' : 's'} per plot`;
+
+    const qaqcText = (() => {
+      switch (qaqcMethod) {
+      case 'none':
+        return 'N/A';
+      case 'overlap':
+        return `overlap, ${reviewText}`;
+      case 'sme':
+        return smes.length > 0
+          ? `sme (${emailsFor(smes).join(', ')}), ${reviewText}`
+          : `sme, ${reviewText}`;
+      default:
+        return `${qaqcMethod}, ${reviewText}`;
+      }
+    })();
 
     return (
       <div className='wizard-card'>
@@ -146,8 +180,8 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         <p>Number of Plots: <b>{numPlots}</b></p>
         <p>Plot Shape: <b>{plotShape}</b></p>
         <p>Plot Size: <b>{plotSize}</b></p>
-        <p>User Assignment: <b>{''}</b></p>
-        <p>Quality Control: <b>{''}</b></p>
+        <p>User Assignment: <b>{userAssignmentText}</b></p>
+        <p>Quality Control: <b>{qaqcText}</b></p>
       </div>
     );
   }
@@ -238,7 +272,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           .then((response) => (response.ok ? response.json() : Promise.reject(response)))
           .then((data) => {
             dispatch([event_ids.projectDetails, data]);
-            window.location(`project-wizard?projectId=${projectId}&institutionId=${institutionId}`);
+            window.location.assign(`project-wizard?projectId=${projectId}&institutionId=${institutionId}`);
           })
           .catch((error) => {
             console.log(error);
