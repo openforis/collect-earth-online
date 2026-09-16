@@ -911,7 +911,7 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
   );
 }
 
-export const BreadCrumbs = ({crumbs}) => {  
+export const BreadCrumbs = ({crumbs, sidebar}) => {  
   const [state, setState] = useAtom(stateAtom);
   const {breadCrumbs} = state;
   
@@ -965,7 +965,8 @@ export const BreadCrumbs = ({crumbs}) => {
   
   return (
     <div id="breadcrumb-bar"
-         className="flex-row">
+         className="flex-row"
+         style={{marginLeft: sidebar? '100px' : 'inherit'}}>
       <div
         style={{cursor: "pointer"}}
         onClick={()=> {
