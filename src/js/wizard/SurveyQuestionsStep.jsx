@@ -142,7 +142,7 @@ export const QuestionCard = ({
               className="text-input"
               defaultValue={question.question}
               placeholder="Enter Text"
-              onBlue={(e) => updateQuestion('question', e.target.value)}
+              onBlur={(e) => updateQuestion('question', e.target.value)}
             />
             <label className="text-label-sm">
               Question Label (Optional) <SvgIcon icon="info" size="0.8rem" />
@@ -175,7 +175,7 @@ export const QuestionCard = ({
                     type="color"
                     className="question-color-picker"
                     value={a.color}
-                    onChange={(e) => updateAnswer(aId, 'color', e.target.value)}
+                    onBlur={(e) => updateAnswer(aId, 'color', e.target.value)}
                   />
                   <input
                     type="text"
@@ -199,7 +199,7 @@ export const QuestionCard = ({
                   <input
                     type="checkbox"
                     checked={a.hide || false}
-                    onChange={(e) => updateAnswer(aId, 'hide', e.target.checked)}
+                    onBlur={(e) => updateAnswer(aId, 'hide', e.target.checked)}
                   />
                   {(!isInputType && Object.keys(question.answers).length > 1) && (
                     <div

@@ -5,6 +5,7 @@ import { Style, Stroke, Fill } from 'ol/style';
 import { toLonLat } from 'ol/proj';
 import { platformModifierKeyOnly } from 'ol/events/condition';
 import { getCenter, getExtent } from 'ol/extent';
+import { getArea } from "ol/sphere";
 import Collection from 'ol/Collection';
 import DragBox from 'ol/interaction/DragBox';
 import GeoJSON from 'ol/format/GeoJSON';

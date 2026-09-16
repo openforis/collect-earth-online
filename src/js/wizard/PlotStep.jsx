@@ -521,9 +521,8 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
       )}
       {activeAreaGeometry && (
         <div className="mb-3 text-secondary small" style={{ fontWeight: '500' }}>
-          Plot Properties:
           <span>
-            Strata 1: Area {formatNumberWithCommas(Math.round(calculateGeoJsonArea(activeAreaGeometry)))} ha
+            Area: {formatNumberWithCommas(Math.round(calculateGeoJsonArea(activeAreaGeometry)))} ha
           </span>
         </div>
       )}

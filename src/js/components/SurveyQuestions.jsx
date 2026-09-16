@@ -138,7 +138,6 @@ export function SurveyQuestions ({
     }
     setAppState((prev) => {
       const childQuestionIds = getChildQuestionIds(questionId);
-
       const newSamples = sampleIds.reduce((acc, sampleId) => {
         if (answerText == null) return acc;
         const prevSampleAnswers = prev.userSamples?.[sampleId] || {};
@@ -454,7 +453,6 @@ export function SurveyQuestions ({
     dropdown: (q) => {
       const current = getCurrentAnswer(q.id);
       const value = current ? String(current.answerId) : '';
-
       return (
         <div className="sq-dropdown-wrap">
           <select
