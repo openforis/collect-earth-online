@@ -210,7 +210,7 @@ export default function Highlights ({userId, userRole}) {
       title: "Featured Projects",
       subtitle: "Browse active projects from institutions around the world.",
       children: <Projects/>,
-      link: "/"}
+      link: "/home?tab=collect"}
   };
   
   return (
@@ -230,7 +230,7 @@ export default function Highlights ({userId, userRole}) {
                   <div className="highlight-title">
                     <span>{highlight.title}</span>
                     <div className="highlight-link"
-                         onClick={()=>{console.log('view all highlights of type: ', highlight.title);}}>
+                         onClick={()=>{window.open(highlight.link);}}>
                       <span>View All</span>
                       <SvgIcon icon="chevronRight" size="1.2rem"/>
                     </div>
