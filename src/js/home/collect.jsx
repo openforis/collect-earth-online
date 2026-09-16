@@ -3,6 +3,7 @@ import { atom, useAtom } from 'jotai';
 import SvgIcon from "../components/svg/SvgIcon";
 import { stateAtom } from '../utils/constants';
 import MapPanel from '../mapPanel';
+import { zoomMapToPoint } from '../utils/newMercator';
 import { Sidebar, SidebarCard } from "../components/Sidebar";
 import "../../css/highlights.css";
 
@@ -56,7 +57,8 @@ export default function Collect ({projects}) {
               </div>
             </div>
             <div className="primary-button"
-                 onClick={() => {window.location.href = `/review-project?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
+                 onClick={() => {window.location.href =
+                                 `/project-wizard?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
               <div>
                 <span>Visit Project</span>
                 <SvgIcon icon="chevronRight" size="1.2rem"/>

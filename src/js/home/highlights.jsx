@@ -170,7 +170,10 @@ export default function Highlights ({userId, userRole}) {
               </div>
             </div>
             <div className="primary-button"
-                 onClick={() => {window.location.href = `/review-project?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
+                 onClick={() => {
+                   console.log("visit project!");
+                   window.location.href =
+                                 `/project-wizard?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
               <div>
                 <span>Visit Project</span>
                 <SvgIcon icon="chevronRight" size="1.2rem"/>
