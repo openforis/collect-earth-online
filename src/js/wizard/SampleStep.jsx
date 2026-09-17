@@ -6,6 +6,7 @@ import { NewMap } from '../components/NewMap';
 import Select from '../components/Select';
 import SvgIcon from '../components/svg/SvgIcon';
 import { getPlotGeometry, generatePreviewSamples } from '../utils/newMercator';
+import { readFileAsBase64Url } from '../utils/generalUtils';
 
 // -------------------
 // CONSTANTS
@@ -93,14 +94,6 @@ const parseSampleFile = (file, distribution) => {
   return Promise.resolve([]);
 };
 
-const readFileAsBase64 = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (event) => resolve(event.target.result.split(',')[1]);
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsDataURL(file);
-  });
-
 // -------------------
 // SAMPLE STEP
 // -------------------
@@ -184,9 +177,9 @@ export const SampleGenerationCard = ({ setSampleFeatures }) => {
 
     dispatch([event_ids.samples.sampleFileName, file.name]);
 
-    readFileAsBase64(file)
-      .then((base64) => dispatch([event_ids.samples.sampleFileBase64, base64]))
-      .catch((err) => console.error('Error reading sample file:', err));
+    readFileAsBase64Url(file, (b64String) => {
+      dispatch([event_ids.samples.sampleFileBase64, b64String]);
+    });
 
     parseSampleFile(file, sampleDistribution)
       .then((features) => {
