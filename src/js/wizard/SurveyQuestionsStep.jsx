@@ -175,7 +175,7 @@ export const QuestionCard = ({
                     type="color"
                     className="question-color-picker"
                     value={a.color}
-                    onBlur={(e) => updateAnswer(aId, 'color', e.target.value)}
+                    onChange={(e) => updateAnswer(aId, 'color', e.target.value)}
                   />
                   <input
                     type="text"
