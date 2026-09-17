@@ -74,8 +74,6 @@ export const ProjectWizardNavigator = () => {
   const invalidSteps = useSubscription([sub_ids.invalidSteps]);
   const projectType = useSubscription([sub_ids.overview.projectType]);
 
-  console.log(projectType);
-
   const activeSteps = projectType === 'simplified'
     ? projectSteps.filter(s => !['plots', 'samples', 'rules'].includes(s.id))
     : projectSteps;

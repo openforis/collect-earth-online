@@ -263,8 +263,6 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
   const isBoundaryFileDriven = boundaryMethod === 'plotFile' || boundaryMethod === 'shpFile';
   const maxId = useSubscription([sub_ids.plots.maxId]);
 
-  console.log(maxId);
-
   // Debounced random/gridded generation — standard mode only.
   useEffect(() => {
     if (isPublished || plotsSource === 'server') return undefined;

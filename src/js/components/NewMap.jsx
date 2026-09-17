@@ -29,12 +29,20 @@ const plotCentroidStyle = new Style({
   }
 });
 
-const samplePointStyle = new Style({
-  image: new CircleStyle({
-    radius: 5,
-    stroke: new Stroke({ color: '#000', width: 1.5 }),
-  })
-});
+const samplePointStyle = (feature) => {
+  const type = feature.getGeometry()?.getType();
+  if (type === 'Polygon' || type === 'MultiPolygon') {
+    return new Style({
+      stroke: new Stroke({ color: '#000', width: 1.5 }),
+    });
+  }
+  return new Style({
+    image: new CircleStyle({
+      radius: 5,
+      stroke: new Stroke({ color: '#000', width: 1.5 }),
+    })
+  });
+};
 
 export const NewMap = ({
   pan = true,

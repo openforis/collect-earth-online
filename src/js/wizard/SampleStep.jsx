@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import shp from 'shpjs';
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
 import { event_ids, sub_ids } from '../state/projectWizard';
 import { NewMap } from '../components/NewMap';
@@ -86,8 +87,8 @@ const parseSampleFile = (file, distribution) => {
   if (distribution === 'csv') {
     return file.text().then(csvToFeatures);
   }
-  if (distribution === 'shp' && window.shp) {
-    return file.arrayBuffer().then((buffer) => window.shp(buffer)).then(shpToFeatures);
+  if (distribution === 'shp') {
+    return file.arrayBuffer().then((buffer) => shp(buffer)).then(shpToFeatures);
   }
   return Promise.resolve([]);
 };
@@ -188,8 +189,12 @@ export const SampleGenerationCard = ({ setSampleFeatures }) => {
       .catch((err) => console.error('Error reading sample file:', err));
 
     parseSampleFile(file, sampleDistribution)
-      .then((features) => setSampleFeatures(featuresToGeometries(features)))
-      .catch((err) => console.error('Error parsing sample file:', err));
+      .then((features) => {
+        setSampleFeatures(featuresToGeometries(features));
+      })
+      .catch((err) => {
+        console.error('Error parsing sample file:', err);
+      });
   };
 
   return (
@@ -238,9 +243,9 @@ export const SampleGenerationCard = ({ setSampleFeatures }) => {
           </label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
             <label
-              className="btn btn-sm btn-outline-lightgreen py-2 px-3 text-nowrap"
+              className="btn btn-sm btn-outline-darkgreen"
               htmlFor="sample-file-upload-input"
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px'}}
             >
               <SvgIcon icon="plus" size="0.9rem" />
               Upload {sampleDistribution.toUpperCase()} file
