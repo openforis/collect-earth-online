@@ -627,26 +627,13 @@ export function pageInit(params, session) {
     <GeoDashNavigationBar
       editor
       page={(addDialog, copyDialog, closeDialogs) => (
-        <>
-          <BreadCrumbs
-            crumbs={[
-              {display: "Institution",
-               id: "institution",
-               query: ["institution", params.institutionId],
-               onClick:()=>{
-                 window.location.assign(`/review-institution?institutionId=${params.institutionId}`);  
-               }},
-              {display: "Widget Layout Editor",
-               id: "widget-layout-editor"}]}
-          />
-          <WidgetLayoutEditor
+        <WidgetLayoutEditor
           addDialog={addDialog}
           closeDialogs={closeDialogs}
           copyDialog={copyDialog}
           institutionId={parseInt(params.institutionId || -1)}
           projectId={parseInt(params.projectId || -1)}
-          />
-        </>
+        />
       )}
       userName={session.userName || ""}
     />,

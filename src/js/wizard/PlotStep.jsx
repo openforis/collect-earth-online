@@ -264,10 +264,16 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
   const maxId = useSubscription([sub_ids.plots.maxId]);
 
   // Debounced random/gridded generation — standard mode only.
+  const skipNextGeneration = useRef(true);
   useEffect(() => {
     if (isPublished || plotsSource === 'server') return undefined;
     if (!activeAreaGeometry || FILE_DISTRIBUTIONS.includes(plotDistribution)) {
       setPlotLimitError('');
+      return undefined;
+    }
+
+    if (skipNextGeneration.current) {
+      skipNextGeneration.current = false;
       return undefined;
     }
 

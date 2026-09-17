@@ -316,7 +316,9 @@ function SubmitProjectModal () {
                  checked={TOS}
                  onChange={(e)=>setTOS(e.target.checked)}/>
           <label>Accept
-            <a href="https://app.collect.earth/terms-of-service">Terms of Service</a>
+            <a href="https://app.collect.earth/terms-of-service" target="_blank">
+              Terms of Service
+            </a>
             <span style={{color: 'red'}}>*</span>
           </label>
           

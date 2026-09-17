@@ -20,6 +20,8 @@ const SAMPLE_FILE_ACCEPT = {
   geojson: '.geojson,.json',
 };
 
+const GENERATED_PLOT_DISTRIBUTIONS = ['random', 'gridded'];
+
 // -------------------
 // PURE HELPERS
 // -------------------
@@ -143,6 +145,8 @@ export const SampleGenerationCard = ({ setSampleFeatures }) => {
   const availability = useSubscription([sub_ids.availability]) || '';
   const isPublished = availability === 'published';
   const extension = sampleDistribution === 'shp' ? 'zip' : sampleDistribution;
+  const plotDistribution = useSubscription([sub_ids.plots.plotDistribution]) || 'random';
+  const isFileIneligible = isPublished || GENERATED_PLOT_DISTRIBUTIONS.includes(plotDistribution);
 
   // Published projects can't use file-based sample distributions; if the
   // loaded project has one, fall back to a selectable option.
@@ -156,9 +160,9 @@ export const SampleGenerationCard = ({ setSampleFeatures }) => {
     ['random', 'Random', false],
     ['gridded', 'Gridded', false],
     ['center', 'Center', false],
-    ['csv', 'CSV File', isPublished],
-    ['shp', 'SHP File', isPublished],
-    ['geojson', 'GeoJSON File', isPublished]
+    ['csv', 'CSV File', isFileIneligible],
+    ['shp', 'SHP File', isFileIneligible],
+    ['geojson', 'GeoJSON File', isFileIneligible]
   ];
 
   const handleDistributionChange = (e) => {
