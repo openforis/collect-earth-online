@@ -154,7 +154,8 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_id integer)
     total_plots        integer,
     average_time       numeric,
     per_project        text,
-    user_email         text
+    user_email         text,
+    accept_tos         text
  ) AS $$
 
     WITH users_plots as (
@@ -197,9 +198,11 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_id integer)
         FROM proj_groups
     ), user_email as (
        SELECT email FROM users WHERE user_uid = _user_id
-    )
+    ), accept_tos AS (
+       SELECT tos_slug FROM users WHERE user_uid = _user_id
+)
 
-    SELECT * FROM user_totals, average_totals, proj_agg, user_email
+    SELECT * FROM user_totals, average_totals, proj_agg, user_email, accept_tos
 
 $$ LANGUAGE SQL;
 

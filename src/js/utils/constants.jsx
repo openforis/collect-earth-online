@@ -6,6 +6,7 @@ import { atom } from 'jotai';
 */
 
 export const stateAtom = atom({
+  acceptTOS: false,
   breadCrumbs: [
     {display: "Homepage",
      id: "home",

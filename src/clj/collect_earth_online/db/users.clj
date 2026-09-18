@@ -190,12 +190,13 @@
     (data-response all-users)))
 
 (defn get-user-stats [{:keys [params]}]
-  (let [account-id (tc/val->int (:accountId params))]
+  (let [account-id (tc/val->int (:accountId params))]    
     (if-let [stats (first (call-sql "get_user_stats" account-id))]
       (data-response {:totalProjects (:total_projects stats)
                       :totalPlots    (:total_plots stats)
                       :averageTime   (:average_time stats)
-                      :perProject    (tc/jsonb->clj (:per_project stats))})
+                      :perProject    (tc/jsonb->clj (:per_project stats))
+                      :acceptTOS     (:accept_tos stats)})
       (data-response {}))))
 
 (defn get-user-admin-institutions [{:keys [session]}]
