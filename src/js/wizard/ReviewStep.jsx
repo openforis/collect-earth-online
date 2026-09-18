@@ -238,6 +238,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           .then((response) => (response.ok ? response.json() : Promise.reject(response)))
           .then((data) => {
             dispatch([event_ids.projectDetails, data]);
+            dispatch([event_ids.availability, 'published']);
           })
           .catch((error) => {
             console.log(error);
@@ -252,6 +253,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           .then((response) => (response.ok ? response.json() : Promise.reject(response)))
           .then((data) => {
             dispatch([event_ids.projectDetails, data]);
+            dispatch([event_ids.availability, 'closed']);
           })
           .catch((error) => {
             console.log(error);
@@ -313,25 +315,28 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
       }
     };
 
-    const projectStates = {
-      unpublished: {
+    function projectState (availability){
+      switch (availability){
+      case 'unpublished' : return {
         button: "Publish",
         update: publishProject,
         description: "Admins can review, edit, and test collecting the project. Publish the project in order for users to begin collection.",
-      },
-      published: {
+      };
+      case 'published': return {
         button: "Close",
         update: closeProject,
         description: "Users can begin collecting. Limited changes to the project details can be made. Close the project to prevent anymore updates.",
-      },
-      closed: {
+      };
+      case 'closed': return {
         button: "Reopen",
         update: publishProject,
         description: "The project is closed to all changes. Reopen the project for additional collection.",
-      }
-    };
-
-    const currentState = projectStates[availability] || projectStates.unpublished;
+      };
+        
+      default : return {
+        button: '',
+        description: ''};
+      }};
 
     const btnStyle = {
       width: '100%',
@@ -375,28 +380,29 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           }}
         >
           This project is <b>{availability === "unpublished" ? "in draft mode" : availability}</b>. 
-          {" "}{currentState.description}
+          {" "}{projectState(availability).description}
         </div>
-        
         <div className="d-flex flex-column w-100">
-          <h4 style={{ ...headerStyle, marginTop: '0' }}>
-            Modify Project Details
-          </h4>
-          <button
-            className="btn btn-outline-red"
-            style={btnStyle}
-            onClick={currentState.update}
-          >
-            {currentState.button} Project
-          </button>
-          <button
-            className="btn btn-outline-red"
-            style={btnStyle}
-            onClick={deleteProject}
-          >
-            Delete Project
-          </button>
-          
+          {availability && (
+            <>
+              <h4 style={{ ...headerStyle, marginTop: '0' }}>
+                Modify Project Details
+              </h4>
+              <button
+                className="btn btn-outline-red"
+                style={btnStyle}
+                onClick={projectState(availability).update}
+              >
+                {projectState(availability).button} Project
+              </button>
+              <button
+                className="btn btn-outline-red"
+                style={btnStyle}
+                onClick={deleteProject}
+              >
+                Delete Project
+              </button>
+            </>)}
           <h4 style={headerStyle}>External Links</h4>
           <button
             className="btn btn-outline-darkgreen"
