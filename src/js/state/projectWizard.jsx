@@ -943,22 +943,27 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && Number.isInteger(data[1].projectId)) {
-          (referencePlotId > 0) && fetch("/start-plot-similarity", {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json; charset=utf-8",
-            },
-            body: JSON.stringify({
-              projectId: data[1].projectId,
-              referencePlotId,
-              similarityYears,
+          const projectId = data[1].projectId;
+          const goToWizard = () =>
+            window.location.assign(`/project-wizard?projectId=${projectId}&institutionId=${institutionId}`);
+
+          if (referencePlotId > 0) {
+            return fetch("/start-plot-similarity", {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json; charset=utf-8",
+              },
+              body: JSON.stringify({ projectId, referencePlotId, similarityYears }),
             })
-          });
-          window.location.assign(`/project-wizard?projectId=${data[1].projectId}&institutionId=${institutionId}`);
+              .catch((err) => console.error("start-plot-similarity failed", err)) // don't block navigation
+              .finally(goToWizard);
+          }
+
+          goToWizard();
           return Promise.resolve();
         } else {
-          dispatch([event_ids.errors [['server',
+          dispatch([event_ids.errors, [['server',
             Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
           return Promise.reject(data[1]);
         }

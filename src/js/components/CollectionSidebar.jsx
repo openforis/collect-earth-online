@@ -797,12 +797,19 @@ export const ImageryOptions = () => {
     currentImagery,
     imageryList = [],
     imagery,
+    unansweredColor,
   } = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
 
   const [open, setOpen] = useState(true);
   const [enableGrid, setEnableGrid] = useState(false);
 
+  const toggleUnansweredColor = () =>
+    setAppState((s) => ({
+      ...s,
+      unansweredColor: s.unansweredColor === "white" ? "black" : "white",
+    }));
+  
   const setBaseMapSource = (id) => {
     const img = imageryList.find((i) => Number(i.id) === Number(id)) || null;
     setAppState((s) => ({
@@ -905,16 +912,41 @@ export const ImageryOptions = () => {
 
          return byType[imagery.sourceConfig.type] || null;
        })}
-      <div className="sidebar-mode" style={{ marginTop: '5px' }}>
-        <label className="sidebar-switch" style={{ marginBottom: '0px' }}>
-          <input
-            type="checkbox"
-            checked={enableGrid}
-            onChange={toggleGrid}
-          />
-          <span className="sidebar-slider round"></span>
-        </label>
-        <span className="mode-label">Enable map grid</span>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          columnGap: "16px",
+          marginTop: '5px',
+        }}
+      >
+        <div className="sidebar-mode">
+          <label className="sidebar-switch" style={{ marginBottom: "0px" }}>
+            <input
+              type="checkbox"
+              checked={enableGrid}
+              onChange={toggleGrid}
+            />
+            <span className="sidebar-slider round"></span>
+          </label>
+          <span className="mode-label" style={{ whiteSpace: "nowrap" }}>
+            Map grid
+          </span>
+        </div>
+
+        <div className="sidebar-mode">
+          <label className="sidebar-switch" style={{ marginBottom: "0px" }}>
+            <input
+              type="checkbox"
+              checked={unansweredColor === "white"}
+              onChange={toggleUnansweredColor}
+            />
+            <span className="sidebar-slider round"></span>
+          </label>
+          <span className="mode-label" style={{ whiteSpace: "nowrap" }}>
+            Unanswered color: {unansweredColor}
+          </span>
+        </div>
       </div>
     </SidebarCard>
   );

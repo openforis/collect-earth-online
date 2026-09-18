@@ -248,7 +248,6 @@ export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
         ? state.selectedQuestionId
         : parseInt(firstQuestionId),
       collectionStart: Date.now(),
-      unansweredColor: "black",
     };
   };
   // API CALLS

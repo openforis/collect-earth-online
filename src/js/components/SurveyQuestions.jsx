@@ -921,6 +921,7 @@ const ConfidenceItem = ({ isOpen, onToggle }) => {
 export const DrawingTool = () => {
   const { currentProject, currentPlot, mapConfig, answerMode } = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
+  const isDrawing = answerMode === "draw";
 
   const sg = currentProject?.sampleGeometries || {
     points: true,
@@ -1021,7 +1022,14 @@ export const DrawingTool = () => {
 
   const setDrawTool = (type) => {
     setDrawToolState(type);
-    setAnswerMode("draw", type);
+
+    if (answerMode === "draw") {
+      mercator.disableDrawing(mapConfig);
+      mercator.enableDrawing(mapConfig, "drawLayer", type);
+    } else {
+      // First time entering draw mode: build the layer from saved samples
+      setAnswerMode("draw", type);
+    }
   };
 
   const discardDrawnSamples = () => {
@@ -1117,14 +1125,24 @@ export const DrawingTool = () => {
           <button
             className="btn btn-outline-darkgreen"
             onClick={featuresToSampleLayer}
-            title="Save drawn features back to sample list"
+            disabled={!isDrawing}
+            title={
+              isDrawing
+                ? "Save drawn features back to sample list"
+                : "Select a drawing tool to enable"
+            }
           >
             Save samples
           </button>
           <button
             className="btn btn-outline-darkgreen"
             onClick={discardDrawnSamples}
-            title="Exit draw mode and return to answering"
+            disabled={!isDrawing}
+            title={
+              isDrawing
+                ? "Exit draw mode and return to answering"
+                : "Select a drawing tool to enable"
+            }
           >
             Discard samples
           </button>
