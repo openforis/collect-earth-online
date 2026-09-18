@@ -260,7 +260,7 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
   const plotFileName = useSubscription([mode.subs.plotFileName]) || '';
   const [plotLimitError, setPlotLimitError] = useState('');
   const activeAreaGeometry = aoiFeatures[0];
-  const isBoundaryFileDriven = boundaryMethod === 'plotFile' || boundaryMethod === 'shpFile';
+  const isBoundaryFileDriven = boundaryMethod === 'plotFile';
   const maxId = useSubscription([sub_ids.plots.maxId]);
 
   // Debounced random/gridded generation — standard mode only.
