@@ -9,6 +9,8 @@ import checkboxIcon from "./checkboxIcon.svg";
 import uncheckedBoxIcon from "./uncheckedBoxIcon.svg";
 import closeIcon from "./closeIcon.svg";
 import collapseIcon from "./collapseIcon.svg";
+import collectIcon from "./collectIcon.svg";
+import compassIcon from "./compassIcon.svg";
 import copyIcon from "./copyIcon.svg";
 import downCaretIcon from "./downCaretIcon.svg";
 import downCaretIconNew from "./downCaretIconNew.svg";
@@ -17,6 +19,7 @@ import drawIcon from "./drawIcon.svg";
 import editIcon from "./editIcon.svg";
 import expandIcon from "./expandIcon.svg";
 import fileIcon from "./fileIcon.svg";
+import groupIcon from "./groupIcon.svg";
 import helpIcon from "./helpIcon.svg";
 import infoIcon from "./infoIcon.svg";
 import leftArrowIcon from "./leftArrowIcon.svg";
@@ -62,6 +65,8 @@ export const iconMap = {
   checkboxUnchecked: uncheckedBoxIcon,
   close: closeIcon,
   collapse: collapseIcon,
+  collect: collectIcon,
+  compass: compassIcon,
   copy: copyIcon,
   downCaret: downCaretIcon,
   downCaretNew: downCaretIconNew,
@@ -70,6 +75,7 @@ export const iconMap = {
   edit: editIcon,
   expand: expandIcon,
   file: fileIcon,
+  group: groupIcon,
   help: helpIcon,
   info: infoIcon,
   leftArrow: leftArrowIcon,

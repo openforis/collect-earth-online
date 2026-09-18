@@ -12,6 +12,8 @@ import { stateAtom } from "../utils/constants";
 import "../../css/custom.css";
 
 
+import '../../css/navsidebar.css';
+
 export function LogOutButton({ userName, uri }) {
   const fullUri = uri + window.location.search;
   const loggedOut = !userName || userName === "guest";
@@ -145,17 +147,110 @@ class HelpSlideDialog extends React.Component {
   }
 }
 
-export class NavigationBar extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      helpSlides: [],
-      showHelpMenu: false,
-      page: "",
-    };
+export function NavSideBar () {
+  const [navIcon, setNavIcon] = useState("highlights");
+
+  function highlightsHandler() {
+    console.log("highlights!");
+    setNavIcon("highlights");
+  };
+  function institutionsHandler() {
+    console.log("institutions!");
+    setNavIcon("institutions");
+  };
+  function collectHandler() {
+    console.log("collect!");
+    setNavIcon("collect");
+  };
+  function manageHandler() {
+    console.log("manage!");
+    setNavIcon("manage");
+  };
+  
+  const navIcons = {
+    highlights:
+    {title: "Highlights",
+     icon: "compass",
+     clickHandler: highlightsHandler},
+    institutions:
+    {title: "Institutions",
+     icon: "group",
+     clickHandler: institutionsHandler},
+    collect:
+    {title: "Collect",
+     icon: "collect",
+     clickHandler: collectHandler},
+    manage:
+    {title: "Manage",
+     icon: "settings",
+     clickHandler: manageHandler},
+  };
+
+  function NavIcon ({icon, clickHandler, title, navikey}) {
+    return (
+      <div onClick={clickHandler}
+           className="sidebar-navicon"
+           style={navIcon === navikey ? {paddingLeft: "8px"} : null}>
+        <SvgIcon icon={icon} size="2rem" 
+        />
+        <p style={{color: "white"}}>{title}</p>
+      </div>
+    );
   }
 
-  componentDidMount() {
+  return (
+        <div id="nav-sidebar" className="nav-sidebar">
+          {
+            Object.entries(navIcons).map(([navikey, {clickHandler, icon, title}])=>{
+              return (
+                <div
+                  key={navikey}
+                  style={navIcon === navikey
+                         ? {backgroundColor: "#001A19",
+                            width: "100px",
+                            borderLeft: "8px solid #15C1AE"}
+                         : null}>
+                  <NavIcon icon={icon} clickHandler={clickHandler} title={title} navikey={navikey}/>
+                </div>
+              );
+            })
+          }                              
+        </div>        
+  );
+}
+
+export function NavTopBar ({version, userName, userId, children}) {
+  const [helpSlides, setHelpSlides] = useState([]);
+  const [showHelpMenu, toggleHelpMenu] = useState(false);
+  const [page, setPage] = useState("");
+  const uri = window.location.pathname;
+  const loggedOut = !userName || userName === "guest";
+
+  function autoShowHelpMenu (page) {
+    const autoShowPages = ["home"];
+    const key = `${page}:seen`;
+    if (autoShowPages.includes(page) && !getPreference(key)) {
+      toggleHelpMenu(true);
+      setPreference(key, true);
+    }
+  };
+
+  function getHelpSlides (availableLanguages, page) {
+    fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`, {
+      headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json" },
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        setHelpSlides(data);
+        setPage(page);
+        autoShowHelpMenu(page);
+      })
+      .catch((error) => console.log(page, getLanguage(availableLanguages), error));
+  };
+
+  function closeHelpMenu () {toggleHelpMenu(false);};
+
+  useEffect(()=>{
     fetch("/locale/help.json", {
       headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json" },
     })
@@ -164,46 +259,18 @@ export class NavigationBar extends React.Component {
         const location = window.location.pathname.slice(1);
         const page = location === "" ? "home" : location;
         const availableLanguages = data[page];
-        if (availableLanguages) this.getHelpSlides(availableLanguages, page);
+        if (availableLanguages) getHelpSlides(availableLanguages, page);
       })
       .catch((error) => console.log(error));
-  }
+  },[]);
 
-  autoShowHelpMenu = (page) => {
-    const autoShowPages = ["home"];
-    const key = `${page}:seen`;
-    if (autoShowPages.includes(page) && !getPreference(key)) {
-      this.setState({ showHelpMenu: true });
-      setPreference(key, true);
-    }
-  };
-
-  getHelpSlides = (availableLanguages, page) => {
-    fetch(`/locale/${page}/${getLanguage(availableLanguages)}.json`, {
-      headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json" },
-    })
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        this.setState({ helpSlides: data, page });
-        this.autoShowHelpMenu(page);
-      })
-      .catch((error) => console.log(page, getLanguage(availableLanguages), error));
-  };
-
-  closeHelpMenu = () => this.setState({ showHelpMenu: false });
-
-  render() {
-    const { userName, userId, children } = this.props;
-    const uri = window.location.pathname;
-    const loggedOut = !userName || userName === "guest";
-
-    return (
+  return (
       <>
-        {this.state.showHelpMenu && (
+        {showHelpMenu && (
           <HelpSlideDialog
-            closeHelpMenu={this.closeHelpMenu}
-            helpSlides={this.state.helpSlides}
-            page={this.state.page}
+            closeHelpMenu={closeHelpMenu}
+            helpSlides={helpSlides}
+            page={page}
           />
         )}
         <nav
@@ -221,7 +288,7 @@ export class NavigationBar extends React.Component {
                 style={{ maxHeight: "40px" }}
               />
               <div className="badge badge-pill badge-light" style={{ fontSize: "0.6rem" }}>
-                Version: {this.props.version}
+                Version: {version}
               </div>
             </div>
           </a>
@@ -265,8 +332,8 @@ export class NavigationBar extends React.Component {
             <ul className="navbar-nav mr-0" id="login-info">
               <LogOutButton uri={uri} userName={userName} />
             </ul>
-            <div className="ml-3" onClick={() => this.setState({ showHelpMenu: true })}>
-              {this.state.helpSlides.length > 0 && (
+            <div className="ml-3" onClick={() => toggleHelpMenu(true)}>
+              {helpSlides.length > 0 && (
                 <div
                   className="tooltip_wrapper"
                   style={{
@@ -280,13 +347,21 @@ export class NavigationBar extends React.Component {
                 </div>
               )}
             </div>
-          </div>
-          
+          </div>          
         </nav>
         {children}
       </>
     );
-  }
+}
+
+
+export function NavigationBar ({children, version, userName, userId}) {
+  return(
+    <>
+      <NavSideBar/>
+      <NavTopBar children={children} version={version} userName={userName} userId={userId}/>
+    </>
+  );
 }
 
 export function Logo({ size, url, name, id, src }) {
