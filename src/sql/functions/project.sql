@@ -1,3 +1,4 @@
+
 -- NAMESPACE: project
 -- REQUIRES: clear
 
@@ -621,7 +622,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION user_project(_user_id integer, _role_id integer, _privacy_level text, _availability text)
  RETURNS boolean AS $$
 
-    SELECT (_role_id = 1 AND _availability <> 'archived')
+    SELECT (_role_id = 1 AND _availability <> 'archived')           
             OR (_availability = 'published'
                 AND (_privacy_level = 'public'
                     OR (_user_id > 0 AND _privacy_level = 'users')
@@ -638,22 +639,56 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
     description       text,
     centroid          text,
     num_plots         integer,
-    editable          boolean
+    editable          boolean,
+    institution_name  text
  ) AS $$
 
     SELECT project_uid,
         p.institution_rid,
-        name,
-        description,
+        p.name,
+        p.description,
         ST_AsGeoJSON(ST_Centroid(boundary)),
         num_plots,
-        (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable
+        (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable,
+        ins.name AS institution_name
     FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
+    JOIN institutions ins ON ins.institution_uid = p.institution_rid
     WHERE user_project(_user_id, role_rid, p.privacy_level, p.availability)
         AND valid_boundary(boundary) = TRUE
+    ORDER BY project_uid
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_highlight_projects(_user_id integer)
+ RETURNS table (
+    project_id        integer,
+    institution_id    integer,
+    name              text,
+    description       text,
+    centroid          text,
+    num_plots         integer,
+    editable          boolean,
+    institution_name  text
+ ) AS $$
+
+    SELECT project_uid,
+        p.institution_rid,
+        p.name,
+        p.description,
+        ST_AsGeoJSON(ST_Centroid(boundary)),
+        num_plots,
+        (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable,
+        ins.name AS institution_name
+    FROM projects AS p
+    LEFT JOIN institution_users iu
+        ON user_rid = _user_id
+        AND p.institution_rid = iu.institution_rid
+    JOIN institutions ins ON ins.institution_uid = p.institution_rid
+        WHERE valid_boundary(boundary) = TRUE
+        AND p.highlight = TRUE
     ORDER BY project_uid
 
 $$ LANGUAGE SQL;

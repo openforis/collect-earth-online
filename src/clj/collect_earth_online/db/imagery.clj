@@ -12,7 +12,7 @@
       (#{"Planet" "PlanetTFO"}      image-type) (dissoc source-config :accessToken))))
 
 (defn- prepare-imagery [imagery inst-admin?]
-  (mapv (fn [{:keys [imagery_id institution_id visibility title attribution extent is_proxied source_config created_date]}]
+  (mapv (fn [{:keys [imagery_id institution_id visibility title attribution extent is_proxied source_config created_date institution_name]}]
           (let [source-config (tc/jsonb->clj source_config)]
             {:id           imagery_id
              :institution  institution_id ; FIXME, legacy variable name, update to institutionId
@@ -24,7 +24,8 @@
              :sourceConfig (if (or inst-admin? (not is_proxied))
                              source-config
                              (clean-source source-config))
-             :createdDate  created_date}))
+             :createdDate  created_date
+             :institutionName institution_name}))
         imagery))
 
 (defn get-institution-imagery [{:keys [params session]}]
