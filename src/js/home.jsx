@@ -343,29 +343,78 @@ function Home ({ userRole, userId }) {
     fetch("/get-user-stats?accountId=" + userId)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((stats) => {
-        console.log("user accepts TOS?", (stats.acceptTOS || "").length > 0);
-        setAppState({... appState, acceptTOS: (stats.acceptTOS || "").length > 0});
-        return Promise.resolve();
-      })
-      .catch((response) => {
-        console.log(response);
+        if (stats) {
+          (!(stats.acceptTOS || "").length > 0) &&
+            setAppState(s => ({ ... s, modal: {"TOS": true}}));
+          return Promise.resolve();
+        } else {
+          return Promise.reject("Unable to get User Data");
+        }       
       });
   }
-
-  useEffect(()=>{
-        // getUserStats(userId);
+    useEffect(()=>{
+      Promise.all([getImagery(), getInstitutions(), getProjects(), getUserStats(userId)])
+      .catch((response) => {
+        setAppState (prev => ({ ... prev, modal: {alert: {alertType: "Collection Alert", alertMessage: "Error retrieving the collection data. See console for details."}}}));
+      })
+      .finally(() => setAppState(prev => ({... prev, modalMessage: null })));
   }, []);
 
+  function userAcceptTOS (slug) {
+    fetch(`/user-accept-tos?userId=${userId}&slug=${slug}`, { method: "POST" })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        setAppState(s => ({... s, modal: null}));
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+ 
+  function TOSModal (){
+    const [slug, setSlug] = useState("");
+    return (
+        <Modal
+          title="Terms of Service"
+          confirmDisabled={slug.length === 0}
+          confirmText="Accept"          
+          onConfirm={()=>{userAcceptTOS(slug);}}
+        >
+          <p>In order to use Collect Earth Online, you must agree to the following
+            <span
+              style={{cursor: 'pointer',
+                      textDecorationLine: 'underline',
+                      color: 'var(--Primary-Highlight-Green)'}}
+            >Terms and Conditions</span>.</p>
+          <p>Please enter your email address below to continue using CEO and accept the <span style={{cursor: 'pointer',
+                      textDecorationLine: 'underline',
+                      color: 'var(--Primary-Highlight-Green)'}}>Terms and Conditions</span>.</p>
+          <div>            
+            <input type="text"
+                   className="text-input"
+                   id="project-name"
+                   value={slug}
+                   onChange={(e)=> {setSlug(e.target.value);}}
+              placeholder="Email Address"></input>
+          </div>
+        </Modal>);
+
+  }
+
+  function AlertModal({alertType}) {
+    return (<Modal title={appState.modal.alert.alertType}
+                   onClose={()=>{setAppState({ ... appState, modal: null});}}>
+          {appState.modal.alert.alertMessage}
+            </Modal>);
+  }
+
   function HomeModal({modal}) {
+    const [tos, setTos] = useState("");
     if (modal) {
       const modalType = Object.keys(modal)[0];
       switch( modalType ) {
-      case "alert": return (
-        <Modal title={appState.modal.alert.alertType}
-               onClose={()=>{setAppState({ ... appState, modal: null});}}>
-          {appState.modal.alert.alertMessage}
-        </Modal>);
-
+      case "alert": return (<AlertModal/>);
+      case "TOS": return (<TOSModal/>);
       default: return (<></>);
       }    
     }

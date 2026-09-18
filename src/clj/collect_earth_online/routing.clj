@@ -84,6 +84,9 @@
    [:get  "/get-user-stats"]                 {:handler     users/get-user-stats
                                               :auth-type   :user
                                               :auth-action :block}
+   [:post "/user-accept-tos"]                {:handler users/user-accept-tos
+                                              :auth-type :user
+                                              :auth-action :block}
    [:post "/account"]                        {:handler     users/update-account
                                               :auth-type   :user
                                               :auth-action :block}

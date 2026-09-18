@@ -337,3 +337,13 @@
           (data-response (format "Email Sent. Please check all inboxes at %s for a new email with further instructions." email)))
       (catch Exception _
 	(data-response  "A server error interrupted your request. Please try again or contact an administrator.")))))
+
+(defn user-accept-tos [{:keys [params]}]
+  (let [slug (:slug params)
+        user-id (tc/val->int (:userId params))]
+    (try (do
+           (call-sql "user_accept_tos" user-id slug)
+           (data-response true))
+         (catch Exception e
+           (data-response {:message "error accepting TOS"} {:status 500}))))
+  )

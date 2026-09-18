@@ -506,3 +506,12 @@ RETURNS TABLE (
 
     SELECT _project_id, _user_id, _name;
 $$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION user_accept_tos(_user_id INTEGER, _slug TEXT)
+ RETURNS VOID AS $$
+
+    UPDATE users
+    SET tos_slug = _slug
+    WHERE user_uid = _user_id
+
+$$ LANGUAGE SQL;
