@@ -380,21 +380,18 @@ function Home ({ userRole, userId }) {
           confirmText="Accept"          
           onConfirm={()=>{userAcceptTOS(slug);}}
         >
-          <p>In order to use Collect Earth Online, you must agree to the following
+          <p>In order to use Collect Earth Online, please review and accept the 
             <span
               style={{cursor: 'pointer',
                       textDecorationLine: 'underline',
                       color: 'var(--Primary-Highlight-Green)'}}
             >Terms and Conditions</span>.</p>
-          <p>Please enter your email address below to continue using CEO and accept the <span style={{cursor: 'pointer',
-                      textDecorationLine: 'underline',
-                      color: 'var(--Primary-Highlight-Green)'}}>Terms and Conditions</span>.</p>
           <div>            
             <input type="text"
                    className="text-input"
                    value={slug}
                    onChange={(e)=> {setSlug(e.target.value);}}
-              placeholder="Email Address"></input>
+                   placeholder="Enter Username to Agree"/>
           </div>
         </Modal>);
 
