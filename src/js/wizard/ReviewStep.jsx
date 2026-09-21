@@ -228,6 +228,8 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const displayClosedDate = closedDate || (["archived", "closed"].includes(availability) ? "Unknown" : "Open");
 
     const publishProject = () => {
+      dispatch([event_ids.modal, 'review']);
+      /*
       const unpublished = availability === "unpublished";
       const message = unpublished
         ? "Do you want to publish this project? This action will clear plots collected by admins to allow collecting by users."
@@ -243,7 +245,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
             console.log(error);
             window.alert("Error publishing project. See console for details.");
           });
-      }
+      }*/
     };
 
     const closeProject = () => {

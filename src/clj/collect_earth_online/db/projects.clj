@@ -791,7 +791,11 @@
 (defn publish-project! [{:keys [params session]}]
   (let [user-id      (:userId session -1)
         project-id   (tc/val->int (:projectId params))
-        clear-saved? (tc/val->bool (:clearSaved params))]
+        clear-saved? (tc/val->bool (:clearSaved params))
+        tos-slug     (-> params :slug
+                         (str ":project:" project-id ":"
+                              (.format (SimpleDateFormat. "YYYY-MM-dd-HH-mm-ss") (Date.))))
+        slug-date    (new java.util.Date)]
     (when clear-saved? (reset-collected-samples! project-id))
     (call-sql "publish_project" project-id)
     (data-response (build-project-by-id user-id project-id))))

@@ -297,26 +297,26 @@ function NewProjectModal () {
 
 function SubmitProjectModal () {
   const institutionId = useSubscription([sub_ids.institutionId]);
-  const [TOS, setTOS] = useState(false);
+  const [slug, setSlug]  = useState("");
   return (
     <Modal
       title='Project Saved'
       closeText='Return to Institution'
       confirmText='Publish Project'
       onConfirm={()=>{
-        dispatch ([event_ids.publishProject]); }}
-      confirmDisabled={!TOS}
+        dispatch ([event_ids.publishProject, slug]); }}
+      confirmDisabled={slug.length === 0}
       onClose={()=>{window.location=`/review-institution?institutionId=${institutionId}`;}}>
       <div>
         <p >You are about to publish this project. Once published it will be added to your institution. You’ll still be able to make changes later from the project page within your institution.</p>
         <div>
-          <input type='checkbox'
-                 checked={TOS}
-                 onChange={(e)=>setTOS(e.target.checked)}/>
-          <label>Accept <a href="/">Terms of Service</a><span style={{color: 'red'}}>*</span></label>
+          <input type="text"
+                 className="text-input"
+                 value={slug}
+                 onChange={(e)=> {setSlug(e.target.value);}}
+                 placeholder="Email Address"/>
           
         </div>
-        <p > Are you sure you want to continue?</p>
       </div>
     </Modal>
   );

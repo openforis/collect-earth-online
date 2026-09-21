@@ -1,5 +1,7 @@
 (ns collect-earth-online.db.users
   (:import java.net.URLEncoder
+           java.text.SimpleDateFormat
+           java.util.Date
            java.time.format.DateTimeFormatter
            java.time.LocalDateTime
            java.util.UUID)
@@ -339,11 +341,12 @@
 	(data-response  "A server error interrupted your request. Please try again or contact an administrator.")))))
 
 (defn user-accept-tos [{:keys [params]}]
-  (let [slug (:slug params)
-        user-id (tc/val->int (:userId params))]
+  (let [user-id (tc/val->int (:userId params))
+        slug (-> params :slug
+                 (str ":user:" user-id ":"
+                      (.format (SimpleDateFormat. "YYYY-MM-dd-HH-mm-ss") (Date.))))]
     (try (do
            (call-sql "user_accept_tos" user-id slug)
            (data-response true))
          (catch Exception e
-           (data-response {:message "error accepting TOS"} {:status 500}))))
-  )
+           (data-response {:message "error accepting TOS"} {:status 500})))))

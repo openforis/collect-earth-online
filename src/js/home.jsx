@@ -392,7 +392,6 @@ function Home ({ userRole, userId }) {
           <div>            
             <input type="text"
                    className="text-input"
-                   id="project-name"
                    value={slug}
                    onChange={(e)=> {setSlug(e.target.value);}}
               placeholder="Email Address"></input>

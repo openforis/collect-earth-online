@@ -110,12 +110,13 @@ CREATE OR REPLACE FUNCTION create_project(
 $$ LANGUAGE SQL;
 
 -- Publish project
-CREATE OR REPLACE FUNCTION publish_project(_project_id integer)
+CREATE OR REPLACE FUNCTION publish_project(_project_id integer, _slug text)
  RETURNS void AS $$
 
     UPDATE projects
     SET availability = 'published',
-        published_date = Now()
+        published_date = Now(),
+        tos_slug = _slug
     WHERE project_uid = _project_id;
 
     DELETE FROM ext_samples
