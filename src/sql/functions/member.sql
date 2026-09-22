@@ -490,7 +490,7 @@ $$ LANGUAGE SQL;
 
 
 -- Accepts data sharing terms for regular user
-CREATE OR REPLACE FUNCTION user_data_sharing(_project_id INTEGER, _user_id INTEGER, _name TEXT, _ip TEXT)
+CREATE OR REPLACE FUNCTION user_data_sharing(_project_id INTEGER, _user_id INTEGER, _name TEXT, _ip TEXT, _dlug TEXT)
 RETURNS TABLE (
     project_id INTEGER,
     user_id INTEGER,
@@ -501,7 +501,7 @@ RETURNS TABLE (
     VALUES (_project_id, _name, _ip);
 
     UPDATE users
-    SET accepted_terms = TRUE
+    SET accept_tos = _slug
     WHERE user_uid = _user_id;
 
     SELECT _project_id, _user_id, _name;

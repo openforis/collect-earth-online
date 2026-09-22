@@ -512,7 +512,7 @@ export function SuccessModal({ message, onClose }) {
 }
 
 export function AcceptTermsModal ({institutionId, projectId, toggleAcceptTermsModal }) {
-  const [interpreterName, setInterpreterName] = useState("");
+  const [interpreterName, setInterpreterName] = useState("");  
 
   const acceptTerms = () => {
     fetch(`/confirm-data-sharing?projectId=${projectId}`,
