@@ -116,7 +116,7 @@ CREATE OR REPLACE FUNCTION publish_project(_project_id integer, _slug text)
     UPDATE projects
     SET availability = 'published',
         published_date = Now(),
-        tos_slug = _slug
+        accept_tos = _slug
     WHERE project_uid = _project_id;
 
     DELETE FROM ext_samples

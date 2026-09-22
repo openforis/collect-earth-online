@@ -1,5 +1,6 @@
 ALTER TABLE projects
-  ADD COLUMN tos_slug text;
+  ADD COLUMN accept_tos text ;
 
 ALTER TABLE users
-  ADD COLUMN tos_slug text;
+ ADD COLUMN accept_tos text ;
+ 

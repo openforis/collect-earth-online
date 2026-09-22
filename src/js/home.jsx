@@ -380,18 +380,18 @@ function Home ({ userRole, userId }) {
           confirmText="Accept"          
           onConfirm={()=>{userAcceptTOS(slug);}}
         >
-          <p>In order to use Collect Earth Online, please review and accept the 
+          <p>In order to use Collect Earth Online, please review and accept the
             <span
               style={{cursor: 'pointer',
                       textDecorationLine: 'underline',
                       color: 'var(--Primary-Highlight-Green)'}}
-            >Terms and Conditions</span>.</p>
+            > Terms and Conditions</span>.</p>
           <div>            
             <input type="text"
                    className="text-input"
                    value={slug}
                    onChange={(e)=> {setSlug(e.target.value);}}
-                   placeholder="Enter Username to Agree"/>
+                   placeholder="Enter Username to Accept"/>
           </div>
         </Modal>);
 

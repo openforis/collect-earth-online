@@ -794,7 +794,7 @@
         clear-saved? (tc/val->bool (:clearSaved params))
         tos-slug     (-> params :slug
                          (str ":userId:" user-id ":"
-                              (.format (SimpleDateFormat. "YYYY-MM-dd-HH-mm-ss") (Date.))))
+                              (.format (SimpleDateFormat. "YYYYMMddHHmmss") (Date.))))
         slug-date    (new java.util.Date)]
     (when clear-saved? (reset-collected-samples! project-id))
     (call-sql "publish_project" project-id)

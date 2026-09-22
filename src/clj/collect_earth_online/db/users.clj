@@ -24,7 +24,7 @@
         user      (first (call-sql "check_login" {:log? false} email password))
         user-info {:userId        (:user_id user)
                    :userName      email
-                   :acceptedTerms (:accepted_terms user)
+                   :acceptedTOS   (:accept_tos user)
                    :userRole      (if (:administrator user) "admin" "user")}]
     (if-let [error-msg (get-login-errors user)]
       (data-response error-msg)
@@ -344,7 +344,7 @@
   (let [user-id (tc/val->int (:userId params))
         slug (-> params :slug
                  (str ":user:" user-id ":"
-                      (.format (SimpleDateFormat. "YYYY-MM-dd-HH-mm-ss") (Date.))))]
+                      (.format (SimpleDateFormat. "YYYYMMddHHmmss") (Date.))))]
     (try (do
            (call-sql "user_accept_tos" user-id slug)
            (data-response true))

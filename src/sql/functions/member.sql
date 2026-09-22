@@ -129,10 +129,10 @@ CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
     user_id          integer,
     administrator    boolean,
     verified         boolean,
-    accepted_terms   boolean
+    accepted_tos     text
  ) AS $$
 
-    SELECT user_uid, administrator, verified, accepted_terms
+    SELECT user_uid, administrator, verified, accept_tos
     FROM users
     WHERE email = _email
         AND password = crypt(_password, password)
@@ -199,7 +199,7 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_id integer)
     ), user_email as (
        SELECT email FROM users WHERE user_uid = _user_id
     ), accept_tos AS (
-       SELECT tos_slug FROM users WHERE user_uid = _user_id
+       SELECT accept_tos FROM users WHERE user_uid = _user_id
 )
 
     SELECT * FROM user_totals, average_totals, proj_agg, user_email, accept_tos
@@ -511,7 +511,7 @@ CREATE OR REPLACE FUNCTION user_accept_tos(_user_id INTEGER, _slug TEXT)
  RETURNS VOID AS $$
 
     UPDATE users
-    SET tos_slug = _slug
+    SET accept_tos = _slug
     WHERE user_uid = _user_id
 
 $$ LANGUAGE SQL;
