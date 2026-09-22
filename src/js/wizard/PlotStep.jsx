@@ -643,7 +643,6 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList = [] }) => {
   const plotDistribution = useSubscription([sub_ids.plots.plotDistribution]) || '';
   const availability = useSubscription([sub_ids.availability]) || '';
   const isPublished = availability === 'published';
-
   const userAssignment = designSettings.userAssignment || { userMethod: "none", users: [], percents: [] };
   const { userMethod, users = [], percents = [], fileAssignments = {} } = userAssignment;
   const { qaqcAssignment } = designSettings;

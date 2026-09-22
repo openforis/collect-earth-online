@@ -296,7 +296,9 @@ export const UserDrawnSamplesCard = () => {
 
       {allowDrawnSamples && (
         <>
-          <div className="mt-3 p-3" style={{ backgroundColor: '#e6f4f4', border: '1px solid #2d6f74', color: '#2d6f74', fontSize: '0.9rem' }}>
+          <div
+            className="mt-3 p-3"
+            style={{ backgroundColor: '#e6f4f4', border: '1px solid #2d6f74', color: '#2d6f74', fontSize: '0.9rem' }}>
             <SvgIcon icon="info" size="1rem" style={{ marginRight: '8px', verticalAlign: 'middle' }} />
             Enable this to allow users to draw and label points, lines, and polygons during data collection.
           </div>

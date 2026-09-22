@@ -42,9 +42,9 @@ const projectWizardDb = {
   currentStep: null,
   modal: null,
   projectSource: null,
-  templateProjectId: -1,
   projectId: -1,
   projectDraftId: -1,
+  templateProjectId: -1,
   useTemplatePlots: false,
   useTemplateWidgets: false,
   originalProject: {},
@@ -132,7 +132,6 @@ initAppDb(projectWizardDb);
 
 export const event_ids = {
   institutionId: 'institutionId',
-  templateProject: 'templateProject',
   projectId: 'projectId',
   draftProject: 'draftProject',
   editProject: 'editProject',
@@ -140,6 +139,8 @@ export const event_ids = {
   saveDraft: 'saveDraft',
   saveProject: 'saveProject',
   publishProject: 'publishProject',
+  templateProjectId: 'templateProjectId',
+  templateProject: 'templateProject',
   errors: 'errors',
   continueHandler: 'continueHandler',
   validate: 'validate',
@@ -211,7 +212,9 @@ export const event_ids = {
     setQuestions: 'setQuestions',
     updateQuestion: 'updateQuestion',
     updateAnswer: 'updateAnswer',
-    moveQuestion: 'moveQuestion'},
+    moveQuestion: 'moveQuestion',
+    removeQuestion: 'removeQuestion',
+  },
   rules: {
     rules: 'rules',
     removeRule: 'rules.removeRule',
@@ -255,8 +258,6 @@ export const sub_ids = {
   projectSource: 'projectSource',
   successResponse: 'successReponse',
   templateProjectId: 'templateProjectId',
-  useTemplatePlots: 'useTemplatePlots',
-  useTemplateWidgets: 'useTemplateWidgets',
   originalProject: 'originalProject',
   validStep: 'validStep',
   invalidSteps: 'invalidSteps',
@@ -876,7 +877,7 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
       })
       .catch((message) => {
         console.log('create project request errors', message);        
-        dispatch([event_ids.errors [['server', Object.entries(message.params).map(([field, error]) => field + ": " + error)]]]);
+        dispatch([event_ids.errors, [['server', Object.entries(message.params).map(([field, error]) => field + ": " + error)]]]);
       });
   }
 
@@ -916,12 +917,12 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
           window.location.assign(`/project-wizard?projectId=${existingProjectId}&institutionId=${institutionId}`);
           return Promise.resolve();
         } else {
-          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
+          dispatch([event_ids.errors, [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
           return Promise.reject(data[1]);
         }
       })
       .catch((message) => {
-        dispatch([event_ids.errors [['server', [message]]]]);;
+        dispatch([event_ids.errors, [['server', [message]]]]);;
       });
   }
   
@@ -968,7 +969,7 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
           return Promise.reject(data[1]);
         }
       })
-      .catch((message) => dispatch([event_ids.errors [['server', [message]]]]));
+      .catch((message) => dispatch([event_ids.errors, [['server', [message]]]]));
   }
   errors ? dispatch([event_ids.errors, errors]) :
     (existingProjectId > 0) ? updateProject() : createProject();
@@ -977,7 +978,6 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
 regEvent(event_ids.publishProject, ({ draftDb }) => {
   const availability = draftDb[sub_ids.availability];
   const unpublished = availability === "unpublished";
-  const institutionId = draftDb[sub_ids.institutionId];
   const projectId = draftDb[sub_ids.projectId];
 
   fetch(`/publish-project?projectId=${projectId}&clearSaved=${unpublished}`, { method: "POST" })
@@ -987,93 +987,6 @@ regEvent(event_ids.publishProject, ({ draftDb }) => {
       console.log(error);
       window.alert("Error publishing project. See console for details.");
     });
-});
-
-regEvent(event_ids.submitForm, ({ draftDb }) => {
-  //TODO: this is crufty and not neat. do we need this after saveProject?
-  const institutionId = Number(current(draftDb[sub_ids.institutionId]));
-  const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
-  const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
-  const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
-  const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
-  const similarityDetails = current(draftDb[sub_ids.plots.plotSimilarityDetails]) || {};
-  const existingProjectId = current(draftDb[sub_ids.projectId]);
-  const referencePlotId = similarityDetails.referencePlotId;
-  const similarityYears = similarityDetails.years;
-  const form = buildProject(draftDb, sub_ids);
-  const errors = validateWizard(form);
-  
-  function updateForm () {
-    fetch("/update-project", {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json; charset=utf-8",
-      },
-      body: JSON.stringify({
-        projectId: existingProjectId,
-        ...form,
-      }),
-    })
-      .then((response) => Promise.all([response.ok, response.json()]))
-      .then((data) => {
-        if (data[0] && data[1] === "") {
-          dispatch([event_ids.modal, 'review']);
-          dispatch([event_ids.successResponse, data[1]]);
-          return Promise.resolve();
-        } else {
-          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
-          return Promise.reject(data[1]);
-        }
-      })
-      .catch((message) => {
-        dispatch([event_ids.errors [['server', [message]]]]);;
-      });
-  }
-  
-  
-  function submitForm () {    
-    fetch("/create-project", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json; charset=utf-8",
-      },
-      body: JSON.stringify({
-        institutionId,
-        projectTemplate: templateProjectId,
-        useTemplatePlots,
-        useTemplateWidgets,
-        ...form,
-      }),
-    })
-      .then((response) => Promise.all([response.ok, response.json()]))
-      .then((data) => {
-        if (data[0] && Number.isInteger(data[1].projectId)) {
-          (referencePlotId > 0) && fetch("/start-plot-similarity", {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json; charset=utf-8",
-            },
-            body: JSON.stringify({
-              projectId: data[1].projectId,
-              referencePlotId,
-              similarityYears,
-            })
-          });
-          //dispatch([event_ids.successResponse, data[1]]);
-          dispatch([event_ids.modal, 'review']);
-          return Promise.resolve();
-        } else {
-          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
-          return Promise.reject(data[1]);
-        }
-      })
-      .catch((message) => dispatch([event_ids.errors [['server', [message]]]]));
-  }
-  errors ? dispatch([event_ids.errors, errors]) :
-    (existingProjectId > 0) ? updateForm() : submitForm();
 });
 
 regEvent(event_ids.draftSuccess, ({ draftDb }, response) => {
@@ -1308,22 +1221,17 @@ regEvent(event_ids.questions.setQuestions, ({ draftDb }, questions ) => {
 });
 
 regEvent(event_ids.questions.updateQuestion, ({ draftDb }, qId, field, value) => {
-  const questions = draftDb[sub_ids.questions.questions];
-  const q = questions[qId] || questions[String(qId)] || questions[Number(qId)];
-  if (q) {
-    q[field] = value;
-  }
+  const questions = current(draftDb['questions']);
+  draftDb['questions'] = { ...questions, [qId]: { ...questions[qId], [field]: value } };
 });
 
 regEvent(event_ids.questions.updateAnswer, ({ draftDb }, qId, aId, field, value) => {
-  const questions = draftDb[sub_ids.questions.questions];
-  const q = questions[qId] || questions[String(qId)] || questions[Number(qId)];
-  if (q && q.answers) {
-    const a = q.answers[aId] || q.answers[String(aId)] || q.answers[Number(aId)];
-    if (a) {
-      a[field] = value;
-    }
-  }
+  const questions = current(draftDb['questions']);
+  const q = questions[qId];
+  draftDb['questions'] = {
+    ...questions,
+    [qId]: { ...q, answers: { ...q.answers, [aId]: { ...q.answers[aId], [field]: value } } },
+  };
 });
 
 regEvent(event_ids.questions.moveQuestion, ({ draftDb }, id, targetQ, nextId, nextQ) => {
@@ -1333,6 +1241,17 @@ regEvent(event_ids.questions.moveQuestion, ({ draftDb }, id, targetQ, nextId, ne
 
   if (currentQ) currentQ.cardOrder = nextQ.cardOrder;
   if (targetNextQ) targetNextQ.cardOrder = targetQ.cardOrder;
+});
+
+regEvent(event_ids.questions.removeQuestion, ({ draftDb }, qId, cascadeDelete) => {
+  const next = cascadeDelete(
+    { questions: current(draftDb['questions']), rules: current(draftDb['rules']) }, qId);
+  draftDb['questions'] = next.questions;
+  draftDb['rules'] = next.rules;
+});
+
+regEvent(event_ids.questions.moveQuestion, ({ draftDb }, id, direction) => {
+  draftDb['questions'] = moveQuestion(current(draftDb['questions']), id, direction);
 });
 
 // RULES EVENTS
@@ -1359,7 +1278,7 @@ regEvent(event_ids.rules.rules, ({ draftDb }, newRule) => {
 });
 
 regEvent(event_ids.rules.removeRule, ({ draftDb }, rid ) => {
-  let newRules = draftDb[sub_ids.rules.rules].filter((r) => r.id !== rid);
+  const newRules = draftDb[sub_ids.rules.rules].filter((r) => r.id !== rid);
   draftDb[sub_ids.rules.rules] = newRules;
 });
 
@@ -1381,10 +1300,6 @@ regEvent(event_ids.rules.search, ({ draftDb }, search) => {
 
 regEvent(event_ids.rules.filter, ({ draftDb }, filter) => {
   draftDb[sub_ids.rules.filter] = filter;
-});
-
-regEvent(event_ids.rules.delete, ({ draftDb }, idx) => {
-  draftDb[sub_ids.rules.rules].splice(idx, 1);
 });
 
 regEvent(event_ids.rules.newRule.min, ({ draftDb }, min) => {

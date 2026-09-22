@@ -5,6 +5,75 @@ import SvgIcon from '../components/svg/SvgIcon';
 import { event_ids, sub_ids } from '../state/projectWizard';
 import { InfoTooltip } from '../components/PageComponents';
 
+const isTopLevel = (q) => Number(q.parentQuestionId) === -1;
+const orderKey   = (q) => (isTopLevel(q) ? 'cardOrder' : 'siblingOrder');
+const orderOf    = ([id, q]) => q[orderKey(q)] ?? Number(id);
+
+const childrenOf = (questions, parentId) =>
+  Object.keys(questions).filter((id) => String(questions[id].parentQuestionId) === String(parentId));
+
+// Depth-first with an accumulator
+export const descendantIds = (questions, rootId, seen = []) =>
+  seen.includes(String(rootId))
+    ? seen
+    : childrenOf(questions, rootId)
+        .reduce((acc, id) => descendantIds(questions, id, acc), [...seen, String(rootId)]);
+
+const RULE_REFS = {
+  'text-match':           (r) => [r.questionId],
+  'numeric-range':        (r) => [r.questionId],
+  'sum-of-answers':       (r) => r.questionIds,
+  'matching-sums':        (r) => [...r.questionIds1, ...r.questionIds2],
+  'incompatible-answers': (r) => [r.questionId1, r.questionId2],
+  'multiple-incompatible-answers': (r) => [...Object.keys(r.answers), r.incompatQuestionId],
+};
+export const ruleQuestionIds = (rule) => (RULE_REFS[rule.ruleType]?.(rule) ?? []).map(String);
+
+export const sortedSiblings = (questions, parentId) =>
+  Object.entries(questions)
+    .filter(([, q]) => String(q.parentQuestionId) === String(parentId))
+    .sort((a, b) => orderOf(a) - orderOf(b));
+
+export const renumberSiblings = (questions, parentId) => ({
+  ...questions,
+  ...Object.fromEntries(
+    sortedSiblings(questions, parentId).map(([id, q], i) => [id, { ...q, [orderKey(q)]: i + 1 }])),
+});
+
+export const removeQuestionCascade = ({ questions, rules }, qId) => {
+  const orphaned = descendantIds(questions, qId);
+  const keep = (id) => !orphaned.includes(String(id));
+  return {
+    questions: renumberSiblings(
+      Object.fromEntries(Object.entries(questions).filter(([id]) => keep(id))),
+      questions[qId].parentQuestionId),
+    rules: rules.filter((rule) => ruleQuestionIds(rule).every(keep)),
+  };
+};
+
+export const moveQuestion = (questions, id, direction) => {
+  const siblings = sortedSiblings(questions, questions[id].parentQuestionId);
+  const i = siblings.findIndex(([sid]) => sid === String(id));
+  const j = i + direction;
+  if (j < 0 || j >= siblings.length) return questions;
+  const [[idA, a], [idB, b]] = [siblings[i], siblings[j]];
+  return {
+    ...questions,
+    [idA]: { ...a, [orderKey(a)]: b[orderKey(b)] },
+    [idB]: { ...b, [orderKey(b)]: a[orderKey(a)] },
+  };
+};
+
+// On load: numeric parent ids, cardOrder -1 on children, siblingOrder filled per group.
+export const normalizeQuestions = (raw = {}) => {
+  const typed = Object.fromEntries(Object.entries(raw).map(([id, q]) => [id, {
+    ...q,
+    parentQuestionId: Number(q.parentQuestionId ?? -1),
+    ...(Number(q.parentQuestionId ?? -1) !== -1 && { cardOrder: -1 }),
+  }]));
+  const parents = _.uniq(Object.values(typed).map((q) => q.parentQuestionId).filter((p) => p !== -1));
+  return parents.reduce(renumberSiblings, typed);
+};
 
 export const QuestionCard = ({
   qId,
@@ -85,12 +154,8 @@ export const QuestionCard = ({
     dispatch([event_ids.questions.updateQuestion, qId, 'answers', newAnswers]);
   };
 
-  const removeQuestion = () => {
-    const newQuestions = { ...questions };
-    delete newQuestions[qId];
-    setQuestions(newQuestions);
-    dispatch([event_ids.questions.setQuestions, newQuestions]);
-  };
+  const removeQuestion = () => dispatch([event_ids.questions.removeQuestion, qId, removeQuestionCascade]);
+
 
   return (
     <div
@@ -151,15 +216,13 @@ export const QuestionCard = ({
               className="text-input"
               defaultValue={question.questionLabel || ''}
               placeholder="Enter Label"
-              onBlur={(e) => dispatch([event_ids.overview.projectName, e.target.value])}
+              onBlur={(e) => updateQuestion('label', e.target.value)}
             />
-            
             <div className="question-metadata-row">
               <span>
                 Component Type: <strong>{question.componentType} - {question.dataType || 'text'}</strong>
               </span>
             </div>
-            
             <div className="question-answers-container">
               <div className="question-answers-header-row">
                 <label className="text-label-sm question-color-label">Color *</label>
@@ -168,7 +231,6 @@ export const QuestionCard = ({
                   <span className="question-hide-answer-label">Hide Answer</span>
                 </label>
               </div>
-              
               {Object.entries(question.answers).map(([aId, a]) => (
                 <div key={aId} className="question-answer-row">
                   <input
@@ -199,7 +261,7 @@ export const QuestionCard = ({
                   <input
                     type="checkbox"
                     checked={a.hide || false}
-                    onBlur={(e) => updateAnswer(aId, 'hide', e.target.checked)}
+                    onChange={(e) => updateAnswer(aId, 'hide', e.target.checked)}
                   />
                   {(!isInputType && Object.keys(question.answers).length > 1) && (
                     <div

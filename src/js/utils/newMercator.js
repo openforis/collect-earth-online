@@ -13,7 +13,7 @@ import Point from 'ol/geom/Point';
 
 
 const METERS_PER_DEG = 111320;
-const MAX_GRID_CELLS = 2_000_000;
+const MAX_GRID_CELLS = 50000;
 export const createVectorSource = () => new VectorSource();
 
 export const boundaryStyle = new Style({

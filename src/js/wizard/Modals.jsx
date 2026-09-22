@@ -97,12 +97,11 @@ function TemplateProjectModal () {
   const [templateProjects, setTemplateProjects] = useState([]);
   const [filterProjectId, setFilterProjectId] = useState(-1);
   const [filterProjectName, setFilterProjectName] = useState("");
-  const [filteredProjects, filterProjects] = useState([]);
 
   function setTemplateProject (templateProject) {dispatch([event_ids.templateProject, templateProject]);}
   function setUseTemplatePlots (useTemplatePlots) {dispatch([event_ids.overview.useTemplatePlots, useTemplatePlots]);}
   function setDesignSettings (designSettings) {dispatch([event_ids.plots.designSettings, designSettings]);}
-  function setImageryId (imageryId) {dispatch([event_ids.imagery.imagery, imageryId]);}
+  function setImageryId (imageryId) {dispatch([event_ids.imagery.previewId, imageryId]);}
   function validate () {dispatch([event_ids.validate]);}
   function setPlots (plots) {dispatch([event_ids.plots.plots, plots]);}
   function setImageryList (imageryList) {dispatch([event_ids.imagery.imageryList, imageryList]);}
