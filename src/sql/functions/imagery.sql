@@ -382,7 +382,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Get Planet TFO imagery by institution_id
-CREATE OR REPLACE FUNCTION get_tfo_imagery_by_institution(_institution_id integer)
+CREATE OR REPLACE FUNCTION get_tfo_imagery_by_institution(_imagery_id integer, _institution_id integer)
 RETURNS setOf imagery_return AS $$
     SELECT imagery_uid,
            institution_rid,
@@ -394,5 +394,5 @@ RETURNS setOf imagery_return AS $$
            source_config
     FROM imagery
     WHERE institution_rid = _institution_id
-    AND source_config->>'type' = 'planetTFO';
+    AND imagery_uid = _imagery_id;
 $$ LANGUAGE SQL;

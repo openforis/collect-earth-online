@@ -55,15 +55,20 @@ export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
         const imageryListRaw = await imageryRes.json();
         const plotters = await plottersRes.json();
         const stats = await statsRes.json();
-        const imageryList = Array.isArray(imageryListRaw) ?
-              imageryListRaw.map((image, i) => ({ ...image, visible: i === 0 })) :
-              [];
+        const imageryList = Array.isArray(imageryListRaw)
+          ? imageryListRaw.map((image, i) => ({
+            ...image,
+            visible: i === 0,
+            institutionId: project.institution,
+          }))
+          : [];
         // Initialize map on HTML ID
         const mapConf = mercator.createMap(
           "image-analysis-pane",
           [0, 0],
           1,
-          Array.isArray(imageryList) ? imageryList : []
+          Array.isArray(imageryList) ? imageryList : [],
+          state.currentProject.institution,
         );
 
         // add AOI Polygon Layer
