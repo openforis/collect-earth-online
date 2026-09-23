@@ -711,12 +711,13 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList = [] }) => {
 
   const renderUserRow = (idx, userId, email) => (
     <>
-    <div key={userId} className="d-flex align-items-center mb-2">
+      <div key={userId} className="d-flex align-items-center"
+        style={{marginTop: "10px"}}>
       {userMethod === "percent" && (
         <div className="d-flex flex-column" style={{ marginRight: '10px' }}>
           <input
-            type="number" className="text-input" min="0" max="100" placeholder="%"
-            style={{ width: '90px', height: '28px', padding: '2px 8px', fontSize: '0.85rem' }}
+            type="number" min="0" max="100" placeholder="%"
+            style={{ width: '90px', padding: '2px 8px', fontSize: '0.85rem' }}
             value={percents[idx]}
             onChange={(e) => updatePercent(idx, e.target.value)}
           />
@@ -751,7 +752,7 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList = [] }) => {
       )}
     </div>
       {userMethod === 'percent' && (
-      <small style={{ color: 'var(--Neutral-Text-gray)' }}>
+        <small style={{ color: 'var(--Neutral-Text-gray)'}}>
         ~{formatNumberWithCommas(Math.round(((percents[idx] || 0) / 100) * totalPlots))} plots
       </small>
       )}
@@ -811,9 +812,7 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList = [] }) => {
 
           {userMethod === "equal" && users.length > 0 && (
             <small className="d-block mt-1" style={{ fontStyle: 'italic' }}>
-              {isFileDistribution
-                ? "- CEO will use the file plot distribution information for plot assignment."
-                : `- Each user will be assigned ~${formatNumberWithCommas(Math.round(totalPlots / users.length))} plots.`}
+              - Each user will be assigned ~{formatNumberWithCommas(Math.round(totalPlots / users.length))} plots.
             </small>
           )}
         </>
