@@ -21,6 +21,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const projectName = useSubscription([sub_ids.overview.projectName]);
     const projectDescription = useSubscription([sub_ids.overview.projectDescription]);
     const projectVisibility = useSubscription([sub_ids.overview.visibility]);
+    const templateProjectId = useSubscription([sub_ids.templateProjectId]);
     const dataLicenseType = "Public-Open Use"; //useSubscription([sub_ids.overview.license])
     const showGee = useSubscription([sub_ids.overview.projectOptions.showGEEScript]);
     const extraPlotColumns = useSubscription([sub_ids.overview.projectOptions.showPlotInformation]);
