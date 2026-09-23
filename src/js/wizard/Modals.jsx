@@ -160,6 +160,7 @@ function TemplateProjectModal () {
         dispatch([event_ids.templateProjectId, projectId]);
         dispatch([event_ids.templateProjectName,
           templateProjects.find(({ id }) => id === projectId)?.name ?? '']);
+        dispatch([event_ids.templatePlotDesign]);
         dispatch([event_ids.overview.useTemplatePlots, true]);
         dispatch([event_ids.overview.useTemplateWidgets, true]);
         dispatch([event_ids.validate]);
@@ -169,6 +170,7 @@ function TemplateProjectModal () {
         dispatch([event_ids.templateProjectId, -1]);
         dispatch([event_ids.overview.useTemplatePlots, false]);
         dispatch([event_ids.overview.useTemplateWidgets, false]);
+        dispatch([event_ids.templatePlotDesign, true]);
         dispatch([event_ids.templateProjectName, '']);
         dispatch([event_ids.errors, [['Project Template Error',
           ['Error getting complete template info. See console for details.']]]]);

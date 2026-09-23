@@ -48,6 +48,7 @@ const projectWizardDb = {
   templateProjectId: -1,
   templateProjectName: '',
   useTemplatePlots: false,
+  templatePlotDesign: null,
   useTemplateWidgets: false,
   originalProject: {},
   invalidSteps: [],
@@ -142,6 +143,7 @@ export const event_ids = {
   publishProject: 'publishProject',
   templateProjectId: 'templateProjectId',
   templateProjectName: '',
+  templatePlotDesign: 'templatePlotDesign',
   templateProject: 'templateProject',
   errors: 'errors',
   continueHandler: 'continueHandler',
@@ -261,6 +263,7 @@ export const sub_ids = {
   successResponse: 'successReponse',
   templateProjectId: 'templateProjectId',
   templateProjectName: '',
+  templatePlotDesign: 'templatePlotDesign',
   originalProject: 'originalProject',
   validStep: 'validStep',
   invalidSteps: 'invalidSteps',
@@ -365,6 +368,7 @@ regSub(sub_ids.errors, sub_ids.errors);
 regSub(sub_ids.successResponse, sub_ids.successResponse);
 regSub(sub_ids.institutionId, sub_ids.institutionId);
 regSub(sub_ids.templateProjectId, sub_ids.templateProjectId);
+regSub(sub_ids.templatePlotDesign, sub_ids.templatePlotDesign);
 regSub(sub_ids.useTemplatePlots, sub_ids.useTemplatePlots);
 regSub(sub_ids.useTemplateWidgets, sub_ids.useTemplateWidgets);
 regSub(sub_ids.availability, sub_ids.availability);
@@ -469,8 +473,19 @@ regEvent(event_ids.templateProjectName, ({ draftDb }, name) => {
   draftDb[sub_ids.templateProjectName] = name;
 });
 
+regEvent(event_ids.templatePlotDesign, ({ draftDb }, clear = false) => {
+  draftDb[sub_ids.templatePlotDesign] = clear ? null : pickKeys(current(draftDb), PLOT_DESIGN_KEYS);
+});
+
 regEvent(event_ids.projectDetails, ({ draftDb }, projectDetails) => {
   draftDb[sub_ids.projectDetails] = projectDetails;
+});
+
+regEvent(event_ids.overview.useTemplatePlots, ({ draftDb }, useTemplatePlots) => {
+  draftDb[sub_ids.overview.useTemplatePlots] = useTemplatePlots;
+  const snapshot = current(draftDb[sub_ids.templatePlotDesign]);
+  if (!snapshot) return;
+  Object.assign(draftDb, useTemplatePlots ? snapshot : pickKeys(projectWizardDb, PLOT_DESIGN_KEYS));
 });
 
 regEvent(event_ids.errors, ({ draftDb }, errors) => {
@@ -1059,10 +1074,6 @@ regEvent(event_ids.overview.projectOptions.autoLaunchGeoDash, ({ draftDb }) => {
   draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash] = !draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash];
 });
 
-regEvent(event_ids.overview.useTemplatePlots, ({ draftDb }, useTemplatePlots)=>{
-  draftDb[sub_ids.overview.useTemplatePlots] = useTemplatePlots;
-});
-
 regEvent(event_ids.overview.projectOptions.plotSimilarity, ({ draftDb }) => {
   draftDb[sub_ids.overview.projectOptions.plotSimilarity] = !draftDb[sub_ids.overview.projectOptions.plotSimilarity];
 });
@@ -1405,3 +1416,15 @@ export const usePlotDesignLocked = () => {
 };
 
 export const renumberRules = (rules) => rules.map((rule, i) => ({ ...rule, id: i }));
+
+const PLOT_DESIGN_KEYS = [
+  'boundary.generationMethod', 'boundary.aoiFeatures', 'boundary.aoiFileName',
+  'plots.plotDistribution', 'plots.numPlots', 'plots.plotSize', 'plots.plotShape',
+  'plots.plotSpacing', 'plots.shufflePlots', 'plots.plotsSource', 'plots.totalPlots',
+  'plots.plotFeatures', 'plots.plotFileName', 'plots.plotFileBase64', 'plots.maxId',
+  'plots.designSettings', 'plots.referencePlotId', 'plots.plotSimilarityDetails',
+  'samples.sampleDistribution', 'samples.samplesPerPlot', 'samples.sampleResolution',
+  'samples.sampleFileName', 'samples.sampleFileBase64', 'samples.allowDrawnSamples',
+];
+
+const pickKeys = (source, keys) => Object.fromEntries(keys.map((k) => [k, source[k]]));
