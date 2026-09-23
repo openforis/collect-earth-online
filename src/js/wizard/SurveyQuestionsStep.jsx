@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { dispatch, useSubscription } from '@flexsurfer/reflex';
 import { SurveyQuestions } from '../components/SurveyQuestions';
 import SvgIcon from '../components/svg/SvgIcon';
-import { event_ids, sub_ids } from '../state/projectWizard';
+import { event_ids, sub_ids, renumberRules } from '../state/projectWizard';
 import { InfoTooltip } from '../components/PageComponents';
 
 
