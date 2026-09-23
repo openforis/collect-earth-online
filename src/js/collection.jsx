@@ -792,20 +792,20 @@ function ImageAnalysisPane({}) {
             value={`${state.showBoundary ? "Hide" : "Show"} Boundary`}
           />
           <div className="d-flex flex-column" style={{ gap: '2px' }}>
-            <button className="btn btn-sm"
+            <button
+              className="btn btn-sm"
               style={{backgroundColor: 'white',
                 borderRadius: '25%',
                 margin: 'auto 0 auto auto'}}
               onClick={() => zoom(1)}>
-		  <SvgIcon icon="plus" size="0.9rem" />
+              <SvgIcon icon="plus" size="0.9rem" />
             </button>
-            <br/>
-            <button className="btn btn-sm"
+            <button
+              className="btn btn-sm"
               style={{backgroundColor: 'white',
                 borderRadius: '25%',
                 margin: 'auto 0 auto auto'}}
-              onClick={() => zoom(-1)}
-            >
+              onClick={() => zoom(-1)}>
               <SvgIcon icon="minus" size="0.9rem" /></button>
           </div>
         </div>
