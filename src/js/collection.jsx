@@ -37,12 +37,13 @@ export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
     (async () => {
       setState((s) => ({ ...s, modalMessage: "Loading project details" }));
       try {
-        const [projectRes, plotsRes, imageryRes, plottersRes, statsRes] = await Promise.all([
+        const [projectRes, plotsRes, imageryRes, plottersRes, statsRes, plotSimilarity] = await Promise.all([
           fetch(`/get-project-by-id?projectId=${projectId}`),
           fetch(`/get-project-plots?projectId=${projectId}`),
           fetch(`/get-project-imagery?projectId=${projectId}`),
           fetch(`/get-plotters?projectId=${projectId}`),
-          fetch(`/get-project-stats?projectId=${projectId}`)
+          fetch(`/get-project-stats?projectId=${projectId}`),
+          // fetch(`/recalculate-plot`)
         ]);
         if (cancelled) return;
         if (!projectRes.ok) throw projectRes;

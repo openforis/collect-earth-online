@@ -947,7 +947,6 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
           const projectId = data[1].projectId;
           const goToWizard = () =>
             window.location.assign(`/project-wizard?projectId=${projectId}&institutionId=${institutionId}`);
-
           if (referencePlotId > 0) {
             return fetch("/start-plot-similarity", {
               method: "POST",
@@ -957,7 +956,7 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
               },
               body: JSON.stringify({ projectId, referencePlotId, similarityYears }),
             })
-              .catch((err) => console.error("start-plot-similarity failed", err)) // don't block navigation
+              .catch((err) => console.error("start-plot-similarity failed", err))
               .finally(goToWizard);
           }
 
