@@ -831,6 +831,7 @@ export const QualityControlCard = ({ institutionUserList = [], totalPlots, allow
   const assignedSMEs = institutionUserList.filter(({ id }) => smes.includes(id));
   const availability = useSubscription([sub_ids.availability]) || '';
   const isPublished = availability === 'published';
+  const maxReviews = Math.max(users.length, 2);
 
   const qualityMethods = [
     ["none", "None", false],
@@ -848,6 +849,12 @@ export const QualityControlCard = ({ institutionUserList = [], totalPlots, allow
     dispatch([event_ids.plots.designSettings, {
       ...designSettings,
       qaqcAssignment: { ...qaqcAssignment, ...updates }
+    }]);
+
+  const setQaqcMethod = (qaqcMethod) =>
+    dispatch([event_ids.plots.designSettings, {
+      ...designSettings,
+      qaqcAssignment: { qaqcMethod, percent: 0, smes: [], timesToReview: 2 }
     }]);
 
   return (
@@ -868,7 +875,7 @@ export const QualityControlCard = ({ institutionUserList = [], totalPlots, allow
           label="Quality Mode"
           options={qualityMethods}
           value={qaqcMethod}
-          onChange={(e) => setQaqcAssignment({ qaqcMethod: e.target.value })}
+          onChange={(e) => setQaqcMethod(e.target.value)}
           colSize="text-input"
         />
       </div>
@@ -895,8 +902,13 @@ export const QualityControlCard = ({ institutionUserList = [], totalPlots, allow
         <div className="mb-3">
           <label># of Reviews:</label>
           <input
-            type="number" className="text-input" min="2" max={Math.max(users.length, 2)}
-            value={timesToReview} onChange={(e) => setQaqcAssignment({ timesToReview: parseInt(e.target.value) })}
+            type="number" className="text-input" min="2" max={maxReviews}
+            value={timesToReview}
+            onChange={(e) => {
+              const n = parseInt(e.target.value);
+              if (Number.isNaN(n)) return;
+              setQaqcAssignment({ timesToReview: Math.min(Math.max(n, 2), maxReviews) });
+            }}
           />
           <small className="d-block mt-1">
             {formatNumberWithCommas(plotsToReview)} plots reviewed {timesToReview} times.
