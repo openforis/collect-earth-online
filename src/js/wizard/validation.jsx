@@ -118,8 +118,8 @@ export function validateSamples({
      sampleDistribution === "gridded" &&
      plotShape === "square" &&
      sampleResolution >= plotSize && "The sample spacing must be less than the plot width.",
-     (samplesPerPlot > perPlotLimit || totalPlots * samplesPerPlot > sampleLimit) &&
-       "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
+     // (samplesPerPlot > perPlotLimit || totalPlots * samplesPerPlot > sampleLimit) &&
+     //   "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
      allowDrawnSamples && !Object.values(designSettings?.sampleGeometries).some((g) => g) &&
            "At least one geometry type must be enabled.",]
           .filter((e)=>e));
