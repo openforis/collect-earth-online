@@ -79,22 +79,23 @@ of project visibility`;
             {
               name: "Actions",
               width: "120px",
-              cell: (row) => (
-                <button
-                  style={{
-                    border: "1px solid #3D7F7A",
-                    color: "#3D7F7A",
-                    background: "white",
-                    borderRadius: "4px",
-                    padding: "4px 10px",
-                    cursor: "pointer",
-                    fontWeight: 500,
-                  }}
-                  onClick={() => handleOpenNewImagery(row)}
-                >
-                  Edit
-                </button>
-              ),
+              cell: (row) =>
+                row.visibility === "platform" ? null : (
+                  <button
+                    style={{
+                      border: "1px solid #3D7F7A",
+                      color: "#3D7F7A",
+                      background: "white",
+                      borderRadius: "4px",
+                      padding: "4px 10px",
+                      cursor: "pointer",
+                      fontWeight: 500,
+                    }}
+                    onClick={() => handleOpenNewImagery(row)}
+                  >
+                    Edit
+                  </button>
+                ),
               ignoreRowClick: true,
               allowOverflow: true,
               button: true,
@@ -172,6 +173,7 @@ of project visibility`;
         data={filteredImagery}
         selectableRows
         onSelectedRowsChange={({ selectedRows }) => setSelectedRows(selectedRows)}
+        selectableRowDisabled={(row) => row.visibility === "platform"}
         pagination
         paginationPerPage={100}
         paginationRowsPerPageOptions={[25, 50, 100, 250]}

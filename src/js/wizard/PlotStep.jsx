@@ -876,14 +876,22 @@ export const QualityControlCard = ({ institutionUserList = [], totalPlots, allow
 
       {(qaqcMethod === "overlap" || qaqcMethod === "sme") && (
         <div className="mb-3">
-          <label>Percent: {percent}%</label>
-          <input
-            type="range" className="form-control-range" min="0" max="100" step="5"
-            value={percent} onChange={(e) => setQaqcAssignment({ percent: parseInt(e.target.value) })}
-          />
+          <label className="sq-range-label">
+            Percent: {percent}%
+          </label>
+          <div className="sq-range-wrap">
+            <input
+              className="sq-range"
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={percent}
+              onChange={(e) => setQaqcAssignment({ percent: parseInt(e.target.value) })}
+            />
+          </div>
         </div>
       )}
-
       {qaqcMethod === "overlap" && (
         <div className="mb-3">
           <label># of Reviews:</label>
