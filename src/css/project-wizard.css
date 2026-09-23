@@ -835,3 +835,8 @@ text-underline-position: from-font;
   font-size: 16px;
   color: #263030;
 }
+
+.wizard-card.is-locked {
+  opacity: 0.55;
+  user-select: none;
+}

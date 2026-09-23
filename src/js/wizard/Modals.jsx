@@ -91,144 +91,151 @@ function ImportProjectModal () {
 function TemplateProjectModal () {
 
   const institutionId = useSubscription([sub_ids.institutionId]);
-  const institutionImagery = useSubscription([sub_ids.institution.imagery]);
   const projectType = useSubscription([sub_ids.overview.projectType]) || 'regular';
+  const institutionImagery = useSubscription([sub_ids.institution.imagery]) || [];
   const [templateProjectId, setTemplateProjectId] = useState(-1);
   const [templateProjects, setTemplateProjects] = useState([]);
-  const [filterProjectId, setFilterProjectId] = useState(-1);
-  const [filterProjectName, setFilterProjectName] = useState("");
+  const [filterProjectId, setFilterProjectId] = useState('');
+  const [filterProjectName, setFilterProjectName] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  function setTemplateProject (templateProject) {dispatch([event_ids.templateProject, templateProject]);}
-  function setUseTemplatePlots (useTemplatePlots) {dispatch([event_ids.overview.useTemplatePlots, useTemplatePlots]);}
-  function setDesignSettings (designSettings) {dispatch([event_ids.plots.designSettings, designSettings]);}
-  function setImageryId (imageryId) {dispatch([event_ids.imagery.previewId, imageryId]);}
-  function validate () {dispatch([event_ids.validate]);}
-  function setPlots (plots) {dispatch([event_ids.plots.plots, plots]);}
-  function setImageryList (imageryList) {dispatch([event_ids.imagery.imageryList, imageryList]);}
-  function setPreviewImagery (imageryId) {dispatch([event_ids.imagery.previewId, imageryId]);}
-  function setUseTemplateWidgets (useTemplateWidgets) {dispatch([event_ids.overview.useTemplateWidgets, useTemplateWidgets]);}
-  
+  const stripForeignUsers = (designSettings) => ({
+    ...designSettings,
+    userAssignment: { ...designSettings.userAssignment, userMethod: 'none', users: [], percents: [] },
+    qaqcAssignment: { ...designSettings.qaqcAssignment, qaqcMethod: 'none', smes: [] },
+  });
+  const matchesFilters = (idFilter, nameFilter) => ({ id, name }) =>
+    (idFilter === '' || String(id).includes(idFilter))
+      && (nameFilter === '' || name.toLowerCase().includes(nameFilter.toLowerCase()));
+
+  const intersectTemplateImagery = (templateImagery, institutionImagery, templateBasemapId) => {
+    const allowed = new Set(institutionImagery.map(({ id }) => id));
+    const shared = templateImagery.filter(({ id }) => allowed.has(id));
+    const pool = shared.length ? shared : institutionImagery;
+    const basemap =
+      pool.find(({ id }) => id === templateBasemapId)
+        ?? pool.find(({ visibility }) => visibility === 'platform')
+        ?? pool[0];
+    return [basemap, ...pool.filter((img) => img !== basemap)].map(({ id }) => id);
+  };
+
   function getTemplateById (projectId) {
-    fetch(`/get-template-by-id?projectId=${projectId}`)
+    return fetch(`/get-template-by-id?projectId=${projectId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
-        setTemplateProject(data);
-        const institutionImageryIds = institutionImagery.map((i) => i.id);
-        data.institutionId != institutionId ?
-          setDesignSettings({... data.designSettings, userAssignment: {
-            userMethod: null,
-            users: [],
-            percents: []}})
-          : setDesignSettings(data.designSettings);
-        setTemplateProjectId(projectId);
-        setImageryId(institutionImageryIds.includes(data.imageryId)
-                     ? [data.imageryId]
-                     : institutionImageryIds);
-        setUseTemplatePlots(true);
-        setUseTemplateWidgets(true);
-        validate();
-      });}
-  
-  function getProjectPlots(projectId) {
-    fetch(`/get-project-plots?projectId=${projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        setPlots(data);
-      });}
-  
-  function getProjectImagery(projectId) {    
-    fetch("/get-project-imagery?projectId=" + projectId)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        setPreviewImagery(data[0].id);
-        setImageryList(data.map((i) => i.id));        
-      });}
-
-  function getTemplateProjects (projectId) {
-    Promise.all([
-      getTemplateById(projectId),
-      getProjectPlots(projectId),
-      getProjectImagery(projectId),
-    ])
-//      .then(() => setTemplateProjectId(projectId))
-      .catch((error) => {
-        setTemplateProject({});
-        setTemplateProjectId(-1);
-        console.error(error);
-        dispatch([event_ids.modal, [['Project Template Error', ["Error getting complete template info. See console for details."]]]]);
+        dispatch([event_ids.templateProject, data]);
+        dispatch([event_ids.plots.designSettings,
+          data.templateInstitutionId === institutionId
+            ? data.designSettings
+            : stripForeignUsers(data.designSettings)]);
+        return data;
       });
   }
-    
+ 
+  // get-project-plots returns {id, plotId, center, flagged, status} rows,
+  // where center is a GeoJSON Point string and id is the visible id.
+  function getProjectPlots (projectId) {
+    return fetch(`/get-project-plots?projectId=${projectId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((plots) => dispatch([event_ids.plots.serverPlots, {
+        features: plots.map((p) => JSON.parse(p.center)),
+        count: plots.length,
+        maxId: Math.max(0, ...plots.map((p) => p.id)),
+      }]));
+  }
+ 
+  function getProjectImagery (projectId) {
+    return fetch(`/get-project-imagery?projectId=${projectId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)));
+  }
+ 
+  function loadTemplate (projectId) {
+    if (projectId <= 0 || loading) return;
+    setLoading(true);
+    Promise.all([getTemplateById(projectId), getProjectPlots(projectId), getProjectImagery(projectId)])
+      .then(([template, , templateImagery]) => {
+        const imageryIds = intersectTemplateImagery(templateImagery, institutionImagery, template.imageryId);
+        dispatch([event_ids.imagery.imageryList, imageryIds]);
+        dispatch([event_ids.imagery.previewId, imageryIds[0]]);
+        dispatch([event_ids.templateProjectId, projectId]);
+        dispatch([event_ids.templateProjectName,
+          templateProjects.find(({ id }) => id === projectId)?.name ?? '']);
+        dispatch([event_ids.overview.useTemplatePlots, true]);
+        dispatch([event_ids.overview.useTemplateWidgets, true]);
+        dispatch([event_ids.validate]);
+      })
+      .catch((error) => {
+        console.error(error);
+        dispatch([event_ids.templateProjectId, -1]);
+        dispatch([event_ids.overview.useTemplatePlots, false]);
+        dispatch([event_ids.overview.useTemplateWidgets, false]);
+        dispatch([event_ids.templateProjectName, '']);
+        dispatch([event_ids.errors, [['Project Template Error',
+          ['Error getting complete template info. See console for details.']]]]);
+      })
+      .finally(() => setLoading(false));
+  }
+ 
   useEffect(() => {
     fetch(`/get-template-projects?projectType=${projectType}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) =>
-        data && data.length > 0 ?
-          setTemplateProjects(data):
-          setTemplateProjects([{ id: -1, name: "No template projects found" }])        
-      )
+      .then((data) => setTemplateProjects(data || []))
       .catch((error) => {
+        console.error(error);
         dispatch([event_ids.errors, [['Template Projects', ['Failed to load template projects']]]]);
-        Promise.reject(error);
       });
-  }, []);
-
-  
+  }, [projectType]);
+ 
+  const visibleProjects = templateProjects.filter(matchesFilters(filterProjectId, filterProjectName));
+ 
   return (
     <Modal
-      title='Select Template Project'
-      confirmText='Select'
-      closeText='Quit'
-      onConfirm={()=> {getTemplateProjects(templateProjectId);}}      
-      onClose={()=>{ dispatch([event_ids.modal, 'newProject']);}}>
-      <div>        
-        {templateProjects.length ?
-         <div>
-           <p>Filter Template Projects:</p>
-           <div style={{display: "flex",
-                        gap: "1rem",
-                        flexDirection: "row"}}>
-             <input
-               className="text-input"
-               style={{width: "20%"}}
-               type="text"
-               placeHolder="Id"
-               value={filterProjectId > 0 ? filterProjectId : null}
-               onKeyPress={(e)=>{
-                 const pattern = /^[0-9]+$/;
-                 const input = e.key;
-                 !pattern.test(input) && e.preventDefault();
-               }}
-               onChange={(e)=>{setFilterProjectId(e.target.value);}}
-             />
-             <input
-               placeholder="Project Name"
-               className="text-input"
-               style={{flexGrow: 2}}
-               type="text"
-               value={filterProjectName}
-               onChange={(e)=>{setFilterProjectName(e.target.value);}}
-             />
-             
-           </div>
-           <select
-             className="text-input"
-             onChange={(e)=>{
-               setTemplateProjectId(Number(e.target.value));}}>
-             <option value={-1} selected disabled hidden>Select Template Project:</option>
-             {templateProjects
-              .filter(({id, name}) => {
-                return ((id.toString().includes(filterProjectId.toString())) ||
-                        (name.toLocaleLowerCase().includes(filterProjectName.toLocaleLowerCase()))
-                       );
-              })
-              .map(e =>(<option key={e.id} value={e.id}>{e.name}</option>))}
-         </select>
-         </div>
-         : <></>}
-      </div>
+      title="Select Template Project"
+      confirmText={loading ? 'Loading...' : 'Select'}
+      closeText="Quit"
+      onConfirm={() => loadTemplate(templateProjectId)}
+      onClose={() => dispatch([event_ids.modal, 'newProject'])}>
+      {templateProjects.length === 0
+        ? <p>No template projects found.</p>
+        : (
+          <div>
+            <p>Filter Template Projects:</p>
+            <div style={{ display: 'flex', gap: '1rem', flexDirection: 'row' }}>
+              <input
+                className="text-input"
+                style={{ width: '20%' }}
+                type="text"
+                inputMode="numeric"
+                placeholder="Id"
+                value={filterProjectId}
+                onChange={(e) => setFilterProjectId(e.target.value.replace(/[^0-9]/g, ''))}
+              />
+              <input
+                className="text-input"
+                style={{ flexGrow: 2 }}
+                type="text"
+                placeholder="Project Name"
+                value={filterProjectName}
+                onChange={(e) => setFilterProjectName(e.target.value)}
+              />
+            </div>
+            <select
+              className="text-input"
+              value={templateProjectId}
+              onChange={(e) => setTemplateProjectId(Number(e.target.value))}>
+              <option value={-1} disabled hidden>Select Template Project:</option>
+              {visibleProjects.map(({ id, name }) => (
+                <option key={id} value={id}>{name}</option>
+              ))}
+            </select>
+            {visibleProjects.length === 0 && (
+              <p style={{ marginTop: '0.5rem' }}>No template projects match the filters.</p>
+            )}
+          </div>
+        )}
     </Modal>
   );
+
 }
 
 function handleNewProject (projectSource) {

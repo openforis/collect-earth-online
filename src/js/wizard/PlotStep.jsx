@@ -18,7 +18,8 @@ import {
 } from '../utils/newMercator';
 import {
   event_ids,
-  sub_ids
+  sub_ids,
+  usePlotDesignLocked,
 } from '../state/projectWizard';
 import { InfoTooltip } from '../components/PageComponents';
 
@@ -182,6 +183,7 @@ export const PlotStep = ({ imageryList = [] }) => {
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
   const initializedMap = useRef(false);
   const newPlotFeatures = useSubscription([sub_ids.plots.newPlotFeatures]) || [];
+  const plotDesignLocked = usePlotDesignLocked();
 
   useEffect(() => {
     setMapLibrary(imageryList);
@@ -216,7 +218,16 @@ export const PlotStep = ({ imageryList = [] }) => {
         </Modal>
       )}
 
-      <div className="wizard-sidebar">
+      <div
+        className={`wizard-sidebar${plotDesignLocked ? ' is-locked' : ''}`}
+        inert={plotDesignLocked ? '' : undefined}
+      >
+        {plotDesignLocked && (
+          <div className="wizard-card mb-2 text-secondary small" style={{ fontWeight: '500' }}>
+            Plot design, assignments and quality control come from the template.
+            Uncheck "Use template plot design" in Project Overview to change them.
+          </div>
+        )}
         <ExistingPlotsCard />
         <PlotGenerationCard onUploadedPlotIds={setUploadedPlotIds} />
         <PlotSimilarityCard plotIdList={plotIdList} />

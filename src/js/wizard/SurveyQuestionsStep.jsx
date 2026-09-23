@@ -5,6 +5,8 @@ import SvgIcon from '../components/svg/SvgIcon';
 import { event_ids, sub_ids } from '../state/projectWizard';
 import { InfoTooltip } from '../components/PageComponents';
 
+
+// USEFUL CONSTANTS AND FUNCTIONS
 const isTopLevel = (q) => Number(q.parentQuestionId) === -1;
 const orderKey   = (q) => (isTopLevel(q) ? 'cardOrder' : 'siblingOrder');
 const orderOf    = ([id, q]) => q[orderKey(q)] ?? Number(id);
@@ -47,7 +49,7 @@ export const removeQuestionCascade = ({ questions, rules }, qId) => {
     questions: renumberSiblings(
       Object.fromEntries(Object.entries(questions).filter(([id]) => keep(id))),
       questions[qId].parentQuestionId),
-    rules: rules.filter((rule) => ruleQuestionIds(rule).every(keep)),
+    rules: renumberRules(rules.filter((rule) => ruleQuestionIds(rule).every(keep))),
   };
 };
 

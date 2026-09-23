@@ -34,10 +34,12 @@ export function validatePlots({
   numPlots,
   append,
   newPlotDistribution,
-  newPlotFileName
+  newPlotFileName,
+  locked
 }) {
   if (append) {
     if (!newPlotFileName) return [];
+    if (locked) return [];
     return [
       (newPlotDistribution === "csv" && !(newPlotFileName || "").includes(".csv")) &&
         "A plot CSV (.csv) file is required.",
@@ -97,7 +99,9 @@ export function validateSamples({
   sampleLimit,
   allowDrawnSamples,
   designSettings,
+  locked,
 }) {
+  if (locked) return [];
   return ([sampleDistribution === "random" &&
      !samplesPerPlot && "A number of samples per plot is required for random sample distribution.",
      sampleDistribution === "gridded" &&

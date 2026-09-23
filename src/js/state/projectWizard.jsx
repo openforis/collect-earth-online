@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { atom } from 'jotai';
-import { initAppDb , regEvent , regEffect , dispatch , regSub , current } from '@flexsurfer/reflex';
-
+import { initAppDb , regEvent , regEffect , dispatch , regSub , current, useSubscription } from '@flexsurfer/reflex';
+import { enableTracing, enableTracePrint } from '@flexsurfer/reflex';
 import {
   validateOverview,
   validateImagery,
@@ -14,6 +14,7 @@ import {
 
 export const previewSelectedSampleIdAtom = atom(1);
 export const previewUserSamplesAtom = atom({});
+if (process.env.NODE_ENV !== 'production') { enableTracing(); enableTracePrint(); }  
 
 const newRuleDefaults = {
   'rules.newRule.label': null,
@@ -45,6 +46,7 @@ const projectWizardDb = {
   projectId: -1,
   projectDraftId: -1,
   templateProjectId: -1,
+  templateProjectName: '',
   useTemplatePlots: false,
   useTemplateWidgets: false,
   originalProject: {},
@@ -74,7 +76,6 @@ const projectWizardDb = {
   'boundary.aoiFeatures': [],
   'boundary.aoiFileName': '',
   // plots
-  'plots.plots': [],
   'plots.plotDistribution': 'random',
   'plots.numPlots': '',
   'plots.plotSize': '',
@@ -140,6 +141,7 @@ export const event_ids = {
   saveProject: 'saveProject',
   publishProject: 'publishProject',
   templateProjectId: 'templateProjectId',
+  templateProjectName: '',
   templateProject: 'templateProject',
   errors: 'errors',
   continueHandler: 'continueHandler',
@@ -258,6 +260,7 @@ export const sub_ids = {
   projectSource: 'projectSource',
   successResponse: 'successReponse',
   templateProjectId: 'templateProjectId',
+  templateProjectName: '',
   originalProject: 'originalProject',
   validStep: 'validStep',
   invalidSteps: 'invalidSteps',
@@ -381,6 +384,7 @@ regSub(sub_ids.overview.projectOptions.autoLaunchGeoDash, sub_ids.overview.proje
 regSub(sub_ids.overview.useTemplatePlots, sub_ids.overview.useTemplatePlots);
 regSub(sub_ids.overview.useTemplateWidgets, sub_ids.overview.useTemplateWidgets);
 regSub(sub_ids.overview.projectOptions.plotSimilarity, sub_ids.overview.projectOptions.plotSimilarity);
+regSub(sub_ids.templateProjectName, sub_ids.templateProjectName);
 
 //imagery
 regSub(sub_ids.imagery.imageryList, sub_ids.imagery.imageryList);
@@ -392,7 +396,6 @@ regSub(sub_ids.boundary.aoiFeatures, sub_ids.boundary.aoiFeatures);
 regSub(sub_ids.boundary.aoiFileName, sub_ids.boundary.aoiFileName);
 
 // plots
-regSub(sub_ids.plots.plots, sub_ids.plots.plots);
 regSub(sub_ids.plots.plotDistribution, sub_ids.plots.plotDistribution);
 regSub(sub_ids.plots.numPlots, sub_ids.plots.numPlots);
 regSub(sub_ids.plots.plotSize, sub_ids.plots.plotSize);
@@ -460,6 +463,10 @@ regSub(sub_ids.invalidSteps, sub_ids.invalidSteps);
 
 regEvent(event_ids.projectId, ({ draftDb }, projectId) => {
   draftDb[sub_ids.projectId] = projectId;
+});
+
+regEvent(event_ids.templateProjectName, ({ draftDb }, name) => {
+  draftDb[sub_ids.templateProjectName] = name;
 });
 
 regEvent(event_ids.projectDetails, ({ draftDb }, projectDetails) => {
@@ -537,11 +544,17 @@ regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
   dispatch([event_ids.currentStep, 'review']);
 });
 
+const plotDesignLocked = (draftDb) =>
+  current(draftDb[sub_ids.templateProjectId]) > 0
+    && current(draftDb[sub_ids.projectId]) === -1
+    && Boolean(current(draftDb[sub_ids.overview.useTemplatePlots]));
+
 export function buildProject (draftDb, sub_ids) {
   const projectId = current(draftDb[sub_ids.projectId]);
   const plotDistribution = current(draftDb[sub_ids.plots.plotDistribution]);
   const originalProject = current(draftDb[sub_ids.originalProject]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
+  const locked = plotDesignLocked(draftDb);
   const plotFileNeeded = !useTemplatePlots &&
         (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
   const name = current(draftDb[sub_ids.overview.projectName]);
@@ -626,6 +639,7 @@ export function buildProject (draftDb, sub_ids) {
     sampleDistribution,
     sampleFileName,
     sampleResolution,
+    locked,
     plotLimit: 5000,
     sampleLimit: 35000,
     perPlotLimit: 200,
@@ -755,12 +769,12 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   name,
   numPlots = 0,
   plotDistribution,
-  plotfileName,
+  plotFileName,
   plotShape,
   plotSize,
   plotSpacing = -1,
   projectOptions = {showGEEScript : false, showPlotInformation: false, collectConfidence: false, autoLaunchGeoDash: false},
-  type = 'regular',
+  type,
   referencePlot = -1,
   sampleDistribution,
   sampleFileName,
@@ -768,18 +782,18 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   samplesPerPlot,
   surveyQuestions,
   surveyRules = [],
-  visibility = 'institution',
   availability = '',
   createdDate = '',
   publishedDate = '',
   closedDate = '',
+  privacyLevel,
 
 }) => {
   draftDb[sub_ids.overview.projectName] = name;
   draftDb[sub_ids.overview.projectDescription] = description;
   draftDb[sub_ids.overview.projectType] = type;
   draftDb[sub_ids.overview.learningMaterial] = learningMaterial;
-  draftDb[sub_ids.overview.visibility] = visibility;
+  draftDb[sub_ids.overview.visibility] = privacyLevel ?? draftDb[sub_ids.overview.visibility];
   draftDb[sub_ids.overview.projectOptions.showGEEScript] = projectOptions.showGEEScript;
   draftDb[sub_ids.overview.projectOptions.showPlotInformation] = projectOptions.showPlotInformation;
   draftDb[sub_ids.overview.projectOptions.collectConfidence] = projectOptions.collectConfidence;
@@ -795,7 +809,7 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.plots.plotShape] = plotShape;
   draftDb[sub_ids.plots.plotSpacing] = plotSpacing;
   draftDb[sub_ids.plots.totalPlots] = Number(numPlots);
-  draftDb[sub_ids.plots.plotFileName] = plotfileName;
+  draftDb[sub_ids.plots.plotFileName] = plotFileName;
   draftDb[sub_ids.plots.referencePlotId] = Number(referencePlot);
   draftDb[sub_ids.plots.designSettings] = designSettings;
   draftDb[sub_ids.samples.sampleDistribution] = sampleDistribution;
@@ -1088,10 +1102,6 @@ regEvent(event_ids.boundary.clearBoundary, ({ draftDb }) => {
 });
 
 // PLOT GENERATION EVENTS
-regEvent(event_ids.plots.plots, ({ draftDb }, plots) => {
-  draftDb[sub_ids.plots.plots] = plots;
-});
-
 regEvent(event_ids.plots.plotDistribution, ({ draftDb }, distribution) => {
   if (draftDb[sub_ids.plots.plotDistribution] === distribution) return;
   draftDb[sub_ids.plots.plotDistribution] = distribution;
@@ -1356,7 +1366,6 @@ regEvent(event_ids.rules.newRule.removeAnswer, ({ draftDb }, questionId) => {
   draftDb[sub_ids.rules.newRule.answers] = dbAnswers.filter(([question])=>question != questionId);
 });
 
-
 regEvent(event_ids.rules.newRule.tempQuestionId, ({ draftDb }, tempQuestionId) => {
   draftDb[sub_ids.rules.newRule.tempQuestionId] = tempQuestionId;
 });
@@ -1373,6 +1382,11 @@ regEvent(event_ids.rules.newRule.incompatAnswerId, ({ draftDb }, incompatAnswerI
   draftDb[sub_ids.rules.newRule.incompatAnswerId] = incompatAnswerId;
 });
 
+regEvent(event_ids.rules.removeRule, ({ draftDb }, rid) => {
+  draftDb[sub_ids.rules.rules] =
+    renumberRules(current(draftDb[sub_ids.rules.rules]).filter((r) => r.id !== rid));
+});
+
 
 // EVENTS FOR INSTITUTION INFORMATION
 regEvent(event_ids.institution.users, ({draftDb}, users) => {
@@ -1382,3 +1396,12 @@ regEvent(event_ids.institution.users, ({draftDb}, users) => {
 regEvent(event_ids.institution.imagery, ({ draftDb }, imagery) => {
   draftDb[sub_ids.institution.imagery] = imagery;
 });
+
+export const usePlotDesignLocked = () => {
+  const templateProjectId = useSubscription([sub_ids.templateProjectId]) || -1;
+  const projectId = useSubscription([sub_ids.projectId]) || -1;
+  const useTemplatePlots = useSubscription([sub_ids.overview.useTemplatePlots]);
+  return templateProjectId > 0 && projectId === -1 && Boolean(useTemplatePlots);
+};
+
+export const renumberRules = (rules) => rules.map((rule, i) => ({ ...rule, id: i }));

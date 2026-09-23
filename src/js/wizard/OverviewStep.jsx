@@ -5,6 +5,10 @@ import { InfoTooltip } from "../components/PageComponents";
 
 import SvgIcon from "../components/svg/SvgIcon";
 
+const TEMPLATE_OPTIONS = {
+  useTemplatePlots: 'Use template plot design',
+  useTemplateWidgets: 'Use template widgets',
+};
 
 const VisibilityCard = () => {    
   const visibilityOptions={public: "Public: All Users",
@@ -185,12 +189,49 @@ const GeneralInformationCard = () => {
     </div>);
 };
 
+const TemplateOptionsCard = () => {
+  const templateProjectId = useSubscription([sub_ids.templateProjectId]) || -1;
+  const templateProjectName = useSubscription([sub_ids.templateProjectName]) || '';
+  const projectId = useSubscription([sub_ids.projectId]) || -1;
+  const options = {
+    useTemplatePlots: useSubscription([sub_ids.overview.useTemplatePlots]),
+    useTemplateWidgets: useSubscription([sub_ids.overview.useTemplateWidgets]),
+  };
+  const usingTemplate = templateProjectId > 0 && projectId === -1;
+  if (!usingTemplate) return null;
+
+  return (
+    <div className="wizard-card" style={{ marginBottom: '15px' }}>
+      <p className="card-title">
+        Template: {templateProjectName || `Project ${templateProjectId}`} (#{templateProjectId})
+      </p>
+      {Object.entries(TEMPLATE_OPTIONS).map(([id, label]) => (
+        <div
+          className="labeled-input"
+          key={id}
+          onClick={() => dispatch([event_ids.overview[id], !options[id]])}>
+          <span className="checkbox">
+            <SvgIcon icon={options[id] ? 'checkboxChecked' : 'checkboxUnchecked'} size="1.2rem" />
+          </span>
+          <span className="text-label" style={options[id] ? { fontWeight: 'bold' } : {}}>
+            {label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export default function OverviewStep () {
+  const templateProjectId = useSubscription([sub_ids.templateProjectId]) || -1;
   return (
     <div className="project-wizard overview-step"
          style={{paddingLeft: "20%",
                  paddingRight: "20%"}}>
-      <GeneralInformationCard /> 
+      <GeneralInformationCard />
+      {templateProjectId > 0 && (
+        <TemplateOptionsCard/>
+      )}
       <VisibilityCard/> 
       <ProjectOptionsCard/>
     </div>

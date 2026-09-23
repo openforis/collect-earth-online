@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import shp from 'shpjs';
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
-import { event_ids, sub_ids } from '../state/projectWizard';
+import { event_ids, sub_ids, usePlotDesignLocked } from '../state/projectWizard';
 import { NewMap } from '../components/NewMap';
 import Select from '../components/Select';
 import SvgIcon from '../components/svg/SvgIcon';
@@ -108,6 +108,7 @@ export const SampleStep = () => {
   const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]);
   const sampleResolution = useSubscription([sub_ids.samples.sampleResolution]) || 0;
   const [sampleFeatures, setSampleFeatures] = useState([]);
+  const plotDesignLocked = usePlotDesignLocked();
 
   const activePlot = plotFeatures.length > 0 ? plotFeatures[0] : null;
   const { aoiToShow, rawPlotGeom } = derivePlotPreview(activePlot, plotSize, plotShape);
@@ -118,7 +119,16 @@ export const SampleStep = () => {
 
   return (
     <div className="wizard-step-layout">
-      <div className="wizard-sidebar">
+      <div
+        className={`wizard-sidebar${plotDesignLocked ? ' is-locked' : ''}`}
+        inert={plotDesignLocked ? '' : undefined}
+      >
+        {plotDesignLocked && (
+          <div className="wizard-card mb-2 text-secondary small" style={{ fontWeight: '500' }}>
+            Sample design comes from the template.
+            Uncheck "Use template plot design" in Project Overview to change it.
+          </div>
+        )}
         <SampleGenerationCard setSampleFeatures={setSampleFeatures} />
         <UserDrawnSamplesCard />
       </div>
