@@ -150,6 +150,7 @@ export const event_ids = {
   validate: 'validate',
   currentStep: 'currentStep',
   modal: 'modal',
+  availability: 'availability',
   projectSource: 'projectSource',
   successResponse: 'successReponse',
   draftSuccess:'draftSuccess', 
@@ -496,7 +497,9 @@ regEvent(event_ids.errors, ({ draftDb }, errors) => {
 regEvent(event_ids.institutionId, ({ draftDb }, institutionId )=> {
   draftDb[sub_ids.institutionId] = institutionId;
 });
-
+regEvent(event_ids.availability, ({ draftDb }, availability ) => {
+  draftDb[sub_ids.availability] = availability;
+});
 // PROJECT WIZARD EVENTS
 
 regEvent(event_ids.draftProject, ({ draftDb }, draftId) => {
