@@ -12,8 +12,26 @@ function ImportProjectModal () {
   const [projectFileName, setProjectFileName] = useState("");
   const [projectFileBase64, setProjectFileBase64] = useState(null);
   const [importErrors, setImportErrors] = useState(null);
+  const [importing, setImporting] = useState(false);
+
+  // Surface the server's message instead of only the status text
+  const readError = (response) =>
+    response.text()
+      .then((text) => {
+        try {
+          const body = JSON.parse(text);
+          return body.message || body.error
+            || (body.params && Object.entries(body.params).map(([f, m]) => `${f}: ${m}`).join('; '))
+            || text;
+        } catch {
+          return text;
+        }
+      })
+      .then((message) => Promise.reject(message || response.statusText || 'Import failed.'));
 
   function importCollectProject (fileName, fileb64) {
+    if (importing) return;
+    setImporting(true);
     fetch(`/import-ce-project`, {
       method: "POST",
       headers: {
@@ -25,22 +43,22 @@ function ImportProjectModal () {
         fileb64,
       }),
     })
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((response) => (response.ok ? response.json() : readError(response)))
       .then((data) => {
-        dispatch([event_ids.templateProject, data]);
+        dispatch([event_ids.importProject, data]);
         dispatch([event_ids.currentStep, 'review']);
         dispatch([event_ids.modal, null]);
       })
       .catch((message) => {
-        console.log('import collect earth project errors: ', message);        
-        setImportErrors([message.statusText]);
-      });
+        console.log('import collect earth project errors: ', message);
+        setImportErrors([typeof message === 'string' ? message : 'Import failed. See console for details.']);
+      })
+      .finally(() => setImporting(false));
   };
 
   function uploadProjectFile (file) {
     setImportErrors(null);
     readFileAsBase64Url(file, (base64) => {
-      //do some sort of validating
       setProjectFileName(file.name);
       setProjectFileBase64(base64);
     });       
@@ -49,11 +67,11 @@ function ImportProjectModal () {
   return (
     <Modal
       title='Upload Collect Earth Project File'
-      confirmText='Upload'
+      confirmText={importing ? 'Importing...' : 'Upload'}
       closeText='Quit'
-      onConfirm={()=> {importCollectProject(projectFileName, projectFileBase64);}}      
+      onConfirm={()=> {importCollectProject(projectFileName, projectFileBase64);}}
       onClose={()=>{ dispatch([event_ids.modal, 'newProject']);}}
-      confirmDisabled={projectFileName === ""}
+      confirmDisabled={projectFileName === "" || !projectFileBase64 || importing}
     >
       <div>
         <label
@@ -63,26 +81,26 @@ function ImportProjectModal () {
         >
           <SvgIcon icon='plus' size='0.9rem' />
           {projectFileName ? `File: ${projectFileName}` : 'Upload Collect Earth Project File'}
-        <input
-          type='file'
-          accept='application/cep'
-          defaultValue=''
-          id='template-project-file'
-          style={{ display: 'none'}}
-          onChange={(e)=> {
-            const file = e.target.files[0];
-            file && uploadProjectFile(file);
-          }}
-        />
+          <input
+            type='file'
+            accept='.cep'
+            defaultValue=''
+            id='template-project-file'
+            style={{ display: 'none'}}
+            onChange={(e)=> {
+              const file = e.target.files[0];
+              file && uploadProjectFile(file);
+            }}
+          />
         </label>
         {importErrors &&
-         (<div style={{border: '1px solid red',
-                       background: 'pink',
-                       color: 'red'}} >
-            {importErrors.map((message) => {
-              return (<span > {message} <br/> </span>);
-            })}
-          </div>)}
+          (<div style={{border: '1px solid red',
+            background: 'pink',
+            color: 'red'}} >
+             {importErrors.map((message) => {
+               return (<span > {message} <br/> </span>);
+             })}
+           </div>)}
       </div>
     </Modal>
   );
@@ -258,11 +276,11 @@ function handleNewProject (projectSource) {
 function NewProjectModal () {
   const newProjectOptions = {
     newProject: ['Create a new project',
-                 'Generate a new project from scratch by customizing all steps.'],
+      'Generate a new project from scratch by customizing all steps.'],
     templateProject: ['Select from an existing template',
-                      'Select a template and prefill all the steps. You can edit and customize it.'],
+      'Select a template and prefill all the steps. You can edit and customize it.'],
     importProject: ['Import Collect Earth Project',
-                    'Import a project from the Collect Earth desktop application.']};
+      'Import a project from the Collect Earth desktop application.']};
   const projectSource = useSubscription([sub_ids.projectSource]);
   const institutionId = useSubscription([sub_ids.institutionId]);
   return (
@@ -279,8 +297,8 @@ function NewProjectModal () {
           return (
             <div
               className={projectSource === id ?
-                         "radio-selected-button"
-                         : "radio-selection-button"}
+                "radio-selected-button"
+                : "radio-selection-button"}
               key={id}
               onClick={()=> {
                 dispatch([event_ids.projectSource, id]);
@@ -290,7 +308,7 @@ function NewProjectModal () {
               >{projectSource === id
                 ? <SvgIcon icon="radioChecked" size="1.2rem" />                            
                 : <SvgIcon icon="radio" size="1.2rem"
-                           className="radio-button-unchecked"/> }
+                    className="radio-button-unchecked"/> }
                 {"    "}
                 { title } </p>
               <label
@@ -321,8 +339,8 @@ function SubmitProjectModal () {
           Once satisfied with the project, click publish to begin final collection.</p>
         <div>
           <input type='checkbox'
-                 checked={TOS}
-                 onChange={(e)=>setTOS(e.target.checked)}/>
+            checked={TOS}
+            onChange={(e)=>setTOS(e.target.checked)}/>
           <label>Accept
             <a href="https://app.collect.earth/terms-of-service" target="_blank">
               Terms of Service
@@ -431,8 +449,8 @@ function ErrorModal () {
     <Modal
       onClose={()=>{dispatch([event_ids.modal, null]);}}>
       <div style={{display: 'flex',
-                   flexDirection: 'column',
-                   gap: '1rem'}}>
+        flexDirection: 'column',
+        gap: '1rem'}}>
         <div className='alert-icon'>
           <SvgIcon  icon='alert' size='2rem'/>
         </div>
@@ -440,21 +458,21 @@ function ErrorModal () {
         <br/>      
         {errors.map(([errorType, errorMessages])=> {
           return (<div className='error-card'>
-       <div className='error-header' onClick={()=>toggleVisible(errorType)}>
-         <b > {stepName(errorType)}</b>
-         <SvgIcon icon={visible.includes(errorType) ? 'upCaretNew' : 'downCaretNew'}
-                  size='1.2rem'> </SvgIcon>
-       </div>
-       {visible.includes(errorType) &&
-        <div style={{gap: '1rem'}}>
-          <br/>
-          {errorMessages.map((message) => {
-            return (
-              <p > - {message}
-              </p>);
-          })}
-        </div>}
-     </div>);
+                    <div className='error-header' onClick={()=>toggleVisible(errorType)}>
+                      <b > {stepName(errorType)}</b>
+                      <SvgIcon icon={visible.includes(errorType) ? 'upCaretNew' : 'downCaretNew'}
+                        size='1.2rem'> </SvgIcon>
+                    </div>
+                    {visible.includes(errorType) &&
+                      <div style={{gap: '1rem'}}>
+                        <br/>
+                        {errorMessages.map((message) => {
+                          return (
+                            <p > - {message}
+                            </p>);
+                        })}
+                      </div>}
+                  </div>);
         })}
       </div>
     </Modal>    

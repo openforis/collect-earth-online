@@ -20,6 +20,8 @@ import {
   event_ids,
   sub_ids,
   usePlotDesignLocked,
+  extractPlotIds,
+  extractPlotGeometries,
 } from '../state/projectWizard';
 import { InfoTooltip } from '../components/PageComponents';
 
@@ -38,8 +40,6 @@ const ACCEPTED_MIME_TYPES = {
   shp: 'application/zip',
   geojson: 'application/json',
 };
-
-const PLOT_ID_KEYS = ['visible_id', 'plotid', 'plot_id', 'PlotID', 'plotId', 'PLOTID'];
 
 const DISTRIBUTION_LABELS = {
   random: 'Random',
@@ -135,22 +135,6 @@ const computePlotGeneration = ({ distribution, numPlots, plotSpacing, plotSize, 
     : { kind: 'noop' };
 };
 
-// Extracts visible ids from plot file.
-const extractPlotIds = (plots) =>
-  plots
-    .map((plot) => {
-      const props = plot.properties || plot;
-      const idKey = Object.keys(props).find((key) => PLOT_ID_KEYS.includes(key));
-      return idKey ? props[idKey] : undefined;
-    })
-    .filter((id) => id != null);
-
-// Extracts geometries from plot file.
-const extractPlotGeometries = (plots) =>
-  plots
-    .map((plot) => (plot ? (plot.type ? plot : plot.plot_geom || plot.plotGeom) : null))
-    .filter(Boolean);
-
 // Builds a rectangular AOI polygon from a file's [[lonMin, latMin], [lonMax, latMax]] extent.
 const boundaryBoxFromExtent = ([[lonMin, latMin], [lonMax, latMax]]) => [
   {
@@ -178,7 +162,7 @@ export const PlotStep = ({ imageryList = [] }) => {
   const plotDistribution = useSubscription([sub_ids.plots.plotDistribution]) || 'random';
   const totalPlotsCalculated = useSubscription([sub_ids.plots.totalPlots]) || 0;
   const modal = useSubscription([sub_ids.modal]);
-  const [uploadedPlotIds, setUploadedPlotIds] = useState([]);
+  const uploadedPlotIds = useSubscription([sub_ids.plots.plotIds]) || [];
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
   const initializedMap = useRef(false);
@@ -229,7 +213,7 @@ export const PlotStep = ({ imageryList = [] }) => {
           </div>
         )}
         <ExistingPlotsCard />
-        <PlotGenerationCard onUploadedPlotIds={setUploadedPlotIds} />
+        <PlotGenerationCard />
         <PlotSimilarityCard plotIdList={plotIdList} />
         <AssignPlotsCard totalPlots={totalPlotsCalculated} institutionUserList={institutionUsers}/>
         <QualityControlCard totalPlots={totalPlotsCalculated} institutionUserList={institutionUsers}/>
@@ -249,7 +233,7 @@ export const PlotStep = ({ imageryList = [] }) => {
   );
 };
 
-export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
+export const PlotGenerationCard = () => {
   const availability = useSubscription([sub_ids.availability]) || '';
   const isPublished = availability === 'published';
   const mode = PLOT_GENERATION_MODES[isPublished ? 'append' : 'standard'];
@@ -358,7 +342,7 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
         }
 
         if (data.plots && data.plots.length > 0) {
-          onUploadedPlotIds && onUploadedPlotIds(extractPlotIds(data.plots));
+          dispatch([event_ids.plots.plotIds, extractPlotIds(data.plots)]);
           dispatch([mode.events.plotFeatures, extractPlotGeometries(data.plots)]);
         }
       })
@@ -375,7 +359,7 @@ export const PlotGenerationCard = ({ onUploadedPlotIds }) => {
     });
   };
 
-    const labelPlotDimensionUnits = plotShape === 'circle' ? 'Plot Diameter (m)' : 'Plot Width (m)';
+  const labelPlotDimensionUnits = plotShape === 'circle' ? 'Plot Diameter (m)' : 'Plot Width (m)';
 
   const renderPlotShapeInput = () => (
     <div className="form-group mb-3">
@@ -724,48 +708,48 @@ export const AssignPlotsCard = ({ totalPlots, institutionUserList = [] }) => {
     <>
       <div key={userId} className="d-flex align-items-center"
         style={{marginTop: "10px"}}>
-      {userMethod === "percent" && (
-        <div className="d-flex flex-column" style={{ marginRight: '10px' }}>
-          <input
-            type="number" min="0" max="100" placeholder="%"
-            style={{ width: '90px', padding: '2px 8px', fontSize: '0.85rem' }}
-            value={percents[idx]}
-            onChange={(e) => updatePercent(idx, e.target.value)}
-          />
-        </div>
-      )}
-      {userMethod === "file" && (
-        <div className="d-flex flex-column" style={{ marginRight: '10px' }}>
-          <input
-            type="number" className="text-input" disabled
-            style={{ width: '60px' }}
-            value={(fileAssignments[email] || []).length}
-          />
-          <small style={{ color: 'var(--Neutral-Text-gray)' }}>plots assigned to</small>
-        </div>
-      )}
+        {userMethod === "percent" && (
+          <div className="d-flex flex-column" style={{ marginRight: '10px' }}>
+            <input
+              type="number" min="0" max="100" placeholder="%"
+              style={{ width: '90px', padding: '2px 8px', fontSize: '0.85rem' }}
+              value={percents[idx]}
+              onChange={(e) => updatePercent(idx, e.target.value)}
+            />
+          </div>
+        )}
+        {userMethod === "file" && (
+          <div className="d-flex flex-column" style={{ marginRight: '10px' }}>
+            <input
+              type="number" className="text-input" disabled
+              style={{ width: '60px' }}
+              value={(fileAssignments[email] || []).length}
+            />
+            <small style={{ color: 'var(--Neutral-Text-gray)' }}>plots assigned to</small>
+          </div>
+        )}
 
-      <span className="flex-grow-1" style={{ fontSize: '0.9rem' }}>{email}</span>
+        <span className="flex-grow-1" style={{ fontSize: '0.9rem' }}>{email}</span>
 
-      {userMethod !== "file" && (
-        <button
-          className="btn btn-sm"
-          title={`Remove ${email}`}
-          style={{
-            backgroundColor: 'transparent',
-            border: '1px solid var(--Primary-Red)',
-            color: 'var(--Primary-Red)',
-          }}
-          onClick={() => removeUser(userId)}
-        >
-          <SvgIcon icon="minus" size="0.8rem" color="var(--Primary-Red)" />
-        </button>
-      )}
-    </div>
+        {userMethod !== "file" && (
+          <button
+            className="btn btn-sm"
+            title={`Remove ${email}`}
+            style={{
+              backgroundColor: 'transparent',
+              border: '1px solid var(--Primary-Red)',
+              color: 'var(--Primary-Red)',
+            }}
+            onClick={() => removeUser(userId)}
+          >
+            <SvgIcon icon="minus" size="0.8rem" color="var(--Primary-Red)" />
+          </button>
+        )}
+      </div>
       {userMethod === 'percent' && (
         <small style={{ color: 'var(--Neutral-Text-gray)'}}>
-        ~{formatNumberWithCommas(Math.round(((percents[idx] || 0) / 100) * totalPlots))} plots
-      </small>
+          ~{formatNumberWithCommas(Math.round(((percents[idx] || 0) / 100) * totalPlots))} plots
+        </small>
       )}
     </>
   );
@@ -988,12 +972,12 @@ export const ExistingPlotsCard = () => {
           text="These plots belong to the published project and cannot be modified. New plots added below will be appended to them."
         />
       </div>
-        {rows.map(([label, value]) => (
-          <div key={label} className="d-flex justify-content-between mb-2">
-            <span className="text-label-sm" style={{ color: 'var(--Neutral-Text-gray)', margin: 0 }}>{label}</span>
-            <span className="text-label-sm" style={{ color: '#333', fontWeight: 500, margin: 0 }}>{value}</span>
-          </div>
-        ))}
+      {rows.map(([label, value]) => (
+        <div key={label} className="d-flex justify-content-between mb-2">
+          <span className="text-label-sm" style={{ color: 'var(--Neutral-Text-gray)', margin: 0 }}>{label}</span>
+          <span className="text-label-sm" style={{ color: '#333', fontWeight: 500, margin: 0 }}>{value}</span>
+        </div>
+      ))}
     </div>
   );
 };
