@@ -323,74 +323,33 @@ function NewProjectModal () {
 
 function SubmitProjectModal () {
   const [TOS, setTOS] = useState(false);
-  const projectId = Number(useSubscription([sub_ids.projectId]));
-  const isEditing = projectId > 0;
+  const update = Number(useSubscription([sub_ids.projectId]));
   return (
     <Modal
-      title={isEditing ? 'Update Project' : 'Create Project'}
+      title={update < 0 ? 'Create Project' : 'Update Project'}
       closeText='Return to editing'
-      confirmText={isEditing ? 'Update Project' : 'Create Project'}
+      confirmText={update < 0 ? 'Create Project' : 'Update Project'}
       onConfirm={()=>{
         dispatch([event_ids.saveProject, TOS]);
       }}
-      confirmDisabled={!isEditing && !TOS}
+      confirmDisabled={!TOS}
       onClose={()=>{dispatch([event_ids.modal, null])}}>
-      {isEditing ? (
-        <p>Are you sure you want to apply these changes to the project?</p>
-      ) : (
-        <div>
-          <p >You will be able to continue to make changes to the project after creating/updating it.
-            Once satisfied with the project, click publish to begin final collection.</p>
-          <div className="labeled-input" onClick={()=>setTOS(!TOS)}>
-            <span className="checkbox">
-              <SvgIcon icon={TOS ? 'checkboxChecked' : 'checkboxUnchecked'} size="1.2rem" />
-            </span>
-            <span className="text-label" style={TOS ? {fontWeight: 'bold'} : {}}>
-              Accept{' '}
-              <a
-                href="https://app.collect.earth/terms-of-service"
-                onClick={(e)=>e.stopPropagation()}
-                target="_blank">
-                Terms of Service
-              </a>
-              <span style={{color: 'red'}}>*</span>
-            </span>
-          </div>
-          <p > Are you sure you want to continue?</p>
-        </div>
-      )}
-    </Modal>
-  );
-};
-
-function UpdatePublishedProjectModal () {
-  const [overwrite, setOverwrite] = useState(false);
-  return (
-    <Modal
-      title='Update Published Project'
-      closeText='Return to editing'
-      confirmText='Update Project'
-      onConfirm={()=>{
-        dispatch([event_ids.saveProject, false, overwrite]);
-      }}
-      onClose={()=>{dispatch([event_ids.modal, null]);}}>
       <div>
-        <p>Would you like to clear data that has been collected?</p>
-        {[[false, 'No'], [true, 'Yes']].map(([value, label]) => (
-          <div className="labeled-input" key={label} onClick={()=>setOverwrite(value)}>
-            <span>{overwrite === value
-              ? <SvgIcon icon="radioChecked" size="1.2rem" />
-              : <SvgIcon icon="radio" size="1.2rem"/>}</span>
-            <span className="text-label" style={overwrite === value ? {fontWeight: 'bold'} : {}}>
-              {label}
-            </span>
-          </div>
-        ))}
-        {overwrite && (
-          <p style={{color: 'red', marginTop: '.5rem'}}>
-            All data collected for this project will be permanently deleted.
-          </p>
-        )}
+        <p >You will be able to continue to make changes to the project after creating/updating it.
+          Once satisfied with the project, click publish to begin final collection.</p>
+        <div>
+          <input type='checkbox'
+            checked={TOS}
+            onChange={(e)=>setTOS(e.target.checked)}/>
+          <label>Accept
+            <a href="https://app.collect.earth/terms-of-service" target="_blank">
+              Terms of Service
+            </a>
+            <span style={{color: 'red'}}>*</span>
+          </label>
+          
+        </div>
+        <p > Are you sure you want to continue?</p>
       </div>
     </Modal>
   );
@@ -547,7 +506,6 @@ export default function ProjectWizardModal () {
   case 'import'      : return (<ImportProjectModal/>);
   case 'newProject'  : return (<NewProjectModal/>);
   case 'review'      : return (<SubmitProjectModal/>);
-  case 'update-published' : return (<UpdatePublishedProjectModal/>);
   case 'success'     : return (<SuccessModal/>);
   case 'error'       : return (<ErrorModal/>);
   case 'draft-success' : return (<DraftSuccessModal/>);
