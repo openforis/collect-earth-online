@@ -2,9 +2,80 @@ import React, { useState, useEffect } from 'react';
 import { dispatch, useSubscription } from '@flexsurfer/reflex';
 import { SurveyQuestions } from '../components/SurveyQuestions';
 import SvgIcon from '../components/svg/SvgIcon';
-import { event_ids, sub_ids } from '../state/projectWizard';
+import { event_ids, sub_ids, renumberRules } from '../state/projectWizard';
 import { InfoTooltip } from '../components/PageComponents';
 
+
+// USEFUL CONSTANTS AND FUNCTIONS
+const isTopLevel = (q) => Number(q.parentQuestionId) === -1;
+const orderKey   = (q) => (isTopLevel(q) ? 'cardOrder' : 'siblingOrder');
+const orderOf    = ([id, q]) => q[orderKey(q)] ?? Number(id);
+
+const childrenOf = (questions, parentId) =>
+  Object.keys(questions).filter((id) => String(questions[id].parentQuestionId) === String(parentId));
+
+// Depth-first with an accumulator
+export const descendantIds = (questions, rootId, seen = []) =>
+  seen.includes(String(rootId))
+    ? seen
+    : childrenOf(questions, rootId)
+        .reduce((acc, id) => descendantIds(questions, id, acc), [...seen, String(rootId)]);
+
+const RULE_REFS = {
+  'text-match':           (r) => [r.questionId],
+  'numeric-range':        (r) => [r.questionId],
+  'sum-of-answers':       (r) => r.questionIds,
+  'matching-sums':        (r) => [...r.questionIds1, ...r.questionIds2],
+  'incompatible-answers': (r) => [r.questionId1, r.questionId2],
+  'multiple-incompatible-answers': (r) => [...Object.keys(r.answers), r.incompatQuestionId],
+};
+export const ruleQuestionIds = (rule) => (RULE_REFS[rule.ruleType]?.(rule) ?? []).map(String);
+
+export const sortedSiblings = (questions, parentId) =>
+  Object.entries(questions)
+    .filter(([, q]) => String(q.parentQuestionId) === String(parentId))
+    .sort((a, b) => orderOf(a) - orderOf(b));
+
+export const renumberSiblings = (questions, parentId) => ({
+  ...questions,
+  ...Object.fromEntries(
+    sortedSiblings(questions, parentId).map(([id, q], i) => [id, { ...q, [orderKey(q)]: i + 1 }])),
+});
+
+export const removeQuestionCascade = ({ questions, rules }, qId) => {
+  const orphaned = descendantIds(questions, qId);
+  const keep = (id) => !orphaned.includes(String(id));
+  return {
+    questions: renumberSiblings(
+      Object.fromEntries(Object.entries(questions).filter(([id]) => keep(id))),
+      questions[qId].parentQuestionId),
+    rules: renumberRules(rules.filter((rule) => ruleQuestionIds(rule).every(keep))),
+  };
+};
+
+export const moveQuestion = (questions, id, direction) => {
+  const siblings = sortedSiblings(questions, questions[id].parentQuestionId);
+  const i = siblings.findIndex(([sid]) => sid === String(id));
+  const j = i + direction;
+  if (j < 0 || j >= siblings.length) return questions;
+  const [[idA, a], [idB, b]] = [siblings[i], siblings[j]];
+  return {
+    ...questions,
+    [idA]: { ...a, [orderKey(a)]: b[orderKey(b)] },
+    [idB]: { ...b, [orderKey(b)]: a[orderKey(a)] },
+  };
+};
+
+// On load: numeric parent ids, cardOrder -1 on children, siblingOrder filled per group.
+export const normalizeQuestions = (raw = {}) => {
+  const typed = Object.fromEntries(Object.entries(raw).map(([id, q]) => [id, {
+    ...q,
+    parentQuestionId: Number(q.parentQuestionId ?? -1),
+    ...(Number(q.parentQuestionId ?? -1) !== -1 && { cardOrder: -1 }),
+  }]));
+  const parents = _.uniq(Object.values(typed).map((q) => q.parentQuestionId).filter((p) => p !== -1));
+  return parents.reduce(renumberSiblings, typed);
+};
 
 export const QuestionCard = ({
   qId,
@@ -85,12 +156,8 @@ export const QuestionCard = ({
     dispatch([event_ids.questions.updateQuestion, qId, 'answers', newAnswers]);
   };
 
-  const removeQuestion = () => {
-    const newQuestions = { ...questions };
-    delete newQuestions[qId];
-    setQuestions(newQuestions);
-    dispatch([event_ids.questions.setQuestions, newQuestions]);
-  };
+  const removeQuestion = () => dispatch([event_ids.questions.removeQuestion, qId, removeQuestionCascade]);
+
 
   return (
     <div
@@ -140,26 +207,24 @@ export const QuestionCard = ({
             </label>
             <input
               className="text-input"
-              value={question.question}
+              defaultValue={question.question}
               placeholder="Enter Text"
-              onChange={(e) => updateQuestion('question', e.target.value)}
+              onBlur={(e) => updateQuestion('question', e.target.value)}
             />
             <label className="text-label-sm">
               Question Label (Optional) <SvgIcon icon="info" size="0.8rem" />
             </label>
             <input
               className="text-input"
-              value={question.questionLabel || ''}
+              defaultValue={question.questionLabel || ''}
               placeholder="Enter Label"
-              onChange={(e) => updateQuestion('questionLabel', e.target.value)}
+              onBlur={(e) => updateQuestion('label', e.target.value)}
             />
-            
             <div className="question-metadata-row">
               <span>
                 Component Type: <strong>{question.componentType} - {question.dataType || 'text'}</strong>
               </span>
             </div>
-            
             <div className="question-answers-container">
               <div className="question-answers-header-row">
                 <label className="text-label-sm question-color-label">Color *</label>
@@ -168,7 +233,6 @@ export const QuestionCard = ({
                   <span className="question-hide-answer-label">Hide Answer</span>
                 </label>
               </div>
-              
               {Object.entries(question.answers).map(([aId, a]) => (
                 <div key={aId} className="question-answer-row">
                   <input
@@ -263,6 +327,7 @@ export const SurveyQuestionsStep = () => {
     parentQuestionId: "-1",
     parentAnswerIds: [],
     answers: null,
+    required: false,
   };
 
   function setQuestions (questions) {dispatch([event_ids.questions.setQuestions, questions]);}
@@ -272,6 +337,7 @@ export const SurveyQuestionsStep = () => {
                             confirmDuplicateWarning(true);}
   
   const addQuestion = () => {
+    
     if (!newQuestion.questionText) return;
 
     const nextId = (Math.max(...Object.keys(questions).map(Number), 0) + 1).toString();
@@ -291,6 +357,7 @@ export const SurveyQuestionsStep = () => {
       answers: newQuestion.answers || {
         "1": { answer: defaultAnswer, color: "#109844" },
       },
+      required: newQuestion.required,
     };    
     const duplicateQuestions =   Object.values(questions)
           .map(({question})=> question.split(/\(\d\)/)[0] == questionToAdd.question.split(/\(\d\)/)[0]);
@@ -379,14 +446,16 @@ export const SurveyQuestionsStep = () => {
 
           <div style={{ display: 'flex', gap: '15px', flexDirection: 'column' }}>
             <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-              <div style={{ flex: newQuestion.componentType === 'copy' ? '1 1 calc(50% - 15px)' : '1' }}>
+              <div style={{ flex: newQuestion.componentType === 'copy' ? '1 1 calc(50% - 15px)' :
+                            newQuestion.componentType === 'input' ? '1 1 calc(80% - 15px)':
+                            '1' }}>
                 <label className="text-label-sm">
                   Component Type <span style={{ color: 'red' }}>*</span>
                 </label>
                 <select
                   className="text-input"
                   value={`${newQuestion.componentType}-${newQuestion.dataType}`}
-                  onChange={(e) => {
+                  onChange={(e) => {                    
                     const [comp, data] = e.target.value.split('-');
                     setNewQuestion({
                       ...newQuestion,
@@ -406,7 +475,18 @@ export const SurveyQuestionsStep = () => {
                   <option value="copy-none">Copy Existing Question</option>
                 </select>
               </div>
-
+              {newQuestion.componentType === 'input' && (
+                <div style={{
+                  alignContent: 'center',
+                  flex: '1 1 calc(20% - 15px)' }}>
+                  <input
+                    type="checkbox"
+                    checked={newQuestion.required || false}
+                    onChange={(e) => setNewQuestion({... newQuestion, required: e.target.checked})}
+                  />
+                  <span style={{alignContent: 'center'}}> Input text required? </span>
+                  
+                </div>)}
               {newQuestion.componentType === 'copy' && (
                 <div style={{ flex: '1 1 calc(50% - 15px)' }}>
                   <label className="text-label-sm">
@@ -436,7 +516,6 @@ export const SurveyQuestionsStep = () => {
                   </select>
                 </div>
               )}
-
               <div style={{ flex: newQuestion.componentType === 'copy' ? '1 1 100%' : '1' }}>
                 <label className="text-label-sm">Parent Question</label>
                 <select
@@ -457,7 +536,6 @@ export const SurveyQuestionsStep = () => {
                 </select>
               </div>
             </div>
-
             <div style={{ width: '100%' }}>
               <label className="text-label-sm">
                 Parent Answer

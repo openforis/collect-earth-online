@@ -32,7 +32,25 @@ export function validatePlots({
   smes,
   timesToReview,
   numPlots,
+  append,
+  newPlotDistribution,
+  newPlotFileName,
+  skipPlotValidation,
 }) {
+  if (append) {
+    if (!newPlotFileName) return [];
+    if (skipPlotValidation) return [];
+    return [
+      (newPlotDistribution === "csv" && !(newPlotFileName || "").includes(".csv")) &&
+        "A plot CSV (.csv) file is required.",
+      (newPlotDistribution === "shp" && !(newPlotFileName || "").includes(".zip")) &&
+        "A plot SHP (.zip) file is required.",
+      (newPlotDistribution === "csv" && (!plotSize || plotSize === 0)) &&
+        "A plot size is required.",
+      (totalPlots > plotLimit) &&
+        "The plot size limit has been exceeded. Check the Plot Design section for detailed info.",
+    ].filter((e) => e);
+  }
   return (
     [(["random", "gridded"].includes(plotDistribution) && !aoiFeatures.length) &&
      "Please select a valid boundary.",
@@ -81,7 +99,9 @@ export function validateSamples({
   sampleLimit,
   allowDrawnSamples,
   designSettings,
+  skipSampleValidation,
 }) {
+  if (skipSampleValidation) return [];
   return ([sampleDistribution === "random" &&
      !samplesPerPlot && "A number of samples per plot is required for random sample distribution.",
      sampleDistribution === "gridded" &&

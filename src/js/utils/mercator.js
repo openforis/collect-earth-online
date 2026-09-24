@@ -27,6 +27,7 @@ import { Tile as TileLayer, Vector as VectorLayer, Group as LayerGroup, Graticul
 import { BingMaps, Cluster, OSM, TileWMS, Vector as VectorSource, XYZ } from "ol/source";
 import { Circle as CircleStyle, Fill, Stroke, Style, Text as StyleText } from "ol/style";
 import { fromLonLat, transform, transformExtent, getPointResolution } from "ol/proj";
+import WMTSCapabilities from 'ol/format/WMTSCapabilities';
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
 import { getArea, getDistance } from "ol/sphere";
 import { formatDateISO, isNumber } from "./generalUtils";
@@ -358,7 +359,8 @@ mercator.createSource = (
     [-180, 90],
     [-180, -90],
   ],
-  show = false
+  show = false,
+  institutionId = null,
 ) => {
   const { type } = sourceConfig;
   if (isProxied) {
@@ -369,6 +371,8 @@ mercator.createSource = (
         params: { imageryId },
         attributions: attribution,
       });
+    } else if (type ===  "WMTS") {
+      return createWMTSSource(sourceConfig, imageryId, attribution, true);
     } else if (sourceConfig.type === "Planet") {
       return new XYZ({
         url:
@@ -390,10 +394,14 @@ mercator.createSource = (
       attributions: attribution,
     });
   } else if (type === "PlanetTFO") {
-    const dataLayer = (sourceConfig.time === "newest") ? mercator.newestTFOLayer() : sourceConfig.time;
+    const dataLayer = (!sourceConfig.time || sourceConfig.time === "newest")
+      ? mercator.newestTFOLayer()
+      : sourceConfig.time;
+    console.log(institutionId);
     return new XYZ({
       url:
-       "get-tfo-tiles?z={z}&x={x}&y={y}" +
+        "get-tfo-tiles?z={z}&x={x}&y={y}" +
+        `&institutionId=${institutionId}` +
         `&dataLayer=${dataLayer}` +
         `&band=${sourceConfig.band}` +
         `&imageryId=${imageryId}`,
@@ -574,7 +582,8 @@ mercator.createLayer = (layerConfig, projectAOI, show = false) => {
     layerConfig.attribution,
     layerConfig.isProxied,
     projectAOI,
-    show
+    show,
+    layerConfig.institutionId
   );
   if (!source) {
     return null;
@@ -734,7 +743,7 @@ mercator.hasValidBounds = (latMin, latMax, lonMin, lonMax) =>
 //                                                     geoserverParams: {VERSION: "1.1.1",
 //                                                                       LAYERS: "DigitalGlobe:Imagery",
 //                                                                       CONNECTID: "your-digital-globe-connect-id-here"}}}]);
-mercator.createMap = (divName, centerCoords, zoomLevel, layerConfigs, projectBoundary = null) => {
+mercator.createMap = (divName, centerCoords, zoomLevel, layerConfigs, projectBoundary = null, institutionId = null) => {
   // This just verifies map inputs
   // if everything goes right, the layer are added later
   const projectAOI = projectBoundary ? JSON.parse(projectBoundary).coordinates[0] : null;
@@ -890,7 +899,9 @@ mercator.updateLayerSource = (mapConfig, imageryId, projectBoundary, transformer
           layerConfig.id,
           layerConfig.attribution,
           layerConfig.isProxied,
-          projectAOI
+          projectAOI,
+          false,
+          layerConfig.institutionId
         )
       );
     }

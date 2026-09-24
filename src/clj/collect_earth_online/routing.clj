@@ -134,7 +134,7 @@
    [:post "/archive-project"]                {:handler     (validate projects/archive-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/create-project"]                 {:handler     projects/create-project!
+   [:post "/create-project"]                 {:handler     #'projects/create-project!
                                               :auth-type   :admin
                                               :auth-action :block}
    [:post "/update-project"]                 {:handler     projects/update-project!
@@ -292,10 +292,10 @@
    [:get  "/get-securewatch-dates"]         {:handler     proxy/get-securewatch-dates
                                              :auth-type   :no-cross
                                              :auth-action :block}
-   [:get "/get-tfo-dates"]                  {:handler     proxy/get-tfo-dates
+   [:get "/get-tfo-dates"]                  {:handler     #'proxy/get-tfo-dates
                                              :auth-type   :no-cross
                                              :auth-action :block}
-   [:get  "/get-tfo-tiles"]                 {:handler     proxy/get-tfo-tiles
+   [:get  "/get-tfo-tiles"]                 {:handler     #'proxy/get-tfo-tiles
                                              :auth-type   :no-cross
                                              :auth-action :block}
 

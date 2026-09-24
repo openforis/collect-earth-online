@@ -6,10 +6,10 @@ import { NewMap } from '../components/NewMap';
 import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
 import SvgIcon from '../components/svg/SvgIcon';
 import Modal from '../components/Modal';
-
 import {
   event_ids,
-  sub_ids
+  sub_ids,
+  usePlotDesignLocked,
 } from '../state/projectWizard';
 
 
@@ -18,12 +18,13 @@ export const BoundaryStep = ({ imageryList = [] }) => {
   const aoiFeatures = useSubscription([sub_ids.boundary.aoiFeatures]) || [];
   const aoiFileName = useSubscription([sub_ids.boundary.aoiFileName]) || "";
   const modal = useSubscription([sub_ids.modal]);
-  const isDrawingActive = generationMethod === "manual";
   const setMapLibrary = useSetAtom(mapImageryLibraryAtom);
   const setActiveMapLayers = useSetAtom(activeMapLayerIdsAtom);
   const initializedMap = useRef(false);
   const projectType = useSubscription([sub_ids.overview.projectType]) || 'regular';
   const isSimplified = projectType === 'simplified';
+  const plotDesignLocked = usePlotDesignLocked();
+  const isDrawingActive = generationMethod === "manual" && !plotDesignLocked;
 
   useEffect(() => {
     setMapLibrary(imageryList);
@@ -91,7 +92,16 @@ export const BoundaryStep = ({ imageryList = [] }) => {
           <p>{modal.message}</p>
         </Modal>
       )}
-      <div className="wizard-sidebar">
+      <div
+        className={`wizard-sidebar${plotDesignLocked ? ' is-locked' : ''}`}
+        inert={plotDesignLocked ? '' : undefined}
+      >
+        {plotDesignLocked && (
+          <div className="wizard-card mb-2 text-secondary small" style={{ fontWeight: '500' }}>
+            The project boundary comes from the template.
+            Uncheck "Use template plot design" in Project Overview to change it.
+          </div>
+        )}
         <div className="card" style={{ width: '100%', padding: '20px' }}>
           
           {/* Method Selection Section */}
@@ -158,7 +168,7 @@ export const BoundaryStep = ({ imageryList = [] }) => {
               <div className="d-flex flex-column">
                 <p className="font-italic" style={{ fontSize: '0.85rem', color: '#666' }}>
                   - Upload a polygon shapefile of the boundary of your entire project area. Requires a zip of SHP, SHX, DBF, and PRJ files. Define plots in the next step.
-                  <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/imageryselection.html#imagery-selection" target="_blank"> Learn more</a>
+                  <a href="https://collect-earth-online-doc.readthedocs.io/en/latest/project/plotsample.html" target="_blank"> Learn more</a>
                 </p>
 
                 <label className="text-label-sm" style={{ marginBottom: '8px', fontWeight: 'bold' }}>
