@@ -8,6 +8,7 @@ import { stateAtom } from '../utils/constants';
 import { mercator } from "../utils/mercator";
 import { SurveyQuestions, DrawingTool } from "./SurveyQuestions.jsx";
 import { Sidebar, SidebarCard } from "./Sidebar";
+import { LearningMaterialModal } from "./PageComponents";
 import {
   everyObject,
   safeLength,
@@ -23,7 +24,7 @@ import {
   GEEImageCollectionMenu,
 } from "../imagery/collectionMenuControls";
 
-const StatsCard = ({}) => {
+const OverviewCard = ({}) => {
   const state = useAtomValue(stateAtom);
   const stats = [{title: 'Total Plots', key: 'totalPlots'},
                  {title: 'Total Contributors', key: 'totalUsers'},
@@ -51,44 +52,36 @@ const StatsCard = ({}) => {
   return (
     <>
       {Object.keys(state.currentPlot).length === 0 &&
-       <SidebarCard
-         title="Plot Statistics"
-       >
-         <div id="stats-card">
-           {state.stats &&
-            stats.map(({title, key, icon, color}) => {
-              return (<div className="stat">
-                        {icon &&
-                         <span
-                           style={{color: color}}
-                         > ⯀ </span>}
-                        <span
-                          style={{color: 'gray'}}
-                        > {title}: </span>
-                        <span
-                          style={{fontWeight: 'bold'}}
-                        > {getStat(key)}</span>
-                      </div>
-                     );})}
-         </div>         
-       </SidebarCard>}
+        <>
+          <SidebarCard title="Plot Statistics">
+            <div id="stats-card">
+              {state.stats &&
+                stats.map(({title, key, icon, color}) => {
+                  return (<div className="stat">
+                            {icon &&
+                              <span
+                                style={{color: color}}
+                              > ⯀ </span>}
+                            <span
+                              style={{color: 'gray'}}
+                            > {title}: </span>
+                            <span
+                              style={{fontWeight: 'bold'}}
+                            > {getStat(key)}</span>
+                          </div>
+                  );})}
+            </div>         
+          </SidebarCard>
+          <SidebarCard title="Project Description">
+            <div id="overview-card">
+              <span>{state.currentProject.description}</span>
+            </div>         
+          </SidebarCard>
+        </>
+      }
     </>
   );
 };
-
-export function OverviewCard ({}) {
-  const { currentProject } = useAtomValue(stateAtom);
-  return (
-    <SidebarCard
-         title="Project Description"
-       >
-         <div id="overview-card">
-           <span>{currentProject.description}</span>
-         </div>         
-       </SidebarCard>
-  );
-
-}
 
 export function CollectionSidebar ({ processModal, userEmail }) {
   const { currentPlot, currentProject } = useAtomValue(stateAtom);
@@ -96,12 +89,11 @@ export function CollectionSidebar ({ processModal, userEmail }) {
     <>
       <NewPlotNavigation userEmail={userEmail}/>
       <OverviewCard/>
-      <StatsCard/>
       {currentPlot.id > 0 && (
         <>
           <ExternalTools />
           {currentProject?.type !== "simplified" && <ImageryOptions />}
-          <SurveyQuestions />
+          <SurveyQuestions showHeader={true} />
           {currentProject.allowDrawnSamples && <DrawingTool />}
         </>
       )}
@@ -406,6 +398,8 @@ export const ExternalTools = () => {
     currentProject,
     KMLFeatures,
   } = useAtomValue(stateAtom);
+  const [showLearningMaterial, setShowLearningMaterial] = useState(false);
+
   const loadGEEScript = () => {
     let urlParams="";
     if(currentPlot?.plotGeom){
@@ -448,9 +442,9 @@ export const ExternalTools = () => {
     window.open(url, "_blank");
   };
 
-  function openLearningMaterial () {
-    window.open(currentProject.learningMaterial);
-  }
+  const toggleLearningMaterial = () => {
+    setShowLearningMaterial((prev) => !prev);
+  };
 
   const showGeoDash = () => {
     const plotRadius = currentProject?.plotSize
@@ -511,11 +505,17 @@ export const ExternalTools = () => {
         </button>
 
         {currentProject.learningMaterial ?
-         <button className="ext-btn" onClick={openLearningMaterial}>
+         <button className="ext-btn" onClick={toggleLearningMaterial}>
            <span>Learning Material</span>
          </button> 
          : <></>}
       </div>
+      {showLearningMaterial && (
+        <LearningMaterialModal
+          learningMaterial={currentProject?.learningMaterial}
+          onClose={toggleLearningMaterial}
+        />
+      )}
     </SidebarCard>
   );
 };
@@ -797,12 +797,19 @@ export const ImageryOptions = () => {
     currentImagery,
     imageryList = [],
     imagery,
+    unansweredColor,
   } = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
 
   const [open, setOpen] = useState(true);
   const [enableGrid, setEnableGrid] = useState(false);
 
+  const toggleUnansweredColor = () =>
+    setAppState((s) => ({
+      ...s,
+      unansweredColor: s.unansweredColor === "white" ? "black" : "white",
+    }));
+  
   const setBaseMapSource = (id) => {
     const img = imageryList.find((i) => Number(i.id) === Number(id)) || null;
     setAppState((s) => ({
@@ -905,18 +912,42 @@ export const ImageryOptions = () => {
 
          return byType[imagery.sourceConfig.type] || null;
        })}
-      <div className="sidebar-mode">
-        <label className="sidebar-switch">
-          <input
-            type="checkbox"
-            checked={enableGrid}
-            onChange={toggleGrid}
-          />
-          <span className="sidebar-slider round"></span>
-            </label>
-            <span className="mode-label">Enable map grid</span>
-          </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          columnGap: "16px",
+          marginTop: '5px',
+        }}
+      >
+        <div className="sidebar-mode">
+          <label className="sidebar-switch" style={{ marginBottom: "0px" }}>
+            <input
+              type="checkbox"
+              checked={enableGrid}
+              onChange={toggleGrid}
+            />
+            <span className="sidebar-slider round"></span>
+          </label>
+          <span className="mode-label" style={{ whiteSpace: "nowrap" }}>
+            Map grid
+          </span>
+        </div>
 
+        <div className="sidebar-mode">
+          <label className="sidebar-switch" style={{ marginBottom: "0px" }}>
+            <input
+              type="checkbox"
+              checked={unansweredColor === "white"}
+              onChange={toggleUnansweredColor}
+            />
+            <span className="sidebar-slider round"></span>
+          </label>
+          <span className="mode-label" style={{ whiteSpace: "nowrap" }}>
+            Unanswered color: {unansweredColor}
+          </span>
+        </div>
+      </div>
     </SidebarCard>
   );
 };

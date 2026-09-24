@@ -28,7 +28,7 @@ export default function Select({
 }) {
   return (
     <>
-      <label className="col-5" htmlFor={id}>
+      <label htmlFor={id}>
         {label}
       </label>
       <select

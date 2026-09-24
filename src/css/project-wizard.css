@@ -820,3 +820,24 @@ text-underline-position: from-font;
 .question-hide-toggle {
   cursor: pointer;
 }
+
+.sq-range-wrap {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.sq-range {
+  width: 100%;
+  accent-color: #2d6f74;
+}
+
+.sq-range-label {
+  font-size: 16px;
+  color: #263030;
+}
+
+.wizard-card.is-locked {
+  opacity: 0.55;
+  user-select: none;
+}

@@ -158,7 +158,6 @@
     gap: 16px;
     align-self: stretch;
     overflow-x: scroll;
-
 }
 
 .blog-frame {
@@ -298,12 +297,10 @@
     width: 100%;
 }
 
-
 #projects-map-container {
     width: inherit;
     position: absolute;
 }
-
 
 #projects-map {
     position: absolute;
@@ -510,7 +507,6 @@ background: var(--Neutral-Light-gray, #F6F6F6);
 margin-bottom: 2rem;
 width: 100%;}
 
-
 .search-label {
 display: flex;
 align-items: center;
@@ -532,7 +528,6 @@ width: 100%;
 
 
 .cta-sort-row {
-
 display: flex;
 justify-content: space-between;
 align-items: center;

@@ -5,6 +5,7 @@
             [clojure.java.shell :as sh]
             [clojure.data.json  :as json]
             [flatland.ordered.map                  :refer [ordered-map]]
+            [triangulum.database                   :refer [call-sql]]
             [triangulum.config                     :refer [get-config]]
             [triangulum.type-conversion            :as tc]
             [triangulum.utils                      :refer [parse-as-sh-cmd]]
@@ -281,10 +282,19 @@
 
 (defn export-table-to-file
   [folder-name project-id table-name db-config]
-  (sh-wrapper-quoted folder-name {}
+  (let [sample-geometry-types ["points" "lines" "polygons" "multipolygons"]]
+    (if (= table-name "sample")
+      (doseq [geom-type sample-geometry-types]
+        (let [shapes (call-sql (str "get_sample_shapes_" geom-type) (tc/val->int project-id))]
+          (when (> (count shapes) 0)
+            (sh-wrapper-quoted folder-name {}
+                               (pgsql2shp-string db-config
+                                                 (str project-id "-samples-" geom-type)
+                                                 (str "\"SELECT * FROM get_sample_shapes_" geom-type "(" project-id ")\""))))))
+      (sh-wrapper-quoted folder-name {}
                          (pgsql2shp-string db-config
                                            (str project-id "-" table-name)
-                                           (str "\"SELECT * FROM get_" table-name "_shapes(" project-id ")\""))))
+                                           (str "\"SELECT * FROM get_" table-name "_shapes(" project-id ")\""))))))
 
 (defn create-shape-files
   [folder-name table-name project-id]

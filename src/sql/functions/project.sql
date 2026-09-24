@@ -658,6 +658,7 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
     JOIN institutions ins ON ins.institution_uid = p.institution_rid
     WHERE user_project(_user_id, role_rid, p.privacy_level, p.availability)
         AND valid_boundary(boundary) = TRUE
+        AND p.highlight = TRUE
     ORDER BY project_uid
 
 $$ LANGUAGE SQL;
