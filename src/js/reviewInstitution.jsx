@@ -419,7 +419,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   }, []);
 
   return (
-    <div className="reviewInstitution" style={{paddingTop: '2rem'}}>
+    <div className="reviewInstitution" style={{paddingTop: '2rem', marginLeft: '100px'}}>
       <SidebarTabs
         tabs={[
           { id: "projects", label: "Projects", icon: "projects", badge: safeLength(state.projectList) },
@@ -569,7 +569,7 @@ export const SidebarTabs = ({
 
 
   return (
-    <div className="sidebar-tabs">
+    <div className="sidebar-tabs" style={{left: '100px'}}>
       <div className="sidebar-header">
         <div className="sidebar-header-left">
           <SvgIcon icon="folder" size="1.2rem" />
@@ -779,22 +779,31 @@ export const EditInstitutionModal = ({ onClose, onSave}) => {
   );
 };
 
-export function pageInit(params, session) {
-  let [] = 
-  ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+function ReviewInstitutionPage ({userId, userName, versionDeployed, institutionName, institutionId}) {
+  const [tab, setTab] = useState();
+  return (
+    <NavigationBar fxns={{tab: {get: 'institutions', set: (tab)=> {window.location.href=`/home?tab=${tab}`;}}}} userId={userId} userName={userName} version={versionDeployed}>
       <BreadCrumbs
+        sidebar
         crumbs={[
-          {display: params.institutionName || "Review Institution",
+          {display: institutionName || "Review Institution",
            id:"institution",
-           query:["institution", parseInt(params.institutionId || "-1")],
+           query:["institution", parseInt(institutionId || "-1")],
            onClick:()=>{}}]}
       />
       <ReviewInstitution
-        institutionId={parseInt(params.institutionId || "-1")}
-        userId={session.userId || -1}
+        institutionId={parseInt(institutionId || "-1")}
+        userId={userId || -1}
       />
     </NavigationBar>,
+  );
+}
+
+export function pageInit(params, session) {
+  
+  let [] = 
+  ReactDOM.render(
+    <ReviewInstitutionPage userId={session.userId} userName={session.userName} versionDeployed={session.versionDeployed} institutionId={params.institutionId} institutionName={params.institutionName}/>,
     document.getElementById("app")
   );
 }

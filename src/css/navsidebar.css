@@ -19,7 +19,7 @@
     padding: 1rem .5rem ;
 
     background-color: #393E46;
-   
+    /* background-color: var(--Primary-Standard-Green); */
 }
 
 .sidebar-navicon {

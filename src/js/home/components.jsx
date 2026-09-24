@@ -12,7 +12,6 @@ export default function HomeTabs ({tab, session}) {
       .then((response) => (response.ok? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
-          console.log('fetched home projects', data);
           setProjects(data);
           return Promise.resolve();
         } else {

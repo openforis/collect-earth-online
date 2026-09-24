@@ -40,8 +40,13 @@ export default function Institutions ({userId, userRole}) {
       return map;
     }, [projects]);
 
+    function filteredInstitutions (institutions, filter) {
+      return institutions.filter(({name})=> name.toLocaleLowerCase().includes(filter.toLocaleLowerCase()));
+    }
+
     const visibleInstitutions = useMemo(() => {
-      return activeTab === "affiliations" ? userInstitutions : otherInstitutions;
+      return activeTab === "affiliations" ? filteredInstitutions(userInstitutions, search)
+        : filteredInstitutions(otherInstitutions, search);
     }, [
       activeTab,
       userInstitutions,
@@ -202,7 +207,8 @@ export default function Institutions ({userId, userRole}) {
                       color: "#2f3e2f",
                       transition: "background 0.15s ease",
                     }}
-                    onClick={() => (window.location.href = `/create-project?projectId=${project.id}&institutionId=${inst.id}`)}
+                    onClick={() => (window.location.href =
+                                    `/project-wizard?projectId=${project.id}&institutionId=${inst.id}`)}
                     onMouseOver={(e) => (e.currentTarget.style.background = "#f1f5f3")}
                     onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
                   >
@@ -220,8 +226,6 @@ export default function Institutions ({userId, userRole}) {
 
   return (
     <div id='institutions-tab' className='home-tab'>
-      <div className="row tog-effect"
-           style={{flexWrap: 'nowrap'}}>
         <InstitutionSidebar
           institutions={appState.institutions}
           projects={appState.projects}
@@ -230,12 +234,13 @@ export default function Institutions ({userId, userRole}) {
           userRole={userRole}
           stateAtom={stateAtom}
         />
+        <div id="institutions-map-container">
         <MapPanel
           imagery={appState.imagery}
           projects={appState.projects}
           mapConfigAtom={mapConfigAtom}
-        />
-      </div>
+      />
     </div>
+      </div>
   );
 }

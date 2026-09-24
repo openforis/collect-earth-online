@@ -5,8 +5,7 @@ import HomeTabs from "./home/components";
 
 
 function Home ({params, session}) {
-  const [tab, setTab] = useState('highlights');
-  
+  const [tab, setTab] = useState(params.tab || 'highlights');  
     return (
     <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}
                    fxns={{tab: {get: tab, set: setTab}}}>
