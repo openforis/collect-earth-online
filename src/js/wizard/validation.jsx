@@ -35,11 +35,11 @@ export function validatePlots({
   append,
   newPlotDistribution,
   newPlotFileName,
-  locked
+  skipPlotValidation,
 }) {
   if (append) {
     if (!newPlotFileName) return [];
-    if (locked) return [];
+    if (skipPlotValidation) return [];
     return [
       (newPlotDistribution === "csv" && !(newPlotFileName || "").includes(".csv")) &&
         "A plot CSV (.csv) file is required.",
@@ -99,9 +99,9 @@ export function validateSamples({
   sampleLimit,
   allowDrawnSamples,
   designSettings,
-  locked,
+  skipSampleValidation,
 }) {
-  if (locked) return [];
+  if (skipSampleValidation) return [];
   return ([sampleDistribution === "random" &&
      !samplesPerPlot && "A number of samples per plot is required for random sample distribution.",
      sampleDistribution === "gridded" &&
@@ -118,8 +118,8 @@ export function validateSamples({
      sampleDistribution === "gridded" &&
      plotShape === "square" &&
      sampleResolution >= plotSize && "The sample spacing must be less than the plot width.",
-     // (samplesPerPlot > perPlotLimit || totalPlots * samplesPerPlot > sampleLimit) &&
-     //   "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
+     (samplesPerPlot > perPlotLimit || totalPlots * samplesPerPlot > sampleLimit) &&
+       "The sample size limit has been exceeded. Check the Sample Design section for detailed info.",
      allowDrawnSamples && !Object.values(designSettings?.sampleGeometries).some((g) => g) &&
            "At least one geometry type must be enabled.",]
           .filter((e)=>e));

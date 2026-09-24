@@ -569,9 +569,6 @@ export function buildProject (draftDb, sub_ids) {
   const plotDistribution = current(draftDb[sub_ids.plots.plotDistribution]);
   const originalProject = current(draftDb[sub_ids.originalProject]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
-  const locked = plotDesignLocked(draftDb);
-  const plotFileNeeded = !useTemplatePlots &&
-        (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
   const name = current(draftDb[sub_ids.overview.projectName]);
   const description= current(draftDb[sub_ids.overview.projectDescription]);
   const privacyLevel = current(draftDb[sub_ids.overview.visibility]);
@@ -618,6 +615,13 @@ export function buildProject (draftDb, sub_ids) {
   const newPlotFileName = current(draftDb[sub_ids.plots.newPlotFileName]);
   const newPlotFileBase64 = current(draftDb[sub_ids.plots.newPlotFileBase64]);
   const learningMaterial = current(draftDb[sub_ids.overview.learningMaterial]);
+  const isEditing = projectId > 0;
+  const original = current(draftDb[sub_ids.originalProject]) || {};
+  const designChanged = (keys) =>
+    !_.isEqual(pickKeys(current(draftDb), keys), pickKeys(original, keys));
+  const locked = plotDesignLocked(draftDb);
+  const plotFileNeeded = !locked
+        && (!isEditing || plotDistribution !== original['plots.plotDistribution']);
 
   return {
     name,
@@ -654,7 +658,8 @@ export function buildProject (draftDb, sub_ids) {
     sampleDistribution,
     sampleFileName,
     sampleResolution,
-    locked,
+    skipPlotValidation:   locked || (isEditing && !designChanged(PLOT_DESIGN_FIELDS)),
+    skipSampleValidation: locked || (isEditing && !designChanged(SAMPLE_DESIGN_FIELDS)),
     plotLimit: 5000,
     sampleLimit: 35000,
     perPlotLimit: 200,
@@ -838,8 +843,8 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.createdDate] = createdDate;
   draftDb[sub_ids.publishedDate] = publishedDate;
   draftDb[sub_ids.closedDate] = closedDate;
-  draftDb[sub_ids.originalProject] = { plotDistribution };
-
+  draftDb[sub_ids.originalProject] =
+    pickKeys(current(draftDb), [...PLOT_DESIGN_FIELDS, ...SAMPLE_DESIGN_FIELDS]);
 });
 
 regEvent(event_ids.saveDraft, ({ draftDb }) => {
@@ -1417,14 +1422,21 @@ export const usePlotDesignLocked = () => {
 
 export const renumberRules = (rules) => rules.map((rule, i) => ({ ...rule, id: i }));
 
-const PLOT_DESIGN_KEYS = [
+const PLOT_DESIGN_FIELDS = [
   'boundary.generationMethod', 'boundary.aoiFeatures', 'boundary.aoiFileName',
   'plots.plotDistribution', 'plots.numPlots', 'plots.plotSize', 'plots.plotShape',
-  'plots.plotSpacing', 'plots.shufflePlots', 'plots.plotsSource', 'plots.totalPlots',
-  'plots.plotFeatures', 'plots.plotFileName', 'plots.plotFileBase64', 'plots.maxId',
-  'plots.designSettings', 'plots.referencePlotId', 'plots.plotSimilarityDetails',
+  'plots.plotSpacing', 'plots.shufflePlots', 'plots.plotFileName', 'plots.plotFileBase64',
+  'plots.designSettings',
+  // append mode on published projects
+  'plots.newPlotDistribution', 'plots.newPlotFileName', 'plots.newPlotFileBase64',
+  'plots.newPlotSize', 'plots.newPlotShape',
+];
+const SAMPLE_DESIGN_FIELDS = [
   'samples.sampleDistribution', 'samples.samplesPerPlot', 'samples.sampleResolution',
   'samples.sampleFileName', 'samples.sampleFileBase64', 'samples.allowDrawnSamples',
 ];
+const DERIVED_DESIGN_KEYS = ['plots.plotsSource', 'plots.totalPlots', 'plots.plotFeatures',
+  'plots.maxId', 'plots.referencePlotId', 'plots.plotSimilarityDetails'];
+const PLOT_DESIGN_KEYS = [...PLOT_DESIGN_FIELDS, ...SAMPLE_DESIGN_FIELDS, ...DERIVED_DESIGN_KEYS];
 
 const pickKeys = (source, keys) => Object.fromEntries(keys.map((k) => [k, source[k]]));

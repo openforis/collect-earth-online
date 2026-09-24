@@ -261,8 +261,22 @@ export function pageInit(params, session) {
       />
       <BreadCrumbs
         crumbs={[
-          {display: "Geo-Dash",
-           id:"geodash"}]}
+          {
+            display: "Institution",
+            id: "institution",
+            query: ["institution", params.institutionId],
+            onClick:()=>{window.location.assign(`/review-institution?institutionId=${params.institutionId}`)}
+          },
+          {
+            display: "Collection",
+            id: "project",
+            query: ["project", params.projectId],
+            onClick:()=>{window.location.assign(`/collection?projectId=${params.projectId}&institutionId=${params.institutionId}`)}},
+          {
+            display: "Geo-Dash",
+            id:"geodash"
+          }]}
+
       />
     </>
     ,
