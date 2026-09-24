@@ -1,21 +1,21 @@
 (ns collect-earth-online.routing
-  (:require [collect-earth-online.api :refer [validate]]
-            [collect-earth-online.generators.ce-project :as ce-project]
-            [collect-earth-online.gcloud          :as gcloud]
-            [collect-earth-online.sse             :as sse]
-            [collect-earth-online.db.doi          :as doi]
-            [collect-earth-online.db.geodash      :as geodash]
-            [collect-earth-online.db.geoai        :as geoai]          
-            [collect-earth-online.db.imagery      :as imagery]
-            [collect-earth-online.db.institutions :as institutions]
-            [collect-earth-online.db.metrics      :as metrics]
-            [collect-earth-online.db.plots        :as plots]
-            [collect-earth-online.db.projects     :as projects]
-            [collect-earth-online.db.qaqc         :as qaqc]
-            [collect-earth-online.db.users        :as users]            
-            [collect-earth-online.handlers :refer [crumb-data]]
-            [collect-earth-online.proxy           :as proxy]
-            [triangulum.views                     :refer [render-page]]))
+  (:require [collect-earth-online.api                          :refer [validate]]
+            [collect-earth-online.generators.ce-project.reader :as ce-project]
+            [collect-earth-online.gcloud                       :as gcloud]
+            [collect-earth-online.sse                          :as sse]
+            [collect-earth-online.db.doi                       :as doi]
+            [collect-earth-online.db.geodash                   :as geodash]
+            [collect-earth-online.db.geoai                     :as geoai]          
+            [collect-earth-online.db.imagery                   :as imagery]
+            [collect-earth-online.db.institutions              :as institutions]
+            [collect-earth-online.db.metrics                   :as metrics]
+            [collect-earth-online.db.plots                     :as plots]
+            [collect-earth-online.db.projects                  :as projects]
+            [collect-earth-online.db.qaqc                      :as qaqc]
+            [collect-earth-online.db.users                     :as users]            
+            [collect-earth-online.handlers                     :refer [crumb-data]]
+            [collect-earth-online.proxy                        :as proxy]
+            [triangulum.views                                  :refer [render-page]]))
 
 (def routes
   {;; Page Routes
@@ -135,7 +135,7 @@
    [:post "/archive-project"]                {:handler     (validate projects/archive-project!)
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/create-project"]                 {:handler     projects/create-project!
+   [:post "/create-project"]                 {:handler     #'projects/create-project!
                                               :auth-type   :admin
                                               :auth-action :block}
    [:post "/update-project"]                 {:handler     projects/update-project!
@@ -293,10 +293,10 @@
    [:get  "/get-securewatch-dates"]         {:handler     proxy/get-securewatch-dates
                                              :auth-type   :no-cross
                                              :auth-action :block}
-   [:get "/get-tfo-dates"]                  {:handler     proxy/get-tfo-dates
+   [:get "/get-tfo-dates"]                  {:handler     #'proxy/get-tfo-dates
                                              :auth-type   :no-cross
                                              :auth-action :block}
-   [:get  "/get-tfo-tiles"]                 {:handler     proxy/get-tfo-tiles
+   [:get  "/get-tfo-tiles"]                 {:handler     #'proxy/get-tfo-tiles
                                              :auth-type   :no-cross
                                              :auth-action :block}
 

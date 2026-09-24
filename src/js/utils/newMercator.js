@@ -4,13 +4,16 @@ import { TileWMS, XYZ, OSM, BingMaps, Vector as VectorSource } from 'ol/source';
 import { Style, Stroke, Fill } from 'ol/style';
 import { toLonLat } from 'ol/proj';
 import { platformModifierKeyOnly } from 'ol/events/condition';
-import { getCenter, getExtent } from 'ol/extent';
+import { getCenter, getExtent, createEmpty, extend } from 'ol/extent';
+import { getArea } from "ol/sphere";
 import Collection from 'ol/Collection';
 import DragBox from 'ol/interaction/DragBox';
 import GeoJSON from 'ol/format/GeoJSON';
 import Point from 'ol/geom/Point';
 
 
+const METERS_PER_DEG = 111320;
+const MAX_GRID_CELLS = 50000;
 export const createVectorSource = () => new VectorSource();
 
 export const boundaryStyle = new Style({
@@ -305,6 +308,30 @@ export const createImageryLayer = (config) => {
   }
 };
 
+const parseAoi = (aoi) => {
+  const format = new GeoJSON();
+  const opts = { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:4326' };
+
+  const items = Array.isArray(aoi)
+    ? aoi
+    : aoi?.type === 'FeatureCollection'
+      ? aoi.features
+      : [aoi];
+
+  const geoms = items.map((item) =>
+    item.type === 'Feature'
+      ? format.readFeature(item, opts).getGeometry()
+      : format.readGeometry(item, opts)
+  );
+
+  const extent = createEmpty();
+  geoms.forEach((g) => extend(extent, g.getExtent()));
+
+  return {
+    extent,
+    contains: (coord) => geoms.some((g) => g.intersectsCoordinate(coord)),
+  };
+};
 
 // Simulating plot generation for project wizard
 /**
@@ -314,28 +341,21 @@ export const createImageryLayer = (config) => {
  * @returns {Array} Array of Point feature objects.
  */
 export const generateRandomPlots = (aoiGeoJSON, numPlots) => {
-  const format = new GeoJSON();
-  
-  // Read the geometry and calculate the bounding box extent
-  const feature = format.readFeature(aoiGeoJSON, { 
-    dataProjection: 'EPSG:4326', 
-    featureProjection: 'EPSG:4326' 
-  });
-  
-  const extent = feature.getGeometry().getExtent(); // [minLon, minLat, maxLon, maxLat]
+  const target = Number(numPlots);
+  if (!(target > 0)) return [];
+
+  const { extent, contains } = parseAoi(aoiGeoJSON);
   const [minLon, minLat, maxLon, maxLat] = extent;
-  
+
   const plots = [];
-  for (let i = 0; i < numPlots; i++) {
+  const maxAttempts = target * 100;
+  for (let attempts = 0; plots.length < target && attempts < maxAttempts; attempts++) {
     const lon = minLon + Math.random() * (maxLon - minLon);
     const lat = minLat + Math.random() * (maxLat - minLat);
-    
-    plots.push({ 
-      type: "Point", 
-      coordinates: [lon, lat] 
-    });
+    if (contains([lon, lat])) {
+      plots.push({ type: 'Point', coordinates: [lon, lat] });
+    }
   }
-  
   return plots;
 };
 
@@ -348,53 +368,35 @@ export const generateRandomPlots = (aoiGeoJSON, numPlots) => {
  * @param {number} plotSize - Diameter (or width) of the plot in meters.
  * @returns {Array} Array of Point feature objects.
  */
-export const generateGriddedPlots = (aoiGeoJSON, spacing, plotSize) => {
+export const generateGriddedPlots = (aoiGeoJSON, spacing) => {
   if (!spacing || spacing <= 0) return [];
 
-  const format = new GeoJSON();
-  const feature = format.readFeature(aoiGeoJSON, { 
-    dataProjection: 'EPSG:4326', 
-    featureProjection: 'EPSG:4326' 
-  });
-  const extent = feature.getGeometry().getExtent(); 
-  
-  const degSpacing = spacing / 111320;
-  const degPlotRadius = (plotSize / 2) / 111320;
-  const degPadding = degSpacing / 4;
+  const MAX_PLOTS = 50000;
+  const { extent, contains } = parseAoi(aoiGeoJSON);
 
-  // Define the usable area
-  const usableMinLon = extent[0] + degPlotRadius + degPadding;
-  const usableMinLat = extent[1] + degPlotRadius + degPadding;
-  const usableMaxLon = extent[2] - degPlotRadius - degPadding;
-  const usableMaxLat = extent[3] - degPlotRadius - degPadding;
+  const centerLat = (extent[1] + extent[3]) / 2;
+  const degSpacingLat = spacing / METERS_PER_DEG;
+  const degSpacingLon = degSpacingLat / Math.cos((centerLat * Math.PI) / 180);
 
-  const width = usableMaxLon - usableMinLon;
-  const height = usableMaxLat - usableMinLat;
+  const width = extent[2] - extent[0];
+  const height = extent[3] - extent[1];
+  const xSteps = Math.floor(width / degSpacingLon);
+  const ySteps = Math.floor(height / degSpacingLat);
 
-  if (width < 0 || height < 0) return [];
+  if ((xSteps + 1) * (ySteps + 1) > MAX_GRID_CELLS) return [];
 
-  // Calculate number of steps
-  const xSteps = Math.floor(width / degSpacing);
-  const ySteps = Math.floor(height / degSpacing);
-
-  // Center the grid by calculating the remainder
-  const xRemainder = width - (xSteps * degSpacing);
-  const yRemainder = height - (ySteps * degSpacing);
-
-  const startLon = usableMinLon + (xRemainder / 2);
-  const startLat = usableMinLat + (yRemainder / 2);
+  // Center the grid inside the bounding box
+  const startLon = extent[0] + (width - xSteps * degSpacingLon) / 2;
+  const startLat = extent[1] + (height - ySteps * degSpacingLat) / 2;
 
   const plots = [];
   for (let i = 0; i <= xSteps; i++) {
     for (let j = 0; j <= ySteps; j++) {
-      plots.push({ 
-        type: "Point", 
-        coordinates: [
-          startLon + (i * degSpacing), 
-          startLat + (j * degSpacing)
-        ] 
-      });
-      if (plots.length > 50000) break;
+      const coord = [startLon + i * degSpacingLon, startLat + j * degSpacingLat];
+      if (!contains(coord)) continue;
+
+      plots.push({ type: 'Point', coordinates: coord });
+      if (plots.length >= MAX_PLOTS) return plots;
     }
   }
   return plots;
@@ -402,40 +404,12 @@ export const generateGriddedPlots = (aoiGeoJSON, spacing, plotSize) => {
 
 /**
  * Estimates the number of plots a gridded distribution will generate.
- * @param {Object} aoiGeoJSON - The GeoJSON feature for the project area.
- * @param {number} spacing - Distance between points in meters.
- * @param {number} plotSize - Diameter (or width) of the plot in meters.
- * @returns {number} Estimated total plot count.
  */
-export const estimateGriddedPlotCount = (aoiGeoJSON, spacing, plotSize) => {
+export const estimateGriddedPlotCount = (aoiGeoJSON, spacing) => {
   if (!spacing || spacing <= 0) return 0;
-
-  try {
-    const format = new GeoJSON();
-    const feature = format.readFeature(aoiGeoJSON, { 
-      dataProjection: 'EPSG:4326', 
-      featureProjection: 'EPSG:4326' 
-    });
-    const extent = feature.getGeometry().getExtent();
-    
-    const degSpacing = spacing / 111320;
-    const degPlotRadius = (plotSize / 2) / 111320;
-    const degPadding = degSpacing; // Padding is equal to spacing
-
-    // Usable area: Total - (2 * Radius) - (2 * Padding)
-    const usableWidth = (extent[2] - extent[0]) - (2 * degPlotRadius) - (2 * degPadding);
-    const usableHeight = (extent[3] - extent[1]) - (2 * degPlotRadius) - (2 * degPadding);
-
-    if (usableWidth < 0 || usableHeight < 0) return 0;
-
-    // We add 1 to include both start and end points of the series
-    const xSteps = Math.floor(usableWidth / degSpacing) + 1;
-    const ySteps = Math.floor(usableHeight / degSpacing) + 1;
-    
-    return xSteps * ySteps;
-  } catch (e) {
-    return 0;
-  }
+  const areaHa = calculateGeoJsonArea(aoiGeoJSON);
+  if (!Number.isFinite(areaHa)) return 0;
+  return Math.floor((areaHa * 10000) / (spacing * spacing));
 };
 
 /**
@@ -493,18 +467,6 @@ export const getPlotGeometry = (pointFeature, plotSize, plotShape) => {
  * Generates an array of GeoJSON point geometries representing sample locations within a given plot,
  * primarily intended for map previews. The calculation is performed in Web Mercator (EPSG:3857) 
  * to ensure accurate distance measurements in meters.
- *
- * @param {Object} rawPlotGeom - The base plot geometry (GeoJSON object or raw coordinate geometry) in EPSG:4326.
- * This defines the boundary within which samples are generated.
- * @param {string} distribution - The spatial distribution strategy for the samples.
- * Valid options: 'center', 'random', 'gridded', 'csv', 'shp', 'geojson'.
- * @param {number} count - The target number of samples to generate (used primarily for 'random' distribution).
- * @param {number} resolution - The spacing in meters between samples (used exclusively for 'gridded' distribution).
- * @param {Array<Object>} [fileFeatures=[]] - An optional array of parsed file features (e.g., from an uploaded CSV, SHP, or GeoJSON).
- * Used when the distribution is file-based to extract sample points.
- *
- * @returns {Array<Object>} An array of GeoJSON Feature objects representing the generated sample points, projected back to EPSG:4326.
- * Returns an empty array if the input geometry is invalid or cannot be parsed.
  */
 export const generatePreviewSamples = (
   rawPlotGeom, 
@@ -519,7 +481,7 @@ export const generatePreviewSamples = (
   let olGeom;
   
   try {
-    // Read the EPSG:4326 plot into Web Mercator (EPSG:3857) - Units are now in METERS
+    // Read the EPSG:4326 plot into Web Mercator (EPSG:3857)
     olGeom = format.readGeometry(rawPlotGeom, {
       dataProjection: 'EPSG:4326',
       featureProjection: 'EPSG:3857'
@@ -564,7 +526,7 @@ export const generatePreviewSamples = (
   }
   // --- GRIDDED LOGIC ---
   else if (distribution === 'gridded') {
-    const res = resolution > 0 ? resolution : 10; // Default to 10m to prevent divide-by-zero
+    const res = resolution > 0 ? resolution : 10;
     
     // 1. Calculate the bounding box dimensions in meters
     const width = extent[2] - extent[0];

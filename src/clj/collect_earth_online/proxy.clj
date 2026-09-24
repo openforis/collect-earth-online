@@ -387,12 +387,13 @@
 (defn get-tfo-tiles [{:keys [params]}]
   (let [{:keys [x y z dataLayer band]} params
         institution-id (tc/val->int (:institutionId params))
+        imagery-id     (tc/val->int (:imageryId params))
         access-token   (->> institution-id
-                            (call-sql "get_tfo_imagery_by_institution")
+                            (call-sql "get_tfo_imagery_by_institution" imagery-id)
                             (first)
                             (:source_config)
                             (tc/jsonb->clj)
-                            (:access_token))]
-    (client/get (format "https://tiles0.planet.com/basemaps/v1/planet-tiles/%s/gmap/%s/%s/%s.png?proc=%s&api_key=%s"
+                            (:accessToken))]
+    (client/get (format "https://tiles.planet.com/basemaps/v1/planet-tiles/%s/gmap/%s/%s/%s.png?proc=%s&api_key=%s"
                         dataLayer z x y band access-token)
                 {:as :stream})))

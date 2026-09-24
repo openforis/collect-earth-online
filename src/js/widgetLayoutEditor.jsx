@@ -25,7 +25,7 @@ import { isValidJSON } from "./utils/generalUtils";
 import { getNextInSequence, last } from "./utils/sequence";
 import BasemapSelector from "./geodash/form/BasemapSelector";
 import Modal from "./components/Modal";
-import { BreadCrumbs } from "./components/PageComponents";
+import { BreadCrumbs, NavigationBar } from "./components/PageComponents";
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -39,6 +39,8 @@ class WidgetLayoutEditor extends React.PureComponent {
       imagery: [],
       projectTemplateList: [],
       editDialog: false,
+      addDialog: false,
+      copyDialog: false,
       modal: null,
 
       // Widget specific state
@@ -273,7 +275,13 @@ class WidgetLayoutEditor extends React.PureComponent {
     });
   };
 
-  cancelNewWidget = () => this.props.closeDialogs();
+  openAddDialog = () => this.setState({ addDialog: true });
+
+  openCopyDialog = () => this.setState({ copyDialog: true });
+
+  closeDialogs = () => this.setState({ addDialog: false, copyDialog: false });
+
+  cancelNewWidget = () => this.closeDialogs();
 
   cancelEditWidget = () => this.setState({ editDialog: false });
 
@@ -317,7 +325,7 @@ class WidgetLayoutEditor extends React.PureComponent {
     const { assetId, visParams } = widgetDesign;
     const validateJSONRequest = await fetch(`/geo-dash/validate-vis-params?imgPath=${assetId}&visParams=${visParams}`);
     const validateJSONResponse = await validateJSONRequest.json();
-    this.props.closeDialogs();
+    this.closeDialogs();
     return [
       !title.length && "You must add a title for the widget.",
       validateJSONResponse,
@@ -347,7 +355,7 @@ class WidgetLayoutEditor extends React.PureComponent {
         layout: this.getNextLayout(),
         ...this.buildNewWidget(),
       });
-      this.props.closeDialogs();
+      this.closeDialogs();
       this.resetWidgetDesign();
     }
   };
@@ -510,8 +518,7 @@ class WidgetLayoutEditor extends React.PureComponent {
   );
 
   render() {
-    const { widgets, projectTemplateList, editDialog } = this.state;
-    const { addDialog, copyDialog, closeDialogs } = this.props;
+    const { widgets, projectTemplateList, editDialog, addDialog, copyDialog } = this.state;
     return (
       <EditorContext.Provider
         value={{
@@ -526,10 +533,10 @@ class WidgetLayoutEditor extends React.PureComponent {
         }}
       >
         {this.state.modal?.alert &&
-         <Modal title={this.state.modal.alert.alertType}
-                onClose={()=>{this.setState({modal: null});}}>
-           {this.state.modal.alert.alertMessage}
-         </Modal>}
+          <Modal title={this.state.modal.alert.alertType}
+            onClose={()=>{this.setState({modal: null});}}>
+            {this.state.modal.alert.alertMessage}
+          </Modal>}
 
         {addDialog && (
           <GeoDashModal
@@ -549,73 +556,92 @@ class WidgetLayoutEditor extends React.PureComponent {
         )}
         {copyDialog && (
           <CopyDialog
-            closeDialogs={closeDialogs}
+            closeDialogs={this.closeDialogs}
             copyProjectWidgets={this.copyProjectWidgets}
             projectTemplateList={projectTemplateList}
           />
         )}
-        <div style={{ marginBottom: `${gridRowHeight}px` }}>
-          {widgets.length > 0 ? (
-            <ReactGridLayout
-              cols={12}
-              onLayoutChange={this.onLayoutChange}
-              resizeHandles={["e", "s", "se"]}
-              rowHeight={gridRowHeight}
-            >
-              {widgets.map((widget) => (
-                <div key={widget.id} data-grid={{ ...widget.layout, minW: 3 }}>
-                  <WidgetContainer title={widget.name} titleButtons={this.containerButtons(widget)}>
-                    <div
-                      style={{
-                        height: "100%",
-                        position: "relative",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        width: "100%",
-                      }}
-                    >
+        <div className="container-fluid" style={{ paddingTop: "67px" }}>
+          <div className="d-flex align-items-center justify-content-between my-3">
+            <h2 className="mb-0">Geo-Dash</h2>
+            <div className="d-flex" style={{ gap: ".5rem" }}>
+              <button
+                type="button"
+                className="btn btn-outline-darkgreen"
+                onClick={() => this.setState({ copyDialog: true })}>
+                Copy Layout
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-darkgreen"
+                onClick={() => this.setState({ addDialog: true })}>
+                Add Widget
+              </button>
+            </div>
+          </div>
+          <div style={{ marginBottom: `${gridRowHeight}px` }}>
+            {widgets.length > 0 ? (
+              <ReactGridLayout
+                cols={12}
+                onLayoutChange={this.onLayoutChange}
+                resizeHandles={["e", "s", "se"]}
+                rowHeight={gridRowHeight}
+              >
+                {widgets.map((widget) => (
+                  <div key={widget.id} data-grid={{ ...widget.layout, minW: 3 }}>
+                    <WidgetContainer title={widget.name} titleButtons={this.containerButtons(widget)}>
                       <div
-                        className="text text-danger mx-auto font-weight-bold mt-2"
-                        style={{
-                          background: "#f1f1f1",
-                          borderRadius: ".5rem",
-                          padding: "0 .5rem",
-                          zIndex: 100,
-                        }}
-                      >
-                        Sample Image
-                      </div>
-                      <img
-                        alt="preview of widget"
-                        src={this.getImageByType(widget.type)}
                         style={{
                           height: "100%",
-                          position: "absolute",
+                          position: "relative",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
                           width: "100%",
-                          objectFit: "contain",
                         }}
-                      />
-                    </div>
-                  </WidgetContainer>
-                </div>
-              ))}
-            </ReactGridLayout>
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                margin: "2rem",
-              }}
-            >
-              <SvgIcon icon="alert" size="1.2rem" />
-              <p style={{ marginLeft: "0.4rem" }}>
-                You don&apos;t have any GeoDash Widgets. Click Copy Layout or Add Widget above to
-                get started!
-              </p>
-            </div>
-          )}
+                      >
+                        <div
+                          className="text text-danger mx-auto font-weight-bold mt-2"
+                          style={{
+                            background: "#f1f1f1",
+                            borderRadius: ".5rem",
+                            padding: "0 .5rem",
+                            zIndex: 100,
+                          }}
+                        >
+                          Sample Image
+                        </div>
+                        <img
+                          alt="preview of widget"
+                          src={this.getImageByType(widget.type)}
+                          style={{
+                            height: "100%",
+                            position: "absolute",
+                            width: "100%",
+                            objectFit: "contain",
+                          }}
+                        />
+                      </div>
+                    </WidgetContainer>
+                  </div>
+                ))}
+              </ReactGridLayout>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  margin: "2rem",
+                }}
+              >
+                <SvgIcon icon="alert" size="1.2rem" />
+                <p style={{ marginLeft: "0.4rem" }}>
+                  You don&apos;t have any GeoDash Widgets. Click Copy Layout or Add Widget above to
+                  get started!
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </EditorContext.Provider>
     );
@@ -624,32 +650,26 @@ class WidgetLayoutEditor extends React.PureComponent {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <GeoDashNavigationBar
-      editor
-      page={(addDialog, copyDialog, closeDialogs) => (
-        <>
-          <BreadCrumbs
-            crumbs={[
-              {display: "Institution",
-               id: "institution",
-               query: ["institution", params.institutionId],
-               onClick:()=>{
-                 window.location.assign(`/review-institution?institutionId=${params.institutionId}`);  
-               }},
-              {display: "Widget Layout Editor",
-               id: "widget-layout-editor"}]}
-          />
-          <WidgetLayoutEditor
-          addDialog={addDialog}
-          closeDialogs={closeDialogs}
-          copyDialog={copyDialog}
-          institutionId={parseInt(params.institutionId || -1)}
-          projectId={parseInt(params.projectId || -1)}
-          />
-        </>
-      )}
-      userName={session.userName || ""}
-    />,
+    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+      <BreadCrumbs
+        crumbs={[
+          {display: "Institution",
+            id: "institution",
+            query: ["institution", params.institutionId],
+            onClick: (e)=>{
+              window.location.assign(`/review-institution?institutionId=${params.institutionId}`);
+            }},
+          {display: "Geo-Dash",
+            id: "geodash",
+            query: ["project", params.projectId],
+            onClick: (e)=>{}}
+        ]}
+      />
+      <WidgetLayoutEditor
+        institutionId={parseInt(params.institutionId || -1)}
+        projectId={parseInt(params.projectId || -1)}
+      />
+    </NavigationBar>,
     document.getElementById("app")
   );
 }

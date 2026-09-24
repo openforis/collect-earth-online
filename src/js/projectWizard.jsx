@@ -4,7 +4,6 @@ import { useSubscription, dispatch } from '@flexsurfer/reflex';
 
 import { BreadCrumbs, NavigationBar } from "./components/PageComponents";
 
-import SvgIcon from "./components/svg/SvgIcon";
 import { ImageryStep } from "./wizard/ImageryStep";
 import { BoundaryStep } from "./wizard/BoundaryStep";
 import { PlotStep } from "./wizard/PlotStep";
@@ -13,7 +12,7 @@ import { SampleStep } from "./wizard/SampleStep";
 import ReviewStep from "./wizard/ReviewStep";
 import OverviewStep from './wizard/OverviewStep';
 import RulesStep from './wizard/RulesStep';
-import NavButtons, { ProjectWizardNavigator } from './wizard/NavButtons';
+import {NavButtons, ProjectWizardNavigator } from './wizard/NavButtons';
 import ProjectWizardModal from './wizard/Modals';
 import { event_ids,  sub_ids } from "./state/projectWizard";
 
@@ -28,13 +27,11 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
   
   const currentStep = useSubscription([sub_ids.currentStep]);
   const modal = useSubscription([sub_ids.modal]);
-  const projectSource = useSubscription([sub_ids.projectSource]);
   const projectType = useSubscription([sub_ids.overview.projectType]);
   function setInstitutionImagery (imagery) {dispatch([event_ids.institution.imagery, imagery]);}
   const institutionImagery = useSubscription([sub_ids.institution.imagery]);
   function setDraftProject (draftProject) {dispatch([event_ids.draftProject, draftProject]);};
   function setEditProject (project) {dispatch([event_ids.editProject, project]);};
-  function setPlotFeatures (plots) { dispatch([event_ids.plots.plotFeatures, plots]); };
   function setProjectId (projectId) {dispatch([event_ids.projectId, projectId]);};
 
   draftId && console.log('this is a draft project');
@@ -48,14 +45,20 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
     dispatch([event_ids.modal, 'newProject']);
     draftId && setDraftProject(draftId);
     projectId && setEditProject(projectId);
+    projectId && setProjectId(projectId);
     projectId && !draftId && (
       fetch(`/get-project-plots?projectId=${projectId}`)
         .then(res => res.json())
         .then(data => {
+          const maxId = data.length ? Math.max(...data.map(o => o.id)) : undefined;
           const geoms = (data || [])
             .map(p => (typeof p.center === 'string' ? JSON.parse(p.center) : p.center))
             .filter(g => g && g.type);
-          dispatch([event_ids.plots.serverPlots, { features: geoms, count: data.length }]);
+          dispatch([event_ids.plots.serverPlots,
+            { features: geoms,
+              count: data.length,
+              maxId
+            }]);
         })
         .catch(err => console.error("could not load plots", err))
     );

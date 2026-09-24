@@ -12,8 +12,26 @@ function ImportProjectModal () {
   const [projectFileName, setProjectFileName] = useState("");
   const [projectFileBase64, setProjectFileBase64] = useState(null);
   const [importErrors, setImportErrors] = useState(null);
+  const [importing, setImporting] = useState(false);
+
+  // Surface the server's message instead of only the status text
+  const readError = (response) =>
+    response.text()
+      .then((text) => {
+        try {
+          const body = JSON.parse(text);
+          return body.message || body.error
+            || (body.params && Object.entries(body.params).map(([f, m]) => `${f}: ${m}`).join('; '))
+            || text;
+        } catch {
+          return text;
+        }
+      })
+      .then((message) => Promise.reject(message || response.statusText || 'Import failed.'));
 
   function importCollectProject (fileName, fileb64) {
+    if (importing) return;
+    setImporting(true);
     fetch(`/import-ce-project`, {
       method: "POST",
       headers: {
@@ -25,22 +43,22 @@ function ImportProjectModal () {
         fileb64,
       }),
     })
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((response) => (response.ok ? response.json() : readError(response)))
       .then((data) => {
-        dispatch([event_ids.templateProject, data]);
+        dispatch([event_ids.importProject, data]);
         dispatch([event_ids.currentStep, 'review']);
         dispatch([event_ids.modal, null]);
       })
       .catch((message) => {
-        console.log('import collect earth project errors: ', message);        
-        setImportErrors([message.statusText]);
-      });
+        console.log('import collect earth project errors: ', message);
+        setImportErrors([typeof message === 'string' ? message : 'Import failed. See console for details.']);
+      })
+      .finally(() => setImporting(false));
   };
 
   function uploadProjectFile (file) {
     setImportErrors(null);
     readFileAsBase64Url(file, (base64) => {
-      //do some sort of validating
       setProjectFileName(file.name);
       setProjectFileBase64(base64);
     });       
@@ -49,11 +67,11 @@ function ImportProjectModal () {
   return (
     <Modal
       title='Upload Collect Earth Project File'
-      confirmText='Upload'
+      confirmText={importing ? 'Importing...' : 'Upload'}
       closeText='Quit'
-      onConfirm={()=> {importCollectProject(projectFileName, projectFileBase64);}}      
+      onConfirm={()=> {importCollectProject(projectFileName, projectFileBase64);}}
       onClose={()=>{ dispatch([event_ids.modal, 'newProject']);}}
-      confirmDisabled={projectFileName === ""}
+      confirmDisabled={projectFileName === "" || !projectFileBase64 || importing}
     >
       <div>
         <label
@@ -63,26 +81,26 @@ function ImportProjectModal () {
         >
           <SvgIcon icon='plus' size='0.9rem' />
           {projectFileName ? `File: ${projectFileName}` : 'Upload Collect Earth Project File'}
-        <input
-          type='file'
-          accept='application/cep'
-          defaultValue=''
-          id='template-project-file'
-          style={{ display: 'none'}}
-          onChange={(e)=> {
-            const file = e.target.files[0];
-            file && uploadProjectFile(file);
-          }}
-        />
+          <input
+            type='file'
+            accept='.cep'
+            defaultValue=''
+            id='template-project-file'
+            style={{ display: 'none'}}
+            onChange={(e)=> {
+              const file = e.target.files[0];
+              file && uploadProjectFile(file);
+            }}
+          />
         </label>
         {importErrors &&
-         (<div style={{border: '1px solid red',
-                       background: 'pink',
-                       color: 'red'}} >
-            {importErrors.map((message) => {
-              return (<span > {message} <br/> </span>);
-            })}
-          </div>)}
+          (<div style={{border: '1px solid red',
+            background: 'pink',
+            color: 'red'}} >
+             {importErrors.map((message) => {
+               return (<span > {message} <br/> </span>);
+             })}
+           </div>)}
       </div>
     </Modal>
   );
@@ -91,145 +109,153 @@ function ImportProjectModal () {
 function TemplateProjectModal () {
 
   const institutionId = useSubscription([sub_ids.institutionId]);
-  const institutionImagery = useSubscription([sub_ids.institution.imagery]);
   const projectType = useSubscription([sub_ids.overview.projectType]) || 'regular';
+  const institutionImagery = useSubscription([sub_ids.institution.imagery]) || [];
   const [templateProjectId, setTemplateProjectId] = useState(-1);
   const [templateProjects, setTemplateProjects] = useState([]);
-  const [filterProjectId, setFilterProjectId] = useState(-1);
-  const [filterProjectName, setFilterProjectName] = useState("");
-  const [filteredProjects, filterProjects] = useState([]);
+  const [filterProjectId, setFilterProjectId] = useState('');
+  const [filterProjectName, setFilterProjectName] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  function setTemplateProject (templateProject) {dispatch([event_ids.templateProject, templateProject]);}
-  function setUseTemplatePlots (useTemplatePlots) {dispatch([event_ids.overview.useTemplatePlots, useTemplatePlots]);}
-  function setDesignSettings (designSettings) {dispatch([event_ids.plots.designSettings, designSettings]);}
-  function setImageryId (imageryId) {dispatch([event_ids.imagery.imagery, imageryId]);}
-  function validate () {dispatch([event_ids.validate]);}
-  function setPlots (plots) {dispatch([event_ids.plots.plots, plots]);}
-  function setImageryList (imageryList) {dispatch([event_ids.imagery.imageryList, imageryList]);}
-  function setPreviewImagery (imageryId) {dispatch([event_ids.imagery.previewId, imageryId]);}
-  function setUseTemplateWidgets (useTemplateWidgets) {dispatch([event_ids.overview.useTemplateWidgets, useTemplateWidgets]);}
-  
+  const stripForeignUsers = (designSettings) => ({
+    ...designSettings,
+    userAssignment: { ...designSettings.userAssignment, userMethod: 'none', users: [], percents: [] },
+    qaqcAssignment: { ...designSettings.qaqcAssignment, qaqcMethod: 'none', smes: [] },
+  });
+  const matchesFilters = (idFilter, nameFilter) => ({ id, name }) =>
+    (idFilter === '' || String(id).includes(idFilter))
+      && (nameFilter === '' || name.toLowerCase().includes(nameFilter.toLowerCase()));
+
+  const intersectTemplateImagery = (templateImagery, institutionImagery, templateBasemapId) => {
+    const allowed = new Set(institutionImagery.map(({ id }) => id));
+    const shared = templateImagery.filter(({ id }) => allowed.has(id));
+    const pool = shared.length ? shared : institutionImagery;
+    const basemap =
+      pool.find(({ id }) => id === templateBasemapId)
+        ?? pool.find(({ visibility }) => visibility === 'platform')
+        ?? pool[0];
+    return [basemap, ...pool.filter((img) => img !== basemap)].map(({ id }) => id);
+  };
+
   function getTemplateById (projectId) {
-    fetch(`/get-template-by-id?projectId=${projectId}`)
+    return fetch(`/get-template-by-id?projectId=${projectId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
       .then((data) => {
-        setTemplateProject(data);
-        const institutionImageryIds = institutionImagery.map((i) => i.id);
-        data.institutionId != institutionId ?
-          setDesignSettings({... data.designSettings, userAssignment: {
-            userMethod: null,
-            users: [],
-            percents: []}})
-          : setDesignSettings(data.designSettings);
-        setTemplateProjectId(projectId);
-        setImageryId(institutionImageryIds.includes(data.imageryId)
-                     ? [data.imageryId]
-                     : institutionImageryIds);
-        setUseTemplatePlots(true);
-        setUseTemplateWidgets(true);
-        validate();
-      });}
-  
-  function getProjectPlots(projectId) {
-    fetch(`/get-project-plots?projectId=${projectId}`)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        setPlots(data);
-      });}
-  
-  function getProjectImagery(projectId) {    
-    fetch("/get-project-imagery?projectId=" + projectId)
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) => {
-        setPreviewImagery(data[0].id);
-        setImageryList(data.map((i) => i.id));        
-      });}
-
-  function getTemplateProjects (projectId) {
-    Promise.all([
-      getTemplateById(projectId),
-      getProjectPlots(projectId),
-      getProjectImagery(projectId),
-    ])
-//      .then(() => setTemplateProjectId(projectId))
-      .catch((error) => {
-        setTemplateProject({});
-        setTemplateProjectId(-1);
-        console.error(error);
-        dispatch([event_ids.modal, [['Project Template Error', ["Error getting complete template info. See console for details."]]]]);
+        dispatch([event_ids.templateProject, data]);
+        dispatch([event_ids.plots.designSettings,
+          data.templateInstitutionId === institutionId
+            ? data.designSettings
+            : stripForeignUsers(data.designSettings)]);
+        return data;
       });
   }
-    
+ 
+  // get-project-plots returns {id, plotId, center, flagged, status} rows,
+  // where center is a GeoJSON Point string and id is the visible id.
+  function getProjectPlots (projectId) {
+    return fetch(`/get-project-plots?projectId=${projectId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((plots) => dispatch([event_ids.plots.serverPlots, {
+        features: plots.map((p) => JSON.parse(p.center)),
+        count: plots.length,
+        maxId: Math.max(0, ...plots.map((p) => p.id)),
+      }]));
+  }
+ 
+  function getProjectImagery (projectId) {
+    return fetch(`/get-project-imagery?projectId=${projectId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)));
+  }
+ 
+  function loadTemplate (projectId) {
+    if (projectId <= 0 || loading) return;
+    setLoading(true);
+    Promise.all([getTemplateById(projectId), getProjectPlots(projectId), getProjectImagery(projectId)])
+      .then(([template, , templateImagery]) => {
+        const imageryIds = intersectTemplateImagery(templateImagery, institutionImagery, template.imageryId);
+        dispatch([event_ids.imagery.imageryList, imageryIds]);
+        dispatch([event_ids.imagery.previewId, imageryIds[0]]);
+        dispatch([event_ids.templateProjectId, projectId]);
+        dispatch([event_ids.templateProjectName,
+          templateProjects.find(({ id }) => id === projectId)?.name ?? '']);
+        dispatch([event_ids.templatePlotDesign]);
+        dispatch([event_ids.overview.useTemplatePlots, true]);
+        dispatch([event_ids.overview.useTemplateWidgets, true]);
+        dispatch([event_ids.validate]);
+      })
+      .catch((error) => {
+        console.error(error);
+        dispatch([event_ids.templateProjectId, -1]);
+        dispatch([event_ids.overview.useTemplatePlots, false]);
+        dispatch([event_ids.overview.useTemplateWidgets, false]);
+        dispatch([event_ids.templatePlotDesign, true]);
+        dispatch([event_ids.templateProjectName, '']);
+        dispatch([event_ids.errors, [['Project Template Error',
+          ['Error getting complete template info. See console for details.']]]]);
+      })
+      .finally(() => setLoading(false));
+  }
+ 
   useEffect(() => {
     fetch(`/get-template-projects?projectType=${projectType}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then((data) =>
-        data && data.length > 0 ?
-          setTemplateProjects(data):
-          setTemplateProjects([{ id: -1, name: "No template projects found" }])        
-      )
+      .then((data) => setTemplateProjects(data || []))
       .catch((error) => {
+        console.error(error);
         dispatch([event_ids.errors, [['Template Projects', ['Failed to load template projects']]]]);
-        Promise.reject(error);
       });
-  }, []);
-
-  
+  }, [projectType]);
+ 
+  const visibleProjects = templateProjects.filter(matchesFilters(filterProjectId, filterProjectName));
+ 
   return (
     <Modal
-      title='Select Template Project'
-      confirmText='Select'
-      closeText='Quit'
-      onConfirm={()=> {getTemplateProjects(templateProjectId);}}      
-      onClose={()=>{ dispatch([event_ids.modal, 'newProject']);}}>
-      <div>        
-        {templateProjects.length ?
-         <div>
-           <p>Filter Template Projects:</p>
-           <div style={{display: "flex",
-                        gap: "1rem",
-                        flexDirection: "row"}}>
-             <input
-               className="text-input"
-               style={{width: "20%"}}
-               type="text"
-               placeHolder="Id"
-               value={filterProjectId > 0 ? filterProjectId : null}
-               onKeyPress={(e)=>{
-                 const pattern = /^[0-9]+$/;
-                 const input = e.key;
-                 !pattern.test(input) && e.preventDefault();
-               }}
-               onChange={(e)=>{setFilterProjectId(e.target.value);}}
-             />
-             <input
-               placeholder="Project Name"
-               className="text-input"
-               style={{flexGrow: 2}}
-               type="text"
-               value={filterProjectName}
-               onChange={(e)=>{setFilterProjectName(e.target.value);}}
-             />
-             
-           </div>
-           <select
-             className="text-input"
-             onChange={(e)=>{
-               setTemplateProjectId(Number(e.target.value));}}>
-             <option value={-1} selected disabled hidden>Select Template Project:</option>
-             {templateProjects
-              .filter(({id, name}) => {
-                return ((id.toString().includes(filterProjectId.toString())) ||
-                        (name.toLocaleLowerCase().includes(filterProjectName.toLocaleLowerCase()))
-                       );
-              })
-              .map(e =>(<option key={e.id} value={e.id}>{e.name}</option>))}
-         </select>
-         </div>
-         : <></>}
-      </div>
+      title="Select Template Project"
+      confirmText={loading ? 'Loading...' : 'Select'}
+      closeText="Quit"
+      onConfirm={() => loadTemplate(templateProjectId)}
+      onClose={() => dispatch([event_ids.modal, 'newProject'])}>
+      {templateProjects.length === 0
+        ? <p>No template projects found.</p>
+        : (
+          <div>
+            <p>Filter Template Projects:</p>
+            <div style={{ display: 'flex', gap: '1rem', flexDirection: 'row' }}>
+              <input
+                className="text-input"
+                style={{ width: '20%' }}
+                type="text"
+                inputMode="numeric"
+                placeholder="Id"
+                value={filterProjectId}
+                onChange={(e) => setFilterProjectId(e.target.value.replace(/[^0-9]/g, ''))}
+              />
+              <input
+                className="text-input"
+                style={{ flexGrow: 2 }}
+                type="text"
+                placeholder="Project Name"
+                value={filterProjectName}
+                onChange={(e) => setFilterProjectName(e.target.value)}
+              />
+            </div>
+            <select
+              className="text-input"
+              value={templateProjectId}
+              onChange={(e) => setTemplateProjectId(Number(e.target.value))}>
+              <option value={-1} disabled hidden>Select Template Project:</option>
+              {visibleProjects.map(({ id, name }) => (
+                <option key={id} value={id}>{name}</option>
+              ))}
+            </select>
+            {visibleProjects.length === 0 && (
+              <p style={{ marginTop: '0.5rem' }}>No template projects match the filters.</p>
+            )}
+          </div>
+        )}
     </Modal>
   );
+
 }
 
 function handleNewProject (projectSource) {
@@ -250,11 +276,11 @@ function handleNewProject (projectSource) {
 function NewProjectModal () {
   const newProjectOptions = {
     newProject: ['Create a new project',
-                 'Generate a new project from scratch by customizing all steps.'],
+      'Generate a new project from scratch by customizing all steps.'],
     templateProject: ['Select from an existing template',
-                      'Select a template and prefill all the steps. You can edit and customize it.'],
+      'Select a template and prefill all the steps. You can edit and customize it.'],
     importProject: ['Import Collect Earth Project',
-                    'Import a project from the Collect Earth desktop application.']};
+      'Import a project from the Collect Earth desktop application.']};
   const projectSource = useSubscription([sub_ids.projectSource]);
   const institutionId = useSubscription([sub_ids.institutionId]);
   return (
@@ -271,8 +297,8 @@ function NewProjectModal () {
           return (
             <div
               className={projectSource === id ?
-                         "radio-selected-button"
-                         : "radio-selection-button"}
+                "radio-selected-button"
+                : "radio-selection-button"}
               key={id}
               onClick={()=> {
                 dispatch([event_ids.projectSource, id]);
@@ -282,7 +308,7 @@ function NewProjectModal () {
               >{projectSource === id
                 ? <SvgIcon icon="radioChecked" size="1.2rem" />                            
                 : <SvgIcon icon="radio" size="1.2rem"
-                           className="radio-button-unchecked"/> }
+                    className="radio-button-unchecked"/> }
                 {"    "}
                 { title } </p>
               <label
@@ -300,9 +326,9 @@ function SubmitProjectModal () {
   const [slug, setSlug]  = useState("");
   return (
     <Modal
-      title='Project Saved'
-      closeText='Return to Institution'
-      confirmText='Publish Project'
+      title={update < 0 ? 'Create Project' : 'Update Project'}
+      closeText='Return to editing'
+      confirmText={update < 0 ? 'Create Project' : 'Update Project'}
       onConfirm={()=>{
         dispatch ([event_ids.publishProject, slug]); }}
       confirmDisabled={slug.length === 0}
@@ -418,8 +444,8 @@ function ErrorModal () {
     <Modal
       onClose={()=>{dispatch([event_ids.modal, null]);}}>
       <div style={{display: 'flex',
-                   flexDirection: 'column',
-                   gap: '1rem'}}>
+        flexDirection: 'column',
+        gap: '1rem'}}>
         <div className='alert-icon'>
           <SvgIcon  icon='alert' size='2rem'/>
         </div>
@@ -427,21 +453,21 @@ function ErrorModal () {
         <br/>      
         {errors.map(([errorType, errorMessages])=> {
           return (<div className='error-card'>
-       <div className='error-header' onClick={()=>toggleVisible(errorType)}>
-         <b > {stepName(errorType)}</b>
-         <SvgIcon icon={visible.includes(errorType) ? 'upCaretNew' : 'downCaretNew'}
-                  size='1.2rem'> </SvgIcon>
-       </div>
-       {visible.includes(errorType) &&
-        <div style={{gap: '1rem'}}>
-          <br/>
-          {errorMessages.map((message) => {
-            return (
-              <p > - {message}
-              </p>);
-          })}
-        </div>}
-     </div>);
+                    <div className='error-header' onClick={()=>toggleVisible(errorType)}>
+                      <b > {stepName(errorType)}</b>
+                      <SvgIcon icon={visible.includes(errorType) ? 'upCaretNew' : 'downCaretNew'}
+                        size='1.2rem'> </SvgIcon>
+                    </div>
+                    {visible.includes(errorType) &&
+                      <div style={{gap: '1rem'}}>
+                        <br/>
+                        {errorMessages.map((message) => {
+                          return (
+                            <p > - {message}
+                            </p>);
+                        })}
+                      </div>}
+                  </div>);
         })}
       </div>
     </Modal>    
