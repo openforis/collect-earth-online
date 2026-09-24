@@ -678,19 +678,8 @@
         sample-file-name     (:sampleFileName params)
         sample-file-base64   (:sampleFileBase64 params)
         type                 (:type params)
-        original-project     (first (call-sql "select_project_by_id" project-id))
-        original-questions   (-> original-project :survey_questions tc/jsonb->clj)
-        new-questions        (tc/clj->jsonb
-                              (assoc original-questions
-                                     (-> original-questions count inc str)
-                                     {:dataType "text",
-                                      :question "?",
-                                      :cardOrder (inc (count original-questions)),
-                                      :hideQuestion false,
-                                      :componentType "button",
-                                      :parentAnswerIds [],
-                                      :parentQuestionId -1
-                                      :answers {"0" {:hide false, :color "#00ff4c", :answer "!"}}}))]
+        original-project     (first (call-sql "select_project_by_id" project-id))]
+
     (if original-project
       (try
         (call-sql "update_project"
@@ -756,7 +745,6 @@
                                   design-settings
                                   aoi-features
                                   type))
-
           :else
           (do
             ;; Always recreate samples or reset them
@@ -784,7 +772,6 @@
             (when (not= design-settings (tc/jsonb->clj (:design_settings original-project)))
               (call-sql "delete_plot_assignments_by_project" project-id)
               (assign-plots design-settings (call-sql "get_plot_centers_by_project" project-id) project-id))))
-
         ;; Final clean up
         (call-sql "update_project_counts" project-id)
         (data-response "")

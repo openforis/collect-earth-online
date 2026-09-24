@@ -87,7 +87,7 @@ const projectWizardDb = {
   'plots.totalPlots': 0,
   'plots.plotFeatures': [],
   'plots.plotFileName': '',
-  'plots.plotFileBase64': '',
+  'plots.plotFileBase64': null,
   'plots.referencePlotId': -1,
   'plots.similariyYears': null,
   'plots.designSettings': {
@@ -111,7 +111,7 @@ const projectWizardDb = {
   'plots.newTotalPlots': 0,
   'plots.newPlotFeatures': [],
   'plots.newPlotFileName': '',
-  'plots.newPlotFileBase64': '',
+  'plots.newPlotFileBase64': null,
   'plots.maxId': null,
   // samples
   'samples.sampleDistribution': 'random',
@@ -120,7 +120,7 @@ const projectWizardDb = {
   'samples.sampleFileName': '',
   'samples.sampleFeautres': [],
   'samples.allowDrawnSamples': false,
-  'samples.sampleFileBase64': '',
+  'samples.sampleFileBase64': null,
   'questions': {},
   'rules': [],
   'rules.search': null,
