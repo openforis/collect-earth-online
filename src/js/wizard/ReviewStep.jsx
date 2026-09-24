@@ -323,23 +323,11 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         const usePlots = window.confirm("Use Existing Plots?");
         const useWidgets = window.confirm("Use Existing Widgets?");
         const useAnswers = window.confirm("Copy Answers?");
-        const acceptTos = window.confirm(
-          "Creating a project requires accepting the Terms of Service "
-            + "(https://app.collect.earth/terms-of-service).\n\nDo you accept the Terms of Service?"
-        );
-        if (!acceptTos) {
-          window.alert("You must accept the Terms of Service to copy this project.");
-          return;
-        }
-        const url = `/copy-project?projectId=${projectId}&widgets=${useWidgets}&plots=${usePlots}&answers=${useAnswers}&acceptTos=true`;
+        const url = `/copy-project?projectId=${projectId}&widgets=${useWidgets}&plots=${usePlots}&answers=${useAnswers}`;
 
         fetch(url, { method: "POST" })
           .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-          .then((data) => window.location.assign(`/project-wizard?projectId=${data.projectId}&institutionId=${institutionId}`))
-          .catch((error) => {
-            console.log(error);
-            window.alert("Error copying project. See console for details.");
-          });
+          .then((data) => window.location.assign(`/project-wizard?projectId=${data.projectId}&institutionId=${institutionId}`));
       }
     };
 

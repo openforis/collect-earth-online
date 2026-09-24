@@ -145,82 +145,6 @@ class HelpSlideDialog extends React.Component {
   }
 }
 
-// Pages a user must be able to see before accepting the Terms of Service.
-const TOS_EXEMPT_PAGES = ["/terms-of-service", "/user-disagreement", "/login", "/register",
-                          "/verify-email", "/password-request", "/password-reset"];
-
-export function TermsOfServiceModal({ onAccepted }) {
-  const [checked, setChecked] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-
-  const accept = () => {
-    setSaving(true);
-    fetch("/accept-tos", { method: "POST", headers: { Accept: "application/json" } })
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then(() => onAccepted())
-      .catch(() => {
-        setSaving(false);
-        setError("There was a problem recording your acceptance. Please try again.");
-      });
-  };
-
-  const decline = () =>
-    fetch("/logout", { method: "POST" }).then(() => window.location.assign("/home"));
-
-  // No backdrop or close-button dismissal: the user must accept or log out.
-  return (
-    <div
-      className="modal fade show"
-      id="tosModal"
-      style={{ display: "block", backgroundColor: "rgba(0, 0, 0, 0.4)", zIndex: 2000 }}
-    >
-      <div className="modal-dialog modal-dialog-centered" role="document">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Terms of Service</h5>
-          </div>
-          <div className="modal-body">
-            <p>
-              To continue using Collect Earth Online, please review and accept the{" "}
-              <a href="/terms-of-service" rel="noopener noreferrer" target="_blank">
-                Terms of Service
-              </a>.
-            </p>
-            <div className="form-check">
-              <input
-                checked={checked}
-                className="form-check-input"
-                id="tos-modal-check"
-                onChange={(e) => setChecked(e.target.checked)}
-                type="checkbox"
-              />
-              <label className="form-check-label" htmlFor="tos-modal-check">
-                I have read and accept the Terms of Service
-              </label>
-            </div>
-            {error && <p className="text-danger mt-2 mb-0">{error}</p>}
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-outline-red btn-sm" onClick={decline} type="button">
-              Decline and log out
-            </button>
-            <button
-              className="btn btn-sm"
-              disabled={!checked || saving}
-              onClick={accept}
-              style={{ backgroundColor: "#2d6f74", color: "#fff" }}
-              type="button"
-            >
-              Accept
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export class NavigationBar extends React.Component {
   constructor(props) {
     super(props);
@@ -228,24 +152,10 @@ export class NavigationBar extends React.Component {
       helpSlides: [],
       showHelpMenu: false,
       page: "",
-      showTosModal: false,
     };
   }
 
-  checkTosStatus = () => {
-    const { userName, userId } = this.props;
-    const loggedIn = userName && userName !== "guest" && userId > 0;
-    if (!loggedIn || TOS_EXEMPT_PAGES.includes(window.location.pathname)) return;
-    fetch("/get-tos-status", {
-      headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json" },
-    })
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-      .then(({ accepted }) => this.setState({ showTosModal: !accepted }))
-      .catch((error) => console.log(error));
-  };
-
   componentDidMount() {
-    this.checkTosStatus();
     fetch("/locale/help.json", {
       headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Accept: "application/json" },
     })
@@ -289,10 +199,7 @@ export class NavigationBar extends React.Component {
 
     return (
       <>
-        {this.state.showTosModal && (
-          <TermsOfServiceModal onAccepted={() => this.setState({ showTosModal: false })} />
-        )}
-        {this.state.showHelpMenu && !this.state.showTosModal && (
+        {this.state.showHelpMenu && (
           <HelpSlideDialog
             closeHelpMenu={this.closeHelpMenu}
             helpSlides={this.state.helpSlides}

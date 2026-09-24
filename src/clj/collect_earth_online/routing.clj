@@ -103,12 +103,6 @@
    [:post "/verify-email"]                   {:handler users/verify-email}
    [:post "/register"]                       {:handler users/register}
    [:post "/confirm-data-sharing"]           {:handler #'users/confirm-data-sharing!}
-   [:get  "/get-tos-status"]                 {:handler     users/get-tos-status
-                                              :auth-type   :user
-                                              :auth-action :block}
-   [:post "/accept-tos"]                     {:handler     users/accept-tos!
-                                              :auth-type   :user
-                                              :auth-action :block}
    ;; Projects API
    [:get  "/dump-project-aggregate-data"]    {:handler     projects/dump-project-aggregate-data!
                                               :auth-type   :admin

@@ -330,7 +330,7 @@ function SubmitProjectModal () {
       closeText='Return to editing'
       confirmText={update < 0 ? 'Create Project' : 'Update Project'}
       onConfirm={()=>{
-        dispatch([event_ids.saveProject, TOS]);
+        dispatch([event_ids.saveProject]);
       }}
       confirmDisabled={!TOS}
       onClose={()=>{dispatch([event_ids.modal, null])}}>

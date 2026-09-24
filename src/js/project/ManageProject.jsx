@@ -182,17 +182,9 @@ class ProjectManagement extends React.Component {
                  {label: "Copy Answers",
                   index: "answers",
                   type:  "checkbox",
-                  value: true},
-                 {label: "I accept the Terms of Service (https://app.collect.earth/terms-of-service)",
-                  index: "acceptTos",
-                  type:  "checkbox",
-                  value: false}
+                  value: true}
                 ], (prompts) => {
-                  if (!prompts.acceptTos) {
-                    alert("You must accept the Terms of Service to copy this project.");
-                    return;
-                  }
-                  const url = `/copy-project?projectId=${projectId}&widgets=${prompts.widgets}&plots=${prompts.plots}&answers=${prompts.answers}&acceptTos=true`;
+                  const url = `/copy-project?projectId=${projectId}&widgets=${prompts.widgets}&plots=${prompts.plots}&answers=${prompts.answers}`;
                   fetch(url, {method: "POST"})
 	            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
 	            .then((data) => 
