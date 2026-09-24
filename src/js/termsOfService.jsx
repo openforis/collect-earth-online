@@ -5,7 +5,7 @@ import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 function TermsOfService() {
   return (
     <section className="container pt-3" id="about">
-      <div className="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
+      <div className="col-xl-8 offset-xl-2 col-lg-10 justify-content-center" style={{marginTop: "30px"}}>
         <h1 className="py-4">Collect Earth Online Terms of Service</h1>
 
         {/**/}
