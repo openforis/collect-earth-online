@@ -382,10 +382,11 @@ function Home ({ userRole, userId }) {
         >
           <p>In order to use Collect Earth Online, please review and accept the
             <span
+              onClick={()=>window.open('/terms-of-service')}
               style={{cursor: 'pointer',
                       textDecorationLine: 'underline',
                       color: 'var(--Primary-Highlight-Green)'}}
-            > Terms and Conditions</span>.</p>
+            > Terms of Service</span>.</p>
           <div>            
             <input type="text"
                    className="text-input"

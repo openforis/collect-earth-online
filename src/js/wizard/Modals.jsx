@@ -309,7 +309,9 @@ function SubmitProjectModal () {
       onClose={()=>{window.location=`/review-institution?institutionId=${institutionId}`;}}>
       <div>
         <p >You are about to publish this project. Once published it will be added to your institution. You’ll still be able to make changes later from the project page within your institution.</p>
-        <p>In order to publish this project, enter your username to accept the <span style={{cursor: 'pointer', textDecorationLine: 'underline', color:'var(--Primary-Highight-Green)'}}onClick={()=>window.open('/support')}>terms and conditions</span>.</p>
+        <p>In order to publish this project, enter your username to accept the <span style={
+          {cursor: 'pointer', textDecorationLine: 'underline', color:'var(--Primary-Highight-Green)'}
+        } onClick={()=>window.open('/terms-of-service')}>Terms of Service</span>.</p>
         <div>
           <input type="text"
                  className="text-input"
