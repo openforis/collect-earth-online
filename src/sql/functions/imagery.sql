@@ -214,16 +214,17 @@ $$ LANGUAGE SQL;
 -- Returns all rows in imagery associated with institution_rid
 CREATE OR REPLACE FUNCTION select_imagery_by_project(
   _project_id INTEGER,
-  _user_id INTEGER,
-  _token_key TEXT
+  _user_id    INTEGER,
+  _token_key  TEXT
 )
 RETURNS SETOF imagery_return AS $$
   WITH project_info AS (
     SELECT
-      p.project_uid,
-      p.institution_rid
-    FROM projects p
-    WHERE p.project_uid = _project_id
+      project_uid,
+      institution_rid,
+      imagery_rid AS basemap_imagery_id
+    FROM projects
+    WHERE project_uid = _project_id
   ),
   user_is_in_institution AS (
     SELECT EXISTS (
@@ -242,10 +243,12 @@ RETURNS SETOF imagery_return AS $$
     i.extent,
     i.is_proxied,
     i.source_config
-  FROM project_info p
-  LEFT JOIN project_imagery pi ON pi.project_rid = p.project_uid
+  FROM project_info proj
+  LEFT JOIN project_imagery pi
+    ON pi.project_rid = proj.project_uid
   INNER JOIN imagery i
-    ON i.imagery_uid = pi.imagery_rid OR i.imagery_uid = p.project_uid
+    ON i.imagery_uid = pi.imagery_rid
+    OR i.imagery_uid = proj.basemap_imagery_id
   WHERE i.archived = FALSE
     AND (
       _user_id = 1
@@ -382,7 +385,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Get Planet TFO imagery by institution_id
-CREATE OR REPLACE FUNCTION get_tfo_imagery_by_institution(_institution_id integer)
+CREATE OR REPLACE FUNCTION get_tfo_imagery_by_institution(_imagery_id integer, _institution_id integer)
 RETURNS setOf imagery_return AS $$
     SELECT imagery_uid,
            institution_rid,
@@ -394,5 +397,5 @@ RETURNS setOf imagery_return AS $$
            source_config
     FROM imagery
     WHERE institution_rid = _institution_id
-    AND source_config->>'type' = 'planetTFO';
+    AND imagery_uid = _imagery_id;
 $$ LANGUAGE SQL;

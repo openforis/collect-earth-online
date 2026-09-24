@@ -21,11 +21,13 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const projectName = useSubscription([sub_ids.overview.projectName]);
     const projectDescription = useSubscription([sub_ids.overview.projectDescription]);
     const projectVisibility = useSubscription([sub_ids.overview.visibility]);
+    const templateProjectId = useSubscription([sub_ids.templateProjectId]);
     const dataLicenseType = "Public-Open Use"; //useSubscription([sub_ids.overview.license])
-    const showGee = useSubscription([sub_ids.overview.projectOptions.gee]);
-    const extraPlotColumns = useSubscription([sub_ids.overview.projectOptions.extraPlotColumns]);
-    const plotConfidence = useSubscription([sub_ids.overview.projectOptions.plotConfidence]);
-    const autoGeo = useSubscription([sub_ids.overview.projectOptions.autoGeo]);
+    const showGee = useSubscription([sub_ids.overview.projectOptions.showGEEScript]);
+    const extraPlotColumns = useSubscription([sub_ids.overview.projectOptions.showPlotInformation]);
+    const plotConfidence = useSubscription([sub_ids.overview.projectOptions.collectConfidence]);
+    const autoGeo = useSubscription([sub_ids.overview.projectOptions.autoLaunchGeoDash]);
+    const usingTemplate = templateProjectId > 0 && projectId === -1;
 
     return (
       <div className='wizard-card'>
@@ -40,9 +42,14 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         <p>Description: <b>{projectDescription}</b></p>
         <p>Visibility: <b>{projectVisibility}</b></p>
         <p>Data License Type: <b>{projectVisibility}</b></p>
-
         <p className='hyperlink' >See the full agreement here.</p>
-
+         {usingTemplate && (
+          <>
+            <p>Template: <b>{templateProjectName} (#{templateProjectId})</b></p>
+            <p>{!useTemplatePlots && "Don't "}Use template plot design</p>
+            <p>{!useTemplateWidgets && "Don't "}Use template widgets</p>
+          </>
+        )}
         <p > <b>Project Options: </b></p>
         <p > {!showGee && "Don't "} Show GEE Script Link on Collection Page</p>
         <p > {!extraPlotColumns && "Don't "} Show Extra Plot Columns on Collection Page</p>
@@ -88,7 +95,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         <b >Imagery Used:</b>
         {selectedImagery.map((i)=>{
           return (
-            <p > {imageryList[0] ? imageryList.filter(({id})=> id === i)[0].title : null} </p>
+            <p> {imageryList[0] ? imageryList.filter(({id})=> id === i)[0]?.title : null} </p>
           );
         })}
       </div>
@@ -100,7 +107,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const plotsToShow = useSubscription([sub_ids.plots.plotFeatures]) || [];
 
     return (
-      <div className='wizard-card' style={{ display: 'flex', flexDirection: 'column', height: '420px', boxSizing: 'border-box' }}>
+      <div className='wizard-card' style={{ display: 'flex', flexDirection: 'column', height: '555px', boxSizing: 'border-box' }}>
         <div className='review-card-header'>
           <p className="card-title">BOUNDARY</p>
           <div style={{ cursor: 'pointer' }} onClick={()=>{dispatch([event_ids.currentStep, 'boundary']);}}>
@@ -131,8 +138,43 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
   function PlotsCard () {
     const plotDistribution = useSubscription([sub_ids.plots.plotDistribution]);
     const numPlots = useSubscription([sub_ids.plots.numPlots]);
+    const totalPlots = useSubscription([sub_ids.plots.totalPlots]) || 0;
     const plotShape = useSubscription([sub_ids.plots.plotShape]);
     const plotSize = useSubscription([sub_ids.plots.plotSize]);
+    const institutionUsers = useSubscription([sub_ids.institution.users]) ?? [];
+    const designSettings = useSubscription([sub_ids.plots.designSettings]);
+    const userMethod = designSettings?.userAssignment?.userMethod ?? 'none';
+    const usersAssigned = designSettings?.userAssignment?.users ?? [];
+    const qaqcMethod = designSettings?.qaqcAssignment?.qaqcMethod ?? 'none';
+    const timesToReview = designSettings?.qaqcAssignment?.timesToReview;
+    const smes = designSettings?.qaqcAssignment?.smes ?? [];
+
+    // String() on both sides so it works whether ids arrive as numbers or strings
+    const emailsFor = (ids) =>
+      ids.map((id) => institutionUsers.find((u) => String(u.id) === String(id))?.email ?? id);
+
+    const userAssignmentText = userMethod === 'none'
+      ? 'N/A'
+      : usersAssigned.length > 0
+        ? `${userMethod} (${emailsFor(usersAssigned).join(', ')})`
+        : userMethod;
+
+    const reviewText = `${timesToReview} review${timesToReview === 1 ? '' : 's'} per plot`;
+
+    const qaqcText = (() => {
+      switch (qaqcMethod) {
+      case 'none':
+        return 'N/A';
+      case 'overlap':
+        return `overlap, ${reviewText}`;
+      case 'sme':
+        return smes.length > 0
+          ? `sme (${emailsFor(smes).join(', ')}), ${reviewText}`
+          : `sme, ${reviewText}`;
+      default:
+        return `${qaqcMethod}, ${reviewText}`;
+      }
+    })();
 
     return (
       <div className='wizard-card'>
@@ -143,11 +185,11 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           </div>
         </div>
         <p>Plot Distribution: <b>{plotDistribution}</b></p>
-        <p>Number of Plots: <b>{numPlots}</b></p>
+        <p>Number of Plots: <b>{totalPlots}</b></p>
         <p>Plot Shape: <b>{plotShape}</b></p>
         <p>Plot Size: <b>{plotSize}</b></p>
-        <p>User Assignment: <b>{''}</b></p>
-        <p>Quality Control: <b>{''}</b></p>
+        <p>User Assignment: <b>{userAssignmentText}</b></p>
+        <p>Quality Control: <b>{qaqcText}</b></p>
       </div>
     );
   }
@@ -156,7 +198,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const allowDrawnSamples = useSubscription([sub_ids.samples.allowDrawnSamples]);
     const sampleDistribution = useSubscription([sub_ids.samples.sampleDistribution]);
     const samplesPerPlot = useSubscription([sub_ids.samples.samplesPerPlot]);
-    const numPlots = useSubscription([sub_ids.plots.numPlots]);
+    const totalPlots = useSubscription([sub_ids.plots.totalPlots]) || 0;
 
     return (
       <div className='wizard-card'>
@@ -168,7 +210,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         </div>
         <p>Sample Distribution: <b>{sampleDistribution}</b></p>
         <p>Samples Per Plot: <b>{samplesPerPlot}</b></p>
-        <p>Total Samples: <b>{Number(samplesPerPlot) * Number(numPlots)}</b></p>
+        <p>Total Samples: <b>{Number(samplesPerPlot) * Number(totalPlots)}</b></p>
         <b > {!allowDrawnSamples && "Don't "} Allow users to draw their own samples</b>
       </div>
     );
@@ -239,6 +281,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           .then((data) => {
             dispatch([event_ids.projectDetails, data]);
             dispatch([event_ids.availability, 'published']);
+            window.location.assign(`project-wizard?projectId=${projectId}&institutionId=${institutionId}`);
           })
           .catch((error) => {
             console.log(error);

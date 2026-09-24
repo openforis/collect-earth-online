@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { atom } from 'jotai';
-import { initAppDb , regEvent , regEffect , dispatch , regSub , current } from '@flexsurfer/reflex';
-
+import { initAppDb , regEvent , regEffect , dispatch , regSub , current, useSubscription } from '@flexsurfer/reflex';
+import { enableTracing, enableTracePrint } from '@flexsurfer/reflex';
 import {
   validateOverview,
   validateImagery,
@@ -14,87 +14,9 @@ import {
 
 export const previewSelectedSampleIdAtom = atom(1);
 export const previewUserSamplesAtom = atom({});
+if (process.env.NODE_ENV !== 'production') { enableTracing(); enableTracePrint(); }  
 
-
-const projectWizardDb = {
-  institutionId: -1,
-  errors: [],
-  currentStep: null,
-  modal: null,
-  projectSource: null,
-  templateProjectId: -1,
-  projectId: -1,
-  projectDraftId: -1,
-  useTemplatePlots: false,
-  useTemplateWidgets: false,
-  invalidSteps: [],
-  availability: '',
-  publishedDate: '',
-  createdDate: '',
-  closedDate: '',
-    // overview
-  'overview.projectName': '',
-  'overview.projectDescription': '',
-  'overview.projectType': 'regular',
-  'overview.learningMaterial': '',
-  'overview.visibility': 'institution',
-  // overview.projectOptions
-  'overview.projectOptions.gee': false,
-  'overview.projectOptions.extraPlotColumns': false,
-  'overview.projectOptions.plotConfidence': false,
-  'overview.projectOptions.autoGeo': true,
-  'overview.projectOptions.plotSimilarity': false,
-  'overview.useTemplatePlots': false,
-  'imagery.imageryList': [],
-  'imagery.previewId': '',
-  'institutionImagery': [],
-  // boundary
-  'boundary.generationMethod': 'manual',
-  'boundary.aoiFeatures': [],
-  'boundary.aoiFileName': '',
-  // plots
-  'plots.plots': [],
-  'plots.plotDistribution': 'random',
-  'plots.numPlots': '',
-  'plots.plotSize': '',
-  'plots.plotShape': 'circle',
-  'plots.plotSpacing': null,
-  'plots.shufflePlots': false,
-  'plots.plotsSource': null,
-  'plots.totalPlots': 0,
-  'plots.plotFeatures': [],
-  'plots.plotFileName': '',
-  'plots.plotFileBase64': '',
-  'plots.referencePlotId': -1,
-  'plots.similariyYears': null,
-  'plots.designSettings': {
-    sampleGeometries: {
-      points:   true,
-      lines:    true,
-      polygons: true},
-    userAssignment: {
-      userMethod:  "none",
-      users:       [],
-      percents:    []},
-    qaqcAssignment: {
-      qaqcMethod:    "none",
-      percent:       0,
-      smes:          [],
-      timesToReview: 2}},
-  'plots.plotSimilarityDetails': { referencePlotId: "", years: [] },
-  // samples
-  'samples.sampleDistribution': 'random',
-  'samples.samplesPerPlot': 1,
-  'samples.sampleResolution': 0,
-  'samples.sampleFileName': '',
-  'samples.sampleFeautres': [],
-  'samples.allowDrawnSamples': false,
-  'samples.sampleFileBase64': '',
-  'questions': {},
-  'rules': [],
-  'rules.search': null,
-  'rules.filter': null,
-  'rules.selectedRuleType': null,
+const newRuleDefaults = {
   'rules.newRule.label': null,
   'rules.newRule.regex': "",
   'rules.newRule.questionId': -1,
@@ -113,6 +35,99 @@ const projectWizardDb = {
   'rules.newRule.answerId1': -1,
   'rules.newRule.answerId2': -1,
   'rules.newRule.answers': [],
+};
+
+const projectWizardDb = {
+  institutionId: -1,
+  errors: [],
+  currentStep: null,
+  modal: null,
+  projectSource: null,
+  projectId: -1,
+  projectDraftId: -1,
+  templateProjectId: -1,
+  templateProjectName: '',
+  useTemplatePlots: false,
+  templatePlotDesign: null,
+  useTemplateWidgets: false,
+  originalProject: {},
+  invalidSteps: [],
+  availability: '',
+  publishedDate: '',
+  createdDate: '',
+  closedDate: '',
+  // overview
+  'overview.projectName': '',
+  'overview.projectDescription': '',
+  'overview.projectType': 'regular',
+  'overview.learningMaterial': '',
+  'overview.visibility': 'institution',
+  // overview.projectOptions
+  'overview.projectOptions.showGEEScript': false,
+  'overview.projectOptions.showPlotInformation': false,
+  'overview.projectOptions.collectConfidence': false,
+  'overview.projectOptions.autoLaunchGeoDash': true,
+  'overview.projectOptions.plotSimilarity': false,
+  'overview.useTemplatePlots': false,
+  'imagery.imageryList': [],
+  'imagery.previewId': '',
+  'institutionImagery': [],
+  // boundary
+  'boundary.generationMethod': 'manual',
+  'boundary.aoiFeatures': [],
+  'boundary.aoiFileName': '',
+  // plots
+  'plots.plotDistribution': 'random',
+  'plots.numPlots': '',
+  'plots.plotSize': '',
+  'plots.plotShape': 'circle',
+  'plots.plotSpacing': null,
+  'plots.shufflePlots': false,
+  'plots.plotsSource': null,
+  'plots.totalPlots': 0,
+  'plots.plotFeatures': [],
+  'plots.plotFileName': '',
+  'plots.plotFileBase64': null,
+  'plots.plotIds': [],
+  'plots.referencePlotId': -1,
+  'plots.similariyYears': null,
+  'plots.designSettings': {
+    sampleGeometries: {
+      points:   true,
+      lines:    true,
+      polygons: true},
+    userAssignment: {
+      userMethod:  "none",
+      users:       [],
+      percents:    []},
+    qaqcAssignment: {
+      qaqcMethod:    "none",
+      percent:       0,
+      smes:          [],
+      timesToReview: 2}},
+  'plots.plotSimilarityDetails': { referencePlotId: "", years: [] },
+  'plots.newPlotDistribution': 'csv',
+  'plots.newPlotSize': '',
+  'plots.newPlotShape': 'circle',
+  'plots.newTotalPlots': 0,
+  'plots.newPlotFeatures': [],
+  'plots.newPlotFileName': '',
+  'plots.newPlotFileBase64': null,
+  'plots.maxId': null,
+  // samples
+  'samples.sampleDistribution': 'random',
+  'samples.samplesPerPlot': 1,
+  'samples.sampleResolution': 0,
+  'samples.sampleFileName': '',
+  'samples.sampleFeautres': [],
+  'samples.allowDrawnSamples': false,
+  'samples.sampleFileBase64': null,
+  'questions': {},
+  'rules': [],
+  'rules.search': null,
+  'rules.filter': null,
+  'rules.selectedRuleType': null,
+  ...newRuleDefaults,
   'institution.users': []
 };
 
@@ -120,13 +135,18 @@ initAppDb(projectWizardDb);
 
 export const event_ids = {
   institutionId: 'institutionId',
-  templateProject: 'templateProject',
+  projectId: 'projectId',
   draftProject: 'draftProject',
   editProject: 'editProject',
   submitForm: 'submitForm',
   saveDraft: 'saveDraft',
   saveProject: 'saveProject',
   publishProject: 'publishProject',
+  templateProjectId: 'templateProjectId',
+  templateProjectName: '',
+  templatePlotDesign: 'templatePlotDesign',
+  templateProject: 'templateProject',
+  importProject: 'importProject',
   errors: 'errors',
   continueHandler: 'continueHandler',
   validate: 'validate',
@@ -137,19 +157,19 @@ export const event_ids = {
   successResponse: 'successReponse',
   draftSuccess:'draftSuccess', 
   overview: {projectName: 'overview.projectName',
-             projectDescription: 'overview.projectDescription',
-             projectType: 'overview.projectType',
-             learningMaterial: 'overview.learningMaterial',
-             visibility: 'overview.visibility',
-             useTemplatePlots: 'overview.useTemplatePlots',
-             useTemplateWidgets: 'overview.useTemplateWidgets',
-             projectOptions: {
-               gee: 'overview.projectOptions.gee',
-               extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
-               plotConfidence: 'overview.projectOptions.plotConfidence',
-               autoGeo: 'overview.projectOptions.autoGeo',
-               plotSimilarity: 'overview.projectOptions.plotSimilarity',
-             }},
+    projectDescription: 'overview.projectDescription',
+    projectType: 'overview.projectType',
+    learningMaterial: 'overview.learningMaterial',
+    visibility: 'overview.visibility',
+    useTemplatePlots: 'overview.useTemplatePlots',
+    useTemplateWidgets: 'overview.useTemplateWidgets',
+    projectOptions: {
+      showGEEScript: 'overview.projectOptions.showGEEScript',
+      showPlotInformation: 'overview.projectOptions.showPlotInformation',
+      collectConfidence: 'overview.projectOptions.collectConfidence',
+      autoLaunchGeoDash: 'overview.projectOptions.autoLaunchGeoDash',
+      plotSimilarity: 'overview.projectOptions.plotSimilarity',
+    }},
   projectDetails: 'projectDetails',
   imagery: {
     imageryList: 'imagery.imageryList',
@@ -174,10 +194,18 @@ export const event_ids = {
     plotFeatures: 'plots.plotFeatures',
     plotFileName: 'plots.plotFileName',
     plotFileBase64: 'plots.plotFileBase64',
+    plotIds: 'plots.plotIds',
     designSettings: 'plots.designSettings',
     plotSimilarityDetails: 'plots.plotSimilarityDetails',
     plotsSource: 'plots.plotsSource',
     serverPlots: 'plots.serverPlots',
+    newPlotDistribution: 'plots.newPlotDistribution',
+    newPlotSize: 'plots.newPlotSize',
+    newPlotShape: 'plots.newPlotShape',
+    newTotalPlots: 'plots.newTotalPlots',
+    newPlotFeatures: 'plots.newPlotFeatures',
+    newPlotFileName: 'plots.newPlotFileName',
+    newPlotFileBase64: 'plots.newPlotFileBase64',
   },
   samples: {
     sampleDistribution: 'samples.sampleDistribution',
@@ -192,7 +220,9 @@ export const event_ids = {
     setQuestions: 'setQuestions',
     updateQuestion: 'updateQuestion',
     updateAnswer: 'updateAnswer',
-    moveQuestion: 'moveQuestion'},
+    moveQuestion: 'moveQuestion',
+    removeQuestion: 'removeQuestion',
+  },
   rules: {
     rules: 'rules',
     removeRule: 'rules.removeRule',
@@ -200,6 +230,7 @@ export const event_ids = {
     filter: 'rules.filter',
     selectedRuleType: 'rules.selectedRuleType',
     newRule: {
+      reset: 'rules.newRule.reset',
       label: 'rules.newRule.label',
       answers: 'rules.newRule.answers',
       addAnswer: 'rules.newRule.addAnswer',
@@ -221,9 +252,9 @@ export const event_ids = {
       incompatQuestionId: 'rules.newRule.incompatQuestionId',
       incompatAnswerId: 'rules.newRule.incompatAnswerId',
     }},
-    institution: {
-      users: 'institution.users',
-      imagery: 'institutionImagery'}};
+  institution: {
+    users: 'institution.users',
+    imagery: 'institutionImagery'}};
 
 export const sub_ids = {
   institutionId: 'institutionId',
@@ -235,8 +266,9 @@ export const sub_ids = {
   projectSource: 'projectSource',
   successResponse: 'successReponse',
   templateProjectId: 'templateProjectId',
-  useTemplatePlots: 'useTemplatePlots',
-  useTemplateWidgets: 'useTemplateWidgets',
+  templateProjectName: '',
+  templatePlotDesign: 'templatePlotDesign',
+  originalProject: 'originalProject',
   validStep: 'validStep',
   invalidSteps: 'invalidSteps',
   availability: 'availability',
@@ -244,19 +276,19 @@ export const sub_ids = {
   createdDate: 'createdDate',
   closedDate: 'closedDate',
   overview: {projectName: 'overview.projectName',
-             projectDescription: 'overview.projectDescription',
-             projectType: 'overview.projectType',
-             learningMaterial: 'overview.learningMaterial',
-             visibility: 'overview.visibility',
-             useTemplatePlots: 'overview.useTemplatePlots',
-             useTemplateWidgets: 'overview.useTemplateWidgets',
-             projectOptions: {
-               gee: 'overview.projectOptions.gee',
-               extraPlotColumns: 'overview.projectOptions.extraPlotColumns',
-               plotConfidence: 'overview.projectOptions.plotConfidence',
-               autoGeo: 'overview.projectOptions.autoGeo',
-               plotSimilarity: 'overview.projectOptions.plotSimilarity',
-             }},
+    projectDescription: 'overview.projectDescription',
+    projectType: 'overview.projectType',
+    learningMaterial: 'overview.learningMaterial',
+    visibility: 'overview.visibility',
+    useTemplatePlots: 'overview.useTemplatePlots',
+    useTemplateWidgets: 'overview.useTemplateWidgets',
+    projectOptions: {
+      showGEEScript: 'overview.projectOptions.showGEEScript',
+      showPlotInformation: 'overview.projectOptions.showPlotInformation',
+      collectConfidence: 'overview.projectOptions.collectConfidence',
+      autoLaunchGeoDash: 'overview.projectOptions.autoLaunchGeoDash',
+      plotSimilarity: 'overview.projectOptions.plotSimilarity',
+    }},
   projectDetails: 'projectDetails',
   imagery: {
     imageryList: 'imagery.imageryList',
@@ -278,9 +310,18 @@ export const sub_ids = {
     plotFeatures: 'plots.plotFeatures',
     plotFileName: 'plots.plotFileName',
     plotFileBase64: 'plots.plotFileBase64',
+    plotIds: 'plots.plotIds',
     designSettings: 'plots.designSettings',
     plotSimilarityDetails: 'plots.plotSimilarityDetails',
     plotsSource: 'plots.plotsSource',
+    newPlotDistribution: 'plots.newPlotDistribution',
+    newPlotSize: 'plots.newPlotSize',
+    newPlotShape: 'plots.newPlotShape',
+    newTotalPlots: 'plots.newTotalPlots',
+    newPlotFeatures: 'plots.newPlotFeatures',
+    newPlotFileName: 'plots.newPlotFileName',
+    newPlotFileBase64: 'plots.newPlotFileBase64',
+    maxId: 'plots.maxId',
   },
   samples: {
     sampleDistribution: 'samples.sampleDistribution',
@@ -294,29 +335,29 @@ export const sub_ids = {
     questions: 'questions'
   },
   rules: {rules: 'rules',
-          search: 'rules.search',
-          filter: 'rules.filter',
-          selectedRuleType: 'rules.selectedRuleType',
-          newRule: {
-            label: 'rules.newRule.label',
-            answers: 'rules.newRule.answers',
-            regex: 'rules.newRule.regex',            
-            min: 'rules.newRule.min',
-            max: 'rules.newRule.max',
-            validSum: 'rules.newRule.validSum',
-            questionId: 'rules.newRule.questionId',
-            questionIds: 'rules.newRule.questionIds',
-            questionIds1: 'rules.newRule.questionIds1',
-            questionIds2: 'rules.newRule.questionIds2',
-            questionId1: 'rules.newRule.questionId1',
-            questionId2: 'rules.newRule.questionId2',
-            answerId1: 'rules.newRule.answerId1',
-            answerId2: 'rules.newRule.answerId2',
-            tempQuestionId: 'rules.newRule.tempQuestionId',
-            tempAnswerId: 'rules.newRule.tempAnswerId',
-            incompatQuestionId: 'rules.newRule.incompatQuestionId',
-            incompatAnswerId: 'rules.newRule.incompatAnswerId',
-          }},
+    search: 'rules.search',
+    filter: 'rules.filter',
+    selectedRuleType: 'rules.selectedRuleType',
+    newRule: {
+      label: 'rules.newRule.label',
+      answers: 'rules.newRule.answers',
+      regex: 'rules.newRule.regex',
+      min: 'rules.newRule.min',
+      max: 'rules.newRule.max',
+      validSum: 'rules.newRule.validSum',
+      questionId: 'rules.newRule.questionId',
+      questionIds: 'rules.newRule.questionIds',
+      questionIds1: 'rules.newRule.questionIds1',
+      questionIds2: 'rules.newRule.questionIds2',
+      questionId1: 'rules.newRule.questionId1',
+      questionId2: 'rules.newRule.questionId2',
+      answerId1: 'rules.newRule.answerId1',
+      answerId2: 'rules.newRule.answerId2',
+      tempQuestionId: 'rules.newRule.tempQuestionId',
+      tempAnswerId: 'rules.newRule.tempAnswerId',
+      incompatQuestionId: 'rules.newRule.incompatQuestionId',
+      incompatAnswerId: 'rules.newRule.incompatAnswerId',
+    }},
   institution: {
     imagery: 'institutionImagery',
     users: 'institution.users'}
@@ -324,6 +365,7 @@ export const sub_ids = {
 
 export const effects = {};
 
+regSub(sub_ids.projectId, sub_ids.projectId);
 regSub(sub_ids.currentStep, sub_ids.currentStep);
 regSub(sub_ids.modal, sub_ids.modal);
 regSub(sub_ids.projectSource, sub_ids.projectSource);
@@ -331,6 +373,7 @@ regSub(sub_ids.errors, sub_ids.errors);
 regSub(sub_ids.successResponse, sub_ids.successResponse);
 regSub(sub_ids.institutionId, sub_ids.institutionId);
 regSub(sub_ids.templateProjectId, sub_ids.templateProjectId);
+regSub(sub_ids.templatePlotDesign, sub_ids.templatePlotDesign);
 regSub(sub_ids.useTemplatePlots, sub_ids.useTemplatePlots);
 regSub(sub_ids.useTemplateWidgets, sub_ids.useTemplateWidgets);
 regSub(sub_ids.availability, sub_ids.availability);
@@ -343,13 +386,14 @@ regSub(sub_ids.overview.projectName, sub_ids.overview.projectName);
 regSub(sub_ids.overview.projectDescription, sub_ids.overview.projectDescription);
 regSub(sub_ids.overview.learningMaterial, sub_ids.overview.learningMaterial);
 regSub(sub_ids.overview.visibility, sub_ids.overview.visibility);
-regSub(sub_ids.overview.projectOptions.gee, sub_ids.overview.projectOptions.gee);
-regSub(sub_ids.overview.projectOptions.extraPlotColumns, sub_ids.overview.projectOptions.extraPlotColumns);
-regSub(sub_ids.overview.projectOptions.plotConfidence, sub_ids.overview.projectOptions.plotConfidence);
-regSub(sub_ids.overview.projectOptions.autoGeo, sub_ids.overview.projectOptions.autoGeo);
+regSub(sub_ids.overview.projectOptions.showGEEScript, sub_ids.overview.projectOptions.showGEEScript);
+regSub(sub_ids.overview.projectOptions.showPlotInformation, sub_ids.overview.projectOptions.showPlotInformation);
+regSub(sub_ids.overview.projectOptions.collectConfidence, sub_ids.overview.projectOptions.collectConfidence);
+regSub(sub_ids.overview.projectOptions.autoLaunchGeoDash, sub_ids.overview.projectOptions.autoLaunchGeoDash);
 regSub(sub_ids.overview.useTemplatePlots, sub_ids.overview.useTemplatePlots);
 regSub(sub_ids.overview.useTemplateWidgets, sub_ids.overview.useTemplateWidgets);
 regSub(sub_ids.overview.projectOptions.plotSimilarity, sub_ids.overview.projectOptions.plotSimilarity);
+regSub(sub_ids.templateProjectName, sub_ids.templateProjectName);
 
 //imagery
 regSub(sub_ids.imagery.imageryList, sub_ids.imagery.imageryList);
@@ -361,7 +405,6 @@ regSub(sub_ids.boundary.aoiFeatures, sub_ids.boundary.aoiFeatures);
 regSub(sub_ids.boundary.aoiFileName, sub_ids.boundary.aoiFileName);
 
 // plots
-regSub(sub_ids.plots.plots, sub_ids.plots.plots);
 regSub(sub_ids.plots.plotDistribution, sub_ids.plots.plotDistribution);
 regSub(sub_ids.plots.numPlots, sub_ids.plots.numPlots);
 regSub(sub_ids.plots.plotSize, sub_ids.plots.plotSize);
@@ -373,8 +416,17 @@ regSub(sub_ids.plots.totalPlots, sub_ids.plots.totalPlots);
 regSub(sub_ids.plots.plotFeatures, sub_ids.plots.plotFeatures);
 regSub(sub_ids.plots.plotFileName, sub_ids.plots.plotFileName);
 regSub(sub_ids.plots.plotFileBase64, sub_ids.plots.plotFileBase64);
+regSub(sub_ids.plots.plotIds, sub_ids.plots.plotIds);
 regSub(sub_ids.plots.designSettings, sub_ids.plots.designSettings);
 regSub(sub_ids.plots.plotSimilarityDetails, sub_ids.plots.plotSimilarityDetails);
+regSub(sub_ids.plots.newPlotDistribution, sub_ids.plots.newPlotDistribution);
+regSub(sub_ids.plots.newPlotSize, sub_ids.plots.newPlotSize);
+regSub(sub_ids.plots.newPlotShape, sub_ids.plots.newPlotShape);
+regSub(sub_ids.plots.newTotalPlots, sub_ids.plots.newTotalPlots);
+regSub(sub_ids.plots.newPlotFeatures, sub_ids.plots.newPlotFeatures);
+regSub(sub_ids.plots.newPlotFileName, sub_ids.plots.newPlotFileName);
+regSub(sub_ids.plots.newPlotFileBase64, sub_ids.plots.newPlotFileBase64);
+regSub(sub_ids.plots.maxId, sub_ids.plots.maxId);
 
 // samples
 regSub(sub_ids.samples.sampleDistribution, sub_ids.samples.sampleDistribution);
@@ -413,13 +465,34 @@ regSub(sub_ids.rules.newRule.incompatAnswerId, sub_ids.rules.newRule.incompatAns
 // institution
 regSub(sub_ids.institution.users, sub_ids.institution.users);
 regSub(sub_ids.institution.imagery, sub_ids.institution.imagery);
-
 regSub(sub_ids.invalidSteps, sub_ids.invalidSteps);
+
+
+
+// EVENTS
+
+regEvent(event_ids.projectId, ({ draftDb }, projectId) => {
+  draftDb[sub_ids.projectId] = projectId;
+});
+
+regEvent(event_ids.templateProjectName, ({ draftDb }, name) => {
+  draftDb[sub_ids.templateProjectName] = name;
+});
+
+regEvent(event_ids.templatePlotDesign, ({ draftDb }, clear = false) => {
+  draftDb[sub_ids.templatePlotDesign] = clear ? null : pickKeys(current(draftDb), PLOT_DESIGN_KEYS);
+});
 
 regEvent(event_ids.projectDetails, ({ draftDb }, projectDetails) => {
   draftDb[sub_ids.projectDetails] = projectDetails;
 });
 
+regEvent(event_ids.overview.useTemplatePlots, ({ draftDb }, useTemplatePlots) => {
+  draftDb[sub_ids.overview.useTemplatePlots] = useTemplatePlots;
+  const snapshot = current(draftDb[sub_ids.templatePlotDesign]);
+  if (!snapshot) return;
+  Object.assign(draftDb, useTemplatePlots ? snapshot : pickKeys(projectWizardDb, PLOT_DESIGN_KEYS));
+});
 
 regEvent(event_ids.errors, ({ draftDb }, errors) => {
   draftDb[sub_ids.errors] = errors;
@@ -494,14 +567,16 @@ regEvent(event_ids.editProject, ({ draftDb }, projectId) => {
   dispatch([event_ids.currentStep, 'review']);
 });
 
+const plotDesignLocked = (draftDb) =>
+  current(draftDb[sub_ids.templateProjectId]) > 0
+    && current(draftDb[sub_ids.projectId]) === -1
+    && Boolean(current(draftDb[sub_ids.overview.useTemplatePlots]));
 
 export function buildProject (draftDb, sub_ids) {
-  const projectId = -1; //TODO
+  const projectId = current(draftDb[sub_ids.projectId]);
   const plotDistribution = current(draftDb[sub_ids.plots.plotDistribution]);
-  const originalProject = {plotDistribution: ''}; //TODO
+  const originalProject = current(draftDb[sub_ids.originalProject]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
-  const plotFileNeeded = !useTemplatePlots &&
-        (projectId === -1 || plotDistribution !== originalProject.plotDistribution);
   const name = current(draftDb[sub_ids.overview.projectName]);
   const description= current(draftDb[sub_ids.overview.projectDescription]);
   const privacyLevel = current(draftDb[sub_ids.overview.visibility]);
@@ -521,58 +596,94 @@ export function buildProject (draftDb, sub_ids) {
   const projectImageryList = current(draftDb[sub_ids.imagery.imageryList]);
   const aoiFileName = current(draftDb[sub_ids.boundary.aoiFileName]);
   const type = current(draftDb[sub_ids.overview.projectType]);
-  const gee = current(draftDb[sub_ids.overview.projectOptions.gee]);
-  const extraPlotColumns = current(draftDb[sub_ids.overview.projectOptions.extraPlotColumns]);
-  const plotConfidence = current(draftDb[sub_ids.overview.projectOptions.plotConfidence]);
-  const autoGeo = current(draftDb[sub_ids.overview.projectOptions.autoGeo]);
-  const projectOptions = {gee, extraPlotColumns, plotConfidence, autoGeo}
+  const gee = current(draftDb[sub_ids.overview.projectOptions.showGEEScript]);
+  const showPlotInformation = current(draftDb[sub_ids.overview.projectOptions.showPlotInformation]);
+  const collectConfidence = current(draftDb[sub_ids.overview.projectOptions.collectConfidence]);
+  const autoLaunchGeoDash = current(draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash]);
+  const plotSimilarity = current(draftDb[sub_ids.overview.projectOptions.plotSimilarity]);
+  const projectOptions = {
+    showGEEScript: gee,
+    showPlotInformation: showPlotInformation,
+    collectConfidence: collectConfidence,
+    autoLaunchGeoDash: autoLaunchGeoDash,
+    plotSimilarity,
+  };
   const plotSpacing = Number(current(draftDb[sub_ids.plots.plotSpacing]));
   const shufflePlots = current(draftDb[sub_ids.plots.shufflePlots]);
   const surveyRules = current(draftDb[sub_ids.rules.rules]);
   const plotFileName = current(draftDb[sub_ids.plots.plotFileName]);
   const plotFileBase64 = current(draftDb[sub_ids.plots.plotFileBase64]);
   const sampleFileBase64 = current(draftDb[sub_ids.samples.sampleFileBase64]);
+  const availability = current(draftDb[sub_ids.availability]);
+  const isPublished = availability === 'published';
+  const newPlotDistribution = current(draftDb[sub_ids.plots.newPlotDistribution]);
+  const newPlotSize = current(draftDb[sub_ids.plots.newPlotSize]);
+  const newPlotShape = current(draftDb[sub_ids.plots.newPlotShape]);
+  const newTotalPlots = current(draftDb[sub_ids.plots.newTotalPlots]);
+  const newPlotFileName = current(draftDb[sub_ids.plots.newPlotFileName]);
+  const newPlotFileBase64 = current(draftDb[sub_ids.plots.newPlotFileBase64]);
+  const learningMaterial = current(draftDb[sub_ids.overview.learningMaterial]);
+  const isEditing = projectId > 0;
+  const original = current(draftDb[sub_ids.originalProject]) || {};
+  const designChanged = (keys) =>
+    !_.isEqual(pickKeys(current(draftDb), keys), pickKeys(original, keys));
+  const locked = plotDesignLocked(draftDb);
+  const plotFileNeeded = !locked
+    && (!isEditing || plotDistribution !== original['plots.plotDistribution']);
 
-  return {name ,
-	  description,
-	  privacyLevel,
-	  imageryId,
-	  aoiFeatures,
-	  plotDistribution,
-	  numPlots,
+  return {
+    name,
+    description,
+    privacyLevel,
+    learningMaterial,
+    imageryId,
+    aoiFeatures,
+    plotDistribution,
+    numPlots,
 
-          projectImageryList,
-          aoiFileName,
-          type,
-          projectOptions,
-          plotSpacing,
-          shufflePlots,
-          surveyRules,
-          plotFileName,
-          plotFileBase64,
-          sampleFileBase64,
+    projectImageryList,
+    aoiFileName,
+    type,
+    projectOptions,
+    plotSpacing,
+    shufflePlots,
+    surveyRules,
+    plotFileName,
+    plotFileBase64,
+    sampleFileBase64,
           
-          //TODO: are we using these values for validation?
-	  useTemplatePlots,
-          //originalProject: TODO!!!
+    //TODO: are we using these values for validation?
+    useTemplatePlots,
+    //originalProject: TODO!!!
           
-	  designSettings,
-	  totalPlots,
-          plotSize,
-	  plotFileNeeded,
-          allowDrawnSamples,
-	  samplesPerPlot,
-	  plotShape,
-	  sampleDistribution,
-          sampleFileName,
-          sampleResolution,
-          plotLimit: 5000,
-          sampleLimit: 35000,
-          perPlotLimit: 200,
-	  surveyQuestions: Object.entries(surveyQuestions).reduce((acc, [idx, val])=>{
-            return {...acc, [idx]: val};
-          },
-            {}) };
+    designSettings,
+    totalPlots,
+    plotSize,
+    plotFileNeeded,
+    allowDrawnSamples,
+    samplesPerPlot,
+    plotShape,
+    sampleDistribution,
+    sampleFileName,
+    sampleResolution,
+    skipPlotValidation:   locked || (isEditing && !designChanged(PLOT_DESIGN_FIELDS)),
+    skipSampleValidation: locked || (isEditing && !designChanged(SAMPLE_DESIGN_FIELDS)),
+    plotLimit: 5000,
+    sampleLimit: 35000,
+    perPlotLimit: 200,
+    ...(isPublished && newPlotFileName && {
+      append: true,
+      newPlotDistribution,
+      newPlotFileName,
+      newPlotFileBase64,
+      plotShape: newPlotShape,
+      plotSize: newPlotSize,
+      totalPlots: newTotalPlots,
+    }),
+    surveyQuestions: Object.entries(surveyQuestions).reduce((acc, [idx, val])=>{
+      return {...acc, [idx]: val};
+    },{}),
+  };
 }
 
 regEvent(event_ids.currentStep, ({ draftDb }, currentStep) => {
@@ -599,19 +710,19 @@ regEvent(event_ids.validate, ({ draftDb }, step='wizard') => {
   case 'imagery': {
     const errors = validateImagery(form).filter((e)=>e);
     errors.length && dispatch([event_ids.errors, [['imagery', errors]]]);
-  break;}
+    break;}
   case 'plots' : {
     const errors = validatePlots(form).filter((e)=>e);
     errors.length && dispatch([event_ids.errors, [['plots', errors]]]);
-  break;}
+    break;}
   case 'samples' : {
     const errors = validateSamples(form).filter((e)=>e);
     errors.length && dispatch([event_ids.errors, [['samples', errors]]]);
-  break;}
+    break;}
   case 'questions' : {
     const errors = validateQuestions(form).filter((e)=>e);
     errors.length && dispatch([event_ids.errors, [['questions', errors]]]);
-  break;}
+    break;}
   case 'review' : {
     const errors = validateWizard(form);
     errors && dispatch([event_ids.errors, errors]);
@@ -676,7 +787,7 @@ regEvent(event_ids.overview.useTemplateWidgets, ({ draftDb }, useTemplateWidgets
   draftDb[sub_ids.overview.useTemplateWidgets] = useTemplateWidgets;
 });
 
-regEvent(event_ids.templateProject, ({ draftDb }, {
+function applyProjectToDb (draftDb, {
   allowDrawnSamples,
   aoiFeatures,
   aoiFileName,
@@ -686,12 +797,12 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   name,
   numPlots = 0,
   plotDistribution,
-  plotfileName,
+  plotFileName,
   plotShape,
   plotSize,
   plotSpacing = -1,
-  projectOptions = {gee : false, extraPlotColumns: false, plotConfidence: false, autoGeo: false},
-  projectType = 'regular',
+  projectOptions = {showGEEScript : false, showPlotInformation: false, collectConfidence: false, autoLaunchGeoDash: false},
+  type,
   referencePlot = -1,
   sampleDistribution,
   sampleFileName,
@@ -699,24 +810,23 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   samplesPerPlot,
   surveyQuestions,
   surveyRules = [],
-  visibility = 'institution',
   availability = '',
   createdDate = '',
   publishedDate = '',
   closedDate = '',
+  privacyLevel,
 
-}) => {
+}) {
   draftDb[sub_ids.overview.projectName] = name;
   draftDb[sub_ids.overview.projectDescription] = description;
-  draftDb[sub_ids.overview.projectType] = projectType;
+  draftDb[sub_ids.overview.projectType] = type;
   draftDb[sub_ids.overview.learningMaterial] = learningMaterial;
-  draftDb[sub_ids.overview.visibility] = visibility;
-  draftDb[sub_ids.projectOptions] = {
-    gee:projectOptions.showGEEScript, 
-    extraPlotColumns: projectOptions.showPlotInformation,
-    plotConfidence: projectOptions.collectConfidence,
-    autoGeo: projectOptions.autoLaunchGeoDash
-  };
+  draftDb[sub_ids.overview.visibility] = privacyLevel ?? draftDb[sub_ids.overview.visibility];
+  draftDb[sub_ids.overview.projectOptions.showGEEScript] = projectOptions.showGEEScript;
+  draftDb[sub_ids.overview.projectOptions.showPlotInformation] = projectOptions.showPlotInformation;
+  draftDb[sub_ids.overview.projectOptions.collectConfidence] = projectOptions.collectConfidence;
+  draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash] = projectOptions.autoLaunchGeoDash;
+  draftDb[sub_ids.overview.projectOptions.plotSimilarity] = projectOptions.plotSimilarity ?? false;
   draftDb[sub_ids.boundary.generationMethod] =
   ['shp', 'geojson', 'csv'].includes(plotDistribution) ? 'plotFile' : 'manual';
   draftDb[sub_ids.boundary.aoiFeatures] = aoiFeatures;
@@ -727,7 +837,7 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.plots.plotShape] = plotShape;
   draftDb[sub_ids.plots.plotSpacing] = plotSpacing;
   draftDb[sub_ids.plots.totalPlots] = Number(numPlots);
-  draftDb[sub_ids.plots.plotFileName] = plotfileName;
+  draftDb[sub_ids.plots.plotFileName] = plotFileName;
   draftDb[sub_ids.plots.referencePlotId] = Number(referencePlot);
   draftDb[sub_ids.plots.designSettings] = designSettings;
   draftDb[sub_ids.samples.sampleDistribution] = sampleDistribution;
@@ -741,7 +851,113 @@ regEvent(event_ids.templateProject, ({ draftDb }, {
   draftDb[sub_ids.createdDate] = createdDate;
   draftDb[sub_ids.publishedDate] = publishedDate;
   draftDb[sub_ids.closedDate] = closedDate;
+  draftDb[sub_ids.originalProject] =
+    pickKeys(current(draftDb), [...PLOT_DESIGN_FIELDS, ...SAMPLE_DESIGN_FIELDS]);
+}
 
+regEvent(event_ids.templateProject, ({ draftDb }, project) => {
+  applyProjectToDb(draftDb, project);
+});
+
+// PLOT FILE HELPERS (shared by PlotStep uploads and the Collect Earth import)
+
+const PLOT_ID_KEYS = ['visible_id', 'plotid', 'plot_id', 'PlotID', 'plotId', 'PLOTID'];
+
+// Extracts visible ids from /check-plot-file plots.
+export const extractPlotIds = (plots) =>
+  plots
+    .map((plot) => {
+      const props = plot.properties || plot;
+      const idKey = Object.keys(props).find((key) => PLOT_ID_KEYS.includes(key));
+      return idKey ? props[idKey] : undefined;
+    })
+    .filter((id) => id != null);
+
+// Extracts geometries from /check-plot-file plots.
+export const extractPlotGeometries = (plots) =>
+  plots
+    .map((plot) => (plot ? (plot.type ? plot : plot.plot_geom || plot.plotGeom) : null))
+    .filter(Boolean);
+
+// IMPORT COLLECT EARTH PROJECT
+// The CE import response omits fields that templates/drafts always carry, so fill
+// wizard defaults first, apply it like a template, then set what templateProject doesn't.
+const withDesignDefaults = (designSettings = {}) => {
+  const defaults = _.cloneDeep(projectWizardDb['plots.designSettings']);
+  return {
+    ...defaults,
+    ...designSettings,
+    sampleGeometries: { ...defaults.sampleGeometries, ...designSettings.sampleGeometries },
+    userAssignment:   { ...defaults.userAssignment,   ...designSettings.userAssignment },
+    qaqcAssignment:   { ...defaults.qaqcAssignment,   ...designSettings.qaqcAssignment },
+  };
+};
+
+const withImportDefaults = (project) => ({
+  ...project,
+  type:               project.type ?? 'regular',
+  designSettings:     withDesignDefaults(project.designSettings),
+  allowDrawnSamples:  project.allowDrawnSamples ?? false,
+  plotShape:          project.plotShape ?? projectWizardDb['plots.plotShape'],
+  plotSize:           project.plotSize ?? 0,
+  sampleDistribution: project.sampleDistribution ?? 'center',
+  samplesPerPlot:     project.samplesPerPlot ?? 1,
+  sampleResolution:   project.sampleResolution ?? 0,
+  sampleFileName:     project.sampleFileName ?? '',
+  surveyQuestions:    project.surveyQuestions ?? {},
+});
+
+// Same parsing path as a user upload in PlotStep: the server reads the file,
+// the preview shows the geometries it returns.
+const IMPORT_PLOT_FILE_TYPES = ['csv', 'shp', 'geojson'];
+
+const previewImportedPlotFile = (plotFileType, plotFileName, plotFileBase64) =>
+  fetch('/check-plot-file', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ plotFileType, projectId: 0, plotFileName, plotFileBase64 }),
+  })
+    .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+    .then((data) => {
+      const plots = data.plots || [];
+      dispatch([event_ids.plots.totalPlots, plots.length]);
+      dispatch([event_ids.plots.plotFeatures, extractPlotGeometries(plots)]);
+      dispatch([event_ids.plots.plotIds, extractPlotIds(plots)]);
+    })
+    .catch((err) => {
+      console.error(err);
+      dispatch([event_ids.errors, [['File Error', ['Failed to parse imported plot file']]]]);
+    });
+
+const defaultBasemapId = (institutionImagery = []) =>
+  (institutionImagery.find(({ visibility }) => visibility === 'platform') ?? institutionImagery[0])?.id;
+
+regEvent(event_ids.importProject, ({ draftDb }, project) => {
+  const imported = withImportDefaults(project);
+  applyProjectToDb(draftDb, imported);
+
+  // Not mapped by templateProject
+  draftDb[sub_ids.plots.plotFileBase64] = imported.plotFileBase64 ?? null;
+  draftDb[sub_ids.samples.sampleFileBase64] = imported.sampleFileBase64 ?? null;
+  draftDb[sub_ids.plots.plotFeatures] = [];
+  draftDb[sub_ids.plots.plotIds] = [];
+  if (IMPORT_PLOT_FILE_TYPES.includes(imported.plotDistribution) && imported.plotFileBase64) {
+    previewImportedPlotFile(imported.plotDistribution, imported.plotFileName, imported.plotFileBase64);
+  }
+
+  // CE files carry no CEO imagery, so fall back to the institution's first platform basemap
+  const basemapId = defaultBasemapId(current(draftDb[sub_ids.institution.imagery]));
+  if (basemapId != null && !current(draftDb[sub_ids.imagery.imageryList]).length) {
+    draftDb[sub_ids.imagery.imageryList] = [basemapId];
+    draftDb[sub_ids.imagery.previewId] = basemapId;
+  }
+
+  // Flag steps that still need attention in the navigator, without opening the error modal
+  const errors = validateWizard(buildProject(draftDb, sub_ids));
+  draftDb[sub_ids.invalidSteps] = errors ? errors.map(([step]) => step) : [];
 });
 
 regEvent(event_ids.saveDraft, ({ draftDb }) => {
@@ -781,7 +997,7 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
       .catch((message) => {
         console.log('create project request errors', message);
         let errs = Object.entries(message.params).map(([field, message])=>{return (field + "; " + message);});
-          dispatch([event_ids.errors, [['server', errs]]]);
+        dispatch([event_ids.errors, [['server', errs]]]);
       });
   }
 
@@ -808,7 +1024,7 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
       })
       .catch((message) => {
         console.log('create project request errors', message);        
-        dispatch([event_ids.errors [['server', Object.entries(message.params).map(([field, error]) => field + ": " + error)]]]);
+        dispatch([event_ids.errors, [['server', Object.entries(message.params).map(([field, error]) => field + ": " + error)]]]);
       });
   }
 
@@ -823,7 +1039,6 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
   const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
   const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
-  const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
   const similarityDetails = current(draftDb[sub_ids.plots.plotSimilarityDetails]) || {};
   const existingProjectId = current(draftDb[sub_ids.projectId]);
   const referencePlotId = similarityDetails.referencePlotId;
@@ -831,7 +1046,7 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
   const form = buildProject(draftDb, sub_ids);
   const errors = validateWizard(form);
   
-  function updateForm () {
+  function updateProject () {
     fetch("/update-project", {
       method: "POST",
       headers: {
@@ -845,21 +1060,20 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
-        if (data[0] && data[1] === "") {
-          dispatch([event_ids.modal, 'review']);
+        if (data[0]) {
+          window.location.assign(`/project-wizard?projectId=${existingProjectId}&institutionId=${institutionId}`);
           return Promise.resolve();
         } else {
-          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
+          dispatch([event_ids.errors, [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
           return Promise.reject(data[1]);
         }
       })
       .catch((message) => {
-        dispatch([event_ids.errors [['server', [message]]]]);;
+        dispatch([event_ids.errors, [['server', [message]]]]);;
       });
   }
   
-  
-  function submitForm () {
+  function createProject () {
     fetch("/create-project", {
       method: "POST",
       headers: {
@@ -877,35 +1091,39 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
         if (data[0] && Number.isInteger(data[1].projectId)) {
-          (referencePlotId > 0) && fetch("/start-plot-similarity", {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json; charset=utf-8",
-            },
-            body: JSON.stringify({
-              projectId: data[1].projectId,
-              referencePlotId,
-              similarityYears,
+          const projectId = data[1].projectId;
+          const goToWizard = () =>
+            window.location.assign(`/project-wizard?projectId=${projectId}&institutionId=${institutionId}`);
+          if (referencePlotId > 0) {
+            return fetch("/start-plot-similarity", {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json; charset=utf-8",
+              },
+              body: JSON.stringify({ projectId, referencePlotId, similarityYears }),
             })
-          });
-          dispatch([event_ids.modal, 'review']);
+              .catch((err) => console.error("start-plot-similarity failed", err))
+              .finally(goToWizard);
+          }
+
+          goToWizard();
           return Promise.resolve();
         } else {
-          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
+          dispatch([event_ids.errors, [['server',
+            Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
           return Promise.reject(data[1]);
         }
       })
-      .catch((message) => dispatch([event_ids.errors [['server', [message]]]]));
+      .catch((message) => dispatch([event_ids.errors, [['server', [message]]]]));
   }
   errors ? dispatch([event_ids.errors, errors]) :
-    (existingProjectId > 0) ? updateForm() : submitForm();
+    (existingProjectId > 0) ? updateProject() : createProject();
 });
 
 regEvent(event_ids.publishProject, ({ draftDb }) => {
   const availability = draftDb[sub_ids.availability];
   const unpublished = availability === "unpublished";
-  const institutionId = draftDb[sub_ids.institutionId];
   const projectId = draftDb[sub_ids.projectId];
 
   fetch(`/publish-project?projectId=${projectId}&clearSaved=${unpublished}`, { method: "POST" })
@@ -915,93 +1133,6 @@ regEvent(event_ids.publishProject, ({ draftDb }) => {
       console.log(error);
       window.alert("Error publishing project. See console for details.");
     });
-});
-
-regEvent(event_ids.submitForm, ({ draftDb }) => {
-  //TODO: this is crufty and not neat. do we need this after saveProject?
-  const institutionId = Number(current(draftDb[sub_ids.institutionId]));
-  const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
-  const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
-  const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
-  const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
-  const similarityDetails = current(draftDb[sub_ids.plots.plotSimilarityDetails]) || {};
-  const existingProjectId = current(draftDb[sub_ids.projectId]);
-  const referencePlotId = similarityDetails.referencePlotId;
-  const similarityYears = similarityDetails.years;
-  const form = buildProject(draftDb, sub_ids);
-  const errors = validateWizard(form);
-  
-  function updateForm () {
-    fetch("/update-project", {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json; charset=utf-8",
-      },
-      body: JSON.stringify({
-        projectId: existingProjectId,
-        ...form,
-      }),
-    })
-      .then((response) => Promise.all([response.ok, response.json()]))
-      .then((data) => {
-        if (data[0] && data[1] === "") {
-          dispatch([event_ids.modal, 'review']);
-          dispatch([event_ids.successResponse, data[1]]);
-          return Promise.resolve();
-        } else {
-          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
-          return Promise.reject(data[1]);
-        }
-      })
-      .catch((message) => {
-        dispatch([event_ids.errors [['server', [message]]]]);;
-      });
-  }
-  
-  
-  function submitForm () {    
-    fetch("/create-project", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json; charset=utf-8",
-      },
-      body: JSON.stringify({
-        institutionId,
-        projectTemplate: templateProjectId,
-        useTemplatePlots,
-        useTemplateWidgets,
-        ...form,
-      }),
-    })
-      .then((response) => Promise.all([response.ok, response.json()]))
-      .then((data) => {
-        if (data[0] && Number.isInteger(data[1].projectId)) {
-          (referencePlotId > 0) && fetch("/start-plot-similarity", {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json; charset=utf-8",
-            },
-            body: JSON.stringify({
-              projectId: data[1].projectId,
-              referencePlotId,
-              similarityYears,
-            })
-          });
-          //dispatch([event_ids.successResponse, data[1]]);
-          dispatch([event_ids.modal, 'review']);
-          return Promise.resolve();
-        } else {
-          dispatch([event_ids.errors [['server', Object.entries(data[1].params).map(([field, error]) => field + ": " + error)]]]);
-          return Promise.reject(data[1]);
-        }
-      })
-      .catch((message) => dispatch([event_ids.errors [['server', [message]]]]));
-  }
-  errors ? dispatch([event_ids.errors, errors]) :
-    (existingProjectId > 0) ? updateForm() : submitForm();
 });
 
 regEvent(event_ids.draftSuccess, ({ draftDb }, response) => {
@@ -1045,24 +1176,20 @@ regEvent(event_ids.overview.visibility, ({ draftDb }, visibility) => {
   draftDb[sub_ids.overview.visibility] = visibility;
 });
 
-regEvent(event_ids.overview.projectOptions.gee, ({ draftDb }) => {
-  draftDb[sub_ids.overview.projectOptions.gee] = !draftDb[sub_ids.overview.projectOptions.gee];
+regEvent(event_ids.overview.projectOptions.showGEEScript, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.showGEEScript] = !draftDb[sub_ids.overview.projectOptions.showGEEScript];
 });
 
-regEvent(event_ids.overview.projectOptions.extraPlotColumns, ({ draftDb }) => {
-  draftDb[sub_ids.overview.projectOptions.extraPlotColumns] = !draftDb[sub_ids.overview.projectOptions.extraPlotColumns];
+regEvent(event_ids.overview.projectOptions.showPlotInformation, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.showPlotInformation] = !draftDb[sub_ids.overview.projectOptions.showPlotInformation];
 });
 
-regEvent(event_ids.overview.projectOptions.plotConfidence, ({ draftDb }) => {
-  draftDb[sub_ids.overview.projectOptions.plotConfidence] = !draftDb[sub_ids.overview.projectOptions.plotConfidence];
+regEvent(event_ids.overview.projectOptions.collectConfidence, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.collectConfidence] = !draftDb[sub_ids.overview.projectOptions.collectConfidence];
 });
 
-regEvent(event_ids.overview.projectOptions.autoGeo, ({ draftDb }) => {
-  draftDb[sub_ids.overview.projectOptions.autoGeo] = !draftDb[sub_ids.overview.projectOptions.autoGeo];
-});
-
-regEvent(event_ids.overview.useTemplatePlots, ({ draftDb }, useTemplatePlots)=>{
-  draftDb[sub_ids.overview.useTemplatePlots] = useTemplatePlots;
+regEvent(event_ids.overview.projectOptions.autoLaunchGeoDash, ({ draftDb }) => {
+  draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash] = !draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash];
 });
 
 regEvent(event_ids.overview.projectOptions.plotSimilarity, ({ draftDb }) => {
@@ -1104,15 +1231,12 @@ regEvent(event_ids.boundary.clearBoundary, ({ draftDb }) => {
 });
 
 // PLOT GENERATION EVENTS
-regEvent(event_ids.plots.plots, ({ draftDb }, plots) => {
-  draftDb[sub_ids.plots.plots] = plots;
-});
-
 regEvent(event_ids.plots.plotDistribution, ({ draftDb }, distribution) => {
   if (draftDb[sub_ids.plots.plotDistribution] === distribution) return;
   draftDb[sub_ids.plots.plotDistribution] = distribution;
   draftDb[sub_ids.plots.plotFeatures] = [];
   draftDb[sub_ids.plots.plotFileName] = '';
+  draftDb[sub_ids.plots.plotIds] = [];
   draftDb[sub_ids.plots.totalPlots] = 0;
   draftDb[sub_ids.plots.plotsSource] = 'generated';
 });
@@ -1151,10 +1275,15 @@ regEvent(event_ids.plots.plotFileName, ({ draftDb }, plotFileName) => {
   draftDb[sub_ids.plots.plotFileName] = plotFileName;
 });
 
-regEvent(event_ids.plots.serverPlots, ({ draftDb }, { features, count }) => {
+regEvent(event_ids.plots.serverPlots, ({ draftDb }, { features, count, maxId }) => {
   draftDb[sub_ids.plots.plotFeatures] = features;
   draftDb[sub_ids.plots.totalPlots] = count;
   draftDb[sub_ids.plots.plotsSource] = 'server';
+  draftDb[sub_ids.plots.maxId] = maxId;
+});
+
+regEvent(event_ids.plots.plotIds, ({ draftDb }, plotIds) => {
+  draftDb[sub_ids.plots.plotIds] = plotIds;
 });
 
 regEvent(event_ids.plots.plotFileBase64, ({ draftDb }, plotFileBase64) => {
@@ -1167,6 +1296,40 @@ regEvent(event_ids.plots.designSettings, ({ draftDb }, designSettings) => {
 
 regEvent(event_ids.plots.plotSimilarityDetails, ({ draftDb }, details) => {
   draftDb[sub_ids.plots.plotSimilarityDetails] = details;
+});
+
+// NEW PLOT GENERATION EVENTS (post-publish append)
+regEvent(event_ids.plots.newPlotDistribution, ({ draftDb }, distribution) => {
+  if (draftDb[sub_ids.plots.newPlotDistribution] === distribution) return;
+  draftDb[sub_ids.plots.newPlotDistribution] = distribution;
+  draftDb[sub_ids.plots.newPlotFeatures] = [];
+  draftDb[sub_ids.plots.newPlotFileName] = '';
+  draftDb[sub_ids.plots.newPlotFileBase64] = '';
+  draftDb[sub_ids.plots.newTotalPlots] = 0;
+});
+
+regEvent(event_ids.plots.newPlotSize, ({ draftDb }, size) => {
+  draftDb[sub_ids.plots.newPlotSize] = size;
+});
+
+regEvent(event_ids.plots.newPlotShape, ({ draftDb }, shape) => {
+  draftDb[sub_ids.plots.newPlotShape] = shape;
+});
+
+regEvent(event_ids.plots.newTotalPlots, ({ draftDb }, total) => {
+  draftDb[sub_ids.plots.newTotalPlots] = total;
+});
+
+regEvent(event_ids.plots.newPlotFeatures, ({ draftDb }, features) => {
+  draftDb[sub_ids.plots.newPlotFeatures] = features;
+});
+
+regEvent(event_ids.plots.newPlotFileName, ({ draftDb }, fileName) => {
+  draftDb[sub_ids.plots.newPlotFileName] = fileName;
+});
+
+regEvent(event_ids.plots.newPlotFileBase64, ({ draftDb }, base64) => {
+  draftDb[sub_ids.plots.newPlotFileBase64] = base64;
 });
 
 // SAMPLE GENERATION EVENTS
@@ -1201,22 +1364,17 @@ regEvent(event_ids.questions.setQuestions, ({ draftDb }, questions ) => {
 });
 
 regEvent(event_ids.questions.updateQuestion, ({ draftDb }, qId, field, value) => {
-  const questions = draftDb[sub_ids.questions.questions];
-  const q = questions[qId] || questions[String(qId)] || questions[Number(qId)];
-  if (q) {
-    q[field] = value;
-  }
+  const questions = current(draftDb['questions']);
+  draftDb['questions'] = { ...questions, [qId]: { ...questions[qId], [field]: value } };
 });
 
 regEvent(event_ids.questions.updateAnswer, ({ draftDb }, qId, aId, field, value) => {
-  const questions = draftDb[sub_ids.questions.questions];
-  const q = questions[qId] || questions[String(qId)] || questions[Number(qId)];
-  if (q && q.answers) {
-    const a = q.answers[aId] || q.answers[String(aId)] || q.answers[Number(aId)];
-    if (a) {
-      a[field] = value;
-    }
-  }
+  const questions = current(draftDb['questions']);
+  const q = questions[qId];
+  draftDb['questions'] = {
+    ...questions,
+    [qId]: { ...q, answers: { ...q.answers, [aId]: { ...q.answers[aId], [field]: value } } },
+  };
 });
 
 regEvent(event_ids.questions.moveQuestion, ({ draftDb }, id, targetQ, nextId, nextQ) => {
@@ -1228,19 +1386,42 @@ regEvent(event_ids.questions.moveQuestion, ({ draftDb }, id, targetQ, nextId, ne
   if (targetNextQ) targetNextQ.cardOrder = targetQ.cardOrder;
 });
 
+regEvent(event_ids.questions.removeQuestion, ({ draftDb }, qId, cascadeDelete) => {
+  const next = cascadeDelete(
+    { questions: current(draftDb['questions']), rules: current(draftDb['rules']) }, qId);
+  draftDb['questions'] = next.questions;
+  draftDb['rules'] = next.rules;
+});
+
+regEvent(event_ids.questions.moveQuestion, ({ draftDb }, id, direction) => {
+  draftDb['questions'] = moveQuestion(current(draftDb['questions']), id, direction);
+});
+
 // RULES EVENTS
+
+
+function resetNewRule (draftDb) {
+  Object.entries(_.cloneDeep(newRuleDefaults)).forEach(([key, value]) => {
+    draftDb[key] = value;
+  });
+}
+
+regEvent(event_ids.rules.newRule.reset, ({ draftDb }) => {
+  resetNewRule(draftDb);
+});
 
 regEvent(event_ids.rules.selectedRuleType, ({ draftDb }, selectedRuleType) => {
   draftDb[sub_ids.rules.selectedRuleType] = selectedRuleType;
+  resetNewRule(draftDb);
 });
 
 regEvent(event_ids.rules.rules, ({ draftDb }, newRule) => {
-  
   draftDb[sub_ids.rules.rules].push({...newRule, label: draftDb[sub_ids.rules.newRule.label]});
+  resetNewRule(draftDb);
 });
 
 regEvent(event_ids.rules.removeRule, ({ draftDb }, rid ) => {
-  let newRules = draftDb[sub_ids.rules.rules].filter((r) => r.id !== rid);
+  const newRules = draftDb[sub_ids.rules.rules].filter((r) => r.id !== rid);
   draftDb[sub_ids.rules.rules] = newRules;
 });
 
@@ -1262,10 +1443,6 @@ regEvent(event_ids.rules.search, ({ draftDb }, search) => {
 
 regEvent(event_ids.rules.filter, ({ draftDb }, filter) => {
   draftDb[sub_ids.rules.filter] = filter;
-});
-
-regEvent(event_ids.rules.delete, ({ draftDb }, idx) => {
-  draftDb[sub_ids.rules.rules].splice(idx, 1);
 });
 
 regEvent(event_ids.rules.newRule.min, ({ draftDb }, min) => {
@@ -1315,14 +1492,13 @@ regEvent(event_ids.rules.newRule.answers, ({ draftDb }, answers) => {
 regEvent(event_ids.rules.newRule.addAnswer, ({ draftDb }) => {
   let dbAnswers = current(draftDb[sub_ids.rules.newRule.answers]);
   let answer = [current(draftDb[sub_ids.rules.newRule.tempQuestionId]),
-                current(draftDb[sub_ids.rules.newRule.tempAnswerId])];
+    current(draftDb[sub_ids.rules.newRule.tempAnswerId])];
   draftDb[sub_ids.rules.newRule.answers] = [... dbAnswers, answer];
 });
 regEvent(event_ids.rules.newRule.removeAnswer, ({ draftDb }, questionId) => {
   let dbAnswers = current(draftDb[sub_ids.rules.newRule.answers]);
   draftDb[sub_ids.rules.newRule.answers] = dbAnswers.filter(([question])=>question != questionId);
 });
-
 
 regEvent(event_ids.rules.newRule.tempQuestionId, ({ draftDb }, tempQuestionId) => {
   draftDb[sub_ids.rules.newRule.tempQuestionId] = tempQuestionId;
@@ -1340,6 +1516,11 @@ regEvent(event_ids.rules.newRule.incompatAnswerId, ({ draftDb }, incompatAnswerI
   draftDb[sub_ids.rules.newRule.incompatAnswerId] = incompatAnswerId;
 });
 
+regEvent(event_ids.rules.removeRule, ({ draftDb }, rid) => {
+  draftDb[sub_ids.rules.rules] =
+    renumberRules(current(draftDb[sub_ids.rules.rules]).filter((r) => r.id !== rid));
+});
+
 
 // EVENTS FOR INSTITUTION INFORMATION
 regEvent(event_ids.institution.users, ({draftDb}, users) => {
@@ -1349,3 +1530,31 @@ regEvent(event_ids.institution.users, ({draftDb}, users) => {
 regEvent(event_ids.institution.imagery, ({ draftDb }, imagery) => {
   draftDb[sub_ids.institution.imagery] = imagery;
 });
+
+export const usePlotDesignLocked = () => {
+  const templateProjectId = useSubscription([sub_ids.templateProjectId]) || -1;
+  const projectId = useSubscription([sub_ids.projectId]) || -1;
+  const useTemplatePlots = useSubscription([sub_ids.overview.useTemplatePlots]);
+  return templateProjectId > 0 && projectId === -1 && Boolean(useTemplatePlots);
+};
+
+export const renumberRules = (rules) => rules.map((rule, i) => ({ ...rule, id: i }));
+
+const PLOT_DESIGN_FIELDS = [
+  'boundary.generationMethod', 'boundary.aoiFeatures', 'boundary.aoiFileName',
+  'plots.plotDistribution', 'plots.numPlots', 'plots.plotSize', 'plots.plotShape',
+  'plots.plotSpacing', 'plots.shufflePlots', 'plots.plotFileName', 'plots.plotFileBase64',
+  'plots.designSettings',
+  // append mode on published projects
+  'plots.newPlotDistribution', 'plots.newPlotFileName', 'plots.newPlotFileBase64',
+  'plots.newPlotSize', 'plots.newPlotShape',
+];
+const SAMPLE_DESIGN_FIELDS = [
+  'samples.sampleDistribution', 'samples.samplesPerPlot', 'samples.sampleResolution',
+  'samples.sampleFileName', 'samples.sampleFileBase64', 'samples.allowDrawnSamples',
+];
+const DERIVED_DESIGN_KEYS = ['plots.plotsSource', 'plots.totalPlots', 'plots.plotFeatures', 'plots.plotIds',
+  'plots.maxId', 'plots.referencePlotId', 'plots.plotSimilarityDetails'];
+const PLOT_DESIGN_KEYS = [...PLOT_DESIGN_FIELDS, ...SAMPLE_DESIGN_FIELDS, ...DERIVED_DESIGN_KEYS];
+
+const pickKeys = (source, keys) => Object.fromEntries(keys.map((k) => [k, source[k]]));

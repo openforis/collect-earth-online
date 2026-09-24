@@ -12,7 +12,6 @@ import {
   mapObjectArray,
   intersection,
 } from '../utils/sequence';
-import { LearningMaterialModal } from "./PageComponents";
 
 import '../../css/sidebar.css';
 import '../../css/survey.css';
@@ -41,18 +40,14 @@ export function SurveyQuestions ({
   const surveyData = useMemo(() => {
     return preview ? surveyQuestions : currentProject?.surveyQuestions;
   }, [preview, surveyQuestions, currentProject?.surveyQuestions]);
-
   const userSamples = preview
     ? previewUserSamples
     : globalUserSamples;
-
   const selectedSampleId = preview
     ? previewSelectedId
     : globalSelectedId;
-
   const [openTopId, setOpenTopId] = useState(1);
   const [openByParent, setOpenByParent] = useState({});
-  const [showLearningMaterial, setShowLearningMaterial] = useState(false);
 
   const entries = (obj = {}) => Object.entries(obj || {});
   const visibleAnswers = (q) => entries(q.answers).filter(([, a]) => !a?.hide);
@@ -61,7 +56,7 @@ export function SurveyQuestions ({
   }, [surveyData, userSamples]);
 
   const getSelectedSampleIds = (questionId) => {
-    // If preview, we just return the ID of our 1 fake sample
+    // If preview, return the ID of our 1 fake sample
     if (preview) return [selectedSampleId];
     
     const answered = surveyData?.[questionId]?.answered || [];
@@ -143,7 +138,6 @@ export function SurveyQuestions ({
     }
     setAppState((prev) => {
       const childQuestionIds = getChildQuestionIds(questionId);
-
       const newSamples = sampleIds.reduce((acc, sampleId) => {
         if (answerText == null) return acc;
         const prevSampleAnswers = prev.userSamples?.[sampleId] || {};
@@ -420,8 +414,7 @@ export function SurveyQuestions ({
               <button
                 key={id}
                 style={{
-                  borderColor: a.color || '#2d6f74',
-                  color: a.color || '#2d6f74',
+                  borderColor: isActive ? a.color : '#3d7f7a',
                   borderWidth: '2px',
                   boxShadow: isActive ? `0 0 0 2px ${a.color}` : 'none',
                   fontWeight: isActive ? 'bold' : 'normal'
@@ -460,7 +453,6 @@ export function SurveyQuestions ({
     dropdown: (q) => {
       const current = getCurrentAnswer(q.id);
       const value = current ? String(current.answerId) : '';
-
       return (
         <div className="sq-dropdown-wrap">
           <select
@@ -496,7 +488,7 @@ export function SurveyQuestions ({
             defaultValue={val}
             onBlur={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') setCurrentValue(q.id, 0, e.currentTarget.value);
+              if (e.key === 'Enter') validateAndSetCurrentValue(q.id, 0, e.currentTarget.value);
             }}
           />
         </div>
@@ -507,10 +499,6 @@ export function SurveyQuestions ({
   const AnswerUI = ({ q }) => {
     const render = renderers[q.componentType];
     return render ? render(q) : null;
-  };
-
-  const toggleLearningMaterial = () => {
-    setShowLearningMaterial((prev) => !prev);
   };
 
   // MEMOIZATION
@@ -836,12 +824,6 @@ export function SurveyQuestions ({
           />
         </div>
       )}
-      {showLearningMaterial && (
-        <LearningMaterialModal
-          learningMaterial={currentProject?.learningMaterial}
-          onClose={toggleLearningMaterial}
-        />
-      )}
     </SidebarCard>
   );
 };
@@ -939,6 +921,7 @@ const ConfidenceItem = ({ isOpen, onToggle }) => {
 export const DrawingTool = () => {
   const { currentProject, currentPlot, mapConfig, answerMode } = useAtomValue(stateAtom);
   const setAppState = useSetAtom(stateAtom);
+  const isDrawing = answerMode === "draw";
 
   const sg = currentProject?.sampleGeometries || {
     points: true,
@@ -1039,36 +1022,36 @@ export const DrawingTool = () => {
 
   const setDrawTool = (type) => {
     setDrawToolState(type);
-    setAnswerMode("draw", type);
+
+    if (answerMode === "draw") {
+      mercator.disableDrawing(mapConfig);
+      mercator.enableDrawing(mapConfig, "drawLayer", type);
+    } else {
+      // First time entering draw mode: build the layer from saved samples
+      setAnswerMode("draw", type);
+    }
   };
 
-  const clearAll = (tool = drawTool) => {
-    if (answerMode === "draw" && window.confirm("Do you want to clear all samples from the draw area?")) {
-      mercator.disableDrawing(mapConfig);
-      mercator.removeLayerById(mapConfig, "currentSamples");
-      mercator.removeLayerById(mapConfig, "drawLayer");
+  const discardDrawnSamples = () => {
+    if (!window.confirm("Discard all samples drawn in this session? Samples from the database will be kept.")) return;
 
-      // re-add an empty draw layer and re-enable drawing
-      mercator.addVectorLayer(
-        mapConfig,
-        "drawLayer",
-        null,
-        mercator.ceoMapStyles("draw", "orange"),
-        9999
-      );
-      mercator.enableDrawing(mapConfig, "drawLayer", tool);
-    } else if (window.confirm("Do you want to clear all answers?")) {
-      if (typeof resetPlotValues === "function") {
-        resetPlotValues();
-      } else {
-        // fallback: clear in-app answers if no handler provided
-        setAppState((s) => ({
-          ...s,
-          userSamples: {},
-          userImages: {},
-        }));
-      }
-    }
+    mercator.disableDrawing(mapConfig);
+    mercator.removeLayerById(mapConfig, "drawLayer");
+
+    setAppState((prev) => {
+      const dbSamples = (prev.currentPlot?.samples || []).filter((s) => s.visibleId != null);
+      const keep = new Set(dbSamples.map((s) => s.id));
+      const pick = (obj) =>
+        Object.fromEntries(Object.entries(obj || {}).filter(([id]) => keep.has(Number(id))));
+
+      return {
+        ...prev,
+        answerMode: "answer",
+        currentPlot: { ...prev.currentPlot, samples: dbSamples },
+        userSamples: pick(prev.userSamples),
+        userImages: pick(prev.userImages),
+      };
+    });
   };
 
   const RenderDrawTool = ({ icon, title, type }) => (
@@ -1142,14 +1125,24 @@ export const DrawingTool = () => {
           <button
             className="btn btn-outline-darkgreen"
             onClick={featuresToSampleLayer}
-            title="Save drawn features back to sample list"
+            disabled={!isDrawing}
+            title={
+              isDrawing
+                ? "Save drawn features back to sample list"
+                : "Select a drawing tool to enable"
+            }
           >
             Save samples
           </button>
           <button
             className="btn btn-outline-darkgreen"
-            onClick={() => clearAll()}
-            title="Exit draw mode and return to answering"
+            onClick={discardDrawnSamples}
+            disabled={!isDrawing}
+            title={
+              isDrawing
+                ? "Exit draw mode and return to answering"
+                : "Select a drawing tool to enable"
+            }
           >
             Discard samples
           </button>
