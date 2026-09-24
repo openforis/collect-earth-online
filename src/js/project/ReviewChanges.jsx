@@ -35,6 +35,7 @@ export default class ReviewChanges extends React.Component {
             projectTemplate: this.context.templateProjectId,
             useTemplatePlots: this.context.useTemplatePlots,
             useTemplateWidgets: this.context.useTemplateWidgets,
+            acceptTos: this.state.acceptTOS,
             ...this.buildProjectObject(),
           }),
         })

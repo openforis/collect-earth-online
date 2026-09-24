@@ -63,7 +63,9 @@
                                         "  The CEO Team")
                                    email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)
             auto-validate? (get-config :mail :auto-validate?)
-            user-id        (sql-primitive (call-sql "add_user" {:log? false} email password reset-key))]
+            user-id        (sql-primitive (call-sql "add_user" {:log? false} email password reset-key))
+            _              (when (tc/val->bool (:acceptTOS params))
+                             (call-sql "user_accept_tos" user-id))]
         (if auto-validate?
           (do (call-sql "user_verified" user-id)
               (data-response "You have successfully created an account"))
@@ -308,6 +310,28 @@
           (data-response {:message "success"} {:session (assoc session :acceptedTerms true)})))
       (catch Exception e
         (data-response {:message "error when accepting data sharing terms."} {:status 500})))))
+
+;; Terms of Service
+
+(defn get-tos-status
+  "Returns whether the logged-in user has accepted the Terms of Service."
+  [{:keys [session]}]
+  (let [user-id  (:userId session -1)
+        accepted (when (pos? user-id)
+                   (sql-primitive (call-sql "get_user_tos_accepted_date" user-id)))]
+    (data-response {:accepted (some? accepted)})))
+
+(defn accept-tos!
+  "Records that the logged-in user accepted the Terms of Service, and when."
+  [{:keys [session]}]
+  (let [user-id (:userId session -1)]
+    (if (pos? user-id)
+      (try
+        (call-sql "user_accept_tos" user-id)
+        (data-response {:accepted true})
+        (catch Exception _
+          (data-response {:message "Error recording Terms of Service acceptance."} {:status 500})))
+      (data-response {:message "You must be logged in to accept the Terms of Service."} {:status 401}))))
 
 (defn check-email-taken [{:keys [params]}]
   (let [email (:email params)]    
