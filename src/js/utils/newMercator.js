@@ -2,7 +2,7 @@ import { Feature, Map, Overlay, View } from 'ol';
 import { Tile as TileLayer, Group as LayerGroup, Vector as VectorLayer } from 'ol/layer';
 import { TileWMS, XYZ, OSM, BingMaps, Vector as VectorSource } from 'ol/source';
 import { Style, Stroke, Fill } from 'ol/style';
-import { toLonLat } from 'ol/proj';
+import { toLonLat, fromLonLat } from 'ol/proj';
 import { platformModifierKeyOnly } from 'ol/events/condition';
 import { getCenter, getExtent, createEmpty, extend } from 'ol/extent';
 import { getArea } from "ol/sphere";
@@ -48,7 +48,8 @@ export const parseGeoJson = (geoJson, reprojectToMap) => {
 };
 
 export const calculateGeoJsonArea = (geoJson) =>
-  calculateArea(parseGeoJson(geoJson, false));
+calculateArea(parseGeoJson(geoJson, false));
+
 
 export const zoomMapToExtent = (map, target) => {
   if (!map) return;
@@ -61,6 +62,18 @@ export const zoomMapToExtent = (map, target) => {
     maxZoom: 16
   });
 };
+
+export const zoomMapToPoint = (map, coords, zoom, duration, padding=[50, 50, 50, 50]) => {
+  if (!map) return;
+  const view = map.getView();
+
+  view.animate({
+    zoom: zoom,
+    center: fromLonLat(coords),
+    duration: duration
+  })
+};
+
 
 export const createBoxDrawInteraction = (source, onDrawEnd) => {
   const dragBox = new DragBox({

@@ -1,11 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
 import alertIcon from "./alertIcon.svg";
+import calendarIcon from './calendarIcon.svg';
 import cancelIcon from "./cancelIcon.svg";
 import centerIcon from "./centerIcon.svg";
 import checkIcon from "./checkIcon.svg";
 import checkFilledIcon from "./checkFilledIcon.svg";
 import checkboxIcon from "./checkboxIcon.svg";
+import chevronRightIcon from './chevronRightIcon.svg';
 import uncheckedBoxIcon from "./uncheckedBoxIcon.svg";
 import closeIcon from "./closeIcon.svg";
 import collapseIcon from "./collapseIcon.svg";
@@ -22,6 +24,7 @@ import fileIcon from "./fileIcon.svg";
 import groupIcon from "./groupIcon.svg";
 import helpIcon from "./helpIcon.svg";
 import infoIcon from "./infoIcon.svg";
+import institutionIcon from './institutionIcon.svg';
 import leftArrowIcon from "./leftArrowIcon.svg";
 import leftArrowSlimIcon from "./leftArrowSlimIcon.svg";
 import leftDoubleIcon from "./leftDoubleIcon.svg";
@@ -57,12 +60,14 @@ import morevertIcon from './morevertIcon.svg';
 
 export const iconMap = {
   alert: alertIcon,
+  calendar: calendarIcon,
   cancel: cancelIcon,
   center: centerIcon,
   check: checkIcon,
   checkFilled: checkFilledIcon,
   checkboxChecked: checkboxIcon,
   checkboxUnchecked: uncheckedBoxIcon,
+  chevronRight: chevronRightIcon,
   close: closeIcon,
   collapse: collapseIcon,
   collect: collectIcon,
@@ -78,6 +83,7 @@ export const iconMap = {
   group: groupIcon,
   help: helpIcon,
   info: infoIcon,
+  institution: institutionIcon,
   leftArrow: leftArrowIcon,
   leftArrowSlim: leftArrowSlimIcon,
   leftDouble: leftDoubleIcon,
