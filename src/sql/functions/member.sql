@@ -475,6 +475,25 @@ CREATE OR REPLACE FUNCTION get_users_by_emails(_emails text[])
 
 $$ LANGUAGE SQL;
 
+-- Terms of Service
+CREATE OR REPLACE FUNCTION user_accept_tos(_user_id INTEGER)
+ RETURNS VOID AS $$
+
+    UPDATE users
+    SET tos_accepted_date = NOW()
+    WHERE user_uid = _user_id
+
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_user_tos_accepted_date(_user_id INTEGER)
+ RETURNS timestamptz AS $$
+
+    SELECT tos_accepted_date
+    FROM users
+    WHERE user_uid = _user_id
+
+$$ LANGUAGE SQL;
+
 -- Accepts data sharing terms for guest users
 CREATE OR REPLACE FUNCTION guest_user_data_sharing(_name TEXT, _ip TEXT)
  RETURNS table (

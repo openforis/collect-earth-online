@@ -337,7 +337,7 @@ function Home ({ userRole, userId }) {
   }
   function toggleSidebar (mapConfig) {
     setAppState(prev => ({ ... prev, showSidePanel: !prev.showSidePanel }), () => mercator.resize(mapConfig));}
-  
+
   useEffect(()=>{
     Promise.all([getImagery(), getInstitutions(), getProjects()])
       .catch((response) => {

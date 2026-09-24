@@ -294,14 +294,15 @@ export const UserDrawnSamplesCard = () => {
   return (
     <div className="wizard-card" style={{ marginTop: '10px' }}>
       <h5 className="card-title">USER DRAWN SAMPLES</h5>
-      <div className="form-check mb-2">
-        <input
-          type="checkbox"
-          className="form-check-input"
-          checked={allowDrawnSamples}
-          onChange={() => dispatch([event_ids.samples.allowDrawnSamples, !allowDrawnSamples])}
-        />
-        <label className="form-check-label">Allow users to draw their own samples</label>
+      <div
+        className="labeled-input"
+        onClick={() => dispatch([event_ids.samples.allowDrawnSamples, !allowDrawnSamples])}>
+        <span className="checkbox">
+          <SvgIcon icon={allowDrawnSamples ? 'checkboxChecked' : 'checkboxUnchecked'} size="1.2rem" />
+        </span>
+        <span className="text-label" style={allowDrawnSamples ? { fontWeight: 'bold' } : {}}>
+          Allow users to draw their own samples
+        </span>
       </div>
 
       {allowDrawnSamples && (
@@ -316,14 +317,15 @@ export const UserDrawnSamplesCard = () => {
           <div className="mt-3">
             <label className="text-label-sm">Allowed sample geometries</label>
             {Object.keys(sampleGeometries).map((geom) => (
-              <div key={geom} className="form-check">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  checked={sampleGeometries[geom]}
-                  onChange={() => toggleGeometry(geom)}
-                />
-                <label className="form-check-label text-capitalize">{geom}</label>
+              <div key={geom} className="labeled-input" onClick={() => toggleGeometry(geom)}>
+                <span className="checkbox">
+                  <SvgIcon icon={sampleGeometries[geom] ? 'checkboxChecked' : 'checkboxUnchecked'} size="1.2rem" />
+                </span>
+                <span
+                  className="text-label text-capitalize"
+                  style={sampleGeometries[geom] ? { fontWeight: 'bold' } : {}}>
+                  {geom}
+                </span>
               </div>
             ))}
           </div>
