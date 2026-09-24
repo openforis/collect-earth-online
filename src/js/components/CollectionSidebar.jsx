@@ -41,10 +41,10 @@ const OverviewCard = ({}) => {
     case 'totalPlots': return state.stats.totalPlots;
     case 'totalUsers': return state.stats.userStats.length;
     case 'analyzed' :  return (state.stats.analyzedPlots +
-                               " (" + percent(state.stats.analyzedPlots, state.stats.totalPlots).toPrecision(2) + "%)");
+                               " (" + percent(state.stats.analyzedPlots, state.stats.totalPlots).toFixed(2) + "%)");
     case 'flagged' : return state.stats.flaggedPlots;
     case 'unanalyzed': return (state.stats.unanalyzedPlots +
-                               ' (' + percent(state.stats.unanalyzedPlots, state.stats.totalPlots).toPrecision(2) + '%)');
+                               ' (' + percent(state.stats.unanalyzedPlots, state.stats.totalPlots).toFixed(2) + '%)');
     case 'averageTime': return state.stats.collectionTime + " secs/ plot";    
     }
   };
