@@ -1,7 +1,5 @@
 (ns collect-earth-online.db.users
   (:import java.net.URLEncoder
-           java.text.SimpleDateFormat
-           java.util.Date
            java.time.format.DateTimeFormatter
            java.time.LocalDateTime
            java.util.UUID)
@@ -24,7 +22,7 @@
         user      (first (call-sql "check_login" {:log? false} email password))
         user-info {:userId        (:user_id user)
                    :userName      email
-                   :acceptedTOS   (:accept_tos user)
+                   :acceptedTerms (:accepted_terms user)
                    :userRole      (if (:administrator user) "admin" "user")}]
     (if-let [error-msg (get-login-errors user)]
       (data-response error-msg)
@@ -65,7 +63,9 @@
                                         "  The CEO Team")
                                    email email timestamp (get-base-url) (URLEncoder/encode email) reset-key)
             auto-validate? (get-config :mail :auto-validate?)
-            user-id        (sql-primitive (call-sql "add_user" {:log? false} email password reset-key))]
+            user-id        (sql-primitive (call-sql "add_user" {:log? false} email password reset-key))
+            _              (when (tc/val->bool (:acceptTOS params))
+                             (call-sql "user_accept_tos" user-id))]
         (if auto-validate?
           (do (call-sql "user_verified" user-id)
               (data-response "You have successfully created an account"))
@@ -192,13 +192,12 @@
     (data-response all-users)))
 
 (defn get-user-stats [{:keys [params]}]
-  (let [account-id (tc/val->int (:accountId params))]    
+  (let [account-id (tc/val->int (:accountId params))]
     (if-let [stats (first (call-sql "get_user_stats" account-id))]
       (data-response {:totalProjects (:total_projects stats)
                       :totalPlots    (:total_plots stats)
                       :averageTime   (:average_time stats)
-                      :perProject    (tc/jsonb->clj (:per_project stats))
-                      :acceptTOS     (:accept_tos stats)})
+                      :perProject    (tc/jsonb->clj (:per_project stats))})
       (data-response {}))))
 
 (defn get-user-admin-institutions [{:keys [session]}]
@@ -300,16 +299,14 @@
   (let [{:keys [params session]} req
         user-id          (:userId session)
         project-id       (tc/val->int (:projectId params))
-        slug (-> params :interpreterName
-                 (str ":user:" user-id ":"
-                      (.format (SimpleDateFormat. "YYYYMMddHHmmss") (Date.))))]
+        interpreter-name (:interpreterName params)]
     (try
       (if (= -1 user-id)
         (do
-          (call-sql "guest_user_data_sharing" project-id slug)
+          (call-sql "guest_user_data_sharing" project-id interpreter-name)
           (data-response {:message "success"} {:session {:acceptedTerms true}}))
         (do
-          (call-sql "user_data_sharing" project-id user-id slug (or (:remote-addr req) ""))
+          (call-sql "user_data_sharing" project-id user-id interpreter-name (or (:remote-addr req) ""))
           (data-response {:message "success"} {:session (assoc session :acceptedTerms true)})))
       (catch Exception e
         (data-response {:message "error when accepting data sharing terms."} {:status 500})))))
@@ -342,13 +339,22 @@
       (catch Exception _
 	(data-response  "A server error interrupted your request. Please try again or contact an administrator.")))))
 
-(defn user-accept-tos [{:keys [params]}]
-  (let [user-id (tc/val->int (:userId params))
-        slug (-> params :slug
-                 (str ":user:" user-id ":"
-                      (.format (SimpleDateFormat. "YYYYMMddHHmmss") (Date.))))]
-    (try (do
-           (call-sql "user_accept_tos" user-id slug)
-           (data-response true))
-         (catch Exception e
-           (data-response {:message "error accepting TOS"} {:status 500})))))
+(defn get-tos-status
+  "Returns whether the logged-in user has accepted the Terms of Service."
+  [{:keys [session]}]
+  (let [user-id  (:userId session -1)
+        accepted (when (pos? user-id)
+                   (sql-primitive (call-sql "get_user_tos_accepted_date" user-id)))]
+    (data-response {:accepted (some? accepted)})))
+
+(defn user-accept-tos
+  "Records that the logged-in user accepted the Terms of Service, and when."
+  [{:keys [session]}]
+  (let [user-id (:userId session -1)]
+    (if (pos? user-id)
+      (try
+        (call-sql "user_accept_tos" user-id)
+        (data-response true)
+        (catch Exception _
+          (data-response {:message "error accepting TOS"} {:status 500})))
+      (data-response {:message "You must be logged in to accept the Terms of Service."} {:status 401}))))

@@ -23,7 +23,8 @@ import {
 import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
-export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
+
+export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
   // INIT COLLECTION EFFECT
@@ -115,7 +116,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
           imageryList,
           mapConfig: mapConf,
           currentImagery: defaultImagery || s.currentImagery,
-          showAcceptTermsModal: !!acceptTOS,
+          showAcceptTermsModal: !!acceptedTerms,
           modalMessage: null,
           stats
         }));
@@ -138,7 +139,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
       window.removeEventListener("beforeunload", beforeUnload, { capture: true });
       cancelled = true;
     };
-  }, [projectId, acceptTOS, plotId, setState]);
+  }, [projectId, acceptedTerms, plotId, setState]);
 
   // INIT PROJECT — show project overview when ready
   useEffect(() => {
@@ -718,7 +719,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
             <p>{state.messageBox.body}</p>
           </Modal>
         )}
-        {acceptTOS === '' && state.currentProject?.type === "simplified" && (
+        {!acceptedTerms && state.currentProject?.type === "simplified" && (
           <AcceptTermsModal
             institutionId={state.currentProject.institution}
             projectId={projectId}
@@ -889,7 +890,7 @@ export function pageInit(params, session) {
         projectId={params.projectId}
         plotId={params.plotId || null}
         userName={session.userName || "guest"}
-        acceptTOS={session.acceptTOS || false} />
+        acceptedTerms={session.acceptedTerms || false} />
     </NavigationBar>,
     document.getElementById("app")
   );
