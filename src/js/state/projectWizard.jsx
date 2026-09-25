@@ -68,7 +68,7 @@ const projectWizardDb = {
   'overview.projectOptions.collectConfidence': false,
   'overview.projectOptions.autoLaunchGeoDash': true,
   'overview.projectOptions.plotSimilarity': false,
-  'overview.projectOptions.license': 'public',
+  'overview.projectOptions.license': null,
   'overview.useTemplatePlots': false,
   'imagery.imageryList': [],
   'imagery.previewId': '',
@@ -505,7 +505,8 @@ regEvent(event_ids.errors, ({ draftDb }, errors) => {
 });
 
 regEvent(event_ids.institutionId, ({ draftDb }, institutionId )=> {
-  draftDb[sub_ids.institutionId] = institutionId;
+  // URL params arrive as strings; store a number so === comparisons against API ids work.
+  draftDb[sub_ids.institutionId] = Number(institutionId);
 });
 regEvent(event_ids.availability, ({ draftDb }, availability ) => {
   draftDb[sub_ids.availability] = availability;
