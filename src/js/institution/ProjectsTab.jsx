@@ -29,8 +29,8 @@ export const ProjectsTab = ({
     const idOffset =  getNextInSequence(projectList.map((e)=>e.id));
     const lower = filterText.toLowerCase();
     return projectList.concat(projectDrafts.map((p)=>{return {... p, isDraft: true,
-                                                              draftId: p.id,
-                                                              id: (Number(p.id) + idOffset)};}))
+      draftId: p.id,
+      id: (Number(p.id) + idOffset)};}))
       .filter((p) => p.name?.toLowerCase().includes(lower));
   }, [projectList, projectDrafts, filterText]);
 
@@ -57,9 +57,9 @@ export const ProjectsTab = ({
 	  <a
 	    className="projects-table-name"
 	    href={row.isDraft ? `/project-wizard?draftId=${row.draftId}&institutionId=${institutionId}` :
-	          isAdmin ?
-		  `/project-wizard?projectId=${row.id}&institutionId=${institutionId}`
-		  : `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
+	      isAdmin ?
+		`/project-wizard?projectId=${row.id}&institutionId=${institutionId}`
+		: `/collection?projectId=${row.id}&institutionId=${institutionId}`}>
 	    {row.name}
 	  </a>
 	),
@@ -112,9 +112,9 @@ export const ProjectsTab = ({
                         className="edit-button"
                         onClick={()=> {
                           if(row.isDraft){
-                            window.location.assign(`project-wizard?draftId=${row.id}&institutionId=${institutionId}`);
+                            window.location.assign(`/project-wizard?draftId=${row.draftId}&institutionId=${institutionId}`);
                           } else {
-                            window.location.assign(`project-wizard?projectId=${row.id}&institutionId=${institutionId}`);
+                            window.location.assign(`/project-wizard?projectId=${row.id}&institutionId=${institutionId}`);
                           }
 		        }}
         >
@@ -122,11 +122,11 @@ export const ProjectsTab = ({
                       </div>
       },
       {width: "120px",
-       cell: (row)=> !row.isDraft &&
-       <input
+        cell: (row)=> !row.isDraft &&
+          <input
             className="btn btn-outline-darkgreen btn-sm w-100"
             onClick={() => window.open(`/collection?projectId=${row.id}&institutionId=${institutionId}`)
-                    }
+            }
             type="button"
             value="Collect"
           />}
@@ -160,8 +160,10 @@ export const ProjectsTab = ({
   };
 
   const handleDownload = (selectedFiles) => {
-    if (selectedRows.length === 0) return;
-    downloadProjectsBulk(selectedRows.map((r) => r.id), selectedFiles);
+    // Drafts have nothing to download, and their table ids are offset (not real project ids).
+    const projectIds = selectedRows.filter((r) => !r.isDraft).map((r) => r.id);
+    if (projectIds.length === 0) return;
+    downloadProjectsBulk(projectIds, selectedFiles);
   };
 
   const conditionalRowStyles = [
@@ -222,19 +224,19 @@ export const ProjectsTab = ({
         />
       </div>
       
-        <div className="projects-legend">
-          {[
-            ["No Plots collected", "#D98EB2"],
-            ["Some Plots collected", "#FEBD5B"],
-            ["All Plots collected", "#84D0AC"],
-            ["Simplified", "#9286D3"]
-          ].map(([title, color]) => (
-            <div key={title} className="projects-legend-item">
-              <span className="projects-legend-symbol" style={{ color }}>⯀</span>
-              <span className="projects-legend-label">: {title}</span>
-            </div>
-          ))}
-        </div>
+      <div className="projects-legend">
+        {[
+          ["No Plots collected", "#D98EB2"],
+          ["Some Plots collected", "#FEBD5B"],
+          ["All Plots collected", "#84D0AC"],
+          ["Simplified", "#9286D3"]
+        ].map(([title, color]) => (
+          <div key={title} className="projects-legend-item">
+            <span className="projects-legend-symbol" style={{ color }}>⯀</span>
+            <span className="projects-legend-label">: {title}</span>
+          </div>
+        ))}
+      </div>
 
       {isAdmin && (
         <BulkActions

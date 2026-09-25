@@ -158,10 +158,10 @@
    [:post "/edit-projects-bulk"]             {:handler     (validate projects/edit-projects-bulk!)
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/create-project-draft"]           {:handler     (validate projects/create-project-draft!)
+   [:post "/create-project-draft"]           {:handler     projects/create-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
-   [:post "/update-project-draft"]           {:handler     (validate projects/update-project-draft!)
+   [:post "/update-project-draft"]           {:handler     projects/update-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/copy-project"]                   {:handler projects/copy-project!
