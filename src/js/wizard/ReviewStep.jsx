@@ -157,7 +157,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const timesToReview = designSettings?.qaqcAssignment?.timesToReview;
     const smes = designSettings?.qaqcAssignment?.smes ?? [];
     const fileDistributions = ["geojson", "csv", "shp"];
-    const isFileDistribution = fileDistributions.include(plotDistribution);
+    const isFileDistribution = fileDistributions.includes(plotDistribution);
 
     // String() on both sides so it works whether ids arrive as numbers or strings
     const emailsFor = (ids) =>
