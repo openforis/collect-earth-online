@@ -1570,15 +1570,16 @@ export const usePlotDesignLocked = () => {
   return templateProjectId > 0 && projectId === -1 && Boolean(useTemplatePlots);
 };
 
-// The data license can't change once a project has been published with one.
-// Published projects saved before the license existed stay editable so an admin can pick one.
-export const useLicenseLocked = () => {
+// Once published, a project's data license can go from private to public but never back.
+// True when the project was published (or closed) with a saved public license, which
+// means the private option must be disabled. Unsaved changes in this session don't count.
+export const usePublicLicenseLocked = () => {
   const projectId = useSubscription([sub_ids.projectId]) || -1;
   const availability = useSubscription([sub_ids.availability]);
   const originalProject = useSubscription([sub_ids.originalProject]) || {};
   return projectId > 0
     && ['published', 'closed'].includes(availability)
-    && Boolean(originalProject[LICENSE_KEY]);
+    && originalProject[LICENSE_KEY] === 'public';
 };
 
 export const renumberRules = (rules) => rules.map((rule, i) => ({ ...rule, id: i }));

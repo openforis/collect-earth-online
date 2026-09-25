@@ -1,6 +1,6 @@
 import React, { useEffect, useState , useContext} from "react";
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
-import { event_ids,  sub_ids, useLicenseLocked } from "../state/projectWizard";
+import { event_ids,  sub_ids, usePublicLicenseLocked } from "../state/projectWizard";
 import { InfoTooltip } from "../components/PageComponents";
 
 import SvgIcon from "../components/svg/SvgIcon";
@@ -52,7 +52,7 @@ const DataLicenseCard = () => {
     public: ["Public – Open Use",
       "Anything shared in the project is publicly available for anyone to access and use. Once this project is published, the license cannot be made private."]};
   const license = useSubscription([sub_ids.overview.projectOptions.license]);
-  const locked = useLicenseLocked();
+  const publicLocked = usePublicLicenseLocked();
   return (
     <div className="wizard-card" style={{ marginBottom: "15px"}}>
       <p className="card-title">Data License Type<span style={{color:"red"}}>*</span>
@@ -67,23 +67,23 @@ const DataLicenseCard = () => {
           } />
       </p>
       <p className="text-label" style={{ marginBottom: "10px" }}>
-        Choose if your project will have restricted data or open-use. These terms cannot be changed
-        once the project is published.{" "}
+        Choose if your project will have restricted data or open-use.{" "}
         <a href="/data-license" target="_blank" rel="noopener noreferrer"
           style={{ textDecoration: "underline" }}>
           See the full agreement here.
         </a>
       </p>
-      {locked && (
+      {publicLocked && (
         <p className="text-secondary small" style={{ fontWeight: "500" }}>
-          This project is published, so its data license can no longer be changed.
+          This project was published with a public license, so it can no longer be made private.
         </p>
       )}
-      <div
-        inert={locked ? '' : undefined}
-        style={locked ? { opacity: 0.6 } : {}}>
-        {Object.entries(dataLicenseOptions).map(([id, [label, description]]) => (
-          <div key={id} style={{ marginBottom: "10px" }}>
+      {Object.entries(dataLicenseOptions).map(([id, [label, description]]) => {
+        const disabled = publicLocked && id === "private";
+        return (
+          <div key={id}
+            inert={disabled ? '' : undefined}
+            style={{ marginBottom: "10px", ...(disabled ? { opacity: 0.6 } : {}) }}>
             <div className="labeled-input"
               onClick={() => dispatch([event_ids.overview.projectOptions.license, id])}>
               <span>{license === id
@@ -95,8 +95,8 @@ const DataLicenseCard = () => {
               {description}
             </p>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 };
