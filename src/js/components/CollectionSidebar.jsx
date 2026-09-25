@@ -10,11 +10,6 @@ import { SurveyQuestions, DrawingTool } from "./SurveyQuestions.jsx";
 import { Sidebar, SidebarCard } from "./Sidebar";
 import { LearningMaterialModal } from "./PageComponents";
 import {
-  everyObject,
-  safeLength,
-  filterObject,
-} from "../utils/sequence";
-import {
   PlanetMenu,
   PlanetDailyMenu,
   PlanetTFOMenu,
@@ -24,14 +19,72 @@ import {
   GEEImageCollectionMenu,
 } from "../imagery/collectionMenuControls";
 
+
+// Same rules SurveyQuestions uses to decide whether a sample counts as answered.
+const isAnswerFilled = (question, ans) => {
+  if (!ans) return false;
+  if (question.componentType === "input") {
+    const val = String(ans.answer ?? "").trim();
+    return question.dataType === "number"
+      ? val !== "" && !Number.isNaN(Number(val))
+      : val !== "";
+  }
+  return ans.answerId !== null && ans.answerId !== undefined && ans.answerId !== "";
+};
+
+// Does child apply, given how its parent was answered on this sample?
+const childApplies = (parent, child, parentAns) => {
+  if (parent.componentType === "input") return true;
+  const allowed = (child.parentAnswerIds || []).map(Number);
+  return allowed.length === 0 || allowed.includes(Number(parentAns.answerId));
+};
+
+// Only input questions can be optional (via `required`); every other
+// question type is always required.
+const needsAnswer = (q) => q.componentType !== "input" || !!q.required;
+
+// Walks the question tree for every sample and returns each question that
+// applies to that sample but has no answer. Children are only checked when
+// their parent is answered with a triggering answer.
+export const findMissingAnswers = (
+  surveyQuestions = {},
+  sampleIds = [],
+  userSamples = {}
+) => {
+  const questions = Object.entries(surveyQuestions || {})
+    .map(([id, q]) => ({ ...q, id: Number(id) }))
+    .filter((q) => !q.hideQuestion);
+  const childrenOf = (parentId) =>
+    questions.filter((q) => Number(q.parentQuestionId) === parentId);
+  const roots = childrenOf(-1);
+
+  const missing = [];
+  sampleIds.forEach((sampleId) => {
+    const answers = userSamples?.[sampleId] || {};
+    const walk = (q) => {
+      const ans = answers[q.id];
+      if (!isAnswerFilled(q, ans)) {
+        if (needsAnswer(q)) {
+          missing.push({ sampleId, questionId: q.id, question: q.question });
+        }
+        return; // children can't apply until the parent is answered
+        // (so a skipped optional input also skips its children)
+      }
+      childrenOf(q.id).filter((c) => childApplies(q, c, ans)).forEach(walk);
+    };
+    roots.forEach(walk);
+  });
+  return missing;
+};
+
 const OverviewCard = ({}) => {
   const state = useAtomValue(stateAtom);
   const stats = [{title: 'Total Plots', key: 'totalPlots'},
-                 {title: 'Total Contributors', key: 'totalUsers'},
-                 {title: 'Analyzed', icon: 'square', color: '⁨⁨#3019FF', key: 'analyzed'},
-                 {title: 'Flagged', icon: 'square', color: '#E32312', key: 'flagged'},
-                 {title: 'Unanalyzed', icon: 'square', color: '#F3FC4F', key: 'unanalyzed'},
-                 {title: 'Average Collection Time', key: 'averageTime'}];
+    {title: 'Total Contributors', key: 'totalUsers'},
+    {title: 'Analyzed', icon: 'square', color: '⁨⁨#3019FF', key: 'analyzed'},
+    {title: 'Flagged', icon: 'square', color: '#E32312', key: 'flagged'},
+    {title: 'Unanalyzed', icon: 'square', color: '#F3FC4F', key: 'unanalyzed'},
+    {title: 'Average Collection Time', key: 'averageTime'}];
   function percent (part, total) {
     return (part * 100) / total;
   }
@@ -41,10 +94,10 @@ const OverviewCard = ({}) => {
     case 'totalPlots': return state.stats.totalPlots;
     case 'totalUsers': return state.stats.userStats.length;
     case 'analyzed' :  return (state.stats.analyzedPlots +
-                               " (" + percent(state.stats.analyzedPlots, state.stats.totalPlots).toFixed(2) + "%)");
+      " (" + percent(state.stats.analyzedPlots, state.stats.totalPlots).toFixed(2) + "%)");
     case 'flagged' : return state.stats.flaggedPlots;
     case 'unanalyzed': return (state.stats.unanalyzedPlots +
-                               ' (' + percent(state.stats.unanalyzedPlots, state.stats.totalPlots).toFixed(2) + '%)');
+      ' (' + percent(state.stats.unanalyzedPlots, state.stats.totalPlots).toFixed(2) + '%)');
     case 'averageTime': return state.stats.collectionTime + " secs/ plot";    
     }
   };
@@ -201,12 +254,12 @@ export const NewPlotNavigation = ({userEmail}) => {
   const ProjectStats = () => {
     const { stats, } = useAtomValue(stateAtom);
     const { totalPlots,
-            analyzedPlots,
-            unanalyzedPlots,
-            flaggedPlots,
-            userStats,
-            collectionTime,
-          } = stats;
+      analyzedPlots,
+      unanalyzedPlots,
+      flaggedPlots,
+      userStats,
+      collectionTime,
+    } = stats;
     const currentUserStats = userStats.filter(({email}) => email === userEmail)[0];
     const userAverageTime = (currentUser) => {
       const { seconds, timedPlots } = currentUser;
@@ -215,72 +268,72 @@ export const NewPlotNavigation = ({userEmail}) => {
     
     return (
       <>
-      <div
-        className="modal-spoofer"
-        onClick={()=>{setAppState((s) => ({... s, showInfoModal: !s.showInfoModal}));}}
-        style={{backgroundColor: 'red',
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                opacity: 0,
-                width: '100vw',
-                height: '100vh'}}>
-      </div>
-      <div
-        style={{
-          position: "absolute", 
-          zIndex: "1",
-          top: "45px",
-          width: "100%",
-          paddingRight: "2rem"
-        }}>
-        <SidebarCard
-          showHeader={false}>
-          <label className="stats-header m-0 mr-3">Project Statistics</label>
-          <div className="stats-row">
-            <label className="m-0 mr-3">--Total</label>
-            <span>{totalPlots}</span>
-          </div>
-          <div className="stats-row">
-            <label className="m-0 mr-3">--Analyzed</label>
-            <span>{analyzedPlots}</span>
-          </div>
-          <div className="stats-row">
-            <label className="m-0 mr-3">--Unanalyzed</label>
-            <span>{unanalyzedPlots}</span>
-          </div>
-          <div className="stats-row">
-            <label className="m-0 mr-3">--Flagged</label>
-            <span>{flaggedPlots}</span>
-          </div>
-          <div className="stats-row">
-            <label className="m-0 mr-3">--Total Contributors</label>
-            <span>{userStats.length}</span>
-          </div>      
-          {collectionTime &&
-           <div className="stats-row">
-             <label className="m-0 mr-3">--Average Collection Time</label>
-             <span>{(collectionTime / (totalPlots - unanalyzedPlots)).toFixed(2)}s</span>
-           </div>}
-          {currentUserStats &&
-           <>
-             <label className="stats-header m-0 mr-3">My Statistics</label>
-             <div className="stats-row">
-               <label className="m-0 mr-3">--Analyzed</label>
-               <span>{currentUserStats.analyzed}</span>
-             </div>
-             <div className="stats-row">
-               <label className="m-0 mr-3">--Flagged</label>
-               <span>{currentUserStats.flagged}</span>
-             </div>
-             <div className="stats-row">
-               <label className="m-0 mr-3">--My Average Time</label>
-               <span>{userAverageTime(currentUserStats)}s</span>
-             </div>
-           </>}
-        </SidebarCard>
-      </div>
-    </>);};
+        <div
+          className="modal-spoofer"
+          onClick={()=>{setAppState((s) => ({... s, showInfoModal: !s.showInfoModal}));}}
+          style={{backgroundColor: 'red',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            opacity: 0,
+            width: '100vw',
+            height: '100vh'}}>
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            zIndex: "1",
+            top: "45px",
+            width: "100%",
+            paddingRight: "2rem"
+          }}>
+          <SidebarCard
+            showHeader={false}>
+            <label className="stats-header m-0 mr-3">Project Statistics</label>
+            <div className="stats-row">
+              <label className="m-0 mr-3">--Total</label>
+              <span>{totalPlots}</span>
+            </div>
+            <div className="stats-row">
+              <label className="m-0 mr-3">--Analyzed</label>
+              <span>{analyzedPlots}</span>
+            </div>
+            <div className="stats-row">
+              <label className="m-0 mr-3">--Unanalyzed</label>
+              <span>{unanalyzedPlots}</span>
+            </div>
+            <div className="stats-row">
+              <label className="m-0 mr-3">--Flagged</label>
+              <span>{flaggedPlots}</span>
+            </div>
+            <div className="stats-row">
+              <label className="m-0 mr-3">--Total Contributors</label>
+              <span>{userStats.length}</span>
+            </div>
+            {collectionTime &&
+              <div className="stats-row">
+                <label className="m-0 mr-3">--Average Collection Time</label>
+                <span>{(collectionTime / (totalPlots - unanalyzedPlots)).toFixed(2)}s</span>
+              </div>}
+            {currentUserStats &&
+              <>
+                <label className="stats-header m-0 mr-3">My Statistics</label>
+                <div className="stats-row">
+                  <label className="m-0 mr-3">--Analyzed</label>
+                  <span>{currentUserStats.analyzed}</span>
+                </div>
+                <div className="stats-row">
+                  <label className="m-0 mr-3">--Flagged</label>
+                  <span>{currentUserStats.flagged}</span>
+                </div>
+                <div className="stats-row">
+                  <label className="m-0 mr-3">--My Average Time</label>
+                  <span>{userAverageTime(currentUserStats)}s</span>
+                </div>
+              </>}
+          </SidebarCard>
+        </div>
+      </>);};
 
   return (
     <SidebarCard      
@@ -333,8 +386,8 @@ export const NewPlotNavigation = ({userEmail}) => {
                 navigationMode === "similar"
                   ? "Reference Plot Id: " + currentProject?.plotSimilarityDetails?.referencePlotId
                   : currentPlot?.visibleId
-                  ? "Current Plot: " + currentPlot?.visibleId
-                  : "Select a Plot to begin"
+                    ? "Current Plot: " + currentPlot?.visibleId
+                    : "Select a Plot to begin"
               }
               value={newPlotId}
               onChange={(e) => setAppState((s) => ({ ...s, newPlotId: e.target.value }))}
@@ -405,22 +458,22 @@ export const ExternalTools = () => {
     if(currentPlot?.plotGeom){
       urlParams = currentPlot?.plotGeom?.includes("Point")
         ? currentProject?.plotShape === "circle"
-        ? "center=[" +
-        mercator.parseGeoJson(currentPlot?.plotGeom).getCoordinates() +
-        "];radius=" +
-        currentProject?.plotSize / 2
-        : "geoJson=" +
-        mercator.geometryToGeoJSON(
-          mercator.getPlotPolygon(
-            currentPlot?.plotGeom,
-            currentProject?.plotSize,
-            currentProject?.plotShape
-          ),
-          "EPSG:4326",
-          "EPSG:3857",
-          5
-        )
-      : "geoJson=" + currentPlot?.plotGeom;
+          ? "center=[" +
+            mercator.parseGeoJson(currentPlot?.plotGeom).getCoordinates() +
+            "];radius=" +
+            currentProject?.plotSize / 2
+          : "geoJson=" +
+            mercator.geometryToGeoJSON(
+              mercator.getPlotPolygon(
+                currentPlot?.plotGeom,
+                currentProject?.plotSize,
+                currentProject?.plotShape
+              ),
+              "EPSG:4326",
+              "EPSG:3857",
+              5
+            )
+        : "geoJson=" + currentPlot?.plotGeom;
     }
     if (auxWindow) auxWindow.close();
     const win = window.open(
@@ -448,8 +501,8 @@ export const ExternalTools = () => {
 
   const showGeoDash = () => {
     const plotRadius = currentProject?.plotSize
-          ? currentProject?.plotSize / 2.0
-          : mercator.getViewRadius(state.mapConfig);
+      ? currentProject?.plotSize / 2.0
+      : mercator.getViewRadius(state.mapConfig);
     setState(s => ({...s, usedGeodash: true }));
     window.open(
       "/geo-dash?" +
@@ -491,10 +544,10 @@ export const ExternalTools = () => {
         </button>
 
         {currentProject.referencePlotId ?
-         <button className="ext-btn" onClick={loadGEEScript}>
-           <span>Go To GEE Script</span>
-         </button>
-         : <></>}
+          <button className="ext-btn" onClick={loadGEEScript}>
+            <span>Go To GEE Script</span>
+          </button>
+          : <></>}
 
         <button className="ext-btn" onClick={showGeoDash}>
           <span>Open GeoDash</span>
@@ -505,10 +558,10 @@ export const ExternalTools = () => {
         </button>
 
         {currentProject.learningMaterial ?
-         <button className="ext-btn" onClick={toggleLearningMaterial}>
-           <span>Learning Material</span>
-         </button> 
-         : <></>}
+          <button className="ext-btn" onClick={toggleLearningMaterial}>
+            <span>Learning Material</span>
+          </button>
+          : <></>}
       </div>
       {showLearningMaterial && (
         <LearningMaterialModal
@@ -541,14 +594,14 @@ export const SidebarFooter = ({ processModal }) => {
   const setAppState = useSetAtom(stateAtom);
 
   const hasAnswers = () =>
-        _.some(Object.values(userSamples), (sample) => !_.isEmpty(sample)) ||
-        _.some(Object.values(userSamples), (sample) => !_.isEmpty(sample));
+    _.some(Object.values(userSamples), (sample) => !_.isEmpty(sample)) ||
+      _.some(Object.values(userSamples), (sample) => !_.isEmpty(sample));
 
   const confirmFlag = () =>
-        hasAnswers() ||
-        confirm(
-          "Flagging this plot will delete your previous answers. Are you sure you want to continue?"
-        );
+    hasAnswers() ||
+      confirm(
+        "Flagging this plot will delete your previous answers. Are you sure you want to continue?"
+      );
 
   const navToNextPlot = () => {
     return setAppState(s => ({
@@ -590,7 +643,7 @@ export const SidebarFooter = ({ processModal }) => {
         if (response.ok) {
           if (inReviewMode) {
             setAppState(s => ({...s,
-                               remainingPlotters: remainingPlotters.filter((plotter) => plotter.userId != currentUserId) }));
+              remainingPlotters: remainingPlotters.filter((plotter) => plotter.userId != currentUserId) }));
           }
           if(currentProject.type !== "simplified") {
             return navToNextPlot();
@@ -640,7 +693,7 @@ export const SidebarFooter = ({ processModal }) => {
       const samples = newPlot?.samples || [];
 
       const bySample = (pick, copy) =>
-            Object.fromEntries(samples.map((s) => [s.id, copy ? (pick(s) || {}) : {}]));
+        Object.fromEntries(samples.map((s) => [s.id, copy ? (pick(s) || {}) : {}]));
 
       const selectedQuestionId = Number(
         (Object.entries(prev.currentProject?.surveyQuestions || {}).find(
@@ -684,71 +737,73 @@ export const SidebarFooter = ({ processModal }) => {
   };
 
   const checkCanSave = () => {
-    const { surveyQuestions, collectConfidence } = currentProject;
-    const { confidence } = currentPlot;    
-    const visibleSurveyQuestions = filterObject(surveyQuestions, ([_id, val]) => val.hideQuestion != true);
-    const requiredQuestions = filterObject(visibleSurveyQuestions, ([_id, val]) => val.required);
-    const noneAnswered = everyObject(visibleSurveyQuestions, ([_id, sq]) => safeLength(sq.answered) === 0);
-    const hasSamples = safeLength(currentPlot.samples) > 0;
-    const allAnswered = everyObject(
-      requiredQuestions, ([_id, sq]) => safeLength(sq.visible) === safeLength(sq.answered));
-    if(currentPlot.flagged) {
+    const { surveyQuestions, projectOptions } = currentProject;
+    const collectConfidence = projectOptions?.collectConfidence;
+    const { confidence, confidenceComment } = currentPlot;
+    const hasConfidence = Number.isInteger(confidence) && confidence >= 0 && confidence <= 100;
+    const hasConfidenceComment = String(confidenceComment ?? "").trim() !== "";
+    const confidenceComplete = hasConfidence && hasConfidenceComment;
+    const samples = currentPlot.samples || [];
+    const sampleIds = samples.map((s) => s.id);
+    const hasSamples = sampleIds.length > 0;
+
+    // Validate against userSamples (what actually gets posted), not the
+    // derived surveyQuestions[].visible / .answered fields.
+    const missing = findMissingAnswers(surveyQuestions, sampleIds, userSamples);
+    const allAnswered = missing.length === 0;
+    const noneAnswered = sampleIds.every((id) => _.isEmpty(userSamples?.[id]));
+
+    const showAlert = (alertType, alertMessage) =>
+      setAppState((prev) => ({ ...prev, modal: { alert: { alertType, alertMessage } } }));
+
+    const describeMissing = () => {
+      const visibleIdOf = (id) => samples.find((s) => s.id === id)?.visibleId ?? id;
+      const lines = missing
+        .slice(0, 5)
+        .map(({ sampleId, question }) => `"${question}" on sample ${visibleIdOf(sampleId)}`);
+      const more = missing.length > 5 ? ` and ${missing.length - 5} more` : "";
+      return `Missing answers: ${lines.join("; ")}${more}.`;
+    };
+
+    const confidenceMessage = () =>
+      !hasConfidence && !hasConfidenceComment
+        ? "You must set the plot confidence and add a confidence comment before saving."
+        : !hasConfidence
+          ? "You must set the plot confidence before saving."
+          : "You must add a confidence comment before saving.";
+
+    if (currentPlot.flagged) {
       return true;
     } else if (inReviewMode) {
       if (!(noneAnswered || allAnswered)) {
-        setAppState((prev) => ({
-          ...prev,
-          modal: {
-            alert: {
-              alertType: "Review Mode Alert",
-              alertMessage:
-              "In review mode, plots can only be saved if all questions are answered or the answers are cleared.",
-            },
-          },
-        }));
+        showAlert(
+          "Review Mode Alert",
+          "In review mode, plots can only be saved if all questions are answered or the answers are cleared. " +
+            describeMissing()
+        );
         return false;
-      } else {
-        return true;
       }
+      // Answers were cleared: nothing to attach a confidence to.
+      if (noneAnswered || !collectConfidence || confidenceComplete) return true;
+      showAlert("Review Mode Alert", confidenceMessage());
+      return false;
     } else if (!hasSamples) {
-      setAppState((prev) => ({
-        ...prev,
-        modal: {
-          alert: {
-            alertType: "Review Mode Alert",
-            alertMessage:
-            "The collection must have samples to be saved. Enter draw mode to add more samples.",
-          },
-        },
-      }));
+      showAlert(
+        "Collection Alert",
+        "The collection must have samples to be saved. Enter draw mode to add more samples."
+      );
       return false;
     } else if (!allAnswered) {
-      setAppState((prev) => ({
-        ...prev,
-        modal: {
-          alert: {
-            alertType: "Review Mode Alert",
-            alertMessage:
-            "All required questions must be answered to save the collection.",
-          },
-        },
-      }));
+      showAlert(
+        "Collection Alert",
+        "All required questions must be answered for every sample before saving. " + describeMissing()
+      );
       return false;
-    } else if (collectConfidence && !confidence) {
-      setAppState((prev) => ({
-        ...prev,
-        modal: {
-          alert: {
-            alertType: "Review Mode Alert",
-            alertMessage:
-            "You must input the confidence before saving the interpretation.",
-          },
-        },
-      }));
+    } else if (collectConfidence && !confidenceComplete) {
+      showAlert("Collection Alert", confidenceMessage());
       return false;
-    } else {
-      return true;
     }
+    return true;
   };
 
   const postValuesToDB = () => {
@@ -767,23 +822,23 @@ export const SidebarFooter = ({ processModal }) => {
   return (
     <div className="sidebar-footer-buttons">
       {!collecting &&
-       <button className="btn outline"
-               onClick={clearAll}>
-         Clear All
-       </button>}
+        <button className="btn outline"
+          onClick={clearAll}>
+          Clear All
+        </button>}
       {!collecting &&
-       <button className="btn outline"
-               onClick={toggleFlagged}>
-         {currentPlot.flagged ? "Unflag Plot" : "Flag Plot"}
-       </button>}
+        <button className="btn outline"
+          onClick={toggleFlagged}>
+          {currentPlot.flagged ? "Unflag Plot" : "Flag Plot"}
+        </button>}
       <button className={!collecting ? "btn filled" : "btn outline"}
-              onClick={() => setAppState(s => ({...s, showQuitModal: !s.showQuitModal}))}
+        onClick={() => setAppState(s => ({...s, showQuitModal: !s.showQuitModal}))}
       >Exit</button>
       {!collecting &&
-       <button className="btn filled"
-               onClick={postValuesToDB}>
-         Save & Continue
-       </button>}
+        <button className="btn filled"
+          onClick={postValuesToDB}>
+          Save & Continue
+        </button>}
     </div>
   );
 };
@@ -887,31 +942,31 @@ export const ImageryOptions = () => {
       )}
 
       {currentImagery.id &&
-       imageryList.map((imagery) => {
-         const visible = currentImagery.id === imagery.id && open;
-         if (!imagery.sourceConfig) return null;
+        imageryList.map((imagery) => {
+          const visible = currentImagery.id === imagery.id && open;
+          if (!imagery.sourceConfig) return null;
 
-         const propsForMenu = {
-           ...commonProps,
-           key: imagery.id,
-           thisImageryId: imagery.id,
-           sourceConfig: imagery.sourceConfig,
-           visible,
-         };
+          const propsForMenu = {
+            ...commonProps,
+            key: imagery.id,
+            thisImageryId: imagery.id,
+            sourceConfig: imagery.sourceConfig,
+            visible,
+          };
 
-         const byType = {
-           Planet: <PlanetMenu {...propsForMenu} />,
-           PlanetDaily: <PlanetDailyMenu {...propsForMenu} />,
-           PlanetTFO: <PlanetTFOMenu {...propsForMenu} />,
-           SecureWatch: <SecureWatchMenu {...propsForMenu} />,
-           Sentinel1: <SentinelMenu {...propsForMenu} />,
-           Sentinel2: <SentinelMenu {...propsForMenu} />,
-           GEEImage: <GEEImageMenu {...propsForMenu} />,
-           GEEImageCollection: <GEEImageCollectionMenu {...propsForMenu} />,
-         };
+          const byType = {
+            Planet: <PlanetMenu {...propsForMenu} />,
+            PlanetDaily: <PlanetDailyMenu {...propsForMenu} />,
+            PlanetTFO: <PlanetTFOMenu {...propsForMenu} />,
+            SecureWatch: <SecureWatchMenu {...propsForMenu} />,
+            Sentinel1: <SentinelMenu {...propsForMenu} />,
+            Sentinel2: <SentinelMenu {...propsForMenu} />,
+            GEEImage: <GEEImageMenu {...propsForMenu} />,
+            GEEImageCollection: <GEEImageCollectionMenu {...propsForMenu} />,
+          };
 
-         return byType[imagery.sourceConfig.type] || null;
-       })}
+          return byType[imagery.sourceConfig.type] || null;
+        })}
       <div
         style={{
           display: "flex",

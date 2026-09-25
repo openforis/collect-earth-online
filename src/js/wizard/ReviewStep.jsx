@@ -8,7 +8,7 @@ import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
 import SvgIcon from '../components/svg/SvgIcon';
 import SurveyRule from '../survey/SurveyRule';
 import { SurveyQuestions } from '../components/SurveyQuestions';
-import { NewMap } from '../components/NewMap';;
+import { NewMap } from '../components/NewMap';
 
 import "../../css/project-wizard.css";
 
@@ -22,7 +22,11 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const projectDescription = useSubscription([sub_ids.overview.projectDescription]);
     const projectVisibility = useSubscription([sub_ids.overview.visibility]);
     const templateProjectId = useSubscription([sub_ids.templateProjectId]);
-    const dataLicenseType = "Public-Open Use"; //useSubscription([sub_ids.overview.license])
+    const templateProjectName = useSubscription([sub_ids.templateProjectName]);
+    const useTemplatePlots = useSubscription([sub_ids.overview.useTemplatePlots]);
+    const useTemplateWidgets = useSubscription([sub_ids.overview.useTemplateWidgets]);
+    const dataLicense = useSubscription([sub_ids.overview.projectOptions.license]);
+    const dataLicenseLabels = {private: 'Private – Restricted Use', public: 'Public – Open Use'};
     const showGee = useSubscription([sub_ids.overview.projectOptions.showGEEScript]);
     const extraPlotColumns = useSubscription([sub_ids.overview.projectOptions.showPlotInformation]);
     const plotConfidence = useSubscription([sub_ids.overview.projectOptions.collectConfidence]);
@@ -41,9 +45,13 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         <p>Name: <b>{projectName}</b></p>
         <p>Description: <b>{projectDescription}</b></p>
         <p>Visibility: <b>{projectVisibility}</b></p>
-        <p>Data License Type: <b>{projectVisibility}</b></p>
-        <p className='hyperlink' >See the full agreement here.</p>
-         {usingTemplate && (
+        <p>Data License Type: <b>{dataLicenseLabels[dataLicense] ?? 'Not selected'}</b></p>
+        <p>
+          <a className='hyperlink' href='/data-license' target='_blank' rel='noopener noreferrer'>
+            See the full agreement here.
+          </a>
+        </p>
+        {usingTemplate && (
           <>
             <p>Template: <b>{templateProjectName} (#{templateProjectId})</b></p>
             <p>{!useTemplatePlots && "Don't "}Use template plot design</p>
@@ -565,15 +573,15 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         ) : null}
       </div>
       {projectId ? (
-      <div
-        className="wizard-sidebar"
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          height: '100%',
-          paddingBottom: '100px' }}>
-        <ProjectActionsCard/>
-      </div>
+        <div
+          className="wizard-sidebar"
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            height: '100%',
+            paddingBottom: '100px' }}>
+          <ProjectActionsCard/>
+        </div>
       ) : null}
     </div>
   );

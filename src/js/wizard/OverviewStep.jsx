@@ -1,6 +1,6 @@
 import React, { useEffect, useState , useContext} from "react";
 import { useSubscription, dispatch } from '@flexsurfer/reflex';
-import { event_ids,  sub_ids } from "../state/projectWizard";
+import { event_ids,  sub_ids, useLicenseLocked } from "../state/projectWizard";
 import { InfoTooltip } from "../components/PageComponents";
 
 import SvgIcon from "../components/svg/SvgIcon";
@@ -41,6 +41,62 @@ const VisibilityCard = () => {
             >{ label  }</span>
           </div>);
       })}
+    </div>
+  );
+};
+
+const DataLicenseCard = () => {
+  const dataLicenseOptions = {
+    private: ["Private – Restricted Use",
+      "All contributions that are provided are only available to the Institution and its authorized users. Outside contributions must agree to restricted-use rights."],
+    public: ["Public – Open Use",
+      "Anything shared in the project is publicly available for anyone to access and use. Once this project is published, the license cannot be made private."]};
+  const license = useSubscription([sub_ids.overview.projectOptions.license]);
+  const locked = useLicenseLocked();
+  return (
+    <div className="wizard-card" style={{ marginBottom: "15px"}}>
+      <p className="card-title">Data License Type<span style={{color:"red"}}>*</span>
+        <InfoTooltip
+          title={"Data License Type"}
+          text={
+            <>
+              Sets whether contributions to this project stay restricted to your Institution or are
+              released publicly under an open license such as CC BY 4.0.
+              <a href="/data-license" target="_blank" rel="noopener noreferrer"> Read the agreement</a>
+            </>
+          } />
+      </p>
+      <p className="text-label" style={{ marginBottom: "10px" }}>
+        Choose if your project will have restricted data or open-use. These terms cannot be changed
+        once the project is published.{" "}
+        <a href="/data-license" target="_blank" rel="noopener noreferrer"
+          style={{ textDecoration: "underline" }}>
+          See the full agreement here.
+        </a>
+      </p>
+      {locked && (
+        <p className="text-secondary small" style={{ fontWeight: "500" }}>
+          This project is published, so its data license can no longer be changed.
+        </p>
+      )}
+      <div
+        inert={locked ? '' : undefined}
+        style={locked ? { opacity: 0.6 } : {}}>
+        {Object.entries(dataLicenseOptions).map(([id, [label, description]]) => (
+          <div key={id} style={{ marginBottom: "10px" }}>
+            <div className="labeled-input"
+              onClick={() => dispatch([event_ids.overview.projectOptions.license, id])}>
+              <span>{license === id
+                ? <SvgIcon icon="radioChecked" size="1.2rem" />
+                : <SvgIcon icon="radio" size="1.2rem"/>}</span>
+              <span className="text-label" style={{ fontWeight: "bold" }}>{label}</span>
+            </div>
+            <p className="text-label-sm" style={{ margin: "0 0 0 1.8rem", color: "#555" }}>
+              {description}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -226,13 +282,14 @@ export default function OverviewStep () {
   const templateProjectId = useSubscription([sub_ids.templateProjectId]) || -1;
   return (
     <div className="project-wizard overview-step"
-         style={{paddingLeft: "20%",
-                 paddingRight: "20%"}}>
+      style={{paddingLeft: "20%",
+        paddingRight: "20%"}}>
       <GeneralInformationCard />
       {templateProjectId > 0 && (
         <TemplateOptionsCard/>
       )}
       <VisibilityCard/> 
+      <DataLicenseCard/>
       <ProjectOptionsCard/>
     </div>
   );

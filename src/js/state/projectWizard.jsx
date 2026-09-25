@@ -68,6 +68,7 @@ const projectWizardDb = {
   'overview.projectOptions.collectConfidence': false,
   'overview.projectOptions.autoLaunchGeoDash': true,
   'overview.projectOptions.plotSimilarity': false,
+  'overview.projectOptions.license': 'public',
   'overview.useTemplatePlots': false,
   'imagery.imageryList': [],
   'imagery.previewId': '',
@@ -169,6 +170,7 @@ export const event_ids = {
       collectConfidence: 'overview.projectOptions.collectConfidence',
       autoLaunchGeoDash: 'overview.projectOptions.autoLaunchGeoDash',
       plotSimilarity: 'overview.projectOptions.plotSimilarity',
+      license: 'overview.projectOptions.license',
     }},
   projectDetails: 'projectDetails',
   imagery: {
@@ -288,6 +290,7 @@ export const sub_ids = {
       collectConfidence: 'overview.projectOptions.collectConfidence',
       autoLaunchGeoDash: 'overview.projectOptions.autoLaunchGeoDash',
       plotSimilarity: 'overview.projectOptions.plotSimilarity',
+      license: 'overview.projectOptions.license',
     }},
   projectDetails: 'projectDetails',
   imagery: {
@@ -393,6 +396,8 @@ regSub(sub_ids.overview.projectOptions.autoLaunchGeoDash, sub_ids.overview.proje
 regSub(sub_ids.overview.useTemplatePlots, sub_ids.overview.useTemplatePlots);
 regSub(sub_ids.overview.useTemplateWidgets, sub_ids.overview.useTemplateWidgets);
 regSub(sub_ids.overview.projectOptions.plotSimilarity, sub_ids.overview.projectOptions.plotSimilarity);
+regSub(sub_ids.overview.projectOptions.license, sub_ids.overview.projectOptions.license);
+regSub(sub_ids.originalProject, sub_ids.originalProject);
 regSub(sub_ids.templateProjectName, sub_ids.templateProjectName);
 
 //imagery
@@ -601,12 +606,14 @@ export function buildProject (draftDb, sub_ids) {
   const collectConfidence = current(draftDb[sub_ids.overview.projectOptions.collectConfidence]);
   const autoLaunchGeoDash = current(draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash]);
   const plotSimilarity = current(draftDb[sub_ids.overview.projectOptions.plotSimilarity]);
+  const license = current(draftDb[sub_ids.overview.projectOptions.license]);
   const projectOptions = {
     showGEEScript: gee,
     showPlotInformation: showPlotInformation,
     collectConfidence: collectConfidence,
     autoLaunchGeoDash: autoLaunchGeoDash,
     plotSimilarity,
+    license,
   };
   const plotSpacing = Number(current(draftDb[sub_ids.plots.plotSpacing]));
   const shufflePlots = current(draftDb[sub_ids.plots.shufflePlots]);
@@ -827,6 +834,7 @@ function applyProjectToDb (draftDb, {
   draftDb[sub_ids.overview.projectOptions.collectConfidence] = projectOptions.collectConfidence;
   draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash] = projectOptions.autoLaunchGeoDash;
   draftDb[sub_ids.overview.projectOptions.plotSimilarity] = projectOptions.plotSimilarity ?? false;
+  draftDb[sub_ids.overview.projectOptions.license] = projectOptions.license ?? null;
   draftDb[sub_ids.boundary.generationMethod] =
   ['shp', 'geojson', 'csv'].includes(plotDistribution) ? 'plotFile' : 'manual';
   draftDb[sub_ids.boundary.aoiFeatures] = aoiFeatures;
@@ -852,7 +860,7 @@ function applyProjectToDb (draftDb, {
   draftDb[sub_ids.publishedDate] = publishedDate;
   draftDb[sub_ids.closedDate] = closedDate;
   draftDb[sub_ids.originalProject] =
-    pickKeys(current(draftDb), [...PLOT_DESIGN_FIELDS, ...SAMPLE_DESIGN_FIELDS]);
+    pickKeys(current(draftDb), [...PLOT_DESIGN_FIELDS, ...SAMPLE_DESIGN_FIELDS, LICENSE_KEY]);
 }
 
 regEvent(event_ids.templateProject, ({ draftDb }, project) => {
@@ -1198,6 +1206,10 @@ regEvent(event_ids.overview.projectOptions.plotSimilarity, ({ draftDb }) => {
   draftDb[sub_ids.overview.projectOptions.plotSimilarity] = !draftDb[sub_ids.overview.projectOptions.plotSimilarity];
 });
 
+regEvent(event_ids.overview.projectOptions.license, ({ draftDb }, license) => {
+  draftDb[sub_ids.overview.projectOptions.license] = license;
+});
+
 regEvent(event_ids.imagery.imageryList, ({ draftDb }, imageryList ) => {
   draftDb[sub_ids.imagery.imageryList] = imageryList;
 });
@@ -1540,7 +1552,20 @@ export const usePlotDesignLocked = () => {
   return templateProjectId > 0 && projectId === -1 && Boolean(useTemplatePlots);
 };
 
+// The data license can't change once a project has been published with one.
+// Published projects saved before the license existed stay editable so an admin can pick one.
+export const useLicenseLocked = () => {
+  const projectId = useSubscription([sub_ids.projectId]) || -1;
+  const availability = useSubscription([sub_ids.availability]);
+  const originalProject = useSubscription([sub_ids.originalProject]) || {};
+  return projectId > 0
+    && ['published', 'closed'].includes(availability)
+    && Boolean(originalProject[LICENSE_KEY]);
+};
+
 export const renumberRules = (rules) => rules.map((rule, i) => ({ ...rule, id: i }));
+
+const LICENSE_KEY = 'overview.projectOptions.license';
 
 const PLOT_DESIGN_FIELDS = [
   'boundary.generationMethod', 'boundary.aoiFeatures', 'boundary.aoiFileName',

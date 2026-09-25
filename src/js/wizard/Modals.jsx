@@ -348,7 +348,7 @@ function SubmitProjectModal () {
             <span className="text-label" style={TOS ? {fontWeight: 'bold'} : {}}>
               Accept{' '}
               <a
-                href="https://app.collect.earth/terms-of-service"
+                href="/terms-of-service"
                 onClick={(e)=>e.stopPropagation()}
                 target="_blank">
                 Terms of Service

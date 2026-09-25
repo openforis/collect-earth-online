@@ -247,7 +247,7 @@ export function SurveyQuestions ({
     const us = userSamples?.[sampleId]?.[qId];
     if (us) return { answerId: Number(us.answerId), answer: us.answer };
     const a = (currentProject?.surveyQuestions?.[qId]?.answered || [])
-          .find(x => Number(x.sampleId) === Number(sampleId));
+      .find(x => Number(x.sampleId) === Number(sampleId));
     return a ? { answerId: Number(a.answerId), answer: a.answerText } : null;
   };
 
@@ -257,8 +257,8 @@ export function SurveyQuestions ({
     if (!q) return false;
     if (q.componentType === 'input') {
       const val = q.dataType === 'number'
-            ? (ansObj.answer ?? '').toString().trim()
-            : (ansObj.answer ?? '').toString().trim();
+        ? (ansObj.answer ?? '').toString().trim()
+        : (ansObj.answer ?? '').toString().trim();
       // number: must be non-empty and not NaN; text: non-empty string
       if (q.dataType === 'number') return val !== '' && !Number.isNaN(Number(val));
       return val.length > 0;
@@ -307,7 +307,7 @@ export function SurveyQuestions ({
       const us = userSamples?.[selectedSampleId]?.[questionId];
       if (us) return { answerId: toNum(us.answerId), answer: us.answer };
       const fromSurvey = (currentProject?.surveyQuestions?.[questionId]?.answered || [])
-            .find(a => a.sampleId === selectedSampleId);
+        .find(a => a.sampleId === selectedSampleId);
       if (fromSurvey) return { answerId: toNum(fromSurvey.answerId), answer: fromSurvey.answerText };
     }
     const anyAnswers = (currentProject?.surveyQuestions?.[questionId]?.answered || [])[0];
@@ -349,9 +349,9 @@ export function SurveyQuestions ({
   // RENDERING FUNCTIONS
   const renderQuestionNode = (question, depth = 0) => {
     const isOpen =
-          depth === 0
-          ? openTopId === question.id
-          : openByParent[question.parentQuestionId] === question.id;
+      depth === 0
+        ? openTopId === question.id
+        : openByParent[question.parentQuestionId] === question.id;
 
     const children = childrenOf(question.id, surveyData).filter(isChildVisible);
     const status = getQuestionStatus(question.id);
@@ -363,7 +363,7 @@ export function SurveyQuestions ({
         setOpenByParent(prev => ({
           ...prev,
           [question.parentQuestionId]:
-          prev[question.parentQuestionId] === question.id ? null : question.id,
+            prev[question.parentQuestionId] === question.id ? null : question.id,
         }));
       }
       setAppState(s => ({ ...s, selectedQuestionId: question.id }));
@@ -570,7 +570,7 @@ export function SurveyQuestions ({
 
   const checkRuleSumOfAnswers = (surveyRule, questionIdToSet, answerId, answerText) => {
     const answerVal = !isNaN(Number(answerText)) ?
-          Number(answerText) : Number(getSurveyAnswerText(questionIdToSet, answerId));
+      Number(answerText) : Number(getSurveyAnswerText(questionIdToSet, answerId));
     if (surveyRule.questionIds.includes(questionIdToSet)) {
       const answeredQuestions = getAnsweredQuestions(surveyRule.questionIds, questionIdToSet);
       if (surveyRule.questionIds.length === lengthObject(answeredQuestions) + 1) {
@@ -586,8 +586,8 @@ export function SurveyQuestions ({
             return `Sum of answers validation failed.\r\n\nSum for questions [${surveyRule.questionIds
               .map((q) => getSurveyQuestionText(q))
               .toString()}] must be ${surveyRule.validSum.toString()}.\r\n\nAn acceptable answer for "${question}" is ${(
-              surveyRule.validSum - invalidSum
-            ).toString()}.`;
+                surveyRule.validSum - invalidSum
+              ).toString()}.`;
           } else {
             return null;
           }
@@ -621,7 +621,7 @@ export function SurveyQuestions ({
       const ready = (al1, rl1, al2, rl2) => al1 > 1 && rl1 === al1 && rl2 === al2 + 1;
       if (
         ready(ansLen1, ruleLen1, ansLen2, ruleLen2) ||
-        ready(ansLen2, ruleLen2, ansLen1, ruleLen1)
+          ready(ansLen2, ruleLen2, ansLen1, ruleLen1)
       ) {
         const sampleIds = getSelectedSampleIds(questionIdToSet);
         const answeredSampleIds1 = getAnsweredSampleIds(answeredQuestions1);
@@ -643,14 +643,14 @@ export function SurveyQuestions ({
             const { question } = currentProject?.surveyQuestions[questionIdToSet];
             return (
               "Matching sums validation failed.\r\n\n" +
-              `Totals of the question sets [${surveyRule.questionIds1
-                .map((q) => getSurveyQuestionText(q))
-                .toString()}] and [${surveyRule.questionIds2
-                .map((q) => getSurveyQuestionText(q))
-                .toString()}] do not match.\r\n\n` +
-              `An acceptable answer for "${question}" is ${Math.abs(
-                invalidSum[0] - invalidSum[1]
-              )}.`
+                `Totals of the question sets [${surveyRule.questionIds1
+                  .map((q) => getSurveyQuestionText(q))
+                  .toString()}] and [${surveyRule.questionIds2
+                    .map((q) => getSurveyQuestionText(q))
+                    .toString()}] do not match.\r\n\n` +
+                `An acceptable answer for "${question}" is ${Math.abs(
+                  invalidSum[0] - invalidSum[1]
+                )}.`
             );
           } else {
             return null;
@@ -734,7 +734,7 @@ export function SurveyQuestions ({
     });
     const incompatQuestion = surveyQuestions[incompatQuestionId];
     const incompatAnswer = (incompatQuestion.answered.some((a) => a.answerId == incompatAnswerId) ||
-                            (incompatQuestionId == questionIdToSet && incompatAnswerId == answerId));
+      (incompatQuestionId == questionIdToSet && incompatAnswerId == answerId));
 
     if (ruleAnswerList.length === answeredQuestionsList.length && incompatAnswer) {
       const answerText = surveyQuestions[questionIdToSet].answers[answerId].answer;
@@ -757,11 +757,11 @@ export function SurveyQuestions ({
     };
     return (
       currentProject?.surveyRules &&
-      currentProject?.surveyRules
-        .map((surveyRule) =>
-          ruleFunctions[surveyRule.ruleType](surveyRule, questionIdToSet, answerId, answerText)
-        )
-        .find((msg) => msg)
+        currentProject?.surveyRules
+          .map((surveyRule) =>
+            ruleFunctions[surveyRule.ruleType](surveyRule, questionIdToSet, answerId, answerText)
+          )
+          .find((msg) => msg)
     );
   };
 
@@ -838,9 +838,11 @@ const ConfidenceItem = ({ isOpen, onToggle }) => {
 
   const calculateConfidenceStatus = () => {
     const { confidence, confidenceComment } = currentPlot;
-    if(confidence && confidenceComment) {
+    const hasConfidence = Number.isInteger(confidence);
+    const hasComment = String(confidenceComment ?? '').trim() !== '';
+    if(hasConfidence && hasComment) {
       setConfidenceStatus('complete');
-    } else if(!confidence && !confidenceComment) {
+    } else if(!hasConfidence && !hasComment) {
       setConfidenceStatus('none');
     } else {
       setConfidenceStatus('partial');
@@ -864,7 +866,7 @@ const ConfidenceItem = ({ isOpen, onToggle }) => {
             <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
               <rect x="4" y="9" width="12" height="2" fill="currentColor" rx="1" />
             </svg>
-            )}
+          )}
         </span>
         <span className="sq-text">Plot Confidence</span>
         <SvgIcon icon={isOpen ? "upCaret" : "downCaret"} size="1rem" />
@@ -897,7 +899,9 @@ const ConfidenceItem = ({ isOpen, onToggle }) => {
           </div>
 
           <div className="sq-textarea-wrap">
-            <label className="sq-textarea-label">Comment on the confidence (optional):</label>
+            <label className="sq-textarea-label">
+              Comment on the confidence<span style={{ color: 'red' }}>*</span>
+            </label>
             <textarea
               className="sq-textarea"
               value={currentPlot?.confidenceComment || ''}
@@ -944,7 +948,7 @@ export const DrawingTool = () => {
     const type = currentProject.type;
     const samples = currentPlot?.samples || [];
     const visibleSamples =
-          type === "simplified" ? samples.filter((s) => s.visibleId !== 1) : samples;
+      type === "simplified" ? samples.filter((s) => s.visibleId !== 1) : samples;
 
     mercator.disableDrawing(mapConfig);
     mercator.removeLayerById(mapConfig, "currentSamples");
@@ -965,8 +969,8 @@ export const DrawingTool = () => {
     mercator.disableDrawing(mapConfig);
     const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
     const existingIds = allFeatures
-          .map((f) => f.get("sampleId"))
-          .filter((id) => id);
+      .map((f) => f.get("sampleId"))
+      .filter((id) => id);
 
     const getMax = (arr) => Math.max(0, ...existingIds, ...arr.map((s) => s.id));
 
