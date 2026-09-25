@@ -414,6 +414,109 @@ function UpdatePublishedProjectModal () {
   );
 };
 
+function CheckboxOption ({ checked, disabled = false, onToggle, children }) {
+  return (
+    <div
+      className="labeled-input"
+      onClick={() => !disabled && onToggle()}
+      style={disabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}>
+      <span className="checkbox">
+        <SvgIcon icon={checked ? 'checkboxChecked' : 'checkboxUnchecked'} size="1.2rem" />
+      </span>
+      <span className="text-label" style={checked ? { fontWeight: 'bold' } : {}}>
+        {children}
+      </span>
+    </div>
+  );
+}
+
+function CopyProjectModal () {
+  const projectId = useSubscription([sub_ids.projectId]);
+  const institutionId = useSubscription([sub_ids.institutionId]);
+  const [usePlots, setUsePlots] = useState(true);
+  const [useWidgets, setUseWidgets] = useState(true);
+  const [copyAnswers, setCopyAnswers] = useState(false);
+  const [acceptTos, setAcceptTos] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [copyError, setCopyError] = useState(null);
+
+  // Answers are matched to the new project's plots by visible id, so they only
+  // line up when the existing plots are copied too.
+  const toggleUsePlots = () => {
+    if (usePlots) setCopyAnswers(false);
+    setUsePlots(!usePlots);
+  };
+
+  function copyProject () {
+    if (copying || !acceptTos) return;
+    setCopying(true);
+    setCopyError(null);
+    const params = new URLSearchParams({
+      projectId,
+      plots: usePlots,
+      widgets: useWidgets,
+      answers: usePlots && copyAnswers,
+      acceptTos,
+    });
+    fetch(`/copy-project?${params}`, { method: 'POST' })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        window.location.assign(`/project-wizard?projectId=${data.projectId}&institutionId=${institutionId}`);
+      })
+      .catch((error) => {
+        console.error(error);
+        setCopyError('Error copying project. See console for details.');
+        setCopying(false);
+      });
+  }
+
+  return (
+    <Modal
+      title='Copy Project'
+      closeText='Cancel'
+      confirmText={copying ? 'Copying...' : 'Copy Project'}
+      onConfirm={copyProject}
+      confirmDisabled={!acceptTos || copying}
+      onClose={() => { !copying && dispatch([event_ids.modal, null]); }}>
+      <div>
+        <p>A new unpublished copy of this project will be created. Choose what to include:</p>
+        <CheckboxOption checked={usePlots} onToggle={toggleUsePlots}>
+          Use existing plots
+        </CheckboxOption>
+        <CheckboxOption checked={useWidgets} onToggle={() => setUseWidgets(!useWidgets)}>
+          Use existing widgets
+        </CheckboxOption>
+        <CheckboxOption
+          checked={usePlots && copyAnswers}
+          disabled={!usePlots}
+          onToggle={() => setCopyAnswers(!copyAnswers)}>
+          Copy answers
+        </CheckboxOption>
+        {!usePlots && (
+          <p className="text-secondary small" style={{ marginTop: '-0.25rem' }}>
+            Answers can only be copied when using existing plots.
+          </p>
+        )}
+        <hr/>
+        <CheckboxOption checked={acceptTos} onToggle={() => setAcceptTos(!acceptTos)}>
+          Accept{' '}
+          <a
+            href="/terms-of-service"
+            onClick={(e) => e.stopPropagation()}
+            target="_blank"
+            rel="noopener noreferrer">
+            Terms of Service
+          </a>
+          <span style={{ color: 'red' }}>*</span>
+        </CheckboxOption>
+        {copyError && (
+          <p style={{ color: 'red', marginTop: '.5rem' }}>{copyError}</p>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
 function DraftSuccessModal () {
   const institutionId = useSubscription([sub_ids.institutionId]);
   return (
@@ -566,6 +669,7 @@ export default function ProjectWizardModal () {
   case 'newProject'  : return (<NewProjectModal/>);
   case 'review'      : return (<SubmitProjectModal/>);
   case 'update-published' : return (<UpdatePublishedProjectModal/>);
+  case 'copy-project' : return (<CopyProjectModal/>);
   case 'success'     : return (<SuccessModal/>);
   case 'error'       : return (<ErrorModal/>);
   case 'draft-success' : return (<DraftSuccessModal/>);
