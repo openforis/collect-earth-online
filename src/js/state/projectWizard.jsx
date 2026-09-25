@@ -70,6 +70,7 @@ const projectWizardDb = {
   'overview.projectOptions.plotSimilarity': false,
   'overview.projectOptions.license': null,
   'overview.useTemplatePlots': false,
+  'overview.useTemplateWidgets': false,
   'imagery.imageryList': [],
   'imagery.previewId': '',
   'institutionImagery': [],
@@ -316,6 +317,7 @@ export const sub_ids = {
     plotIds: 'plots.plotIds',
     designSettings: 'plots.designSettings',
     plotSimilarityDetails: 'plots.plotSimilarityDetails',
+    referencePlotId: 'plots.referencePlotId',
     plotsSource: 'plots.plotsSource',
     newPlotDistribution: 'plots.newPlotDistribution',
     newPlotSize: 'plots.newPlotSize',
@@ -514,6 +516,8 @@ regEvent(event_ids.availability, ({ draftDb }, availability ) => {
 // PROJECT WIZARD EVENTS
 
 regEvent(event_ids.draftProject, ({ draftDb }, draftId) => {
+  // Saving again should update this draft, not create a new one.
+  draftDb[sub_ids.projectDraftId] = Number(draftId);
   function getProjectDraftById(projectDraftId) {
     fetch(`/get-project-draft-by-id?projectDraftId=${projectDraftId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
@@ -523,6 +527,12 @@ regEvent(event_ids.draftProject, ({ draftDb }, draftId) => {
           return Promise.resolve();
         } else {
           dispatch([event_ids.templateProject, data]);
+          // Imagery isn't part of applyProjectToDb (templates and edits load it separately).
+          const imageryIds = data.projectImageryList ?? (data.imageryId > 0 ? [data.imageryId] : []);
+          if (imageryIds.length) {
+            dispatch([event_ids.imagery.imageryList, imageryIds]);
+            dispatch([event_ids.imagery.previewId, imageryIds[0]]);
+          }
           return Promise.resolve();
         }
       }).catch(() => {
@@ -972,10 +982,16 @@ regEvent(event_ids.importProject, ({ draftDb }, project) => {
 regEvent(event_ids.saveDraft, ({ draftDb }) => {
   const institutionId = Number(current(draftDb[sub_ids.institutionId]));
   const form = buildProject(draftDb, sub_ids);
-  const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
+  const useTemplateWidgets = current(draftDb[sub_ids.overview.useTemplateWidgets]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
   const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
   const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
+
+  // Validation failures come back as {params: {field: message}}; other failures as a string.
+  const draftErrors = (message) =>
+    message?.params
+      ? Object.entries(message.params).map(([field, error]) => field + ": " + error)
+      : [typeof message === 'string' ? message : 'Error saving draft. See console for details.'];
 
   function createProjectDraft () {
     fetch("/create-project-draft", {
@@ -998,15 +1014,12 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
           dispatch([event_ids.draftSuccess, ['Draft Saved', data[1]]]);          
           return Promise.resolve();
         } else {          
-          let errs = Object.entries(data[1].params).map(([field, message])=>{return (field + "; " + message);});
-          dispatch([event_ids.errors, [['server', errs]]]);
           return Promise.reject(data[1]);
         }
       })
       .catch((message) => {
-        console.log('create project request errors', message);
-        let errs = Object.entries(message.params).map(([field, message])=>{return (field + "; " + message);});
-        dispatch([event_ids.errors, [['server', errs]]]);
+        console.log('create project draft errors', message);
+        dispatch([event_ids.errors, [['server', draftErrors(message)]]]);
       });
   }
 
@@ -1028,16 +1041,17 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
-        dispatch([event_ids.draftSuccess, ['Draft Saved', data]]);
+        if (!data[0]) return Promise.reject(data[1]);
+        dispatch([event_ids.draftSuccess, ['Draft Saved', data[1]]]);
         return Promise.resolve();
       })
       .catch((message) => {
-        console.log('create project request errors', message);        
-        dispatch([event_ids.errors, [['server', Object.entries(message.params).map(([field, error]) => field + ": " + error)]]]);
+        console.log('update project draft errors', message);
+        dispatch([event_ids.errors, [['server', draftErrors(message)]]]);
       });
   }
 
-  form.projectId > 0
+  projectDraftId > 0
     ? saveProjectDraft()
     : createProjectDraft();           
 });
@@ -1045,7 +1059,7 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
 
 regEvent(event_ids.saveProject, ({ draftDb }, acceptTos, overwrite) => {
   const institutionId = Number(current(draftDb[sub_ids.institutionId]));
-  const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
+  const useTemplateWidgets = current(draftDb[sub_ids.overview.useTemplateWidgets]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
   const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
   const similarityDetails = current(draftDb[sub_ids.plots.plotSimilarityDetails]) || {};
@@ -1147,6 +1161,9 @@ regEvent(event_ids.publishProject, ({ draftDb }) => {
 });
 
 regEvent(event_ids.draftSuccess, ({ draftDb }, response) => {
+  // Remember a newly created draft so the next save updates it instead of creating another.
+  const createdDraftId = response?.[1]?.projectDraftId;
+  if (Number.isInteger(createdDraftId)) draftDb[sub_ids.projectDraftId] = createdDraftId;
   draftDb[sub_ids.successResponse] = response;
   draftDb[sub_ids.modal] = 'draft-success';
 });
@@ -1220,7 +1237,7 @@ regEvent(event_ids.imagery.previewId, ({ draftDb }, previewId) => {
 });
 
 regEvent(event_ids.questions.addQuestion, ({ draftDb }, nextId, questionToAdd ) => {
-  const questions = draftDb[sub_ids.questions.quesions];
+  const questions = draftDb[sub_ids.questions.questions];
   draftDb[sub_ids.questions.questions] = {... questions, [nextId]: questionToAdd};
 });
 
