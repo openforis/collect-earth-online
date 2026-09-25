@@ -115,6 +115,7 @@ function TemplateProjectModal () {
   const [templateProjects, setTemplateProjects] = useState([]);
   const [filterProjectId, setFilterProjectId] = useState('');
   const [filterProjectName, setFilterProjectName] = useState('');
+  const [showPublicProjects, setShowPublicProjects] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const stripForeignUsers = (designSettings) => ({
@@ -206,19 +207,36 @@ function TemplateProjectModal () {
       });
   }, [projectType]);
  
-  const visibleProjects = templateProjects.filter(matchesFilters(filterProjectId, filterProjectName));
+  const visibleProjects = templateProjects
+    .filter((project) => showPublicProjects || project.institutionId === institutionId)
+    .filter(matchesFilters(filterProjectId, filterProjectName));
+  // Don't keep (or load) a selection that the filters have hidden.
+  const selectedProjectId = visibleProjects.some(({ id }) => id === templateProjectId)
+    ? templateProjectId
+    : -1;
  
   return (
     <Modal
       title="Select Template Project"
       confirmText={loading ? 'Loading...' : 'Select'}
       closeText="Quit"
-      onConfirm={() => loadTemplate(templateProjectId)}
+      onConfirm={() => loadTemplate(selectedProjectId)}
       onClose={() => dispatch([event_ids.modal, 'newProject'])}>
       {templateProjects.length === 0
         ? <p>No template projects found.</p>
         : (
           <div>
+            <div
+              className="labeled-input"
+              style={{ marginBottom: '0.5rem' }}
+              onClick={() => setShowPublicProjects(!showPublicProjects)}>
+              <span className="checkbox">
+                <SvgIcon icon={showPublicProjects ? 'checkboxChecked' : 'checkboxUnchecked'} size="1.2rem" />
+              </span>
+              <span className="text-label" style={showPublicProjects ? { fontWeight: 'bold' } : {}}>
+                Show public projects
+              </span>
+            </div>
             <p>Filter Template Projects:</p>
             <div style={{ display: 'flex', gap: '1rem', flexDirection: 'row' }}>
               <input
@@ -241,7 +259,7 @@ function TemplateProjectModal () {
             </div>
             <select
               className="text-input"
-              value={templateProjectId}
+              value={selectedProjectId}
               onChange={(e) => setTemplateProjectId(Number(e.target.value))}>
               <option value={-1} disabled hidden>Select Template Project:</option>
               {visibleProjects.map(({ id, name }) => (
