@@ -1501,10 +1501,8 @@ body {
 #banner {
   position: absolute;
   z-index: 9999;
-
   background-color: var(--Primary-Light-Green);
   font-family: "Public Sans";
-
   box-shadow: var(--Primary-Highlight-Green);
   width: 30vw;
   padding: 1rem;
