@@ -156,6 +156,8 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const qaqcMethod = designSettings?.qaqcAssignment?.qaqcMethod ?? 'none';
     const timesToReview = designSettings?.qaqcAssignment?.timesToReview;
     const smes = designSettings?.qaqcAssignment?.smes ?? [];
+    const fileDistributions = ["geojson", "csv", "shp"];
+    const isFileDistribution = fileDistributions.include(plotDistribution);
 
     // String() on both sides so it works whether ids arrive as numbers or strings
     const emailsFor = (ids) =>
@@ -194,8 +196,8 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         </div>
         <p>Plot Distribution: <b>{plotDistribution}</b></p>
         <p>Number of Plots: <b>{totalPlots}</b></p>
-        <p>Plot Shape: <b>{plotShape}</b></p>
-        <p>Plot Size: <b>{plotSize}</b></p>
+        <p>Plot Shape: <b>{isFileDistribution ? "N/A" : plotShape}</b></p>
+        <p>Plot Size: <b>{isFileDistribution ? "N/A" : plotSize}</b></p>
         <p>User Assignment: <b>{userAssignmentText}</b></p>
         <p>Quality Control: <b>{qaqcText}</b></p>
       </div>
