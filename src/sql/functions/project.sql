@@ -42,8 +42,7 @@ CREATE OR REPLACE FUNCTION create_project(
     _token_key              text,
     _options                jsonb,
     _design_settings        jsonb,
-    _type                   text,
-    _tos_accepted_by        integer
+    _type                   text
 
  ) RETURNS integer AS $$
 
@@ -75,9 +74,7 @@ CREATE OR REPLACE FUNCTION create_project(
         token_key,
         options,
         design_settings,
-        type,
-        tos_accepted_date,
-        tos_accepted_by
+        type
     ) VALUES (
         _institution_id,
         'unpublished',
@@ -106,21 +103,20 @@ CREATE OR REPLACE FUNCTION create_project(
         _token_key,
         _options,
         _design_settings,
-        _type::project_type,
-        NOW(),
-        _tos_accepted_by
+        _type::project_type
     )
     RETURNING project_uid
 
 $$ LANGUAGE SQL;
 
 -- Publish project
-CREATE OR REPLACE FUNCTION publish_project(_project_id integer)
+CREATE OR REPLACE FUNCTION publish_project(_project_id integer, _slug text)
  RETURNS void AS $$
 
     UPDATE projects
     SET availability = 'published',
-        published_date = Now()
+        published_date = Now(),
+        accept_tos = _slug
     WHERE project_uid = _project_id;
 
     DELETE FROM ext_samples

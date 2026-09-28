@@ -1034,7 +1034,7 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
 });
 
 
-regEvent(event_ids.saveProject, ({ draftDb }, acceptTos, overwrite) => {
+regEvent(event_ids.saveProject, ({ draftDb }) => {
   const institutionId = Number(current(draftDb[sub_ids.institutionId]));
   const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
@@ -1055,7 +1055,6 @@ regEvent(event_ids.saveProject, ({ draftDb }, acceptTos, overwrite) => {
       },
       body: JSON.stringify({
         projectId: existingProjectId,
-        overwrite: overwrite === true,
         ...form,
       }),
     })
@@ -1086,7 +1085,6 @@ regEvent(event_ids.saveProject, ({ draftDb }, acceptTos, overwrite) => {
         projectTemplate: templateProjectId,
         useTemplatePlots,
         useTemplateWidgets,
-        acceptTos: acceptTos === true,
         ...form,
       }),
     })
@@ -1123,12 +1121,13 @@ regEvent(event_ids.saveProject, ({ draftDb }, acceptTos, overwrite) => {
     (existingProjectId > 0) ? updateProject() : createProject();
 });
 
-regEvent(event_ids.publishProject, ({ draftDb }) => {
+regEvent(event_ids.publishProject, ({ draftDb }, slug) => {
   const availability = draftDb[sub_ids.availability];
   const unpublished = availability === "unpublished";
   const projectId = draftDb[sub_ids.projectId];
 
-  fetch(`/publish-project?projectId=${projectId}&clearSaved=${unpublished}`, { method: "POST" })
+  fetch(`/publish-project?projectId=${projectId}&clearSaved=${unpublished}&acceptTOS=${slug}`,
+        { method: "POST" })
     .then((response) => (response.ok ? response.json() : Promise.reject(response)))
     .then((data) => {dispatch([event_ids.modal, 'published']);})
     .catch((error) => {

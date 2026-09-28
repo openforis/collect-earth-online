@@ -129,10 +129,10 @@ CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
     user_id          integer,
     administrator    boolean,
     verified         boolean,
-    accepted_terms   boolean
+    accepted_tos     text
  ) AS $$
 
-    SELECT user_uid, administrator, verified, accepted_terms
+    SELECT user_uid, administrator, verified, accept_tos
     FROM users
     WHERE email = _email
         AND password = crypt(_password, password)
@@ -154,7 +154,8 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_id integer)
     total_plots        integer,
     average_time       numeric,
     per_project        text,
-    user_email         text
+    user_email         text,
+    accept_tos         text
  ) AS $$
 
     WITH users_plots as (
@@ -197,9 +198,11 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_id integer)
         FROM proj_groups
     ), user_email as (
        SELECT email FROM users WHERE user_uid = _user_id
-    )
+    ), accept_tos AS (
+       SELECT accept_tos FROM users WHERE user_uid = _user_id
+)
 
-    SELECT * FROM user_totals, average_totals, proj_agg, user_email
+    SELECT * FROM user_totals, average_totals, proj_agg, user_email, accept_tos
 
 $$ LANGUAGE SQL;
 
@@ -475,25 +478,6 @@ CREATE OR REPLACE FUNCTION get_users_by_emails(_emails text[])
 
 $$ LANGUAGE SQL;
 
--- Terms of Service
-CREATE OR REPLACE FUNCTION user_accept_tos(_user_id INTEGER)
- RETURNS VOID AS $$
-
-    UPDATE users
-    SET tos_accepted_date = NOW()
-    WHERE user_uid = _user_id
-
-$$ LANGUAGE SQL;
-
-CREATE OR REPLACE FUNCTION get_user_tos_accepted_date(_user_id INTEGER)
- RETURNS timestamptz AS $$
-
-    SELECT tos_accepted_date
-    FROM users
-    WHERE user_uid = _user_id
-
-$$ LANGUAGE SQL;
-
 -- Accepts data sharing terms for guest users
 CREATE OR REPLACE FUNCTION guest_user_data_sharing(_name TEXT, _ip TEXT)
  RETURNS table (
@@ -506,7 +490,7 @@ $$ LANGUAGE SQL;
 
 
 -- Accepts data sharing terms for regular user
-CREATE OR REPLACE FUNCTION user_data_sharing(_project_id INTEGER, _user_id INTEGER, _name TEXT, _ip TEXT)
+CREATE OR REPLACE FUNCTION user_data_sharing(_project_id INTEGER, _user_id INTEGER, _name TEXT, _ip TEXT, _dlug TEXT)
 RETURNS TABLE (
     project_id INTEGER,
     user_id INTEGER,
@@ -517,8 +501,17 @@ RETURNS TABLE (
     VALUES (_project_id, _name, _ip);
 
     UPDATE users
-    SET accepted_terms = TRUE
+    SET accept_tos = _slug
     WHERE user_uid = _user_id;
 
     SELECT _project_id, _user_id, _name;
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION user_accept_tos(_user_id INTEGER, _slug TEXT)
+ RETURNS VOID AS $$
+
+    UPDATE users
+    SET accept_tos = _slug
+    WHERE user_uid = _user_id
+
 $$ LANGUAGE SQL;
