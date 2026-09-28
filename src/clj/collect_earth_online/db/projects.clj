@@ -447,7 +447,7 @@
                              allow-drawn-samples?
                              saved-plots)))
 
-(defn- create-project-with-tos! [params user-id]
+(defn create-project! [{:keys [params]}]
   (let [institution-id       (tc/val->int (:institutionId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
@@ -512,8 +512,7 @@
                                                 token-key
                                                 project-options
                                                 (tc/clj->jsonb design-settings)
-                                                type
-                                                (when (pos? user-id) user-id)))]
+                                                type))]
         ;; Proceed with other operations only if the initial call is successful
         (try
           ;; Create or copy plots
@@ -566,12 +565,6 @@
           (when-not causes (log (ex-message e)))
           (data-response "Internal server error during project creation request, there may be a problem with your input." {:status 500}))))))
 
-(defn create-project! [{:keys [params session]}]
-  (if-not (tc/val->bool (:acceptTos params))
-    (data-response {:params {:acceptTos "You must accept the Terms of Service to create a project."}}
-                   {:status 400})
-    (create-project-with-tos! params (:userId session -1))))
-
 (defn copy-project!
   "{:params  {:projectId Int}
     :session {:userId Int}
@@ -596,19 +589,16 @@
                   :projectTemplate id
                   :sampleResolution (long sampleResolution)
                   :useTemplatePlots (:plots params)
-                  :useTemplateWidgets (:widgets params)
-                  :acceptTos (:acceptTos params))]
+                  :useTemplateWidgets (:widgets params))]    
     (try
-      (let [new-project    (create-project! {:params project :session session})
+      (let [new-project (create-project! {:params project})
             new-project-id (-> new-project :body tc/json->clj :projectId)]
-        (if-not (integer? new-project-id)
-          ;; Pass through the TOS rejection or creation error
-          new-project
-          (do
-            (when (-> params :answers tc/val->bool)
-              (call-sql "copy_user_plots" project-id new-project-id)
-              (call-sql "copy_sample_values" project-id new-project-id))
-            (data-response {:projectId new-project-id}))))
+        
+        (when (-> params :answers tc/val->bool)
+          (call-sql "copy_user_plots" project-id new-project-id)
+          (call-sql "copy_sample_values" project-id new-project-id))
+
+        (data-response {:projectId new-project-id}))
       (catch Exception e
         (data-response "Error copying project" {:status 500})))))
 

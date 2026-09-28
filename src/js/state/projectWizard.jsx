@@ -1034,7 +1034,7 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
 });
 
 
-regEvent(event_ids.saveProject, ({ draftDb }, acceptTos, overwrite) => {
+regEvent(event_ids.saveProject, ({ draftDb }) => {
   const institutionId = Number(current(draftDb[sub_ids.institutionId]));
   const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
@@ -1055,7 +1055,6 @@ regEvent(event_ids.saveProject, ({ draftDb }, acceptTos, overwrite) => {
       },
       body: JSON.stringify({
         projectId: existingProjectId,
-        overwrite: overwrite === true,
         ...form,
       }),
     })
@@ -1086,7 +1085,6 @@ regEvent(event_ids.saveProject, ({ draftDb }, acceptTos, overwrite) => {
         projectTemplate: templateProjectId,
         useTemplatePlots,
         useTemplateWidgets,
-        acceptTos: acceptTos === true,
         ...form,
       }),
     })
