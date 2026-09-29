@@ -342,8 +342,8 @@
       (catch Exception _
 	(data-response  "A server error interrupted your request. Please try again or contact an administrator.")))))
 
-(defn user-accept-tos [{:keys [params]}]
-  (let [user-id (tc/val->int (:userId params))
+(defn user-accept-tos [{:keys [params session]}]
+  (let [user-id (tc/val->int (:userId session))
         slug (-> params :slug
                  (str ":user:" user-id ":"
                       (.format (SimpleDateFormat. "YYYYMMddHHmmss") (Date.))))]

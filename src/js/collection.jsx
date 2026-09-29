@@ -719,7 +719,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
             <p>{state.messageBox.body}</p>
           </Modal>
         )}
-        {acceptTOS === '' && state.currentProject?.type === "simplified" && (
+        {!acceptTOS && state.currentProject?.type === "simplified" && (
           <AcceptTermsModal
             institutionId={state.currentProject.institution}
             projectId={projectId}
@@ -890,7 +890,7 @@ export function pageInit(params, session) {
         projectId={params.projectId}
         plotId={params.plotId || null}
         userName={session.userName || "guest"}
-        acceptTOS={session.acceptTOS || false} />
+        acceptTOS={session.acceptedTOS || false} />
     </NavigationBar>,
     document.getElementById("app")
   );

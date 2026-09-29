@@ -129,7 +129,7 @@ CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
     user_id          integer,
     administrator    boolean,
     verified         boolean,
-    accepted_tos     text
+    accept_tos       text
  ) AS $$
 
     SELECT user_uid, administrator, verified, accept_tos
@@ -490,7 +490,7 @@ $$ LANGUAGE SQL;
 
 
 -- Accepts data sharing terms for regular user
-CREATE OR REPLACE FUNCTION user_data_sharing(_project_id INTEGER, _user_id INTEGER, _name TEXT, _ip TEXT, _dlug TEXT)
+CREATE OR REPLACE FUNCTION user_data_sharing(_project_id INTEGER, _user_id INTEGER, _name TEXT, _ip TEXT, _slug TEXT)
 RETURNS TABLE (
     project_id INTEGER,
     user_id INTEGER,
