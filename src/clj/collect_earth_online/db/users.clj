@@ -306,11 +306,11 @@
     (try
       (if (= -1 user-id)
         (do
-          (call-sql "guest_user_data_sharing" project-id slug)
-          (data-response {:message "success"} {:session {:acceptedTerms true}}))
+          (call-sql "guest_user_data_sharing" slug (or (:remote-addr req) ""))
+          (data-response {:message "success"} {:session {:acceptedTOS slug}}))
         (do
-          (call-sql "user_data_sharing" project-id user-id slug (or (:remote-addr req) ""))
-          (data-response {:message "success"} {:session (assoc session :acceptedTerms true)})))
+          (call-sql "user_data_sharing" project-id user-id slug (or (:remote-addr req) "") slug)
+          (data-response {:message "success"} {:session (assoc session :acceptedTOS slug)})))
       (catch Exception e
         (data-response {:message "error when accepting data sharing terms."} {:status 500})))))
 

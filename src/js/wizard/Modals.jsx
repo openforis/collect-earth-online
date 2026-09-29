@@ -115,6 +115,7 @@ function TemplateProjectModal () {
   const [templateProjects, setTemplateProjects] = useState([]);
   const [filterProjectId, setFilterProjectId] = useState('');
   const [filterProjectName, setFilterProjectName] = useState('');
+  const [showPublicProjects, setShowPublicProjects] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const stripForeignUsers = (designSettings) => ({
@@ -205,54 +206,71 @@ function TemplateProjectModal () {
         dispatch([event_ids.errors, [['Template Projects', ['Failed to load template projects']]]]);
       });
   }, [projectType]);
-  
-  const visibleProjects = templateProjects.filter(matchesFilters(filterProjectId, filterProjectName));
-  
+
+  const visibleProjects = templateProjects
+    .filter((project) => showPublicProjects || project.institutionId === institutionId)
+    .filter(matchesFilters(filterProjectId, filterProjectName));
+
+  const selectedProjectId = visibleProjects.some(({ id }) => id === templateProjectId)
+    ? templateProjectId
+    : -1;
+
   return (
     <Modal
       title="Select Template Project"
       confirmText={loading ? 'Loading...' : 'Select'}
       closeText="Quit"
-      onConfirm={() => loadTemplate(templateProjectId)}
+      onConfirm={() => loadTemplate(selectedProjectId)}
       onClose={() => dispatch([event_ids.modal, 'newProject'])}>
       {templateProjects.length === 0
-       ? <p>No template projects found.</p>
-       : (
-         <div>
-           <p>Filter Template Projects:</p>
-           <div style={{ display: 'flex', gap: '1rem', flexDirection: 'row' }}>
-             <input
-               className="text-input"
-               style={{ width: '20%' }}
-               type="text"
-               inputMode="numeric"
-               placeholder="Id"
-               value={filterProjectId}
-               onChange={(e) => setFilterProjectId(e.target.value.replace(/[^0-9]/g, ''))}
-             />
-             <input
-               className="text-input"
-               style={{ flexGrow: 2 }}
-               type="text"
-               placeholder="Project Name"
-               value={filterProjectName}
-               onChange={(e) => setFilterProjectName(e.target.value)}
-             />
-           </div>
-           <select
-             className="text-input"
-             value={templateProjectId}
-             onChange={(e) => setTemplateProjectId(Number(e.target.value))}>
-             <option value={-1} disabled hidden>Select Template Project:</option>
-             {visibleProjects.map(({ id, name }) => (
-               <option key={id} value={id}>{name}</option>
-             ))}
-           </select>
-           {visibleProjects.length === 0 && (
-             <p style={{ marginTop: '0.5rem' }}>No template projects match the filters.</p>
-           )}
-         </div>
-       )}
+        ? <p>No template projects found.</p>
+        : (
+          <div>
+            <div
+              className="labeled-input"
+              style={{ marginBottom: '0.5rem' }}
+              onClick={() => setShowPublicProjects(!showPublicProjects)}>
+              <span className="checkbox">
+                <SvgIcon icon={showPublicProjects ? 'checkboxChecked' : 'checkboxUnchecked'} size="1.2rem" />
+              </span>
+              <span className="text-label" style={showPublicProjects ? { fontWeight: 'bold' } : {}}>
+                Show public projects
+              </span>
+            </div>
+            <p>Filter Template Projects:</p>
+            <div style={{ display: 'flex', gap: '1rem', flexDirection: 'row' }}>
+              <input
+                className="text-input"
+                style={{ width: '20%' }}
+                type="text"
+                inputMode="numeric"
+                placeholder="Id"
+                value={filterProjectId}
+                onChange={(e) => setFilterProjectId(e.target.value.replace(/[^0-9]/g, ''))}
+              />
+              <input
+                className="text-input"
+                style={{ flexGrow: 2 }}
+                type="text"
+                placeholder="Project Name"
+                value={filterProjectName}
+                onChange={(e) => setFilterProjectName(e.target.value)}
+              />
+            </div>
+            <select
+              className="text-input"
+              value={selectedProjectId}
+              onChange={(e) => setTemplateProjectId(Number(e.target.value))}>
+              <option value={-1} disabled hidden>Select Template Project:</option>
+              {visibleProjects.map(({ id, name }) => (
+                <option key={id} value={id}>{name}</option>
+              ))}
+            </select>
+            {visibleProjects.length === 0 && (
+              <p style={{ marginTop: '0.5rem' }}>No template projects match the filters.</p>
+            )}
+          </div>
+        )}
     </Modal>
   );
 
@@ -390,6 +408,108 @@ function UpdatePublishedProjectModal () {
     </Modal>
   );
 };
+
+function CheckboxOption ({ checked, disabled = false, onToggle, children }) {
+  return (
+    <div
+      className="labeled-input"
+      onClick={() => !disabled && onToggle()}
+      style={disabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}>
+      <span className="checkbox">
+        <SvgIcon icon={checked ? 'checkboxChecked' : 'checkboxUnchecked'} size="1.2rem" />
+      </span>
+      <span className="text-label" style={checked ? { fontWeight: 'bold' } : {}}>
+        {children}
+      </span>
+    </div>
+  );
+}
+
+function CopyProjectModal () {
+  const projectId = useSubscription([sub_ids.projectId]);
+  const institutionId = useSubscription([sub_ids.institutionId]);
+  const [usePlots, setUsePlots] = useState(true);
+  const [useWidgets, setUseWidgets] = useState(true);
+  const [copyAnswers, setCopyAnswers] = useState(false);
+  const [slug, setSlug] = useState("");
+  const [copying, setCopying] = useState(false);
+  const [copyError, setCopyError] = useState(null);
+
+  // Answers are matched to the new project's plots by visible id, so they only
+  // line up when the existing plots are copied too.
+  const toggleUsePlots = () => {
+    if (usePlots) setCopyAnswers(false);
+    setUsePlots(!usePlots);
+  };
+
+  function copyProject () {
+    if (copying || !slug.trim()) return;
+    setCopying(true);
+    setCopyError(null);
+    const params = new URLSearchParams({
+      projectId,
+      plots: usePlots,
+      widgets: useWidgets,
+      answers: usePlots && copyAnswers,
+      acceptTos: slug.trim(),
+    });
+    fetch(`/copy-project?${params}`, { method: 'POST' })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        window.location.assign(`/project-wizard?projectId=${data.projectId}&institutionId=${institutionId}`);
+      })
+      .catch((error) => {
+        console.error(error);
+        setCopyError('Error copying project. See console for details.');
+        setCopying(false);
+      });
+  }
+
+  return (
+    <Modal
+      title='Copy Project'
+      closeText='Cancel'
+      confirmText={copying ? 'Copying...' : 'Copy Project'}
+      onConfirm={copyProject}
+      confirmDisabled={!slug.trim() || copying}
+      onClose={() => { !copying && dispatch([event_ids.modal, null]); }}>
+      <div>
+        <p>A new unpublished copy of this project will be created. Choose what to include:</p>
+        <CheckboxOption checked={usePlots} onToggle={toggleUsePlots}>
+          Use existing plots
+        </CheckboxOption>
+        <CheckboxOption checked={useWidgets} onToggle={() => setUseWidgets(!useWidgets)}>
+          Use existing widgets
+        </CheckboxOption>
+        <CheckboxOption
+          checked={usePlots && copyAnswers}
+          disabled={!usePlots}
+          onToggle={() => setCopyAnswers(!copyAnswers)}>
+          Copy answers
+        </CheckboxOption>
+        {!usePlots && (
+          <p className="text-secondary small" style={{ marginTop: '-0.25rem' }}>
+            Answers can only be copied when using existing plots.
+          </p>
+        )}
+        <hr/>
+        <p>In order to create this project, enter your username to accept the <span style={
+          {cursor: 'pointer', textDecorationLine: 'underline', color:'var(--Primary-Highight-Green)'}
+        } onClick={()=>window.open('/terms-of-service')}>Terms of Service</span>.</p>
+        <div>
+          <input type="text"
+                 className="text-input"
+                 value={slug}
+                 onChange={(e)=> {setSlug(e.target.value);}}
+                 placeholder="Enter Username to Agree"/>
+        </div>
+        {copyError && (
+          <p style={{ color: 'red', marginTop: '.5rem' }}>{copyError}</p>
+        )}
+      </div>
+    </Modal>
+  );
+}
 
 function DraftSuccessModal () {
   const institutionId = useSubscription([sub_ids.institutionId]);
@@ -543,6 +663,7 @@ export default function ProjectWizardModal () {
   case 'newProject'  : return (<NewProjectModal/>);
   case 'review'      : return (<SubmitProjectModal/>);
   case 'update-published' : return (<UpdatePublishedProjectModal/>);
+  case 'copy-project' : return (<CopyProjectModal/>);
   case 'success'     : return (<SuccessModal/>);
   case 'error'       : return (<ErrorModal/>);
   case 'draft-success' : return (<DraftSuccessModal/>);
