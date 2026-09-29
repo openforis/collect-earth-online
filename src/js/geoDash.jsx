@@ -260,6 +260,7 @@ export function pageInit(params, session) {
         visiblePlotId={params.visiblePlotId ? parseInt(params.visiblePlotId) : -1}
       />
       <BreadCrumbs
+        sidebar={false}
         crumbs={[
           {
             display: "Institution",

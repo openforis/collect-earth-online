@@ -910,9 +910,9 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
   );
 }
 
-export const BreadCrumbs = ({crumbs}) => {  
+export const BreadCrumbs = ({crumbs, sidebar}) => {  
   const [state, setState] = useAtom(stateAtom);
-  const {breadCrumbs} = state;
+  const { breadCrumbs } = state;
   
   const getCrumbData = (message, promise) => {
     setState((s) => ({... s, modalMessage: message}), () =>
@@ -964,7 +964,8 @@ export const BreadCrumbs = ({crumbs}) => {
   
   return (
     <div id="breadcrumb-bar"
-         className="flex-row">
+         className="flex-row"
+         style={{... !sidebar && {left: 0}}}>
       <div
         style={{cursor: "pointer"}}
         onClick={()=> {

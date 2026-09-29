@@ -2,12 +2,12 @@ import Highlights from './highlights';
 import Institutions from './institutions';
 
 
-export default function HomeTabs ({tab, session}) {
+export default function HomeTabs ({tab, userId, userRole}) {
   switch (tab) {
   case 'highlights':
-    return (<Highlights userId={session.userId} userRole={session.userRole}/>);
+    return (<Highlights userId={userId} userRole={userRole}/>);
   case 'institutions' :
-    return (<Institutions userId={session.userId} userRole={session.userRole}/>);
+    return (<Institutions userId={userId} userRole={userRole}/>);
   case 'collect' :
     return (
       <div id='collect-tab' className='home-tab'>

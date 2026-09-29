@@ -100,6 +100,7 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
       {modal && <ProjectWizardModal/>}
       <NavigationBar userId={userId} userName={userName} version={version}>
         <BreadCrumbs
+          sidebar={false}
           crumbs={[
             {display: "Institution",
               id: "institution",

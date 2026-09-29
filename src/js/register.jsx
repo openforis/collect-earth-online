@@ -160,6 +160,7 @@ export function pageInit(params, session) {
   ReactDOM.render(
     <NavigationBar userId={-1} userName="" version={session.versionDeployed}>
       <BreadCrumbs
+        sidebar={ false }
         crumbs={[
           {display: "Registration",
            id: "registration"}]}

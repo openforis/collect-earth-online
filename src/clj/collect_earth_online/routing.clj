@@ -1,6 +1,6 @@
 (ns collect-earth-online.routing
   (:require [collect-earth-online.api                    :refer [validate]]
-            [collect-earth-online.generators.ce-project  :as ce-project]
+            [collect-earth-online.generators.ce-project.reader  :as ce-project]
             [collect-earth-online.gcloud                 :as gcloud]
             [collect-earth-online.sse                    :as sse]
             [collect-earth-online.db.doi                 :as doi]
