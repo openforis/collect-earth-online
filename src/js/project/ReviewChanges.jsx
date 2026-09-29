@@ -12,7 +12,7 @@ export default class ReviewChanges extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      acceptTOS: false,
+      acceptTOS: "",
       modal: null,
     };
   }
@@ -20,7 +20,7 @@ export default class ReviewChanges extends React.Component {
   /// API Functions
 
   createProject = () => {
-    if (!this.state.acceptTOS) {
+    if (!this.state.acceptTOS.trim()) {
       this.setState ({modal: {alert: {alertType: "Create Project Alert", alertMessage: "You must accept the terms of service to continue."}}});
     } else if (confirm("Do you really want to create this project?")) {
       this.context.processModal("Creating Project", () =>
@@ -35,6 +35,7 @@ export default class ReviewChanges extends React.Component {
             projectTemplate: this.context.templateProjectId,
             useTemplatePlots: this.context.useTemplatePlots,
             useTemplateWidgets: this.context.useTemplateWidgets,
+            acceptTos: this.state.acceptTOS.trim(),
             ...this.buildProjectObject(),
           }),
         })
@@ -167,21 +168,22 @@ export default class ReviewChanges extends React.Component {
         </>
       ) : (
         <>
-          <div className="form-check mb-3">
-            <input
-              checked={this.state.acceptTOS}
-              className="form-check-input"
-              id="tos-check"
-              onChange={() => this.setState({ acceptTOS: !this.state.acceptTOS })}
-              type="checkbox"
-            />
-            <label className="form-check-label" htmlFor="tos-check">
-              I agree to the{" "}
+          <div className="mb-3">
+            <label htmlFor="tos-input">
+              Enter your username to accept the{" "}
               <a href="/terms-of-service" target="_blank">
                 Terms of Service
               </a>
               .
             </label>
+            <input
+              className="form-control"
+              id="tos-input"
+              onChange={(e) => this.setState({ acceptTOS: e.target.value })}
+              placeholder="Enter Username to Agree"
+              type="text"
+              value={this.state.acceptTOS}
+            />
           </div>
           <input
             className="btn btn-outline-lightgreen btn-sm col-6"

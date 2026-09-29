@@ -1,6 +1,5 @@
-ALTER TABLE projects
-  ADD COLUMN accept_tos text ;
-
 ALTER TABLE users
- ADD COLUMN accept_tos text ;
- 
+    ADD COLUMN IF NOT EXISTS accept_tos text;
+
+ALTER TABLE projects
+    ADD COLUMN IF NOT EXISTS accept_tos text;
