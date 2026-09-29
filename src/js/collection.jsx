@@ -23,6 +23,7 @@ import {
 import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
+
 export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 

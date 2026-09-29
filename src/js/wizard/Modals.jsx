@@ -16,18 +16,18 @@ function ImportProjectModal () {
 
   // Surface the server's message instead of only the status text
   const readError = (response) =>
-    response.text()
-      .then((text) => {
-        try {
-          const body = JSON.parse(text);
-          return body.message || body.error
-            || (body.params && Object.entries(body.params).map(([f, m]) => `${f}: ${m}`).join('; '))
-            || text;
-        } catch {
-          return text;
-        }
-      })
-      .then((message) => Promise.reject(message || response.statusText || 'Import failed.'));
+        response.text()
+        .then((text) => {
+          try {
+            const body = JSON.parse(text);
+            return body.message || body.error
+              || (body.params && Object.entries(body.params).map(([f, m]) => `${f}: ${m}`).join('; '))
+              || text;
+          } catch {
+            return text;
+          }
+        })
+        .then((message) => Promise.reject(message || response.statusText || 'Import failed.'));
 
   function importCollectProject (fileName, fileb64) {
     if (importing) return;
@@ -94,13 +94,13 @@ function ImportProjectModal () {
           />
         </label>
         {importErrors &&
-          (<div style={{border: '1px solid red',
-            background: 'pink',
-            color: 'red'}} >
-             {importErrors.map((message) => {
-               return (<span > {message} <br/> </span>);
-             })}
-           </div>)}
+         (<div style={{border: '1px solid red',
+                       background: 'pink',
+                       color: 'red'}} >
+            {importErrors.map((message) => {
+              return (<span > {message} <br/> </span>);
+            })}
+          </div>)}
       </div>
     </Modal>
   );
@@ -123,17 +123,17 @@ function TemplateProjectModal () {
     qaqcAssignment: { ...designSettings.qaqcAssignment, qaqcMethod: 'none', smes: [] },
   });
   const matchesFilters = (idFilter, nameFilter) => ({ id, name }) =>
-    (idFilter === '' || String(id).includes(idFilter))
-      && (nameFilter === '' || name.toLowerCase().includes(nameFilter.toLowerCase()));
+        (idFilter === '' || String(id).includes(idFilter))
+        && (nameFilter === '' || name.toLowerCase().includes(nameFilter.toLowerCase()));
 
   const intersectTemplateImagery = (templateImagery, institutionImagery, templateBasemapId) => {
     const allowed = new Set(institutionImagery.map(({ id }) => id));
     const shared = templateImagery.filter(({ id }) => allowed.has(id));
     const pool = shared.length ? shared : institutionImagery;
     const basemap =
-      pool.find(({ id }) => id === templateBasemapId)
-        ?? pool.find(({ visibility }) => visibility === 'platform')
-        ?? pool[0];
+          pool.find(({ id }) => id === templateBasemapId)
+          ?? pool.find(({ visibility }) => visibility === 'platform')
+          ?? pool[0];
     return [basemap, ...pool.filter((img) => img !== basemap)].map(({ id }) => id);
   };
 
@@ -143,13 +143,13 @@ function TemplateProjectModal () {
       .then((data) => {
         dispatch([event_ids.templateProject, data]);
         dispatch([event_ids.plots.designSettings,
-          data.templateInstitutionId === institutionId
-            ? data.designSettings
-            : stripForeignUsers(data.designSettings)]);
+                  data.templateInstitutionId === institutionId
+                  ? data.designSettings
+                  : stripForeignUsers(data.designSettings)]);
         return data;
       });
   }
- 
+  
   // get-project-plots returns {id, plotId, center, flagged, status} rows,
   // where center is a GeoJSON Point string and id is the visible id.
   function getProjectPlots (projectId) {
@@ -161,12 +161,12 @@ function TemplateProjectModal () {
         maxId: Math.max(0, ...plots.map((p) => p.id)),
       }]));
   }
- 
+  
   function getProjectImagery (projectId) {
     return fetch(`/get-project-imagery?projectId=${projectId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)));
   }
- 
+  
   function loadTemplate (projectId) {
     if (projectId <= 0 || loading) return;
     setLoading(true);
@@ -177,7 +177,7 @@ function TemplateProjectModal () {
         dispatch([event_ids.imagery.previewId, imageryIds[0]]);
         dispatch([event_ids.templateProjectId, projectId]);
         dispatch([event_ids.templateProjectName,
-          templateProjects.find(({ id }) => id === projectId)?.name ?? '']);
+                  templateProjects.find(({ id }) => id === projectId)?.name ?? '']);
         dispatch([event_ids.templatePlotDesign]);
         dispatch([event_ids.overview.useTemplatePlots, true]);
         dispatch([event_ids.overview.useTemplateWidgets, true]);
@@ -191,11 +191,11 @@ function TemplateProjectModal () {
         dispatch([event_ids.templatePlotDesign, true]);
         dispatch([event_ids.templateProjectName, '']);
         dispatch([event_ids.errors, [['Project Template Error',
-          ['Error getting complete template info. See console for details.']]]]);
+                                      ['Error getting complete template info. See console for details.']]]]);
       })
       .finally(() => setLoading(false));
   }
- 
+  
   useEffect(() => {
     fetch(`/get-template-projects?projectType=${projectType}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
@@ -205,9 +205,9 @@ function TemplateProjectModal () {
         dispatch([event_ids.errors, [['Template Projects', ['Failed to load template projects']]]]);
       });
   }, [projectType]);
- 
+  
   const visibleProjects = templateProjects.filter(matchesFilters(filterProjectId, filterProjectName));
- 
+  
   return (
     <Modal
       title="Select Template Project"
@@ -216,43 +216,43 @@ function TemplateProjectModal () {
       onConfirm={() => loadTemplate(templateProjectId)}
       onClose={() => dispatch([event_ids.modal, 'newProject'])}>
       {templateProjects.length === 0
-        ? <p>No template projects found.</p>
-        : (
-          <div>
-            <p>Filter Template Projects:</p>
-            <div style={{ display: 'flex', gap: '1rem', flexDirection: 'row' }}>
-              <input
-                className="text-input"
-                style={{ width: '20%' }}
-                type="text"
-                inputMode="numeric"
-                placeholder="Id"
-                value={filterProjectId}
-                onChange={(e) => setFilterProjectId(e.target.value.replace(/[^0-9]/g, ''))}
-              />
-              <input
-                className="text-input"
-                style={{ flexGrow: 2 }}
-                type="text"
-                placeholder="Project Name"
-                value={filterProjectName}
-                onChange={(e) => setFilterProjectName(e.target.value)}
-              />
-            </div>
-            <select
-              className="text-input"
-              value={templateProjectId}
-              onChange={(e) => setTemplateProjectId(Number(e.target.value))}>
-              <option value={-1} disabled hidden>Select Template Project:</option>
-              {visibleProjects.map(({ id, name }) => (
-                <option key={id} value={id}>{name}</option>
-              ))}
-            </select>
-            {visibleProjects.length === 0 && (
-              <p style={{ marginTop: '0.5rem' }}>No template projects match the filters.</p>
-            )}
-          </div>
-        )}
+       ? <p>No template projects found.</p>
+       : (
+         <div>
+           <p>Filter Template Projects:</p>
+           <div style={{ display: 'flex', gap: '1rem', flexDirection: 'row' }}>
+             <input
+               className="text-input"
+               style={{ width: '20%' }}
+               type="text"
+               inputMode="numeric"
+               placeholder="Id"
+               value={filterProjectId}
+               onChange={(e) => setFilterProjectId(e.target.value.replace(/[^0-9]/g, ''))}
+             />
+             <input
+               className="text-input"
+               style={{ flexGrow: 2 }}
+               type="text"
+               placeholder="Project Name"
+               value={filterProjectName}
+               onChange={(e) => setFilterProjectName(e.target.value)}
+             />
+           </div>
+           <select
+             className="text-input"
+             value={templateProjectId}
+             onChange={(e) => setTemplateProjectId(Number(e.target.value))}>
+             <option value={-1} disabled hidden>Select Template Project:</option>
+             {visibleProjects.map(({ id, name }) => (
+               <option key={id} value={id}>{name}</option>
+             ))}
+           </select>
+           {visibleProjects.length === 0 && (
+             <p style={{ marginTop: '0.5rem' }}>No template projects match the filters.</p>
+           )}
+         </div>
+       )}
     </Modal>
   );
 
@@ -276,11 +276,11 @@ function handleNewProject (projectSource) {
 function NewProjectModal () {
   const newProjectOptions = {
     newProject: ['Create a new project',
-      'Generate a new project from scratch by customizing all steps.'],
+                 'Generate a new project from scratch by customizing all steps.'],
     templateProject: ['Select from an existing template',
-      'Select a template and prefill all the steps. You can edit and customize it.'],
+                      'Select a template and prefill all the steps. You can edit and customize it.'],
     importProject: ['Import Collect Earth Project',
-      'Import a project from the Collect Earth desktop application.']};
+                    'Import a project from the Collect Earth desktop application.']};
   const projectSource = useSubscription([sub_ids.projectSource]);
   const institutionId = useSubscription([sub_ids.institutionId]);
   return (
@@ -297,8 +297,8 @@ function NewProjectModal () {
           return (
             <div
               className={projectSource === id ?
-                "radio-selected-button"
-                : "radio-selection-button"}
+                         "radio-selected-button"
+                         : "radio-selection-button"}
               key={id}
               onClick={()=> {
                 dispatch([event_ids.projectSource, id]);
@@ -308,7 +308,7 @@ function NewProjectModal () {
               >{projectSource === id
                 ? <SvgIcon icon="radioChecked" size="1.2rem" />                            
                 : <SvgIcon icon="radio" size="1.2rem"
-                    className="radio-button-unchecked"/> }
+              className="radio-button-unchecked"/> }
                 {"    "}
                 { title } </p>
               <label
@@ -444,8 +444,8 @@ function ErrorModal () {
     <Modal
       onClose={()=>{dispatch([event_ids.modal, null]);}}>
       <div style={{display: 'flex',
-        flexDirection: 'column',
-        gap: '1rem'}}>
+                   flexDirection: 'column',
+                   gap: '1rem'}}>
         <div className='alert-icon'>
           <SvgIcon  icon='alert' size='2rem'/>
         </div>
@@ -456,17 +456,17 @@ function ErrorModal () {
                     <div className='error-header' onClick={()=>toggleVisible(errorType)}>
                       <b > {stepName(errorType)}</b>
                       <SvgIcon icon={visible.includes(errorType) ? 'upCaretNew' : 'downCaretNew'}
-                        size='1.2rem'> </SvgIcon>
+                               size='1.2rem'> </SvgIcon>
                     </div>
                     {visible.includes(errorType) &&
-                      <div style={{gap: '1rem'}}>
-                        <br/>
-                        {errorMessages.map((message) => {
-                          return (
-                            <p > - {message}
-                            </p>);
-                        })}
-                      </div>}
+                     <div style={{gap: '1rem'}}>
+                       <br/>
+                       {errorMessages.map((message) => {
+                         return (
+                           <p > - {message}
+                           </p>);
+                       })}
+                     </div>}
                   </div>);
         })}
       </div>
