@@ -11,7 +11,7 @@ export default function Collect ({projects}) {
   const mapConfigAtom = atom(null);
   const [appState, setAppState] = useAtom(stateAtom);
   
-  function Projects (){
+  function CollectionSidebar (){
     const [mapConfig, setMapConfig] = useAtom(mapConfigAtom);
 
     function Tag ({tag}) {
@@ -25,7 +25,7 @@ export default function Collect ({projects}) {
 
     function Project ({project}) {
       const [seeMore, toggleDescription] = useState(false);
-      const expandStyle= seeMore ? {} : {height: "3rem", overflow: 'hidden'};
+      const expandStyle= seeMore ? {} : {maxHeight: "3rem", overflow: 'hidden'};
       return (
         <div className="project">
           <div className="project-info">
@@ -71,37 +71,33 @@ export default function Collect ({projects}) {
       );
     }
 
-    function CollectionSidebar () {
-      return (
-        <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "30vw", position: "fixed"}}>
-          <SidebarCard title="Collection">
-        
-          </SidebarCard>
-        </Sidebar>
-      );
-    }
-    projects.length && console.log('collect tab projects', projects);
+
+    
     return (
-      <div id="collect-projects">
-        <div className="collect-header">
-          <div className="header-row">
-            <p className="header-title">Collect</p>
-            <p className="header-subtitle">Your projects to collect or review</p>
+      <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "30vw", position: "fixed"}}>
+
+          <div id="collect-projects">
+            <div className="collect-header">
+              <div className="header-row">
+                <p className="header-title">Collect</p>
+                <p className="header-subtitle">Your projects to collect or review</p>
+              </div>
+            </div>            
+            {projects.sort((a, b) => a.lastCollected < b.lastCollected).map((project)=>{return(<Project project={project}/>);})}
           </div>
-        </div>            
-        {projects.sort((a, b) => a.lastCollected < b.lastCollected).map((project)=>{return(<Project project={project}/>);})}
-      </div>
+
+      </Sidebar>
     );
   }
   
   return (
     <div id='collect-tab' className='home-tab'>
-      <Projects />
+      <CollectionSidebar />
       <div id="collect-map-container">
-          <MapPanel
-            mapConfigAtom={mapConfigAtom}
-            imagery={appState.imagery}
-            projects={projects}/>
+        <MapPanel
+          mapConfigAtom={mapConfigAtom}
+          imagery={appState.imagery}
+          projects={projects}/>
         </div>
     </div>);
 }

@@ -106,7 +106,10 @@ function Home ({ userId, userName, version }) {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <Home userId={session.userId} userName={session.userName} version={session.versionDeployed}/>,
+    <>
+      <div style={{position: 'fixed', backgroundColor: 'var(--Primary-Light-Green)', height: '100vh', width: '100vw', zIndex: -1}}/>
+    <Home userId={session.userId} userName={session.userName} version={session.versionDeployed}/>
+    </>,
     document.getElementById("app")
   );
 }
