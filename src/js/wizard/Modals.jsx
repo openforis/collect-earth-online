@@ -322,29 +322,70 @@ function NewProjectModal () {
 };
 
 function SubmitProjectModal () {
-  const institutionId = useSubscription([sub_ids.institutionId]);
-  const [slug, setSlug]  = useState("");
+  const [slug, setSlug] = useState("");
+  const projectId = Number(useSubscription([sub_ids.projectId]));
+  const isEditing = projectId > 0;
+  const acceptedTOS = slug.trim().length > 0;
   return (
     <Modal
-      title={update < 0 ? 'Create Project' : 'Update Project'}
+      title={isEditing ? 'Update Project' : 'Create Project'}
       closeText='Return to editing'
-      confirmText={update < 0 ? 'Create Project' : 'Update Project'}
+      confirmText={isEditing ? 'Update Project' : 'Create Project'}
       onConfirm={()=>{
-        dispatch ([event_ids.publishProject, slug]); }}
-      confirmDisabled={slug.length === 0}
-      onClose={()=>{window.location=`/review-institution?institutionId=${institutionId}`;}}>
-      <div>
-        <p >You are about to publish this project. Once published it will be added to your institution. You’ll still be able to make changes later from the project page within your institution.</p>
-        <p>In order to publish this project, enter your username to accept the <span style={
-          {cursor: 'pointer', textDecorationLine: 'underline', color:'var(--Primary-Highight-Green)'}
-        } onClick={()=>window.open('/terms-of-service')}>Terms of Service</span>.</p>
+        dispatch([event_ids.saveProject, slug.trim()]);
+      }}
+      confirmDisabled={!isEditing && !acceptedTOS}
+      onClose={()=>{dispatch([event_ids.modal, null])}}>
+      {isEditing ? (
+        <p>Are you sure you want to apply these changes to the project?</p>
+      ) : (
         <div>
-          <input type="text"
-                 className="text-input"
-                 value={slug}
-                 onChange={(e)=> {setSlug(e.target.value);}}
-                 placeholder="Enter Username to Agree"/>          
+          <p >You will be able to continue to make changes to the project after creating it.
+            Once satisfied with the project, click publish to begin final collection.</p>
+          <p>In order to create this project, enter your username to accept the <span style={
+            {cursor: 'pointer', textDecorationLine: 'underline', color:'var(--Primary-Highight-Green)'}
+          } onClick={()=>window.open('/terms-of-service')}>Terms of Service</span>.</p>
+          <div>
+            <input type="text"
+                   className="text-input"
+                   value={slug}
+                   onChange={(e)=> {setSlug(e.target.value);}}
+                   placeholder="Enter Username to Agree"/>
+          </div>
         </div>
+      )}
+    </Modal>
+  );
+};
+
+function UpdatePublishedProjectModal () {
+  const [overwrite, setOverwrite] = useState(false);
+  return (
+    <Modal
+      title='Update Published Project'
+      closeText='Return to editing'
+      confirmText='Update Project'
+      onConfirm={()=>{
+        dispatch([event_ids.saveProject, false, overwrite]);
+      }}
+      onClose={()=>{dispatch([event_ids.modal, null]);}}>
+      <div>
+        <p>Would you like to clear data that has been collected?</p>
+        {[[false, 'No'], [true, 'Yes']].map(([value, label]) => (
+          <div className="labeled-input" key={label} onClick={()=>setOverwrite(value)}>
+            <span>{overwrite === value
+              ? <SvgIcon icon="radioChecked" size="1.2rem" />
+              : <SvgIcon icon="radio" size="1.2rem"/>}</span>
+            <span className="text-label" style={overwrite === value ? {fontWeight: 'bold'} : {}}>
+              {label}
+            </span>
+          </div>
+        ))}
+        {overwrite && (
+          <p style={{color: 'red', marginTop: '.5rem'}}>
+            All data collected for this project will be permanently deleted.
+          </p>
+        )}
       </div>
     </Modal>
   );
@@ -501,6 +542,7 @@ export default function ProjectWizardModal () {
   case 'import'      : return (<ImportProjectModal/>);
   case 'newProject'  : return (<NewProjectModal/>);
   case 'review'      : return (<SubmitProjectModal/>);
+  case 'update-published' : return (<UpdatePublishedProjectModal/>);
   case 'success'     : return (<SuccessModal/>);
   case 'error'       : return (<ErrorModal/>);
   case 'draft-success' : return (<DraftSuccessModal/>);

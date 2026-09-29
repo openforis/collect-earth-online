@@ -25,7 +25,9 @@ export const NavButtons = () => {
   const currentStep = useSubscription([sub_ids.currentStep]);
   const projectType = useSubscription([sub_ids.overview.projectType]);
   const projectId = useSubscription([sub_ids.projectId]) || -1;
+  const availability = useSubscription([sub_ids.availability]);
   const isEditing = projectId > 0;
+  const isPublished = isEditing && availability === 'published';
 
   const activeSteps = projectType === 'simplified'
     ? projectSteps.filter(s => !['plots', 'samples', 'rules'].includes(s.id))
@@ -34,7 +36,9 @@ export const NavButtons = () => {
   const stepIdx = activeSteps.map((e)=>e.id).indexOf(currentStep);
   function continueHandler () {dispatch([event_ids.continueHandler, currentStep]);}
   function saveDraftHandler () {dispatch([event_ids.saveDraft]);};
-  function saveProjectHandler () {dispatch([event_ids.modal, 'review']);};
+  function saveProjectHandler () {
+    dispatch([event_ids.modal, isPublished ? 'update-published' : 'review']);
+  };
   function navBackHandler () { dispatch([event_ids.currentStep, activeSteps[stepIdx - 1].id]);}
 
   return (<div className="nav-buttons">

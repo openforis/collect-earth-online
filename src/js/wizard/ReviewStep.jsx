@@ -270,8 +270,6 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
     const displayClosedDate = closedDate || (["archived", "closed"].includes(availability) ? "Unknown" : "Open");
 
     const publishProject = () => {
-      dispatch([event_ids.modal, 'review']);
-      /*
       const unpublished = availability === "unpublished";
       const message = unpublished
         ? "Do you want to publish this project? This action will clear plots collected by admins to allow collecting by users."
@@ -289,7 +287,7 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
             console.log(error);
             window.alert("Error publishing project. See console for details.");
           });
-      }*/
+      }
     };
 
     const closeProject = () => {
@@ -327,11 +325,24 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
         const usePlots = window.confirm("Use Existing Plots?");
         const useWidgets = window.confirm("Use Existing Widgets?");
         const useAnswers = window.confirm("Copy Answers?");
-        const url = `/copy-project?projectId=${projectId}&widgets=${useWidgets}&plots=${usePlots}&answers=${useAnswers}`;
+        const acceptTos = window.prompt(
+          "Creating a project requires accepting the Terms of Service "
+            + `(${window.location.origin}/terms-of-service).\n\n`
+            + "Enter your username to accept the Terms of Service:"
+        );
+        if (!acceptTos) {
+          window.alert("You must accept the Terms of Service to copy this project.");
+          return;
+        }
+        const url = `/copy-project?projectId=${projectId}&widgets=${useWidgets}&plots=${usePlots}&answers=${useAnswers}&acceptTos=${encodeURIComponent(acceptTos)}`;
 
         fetch(url, { method: "POST" })
           .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-          .then((data) => window.location.assign(`/project-wizard?projectId=${data.projectId}&institutionId=${institutionId}`));
+          .then((data) => window.location.assign(`/project-wizard?projectId=${data.projectId}&institutionId=${institutionId}`))
+          .catch((error) => {
+            console.log(error);
+            window.alert("Error copying project. See console for details.");
+          });
       }
     };
 

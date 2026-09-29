@@ -460,8 +460,12 @@
                              allow-drawn-samples?
                              saved-plots)))
 
-(defn create-project! [{:keys [params]}]
-  (let [institution-id       (tc/val->int (:institutionId params))
+(defn create-project! [{:keys [params session]}]
+  (let [accept-tos           (when-not (str/blank? (:acceptTos params))
+                               (-> params :acceptTos
+                                   (str ":userId:" (:userId session -1) ":"
+                                        (.format (SimpleDateFormat. "YYYYMMddHHmmss") (Date.)))))
+        institution-id       (tc/val->int (:institutionId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
         description          (:description params)
@@ -525,7 +529,8 @@
                                                 token-key
                                                 project-options
                                                 (tc/clj->jsonb design-settings)
-                                                type))]
+                                                type
+                                                accept-tos))]
         ;; Proceed with other operations only if the initial call is successful
         (try
           ;; Create or copy plots
@@ -602,9 +607,10 @@
                   :projectTemplate id
                   :sampleResolution (long sampleResolution)
                   :useTemplatePlots (:plots params)
-                  :useTemplateWidgets (:widgets params))]    
+                  :useTemplateWidgets (:widgets params)
+                  :acceptTos          (:acceptTos params))]
     (try
-      (let [new-project (create-project! {:params project})
+      (let [new-project (create-project! {:params project :session session})
             new-project-id (-> new-project :body tc/json->clj :projectId)]
         
         (when (-> params :answers tc/val->bool)
@@ -802,11 +808,7 @@
 (defn publish-project! [{:keys [params session]}]
   (let [user-id      (:userId session -1)
         project-id   (tc/val->int (:projectId params))
-        clear-saved? (tc/val->bool (:clearSaved params))
-        tos-slug     (-> params :slug
-                         (str ":userId:" user-id ":"
-                              (.format (SimpleDateFormat. "YYYYMMddHHmmss") (Date.))))
-        slug-date    (new java.util.Date)]
+        clear-saved? (tc/val->bool (:clearSaved params))]
     (when clear-saved? (reset-collected-samples! project-id))
     (call-sql "publish_project" project-id)
     (data-response (build-project-by-id user-id project-id))))

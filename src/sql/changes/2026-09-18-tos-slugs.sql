@@ -3,4 +3,3 @@ ALTER TABLE projects
 
 ALTER TABLE users
  ADD COLUMN accept_tos text ;
- 
