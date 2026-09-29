@@ -76,9 +76,9 @@ function Home ({ userId, userName, version }) {
 
   function AlertModal({alertType}) {
     return (<Modal title={appState.modal.alert.alertType}
-    onClose={()=>{setAppState({ ... appState, modal: null});}}>
-                                  {appState.modal.alert.alertMessage}
-                                </Modal>);
+                   onClose={()=>{setAppState({ ... appState, modal: null});}}>
+              {appState.modal.alert.alertMessage}
+            </Modal>);
   }
 
   function HomeModal({modal}) {
@@ -97,7 +97,7 @@ function Home ({ userId, userName, version }) {
   return (
     <NavigationBar userId={userId} userName={userName} version={version}
                    fxns={{tab: {get: tab, set: setTab}}}>
-       <HomeModal modal={appState.modal}/>  
+      <HomeModal modal={appState.modal}/>  
       <HomeTabs tab={tab}  userId={userId} userRole={null}/>
     </NavigationBar>
   );

@@ -103,7 +103,9 @@ export default function Highlights ({userId, userRole}) {
             <div className="blog-frame">
               <div className="blog">
                 <div className="blog-graphic"
-                     style={{background: `url(${blog.graphic}) lightgray 50% / cover no-repeat`}}></div>
+                     style={{background: `url(${blog.img}) lightgray 50% / cover no-repeat`
+                            }}
+                ></div>
                 <div className="blog-body">
                   <div className="blog-date">
                     <SvgIcon icon='calendar' size='1rem'/>
