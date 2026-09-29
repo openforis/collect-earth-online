@@ -24,6 +24,8 @@ export default function Collect ({projects}) {
     }
 
     function Project ({project}) {
+      const [seeMore, toggleDescription] = useState(false);
+      const expandStyle= seeMore ? {} : {height: "3rem", overflow: 'hidden'};
       return (
         <div className="project">
           <div className="project-info">
@@ -39,10 +41,10 @@ export default function Collect ({projects}) {
                   <Tag tag={tag}/>);})}
             </div>
             <div className="project-description">
-              <span>{project.description}</span>
+              <p style={expandStyle}>{project.description}</p>
               <div className="expand-description"
-                   onClick={()=>{console.log('expand project description', project.description);}}
-              ><span>See More</span></div>
+                   onClick={()=>{toggleDescription(!seeMore);}}
+              ><span>{seeMore ? "Hide Description" : "See More"}</span></div>
             </div>
           </div>         
           <div className="project-controls">
@@ -58,7 +60,7 @@ export default function Collect ({projects}) {
             </div>
             <div className="primary-button"
                  onClick={() => {window.location.href =
-                                 `/project-wizard?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
+                                 `/collection?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
               <div>
                 <span>Visit Project</span>
                 <SvgIcon icon="chevronRight" size="1.2rem"/>
@@ -78,7 +80,7 @@ export default function Collect ({projects}) {
         </Sidebar>
       );
     }
-    
+    projects.length && console.log('collect tab projects', projects);
     return (
       <div id="collect-projects">
         <div className="collect-header">
@@ -87,7 +89,7 @@ export default function Collect ({projects}) {
             <p className="header-subtitle">Your projects to collect or review</p>
           </div>
         </div>            
-        {projects.map((project)=>{return(<Project project={project}/>);})}
+        {projects.sort((a, b) => a.lastCollected < b.lastCollected).map((project)=>{return(<Project project={project}/>);})}
       </div>
     );
   }

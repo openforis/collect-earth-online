@@ -66,7 +66,7 @@
                        (call-sql "get_highlight_projects" (:userId session -1)))))
 
 (defn get-home-projects [{:keys [session]}]
-  (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable institution_name]}]
+  (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable institution_name last_collected]}]
                          {:id            project_id
                           :institutionId institution_id
                           :name          name
@@ -74,7 +74,8 @@
                           :numPlots      num_plots
                           :centroid      centroid
                           :editable      editable
-                          :institutionName institution_name})
+                          :institutionName institution_name
+                          :lastCollected (str last_collected)})
                        (call-sql "select_user_home_projects" (:userId session -1)))))
 
 (defn get-institution-projects [{:keys [params session]}]
