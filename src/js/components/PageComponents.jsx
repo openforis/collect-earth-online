@@ -966,7 +966,7 @@ export const BreadCrumbs = ({crumbs, sidebar}) => {
   return (
     <div id="breadcrumb-bar"
          className="flex-row"
-         style={{... !sidebar && {left: 0}}}>
+         style={{marginLeft: sidebar? '100px' : 'inherit'}}>
       <div
         style={{cursor: "pointer"}}
         onClick={()=> {

@@ -423,6 +423,7 @@ text-underline-position: from-font;
     border-radius: 4px;
     border: 1px solid var(--Neutral-Soft-gray, #E1E1E1);
     background: var(--Neutral-Light-gray, #F6F6F6);
+    margin: 1rem 0 1rem 0 !important;
 
 }
 
