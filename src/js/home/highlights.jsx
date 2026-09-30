@@ -176,7 +176,7 @@ export default function Highlights ({userId, userRole}) {
                  onClick={() => {
                    console.log("visit project!");
                    window.location.href =
-                                 `/project-wizard?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
+                                 `/collection?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
               <div>
                 <span>Visit Project</span>
                 <SvgIcon icon="chevronRight" size="1.2rem"/>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import _ from "lodash";
 import { stateAtom } from '../utils/constants';
@@ -47,13 +47,30 @@ export function SurveyQuestions ({
     ? previewSelectedId
     : globalSelectedId;
   const [openTopId, setOpenTopId] = useState(1);
-  const [openByParent, setOpenByParent] = useState({});
+  // Children are expanded by default once visible (parent answered);
+  // this only tracks the ones the user collapsed.
+  const [collapsedChildIds, setCollapsedChildIds] = useState({});
+  const [scrollToChildrenOf, setScrollToChildrenOf] = useState(null);
+  const childrenRefs = useRef({});
 
   const entries = (obj = {}) => Object.entries(obj || {});
   const visibleAnswers = (q) => entries(q.answers).filter(([, a]) => !a?.hide);
 
   useEffect(() => {
   }, [surveyData, userSamples]);
+
+  useEffect(() => {
+    setCollapsedChildIds({});
+  }, [currentPlot?.id]);
+
+  useEffect(() => {
+    if (scrollToChildrenOf == null) return;
+    childrenRefs.current[scrollToChildrenOf]?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
+    setScrollToChildrenOf(null);
+  }, [scrollToChildrenOf]);
 
   const getSelectedSampleIds = (questionId) => {
     // If preview, return the ID of our 1 fake sample
@@ -201,19 +218,12 @@ export function SurveyQuestions ({
   const syncOpenChildren = (questionId, answerId, answerText) => {
     if (answerText == null) return;
 
-    const triggered = getOpenChildren(questionId, answerId, answerText);
     const descendants = getDescendantIds(questionId);
+    setCollapsedChildIds((prev) => _.omit(prev, descendants));
 
-    setOpenByParent((prev) => {
-      const next = { ...prev };
-      descendants.forEach((id) => delete next[id]);
-      if (triggered.length > 0) {
-        next[questionId] = triggered[0].id;
-      } else {
-        delete next[questionId];
-      }
-      return next;
-    });
+    if (getOpenChildren(questionId, answerId, answerText).length > 0) {
+      setScrollToChildrenOf(questionId);
+    }
   };
 
   // is this child eligible to show given the parent's current answer?
@@ -351,7 +361,7 @@ export function SurveyQuestions ({
     const isOpen =
       depth === 0
         ? openTopId === question.id
-        : openByParent[question.parentQuestionId] === question.id;
+        : !collapsedChildIds[question.id];
 
     const children = childrenOf(question.id, surveyData).filter(isChildVisible);
     const status = getQuestionStatus(question.id);
@@ -360,11 +370,7 @@ export function SurveyQuestions ({
       if (depth === 0) {
         setOpenTopId(prev => (prev === question.id ? null : question.id));
       } else {
-        setOpenByParent(prev => ({
-          ...prev,
-          [question.parentQuestionId]:
-            prev[question.parentQuestionId] === question.id ? null : question.id,
-        }));
+        setCollapsedChildIds(prev => ({ ...prev, [question.id]: !prev[question.id] }));
       }
       setAppState(s => ({ ...s, selectedQuestionId: question.id }));
     };
@@ -392,7 +398,10 @@ export function SurveyQuestions ({
           <>
             <AnswerUI q={question} />
             {children.length > 0 && (
-              <div className="sq-children">
+              <div
+                className="sq-children"
+                ref={(el) => { childrenRefs.current[question.id] = el; }}
+              >
                 {children.map(child => renderQuestionNode(child, depth + 1))}
               </div>
             )}
