@@ -63,6 +63,8 @@
    [:get  "/support"]                        {:handler (render-page "/support")}
    [:get  "/user-disagreement"]              {:handler (render-page "/user-disagreement")}
    [:get  "/terms-of-service"]               {:handler (render-page "/terms-of-service")}
+   [:get  "/data-license"]                   {:handler (render-page "/data-license")}
+
    [:get  "/widget-layout-editor"]           {:handler     (render-page "/widget-layout-editor")
                                               :auth-type   :admin
                                               :auth-action :redirect}
@@ -155,10 +157,10 @@
    [:post "/edit-projects-bulk"]             {:handler     (validate projects/edit-projects-bulk!)
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/create-project-draft"]           {:handler     (validate projects/create-project-draft!)
+   [:post "/create-project-draft"]           {:handler     projects/create-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
-   [:post "/update-project-draft"]           {:handler     (validate projects/update-project-draft!)
+   [:post "/update-project-draft"]           {:handler     projects/update-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/copy-project"]                   {:handler projects/copy-project!

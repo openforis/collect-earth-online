@@ -79,71 +79,49 @@ function TermsOfService() {
           with malformed or test data.
         </p>
 
-        <h2>The Institution (Project Owner) Elections</h2>
-        <h3>Private – Restricted Use Data Designation</h3>
-        <p>The Project administrator organization (“Institution”) designates this Project as a
-          Private-Restricted Use Project. The Institution acknowledges and agrees that all data, content,
-          materials, comments, classifications, imagery interpretations, metadata, or other contributions
-          (“Contributions”) submitted, uploaded, contributed or otherwise provided to the Project,
-          (a) will be treated as restricted-use and accessible only to the Institution and its authorized
-          users; and (b) will not be accepted from any third party contributors (each, a “Contributor”)
-          unless Contributors grant the Institution the restricted-use rights to their Contributions in
-          accordance with this designation.</p>
-        <h3>Public - Open Use Data Designation</h3>
-        <p>The Project administrator organization (“Institution”) designates this Project as a Public-Open
-          Use Data Project. The Institution acknowledges and agrees that all data, content, materials,
-          comments, classifications, imagery interpretations, metadata, or other contributions
-          (“Contributions”) submitted, uploaded, contributed or otherwise provided to the Project,
-          (a) will be made publicly available and distributed under an open-data or open-content license
-          designated by the Institution (e.g., Creative Commons Attribution 4.0 International (CC BY 4.0)
-          license, or a substantially similar open license); (b) will not be accepted from any third party
-          contributors (each a “Contributor”) unless such Contributor has expressly agreed that their
-          submissions will be publicly accessible and may be reused, modified, distributed, and
-          commercialized by third parties pursuant to the applicable open data or open-content licenses,
-          and (c) once released under the open license, this designation cannot be reversed for such
-          Contributions.</p>
+        <h2>Public Content and License Designations</h2>
+        <p>
+          An admin user on behalf of a Project administrator organization (“Institution”) may designate
+          content contributions as “private” or “public” (i.e., subject to a Creative Commons Attribution
+          4.0 International license) (each a “License Designation”). An admin user is solely responsible
+          for ensuring it has all the necessary rights, licenses, permissions and consent to make, and to
+          the extent applicable modify, each License Designation.
+        </p>
+        <p>
+          By making a License Designation, the admin user represents and warrants that the admin user and
+          Institution have all rights, licenses, permissions, consents and other authority necessary to
+          make the content contributions available under the selected License Designation(s).
+        </p>
+        <p>
+          <strong>Disclaimer; Release.</strong> TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE CEO PARTIES
+          SHALL HAVE NO LIABILITY ARISING OUT OF OR RELATING TO ANY LICENSE DESIGNATION OR CHANGE TO A
+          LICENSE DESIGNATION. THE ADMIN USER, ON BEHALF OF ITSELF AND THE INSTITUTION AND THE RELEVANT
+          CONTENT CONTRIBUTION OWNER(S), HEREBY RELEASES AND FOREVER DISCHARGES THE CEO PARTIES FROM ANY
+          CLAIM, DEMAND, LIABILITY, LOSS, DAMAGE, COST, OR EXPENSE ARISING OUT OF OR RELATING TO ANY
+          LIABILITY ARISING FROM THE FOREGOING.
+        </p>
+        <p className="mb-4">
+          <strong>Indemnification.</strong> The Admin User and Institution shall defend, indemnify, and
+          hold harmless the CEO Parties from and against any damages, liabilities, costs, and expenses
+          (including reasonable attorneys&apos; fees) incurred in connection with any third-party claim,
+          action, demand, or proceeding arising out of or relating to: (i) any License Designation or
+          (ii) any alleged violation of a third party&apos;s intellectual property, privacy,
+          confidentiality, publicity, or other rights resulting from any content contributions.
+        </p>
 
-        <h2>Contributor Licenses</h2>
-        <h3>Contributor License –Private - Restricted Use Data Designation </h3>
-        <p>By submitting, uploading, contributing, annotating, labeling, reviewing, or otherwise providing
-          any data, content, materials, comments, classifications, imagery interpretations, metadata, or
-          other contributions (“Contributions”) to the Project, you ("Contributor") hereby grant to the
-          Project administrator organization (the “Institution”), its affiliates, successors, and assigns,
-          a perpetual, irrevocable, worldwide, non-exclusive, transferable, sublicensable, royalty-free,
-          fully paid-up license to use, host, store, reproduce, modify, adapt, publish, translate, create
-          derivative works from, distribute, transmit, publicly display, publicly perform, commercialize,
-          and otherwise exploit such Contributions, in whole or in part, in any manner and for any purpose
-          whatsoever, whether commercial, non-commercial, research,  governmental, operational, or
-          otherwise, in any media or format now known or later developed, without further notice, consent,
-          attribution, or compensation.</p>
-        <p>Contributor represents and warrants to the Institution that Contributor has all rights necessary to grant the foregoing license and that the
-          Contributions do not infringe or violate the rights of any third party.</p>
-
-        <h3>Contributor License  - Public - Open Use Data Designation</h3>
-        <p>By submitting, uploading, contributing, annotating, labeling, reviewing, or otherwise providing
-          any data, content, materials, comments, classifications, imagery interpretations, metadata, or
-          other contributions (“Contributions”) to the Project, you (“Contributor”) hereby grant to the
-          Project administrator organization (the “Institution”), its affiliates, successors, and assigns,
-          a perpetual, irrevocable, worldwide, non-exclusive, transferable, sublicensable, royalty-free,
-          fully paid-up license to use, host, store, reproduce, modify, adapt, publish, translate, create
-          derivative works from, distribute, transmit, publicly display, publicly perform, commercialize,
-          and otherwise exploit such Contributions, in whole or in part, in any manner and for any purpose
-          whatsoever, whether commercial, non-commercial, research, governmental, operational, or
-          otherwise, in any media or format now known or later developed, without further notice, consent,
-          attribution, or compensation.</p>
-        <p>Contributor acknowledges and agrees that Contributions will be made publicly available and
-          distributed by the Institution under an open-data or open-content license, including without
-          limitation the Creative Commons Attribution 4.0 International (CC BY 4.0) license, or a
-          substantially similar open license, and that any member of the public may use the Contributions
-          pursuant to such license terms. To the maximum extent permitted by applicable law, Contributor
-          hereby irrevocably and unconditionally waives all rights, interests, and claims of any kind in
-          and to the Contributions, including without limitation all copyright, moral rights (including
-          rights of attribution, integrity, disclosure, and withdrawal), rights to collect royalties or
-          other compensation, and all associated claims, demands, and causes of action, whether now known
-          or hereafter arising, with respect to the Contributions. </p>
-        <p>Contributor represents and warrants to the Institution that Contributor has all rights
-          necessary to grant the foregoing licenses and waiver of rights and that the Contributions do not
-          infringe or violate the rights of any third party.</p>
+        <h2>CEO</h2>
+        <p>
+          For purposes of these Terms of Service, “CEO” or “Collect Earth Online” means the Collect Earth
+          Online platform located at <a href="https://app.collect.earth/">https://app.collect.earth/</a> and
+          the consortium, network, and community of private and public organizations, governmental and
+          nongovernmental organizations, institutions, funders, developers, contributors, and other
+          partners that collaborate to develop, operate, host, maintain, support, or otherwise make Collect
+          Earth Online available, including their respective successors, affiliates, officers, directors,
+          employees, agents, and representatives (collectively, the “CEO Parties”). The CEO Parties
+          include, without limitation, organizations and agencies participating in or supporting the
+          SERVIR Network and identified from time to time
+          at <a href="https://www.collect.earth/about/">https://www.collect.earth/about/</a>.
+        </p>
       </div>
     </section>
   );
@@ -155,7 +133,7 @@ export function pageInit(params, session) {
       <BreadCrumbs
         crumbs={[
           {display: "Terms of Service",
-           id:"tos",}]}
+            id:"tos",}]}
       />
       <TermsOfService />
     </NavigationBar>,
