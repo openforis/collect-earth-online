@@ -624,7 +624,7 @@ line-height: 14px; /* 100% */
 }
 
 #collect-projects {
-    width: 30vw;
+    flex-direction: column;
     display: inherit;
     gap: 16px;
     padding: 1rem;

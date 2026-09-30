@@ -136,6 +136,8 @@ export default function Highlights ({userId, userRole}) {
 
   function Projects () {
     const [mapConfig, setMapConfig] = useAtom(mapConfigAtom);
+    const [seeMore, toggleDescription] = useState(false);
+    const expandStyle = seeMore ? {} : {height: "3rem", overflow:"hidden"};
     function Project ({project}) {
       return (
         <div className="project">
@@ -152,10 +154,11 @@ export default function Highlights ({userId, userRole}) {
                   <Tag tag={tag}/>);})}
             </div>
             <div className="project-description">
-              <span>{project.description}</span>
+              <p style={expandStyle}
+              >{project.description}</p>
               <div className="expand-description"
-                   onClick={()=>{console.log('expand project description', project.description);}}
-              ><span>See More</span></div>
+                   onClick={()=>{toggleDescription(!seeMore);}}
+              ><span>{seeMore ? "Hide Description" : "See More"}</span></div>
             </div>
           </div>         
           <div className="project-controls">

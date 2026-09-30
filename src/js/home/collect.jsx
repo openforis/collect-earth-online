@@ -11,7 +11,7 @@ export default function Collect ({projects}) {
   const mapConfigAtom = atom(null);
   const [appState, setAppState] = useAtom(stateAtom);
   
-  function Projects (){
+  function CollectionSidebar (){
     const [mapConfig, setMapConfig] = useAtom(mapConfigAtom);
 
     function Tag ({tag}) {
@@ -24,6 +24,8 @@ export default function Collect ({projects}) {
     }
 
     function Project ({project}) {
+      const [seeMore, toggleDescription] = useState(false);
+      const expandStyle= seeMore ? {} : {maxHeight: "3rem", overflow: 'hidden'};
       return (
         <div className="project">
           <div className="project-info">
@@ -39,10 +41,10 @@ export default function Collect ({projects}) {
                   <Tag tag={tag}/>);})}
             </div>
             <div className="project-description">
-              <span>{project.description}</span>
+              <p style={expandStyle}>{project.description}</p>
               <div className="expand-description"
-                   onClick={()=>{console.log('expand project description', project.description);}}
-              ><span>See More</span></div>
+                   onClick={()=>{toggleDescription(!seeMore);}}
+              ><span>{seeMore ? "Hide Description" : "See More"}</span></div>
             </div>
           </div>         
           <div className="project-controls">
@@ -58,7 +60,7 @@ export default function Collect ({projects}) {
             </div>
             <div className="primary-button"
                  onClick={() => {window.location.href =
-                                 `/project-wizard?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
+                                 `/collection?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
               <div>
                 <span>Visit Project</span>
                 <SvgIcon icon="chevronRight" size="1.2rem"/>
@@ -69,37 +71,33 @@ export default function Collect ({projects}) {
       );
     }
 
-    function CollectionSidebar () {
-      return (
-        <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "30vw", position: "fixed"}}>
-          <SidebarCard title="Collection">
-        
-          </SidebarCard>
-        </Sidebar>
-      );
-    }
+
     
     return (
-      <div id="collect-projects">
-        <div className="collect-header">
-          <div className="header-row">
-            <p className="header-title">Collect</p>
-            <p className="header-subtitle">Your projects to collect or review</p>
+      <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "30vw", position: "fixed"}}>
+
+          <div id="collect-projects">
+            <div className="collect-header">
+              <div className="header-row">
+                <p className="header-title">Collect</p>
+                <p className="header-subtitle">Your projects to collect or review</p>
+              </div>
+            </div>            
+            {projects.sort((a, b) => a.lastCollected < b.lastCollected).map((project)=>{return(<Project project={project}/>);})}
           </div>
-        </div>            
-        {projects.map((project)=>{return(<Project project={project}/>);})}
-      </div>
+
+      </Sidebar>
     );
   }
   
   return (
     <div id='collect-tab' className='home-tab'>
-      <Projects />
+      <CollectionSidebar />
       <div id="collect-map-container">
-          <MapPanel
-            mapConfigAtom={mapConfigAtom}
-            imagery={appState.imagery}
-            projects={projects}/>
+        <MapPanel
+          mapConfigAtom={mapConfigAtom}
+          imagery={appState.imagery}
+          projects={projects}/>
         </div>
     </div>);
 }
