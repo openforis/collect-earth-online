@@ -295,3 +295,22 @@
     100% {transform: translateX(0.75vw);}
 }
 
+.extra-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px 16px;
+}
+
+.extra-info-item {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.extra-info-key {
+  color: #888;
+  margin-right: 4px;
+}
+
+.extra-info-value {
+  font-weight: 600;
+}

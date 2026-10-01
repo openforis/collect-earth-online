@@ -148,6 +148,7 @@ export function CollectionSidebar ({ processModal, userEmail }) {
           {currentProject?.type !== "simplified" && <ImageryOptions />}
           <SurveyQuestions showHeader={true} />
           {currentProject.allowDrawnSamples && <DrawingTool />}
+          {!_.isEmpty(currentPlot.extraPlotInfo) && <ExtraPlotInfo />}
         </>
       )}
     </>
@@ -163,6 +164,29 @@ export function CollectionSidebar ({ processModal, userEmail }) {
       footer={footer}
       style={{"right": 0, "width": "35vw"}}
     />
+  );
+};
+
+export const ExtraPlotInfo = () => {
+  const { currentPlot } = useAtomValue(stateAtom);
+  const entries = Object.entries(currentPlot?.extraPlotInfo || {});
+
+  const formatValue = (value) => {
+    if (value === null || value === undefined || value === "") return "N/A";
+    return typeof value === "object" ? JSON.stringify(value) : String(value);
+  };
+
+  return (
+    <SidebarCard title="Extra Plot Information" collapsible>
+      <div className="extra-info-grid">
+        {entries.map(([key, value]) => (
+          <div className="extra-info-item" key={key}>
+            <span className="extra-info-key">{key}:</span>
+            <span className="extra-info-value">{formatValue(value)}</span>
+          </div>
+        ))}
+      </div>
+    </SidebarCard>
   );
 };
 
