@@ -35,11 +35,12 @@ export default function Collect ({projects}) {
               <SvgIcon icon="institution" size="1.2rem"/>
               <span>{project.institutionName}</span>
             </div>
+            {project.tags?.length &&
             <div className="tags">
               {project.tags?.map((tag)=>{
                 return(
                   <Tag tag={tag}/>);})}
-            </div>
+            </div>}
             <div className="project-description">
               <p style={expandStyle}>{project.description}</p>
               {project.description.length > 168 &&
