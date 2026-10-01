@@ -168,7 +168,7 @@
     align-items: flex-start;
     gap: 20px;
     /* flex: 1 0 0; */
-    min-width: 48rem;
+    min-width: 24rem;
 }
 
 .blog {
@@ -269,7 +269,8 @@
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    overflow-x: scroll;}
+    overflow-x: scroll;
+    width: 100%;}
 
 .tag {
     display: flex;
@@ -537,7 +538,7 @@ display: flex;
 justify-content: space-between;
 align-items: center;
 align-self: stretch;
-gap: 2rem;
+gap: 1rem;
 }
 
 .cta-sort-row a {

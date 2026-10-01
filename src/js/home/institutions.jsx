@@ -86,9 +86,24 @@ export default function Institutions ({userId, userRole}) {
             </div>
           </div>
           <div className="cta-sort-row">
+
+            <div className="filter-actions" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div className="sort-dropdown" style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <label style={{ fontWeight: "500", minWidth: "fit-content"}}>Sort by:</label>
+                <select
+                  className="form-control form-control-sm"
+                  onChange={(e) => setSortType(e.target.value)}
+                  value={sortType}
+                  style={{ flexGrow: 1 }}
+                >
+                  <option value="projects">Number of Projects</option>
+                  <option value="alphabetical">Alphabetical</option>
+                </select>
+              </div>
+            </div>
+            
             <div className="create-institution"
-                 onClick={()=>{window.location.href="/create-institution";}}
-            >
+                 onClick={()=>{window.location.href="/create-institution";}}>
               <div className="create-institution-label">
                 <SvgIcon icon="plus" size="1rem"/>
                 <span>Add New Institution</span>
@@ -96,23 +111,8 @@ export default function Institutions ({userId, userRole}) {
             </div>
             
 
-              
-              <div className="filter-actions" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <div className="sort-dropdown" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <label style={{ fontWeight: "500", minWidth: "fit-content"}}>Sort by:</label>
-                  <select
-                    className="form-control form-control-sm"
-                    onChange={(e) => setSortType(e.target.value)}
-                    value={sortType}
-                    style={{ flexGrow: 1 }}
-                  >
-                    <option value="projects">Number of Projects</option>
-                    <option value="alphabetical">Alphabetical</option>
-                  </select>
-                </div>
-                
-              </div>
-            </div>
+
+          </div>
             <div
               className="tab-row"
               style={{
