@@ -119,16 +119,16 @@ export default function Highlights ({userId, userRole}) {
                     </div>
                   </div>
                   <div className="blog-subtitle">{blog.description}</div>
-                  <div className="tags">
+                  {blog.category.length &&
+                    <div className="tags">
                     {blog.category.map((tag)=> {
                       return (
                         <Tag tag={tag}/>);
                     })}
-                  </div>
+                  </div>}
                 </div>
               </div>
             </div>);
-          
         })}
       </div>)
       : (<div></div>);
@@ -148,17 +148,19 @@ export default function Highlights ({userId, userRole}) {
               <SvgIcon icon="institution" size="1.2rem"/>
               <span>{project.institutionName}</span>
             </div>
-            <div className="tags">
-              {project.tags?.map((tag)=>{
-                return(
-                  <Tag tag={tag}/>);})}
-            </div>
+            {project.tags?.length &&
+             <div className="tags">
+               {project.tags?.map((tag)=>{
+                 return(
+                   <Tag tag={tag}/>);})}
+             </div>}
             <div className="project-description">
               <p style={expandStyle}
               >{project.description}</p>
-              <div className="expand-description"
-                   onClick={()=>{toggleDescription(!seeMore);}}
-              ><span>{seeMore ? "Hide Description" : "See More"}</span></div>
+              {project.description.length > 168 &&
+               <div className="expand-description"
+                    onClick={()=>{toggleDescription(!seeMore);}}
+               ><span>{seeMore ? "Hide Description" : "See More"}</span></div>}              
             </div>
           </div>         
           <div className="project-controls">
@@ -206,21 +208,22 @@ export default function Highlights ({userId, userRole}) {
   const highlights = {
     blogs: {
       title: "Featured Blogs",
-      subtitle: "Read the latest stories, updates, and insights from the Collect Earth community.",
+      subtitle: "Read the latest stories, updates, and insights from the Collect Earth Online community.",
       children: <Blogs/>,
       link: "http://collect.earth/blog"},
     projects: {
       title: "Featured Projects",
       subtitle: "Browse active projects from institutions around the world.",
       children: <Projects/>,
-      link: "/home?tab=collect"}
+    //  link: "/home?tab=collect"
+    }
   };
   
   return (
     <div id="highlights-tab" className="home-tab">
       <div className="header">
         <div className="header-row">
-          <span className="header-title">Highlights</span>
+          <span className="header-title">HIGHLIGHTS</span>
           <span className="header-subtitle">Explore the latest blogs and selected projects from the Collect Earth Online community.</span>
         </div>
       </div>
@@ -232,11 +235,12 @@ export default function Highlights ({userId, userRole}) {
                 <div className="highlight-header">
                   <div className="highlight-title">
                     <span>{highlight.title}</span>
-                    <div className="highlight-link"
+                    {highlight.link &&
+                      <div className="highlight-link"
                          onClick={()=>{window.open(highlight.link);}}>
                       <span>View All</span>
                       <SvgIcon icon="chevronRight" size="1.2rem"/>
-                    </div>
+                    </div>}
                   </div>
                   <div className="highlight-subtitle">{highlight.subtitle}</div>
                 </div>

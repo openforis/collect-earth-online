@@ -42,9 +42,11 @@ export default function Collect ({projects}) {
             </div>
             <div className="project-description">
               <p style={expandStyle}>{project.description}</p>
-              <div className="expand-description"
-                   onClick={()=>{toggleDescription(!seeMore);}}
-              ><span>{seeMore ? "Hide Description" : "See More"}</span></div>
+              {project.description.length > 168 &&
+               <div className="expand-description"
+                    onClick={()=>{toggleDescription(!seeMore);}}
+               ><span>{seeMore ? "Hide Description" : "See More"}</span></div>
+              }
             </div>
           </div>         
           <div className="project-controls">
@@ -76,15 +78,15 @@ export default function Collect ({projects}) {
     return (
       <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "30vw", position: "fixed"}}>
 
-          <div id="collect-projects">
-            <div className="collect-header">
-              <div className="header-row">
-                <p className="header-title">Collect</p>
-                <p className="header-subtitle">Your projects to collect or review</p>
-              </div>
-            </div>            
-            {projects.sort((a, b) => a.lastCollected < b.lastCollected).map((project)=>{return(<Project project={project}/>);})}
-          </div>
+        <div id="collect-projects">
+          <div className="collect-header">
+            <div className="header-row">
+              <span className="header-title">COLLECT</span>
+              <span className="header-subtitle">Your projects to collect or review</span>
+            </div>
+          </div>            
+          {projects.sort((a, b) => a.lastCollected < b.lastCollected).map((project)=>{return(<Project project={project}/>);})}
+        </div>
 
       </Sidebar>
     );
@@ -98,6 +100,6 @@ export default function Collect ({projects}) {
           mapConfigAtom={mapConfigAtom}
           imagery={appState.imagery}
           projects={projects}/>
-        </div>
+      </div>
     </div>);
 }
