@@ -567,7 +567,7 @@ export const ExternalTools = () => {
           <span>Download Plot KML</span>
         </button>
 
-        {currentProject.referencePlotId ?
+        {currentProject?.projectOptions?.showGEEScript ?
           <button className="ext-btn" onClick={loadGEEScript}>
             <span>Go To GEE Script</span>
           </button>
