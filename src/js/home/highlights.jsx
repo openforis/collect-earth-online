@@ -125,7 +125,7 @@ export default function Highlights ({userId, userRole}) {
                       return (
                         <Tag tag={tag}/>);
                     })}
-                  </div>}
+                   </div>}
                 </div>
               </div>
             </div>);
