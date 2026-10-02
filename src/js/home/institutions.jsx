@@ -5,7 +5,7 @@ import SvgIcon from "../components/svg/SvgIcon";
 import { zoomMapToPoint } from '../utils/newMercator';
 import { stateAtom } from '../utils/constants';
 import MapPanel from '../mapPanel';
-import { Sidebar, SidebarCard } from "../components/Sidebar";
+import { Sidebar, SidebarCard, SidebarSearch, SidebarTabs } from "../components/Sidebar";
 
 import "../../css/highlights.css";
 
@@ -74,17 +74,7 @@ export default function Institutions ({userId, userRole}) {
       <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "30vw", position: "fixed" }}>
         <SidebarCard title="Institutions">
 
-          <div className="search-bar">
-            <div className="search-label">
-              <SvgIcon icon="search" size="1rem"/>
-              <input
-                type="text"
-                placeholder="Search by name"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
+          <SidebarSearch value={search} onChange={setSearch}/>
           <div className="cta-sort-row">
 
             <div className="filter-actions" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -113,48 +103,14 @@ export default function Institutions ({userId, userRole}) {
 
 
           </div>
-            <div
-              className="tab-row"
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                borderBottom: "1px solid #ddd",
-                marginTop: 16,
-              }}
-            >
-              <button
-                onClick={() => setActiveTab("affiliations")}
-                style={{
-                  flex: 1,
-                  background: "none",
-                  border: "none",
-                  padding: "8px 0",
-                  fontWeight: 600,
-                  color: activeTab === "affiliations" ? "#1b5e20" : "#666",
-                  borderBottom: activeTab === "affiliations" ? "3px solid #1b5e20" : "3px solid transparent",
-                  cursor: "pointer",
-                  transition: "color 0.2s ease, border-color 0.2s ease",
-                }}
-              >
-                Your Affiliations ({userInstitutions.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("others")}
-                style={{
-                  flex: 1,
-                  background: "none",
-                  border: "none",
-                  padding: "8px 0",
-                  fontWeight: 600,
-                  color: activeTab === "others" ? "#1b5e20" : "#666",
-                  borderBottom: activeTab === "others" ? "3px solid #1b5e20" : "3px solid transparent",
-                  cursor: "pointer",
-                  transition: "color 0.2s ease, border-color 0.2s ease",
-                }}
-              >
-                Other Institutions ({otherInstitutions.length})
-              </button>
-            </div>
+            <SidebarTabs
+              tabs={[
+                { id: "affiliations", label: `Your Affiliations (${userInstitutions.length})` },
+                { id: "others", label: `Other Institutions (${otherInstitutions.length})` },
+              ]}
+              activeTab={activeTab}
+              onChange={setActiveTab}
+            />
 
         </SidebarCard>
 

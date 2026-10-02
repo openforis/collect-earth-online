@@ -36,6 +36,55 @@ export const Sidebar = ({ stateAtom, style, header, children, footer, processMod
 };
 
 
+// Search box used at the top of the home page sidebars (Institutions, Collect).
+export const SidebarSearch = ({ value, onChange, placeholder = "Search by name" }) => (
+  <div className="search-bar">
+    <div className="search-label">
+      <SvgIcon icon="search" size="1rem"/>
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  </div>
+);
+
+// Tab row used in the home page sidebars (Institutions, Collect).
+// tabs: [{ id, label }]
+export const SidebarTabs = ({ tabs, activeTab, onChange }) => (
+  <div
+    className="tab-row"
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      borderBottom: "1px solid #ddd",
+      marginTop: 16,
+    }}
+  >
+    {tabs.map(({ id, label }) => (
+      <button
+        key={id}
+        onClick={() => onChange(id)}
+        style={{
+          flex: 1,
+          background: "none",
+          border: "none",
+          padding: "8px 0",
+          fontWeight: 600,
+          color: activeTab === id ? "#1b5e20" : "#666",
+          borderBottom: activeTab === id ? "3px solid #1b5e20" : "3px solid transparent",
+          cursor: "pointer",
+          transition: "color 0.2s ease, border-color 0.2s ease",
+        }}
+      >
+        {label}
+      </button>
+    ))}
+  </div>
+);
+
 export const SidebarCard = ({
   title,
   children,

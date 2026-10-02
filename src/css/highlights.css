@@ -628,14 +628,14 @@ line-height: 14px; /* 100% */
     flex-direction: column;
     display: inherit;
     gap: 16px;
-    padding: 1rem;
+    padding: 0 1rem 1rem;
 }
 
-.collect-header {
-    border: 1px solid var(--Primary-Highlight-Green, #A0CAC6);
-     padding: 1rem;
-     border-radius: 8px;
-     background: var(--Neutral-White, #FFF);
+.collect-empty {
+    padding: 1rem;
+    color: var(--Neutral-Md-Gray, #767575);
+    font-size: 14px;
+    text-align: center;
 }
 
 #collect-map-container #mapPanel #home-map-pane {
