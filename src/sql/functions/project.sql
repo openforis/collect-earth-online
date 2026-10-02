@@ -632,17 +632,6 @@ CREATE OR REPLACE FUNCTION user_project(_user_id integer, _role_id integer, _pri
 
 $$ LANGUAGE SQL STABLE;
 
-CREATE OR REPLACE FUNCTION last_collected_by_user (_project_id INTEGER, _user_id INTEGER)
-RETURNS TIMESTAMP AS $$
-
-SELECT up.collection_time
-FROM user_plots up
-JOIN plots p ON p.plot_uid = up.plot_rid
-WHERE p.project_rid = _project_id AND up.user_rid = _user_id
-ORDER BY up.collection_time DESC NULLS LAST LIMIT 1
-
-$$ LANGUAGE SQL STABLE;
-
 -- Returns all projects the user can see. This is used only on the home page
 CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
  RETURNS table (
@@ -665,16 +654,23 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
         num_plots,
         (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable,
         ins.name AS institution_name,
-        last_collected_by_user(project_uid, _user_id) AS last_collected
+        lc.last_collected
     FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
     JOIN institutions ins ON ins.institution_uid = p.institution_rid
+    LEFT JOIN (
+        SELECT pl.project_rid, max(up.collection_time) AS last_collected
+        FROM user_plots up
+        INNER JOIN plots pl ON pl.plot_uid = up.plot_rid
+        WHERE up.user_rid = _user_id
+        GROUP BY pl.project_rid
+    ) lc ON lc.project_rid = p.project_uid
     WHERE user_project(_user_id, role_rid, p.privacy_level, p.availability)
         AND valid_boundary(boundary) = TRUE
-    ORDER BY project_uid
-
+    ORDER BY last_collected DESC NULLS LAST, project_uid
+    LIMIT 6000
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_highlight_projects(_user_id integer)

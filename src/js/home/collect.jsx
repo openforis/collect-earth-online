@@ -86,7 +86,7 @@ export default function Collect ({projects}) {
               <span className="header-subtitle">Your projects to collect or review</span>
             </div>
           </div>            
-          {projects.sort((a, b) => a.lastCollected < b.lastCollected).map((project)=>{return(<Project project={project}/>);})}
+          {projects.map((project)=>{return(<Project project={project}/>);})}
         </div>
 
       </Sidebar>
