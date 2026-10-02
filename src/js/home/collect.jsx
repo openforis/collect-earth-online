@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { atom, useAtomValue } from 'jotai';
 import SvgIcon from "../components/svg/SvgIcon";
 import { stateAtom } from '../utils/constants';
@@ -7,9 +7,12 @@ import { zoomMapToPoint } from '../utils/newMercator';
 import { Sidebar, SidebarCard, SidebarSearch, SidebarTabs } from "../components/Sidebar";
 import "../../css/highlights.css";
 
-// Newest first by publish date (unpublished projects have "" and go last), then newest id.
+// Newest first by publish date
 const byNewest = (a, b) =>
   (b.publishedDate || "").localeCompare(a.publishedDate || "") || b.id - a.id;
+
+// Frontend pagination size
+const PAGE_SIZE = 50;
 
 const EMPTY_MESSAGES = {
   recent: "You haven't collected on any projects yet.",
@@ -75,11 +78,43 @@ const Project = React.memo(function Project ({project, mapConfig}) {
   );
 });
 
+// Loads the next page when it scrolls into view
+function LoadMore ({remaining, onLoadMore}) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!ref.current || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) onLoadMore();
+    });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [remaining, onLoadMore]);
+
+  return (
+    <div className="ghost-button" ref={ref}>
+      <div onClick={onLoadMore}>
+        <span>Show more projects ({remaining.toLocaleString()} remaining)</span>
+      </div>
+    </div>
+  );
+}
+
 function CollectSidebar ({projects, mapConfig}) {
   const [activeTab, setActiveTab] = useState("recent");
   const [search, setSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // The server sends every project the user can see, most recently collected first.
+  const showMore = useCallback(() => setVisibleCount((count) => count + PAGE_SIZE), []);
+  const changeTab = (id) => {
+    setActiveTab(id);
+    setVisibleCount(PAGE_SIZE);
+  };
+  const changeSearch = (value) => {
+    setSearch(value);
+    setVisibleCount(PAGE_SIZE);
+  };
+
   const recentProjects = useMemo(() => projects && projects.filter((p) => p.lastCollected), [projects]);
   const newestProjects = useMemo(() => projects && [...projects].sort(byNewest), [projects]);
 
@@ -91,6 +126,8 @@ function CollectSidebar ({projects, mapConfig}) {
       : tabProjects;
   }, [tabProjects, search]);
 
+  const remaining = (visibleProjects?.length || 0) - visibleCount;
+
   function emptyMessage () {
     if (projects === null) return "Loading projects...";
     return search.trim() ? "No projects match your search." : EMPTY_MESSAGES[activeTab];
@@ -99,21 +136,24 @@ function CollectSidebar ({projects, mapConfig}) {
   return (
     <Sidebar header={null} stateAtom={stateAtom} footer={null} style={{ left: 0, width: "30vw", position: "fixed"}}>
       <SidebarCard title="Collect">
-        <SidebarSearch value={search} onChange={setSearch}/>
+        <SidebarSearch value={search} onChange={changeSearch}/>
         <SidebarTabs
           tabs={[
-            { id: "recent", label: `Recent Projects (${(recentProjects || []).length})` },
+            { id: "recent", label: `Recent Interpretations (${(recentProjects || []).length})` },
             { id: "newest", label: `Newest Projects (${(newestProjects || []).length})` },
           ]}
           activeTab={activeTab}
-          onChange={setActiveTab}
+          onChange={changeTab}
         />
       </SidebarCard>
       <div id="collect-projects">
         {visibleProjects?.length > 0
-          ? visibleProjects.map((project) => (
-            <Project key={project.id} project={project} mapConfig={mapConfig}/>
-          ))
+          ? <>
+            {visibleProjects.slice(0, visibleCount).map((project) => (
+              <Project key={project.id} project={project} mapConfig={mapConfig}/>
+            ))}
+            {remaining > 0 && <LoadMore remaining={remaining} onLoadMore={showMore}/>}
+          </>
           : <div className="collect-empty">{emptyMessage()}</div>}
       </div>
     </Sidebar>
@@ -122,9 +162,6 @@ function CollectSidebar ({projects, mapConfig}) {
 
 export default function Collect ({projects}) {
   const { imagery } = useAtomValue(stateAtom);
-  // One atom per mount. Creating it on every render rebuilt the map on each
-  // state change; a module-level atom would keep a map bound to a removed div
-  // after switching home tabs and coming back.
   const [mapConfigAtom] = useState(() => atom(null));
   const mapConfig = useAtomValue(mapConfigAtom);
 

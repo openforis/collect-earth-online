@@ -655,8 +655,7 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
         num_plots,
         (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable,
         ins.name AS institution_name,
-        lc.last_collected,
-        p.published_date
+        lc.last_collected
     FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
@@ -671,9 +670,7 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
     ) lc ON lc.project_rid = p.project_uid
     WHERE user_project(_user_id, role_rid, p.privacy_level, p.availability)
         AND valid_boundary(boundary) = TRUE
-    -- Past the collected projects, fill with the newest ones, so a capped list keeps the newest
     ORDER BY last_collected DESC NULLS LAST, p.published_date DESC NULLS LAST, project_uid DESC
-    LIMIT 6000
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION get_highlight_projects(_user_id integer)
