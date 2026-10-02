@@ -113,7 +113,7 @@ export default function Highlights ({userId, userRole}) {
                   </div>
                   <div className="blog-title-row">
                     <div className="blog-title"
-                         onClick={()=> {window.location.href = blog.link;}}>
+                         onClick={()=> {window.open(blog.link, "_blank", "noopener,noreferrer");}}>
                       <span>{blog.title}</span>
                       <SvgIcon icon="chevronRight" size="1.2rem" color="#1F7067"/>
                     </div>

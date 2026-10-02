@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { atom, useAtomValue } from 'jotai';
 import SvgIcon from "../components/svg/SvgIcon";
 import { stateAtom } from '../utils/constants';
@@ -22,13 +22,13 @@ const EMPTY_MESSAGES = {
 function Tag ({tag}) {
   return (
     <div className="tag"
-         onClick={()=>{console.log('search for tags by tag-id:', tag);}}>
+      onClick={()=>{console.log('search for tags by tag-id:', tag);}}>
       <span>{tag}</span>
     </div>
   );
 }
 
-const Project = React.memo(function Project ({project, mapConfig}) {
+function ProjectCard ({project, mapConfig}) {
   const [seeMore, toggleDescription] = useState(false);
   const expandStyle = seeMore ? {} : {maxHeight: "3rem", overflow: 'hidden'};
   const description = project.description || "";
@@ -36,21 +36,22 @@ const Project = React.memo(function Project ({project, mapConfig}) {
     <div className="project">
       <div className="project-info">
         <span className="project-title">{project.name}</span>
-        <div className="project-attribution"
-             onClick={() => {window.location.href = `/review-institution?institutionId=${project.institutionId}`;}}>
+        <div
+          className="project-attribution"
+          onClick={() => {window.location.href = `/review-institution?institutionId=${project.institutionId}`;}}>
           <SvgIcon icon="institution" size="1.2rem"/>
           <span>{project.institutionName}</span>
         </div>
         {project.tags?.length > 0 &&
-         <div className="tags">
-           {project.tags.map((tag) => <Tag key={tag} tag={tag}/>)}
-         </div>}
+          <div className="tags">
+            {project.tags.map((tag) => <Tag key={tag} tag={tag}/>)}
+          </div>}
         <div className="project-description">
           <p style={expandStyle}>{description}</p>
           {description.length > 168 &&
-           <div className="expand-description"
-                onClick={()=>{toggleDescription(!seeMore);}}
-           ><span>{seeMore ? "Hide Description" : "See More"}</span></div>
+            <div className="expand-description"
+              onClick={()=>{toggleDescription(!seeMore);}}
+            ><span>{seeMore ? "Hide Description" : "See More"}</span></div>
           }
         </div>
       </div>
@@ -65,9 +66,11 @@ const Project = React.memo(function Project ({project, mapConfig}) {
             <span>Zoom to Project on Map</span>
           </div>
         </div>
-        <div className="primary-button"
-             onClick={() => {window.location.href =
-                             `/collection?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
+        <div
+          className="primary-button"
+          onClick={() => {
+            window.location.href = `/collection?projectId=${project.id}&institutionId=${project.institutionId}`;
+          }}>
           <div>
             <span>Visit Project</span>
             <SvgIcon icon="chevronRight" size="1.2rem"/>
@@ -76,7 +79,8 @@ const Project = React.memo(function Project ({project, mapConfig}) {
       </div>
     </div>
   );
-});
+}
+const Project = memo(ProjectCard);
 
 // Loads the next page when it scrolls into view
 function LoadMore ({remaining, onLoadMore}) {
@@ -149,11 +153,11 @@ function CollectSidebar ({projects, mapConfig}) {
       <div id="collect-projects">
         {visibleProjects?.length > 0
           ? <>
-            {visibleProjects.slice(0, visibleCount).map((project) => (
-              <Project key={project.id} project={project} mapConfig={mapConfig}/>
-            ))}
-            {remaining > 0 && <LoadMore remaining={remaining} onLoadMore={showMore}/>}
-          </>
+              {visibleProjects.slice(0, visibleCount).map((project) => (
+                <Project key={project.id} project={project} mapConfig={mapConfig}/>
+              ))}
+              {remaining > 0 && <LoadMore remaining={remaining} onLoadMore={showMore}/>}
+            </>
           : <div className="collect-empty">{emptyMessage()}</div>}
       </div>
     </Sidebar>

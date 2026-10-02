@@ -26,7 +26,7 @@ export default function HomeTabs ({tab, userId, userRole}) {
   case 'highlights':
     return (<Highlights userId={userId} userRole={userRole}/>);
   case 'institutions' :
-    return (<Institutions userId={userId} userRole={userRole}/>);
+    return (<Institutions userId={userId} userRole={userRole} projects={projects}/>);
   case 'collect' :
     return (<Collect projects={projects}/>);
   case 'manage' :

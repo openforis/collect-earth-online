@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import { atom, useAtom } from 'jotai';
 import SvgIcon from "../components/svg/SvgIcon";
 //import { mercator } from './utils/mercator';
-import { zoomMapToPoint } from '../utils/newMercator';
 import { stateAtom } from '../utils/constants';
 import MapPanel from '../mapPanel';
 import { Sidebar, SidebarCard, SidebarSearch, SidebarTabs } from "../components/Sidebar";
@@ -10,9 +9,9 @@ import { Sidebar, SidebarCard, SidebarSearch, SidebarTabs } from "../components/
 import "../../css/highlights.css";
 
 
-export default function Institutions ({userId, userRole}) {
+export default function Institutions ({userId, userRole, projects}) {
   const [appState, setAppState] = useAtom(stateAtom);
-  const mapConfigAtom = atom(null);
+  const [mapConfigAtom] = useState(() => atom(null));
   
   function InstitutionSidebar ({
     institutions = [],
@@ -193,7 +192,7 @@ export default function Institutions ({userId, userRole}) {
         <div id="institutions-map-container">
         <MapPanel
           imagery={appState.imagery}
-          projects={appState.projects}
+          projects={projects || []}
           mapConfigAtom={mapConfigAtom}
       />
     </div>

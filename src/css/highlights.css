@@ -269,8 +269,14 @@
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    overflow-x: scroll;
-    width: 100%;}
+    overflow-x: auto;
+    scrollbar-width: none;
+    width: 100%;
+}
+
+.tags::-webkit-scrollbar {
+    display: none;
+}
 
 .tag {
     display: flex;
