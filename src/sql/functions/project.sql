@@ -655,7 +655,8 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
         num_plots,
         (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable,
         ins.name AS institution_name,
-        lc.last_collected
+        lc.last_collected,
+        p.published_date
     FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
