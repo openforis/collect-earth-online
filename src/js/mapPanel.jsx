@@ -3,6 +3,8 @@ import React, { useEffect, useState, //useMemo, useRef
 import { mercator } from "./utils/mercator";
 import { useAtom } from 'jotai';
 import Modal from "./components/Modal";
+import { View } from "ol";
+import { fromLonLat } from "ol/proj";
 import SvgIcon from "./components/svg/SvgIcon";
 
 function ProjectPopup ({clusterExtent, features, mapConfig}) {
@@ -18,7 +20,7 @@ function ProjectPopup ({clusterExtent, features, mapConfig}) {
   return (
     <div className="d-flex flex-column" id="projectPopUp" style={{ maxHeight: "40vh" }}>
       <div className="cTitle">
-        <h1>{features.length > 1 ? "Cluster info" : "Project info"}</h1>
+        <h1>{features.length > 1 ? "Cluster info" : ""}</h1>
       </div>
       <div className="cContent" style={{ padding: "10px", overflow: "auto" }}>
         <table className="table table-sm" style={{ tableLayout: "fixed" }}>
@@ -89,7 +91,13 @@ export default function MapPanel ({imagery = [], projects = [], mapConfigAtom}) 
           imagery[0];
     const initMapConfig = mercator.createMap("home-map-pane", [70, 15], 2.1, [homePageLayer]);
     mercator.setVisibleLayer(initMapConfig, homePageLayer.id);
-    setMapConfig(initMapConfig);
+    const homeView = new View({
+      projection: "EPSG:3857",
+      center: fromLonLat([70, 15]),
+      zoom: 2.1,
+    });
+    initMapConfig.map.setView(homeView);
+    setMapConfig({ ...initMapConfig, view: homeView });
   }
 
   function showProjectPopup(overlay, feature) {

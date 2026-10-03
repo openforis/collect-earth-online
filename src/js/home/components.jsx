@@ -5,19 +5,20 @@ import Collect from './collect';
 
 
 export default function HomeTabs ({tab, userId, userRole}) {
-  const [projects, setProjects] = useState([]);
+  // null while loading, so the collect tab can tell "loading" from "no projects".
+  const [projects, setProjects] = useState(null);
 
   useEffect(()=>{
-    userId &&
-      fetch(`/get-home-projects`)
+    if (!userId) {
+      setProjects([]);
+      return;
+    }
+    fetch(`/get-home-projects`)
       .then((response) => (response.ok? response.json() : Promise.reject(response)))
-      .then((data) => {
-        if (data.length > 0) {
-          setProjects(data);
-          return Promise.resolve();
-        } else {
-          return Promise.reject("No Projects Found");
-        }
+      .then(setProjects)
+      .catch((error) => {
+        console.error(error);
+        setProjects([]);
       });
   }, [userId]);
 
@@ -25,7 +26,7 @@ export default function HomeTabs ({tab, userId, userRole}) {
   case 'highlights':
     return (<Highlights userId={userId} userRole={userRole}/>);
   case 'institutions' :
-    return (<Institutions userId={userId} userRole={userRole}/>);
+    return (<Institutions userId={userId} userRole={userRole} projects={projects}/>);
   case 'collect' :
     return (<Collect projects={projects}/>);
   case 'manage' :
