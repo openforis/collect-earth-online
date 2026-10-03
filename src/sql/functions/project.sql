@@ -632,7 +632,7 @@ CREATE OR REPLACE FUNCTION user_project(_user_id integer, _role_id integer, _pri
 
 $$ LANGUAGE SQL STABLE;
 
--- Returns the projects the user can see, most recently collected first. Used only on the home page.
+-- Returns all projects the user can see. This is used only on the home page
 CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
  RETURNS table (
     project_id        integer,
@@ -964,7 +964,7 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
           WHEN ct.timed_plots_count = 0 THEN 0
           ELSE ct.total_collection_seconds / ct.timed_plots_count
         END as collection_time
-    FROM projects, project_sum, users_count, user_agg, plot_sum, collection_times ct
+    FROM projects, project_sum, users_count, user_agg, collection_times ct
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;

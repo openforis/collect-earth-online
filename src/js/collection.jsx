@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { useAtom, useSetAtom } from 'jotai';
 import { stateAtom } from './utils/constants';
@@ -258,7 +258,23 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     };
   };
   // API CALLS
+
+  const statsRequestId = useRef(0);
+
+  const refreshProjectStats = () => {
+    const requestId = ++statsRequestId.current;
+    fetch(`/get-project-stats?projectId=${projectId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((stats) => {
+        if (requestId === statsRequestId.current) {
+          setState((prev) => ({ ...prev, stats }));
+        }
+      })
+      .catch((error) => console.error("Could not refresh project stats", error));
+  };
+
   const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {       
+    refreshProjectStats();
     processModal("Getting plot", () => {
       return fetch(
         "/get-collection-plot?" +
