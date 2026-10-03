@@ -171,8 +171,8 @@ CREATE OR REPLACE FUNCTION select_public_imagery()
         is_proxied,
         source_config
     FROM imagery
-    WHERE archived = FALSE
-    AND visibility='platform' ORDER BY imagery_uid ASC
+    WHERE imagery.archived = FALSE
+    AND imagery.visibility='platform' ORDER BY imagery_uid ASC
 
 $$ LANGUAGE SQL;
 

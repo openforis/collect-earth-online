@@ -109,7 +109,7 @@ export function pageInit(params, session) {
       <BreadCrumbs
         crumbs={[
           {display: "Login",
-           id:"login",}]}
+           id:"login"}]}
       />
       <Login returnurl={params.returnurl || ""} />
     </NavigationBar>,

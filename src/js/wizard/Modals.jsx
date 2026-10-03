@@ -16,18 +16,18 @@ function ImportProjectModal () {
 
   // Surface the server's message instead of only the status text
   const readError = (response) =>
-    response.text()
-      .then((text) => {
-        try {
-          const body = JSON.parse(text);
-          return body.message || body.error
-            || (body.params && Object.entries(body.params).map(([f, m]) => `${f}: ${m}`).join('; '))
-            || text;
-        } catch {
-          return text;
-        }
-      })
-      .then((message) => Promise.reject(message || response.statusText || 'Import failed.'));
+        response.text()
+        .then((text) => {
+          try {
+            const body = JSON.parse(text);
+            return body.message || body.error
+              || (body.params && Object.entries(body.params).map(([f, m]) => `${f}: ${m}`).join('; '))
+              || text;
+          } catch {
+            return text;
+          }
+        })
+        .then((message) => Promise.reject(message || response.statusText || 'Import failed.'));
 
   function importCollectProject (fileName, fileb64) {
     if (importing) return;
@@ -94,13 +94,13 @@ function ImportProjectModal () {
           />
         </label>
         {importErrors &&
-          (<div style={{border: '1px solid red',
-            background: 'pink',
-            color: 'red'}} >
-             {importErrors.map((message) => {
-               return (<span > {message} <br/> </span>);
-             })}
-           </div>)}
+         (<div style={{border: '1px solid red',
+                       background: 'pink',
+                       color: 'red'}} >
+            {importErrors.map((message) => {
+              return (<span > {message} <br/> </span>);
+            })}
+          </div>)}
       </div>
     </Modal>
   );
@@ -115,6 +115,7 @@ function TemplateProjectModal () {
   const [templateProjects, setTemplateProjects] = useState([]);
   const [filterProjectId, setFilterProjectId] = useState('');
   const [filterProjectName, setFilterProjectName] = useState('');
+  const [showPublicProjects, setShowPublicProjects] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const stripForeignUsers = (designSettings) => ({
@@ -123,17 +124,17 @@ function TemplateProjectModal () {
     qaqcAssignment: { ...designSettings.qaqcAssignment, qaqcMethod: 'none', smes: [] },
   });
   const matchesFilters = (idFilter, nameFilter) => ({ id, name }) =>
-    (idFilter === '' || String(id).includes(idFilter))
-      && (nameFilter === '' || name.toLowerCase().includes(nameFilter.toLowerCase()));
+        (idFilter === '' || String(id).includes(idFilter))
+        && (nameFilter === '' || name.toLowerCase().includes(nameFilter.toLowerCase()));
 
   const intersectTemplateImagery = (templateImagery, institutionImagery, templateBasemapId) => {
     const allowed = new Set(institutionImagery.map(({ id }) => id));
     const shared = templateImagery.filter(({ id }) => allowed.has(id));
     const pool = shared.length ? shared : institutionImagery;
     const basemap =
-      pool.find(({ id }) => id === templateBasemapId)
-        ?? pool.find(({ visibility }) => visibility === 'platform')
-        ?? pool[0];
+          pool.find(({ id }) => id === templateBasemapId)
+          ?? pool.find(({ visibility }) => visibility === 'platform')
+          ?? pool[0];
     return [basemap, ...pool.filter((img) => img !== basemap)].map(({ id }) => id);
   };
 
@@ -143,13 +144,13 @@ function TemplateProjectModal () {
       .then((data) => {
         dispatch([event_ids.templateProject, data]);
         dispatch([event_ids.plots.designSettings,
-          data.templateInstitutionId === institutionId
-            ? data.designSettings
-            : stripForeignUsers(data.designSettings)]);
+                  data.templateInstitutionId === institutionId
+                  ? data.designSettings
+                  : stripForeignUsers(data.designSettings)]);
         return data;
       });
   }
- 
+  
   // get-project-plots returns {id, plotId, center, flagged, status} rows,
   // where center is a GeoJSON Point string and id is the visible id.
   function getProjectPlots (projectId) {
@@ -161,12 +162,12 @@ function TemplateProjectModal () {
         maxId: Math.max(0, ...plots.map((p) => p.id)),
       }]));
   }
- 
+  
   function getProjectImagery (projectId) {
     return fetch(`/get-project-imagery?projectId=${projectId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)));
   }
- 
+  
   function loadTemplate (projectId) {
     if (projectId <= 0 || loading) return;
     setLoading(true);
@@ -177,7 +178,7 @@ function TemplateProjectModal () {
         dispatch([event_ids.imagery.previewId, imageryIds[0]]);
         dispatch([event_ids.templateProjectId, projectId]);
         dispatch([event_ids.templateProjectName,
-          templateProjects.find(({ id }) => id === projectId)?.name ?? '']);
+                  templateProjects.find(({ id }) => id === projectId)?.name ?? '']);
         dispatch([event_ids.templatePlotDesign]);
         dispatch([event_ids.overview.useTemplatePlots, true]);
         dispatch([event_ids.overview.useTemplateWidgets, true]);
@@ -191,11 +192,11 @@ function TemplateProjectModal () {
         dispatch([event_ids.templatePlotDesign, true]);
         dispatch([event_ids.templateProjectName, '']);
         dispatch([event_ids.errors, [['Project Template Error',
-          ['Error getting complete template info. See console for details.']]]]);
+                                      ['Error getting complete template info. See console for details.']]]]);
       })
       .finally(() => setLoading(false));
   }
- 
+  
   useEffect(() => {
     fetch(`/get-template-projects?projectType=${projectType}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
@@ -205,20 +206,37 @@ function TemplateProjectModal () {
         dispatch([event_ids.errors, [['Template Projects', ['Failed to load template projects']]]]);
       });
   }, [projectType]);
- 
-  const visibleProjects = templateProjects.filter(matchesFilters(filterProjectId, filterProjectName));
- 
+
+  const visibleProjects = templateProjects
+    .filter((project) => showPublicProjects || project.institutionId === institutionId)
+    .filter(matchesFilters(filterProjectId, filterProjectName));
+
+  const selectedProjectId = visibleProjects.some(({ id }) => id === templateProjectId)
+    ? templateProjectId
+    : -1;
+
   return (
     <Modal
       title="Select Template Project"
       confirmText={loading ? 'Loading...' : 'Select'}
       closeText="Quit"
-      onConfirm={() => loadTemplate(templateProjectId)}
+      onConfirm={() => loadTemplate(selectedProjectId)}
       onClose={() => dispatch([event_ids.modal, 'newProject'])}>
       {templateProjects.length === 0
         ? <p>No template projects found.</p>
         : (
           <div>
+            <div
+              className="labeled-input"
+              style={{ marginBottom: '0.5rem' }}
+              onClick={() => setShowPublicProjects(!showPublicProjects)}>
+              <span className="checkbox">
+                <SvgIcon icon={showPublicProjects ? 'checkboxChecked' : 'checkboxUnchecked'} size="1.2rem" />
+              </span>
+              <span className="text-label" style={showPublicProjects ? { fontWeight: 'bold' } : {}}>
+                Show public projects
+              </span>
+            </div>
             <p>Filter Template Projects:</p>
             <div style={{ display: 'flex', gap: '1rem', flexDirection: 'row' }}>
               <input
@@ -241,7 +259,7 @@ function TemplateProjectModal () {
             </div>
             <select
               className="text-input"
-              value={templateProjectId}
+              value={selectedProjectId}
               onChange={(e) => setTemplateProjectId(Number(e.target.value))}>
               <option value={-1} disabled hidden>Select Template Project:</option>
               {visibleProjects.map(({ id, name }) => (
@@ -276,11 +294,11 @@ function handleNewProject (projectSource) {
 function NewProjectModal () {
   const newProjectOptions = {
     newProject: ['Create a new project',
-      'Generate a new project from scratch by customizing all steps.'],
+                 'Generate a new project from scratch by customizing all steps.'],
     templateProject: ['Select from an existing template',
-      'Select a template and prefill all the steps. You can edit and customize it.'],
+                      'Select a template and prefill all the steps. You can edit and customize it.'],
     importProject: ['Import Collect Earth Project',
-      'Import a project from the Collect Earth desktop application.']};
+                    'Import a project from the Collect Earth desktop application.']};
   const projectSource = useSubscription([sub_ids.projectSource]);
   const institutionId = useSubscription([sub_ids.institutionId]);
   return (
@@ -297,8 +315,8 @@ function NewProjectModal () {
           return (
             <div
               className={projectSource === id ?
-                "radio-selected-button"
-                : "radio-selection-button"}
+                         "radio-selected-button"
+                         : "radio-selection-button"}
               key={id}
               onClick={()=> {
                 dispatch([event_ids.projectSource, id]);
@@ -308,7 +326,7 @@ function NewProjectModal () {
               >{projectSource === id
                 ? <SvgIcon icon="radioChecked" size="1.2rem" />                            
                 : <SvgIcon icon="radio" size="1.2rem"
-                    className="radio-button-unchecked"/> }
+              className="radio-button-unchecked"/> }
                 {"    "}
                 { title } </p>
               <label
@@ -322,38 +340,176 @@ function NewProjectModal () {
 };
 
 function SubmitProjectModal () {
-  const [TOS, setTOS] = useState(false);
-  const update = Number(useSubscription([sub_ids.projectId]));
+  const [slug, setSlug] = useState("");
+  const projectId = Number(useSubscription([sub_ids.projectId]));
+  const isEditing = projectId > 0;
+  const acceptedTOS = slug.trim().length > 0;
   return (
     <Modal
-      title={update < 0 ? 'Create Project' : 'Update Project'}
+      title={isEditing ? 'Update Project' : 'Create Project'}
       closeText='Return to editing'
-      confirmText={update < 0 ? 'Create Project' : 'Update Project'}
+      confirmText={isEditing ? 'Update Project' : 'Create Project'}
       onConfirm={()=>{
-        dispatch([event_ids.saveProject]);
+        dispatch([event_ids.saveProject, slug.trim()]);
       }}
-      confirmDisabled={!TOS}
+      confirmDisabled={!isEditing && !acceptedTOS}
       onClose={()=>{dispatch([event_ids.modal, null])}}>
-      <div>
-        <p >You will be able to continue to make changes to the project after creating/updating it.
-          Once satisfied with the project, click publish to begin final collection.</p>
+      {isEditing ? (
+        <p>Are you sure you want to apply these changes to the project?</p>
+      ) : (
         <div>
-          <input type='checkbox'
-            checked={TOS}
-            onChange={(e)=>setTOS(e.target.checked)}/>
-          <label>Accept
-            <a href="https://app.collect.earth/terms-of-service" target="_blank">
-              Terms of Service
-            </a>
-            <span style={{color: 'red'}}>*</span>
-          </label>
-          
+          <p >You will be able to continue to make changes to the project after creating it.
+            Once satisfied with the project, click publish to begin final collection.</p>
+          <p>In order to create this project, enter your username to accept the <span style={
+            {cursor: 'pointer', textDecorationLine: 'underline', color:'var(--Primary-Highight-Green)'}
+          } onClick={()=>window.open('/terms-of-service')}>Terms of Service</span>.</p>
+          <div>
+            <input type="text"
+                   className="text-input"
+                   value={slug}
+                   onChange={(e)=> {setSlug(e.target.value);}}
+                   placeholder="Enter Username to Agree"/>
+          </div>
         </div>
-        <p > Are you sure you want to continue?</p>
+      )}
+    </Modal>
+  );
+};
+
+function UpdatePublishedProjectModal () {
+  const [overwrite, setOverwrite] = useState(false);
+  return (
+    <Modal
+      title='Update Published Project'
+      closeText='Return to editing'
+      confirmText='Update Project'
+      onConfirm={()=>{
+        dispatch([event_ids.saveProject, false, overwrite]);
+      }}
+      onClose={()=>{dispatch([event_ids.modal, null]);}}>
+      <div>
+        <p>Would you like to clear data that has been collected?</p>
+        {[[false, 'No'], [true, 'Yes']].map(([value, label]) => (
+          <div className="labeled-input" key={label} onClick={()=>setOverwrite(value)}>
+            <span>{overwrite === value
+              ? <SvgIcon icon="radioChecked" size="1.2rem" />
+              : <SvgIcon icon="radio" size="1.2rem"/>}</span>
+            <span className="text-label" style={overwrite === value ? {fontWeight: 'bold'} : {}}>
+              {label}
+            </span>
+          </div>
+        ))}
+        {overwrite && (
+          <p style={{color: 'red', marginTop: '.5rem'}}>
+            All data collected for this project will be permanently deleted.
+          </p>
+        )}
       </div>
     </Modal>
   );
 };
+
+function CheckboxOption ({ checked, disabled = false, onToggle, children }) {
+  return (
+    <div
+      className="labeled-input"
+      onClick={() => !disabled && onToggle()}
+      style={disabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}>
+      <span className="checkbox">
+        <SvgIcon icon={checked ? 'checkboxChecked' : 'checkboxUnchecked'} size="1.2rem" />
+      </span>
+      <span className="text-label" style={checked ? { fontWeight: 'bold' } : {}}>
+        {children}
+      </span>
+    </div>
+  );
+}
+
+function CopyProjectModal () {
+  const projectId = useSubscription([sub_ids.projectId]);
+  const institutionId = useSubscription([sub_ids.institutionId]);
+  const [usePlots, setUsePlots] = useState(true);
+  const [useWidgets, setUseWidgets] = useState(true);
+  const [copyAnswers, setCopyAnswers] = useState(false);
+  const [slug, setSlug] = useState("");
+  const [copying, setCopying] = useState(false);
+  const [copyError, setCopyError] = useState(null);
+
+  // Answers are matched to the new project's plots by visible id, so they only
+  // line up when the existing plots are copied too.
+  const toggleUsePlots = () => {
+    if (usePlots) setCopyAnswers(false);
+    setUsePlots(!usePlots);
+  };
+
+  function copyProject () {
+    if (copying || !slug.trim()) return;
+    setCopying(true);
+    setCopyError(null);
+    const params = new URLSearchParams({
+      projectId,
+      plots: usePlots,
+      widgets: useWidgets,
+      answers: usePlots && copyAnswers,
+      acceptTos: slug.trim(),
+    });
+    fetch(`/copy-project?${params}`, { method: 'POST' })
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((data) => {
+        window.location.assign(`/project-wizard?projectId=${data.projectId}&institutionId=${institutionId}`);
+      })
+      .catch((error) => {
+        console.error(error);
+        setCopyError('Error copying project. See console for details.');
+        setCopying(false);
+      });
+  }
+
+  return (
+    <Modal
+      title='Copy Project'
+      closeText='Cancel'
+      confirmText={copying ? 'Copying...' : 'Copy Project'}
+      onConfirm={copyProject}
+      confirmDisabled={!slug.trim() || copying}
+      onClose={() => { !copying && dispatch([event_ids.modal, null]); }}>
+      <div>
+        <p>A new unpublished copy of this project will be created. Choose what to include:</p>
+        <CheckboxOption checked={usePlots} onToggle={toggleUsePlots}>
+          Use existing plots
+        </CheckboxOption>
+        <CheckboxOption checked={useWidgets} onToggle={() => setUseWidgets(!useWidgets)}>
+          Use existing widgets
+        </CheckboxOption>
+        <CheckboxOption
+          checked={usePlots && copyAnswers}
+          disabled={!usePlots}
+          onToggle={() => setCopyAnswers(!copyAnswers)}>
+          Copy answers
+        </CheckboxOption>
+        {!usePlots && (
+          <p className="text-secondary small" style={{ marginTop: '-0.25rem' }}>
+            Answers can only be copied when using existing plots.
+          </p>
+        )}
+        <hr/>
+        <p>In order to create this project, enter your username to accept the <span style={
+          {cursor: 'pointer', textDecorationLine: 'underline', color:'var(--Primary-Highight-Green)'}
+        } onClick={()=>window.open('/terms-of-service')}>Terms of Service</span>.</p>
+        <div>
+          <input type="text"
+                 className="text-input"
+                 value={slug}
+                 onChange={(e)=> {setSlug(e.target.value);}}
+                 placeholder="Enter Username to Agree"/>
+        </div>
+        {copyError && (
+          <p style={{ color: 'red', marginTop: '.5rem' }}>{copyError}</p>
+        )}
+      </div>
+    </Modal>
+  );
+}
 
 function DraftSuccessModal () {
   const institutionId = useSubscription([sub_ids.institutionId]);
@@ -449,8 +605,8 @@ function ErrorModal () {
     <Modal
       onClose={()=>{dispatch([event_ids.modal, null]);}}>
       <div style={{display: 'flex',
-        flexDirection: 'column',
-        gap: '1rem'}}>
+                   flexDirection: 'column',
+                   gap: '1rem'}}>
         <div className='alert-icon'>
           <SvgIcon  icon='alert' size='2rem'/>
         </div>
@@ -461,17 +617,17 @@ function ErrorModal () {
                     <div className='error-header' onClick={()=>toggleVisible(errorType)}>
                       <b > {stepName(errorType)}</b>
                       <SvgIcon icon={visible.includes(errorType) ? 'upCaretNew' : 'downCaretNew'}
-                        size='1.2rem'> </SvgIcon>
+                               size='1.2rem'> </SvgIcon>
                     </div>
                     {visible.includes(errorType) &&
-                      <div style={{gap: '1rem'}}>
-                        <br/>
-                        {errorMessages.map((message) => {
-                          return (
-                            <p > - {message}
-                            </p>);
-                        })}
-                      </div>}
+                     <div style={{gap: '1rem'}}>
+                       <br/>
+                       {errorMessages.map((message) => {
+                         return (
+                           <p > - {message}
+                           </p>);
+                       })}
+                     </div>}
                   </div>);
         })}
       </div>
@@ -506,6 +662,8 @@ export default function ProjectWizardModal () {
   case 'import'      : return (<ImportProjectModal/>);
   case 'newProject'  : return (<NewProjectModal/>);
   case 'review'      : return (<SubmitProjectModal/>);
+  case 'update-published' : return (<UpdatePublishedProjectModal/>);
+  case 'copy-project' : return (<CopyProjectModal/>);
   case 'success'     : return (<SuccessModal/>);
   case 'error'       : return (<ErrorModal/>);
   case 'draft-success' : return (<DraftSuccessModal/>);

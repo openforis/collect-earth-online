@@ -5,9 +5,10 @@ import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 function TermsOfService() {
   return (
     <section className="container pt-3" id="about">
-      <div className="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
+      <div className="col-xl-8 offset-xl-2 col-lg-10 justify-content-center" style={{marginTop: "30px"}}>
         <h1 className="py-4">Collect Earth Online Terms of Service</h1>
 
+        {/**/}
         <h2>Email policy</h2>
         <p>
           By creating an institution you become an &quot;admin&quot; user for that institution.
@@ -22,7 +23,7 @@ function TermsOfService() {
           and release dates, with the very occasional feedback survey.
         </p>
         <p>Your email will not be shared with any third party organization.</p>
-
+        {/**/}
         <h2>Disclaimers</h2>
         <p>
           The SERVIR Network, NASA, and USAID make no express or implied warranty of this
@@ -77,6 +78,50 @@ function TermsOfService() {
           Admin discretion can be used at any point for projects or institutions that are created
           with malformed or test data.
         </p>
+
+        <h2>Public Content and License Designations</h2>
+        <p>
+          An admin user on behalf of a Project administrator organization (“Institution”) may designate
+          content contributions as “private” or “public” (i.e., subject to a Creative Commons Attribution
+          4.0 International license) (each a “License Designation”). An admin user is solely responsible
+          for ensuring it has all the necessary rights, licenses, permissions and consent to make, and to
+          the extent applicable modify, each License Designation.
+        </p>
+        <p>
+          By making a License Designation, the admin user represents and warrants that the admin user and
+          Institution have all rights, licenses, permissions, consents and other authority necessary to
+          make the content contributions available under the selected License Designation(s).
+        </p>
+        <p>
+          <strong>Disclaimer; Release.</strong> TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE CEO PARTIES
+          SHALL HAVE NO LIABILITY ARISING OUT OF OR RELATING TO ANY LICENSE DESIGNATION OR CHANGE TO A
+          LICENSE DESIGNATION. THE ADMIN USER, ON BEHALF OF ITSELF AND THE INSTITUTION AND THE RELEVANT
+          CONTENT CONTRIBUTION OWNER(S), HEREBY RELEASES AND FOREVER DISCHARGES THE CEO PARTIES FROM ANY
+          CLAIM, DEMAND, LIABILITY, LOSS, DAMAGE, COST, OR EXPENSE ARISING OUT OF OR RELATING TO ANY
+          LIABILITY ARISING FROM THE FOREGOING.
+        </p>
+        <p className="mb-4">
+          <strong>Indemnification.</strong> The Admin User and Institution shall defend, indemnify, and
+          hold harmless the CEO Parties from and against any damages, liabilities, costs, and expenses
+          (including reasonable attorneys&apos; fees) incurred in connection with any third-party claim,
+          action, demand, or proceeding arising out of or relating to: (i) any License Designation or
+          (ii) any alleged violation of a third party&apos;s intellectual property, privacy,
+          confidentiality, publicity, or other rights resulting from any content contributions.
+        </p>
+
+        <h2>CEO</h2>
+        <p>
+          For purposes of these Terms of Service, “CEO” or “Collect Earth Online” means the Collect Earth
+          Online platform located at <a href="https://app.collect.earth/">https://app.collect.earth/</a> and
+          the consortium, network, and community of private and public organizations, governmental and
+          nongovernmental organizations, institutions, funders, developers, contributors, and other
+          partners that collaborate to develop, operate, host, maintain, support, or otherwise make Collect
+          Earth Online available, including their respective successors, affiliates, officers, directors,
+          employees, agents, and representatives (collectively, the “CEO Parties”). The CEO Parties
+          include, without limitation, organizations and agencies participating in or supporting the
+          SERVIR Network and identified from time to time
+          at <a href="https://www.collect.earth/about/">https://www.collect.earth/about/</a>.
+        </p>
       </div>
     </section>
   );
@@ -88,7 +133,7 @@ export function pageInit(params, session) {
       <BreadCrumbs
         crumbs={[
           {display: "Terms of Service",
-           id:"tos",}]}
+            id:"tos",}]}
       />
       <TermsOfService />
     </NavigationBar>,

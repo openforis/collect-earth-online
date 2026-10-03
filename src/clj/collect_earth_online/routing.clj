@@ -15,6 +15,7 @@
             [collect-earth-online.db.users                     :as users]            
             [collect-earth-online.handlers                     :refer [crumb-data]]
             [collect-earth-online.proxy                        :as proxy]
+            [collect-earth-online.utils.rss              :as rss]
             [triangulum.views                                  :refer [render-page]]))
 
 (def routes
@@ -62,6 +63,8 @@
    [:get  "/support"]                        {:handler (render-page "/support")}
    [:get  "/user-disagreement"]              {:handler (render-page "/user-disagreement")}
    [:get  "/terms-of-service"]               {:handler (render-page "/terms-of-service")}
+   [:get  "/data-license"]                   {:handler (render-page "/data-license")}
+
    [:get  "/widget-layout-editor"]           {:handler     (render-page "/widget-layout-editor")
                                               :auth-type   :admin
                                               :auth-action :redirect}
@@ -83,6 +86,9 @@
                                               :auth-action :block}
    [:get  "/get-user-stats"]                 {:handler     users/get-user-stats
                                               :auth-type   :user
+                                              :auth-action :block}
+   [:post "/user-accept-tos"]                {:handler users/user-accept-tos
+                                              :auth-type :user
                                               :auth-action :block}
    [:post "/account"]                        {:handler     users/update-account
                                               :auth-type   :user
@@ -114,6 +120,7 @@
                                               :auth-type   :admin
                                               :auth-action :block}
    [:get  "/get-home-projects"]              {:handler projects/get-home-projects}
+   [:get  "/get-highlight-projects"]         {:handler projects/get-highlight-projects}
    [:get  "/get-institution-projects"]       {:handler projects/get-institution-projects}
    [:get  "/get-institution-dash-projects"]  {:handler projects/get-institution-dash-projects}
    [:get  "/get-project-by-id"]              {:handler projects/get-project-by-id}
@@ -150,10 +157,10 @@
    [:post "/edit-projects-bulk"]             {:handler     (validate projects/edit-projects-bulk!)
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:post "/create-project-draft"]           {:handler     (validate projects/create-project-draft!)
+   [:post "/create-project-draft"]           {:handler     projects/create-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
-   [:post "/update-project-draft"]           {:handler     (validate projects/update-project-draft!)
+   [:post "/update-project-draft"]           {:handler     projects/update-project-draft!
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/copy-project"]                   {:handler projects/copy-project!
@@ -309,8 +316,9 @@
                                                :auth-type   :metrics
                                                :auth-action :block}
    [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}
-   [:post "/gcloud-listener"]                  {:handler gcloud/gcloud-handler}
-   [:get  "/open-socket"]                      {:handler sse/sse-handler}
-   [:post "/crumb-data"]                       {:handler crumb-data}
+   [:post "/gcloud-listener"]                 {:handler gcloud/gcloud-handler}
+   [:get  "/open-socket"]                     {:handler sse/sse-handler}
+   [:post "/crumb-data"]                      {:handler crumb-data}
+   [:get  "/get-blog-feed"]                   {:handler rss/get-blog-feed}
    }
   )

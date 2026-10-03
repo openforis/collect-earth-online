@@ -68,7 +68,9 @@ const projectWizardDb = {
   'overview.projectOptions.collectConfidence': false,
   'overview.projectOptions.autoLaunchGeoDash': true,
   'overview.projectOptions.plotSimilarity': false,
+  'overview.projectOptions.license': null,
   'overview.useTemplatePlots': false,
+  'overview.useTemplateWidgets': false,
   'imagery.imageryList': [],
   'imagery.previewId': '',
   'institutionImagery': [],
@@ -169,6 +171,7 @@ export const event_ids = {
       collectConfidence: 'overview.projectOptions.collectConfidence',
       autoLaunchGeoDash: 'overview.projectOptions.autoLaunchGeoDash',
       plotSimilarity: 'overview.projectOptions.plotSimilarity',
+      license: 'overview.projectOptions.license',
     }},
   projectDetails: 'projectDetails',
   imagery: {
@@ -288,6 +291,7 @@ export const sub_ids = {
       collectConfidence: 'overview.projectOptions.collectConfidence',
       autoLaunchGeoDash: 'overview.projectOptions.autoLaunchGeoDash',
       plotSimilarity: 'overview.projectOptions.plotSimilarity',
+      license: 'overview.projectOptions.license',
     }},
   projectDetails: 'projectDetails',
   imagery: {
@@ -313,6 +317,7 @@ export const sub_ids = {
     plotIds: 'plots.plotIds',
     designSettings: 'plots.designSettings',
     plotSimilarityDetails: 'plots.plotSimilarityDetails',
+    referencePlotId: 'plots.referencePlotId',
     plotsSource: 'plots.plotsSource',
     newPlotDistribution: 'plots.newPlotDistribution',
     newPlotSize: 'plots.newPlotSize',
@@ -393,6 +398,8 @@ regSub(sub_ids.overview.projectOptions.autoLaunchGeoDash, sub_ids.overview.proje
 regSub(sub_ids.overview.useTemplatePlots, sub_ids.overview.useTemplatePlots);
 regSub(sub_ids.overview.useTemplateWidgets, sub_ids.overview.useTemplateWidgets);
 regSub(sub_ids.overview.projectOptions.plotSimilarity, sub_ids.overview.projectOptions.plotSimilarity);
+regSub(sub_ids.overview.projectOptions.license, sub_ids.overview.projectOptions.license);
+regSub(sub_ids.originalProject, sub_ids.originalProject);
 regSub(sub_ids.templateProjectName, sub_ids.templateProjectName);
 
 //imagery
@@ -500,7 +507,8 @@ regEvent(event_ids.errors, ({ draftDb }, errors) => {
 });
 
 regEvent(event_ids.institutionId, ({ draftDb }, institutionId )=> {
-  draftDb[sub_ids.institutionId] = institutionId;
+  // URL params arrive as strings; store a number so === comparisons against API ids work.
+  draftDb[sub_ids.institutionId] = Number(institutionId);
 });
 regEvent(event_ids.availability, ({ draftDb }, availability ) => {
   draftDb[sub_ids.availability] = availability;
@@ -508,6 +516,8 @@ regEvent(event_ids.availability, ({ draftDb }, availability ) => {
 // PROJECT WIZARD EVENTS
 
 regEvent(event_ids.draftProject, ({ draftDb }, draftId) => {
+  // Saving again should update this draft, not create a new one.
+  draftDb[sub_ids.projectDraftId] = Number(draftId);
   function getProjectDraftById(projectDraftId) {
     fetch(`/get-project-draft-by-id?projectDraftId=${projectDraftId}`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response)))
@@ -517,6 +527,12 @@ regEvent(event_ids.draftProject, ({ draftDb }, draftId) => {
           return Promise.resolve();
         } else {
           dispatch([event_ids.templateProject, data]);
+          // Imagery isn't part of applyProjectToDb (templates and edits load it separately).
+          const imageryIds = data.projectImageryList ?? (data.imageryId > 0 ? [data.imageryId] : []);
+          if (imageryIds.length) {
+            dispatch([event_ids.imagery.imageryList, imageryIds]);
+            dispatch([event_ids.imagery.previewId, imageryIds[0]]);
+          }
           return Promise.resolve();
         }
       }).catch(() => {
@@ -601,12 +617,14 @@ export function buildProject (draftDb, sub_ids) {
   const collectConfidence = current(draftDb[sub_ids.overview.projectOptions.collectConfidence]);
   const autoLaunchGeoDash = current(draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash]);
   const plotSimilarity = current(draftDb[sub_ids.overview.projectOptions.plotSimilarity]);
+  const license = current(draftDb[sub_ids.overview.projectOptions.license]);
   const projectOptions = {
     showGEEScript: gee,
     showPlotInformation: showPlotInformation,
     collectConfidence: collectConfidence,
     autoLaunchGeoDash: autoLaunchGeoDash,
     plotSimilarity,
+    license,
   };
   const plotSpacing = Number(current(draftDb[sub_ids.plots.plotSpacing]));
   const shufflePlots = current(draftDb[sub_ids.plots.shufflePlots]);
@@ -827,6 +845,7 @@ function applyProjectToDb (draftDb, {
   draftDb[sub_ids.overview.projectOptions.collectConfidence] = projectOptions.collectConfidence;
   draftDb[sub_ids.overview.projectOptions.autoLaunchGeoDash] = projectOptions.autoLaunchGeoDash;
   draftDb[sub_ids.overview.projectOptions.plotSimilarity] = projectOptions.plotSimilarity ?? false;
+  draftDb[sub_ids.overview.projectOptions.license] = projectOptions.license ?? null;
   draftDb[sub_ids.boundary.generationMethod] =
   ['shp', 'geojson', 'csv'].includes(plotDistribution) ? 'plotFile' : 'manual';
   draftDb[sub_ids.boundary.aoiFeatures] = aoiFeatures;
@@ -852,7 +871,7 @@ function applyProjectToDb (draftDb, {
   draftDb[sub_ids.publishedDate] = publishedDate;
   draftDb[sub_ids.closedDate] = closedDate;
   draftDb[sub_ids.originalProject] =
-    pickKeys(current(draftDb), [...PLOT_DESIGN_FIELDS, ...SAMPLE_DESIGN_FIELDS]);
+    pickKeys(current(draftDb), [...PLOT_DESIGN_FIELDS, ...SAMPLE_DESIGN_FIELDS, LICENSE_KEY]);
 }
 
 regEvent(event_ids.templateProject, ({ draftDb }, project) => {
@@ -963,10 +982,16 @@ regEvent(event_ids.importProject, ({ draftDb }, project) => {
 regEvent(event_ids.saveDraft, ({ draftDb }) => {
   const institutionId = Number(current(draftDb[sub_ids.institutionId]));
   const form = buildProject(draftDb, sub_ids);
-  const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
+  const useTemplateWidgets = current(draftDb[sub_ids.overview.useTemplateWidgets]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
   const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
   const projectDraftId = current(draftDb[sub_ids.projectDraftId]);
+
+  // Validation failures come back as {params: {field: message}}; other failures as a string.
+  const draftErrors = (message) =>
+    message?.params
+      ? Object.entries(message.params).map(([field, error]) => field + ": " + error)
+      : [typeof message === 'string' ? message : 'Error saving draft. See console for details.'];
 
   function createProjectDraft () {
     fetch("/create-project-draft", {
@@ -989,15 +1014,12 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
           dispatch([event_ids.draftSuccess, ['Draft Saved', data[1]]]);          
           return Promise.resolve();
         } else {          
-          let errs = Object.entries(data[1].params).map(([field, message])=>{return (field + "; " + message);});
-          dispatch([event_ids.errors, [['server', errs]]]);
           return Promise.reject(data[1]);
         }
       })
       .catch((message) => {
-        console.log('create project request errors', message);
-        let errs = Object.entries(message.params).map(([field, message])=>{return (field + "; " + message);});
-        dispatch([event_ids.errors, [['server', errs]]]);
+        console.log('create project draft errors', message);
+        dispatch([event_ids.errors, [['server', draftErrors(message)]]]);
       });
   }
 
@@ -1019,24 +1041,25 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then((data) => {
-        dispatch([event_ids.draftSuccess, ['Draft Saved', data]]);
+        if (!data[0]) return Promise.reject(data[1]);
+        dispatch([event_ids.draftSuccess, ['Draft Saved', data[1]]]);
         return Promise.resolve();
       })
       .catch((message) => {
-        console.log('create project request errors', message);        
-        dispatch([event_ids.errors, [['server', Object.entries(message.params).map(([field, error]) => field + ": " + error)]]]);
+        console.log('update project draft errors', message);
+        dispatch([event_ids.errors, [['server', draftErrors(message)]]]);
       });
   }
 
-  form.projectId > 0
+  projectDraftId > 0
     ? saveProjectDraft()
     : createProjectDraft();           
 });
 
 
-regEvent(event_ids.saveProject, ({ draftDb }) => {
+regEvent(event_ids.saveProject, ({ draftDb }, acceptTos, overwrite) => {
   const institutionId = Number(current(draftDb[sub_ids.institutionId]));
-  const useTemplateWidgets = current(draftDb[sub_ids.useTemplateWidgets]);
+  const useTemplateWidgets = current(draftDb[sub_ids.overview.useTemplateWidgets]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
   const templateProjectId = current(draftDb[sub_ids.templateProjectId]);
   const similarityDetails = current(draftDb[sub_ids.plots.plotSimilarityDetails]) || {};
@@ -1055,6 +1078,7 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
       },
       body: JSON.stringify({
         projectId: existingProjectId,
+        overwrite: overwrite === true,
         ...form,
       }),
     })
@@ -1085,6 +1109,7 @@ regEvent(event_ids.saveProject, ({ draftDb }) => {
         projectTemplate: templateProjectId,
         useTemplatePlots,
         useTemplateWidgets,
+        acceptTos: typeof acceptTos === "string" ? acceptTos : "",
         ...form,
       }),
     })
@@ -1136,6 +1161,9 @@ regEvent(event_ids.publishProject, ({ draftDb }) => {
 });
 
 regEvent(event_ids.draftSuccess, ({ draftDb }, response) => {
+  // Remember a newly created draft so the next save updates it instead of creating another.
+  const createdDraftId = response?.[1]?.projectDraftId;
+  if (Number.isInteger(createdDraftId)) draftDb[sub_ids.projectDraftId] = createdDraftId;
   draftDb[sub_ids.successResponse] = response;
   draftDb[sub_ids.modal] = 'draft-success';
 });
@@ -1196,6 +1224,10 @@ regEvent(event_ids.overview.projectOptions.plotSimilarity, ({ draftDb }) => {
   draftDb[sub_ids.overview.projectOptions.plotSimilarity] = !draftDb[sub_ids.overview.projectOptions.plotSimilarity];
 });
 
+regEvent(event_ids.overview.projectOptions.license, ({ draftDb }, license) => {
+  draftDb[sub_ids.overview.projectOptions.license] = license;
+});
+
 regEvent(event_ids.imagery.imageryList, ({ draftDb }, imageryList ) => {
   draftDb[sub_ids.imagery.imageryList] = imageryList;
 });
@@ -1205,7 +1237,7 @@ regEvent(event_ids.imagery.previewId, ({ draftDb }, previewId) => {
 });
 
 regEvent(event_ids.questions.addQuestion, ({ draftDb }, nextId, questionToAdd ) => {
-  const questions = draftDb[sub_ids.questions.quesions];
+  const questions = draftDb[sub_ids.questions.questions];
   draftDb[sub_ids.questions.questions] = {... questions, [nextId]: questionToAdd};
 });
 
@@ -1538,7 +1570,21 @@ export const usePlotDesignLocked = () => {
   return templateProjectId > 0 && projectId === -1 && Boolean(useTemplatePlots);
 };
 
+// Once published, a project's data license can go from private to public but never back.
+// True when the project was published (or closed) with a saved public license, which
+// means the private option must be disabled. Unsaved changes in this session don't count.
+export const usePublicLicenseLocked = () => {
+  const projectId = useSubscription([sub_ids.projectId]) || -1;
+  const availability = useSubscription([sub_ids.availability]);
+  const originalProject = useSubscription([sub_ids.originalProject]) || {};
+  return projectId > 0
+    && ['published', 'closed'].includes(availability)
+    && originalProject[LICENSE_KEY] === 'public';
+};
+
 export const renumberRules = (rules) => rules.map((rule, i) => ({ ...rule, id: i }));
+
+const LICENSE_KEY = 'overview.projectOptions.license';
 
 const PLOT_DESIGN_FIELDS = [
   'boundary.generationMethod', 'boundary.aoiFeatures', 'boundary.aoiFileName',

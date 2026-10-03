@@ -6,6 +6,7 @@ import { atom } from 'jotai';
 */
 
 export const stateAtom = atom({
+  acceptTOS: false,
   breadCrumbs: [
     {display: "Homepage",
      id: "home",
@@ -13,6 +14,7 @@ export const stateAtom = atom({
        window.location.assign("/home");
      }}
   ],
+  blogs: [],
   collectionStart: 0,
   currentProject: { surveyQuestions: {}, institution: "" },
   currentImagery: { id: "", sourceConfig: {} },

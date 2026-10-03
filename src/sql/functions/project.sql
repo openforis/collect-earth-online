@@ -42,7 +42,8 @@ CREATE OR REPLACE FUNCTION create_project(
     _token_key              text,
     _options                jsonb,
     _design_settings        jsonb,
-    _type                   text
+    _type                   text,
+    _accept_tos             text
 
  ) RETURNS integer AS $$
 
@@ -74,7 +75,8 @@ CREATE OR REPLACE FUNCTION create_project(
         token_key,
         options,
         design_settings,
-        type
+        type,
+        accept_tos
     ) VALUES (
         _institution_id,
         'unpublished',
@@ -103,7 +105,8 @@ CREATE OR REPLACE FUNCTION create_project(
         _token_key,
         _options,
         _design_settings,
-        _type::project_type
+        _type::project_type,
+        _accept_tos
     )
     RETURNING project_uid
 
@@ -621,7 +624,7 @@ $$ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION user_project(_user_id integer, _role_id integer, _privacy_level text, _availability text)
  RETURNS boolean AS $$
 
-    SELECT (_role_id = 1 AND _availability <> 'archived')
+    SELECT (_role_id = 1 AND _availability <> 'archived')           
             OR (_availability = 'published'
                 AND (_privacy_level = 'public'
                     OR (_user_id > 0 AND _privacy_level = 'users')
@@ -638,22 +641,66 @@ CREATE OR REPLACE FUNCTION select_user_home_projects(_user_id integer)
     description       text,
     centroid          text,
     num_plots         integer,
-    editable          boolean
+    editable          boolean,
+    institution_name  text,
+    last_collected    TIMESTAMP WITHOUT TIME ZONE,
+    published_date    date
  ) AS $$
 
     SELECT project_uid,
         p.institution_rid,
-        name,
-        description,
+        p.name,
+        p.description,
         ST_AsGeoJSON(ST_Centroid(boundary)),
         num_plots,
-        (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable
+        (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable,
+        ins.name AS institution_name,
+        lc.last_collected,
+        p.published_date
     FROM projects AS p
     LEFT JOIN institution_users iu
         ON user_rid = _user_id
         AND p.institution_rid = iu.institution_rid
+    JOIN institutions ins ON ins.institution_uid = p.institution_rid
+    LEFT JOIN (
+        SELECT pl.project_rid, max(up.collection_time) AS last_collected
+        FROM user_plots up
+        INNER JOIN plots pl ON pl.plot_uid = up.plot_rid
+        WHERE up.user_rid = _user_id
+        GROUP BY pl.project_rid
+    ) lc ON lc.project_rid = p.project_uid
     WHERE user_project(_user_id, role_rid, p.privacy_level, p.availability)
         AND valid_boundary(boundary) = TRUE
+    ORDER BY last_collected DESC NULLS LAST, p.published_date DESC NULLS LAST, project_uid DESC
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION get_highlight_projects(_user_id integer)
+ RETURNS table (
+    project_id        integer,
+    institution_id    integer,
+    name              text,
+    description       text,
+    centroid          text,
+    num_plots         integer,
+    editable          boolean,
+    institution_name  text
+ ) AS $$
+
+    SELECT project_uid,
+        p.institution_rid,
+        p.name,
+        p.description,
+        ST_AsGeoJSON(ST_Centroid(boundary)),
+        num_plots,
+        (CASE WHEN role_rid IS NULL THEN FALSE ELSE role_rid = 1 END) AS editable,
+        ins.name AS institution_name
+    FROM projects AS p
+    LEFT JOIN institution_users iu
+        ON user_rid = _user_id
+        AND p.institution_rid = iu.institution_rid
+    JOIN institutions ins ON ins.institution_uid = p.institution_rid
+        WHERE valid_boundary(boundary) = TRUE
+        AND p.highlight = TRUE
     ORDER BY project_uid
 
 $$ LANGUAGE SQL;
@@ -917,7 +964,7 @@ CREATE OR REPLACE FUNCTION select_project_statistics(_project_id integer)
           WHEN ct.timed_plots_count = 0 THEN 0
           ELSE ct.total_collection_seconds / ct.timed_plots_count
         END as collection_time
-    FROM projects, project_sum, users_count, user_agg, plot_sum, collection_times ct
+    FROM projects, project_sum, users_count, user_agg, collection_times ct
     WHERE project_uid = _project_id
 
 $$ LANGUAGE SQL;

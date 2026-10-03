@@ -53,15 +53,30 @@
                                           :smes          []
                                           :timesToReview 2}})
 
-(defn get-home-projects [{:keys [session]}]
-  (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable]}]
+(defn get-highlight-projects [{:keys [session]}]
+  (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable institution_name]}]
                          {:id            project_id
                           :institutionId institution_id
                           :name          name
                           :description   description
                           :numPlots      num_plots
                           :centroid      centroid
-                          :editable      editable})
+                          :editable      editable
+                          :institutionName institution_name})
+                       (call-sql "get_highlight_projects" (:userId session -1)))))
+
+(defn get-home-projects [{:keys [session]}]
+  (data-response (mapv (fn [{:keys [project_id institution_id name description num_plots centroid editable institution_name last_collected published_date]}]
+                         {:id            project_id
+                          :institutionId institution_id
+                          :name          name
+                          :description   description
+                          :numPlots      num_plots
+                          :centroid      centroid
+                          :editable      editable
+                          :institutionName institution_name
+                          :lastCollected (str last_collected)
+                          :publishedDate (str published_date)})
                        (call-sql "select_user_home_projects" (:userId session -1)))))
 
 (defn get-institution-projects [{:keys [params session]}]
@@ -447,8 +462,12 @@
                              allow-drawn-samples?
                              saved-plots)))
 
-(defn create-project! [{:keys [params]}]
-  (let [institution-id       (tc/val->int (:institutionId params))
+(defn create-project! [{:keys [params session]}]
+  (let [accept-tos           (when-not (str/blank? (:acceptTos params))
+                               (-> params :acceptTos
+                                   (str ":userId:" (:userId session -1) ":"
+                                        (.format (SimpleDateFormat. "YYYYMMddHHmmss") (Date.)))))
+        institution-id       (tc/val->int (:institutionId params))
         imagery-id           (or (:imageryId params) (get-first-public-imagery))
         name                 (:name params)
         description          (:description params)
@@ -512,7 +531,8 @@
                                                 token-key
                                                 project-options
                                                 (tc/clj->jsonb design-settings)
-                                                type))]
+                                                type
+                                                accept-tos))]
         ;; Proceed with other operations only if the initial call is successful
         (try
           ;; Create or copy plots
@@ -589,9 +609,10 @@
                   :projectTemplate id
                   :sampleResolution (long sampleResolution)
                   :useTemplatePlots (:plots params)
-                  :useTemplateWidgets (:widgets params))]    
+                  :useTemplateWidgets (:widgets params)
+                  :acceptTos          (:acceptTos params))]
     (try
-      (let [new-project (create-project! {:params project})
+      (let [new-project (create-project! {:params project :session session})
             new-project-id (-> new-project :body tc/json->clj :projectId)]
         
         (when (-> params :answers tc/val->bool)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { useAtom, useSetAtom } from 'jotai';
 import { stateAtom } from './utils/constants';
@@ -24,7 +24,7 @@ import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
 
-export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
+export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
   // INIT COLLECTION EFFECT
@@ -116,7 +116,7 @@ export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
           imageryList,
           mapConfig: mapConf,
           currentImagery: defaultImagery || s.currentImagery,
-          showAcceptTermsModal: !!acceptedTerms,
+          showAcceptTermsModal: !!acceptTOS,
           modalMessage: null,
           stats
         }));
@@ -139,7 +139,7 @@ export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
       window.removeEventListener("beforeunload", beforeUnload, { capture: true });
       cancelled = true;
     };
-  }, [projectId, acceptedTerms, plotId, setState]);
+  }, [projectId, acceptTOS, plotId, setState]);
 
   // INIT PROJECT — show project overview when ready
   useEffect(() => {
@@ -258,7 +258,23 @@ export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
     };
   };
   // API CALLS
+
+  const statsRequestId = useRef(0);
+
+  const refreshProjectStats = () => {
+    const requestId = ++statsRequestId.current;
+    fetch(`/get-project-stats?projectId=${projectId}`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+      .then((stats) => {
+        if (requestId === statsRequestId.current) {
+          setState((prev) => ({ ...prev, stats }));
+        }
+      })
+      .catch((error) => console.error("Could not refresh project stats", error));
+  };
+
   const getPlotData = (visibleId=1, direction, forcedNavMode = null, reviewMode = null) => {       
+    refreshProjectStats();
     processModal("Getting plot", () => {
       return fetch(
         "/get-collection-plot?" +
@@ -719,7 +735,7 @@ export function Collection ({ projectId, acceptedTerms, plotId, userEmail }) {
             <p>{state.messageBox.body}</p>
           </Modal>
         )}
-        {!acceptedTerms && state.currentProject?.type === "simplified" && (
+        {!acceptTOS && state.currentProject?.type === "simplified" && (
           <AcceptTermsModal
             institutionId={state.currentProject.institution}
             projectId={projectId}
@@ -890,7 +906,7 @@ export function pageInit(params, session) {
         projectId={params.projectId}
         plotId={params.plotId || null}
         userName={session.userName || "guest"}
-        acceptedTerms={session.acceptedTerms || false} />
+        acceptTOS={session.acceptedTOS || false} />
     </NavigationBar>,
     document.getElementById("app")
   );

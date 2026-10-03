@@ -1,5 +1,7 @@
 (ns collect-earth-online.db.users
   (:import java.net.URLEncoder
+           java.text.SimpleDateFormat
+           java.util.Date
            java.time.format.DateTimeFormatter
            java.time.LocalDateTime
            java.util.UUID)
@@ -22,7 +24,7 @@
         user      (first (call-sql "check_login" {:log? false} email password))
         user-info {:userId        (:user_id user)
                    :userName      email
-                   :acceptedTerms (:accepted_terms user)
+                   :acceptedTOS   (:accept_tos user)
                    :userRole      (if (:administrator user) "admin" "user")}]
     (if-let [error-msg (get-login-errors user)]
       (data-response error-msg)
@@ -190,12 +192,13 @@
     (data-response all-users)))
 
 (defn get-user-stats [{:keys [params]}]
-  (let [account-id (tc/val->int (:accountId params))]
+  (let [account-id (tc/val->int (:accountId params))]    
     (if-let [stats (first (call-sql "get_user_stats" account-id))]
       (data-response {:totalProjects (:total_projects stats)
                       :totalPlots    (:total_plots stats)
                       :averageTime   (:average_time stats)
-                      :perProject    (tc/jsonb->clj (:per_project stats))})
+                      :perProject    (tc/jsonb->clj (:per_project stats))
+                      :acceptTOS     (:accept_tos stats)})
       (data-response {}))))
 
 (defn get-user-admin-institutions [{:keys [session]}]
@@ -297,15 +300,17 @@
   (let [{:keys [params session]} req
         user-id          (:userId session)
         project-id       (tc/val->int (:projectId params))
-        interpreter-name (:interpreterName params)]
+        slug (-> params :interpreterName
+                 (str ":user:" user-id ":"
+                      (.format (SimpleDateFormat. "YYYYMMddHHmmss") (Date.))))]
     (try
       (if (= -1 user-id)
         (do
-          (call-sql "guest_user_data_sharing" project-id interpreter-name)
-          (data-response {:message "success"} {:session {:acceptedTerms true}}))
+          (call-sql "guest_user_data_sharing" slug (or (:remote-addr req) ""))
+          (data-response {:message "success"} {:session {:acceptedTOS slug}}))
         (do
-          (call-sql "user_data_sharing" project-id user-id interpreter-name (or (:remote-addr req) ""))
-          (data-response {:message "success"} {:session (assoc session :acceptedTerms true)})))
+          (call-sql "user_data_sharing" project-id user-id slug (or (:remote-addr req) "") slug)
+          (data-response {:message "success"} {:session (assoc session :acceptedTOS slug)})))
       (catch Exception e
         (data-response {:message "error when accepting data sharing terms."} {:status 500})))))
 
@@ -336,3 +341,14 @@
           (data-response (format "Email Sent. Please check all inboxes at %s for a new email with further instructions." email)))
       (catch Exception _
 	(data-response  "A server error interrupted your request. Please try again or contact an administrator.")))))
+
+(defn user-accept-tos [{:keys [params session]}]
+  (let [user-id (tc/val->int (:userId session))
+        slug (-> params :slug
+                 (str ":user:" user-id ":"
+                      (.format (SimpleDateFormat. "YYYYMMddHHmmss") (Date.))))]
+    (try (do
+           (call-sql "user_accept_tos" user-id slug)
+           (data-response true))
+         (catch Exception e
+           (data-response {:message "error accepting TOS"} {:status 500})))))
