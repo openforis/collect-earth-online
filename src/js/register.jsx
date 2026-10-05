@@ -73,7 +73,7 @@ class Register extends React.Component {
                                   this.state.modal.alert.onClose();}}>
                {this.state.modal?.alert?.alertMessage}
              </Modal>)}
-        <div className="card card-lightgreen" id="register-form">
+        <div className="card card-lightgreen" style={{marginTop: "30px"}} id="register-form">
           <div className="card-header card-header-lightgreen">Register a new account</div>
           <div className="card-body">
             <form
