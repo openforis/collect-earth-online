@@ -38,17 +38,15 @@ export const Sidebar = ({ stateAtom, style, header, children, footer, processMod
 
 // Search box used at the top of the home page sidebars (Institutions, Collect).
 export const SidebarSearch = ({ value, onChange, placeholder = "Search by name" }) => (
-  <div className="search-bar">
-    <div className="search-label">
-      <SvgIcon icon="search" size="1rem"/>
-      <input
-        type="text"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    </div>
-  </div>
+  <input
+    className="form-control"
+    type="text"
+    aria-label={placeholder}
+    placeholder={placeholder}
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    style={{ marginBottom: 10 }}
+  />
 );
 
 // Tab row used in the home page sidebars (Institutions, Collect).
