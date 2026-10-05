@@ -73,7 +73,7 @@ class Register extends React.Component {
                                   this.state.modal.alert.onClose();}}>
                {this.state.modal?.alert?.alertMessage}
              </Modal>)}
-        <div className="card card-lightgreen" style={{marginTop: "30px"}} id="register-form">
+        <div className="card card-lightgreen" style={{marginTop: "67px"}} id="register-form">
           <div className="card-header card-header-lightgreen">Register a new account</div>
           <div className="card-body">
             <form
@@ -142,7 +142,7 @@ class Register extends React.Component {
                  
                </>}
               
-              <button className="btn btn-darkgreen float-right mb-2"
+              <button className="btn btn-outline-darkgreen float-right mb-2"
                        type="submit"
                        disabled={this.state.userId === null}>
                  { this.state.userId ? "Resend Validation Email" : "Register"}
