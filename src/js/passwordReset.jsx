@@ -105,7 +105,7 @@ class PasswordReset extends React.Component {
                   value={this.state.passwordConfirmation}
                 />
               </div>
-              <button className="btn btn-lightgreen float-right mb-2" type="submit">
+              <button className="btn btn-darkgreen float-right mb-2" type="submit">
                 Reset Password
               </button>
             </form>

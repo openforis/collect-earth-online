@@ -142,7 +142,7 @@ class Register extends React.Component {
                  
                </>}
               
-              <button className="btn btn-lightgreen float-right mb-2"
+              <button className="btn btn-darkgreen float-right mb-2"
                        type="submit"
                        disabled={this.state.userId === null}>
                  { this.state.userId ? "Resend Validation Email" : "Register"}
