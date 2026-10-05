@@ -48,7 +48,7 @@ class PasswordReset extends React.Component {
            {this.state.modal.alert.alertMessage}
          </Modal>}
 
-        <div className="card card-lightgreen" id="reset-form">
+        <div className="card card-lightgreen" style={{marginTop: "67px"}} id="reset-form">
           <div className="card-header card-header-lightgreen">Enter your reset info</div>
           <div className="card-body">
             <form

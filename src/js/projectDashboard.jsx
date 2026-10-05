@@ -130,7 +130,7 @@ class ProjectDashboard extends React.Component {
                               this.state.modal.alert.onClose();}}>
            {this.state.modal.alert.alertMessage}
          </Modal>}
-        <div className="bg-darkgreen">
+        <div className="bg-darkgreen" style={{marginTop: "30px"}}>
           <h1>Project Dashboard</h1>
         </div>
         <div className="d-flex justify-content-around mt-3 flex-grow-1">
