@@ -165,7 +165,7 @@ const InstitutionDashboard = ({ institutionId }) => {
 
       <div
         className="bg-darkgreen mb-3 no-container-margin"
-        style={{ width: "100%", marginTop: "50px" }}
+        style={{ width: "100%" }}
       >
         <h1>Institution Dashboard</h1>
       </div>

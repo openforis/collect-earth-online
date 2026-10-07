@@ -5,7 +5,7 @@ import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 function DataLicense() {
   return (
     <section className="container pt-3" id="data-license">
-      <div className="col-xl-8 offset-xl-2 col-lg-10 justify-content-center" style={{marginTop: "30px"}}>
+      <div className="col-xl-8 offset-xl-2 col-lg-10 justify-content-center">
         <h1 className="py-4">Collect Earth Online Data License Agreement</h1>
 
         <h2>The Institution (Project Owner) Elections</h2>

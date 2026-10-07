@@ -44,7 +44,7 @@ class PasswordRequest extends React.Component {
            {this.state.modal.alert.alertMessage}
          </Modal>}
 
-        <div className="card card-lightgreen" style={{marginTop: "67px"}} id="request-form">
+        <div className="card card-lightgreen" id="request-form">
           <div className="card-header card-header-lightgreen">Enter your login email</div>
           <div className="card-body">
             <form

@@ -14,8 +14,7 @@ export default function InstitutionEditor({
 }) {
   return (
     <div className="row justify-content-center" id="institution-details">
-      <div className="card card-darkgreen col-xl-6 col-lg-6 pb-2" id="institution-edit"
-        style={{marginTop: "56px"}}>
+      <div className="card card-darkgreen col-xl-6 col-lg-6 pb-2" id="institution-edit">
         <h2 className="header" style={{ backgroundColor: "#0c4d48"}}>{title}</h2>
         <div className="mb-3">
           <RequiredInput

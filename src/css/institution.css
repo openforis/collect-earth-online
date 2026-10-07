@@ -46,9 +46,9 @@
   flex-direction: column;
   align-items: stretch;
   position: fixed;
-  top: 120px;
+  top: var(--page-top);
   left: 0;
-  height: calc(100vh - 80px);
+  bottom: 0;
   width: 22vw;
   background: #f7f9f8;
   border-right: 1px solid #dcdedc;
