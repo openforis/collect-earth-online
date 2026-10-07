@@ -837,7 +837,8 @@ text-underline-position: from-font;
   color: #263030;
 }
 
-.wizard-card.is-locked {
+.wizard-card.is-locked,
+.wizard-sidebar .is-locked {
   opacity: 0.55;
   user-select: none;
 }
