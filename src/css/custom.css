@@ -1,17 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap');
 
-/****************/
-/* Layout chrome */
-/****************/
-/* The fixed top navbar and the fixed breadcrumb bar report their real rendered
-   heights into these variables at runtime (see useHeightAsCssVar in
-   components/PageComponents.jsx). The values below are first-paint fallbacks only.
-   Anything that needs to clear the top chrome should use these variables instead
-   of a hardcoded pixel offset. */
 :root {
     --navbar-logo-height: 56px;
     --navbar-height: 80px;
-    --breadcrumb-height: 0px; /* stays 0 on pages without a breadcrumb bar */
+    --breadcrumb-height: 0px;
     --page-top: calc(var(--navbar-height) + var(--breadcrumb-height));
 }
 
