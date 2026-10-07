@@ -98,8 +98,7 @@
 .full-height {
     height: calc(100vh - var(--page-top));
 }
-/* Same as .full-height, but follows the visible viewport on mobile browsers
-   (address bar shown/hidden). */
+
 .full-height-dynamic {
     height: calc(100vh - var(--page-top));
     height: calc(100dvh - var(--page-top));
