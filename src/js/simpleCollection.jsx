@@ -1,8 +1,12 @@
-import React from "react";
+import React, { useRef } from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
 
-import { LoadingModal, BreadCrumbs } from "./components/PageComponents";
+import {
+  LoadingModal,
+  BreadCrumbs,
+  useHeightAsCssVar,
+} from "./components/PageComponents";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 
@@ -101,7 +105,6 @@ class SimpleCollection extends React.Component {
       showSidebar: false,
       modalMessage: null,
       navigationMode: "unanalyzed",
-      myHeight: 0,
       isMobile: false,
       localeText:
         localeLanguages[
@@ -199,7 +202,6 @@ class SimpleCollection extends React.Component {
     window.scrollTo(0, 0);
     this.setState(
       {
-        myHeight: window.innerHeight - 60,
         isMobile: window.innerWidth < 992, // Not sure where 992 came from but it matches the media query.
       },
       () => setTimeout(() => mercator.resize(this.state.mapConfig), 50)
@@ -670,7 +672,7 @@ class SimpleCollection extends React.Component {
     };
 
     return (
-      <div className="row" style={{ height: this.state.myHeight }}>
+      <div className="row full-height-dynamic">
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
                 onClose={()=>{this.setState({modal: null});}}>
@@ -1140,15 +1142,19 @@ export class PlanetTFOMenu extends React.Component {
 }
 
 function NavigationBar({ children }) {
+  const navRef = useRef(null);
+  useHeightAsCssVar(navRef, "--navbar-height");
+
   return (
     <>
       <nav
         className="navbar navbar-expand-lg navbar-light fixed-top py-0"
         id="main-nav"
+        ref={navRef}
         style={{ backgroundColor: "white", borderBottom: "1px solid black" }}
       >
         <a className="navbar-brand pt-1 pb-1" href="/home">
-          <img alt="Home" className="img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
+          <img alt="Home" id="ceo-site-logo" src="/img/ceo-logo.png" />
         </a>
         {/* <a className="nav-link" href="/collection">Desktop</a> */}
       </nav>

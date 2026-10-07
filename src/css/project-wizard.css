@@ -19,9 +19,10 @@
 
 /* 1. ROOT CONTAINER - Lock down page bounce */
 .project-wizard-container {
+    --wizard-navigator-height: 56px;
     background-color: var(--Primary-Light-Green);
     width: 100vw;
-    height: 100vh;
+    height: calc(100vh - var(--page-top));
     display: flex;
     flex-direction: column;
 }
@@ -38,7 +39,7 @@
 
 /* 3. STEP BODY - Eliminating min-height to provide clean percentage targets */
 .wizard-step-body {
-    margin-top: 8rem;
+    margin-top: calc(var(--wizard-navigator-height) + 1.25rem);
     flex: 1;
     width: 100%;
     background-color: var(--Primary-Light-Green);
@@ -137,7 +138,7 @@
     flex: 0 0 auto;
     display: inline-flex;
     width: 100%;
-    height: 56px;
+    height: var(--wizard-navigator-height);
     padding: 0 16px;
     justify-content: space-between;
     align-items: center;
@@ -145,7 +146,7 @@
     box-shadow: 1px 4px 3px 0 var(--Neutral-Dark-gray);
     box-sizing: border-box;
     position: fixed;
-    top: 112px;
+    top: var(--page-top);
     left: 0;
     z-index: 80;
 }

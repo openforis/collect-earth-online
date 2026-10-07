@@ -419,7 +419,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   }, []);
 
   return (
-    <div className="reviewInstitution" style={{paddingTop: '2rem', marginLeft: '100px'}}>
+    <div className="reviewInstitution" style={{marginLeft: '100px'}}>
       <SidebarTabs
         tabs={[
           { id: "projects", label: "Projects", icon: "projects", badge: safeLength(state.projectList) },

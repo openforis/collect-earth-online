@@ -697,10 +697,9 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
           <div
             className="d-flex flex-column position-absolute full-height"
             style={{
-              top: 0,
+              top: "var(--page-top)",
               left: state.isImageryLayersExpanded ? "0px" : "-236.183px",
               width: "236.183px",
-              height: "100%",
               backgroundColor: "#fff",
               boxShadow: "2px 0 5px rgba(0,0,0,.2)",
               transition: "left .3s ease",

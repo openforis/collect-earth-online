@@ -1,16 +1,14 @@
 .sidebar-container {
   position: fixed;
-  margin-top: 54px;
   margin-left: 100px;
-  padding-bottom: 60px;
-  top: 0;
-  height: 100vh;
+  top: var(--navbar-height);
+  bottom: 0;
   display: flex;
   flex-direction: column;
   background-color: #e6efef;
   border-left: 1px solid #c9d6d6;
   z-index: 500;
-  padding: 0px 0px 60px 0px;
+  padding: 0;
 }
 
 .sidebar-content {

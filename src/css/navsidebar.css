@@ -1,13 +1,12 @@
 .nav-sidebar {
     width: 100px;
-    height: 100vh;
     z-index: 1000;
     
     padding-right: 0 !important;
     padding-left: 0 !important;
 
     position: fixed;
-    top: 54px;
+    top: var(--navbar-height);
     left: 0;
     bottom: 0;
 

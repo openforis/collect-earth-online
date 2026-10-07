@@ -561,7 +561,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             projectTemplateList={projectTemplateList}
           />
         )}
-        <div className="container-fluid" style={{ paddingTop: "67px" }}>
+        <div className="container-fluid">
           <div className="d-flex align-items-center justify-content-between my-3">
             <h2 className="mb-0">Geo-Dash</h2>
             <div className="d-flex" style={{ gap: ".5rem" }}>
