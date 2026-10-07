@@ -446,7 +446,9 @@ export const NewPlotNavigation = ({userEmail}) => {
 
 export const ExtraPlotInfo = () => {
   const { currentPlot } = useAtomValue(stateAtom);
-  const entries = Object.entries(currentPlot?.extraPlotInfo || {});
+  const entries = Object.entries(currentPlot?.extraPlotInfo || {}).sort(([keyA], [keyB]) =>
+    keyA.localeCompare(keyB, undefined, { numeric: true, sensitivity: "base" })
+  );
 
   const formatValue = (value) => {
     if (value === null || value === undefined || value === "") return "N/A";
