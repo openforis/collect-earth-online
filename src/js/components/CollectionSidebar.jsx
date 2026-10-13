@@ -635,7 +635,7 @@ export const SidebarFooter = ({ processModal }) => {
       getNewPlot: true,
       navDirection: 'next'
     }));
-  }
+  };
 
   const savePlotAnswers = () => {
     processModal("Saving plot answers", () =>
