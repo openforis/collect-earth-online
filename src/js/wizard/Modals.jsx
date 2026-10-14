@@ -342,17 +342,18 @@ function NewProjectModal () {
 function SubmitProjectModal () {
   const [slug, setSlug] = useState("");
   const projectId = Number(useSubscription([sub_ids.projectId]));
+  const isSaving = useSubscription([sub_ids.projectSaving]);
   const isEditing = projectId > 0;
   const acceptedTOS = slug.trim().length > 0;
   return (
     <Modal
       title={isEditing ? 'Update Project' : 'Create Project'}
       closeText='Return to editing'
-      confirmText={isEditing ? 'Update Project' : 'Create Project'}
+      confirmText={isSaving ? 'Saving...' : (isEditing ? 'Update Project' : 'Create Project')}
       onConfirm={()=>{
         dispatch([event_ids.saveProject, slug.trim()]);
       }}
-      confirmDisabled={!isEditing && !acceptedTOS}
+      confirmDisabled={isSaving || (!isEditing && !acceptedTOS)}
       onClose={()=>{dispatch([event_ids.modal, null])}}>
       {isEditing ? (
         <p>Are you sure you want to apply these changes to the project?</p>
@@ -378,11 +379,13 @@ function SubmitProjectModal () {
 
 function UpdatePublishedProjectModal () {
   const [overwrite, setOverwrite] = useState(false);
+  const isSaving = useSubscription([sub_ids.projectSaving]);
   return (
     <Modal
       title='Update Published Project'
       closeText='Return to editing'
-      confirmText='Update Project'
+      confirmText={isSaving ? 'Saving...' : 'Update Project'}
+      confirmDisabled={isSaving}
       onConfirm={()=>{
         dispatch([event_ids.saveProject, false, overwrite]);
       }}

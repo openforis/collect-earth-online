@@ -26,6 +26,7 @@ export const NavButtons = () => {
   const projectType = useSubscription([sub_ids.overview.projectType]);
   const projectId = useSubscription([sub_ids.projectId]) || -1;
   const availability = useSubscription([sub_ids.availability]);
+  const draftSaving = useSubscription([sub_ids.draftSaving]);
   const isEditing = projectId > 0;
   const isPublished = isEditing && availability === 'published';
 
@@ -59,8 +60,9 @@ export const NavButtons = () => {
                  className={'btn btn-sm'}
                  style={{backgroundColor: "#2d6f74",
                    color: "#fff"}}
+                 disabled={draftSaving}
                  onClick={()=>saveDraftHandler()}
-              >Save Draft</button>)}
+              >{draftSaving ? 'Saving...' : 'Save Draft'}</button>)}
             <button
               className={'btn btn-sm'}
               onClick={()=>
