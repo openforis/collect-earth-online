@@ -72,7 +72,7 @@ const PLOT_GENERATION_MODES = {
     },
   },
   append: {
-    title: 'NEW PLOT GENERATION',
+    title: 'ADD NEW PLOTS',
     fileOnly: true,
     banner: (total) => `${formatNumberWithCommas(total)} new plots will be added to this project.`,
     subs: {
