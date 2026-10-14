@@ -679,6 +679,13 @@ h2.header {
     font-size: 1.1rem;
     font-weight: 500;
 }
+
+#project-dashboard h2.header {
+    display: block;
+    text-align: center;
+    border-radius: 0;
+    border-bottom: none;
+}
 .modal-content {
     max-height: calc(100vh - 50px);
 }

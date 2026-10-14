@@ -65,11 +65,11 @@ class ProjectDashboardQaqc extends React.Component {
 
   initializeMap() {
     const { imageryId, aoiFeatures } = this.state.projectDetails;
-    const singleImagery = this.state.imageryList[0] ||
-          this.state.imageryList.find((i) => i.id === 1317);
+    const singleImagery = this.state.imageryList.find((i) => i.visibility === "platform") ||
+          this.state.imageryList[0];
     // Initialize the basemap
     const mapConfig = mercator.createMap("project-map", [0.0, 0.0], 1, [singleImagery]);
-    mercator.setVisibleLayer(mapConfig, 1317);
+    mercator.setVisibleLayer(mapConfig, singleImagery.id);
     mercator.removeLayerById(mapConfig, "currentPlot");
     mercator.addVectorLayer(
       mapConfig,
