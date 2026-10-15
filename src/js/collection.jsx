@@ -24,7 +24,7 @@ import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
 
-export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
+function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
   // INIT COLLECTION EFFECT
@@ -58,6 +58,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
         const stats = await statsRes.json();
         const imageryList = Array.isArray(imageryListRaw)
           ? imageryListRaw.map((image, i) => ({
+
             ...image,
             visible: i === 0,
             institutionId: project.institution,
