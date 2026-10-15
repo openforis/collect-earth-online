@@ -1,6 +1,7 @@
 import React from "react";
 import { Polygon } from "ol/geom";
 import { mercator } from "../utils/mercator";
+import { gatewayFetch } from "../utils/gatewayFetch";
 
 export default class StatsWidget extends React.Component {
   constructor(props) {
@@ -10,7 +11,7 @@ export default class StatsWidget extends React.Component {
 
   componentDidMount() {
     const { plotExtentPolygon } = this.props;
-    fetch("/geo-dash/gateway-request", {
+    gatewayFetch("/geo-dash/gateway-request", {
       method: "POST",
       headers: {
         Accept: "application/json",

@@ -10,6 +10,7 @@ import Collection from 'ol/Collection';
 import DragBox from 'ol/interaction/DragBox';
 import GeoJSON from 'ol/format/GeoJSON';
 import Point from 'ol/geom/Point';
+import { gatewayFetch } from './gatewayFetch';
 
 
 const METERS_PER_DEG = 111320;
@@ -111,7 +112,7 @@ const sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
     id: imageryId,
     attributions: attribution,
   });
-  fetch("/geo-dash/gateway-request", {
+  gatewayFetch("/geo-dash/gateway-request", {
     method: "POST",
     headers: {
       Accept: "application/json",
@@ -201,7 +202,7 @@ export const createImageryLayer = (config) => {
         properties: { id: imageryId, isPlanetDaily: true } 
       });
 
-      fetch("/geo-dash/gateway-request", {
+      gatewayFetch("/geo-dash/gateway-request", {
         method: "POST",
         headers: { "Accept": "application/json", "Content-Type": "application/json" },
         body: JSON.stringify({

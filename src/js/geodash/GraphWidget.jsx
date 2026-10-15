@@ -4,6 +4,7 @@ import HighchartsReact from "highcharts-react-official";
 import _, { isArray } from "lodash";
 
 import { formatDateISOString } from "../utils/generalUtils";
+import { gatewayFetch } from "../utils/gatewayFetch";
 
 window.Highcharts = Highcharts;
 
@@ -65,7 +66,7 @@ export default class GraphWidget extends React.Component {
     const chartData = this.getChartData(this.getChartKey());
 
     if (!this.validArray(chartData)) {
-      fetch("/geo-dash/gateway-request", {
+      gatewayFetch("/geo-dash/gateway-request", {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -112,7 +113,7 @@ export default class GraphWidget extends React.Component {
   loadTimeSeries = () => {
     const { widget, plotExtentPolygon } = this.props;
     const path = "timeSeriesByIndex";
-    fetch("/geo-dash/gateway-request", {
+    gatewayFetch("/geo-dash/gateway-request", {
       method: "POST",
       headers: {
         Accept: "application/json",

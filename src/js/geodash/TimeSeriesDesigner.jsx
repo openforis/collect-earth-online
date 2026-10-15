@@ -6,11 +6,12 @@ import GDSelect from "./form/GDSelect";
 import GetBands from "./form/GetBands";
 
 import { EditorContext } from "./constants";
+import { gatewayFetch } from "../utils/gatewayFetch";
 
 export async function getBandsFromGateway(setBands, assetId, assetType) {
   if (assetId?.length) {
     try {
-      const res = await fetch("/geo-dash/gateway-request", {
+      const res = await gatewayFetch("/geo-dash/gateway-request", {
         method: "POST",
         headers: {
           Accept: "application/json",

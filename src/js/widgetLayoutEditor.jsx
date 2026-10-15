@@ -18,6 +18,7 @@ import PolygonDesigner from "./geodash/PolygonDesigner";
 import PreImageCollectionDesigner from "./geodash/PreImageCollectionDesigner";
 import TimeSeriesDesigner from "./geodash/TimeSeriesDesigner";
 import SvgIcon from "./components/svg/SvgIcon";
+import { gatewayFetch } from "./utils/gatewayFetch";
 import WidgetContainer from "./geodash/WidgetContainer";
 
 import { EditorContext, graphWidgetList, gridRowHeight, mapWidgetList } from "./geodash/constants";
@@ -323,7 +324,7 @@ class WidgetLayoutEditor extends React.PureComponent {
   getWidgetErrors = async () => {
     const { title, widgetDesign } = this.state;
     const { assetId, visParams } = widgetDesign;
-    const validateJSONRequest = await fetch(`/geo-dash/validate-vis-params?imgPath=${assetId}&visParams=${visParams}`);
+    const validateJSONRequest = await gatewayFetch(`/geo-dash/validate-vis-params?imgPath=${assetId}&visParams=${visParams}`);
     const validateJSONResponse = await validateJSONRequest.json();
     this.closeDialogs();
     return [

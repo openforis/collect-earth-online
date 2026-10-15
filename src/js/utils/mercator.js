@@ -31,6 +31,7 @@ import WMTSCapabilities from 'ol/format/WMTSCapabilities';
 import { fromExtent, fromCircle } from "ol/geom/Polygon";
 import { getArea, getDistance } from "ol/sphere";
 import { formatDateISO, isNumber } from "./generalUtils";
+import { gatewayFetch } from "./gatewayFetch";
 import { mapboxAttributionText } from "../imagery/mapbox-attribution";
 import { getCenter } from 'ol/extent';
 
@@ -306,8 +307,20 @@ mercator.maybeParseJson = (text) => {
   }
 };
 
-// [Side Effects] Makes an AJAX call to get the GEE mapid and token
-// and then updates the temporary XYZ layer's source URL.
+// [Side Effects] Calls load once, the first time the source is asked for a tile URL (visible layers only).
+mercator.loadOnFirstTile = (source, load) => {
+  const placeholderTileUrlFn = source.getTileUrlFunction();
+  let started = false;
+  source.setTileUrlFunction((tileCoord, pixelRatio, projection) => {
+    if (!started) {
+      started = true;
+      load();
+    }
+    return placeholderTileUrlFn(tileCoord, pixelRatio, projection);
+  });
+};
+
+// [Side Effects] Returns a placeholder XYZ source and fetches the GEE mapid and token when it is first shown.
 // TODO, wrap request in cache function
 mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
   const geeSource = new XYZ({
@@ -315,27 +328,29 @@ mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
     id: imageryId,
     attributions: attribution,
   });
-  fetch("/geo-dash/gateway-request", {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(theJson),
-  })
-    .then((res) => (res.ok ? res.json() : Promise.reject()))
-    .then((data) => {
-      if (data && data.hasOwnProperty("url")) {
-        geeSource.setUrl(data.url);
-      } else {
-        geeSource.setUrl("img/source-not-found.png");
-        console.error(data.errMsg);
-      }
+  const loadGEESource = () =>
+    gatewayFetch("/geo-dash/gateway-request", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(theJson),
     })
-    .catch((response) => {
-      console.error("Error loading " + sourceConfig.type + " imagery: ");
-      console.error(response);
-    });
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => {
+        if (data && data.hasOwnProperty("url")) {
+          geeSource.setUrl(data.url);
+        } else {
+          geeSource.setUrl("img/source-not-found.png");
+          console.error(data.errMsg);
+        }
+      })
+      .catch((response) => {
+        console.error("Error loading " + sourceConfig.type + " imagery: ");
+        console.error(response);
+      });
+  mercator.loadOnFirstTile(geeSource, loadGEESource);
   return geeSource;
 };
 
@@ -422,7 +437,7 @@ mercator.createSource = (
       url: "img/source-loading.png",
       attributions: attribution,
     });
-    fetch("/geo-dash/gateway-request", {
+    const loadPlanetDaily = () => gatewayFetch("/geo-dash/gateway-request", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -462,9 +477,13 @@ mercator.createSource = (
           );
           // FIXME, dont use mercator.currentMap
           mercator.currentMap.removeLayer(messageSource);
+          const placeholderShown = mercator.currentMap
+            .getLayers()
+            .getArray()
+            .some((l) => l.get("id") === imageryId && l.getVisible());
           const layerGroup = new LayerGroup({
             id: imageryId,
-            visible: show,
+            visible: show || placeholderShown,
             layers: planetLayers,
             zIndex: 0,
           });
@@ -478,6 +497,11 @@ mercator.createSource = (
       .catch((response) => {
         console.error("Error loading Planet Daily imagery: ", response);
       });
+    if (show) {
+      loadPlanetDaily();
+    } else {
+      mercator.loadOnFirstTile(messageSource, loadPlanetDaily);
+    }
     return messageSource;
   } else if (type === "BingMaps") {
     return new BingMaps({
