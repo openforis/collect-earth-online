@@ -178,9 +178,27 @@ export const NewPlotNavigation = ({userEmail}) => {
     navigationMode,
     newPlotId,
     userPlotList,
-    plotSimilarityDeatils
+    plotSimilarityDeatils,
+    threshold
   } = useAtomValue(stateAtom);
   const [selectedEmail, setSelectedEmail] = useState(currentPlot?.email || "");
+  const isQAQCEnabled =
+    (currentProject?.designSettings?.qaqcAssignment?.qaqcMethod ?? "none") !== "none";
+
+  // Entering review mode from the default navigation starts on analyzed plots.
+  // Leaving review mode while navigating by disagreement would leave an option that
+  // is no longer offered, so fall back to the default navigation.
+  const toggleReviewMode = () =>
+    setAppState((s) => {
+      const enteringReview = !s.inReviewMode;
+      let navMode = s.navigationMode;
+      if (enteringReview && navMode === "natural") {
+        navMode = "analyzed";
+      } else if (!enteringReview && navMode === "qaqc") {
+        navMode = "natural";
+      }
+      return { ...s, inReviewMode: enteringReview, navigationMode: navMode };
+    });
 
   useEffect(() => {
     const currentEmail = currentPlot?.email || "";
@@ -360,6 +378,7 @@ export const NewPlotNavigation = ({userEmail}) => {
         <option value="unanalyzed">Unanalyzed plots</option>
         <option value="flagged">Flagged plots</option>
         <option value="similar" disabled={!currentProject?.plotSimilarityDetails?.referencePlotId}>Similar Plots</option>
+        {inReviewMode && isQAQCEnabled && <option value="qaqc">Disagreement</option>}
       </select>
 
       {currentProject?.isProjectAdmin && (
@@ -369,7 +388,7 @@ export const NewPlotNavigation = ({userEmail}) => {
               <input
                 type="checkbox"
                 checked={inReviewMode}
-                onChange={() => setAppState((s) => ({ ...s, inReviewMode: !s.inReviewMode }))}
+                onChange={toggleReviewMode}
               />
               <span className="sidebar-slider round"></span>
             </label>
@@ -438,6 +457,43 @@ export const NewPlotNavigation = ({userEmail}) => {
               </option>
             ))}
           </select>
+        </div>
+      )}
+      {navigationMode === "qaqc" && (
+        <div style={{ display: "grid", gap: "8px", margin: "10px 0" }}>
+          <label className="sq-range-label" htmlFor="disagreement-threshold">
+            Disagreement: {threshold}%
+          </label>
+          <div className="sq-range-wrap">
+            <input
+              id="disagreement-threshold"
+              className="sq-range"
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={threshold}
+              onChange={(e) =>
+                setAppState((s) => ({ ...s, threshold: parseInt(e.target.value, 10) }))
+              }
+            />
+          </div>
+        </div>
+      )}
+      {navigationMode === "qaqc" && currentPlot?.id > 0 && (
+        <div className="sidebar-mode">
+          <button
+            className="btn outline"
+            type="button"
+            onClick={() =>
+              window.open(
+                `/user-disagreement?projectId=${currentProject?.id}&plotId=${currentPlot.id}&threshold=${threshold}`,
+                `disagreement_${currentProject?.id}`
+              )
+            }
+          >
+            View Disagreements
+          </button>
         </div>
       )}
     </SidebarCard>
