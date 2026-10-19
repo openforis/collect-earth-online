@@ -85,6 +85,7 @@ export const SidebarTabs = ({ tabs, activeTab, onChange }) => (
 
 export const SidebarCard = ({
   title,
+  headerBtn,
   children,
   collapsible = false,
   defaultOpen = true,
@@ -123,9 +124,9 @@ export const SidebarCard = ({
            </button>
 	 )}
          <span className="sidebar-title">{title}</span>
-         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-           
-           {collapsible && (
+         {headerBtn }
+         {collapsible && (
+           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
              <button
                className="sidebar-collapse-button"
                style={{
@@ -141,8 +142,8 @@ export const SidebarCard = ({
              >
                <SvgIcon icon={open ? "upCaret" : "downCaret"} size="1rem" />
              </button>
-           )}
-         </div>
+           </div>
+         )}
        </div>}
 
       {(!collapsible || open) && (
