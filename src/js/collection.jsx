@@ -27,6 +27,11 @@ import { outlineKML } from "./utils/kml";
 export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
+  function getParentId (questionId) {
+    const {parentQuestionId} = state.currentProject.surveyQuestions[questionId];
+    return parentQuestionId === -1 ? questionId : getParentId(parentQuestionId);
+  }
+  
   // INIT COLLECTION EFFECT
   useEffect(() => {
     window.name = "_ceo_collection";
@@ -181,7 +186,9 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   // UPDATE MAP WHEN STATE CHANGES — samples redraw (question/answers/visibility)
   useEffect(() => {
     if (!state.currentPlot?.id || state.answerMode === "draw") return;
-    console.log('useEffect fires!');
+    state.selectedQuestionId === getParentId(state.selectedQuestionId) &&
+      setState((s)=>({... s, selectedSampleIds : []}));
+    
     const selectedQuestion = state.currentProject?.surveyQuestions?.[state.selectedQuestionId];
     if (selectedQuestion?.visible) {
       showPlotSamples();
@@ -348,8 +355,9 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
           setState({modal: {alert: {alertType: "Recalculate Similarity Error", alertMessage: "Error recalculating plot similarity. See console for details."}}});
         }
       }
-  )};
-
+           )};
+  
+  
   const showPlotSamples = () => {
     const {
       mapConfig,
@@ -384,7 +392,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
       mercator.ceoMapStyles("geom", showSamples ? unansweredColor : "transparent"),
       9999
     );
-
+    
     mercator.enableSelection(
       mapConfig,
       "currentSamples",
@@ -392,7 +400,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
         if (sampleId === -1) return;
         console.log("setting sample Id", sampleId);
         setState((s) => ({ ...s, selectedSampleId: sampleId}));
-      },
+      }, 
       state.selectedSampleIds
     );
   };

@@ -112,7 +112,6 @@ export function SurveyQuestions ({
 
   const checkSelection = (sampleIds, questionId) => {
     if (preview) return true;
-    console.log('checking selection', sampleIds);
     const q = surveyData?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
     if (sampleIds.some((s) => !visibleIds.includes(s))) {
@@ -144,11 +143,12 @@ export function SurveyQuestions ({
 
   const setCurrentValue = (questionId, answerId, answerText) => {
     //TODO: DETERMINE IF QUESTION HAS A PARENT QUESTION ID, IF SO-- USE THAT VALUE TO GRAB 'SAMPLEIDS'
-    console.log('setting current value', questionId,  );
-    const parentId = getParent(questionId);
-    const sampleIds = getSelectedSampleIds(parentId);
+
+    // const parentId = getParent(questionId);
+    // const sampleIds = getSelectedSampleIds(parentId);
+    const sampleIds = getSelectedSampleIds(questionId);
    // console.log("set current value sample ids", sampleIds, parentId, questionId, currentId);
-    if (!preview && !checkSelection(sampleIds, parentId)) return;
+    if (!preview && !checkSelection(sampleIds, questionId)) return;
 
     /*
     if (!preview && !checkSelection(sampleIds, questionId)) return;
@@ -179,9 +179,10 @@ export function SurveyQuestions ({
       return;
       }
       */
+
     setAppState((prev) => {
-      // const childQuestionIds = getChildQuestionIds(questionId);
-      const childQuestionIds = getChildQuestionIds(parentId);
+      const childQuestionIds = getChildQuestionIds(questionId);
+      // const childQuestionIds = getChildQuestionIds(parentId);
       const newSamples = sampleIds.reduce((acc, sampleId) => {
         if (answerText == null) return acc;
         const prevSampleAnswers = prev.userSamples?.[sampleId] || {};
@@ -191,8 +192,8 @@ export function SurveyQuestions ({
         );
         const newQuestion = { answerId };
         if (answerText !== "") newQuestion.answer = answerText;
-        acc[sampleId] = { ...subQuestionsCleared, [parentId]: newQuestion };
-        // acc[sampleId] = { ...subQuestionsCleared, [questionId]: newQuestion };
+        // acc[sampleId] = { ...subQuestionsCleared, [parentId]: newQuestion };
+        acc[sampleId] = { ...subQuestionsCleared, [questionId]: newQuestion };
         return acc;
       }, {});
      if (!Object.keys(newSamples).length) return prev;
@@ -221,8 +222,8 @@ export function SurveyQuestions ({
       }; 
     });
 
-    syncOpenChildren(parentId, answerId, answerText);
-    // syncOpenChildren(questionId, answerId, answerText);
+    // syncOpenChildren(parentId, answerId, answerText);
+    syncOpenChildren(questionId, answerId, answerText);
   };
 
   const getOpenChildren = (questionId, answerId, answerText) => {
@@ -820,6 +821,22 @@ export function SurveyQuestions ({
       setCurrentValue(questionIdToSet, answerId, answerText);
     }
   };
+
+  function InvertSampleSelectionButton () {
+    const selectedSamples = mercator.getSelectedSamples(mapConfig);
+    const selectedSampleIds = getSelectedSampleIds(selectedQuestionId);
+    return (
+      <>
+        <button
+          onClick={()=>{
+            console.log('user Samples', userSamples);
+            mercator.invertSelectedFeatures(mapConfig, selectedSampleIds);
+          }}
+          className={'btn filled'}>
+          Select All Samples
+      </button>
+    </>);
+  }
 
   function SelectAllSamplesButton () {
     const selectedSamples = mercator.getSelectedSamples(mapConfig);

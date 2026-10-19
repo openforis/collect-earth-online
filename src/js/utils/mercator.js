@@ -1363,8 +1363,8 @@ mercator.selectAllFeatures = (mapConfig,  setSampleId) => {
 S 
 };
 
-mercator.invertSelection = (mapConfig, setSampleId, selectedFeatures) => {
-  const layer = mercator.getLayerById(mapConfig, layerId);
+mercator.invertSelectedFeatures = (mapConfig, selectedSampleIds) => {
+  const layer = mercator.getLayerById(mapConfig, "currentSamples");
   const allSelect = mercator.makeClickSelect("allSelect", layer);
   const features = allSelect.getFeatures();
   features.clear();
