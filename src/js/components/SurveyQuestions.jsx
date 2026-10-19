@@ -833,7 +833,7 @@ export function SurveyQuestions ({
             mercator.invertSelectedFeatures(mapConfig, selectedSampleIds);
           }}
           className={'btn filled'}>
-          Select All Samples
+          Invert Sample Selection
       </button>
     </>);
   }
@@ -866,7 +866,7 @@ export function SurveyQuestions ({
           </span>          
         </>
       }
-      headerBtn={<SelectAllSamplesButton/>}
+      headerBtn={<><InvertSampleSelectionButton/><SelectAllSamplesButton/></>}
       infoText="View and answer survey questions for this plot"
     >
       {currentPlot?.flagged ? (
