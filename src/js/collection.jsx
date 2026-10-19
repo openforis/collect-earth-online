@@ -24,9 +24,14 @@ import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
 
-function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
+export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
+  function getParentId (questionId) {
+    const {parentQuestionId} = state.currentProject.surveyQuestions[questionId];
+    return parentQuestionId === -1 ? questionId : getParentId(parentQuestionId);
+  }
+  
   // INIT COLLECTION EFFECT
   useEffect(() => {
     window.name = "_ceo_collection";
@@ -58,7 +63,6 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
         const stats = await statsRes.json();
         const imageryList = Array.isArray(imageryListRaw)
           ? imageryListRaw.map((image, i) => ({
-
             ...image,
             visible: i === 0,
             institutionId: project.institution,
@@ -159,7 +163,7 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     showProjectPlot();
 
     if (state.currentProject?.hasGeoDash && state.currentProject?.projectOptions?.autoLaunchGeoDash) {
-      showGeoDash();
+      // showGeoDash();
     }
 
     if (state.storedInterval) clearInterval(state.storedInterval);
@@ -182,7 +186,9 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   // UPDATE MAP WHEN STATE CHANGES — samples redraw (question/answers/visibility)
   useEffect(() => {
     if (!state.currentPlot?.id || state.answerMode === "draw") return;
-
+    state.selectedQuestionId === getParentId(state.selectedQuestionId) &&
+      setState((s)=>({... s, selectedSampleIds : []}));
+    
     const selectedQuestion = state.currentProject?.surveyQuestions?.[state.selectedQuestionId];
     if (selectedQuestion?.visible) {
       showPlotSamples();
@@ -346,11 +352,12 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
         if (response.ok) {
           null;
         } else {
-          this.setState({modal: {alert: {alertType: "Recalculate Similarity Error", alertMessage: "Error recalculating plot similarity. See console for details."}}});
+          setState({modal: {alert: {alertType: "Recalculate Similarity Error", alertMessage: "Error recalculating plot similarity. See console for details."}}});
         }
       }
-  )};
-
+           )};
+  
+  
   const showPlotSamples = () => {
     const {
       mapConfig,
@@ -385,14 +392,16 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
       mercator.ceoMapStyles("geom", showSamples ? unansweredColor : "transparent"),
       9999
     );
-
+    
     mercator.enableSelection(
       mapConfig,
       "currentSamples",
       (sampleId) => {
         if (sampleId === -1) return;
-        setState((s) => ({ ...s, selectedSampleId: sampleId }));
-      }
+        console.log("setting sample Id", sampleId);
+        setState((s) => ({ ...s, selectedSampleId: sampleId}));
+      }, 
+      state.selectedSampleIds
     );
   };
   
@@ -760,16 +769,20 @@ function ImageAnalysisPane({}) {
   const [state, setState] = useAtom(stateAtom);
   
   const toggleShowBoundary = () => {
-  setState (s => ({...s, showBoundary: !state.showBoundary}));
+    console.log("toggle show boundary", state.showBoundary);
+    // setState (s => ({...s, showBoundary: !state.showBoundary}));
   };
   
   const toggleShowSamples = () =>  {
-    setState (s=> ({...s, showSamples: !state.showSamples}));
+    console.log("toggle show samples", state.showSamples);
+    // setState (s=> ({...s, showSamples: !state.showSamples}));
   };
 
   const zoomToPlot = () => {
+    console.log("zooming to plot", state.mapConfig);
+    /*
     state.mapConfig &&
-    mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
+    mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36); */
   };
 
   const zoom = (level) => {

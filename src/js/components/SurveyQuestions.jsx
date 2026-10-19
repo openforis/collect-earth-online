@@ -26,11 +26,15 @@ export function SurveyQuestions ({
     currentProject,
     currentPlot,
     mapConfig,
+    selectedQuestionId,
     selectedSampleId: globalSelectedId,
-    userSamples: globalUserSamples
+    userSamples: globalUserSamples,
+    selectedSampleIds
   } = useAtomValue(stateAtom);
-
+  const state = useAtomValue(stateAtom); //TODO: DELETE ME!
   const setAppState = useSetAtom(stateAtom);
+
+  
 
   // PREVIEW STATE HOOKS
   const [previewUserSamples, setPreviewUserSamples] = useAtom(previewUserSamplesAtom);
@@ -56,8 +60,6 @@ export function SurveyQuestions ({
   const entries = (obj = {}) => Object.entries(obj || {});
   const visibleAnswers = (q) => entries(q.answers).filter(([, a]) => !a?.hide);
 
-  useEffect(() => {
-  }, [surveyData, userSamples]);
 
   useEffect(() => {
     setCollapsedChildIds({});
@@ -72,28 +74,44 @@ export function SurveyQuestions ({
     setScrollToChildrenOf(null);
   }, [scrollToChildrenOf]);
 
-  const getSelectedSampleIds = (questionId) => {
+  function getParent (questionId) {
+    let parentQuestionId = surveyData?.[questionId]?.parentQuestionId;
+    if (parentQuestionId === -1) {
+      return questionId;
+    } else {
+      return getParent(parentQuestionId);
+    }
+  }
+
+  const getSelectedSampleIds = (questionId, userSampleIds) => {
+
     // If preview, return the ID of our 1 fake sample
     if (preview) return [selectedSampleId];
+    //if a child, use selectedsampleids of parent
+    // what about if child of a child?
+
     
+
     const answered = surveyData?.[questionId]?.answered || [];
     const allFeatures = mercator.getAllFeatures(mapConfig, "currentSamples") || [];
     const unansweredFeatures = keyDifference(answered, allFeatures);
-    const selectedSamples = mercator.getSelectedSamples(mapConfig);
+    const selectedSamples = mercator.getSelectedSamples(mapConfig);    
     const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
 
+    
+    //
+    
     const list =
       ((selectedFeatures.length === 0 && answered.length === 0) ||
         lengthObject(userSamples) === 1)
         ? allFeatures
-        : (selectedFeatures.length !== 0 ? selectedFeatures : unansweredFeatures);
+          : (selectedFeatures.length !== 0 ? selectedFeatures : unansweredFeatures);
 
     return list.map((f) => f.get("sampleId"));
   };
 
   const checkSelection = (sampleIds, questionId) => {
     if (preview) return true;
-    
     const q = surveyData?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
     if (sampleIds.some((s) => !visibleIds.includes(s))) {
@@ -124,9 +142,16 @@ export function SurveyQuestions ({
   };
 
   const setCurrentValue = (questionId, answerId, answerText) => {
+    //TODO: DETERMINE IF QUESTION HAS A PARENT QUESTION ID, IF SO-- USE THAT VALUE TO GRAB 'SAMPLEIDS'
+
+    // const parentId = getParent(questionId);
+    // const sampleIds = getSelectedSampleIds(parentId);
     const sampleIds = getSelectedSampleIds(questionId);
+   // console.log("set current value sample ids", sampleIds, parentId, questionId, currentId);
     if (!preview && !checkSelection(sampleIds, questionId)) return;
 
+    /*
+    if (!preview && !checkSelection(sampleIds, questionId)) return;
     if (preview) {
       setPreviewUserSamples((prev) => {
         const newSamples = sampleIds.reduce((acc, sampleId) => {
@@ -152,9 +177,12 @@ export function SurveyQuestions ({
 
       syncOpenChildren(questionId, answerId, answerText);
       return;
-    }
+      }
+      */
+
     setAppState((prev) => {
       const childQuestionIds = getChildQuestionIds(questionId);
+      // const childQuestionIds = getChildQuestionIds(parentId);
       const newSamples = sampleIds.reduce((acc, sampleId) => {
         if (answerText == null) return acc;
         const prevSampleAnswers = prev.userSamples?.[sampleId] || {};
@@ -164,12 +192,11 @@ export function SurveyQuestions ({
         );
         const newQuestion = { answerId };
         if (answerText !== "") newQuestion.answer = answerText;
+        // acc[sampleId] = { ...subQuestionsCleared, [parentId]: newQuestion };
         acc[sampleId] = { ...subQuestionsCleared, [questionId]: newQuestion };
         return acc;
       }, {});
-
-      if (!Object.keys(newSamples).length) return prev;
-
+     if (!Object.keys(newSamples).length) return prev;
       const newUserImages = sampleIds.reduce((acc, sampleId) => {
         acc[sampleId] = {
           id: prev.currentImagery.id,
@@ -186,13 +213,16 @@ export function SurveyQuestions ({
         };
         return acc;
       }, {});
-
+      
       return {
         ...prev,
+        selectedSampleIds: getSelectedSampleIds(questionId),
         userSamples: { ...(prev.userSamples || {}), ...newSamples },
         userImages:  { ...(prev.userImages  || {}), ...newUserImages },
-      };
+      }; 
     });
+
+    // syncOpenChildren(parentId, answerId, answerText);
     syncOpenChildren(questionId, answerId, answerText);
   };
 
@@ -357,7 +387,7 @@ export function SurveyQuestions ({
   };
 
   // RENDERING FUNCTIONS
-  const renderQuestionNode = (question, depth = 0) => {
+  const renderQuestionNode = (question, depth = 0, parentId = null) => {
     const isOpen =
       depth === 0
         ? openTopId === question.id
@@ -374,6 +404,7 @@ export function SurveyQuestions ({
       }
       setAppState(s => ({ ...s, selectedQuestionId: question.id }));
     };
+    
     return (
       <div key={question.id} className={`sq-item ${isOpen ? 'open' : ''} ${depth ? 'sq-item--child' : ''} depth-${depth}`}>
         <button className="sq-item-head" onClick={handleToggle}>
@@ -389,20 +420,20 @@ export function SurveyQuestions ({
               </svg>
             )}
           </span>
-          <span className="sq-text">{question.question}{question.required && (
+          <span className="sq-text">{question.question + " : " + question.id}{question.required && (
             <span style={{ color: 'red' }}>*</span>)}</span>
           <SvgIcon icon={isOpen ? "upCaret" : "downCaret"} size="1rem" />
         </button>
 
         {isOpen && (
           <>
-            <AnswerUI q={question} />
+            <AnswerUI q={question} p={parentId}/>
             {children.length > 0 && (
               <div
                 className="sq-children"
                 ref={(el) => { childrenRefs.current[question.id] = el; }}
               >
-                {children.map(child => renderQuestionNode(child, depth + 1))}
+                {children.map(child => renderQuestionNode(child, depth + 1, question.id))}
               </div>
             )}
           </>
@@ -412,7 +443,7 @@ export function SurveyQuestions ({
   };
 
   const renderers = {
-    button: (q) => {
+    button: (q) => {      
       const current = getCurrentAnswer(q.id);
       const opts = visibleAnswers(q);
       return (
@@ -429,7 +460,9 @@ export function SurveyQuestions ({
                   fontWeight: isActive ? 'bold' : 'normal'
                 }}
                 className={`sq-pill ${isActive ? 'active' : ''}`}
-                onClick={() => validateAndSetCurrentValue(q.id, Number(id), a.answer)}
+                onClick={() => {
+                  console.log("click a button!", q.id);
+                  validateAndSetCurrentValue(q.id, Number(id), a.answer, q);}}
               >
                 <span className="dot" style={{ background: a.color }} />
                 {String(a.answer)}
@@ -450,7 +483,7 @@ export function SurveyQuestions ({
                 type="radio"
                 name={`q-${q.id}`}
                 checked={current ? Number(current.answerId) === Number(id) : false}
-                onChange={() => validateAndSetCurrentValue(q.id, Number(id), a.answer)}
+                onChange={() => validateAndSetCurrentValue(q.id, Number(id), a.answer, q)}
               />
               <span>{String(a.answer)}</span>
             </label>
@@ -471,7 +504,7 @@ export function SurveyQuestions ({
               const selectedId = e.target.value;
               if (selectedId === '') return;
               const ans = q.answers[selectedId];
-              if (ans) validateAndSetCurrentValue(q.id, Number(selectedId), ans.answer);
+              if (ans) validateAndSetCurrentValue(q.id, Number(selectedId), ans.answer, q);
             }}
           >
             <option value="">Select</option>
@@ -495,9 +528,9 @@ export function SurveyQuestions ({
             type={q.dataType}
             placeholder={val || q.questionLabel}
             defaultValue={val}
-            onBlur={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value)}
+            onBlur={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value, q)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') validateAndSetCurrentValue(q.id, 0, e.currentTarget.value);
+              if (e.key === 'Enter') validateAndSetCurrentValue(q.id, 0, e.currentTarget.value, q);
             }}
           />
         </div>
@@ -505,9 +538,9 @@ export function SurveyQuestions ({
     },
   };
 
-  const AnswerUI = ({ q }) => {
+  const AnswerUI = ({ q, p }) => {
     const render = renderers[q.componentType];
-    return render ? render(q) : null;
+    return render ? render(q, p) : null;
   };
 
   // MEMOIZATION
@@ -704,6 +737,7 @@ export function SurveyQuestions ({
       const ques1 = currentProject?.surveyQuestions[surveyRule.questionId1];
       if (ques1.answered.some((ans) => ans.answerId === surveyRule.answerId1)) {
         const ques2Ids = getSelectedSampleIds(questionIdToSet);
+
         const ques1Ids = ques1.answered
           .filter((ans) => ans.answerId === surveyRule.answerId1)
           .map((a) => a.sampleId);
@@ -775,6 +809,7 @@ export function SurveyQuestions ({
   };
 
   const validateAndSetCurrentValue = (questionIdToSet, answerId, answerText = null, previousAnswer = null) => {
+    console.log("validating and setting current value", questionIdToSet);
     const ruleError = rulesViolated(questionIdToSet, answerId, answerText);
     if (ruleError) {
       setCurrentValue(questionIdToSet, answerId, previousAnswer);
@@ -786,18 +821,52 @@ export function SurveyQuestions ({
       setCurrentValue(questionIdToSet, answerId, answerText);
     }
   };
+
+  function InvertSampleSelectionButton () {
+    const selectedSamples = mercator.getSelectedSamples(mapConfig);
+    const selectedSampleIds = getSelectedSampleIds(selectedQuestionId);
+    return (
+      <>
+        <button
+          onClick={()=>{
+            console.log('user Samples', userSamples);
+            mercator.invertSelectedFeatures(mapConfig, selectedSampleIds);
+          }}
+          className={'btn filled'}>
+          Invert Sample Selection
+      </button>
+    </>);
+  }
+
+  function SelectAllSamplesButton () {
+    const selectedSamples = mercator.getSelectedSamples(mapConfig);
+    const selectedSampleIds = getSelectedSampleIds(selectedQuestionId);
+    
+    return (
+      <>
+        <button
+          onClick={()=>{
+            console.log('user Samples', userSamples);
+            mercator.selectAllFeatures(mapConfig);            
+          }}
+          className={'btn filled'}>
+          Select All Samples
+      </button>
+    </>);
+  }
   
   return (
     <SidebarCard
-      showHeader={showHeader}
+      showHeader={showHeader}      
       title={
         <>
           SURVEY{" "}
           <span className="sq-subtitle">
             {`${validatedCount}/${totalTop} questions answered`}
-          </span>
+          </span>          
         </>
       }
+      headerBtn={<><InvertSampleSelectionButton/><SelectAllSamplesButton/></>}
       infoText="View and answer survey questions for this plot"
     >
       {currentPlot?.flagged ? (
