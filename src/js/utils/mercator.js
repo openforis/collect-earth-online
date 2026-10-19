@@ -397,7 +397,6 @@ mercator.createSource = (
     const dataLayer = (!sourceConfig.time || sourceConfig.time === "newest")
       ? mercator.newestTFOLayer()
       : sourceConfig.time;
-    console.log(institutionId);
     return new XYZ({
       url:
         "get-tfo-tiles?z={z}&x={x}&y={y}" +
@@ -1301,6 +1300,7 @@ mercator.makeClickSelect = (interactionTitle, layer) => {
   return select;
 };
 
+
 // [Pure] Returns a new dragBox select interaction with title =
 // interactionTitle that is associated with the passed in layer.
 mercator.makeDragBoxSelect = (interactionTitle, layer, selectedFeatures) => {
@@ -1324,7 +1324,7 @@ mercator.makeDragBoxSelect = (interactionTitle, layer, selectedFeatures) => {
 
 // [Side Effects]
 mercator.addAfterSelectionChange = (selectedFeatures, setSampleId) => {
-  const afterSelectionChange = () => {
+    const afterSelectionChange = () => {
     setSampleId(
       selectedFeatures.getLength() === 1 ? selectedFeatures.getArray()[0].get("sampleId") : -1
     );
@@ -1334,16 +1334,45 @@ mercator.addAfterSelectionChange = (selectedFeatures, setSampleId) => {
 
 // [Side Effects] Adds a click select interaction and a dragBox select interaction
 // to mapConfig's map object associated with the layer with id === layerId.
-mercator.enableSelection = (mapConfig, layerId, setSampleId) => {
+mercator.enableSelection = (mapConfig, layerId, setSampleId, selectedSampleIds) => {
   const layer = mercator.getLayerById(mapConfig, layerId);
   const clickSelect = mercator.makeClickSelect("clickSelect", layer);
   const selectedFeatures = clickSelect.getFeatures();
   const dragBoxSelect = mercator.makeDragBoxSelect("dragBoxSelect", layer, selectedFeatures);
+  
+  !selectedSampleIds.length ? null : layer.getSource().forEachFeature(f => {    
+    selectedSampleIds.includes(f.get("sampleId")) && selectedFeatures.push(f);
+  })
   mercator.addAfterSelectionChange(selectedFeatures, setSampleId);
+  
   mapConfig.map.addInteraction(clickSelect);
   mapConfig.map.addInteraction(dragBoxSelect);
+
+
   return mapConfig;
 };
+
+mercator.selectAllFeatures = (mapConfig,  setSampleId) => {
+  const layer = mercator.getLayerById(mapConfig, "currentSamples");
+  const allSelect = mercator.makeClickSelect("allSelect", layer);
+  const features = allSelect.getFeatures();
+
+  layer.getSource().forEachFeature(f=>{
+    features.push(f);
+  });
+S 
+};
+
+mercator.invertSelection = (mapConfig, setSampleId, selectedFeatures) => {
+  const layer = mercator.getLayerById(mapConfig, layerId);
+  const allSelect = mercator.makeClickSelect("allSelect", layer);
+  const features = allSelect.getFeatures();
+  features.clear();
+  !selectedSampleIds.length ? null : layer.getSource().forEachFeature(f => {
+    !selectedSampleIds.includes(f.get("sampleId")) && features.push(f);
+  })
+};
+
 
 // [Side Effects] Removes the click select and dragBox select
 // interactions from mapConfig's map object.
