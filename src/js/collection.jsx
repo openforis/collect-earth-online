@@ -158,7 +158,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     showProjectPlot();
 
     if (state.currentProject?.hasGeoDash && state.currentProject?.projectOptions?.autoLaunchGeoDash) {
-      // showGeoDash();
+      showGeoDash();
     }
 
     if (state.storedInterval) clearInterval(state.storedInterval);
@@ -181,7 +181,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   // UPDATE MAP WHEN STATE CHANGES — samples redraw (question/answers/visibility)
   useEffect(() => {
     if (!state.currentPlot?.id || state.answerMode === "draw") return;
-    console.log('useEffect fires!');
+
     const selectedQuestion = state.currentProject?.surveyQuestions?.[state.selectedQuestionId];
     if (selectedQuestion?.visible) {
       showPlotSamples();
@@ -345,7 +345,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
         if (response.ok) {
           null;
         } else {
-          setState({modal: {alert: {alertType: "Recalculate Similarity Error", alertMessage: "Error recalculating plot similarity. See console for details."}}});
+          this.setState({modal: {alert: {alertType: "Recalculate Similarity Error", alertMessage: "Error recalculating plot similarity. See console for details."}}});
         }
       }
   )};
@@ -390,10 +390,8 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
       "currentSamples",
       (sampleId) => {
         if (sampleId === -1) return;
-        console.log("setting sample Id", sampleId);
-        setState((s) => ({ ...s, selectedSampleId: sampleId}));
-      },
-      state.selectedSampleIds
+        setState((s) => ({ ...s, selectedSampleId: sampleId }));
+      }
     );
   };
   
@@ -761,20 +759,16 @@ function ImageAnalysisPane({}) {
   const [state, setState] = useAtom(stateAtom);
   
   const toggleShowBoundary = () => {
-    console.log("toggle show boundary", state.showBoundary);
-    // setState (s => ({...s, showBoundary: !state.showBoundary}));
+  setState (s => ({...s, showBoundary: !state.showBoundary}));
   };
   
   const toggleShowSamples = () =>  {
-    console.log("toggle show samples", state.showSamples);
-    // setState (s=> ({...s, showSamples: !state.showSamples}));
+    setState (s=> ({...s, showSamples: !state.showSamples}));
   };
 
   const zoomToPlot = () => {
-    console.log("zooming to plot", state.mapConfig);
-    /*
     state.mapConfig &&
-    mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36); */
+    mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
   };
 
   const zoom = (level) => {
