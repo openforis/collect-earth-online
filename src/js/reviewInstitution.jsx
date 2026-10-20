@@ -481,14 +481,15 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
 export const InstitutionDescription = () => {
   const [state] = useAtom(institutionPageAtom);
   const institution = state?.institutionDetails || {};
-
   if (!institution?.description) return null;
 
   return (
     <div className="inst-desc-container">
       <div className="inst-desc-box">
         <div className="inst-desc-title">
-          <span>Institution Description</span>
+          <span style={{textDecorationLine: 'underline', cursor: 'pointer'}}
+                onClick={()=>window.open(institution?.url)}
+          >{institution?.name}</span>
         </div>
 
         {institution.base64Image && (
@@ -695,7 +696,7 @@ export const EditInstitutionModal = ({ onClose, onSave}) => {
     const file = e.target.files[0];
     if (!file) return;
     setLogoName(file.name);
-    const reader = new FileReader();
+    const reader = new FileReader();   
     reader.onloadend = () => setBase64Image(reader.result.split(",")[1]);
     reader.readAsDataURL(file);
   };
@@ -800,7 +801,7 @@ function ReviewInstitutionPage ({userId, userName, versionDeployed, institutionN
 }
 
 export function pageInit(params, session) {
-  
+ 
   let [] = 
   ReactDOM.render(
     <ReviewInstitutionPage userId={session.userId} userName={session.userName} versionDeployed={session.versionDeployed} institutionId={params.institutionId} institutionName={params.institutionName}/>,

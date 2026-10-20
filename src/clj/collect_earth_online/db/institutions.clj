@@ -32,7 +32,9 @@
                         :url              url
                         :description      description
                         :institutionAdmin institution_admin
-                        :base64Image      base64_image})) ; base64Image is last so it does not appear in the logs.
+                        :base64Image      base64_image
+
+                        }))
       (data-response (str "Institution " institution-id " is not found.")))))
 
 (defn- get-common-errors [name description]
@@ -94,7 +96,7 @@
       (do
         (call-sql "update_institution" institution-id name image-name url description)
         (when (pos? (count base64-image))
-          (call-sql "update_institution_logo" {:log? false} institution-id (second (str/split base64-image #","))))
+          (call-sql "update_institution_logo" {:log? true} institution-id base64-image))
         (data-response "")))))
 
 (defn archive-institution [{:keys [params]}]
