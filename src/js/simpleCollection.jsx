@@ -10,9 +10,8 @@ import {
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 
-import { tfoLayers } from "./imagery/imageryOptions";
+import { fetchTfoMosaics, resolveTfoTime, tfoLabel } from "./imagery/tfo";
 import {
-  last,
   everyObject,
   findObject,
   firstEntry,
@@ -1038,16 +1037,16 @@ export class PlanetTFOMenu extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedTime:
-        this.props.sourceConfig.time === "newest"
-          ? last(tfoLayers)
-          : this.props.sourceConfig.time,
+      selectedTime: this.props.sourceConfig.time || "newest",
       selectedBand: this.props.sourceConfig.band,
+      tfoLayers: [],
+      loadError: null,
     };
   }
 
   componentDidMount() {
     this.updatePlanetLayer();
+    this.getTFOLayers();
   }
 
   componentDidUpdate(prevProps) {
@@ -1056,9 +1055,27 @@ export class PlanetTFOMenu extends React.Component {
     }
   }
 
+  getTFOLayers = () => {
+    fetchTfoMosaics(this.props.thisImageryId)
+      .then((layers) => {
+        this.setState(
+          {
+            tfoLayers: layers,
+            loadError: null,
+            selectedTime: resolveTfoTime(this.state.selectedTime, layers),
+          },
+          this.updatePlanetLayer
+        );
+      })
+      .catch((error) => {
+        console.error(error);
+        this.setState({ loadError: error.message });
+      });
+  };
+
   updateImageryInformation = () => {
     if (this.props.visible) {
-      this.props.setImageryAttribution(` | ${this.state.selectedTime} Mosaic`);
+      this.props.setImageryAttribution(` | ${tfoLabel(this.state.selectedTime)} Mosaic`);
       this.props.setImageryAttributes({
         time: this.state.selectedTime,
       });
@@ -1092,12 +1109,19 @@ export class PlanetTFOMenu extends React.Component {
             onChange={(e) => this.setState({ selectedTime: e.target.value })}
             value={this.state.selectedTime}
           >
-            {tfoLayers.map((time) => (
-              <option key={time} value={time}>
-                {time}
-              </option>
-            ))}
+            {this.state.tfoLayers.length === 0 ? (
+              <option value={this.state.selectedTime}>{tfoLabel(this.state.selectedTime)}</option>
+            ) : (
+              this.state.tfoLayers.map((time) => (
+                <option key={time} value={time}>
+                  {tfoLabel(time)}
+                </option>
+              ))
+            )}
           </select>
+          {this.state.loadError && (
+            <p className="mb-0" style={{ color: "red" }}>{this.state.loadError}</p>
+          )}
         </div>
         <div className="slide-container">
           <div id="radio-group">

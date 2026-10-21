@@ -4,6 +4,7 @@ import DataTable from "react-data-table-component";
 import { BulkActions } from "../components/BulkActions";
 import SvgIcon from "../components/svg/SvgIcon";
 import { imageryOptions } from "../imagery/imageryOptions";
+import { fetchTfoMosaics, tfoLabel } from "../imagery/tfo";
 import Modal from "../components/Modal";
 
 import "../../css/institution.css";
@@ -15,7 +16,6 @@ export const ImageryTab = ({
   getImageryList,
   isAdmin,
   institutionId,
-  tfoLayers = [],
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [filterText, setFilterText] = useState("");
@@ -188,7 +188,6 @@ of project visibility`;
           institutionId={institutionId}
           imageryToEdit={imageryToEdit}
           getImageryList={getImageryList}
-          tfoLayers={tfoLayers}
           onClose={handleCloseNewImagery}
         />
       )}
@@ -200,10 +199,11 @@ of project visibility`;
 export const NewImagery = ({
   institutionId,
   imageryToEdit,
-  tfoLayers = [],
   getImageryList,
   onClose,
 }) => {
+  const [tfoMosaics, setTfoMosaics] = useState([]);
+  const [tfoError, setTfoError] = useState(null);
   const [selectedType, setSelectedType] = useState(0);
   const [imageryTitle, setImageryTitle] = useState("");
   const [imageryAttribution, setImageryAttribution] = useState("");
@@ -336,6 +336,16 @@ export const NewImagery = ({
     else imageryTypeChangeHandler(0);
   }, []);
 
+  useEffect(() => {
+    if (isNewImagery || imageryOptions[selectedType]?.type !== "PlanetTFO") return;
+    fetchTfoMosaics(imageryToEdit.id)
+      .then((mosaics) => {
+        setTfoMosaics(mosaics);
+        setTfoError(null);
+      })
+      .catch((error) => setTfoError(error.message));
+  }, [selectedType]);
+
   const formInput = (title, type, value, callback, required = false) => (
     <div className="mb-3">
       <label className="form-label">
@@ -441,22 +451,23 @@ export const NewImagery = ({
   };
 
   const { type, params, optionalProxy } = imageryOptions[selectedType];
+
+  const withTfoMosaics = (param) => {
+    const saved = imageryParams[param.key];
+    return {
+      ...param,
+      options: [
+        ...param.options,
+        ...tfoMosaics.map((mosaic) => ({ label: tfoLabel(mosaic), value: mosaic })),
+        ...(saved && saved !== "newest" && !tfoMosaics.includes(saved)
+          ? [{ label: tfoLabel(saved), value: saved }]
+          : []),
+      ],
+    };
+  };
   const displayParams =
         type === "PlanetTFO"
-        ? [
-          params[0],
-          {
-            ...params[1],
-            options: [
-              ...params[1].options,
-              ...tfoLayers.map((l) => ({
-                label: l.slice(34, l.length - 7),
-                value: l,
-              })),
-            ],
-          },
-          params[2],
-        ]
+        ? params.map((param) => (param.key === "time" ? withTfoMosaics(param) : param))
         : params;
 
   return (
@@ -492,6 +503,15 @@ export const NewImagery = ({
          formInput("Attribution", "text", imageryAttribution, setImageryAttribution, true)}
 
         {displayParams.map((o) => formTemplate(o))}
+
+        {type === "PlanetTFO" && (
+          <div className="mb-3" style={{ fontSize: ".85em" }}>
+            {isNewImagery
+              ? "Collectors can always switch dates in the imagery menu. To default to a specific date, save this imagery first and then edit it."
+              : "Dates are listed using the access token that is currently saved with this imagery."}
+            {tfoError && <div style={{ color: "red" }}>{tfoError}</div>}
+          </div>
+        )}
 
         {optionalProxy && (
           <div className="form-check mb-3">

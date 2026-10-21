@@ -339,13 +339,6 @@ mercator.sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
   return geeSource;
 };
 
-mercator.newestTFOLayer = () => {
-  const latestDate = new Date(new Date().setDate(1));
-  const month = latestDate.getMonth().toString().padStart(2, "0");
-  const dateMonth = `${latestDate.getFullYear()}-${month}`;
-  return `planet_medres_normalized_analytic_${dateMonth}_mosaic`;
-}
-
 // [Pure] Returns a new ol.source.* object or null if the sourceConfig is invalid.
 mercator.createSource = (
   sourceConfig,
@@ -394,19 +387,14 @@ mercator.createSource = (
       attributions: attribution,
     });
   } else if (type === "PlanetTFO") {
-    const dataLayer = (!sourceConfig.time || sourceConfig.time === "newest")
-      ? mercator.newestTFOLayer()
-      : sourceConfig.time;
-    console.log(institutionId);
     return new XYZ({
       url:
         "get-tfo-tiles?z={z}&x={x}&y={y}" +
-        `&institutionId=${institutionId}` +
-        `&dataLayer=${dataLayer}` +
-        `&band=${sourceConfig.band}` +
+        `&dataLayer=${sourceConfig.time || "newest"}` +
+        `&band=${sourceConfig.band || "rgb"}` +
         `&imageryId=${imageryId}`,
-       attributions: attribution,
-      });
+      attributions: attribution,
+    });
   } else if (type === "PlanetDaily") {
     // make ajax call to get layerid then add xyz layer
     const theJson = {

@@ -1,95 +1,89 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import Select from "../components/Select";
 import { mercator } from "../utils/mercator";
 import { monthlyMapping } from "../utils/generalUtils";
 import SvgIcon from "../components/svg/SvgIcon";
 import Modal from "../components/Modal";
+import { fetchTfoMosaics, resolveTfoTime, tfoLabel } from "./tfo";
 
-export class PlanetMenu extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      year: this.props.sourceConfig.year,
-      month: this.props.sourceConfig.month,
-    };
-  }
+export function PlanetMenu({
+  sourceConfig,
+  visible,
+  thisImageryId,
+  mapConfig,
+  currentProjectBoundary,
+  setImageryAttribution,
+  setImageryAttributes,
+}) {
+  const [year, setYear] = useState(sourceConfig.year);
+  const [month, setMonth] = useState(sourceConfig.month);
 
-  componentDidMount() {
-    this.updateImageryInformation();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (this.props.visible && prevProps.visible !== this.props.visible) {
-      this.updateImageryInformation();
-    }
-  }
-
-  updateImageryInformation = () => {
-    if (this.props.visible) {
-      this.props.setImageryAttribution(
-        " | Monthly Mosaic of " + `${this.state.year}, ${monthlyMapping[this.state.month]}`
-      );
-      this.props.setImageryAttributes({
-        imageryYearPlanet: this.state.year,
-        imageryMonthPlanet: this.state.month,
+  const updateImageryInformation = () => {
+    if (visible) {
+      setImageryAttribution(" | Monthly Mosaic of " + `${year}, ${monthlyMapping[month]}`);
+      setImageryAttributes({
+        imageryYearPlanet: year,
+        imageryMonthPlanet: month,
       });
     }
   };
 
-  updatePlanetLayer = () => {
-    this.updateImageryInformation();
+  useEffect(() => {
+    updateImageryInformation();
+  }, [visible]);
+
+  const updatePlanetLayer = () => {
+    updateImageryInformation();
     mercator.updateLayerSource(
-      this.props.mapConfig,
-      this.props.thisImageryId,
-      this.props.currentProjectBoundary,
-      (sourceConfig) => ({
-        ...sourceConfig,
-        month: (this.state.month.length === 1 ? "0" : "") + this.state.month,
-        year: this.state.year,
+      mapConfig,
+      thisImageryId,
+      currentProjectBoundary,
+      (config) => ({
+        ...config,
+        month: (month.length === 1 ? "0" : "") + month,
+        year,
       })
     );
   };
 
-  render() {
-    return (
-      <div className="my-2" style={{ display: this.props.visible ? "block" : "none" }}>
-        <div className="slide-container">
-          <input
-            className="slider"
-            id="myRange"
-            max={new Date().getFullYear()}
-            min="2016"
-            onChange={(e) => this.setState({ year: e.target.value })}
-            type="range"
-            value={this.state.year || ""}
-          />
-          <label>Year: {this.state.year}</label>
-        </div>
-        <div className="slide-container">
-          <input
-            className="slider"
-            id="myRangemonth"
-            max="12"
-            min="1"
-            onChange={(e) => this.setState({ month: e.target.value })}
-            type="range"
-            value={this.state.month || ""}
-          />
-          <label>Month: {monthlyMapping[this.state.month]}</label>
-        </div>
-        <div className="slide-container">
-          <button
-            className="btn btn-darkgreen btn-sm btn-block"
-            onClick={this.updatePlanetLayer}
-            type="button"
-          >
-            Update Map
-          </button>
-        </div>
+  return (
+    <div className="my-2" style={{ display: visible ? "block" : "none" }}>
+      <div className="slide-container">
+        <input
+          className="slider"
+          id="myRange"
+          max={new Date().getFullYear()}
+          min="2016"
+          onChange={(e) => setYear(e.target.value)}
+          type="range"
+          value={year || ""}
+        />
+        <label>Year: {year}</label>
       </div>
-    );
-  }
+      <div className="slide-container">
+        <input
+          className="slider"
+          id="myRangemonth"
+          max="12"
+          min="1"
+          onChange={(e) => setMonth(e.target.value)}
+          type="range"
+          value={month || ""}
+        />
+        <label>Month: {monthlyMapping[month]}</label>
+      </div>
+      <div className="slide-container">
+        <button
+          className="btn btn-darkgreen btn-sm btn-block"
+          onClick={updatePlanetLayer}
+          type="button"
+        >
+          Update Map
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export class PlanetDailyMenu extends React.Component {
@@ -198,11 +192,10 @@ export class PlanetTFOMenu extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedTime: this.props.sourceConfig.time,
+      selectedTime: this.props.sourceConfig.time || "newest",
       selectedBand: this.props.sourceConfig.band,
       tfoLayers: [],
-      isDisabledLeft: false,
-      isDisabledRight: true
+      loadError: null,
     };
   }
 
@@ -211,42 +204,33 @@ export class PlanetTFOMenu extends React.Component {
     this.getTFOLayers();
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (this.props.visible && prevProps.visible !== this.props.visible) {
       this.updateImageryInformation();
-    }
-   
-    if (prevState.selectedTime !== this.state.selectedTime) {
-      this.setState((state) => {
-        const { tfoLayers, selectedTime } = state;
-        const index = tfoLayers.indexOf(selectedTime);
-
-        return {
-          isDisabledLeft: index >= tfoLayers.length - 1,
-          isDisabledRight: index <= 0
-        }
-      })
     }
   }
 
   getTFOLayers = () => {
-    fetch("/get-tfo-dates")
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    fetchTfoMosaics(this.props.thisImageryId)
       .then((layers) => {
         this.setState(
           {
             tfoLayers: layers,
-            ...(this.props.sourceConfig.time === "newest" && { selectedTime: layers[0] }),
+            loadError: null,
+            selectedTime: resolveTfoTime(this.state.selectedTime, layers),
           },
           this.updatePlanetLayer
         );
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        console.error(error);
+        this.setState({ loadError: error.message });
+      });
   };
 
   updateImageryInformation = () => {
     if (this.props.visible) {
-      this.props.setImageryAttribution(` | ${this.state.selectedTime} Mosaic`);
+      this.props.setImageryAttribution(` | ${tfoLabel(this.state.selectedTime)} Mosaic`);
       this.props.setImageryAttributes({
         time: this.state.selectedTime,
       });
@@ -283,7 +267,17 @@ export class PlanetTFOMenu extends React.Component {
   };
 
   render() {
-    const { tfoLayers, selectedTime, selectedBand } = this.state;
+    const { tfoLayers, selectedTime, selectedBand, loadError } = this.state;
+    const timeIndex = tfoLayers.indexOf(selectedTime);
+    const isDisabledLeft = timeIndex >= tfoLayers.length - 1;
+    const isDisabledRight = timeIndex <= 0;
+    if (loadError) {
+      return (
+        <div className="my-2" style={{ display: this.props.visible ? "block" : "none" }}>
+          <p className="mb-0" style={{ color: "red" }}>{loadError}</p>
+        </div>
+      );
+    }
     return (
       tfoLayers.length > 0 && (
         <div className="my-2" style={{ display: this.props.visible ? "block" : "none" }}>
@@ -301,7 +295,7 @@ export class PlanetTFOMenu extends React.Component {
             >
               {tfoLayers.map((time) => (
                 <option key={time} value={time}>
-                  {time.slice(34, time.length - 7)}
+                  {tfoLabel(time)}
                 </option>
               ))}
             </select>
@@ -311,7 +305,7 @@ export class PlanetTFOMenu extends React.Component {
               onClick={() => {
                 this.switchImagery("backward")
               }}
-              disabled={this.state.isDisabledLeft}
+              disabled={isDisabledLeft}
             >
               <SvgIcon icon="leftArrow" size="0.9rem" />
             </button>
@@ -321,7 +315,7 @@ export class PlanetTFOMenu extends React.Component {
               onClick={() => {
                 this.switchImagery("forward")
               }}
-              disabled={this.state.isDisabledRight}
+              disabled={isDisabledRight}
             >
               <SvgIcon icon="rightArrow" size="0.9rem" />
             </button>
