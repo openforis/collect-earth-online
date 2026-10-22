@@ -393,16 +393,16 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
       9999
     );
     
+    
     mercator.enableSelection(
       mapConfig,
       "currentSamples",
-      (sampleId) => {
-        if (sampleId === -1) return;
-        console.log("setting sample Id", sampleId);
-        setState((s) => ({ ...s, selectedSampleId: sampleId}));
+      (sampleIds) => {
+        if (sampleIds[0] === -1) return;     
+        setState((s) => ({ ...s, selectedSampleId: sampleIds[0] , selectedSampleIds: sampleIds}));
       }, 
       state.selectedSampleIds
-    );
+    ); 
   };
   
   const zoomToPlot = () => mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
@@ -455,15 +455,15 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
       []
     );
 
-    setAppState(prev => ({
+    setState(prev => ({
       ... prev,
-      currentPlot: { ...currentPlot, samples: newSamples },
+      currentPlot: { ...state.currentPlot, samples: newSamples },
       userSamples: newSamples.reduce(
-        (acc, cur) => ({ ...acc, [cur.id]: userSamples[cur.id] || {} }),
+        (acc, cur) => ({ ...acc, [cur.id]: state.userSamples[cur.id] || {} }),
         {}
       ),
       userImages: newSamples.reduce(
-        (acc, cur) => ({ ...acc, [cur.id]: userImages[cur.id] || {} }),
+        (acc, cur) => ({ ...acc, [cur.id]: state.userImages[cur.id] || {} }),
         {}
       ),
     }));

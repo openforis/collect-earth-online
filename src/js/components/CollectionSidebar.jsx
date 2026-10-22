@@ -756,6 +756,7 @@ export const SidebarFooter = ({ processModal }) => {
         null,
         mercator.ceoMapStyles("draw", "orange")
       );
+      setAppState((s)=>({...s, selectedSampleIds: []}));
       mercator.enableDrawing(mapConfig, "drawLayer", drawTool);
     } else if (confirm("Do you want to clear all answers?")) {
       resetPlotValues();

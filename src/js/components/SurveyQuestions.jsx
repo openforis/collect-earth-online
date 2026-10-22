@@ -822,35 +822,24 @@ export function SurveyQuestions ({
     }
   };
 
-  function InvertSampleSelectionButton () {
-    const selectedSamples = mercator.getSelectedSamples(mapConfig);
-    const selectedSampleIds = getSelectedSampleIds(selectedQuestionId);
-    return (
-      <>
-        <button
-          onClick={()=>{
-            console.log('user Samples', userSamples);
-            mercator.invertSelectedFeatures(mapConfig, selectedSampleIds);
-          }}
-          className={'btn filled'}>
-          Invert Sample Selection
-      </button>
-    </>);
-  }
+  
 
   function SelectAllSamplesButton () {
-    const selectedSamples = mercator.getSelectedSamples(mapConfig);
-    const selectedSampleIds = getSelectedSampleIds(selectedQuestionId);
-    
     return (
       <>
         <button
           onClick={()=>{
-            console.log('user Samples', userSamples);
-            mercator.selectAllFeatures(mapConfig);            
+            const samples = mercator.getAllFeatures(mapConfig, "currentSamples");
+            const invertedIds = samples.reduce((coll, s) => {
+              return selectedSampleIds.includes(s.get("sampleId")) ? coll : [... coll, s.get("sampleId")]; 
+            }, []);
+            console.log("selectedSampleIds:", selectedSampleIds, invertedIds);
+            setAppState((s)=>({...s, selectedSampleIds: invertedIds}));
+            console.log("selectedSampleIds:", selectedSampleIds, invertedIds);
+            mercator.invertSelectedFeatures(mapConfig, selectedSampleIds, invertedIds);
           }}
           className={'btn filled'}>
-          Select All Samples
+          {selectedSampleIds.length ? "Invert Sample Selection" : "Select All Samples"}
       </button>
     </>);
   }
@@ -866,7 +855,7 @@ export function SurveyQuestions ({
           </span>          
         </>
       }
-      headerBtn={<><InvertSampleSelectionButton/><SelectAllSamplesButton/></>}
+      headerBtn={<SelectAllSamplesButton/>}
       infoText="View and answer survey questions for this plot"
     >
       {currentPlot?.flagged ? (

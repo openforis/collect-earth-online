@@ -1301,7 +1301,7 @@ mercator.makeClickSelect = (interactionTitle, layer) => {
 };
 
 
-// [Pure] Returns a new dragBox select interaction with title =
+// [Pure] Returns a new dragBox select interaction with title
 // interactionTitle that is associated with the passed in layer.
 mercator.makeDragBoxSelect = (interactionTitle, layer, selectedFeatures) => {
   const dragBox = new DragBox({ condition: platformModifierKeyOnly });
@@ -1323,18 +1323,18 @@ mercator.makeDragBoxSelect = (interactionTitle, layer, selectedFeatures) => {
 };
 
 // [Side Effects]
-mercator.addAfterSelectionChange = (selectedFeatures, setSampleId) => {
+mercator.addAfterSelectionChange = (selectedFeatures, setSampleIds) => {
     const afterSelectionChange = () => {
-    setSampleId(
-      selectedFeatures.getLength() === 1 ? selectedFeatures.getArray()[0].get("sampleId") : -1
-    );
+      setSampleIds(
+	selectedFeatures.getArray().map((f)=>f.get("sampleId"))
+      );
   };
   selectedFeatures.on(["add", "remove"], afterSelectionChange);
 };
 
 // [Side Effects] Adds a click select interaction and a dragBox select interaction
 // to mapConfig's map object associated with the layer with id === layerId.
-mercator.enableSelection = (mapConfig, layerId, setSampleId, selectedSampleIds) => {
+mercator.enableSelection = (mapConfig, layerId, setSampleIds, selectedSampleIds) => {
   const layer = mercator.getLayerById(mapConfig, layerId);
   const clickSelect = mercator.makeClickSelect("clickSelect", layer);
   const selectedFeatures = clickSelect.getFeatures();
@@ -1343,7 +1343,7 @@ mercator.enableSelection = (mapConfig, layerId, setSampleId, selectedSampleIds) 
   !selectedSampleIds.length ? null : layer.getSource().forEachFeature(f => {    
     selectedSampleIds.includes(f.get("sampleId")) && selectedFeatures.push(f);
   })
-  mercator.addAfterSelectionChange(selectedFeatures, setSampleId);
+  mercator.addAfterSelectionChange(selectedFeatures, setSampleIds);
   
   mapConfig.map.addInteraction(clickSelect);
   mapConfig.map.addInteraction(dragBoxSelect);
@@ -1352,26 +1352,43 @@ mercator.enableSelection = (mapConfig, layerId, setSampleId, selectedSampleIds) 
   return mapConfig;
 };
 
-mercator.selectAllFeatures = (mapConfig,  setSampleId) => {
+mercator.selectFeatures = (mapConfig, sampleIds) => {
   const layer = mercator.getLayerById(mapConfig, "currentSamples");
-  const allSelect = mercator.makeClickSelect("allSelect", layer);
-  const features = allSelect.getFeatures();
+  const allSelect = mercator.makeClickSelect("clickSelect", layer);
+  const selectedFeatures = allSelect.getFeatures();
+  const allFeatures = layer.getSource().getFeatures();
 
-  layer.getSource().forEachFeature(f=>{
-    features.push(f);
-  });
-S 
+  selectedFeatures.clear();
+
+  allFeatures.forEach(f => { sampleIds.includes(f.get("sampleId")) && selectedFeatures.push(f) });
+
 };
 
-mercator.invertSelectedFeatures = (mapConfig, selectedSampleIds) => {
+
+
+mercator.invertSelectedFeatures = (mapConfig, selectedSampleIds, invertedIds) => {
+  console.log('inverting selected features selected sample ids', selectedSampleIds, invertedIds);
+  
   const layer = mercator.getLayerById(mapConfig, "currentSamples");
-  const allSelect = mercator.makeClickSelect("allSelect", layer);
-  const features = allSelect.getFeatures();
-  features.clear();
-  !selectedSampleIds.length ? null : layer.getSource().forEachFeature(f => {
-    !selectedSampleIds.includes(f.get("sampleId")) && features.push(f);
+  const clickSelect = mercator.getInteractionByTitle(mapConfig, "clickSelect");
+  const selectedFeatures = clickSelect.getFeatures();
+  const allFeatures = layer.getSource().getFeatures();
+  
+  allFeatures.forEach(f=> {
+    console.log('does sampleId exist in selectedSampleIds', f.get("sampleId"), selectedSampleIds.includes(f.get("sampleId")));
   })
+  
+  allFeatures.forEach(f => {
+    const sampleId = f.get("sampleId");
+    const selected = selectedSampleIds.includes(sampleId);
+    selected ? selectedFeatures.remove(f) : selectedFeatures.push(f)
+  })
+
 };
+
+mercator.selectFeatures = (mapConfig, sampleIds) => {
+
+}
 
 
 // [Side Effects] Removes the click select and dragBox select
