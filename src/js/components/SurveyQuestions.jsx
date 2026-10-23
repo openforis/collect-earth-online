@@ -120,6 +120,7 @@ export function SurveyQuestions ({
   };
 
   const checkSelection = (sampleIds, questionId) => {
+    console.log("checking selection", sampleIds, questionId);
     if (preview) return true;
     const q = surveyData?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
@@ -227,7 +228,7 @@ export function SurveyQuestions ({
       console.log('setting current value', getSelectedSampleIds());
       return {
         ...prev,
-        selectedSampleIds: getSelectedSampleIds(), //getSelectedSampleIds(questionId),
+        selectedSampleIds: {... prev.selectedSampleIds, [getParent(questionId)] : getSelectedSampleIds()}, //getSelectedSampleIds(questionId),
         userSamples: { ...(prev.userSamples || {}), ...newSamples },
         userImages:  { ...(prev.userImages  || {}), ...newUserImages },
       }; 
