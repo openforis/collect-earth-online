@@ -28,8 +28,8 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
   function getParentId (questionId) {
-    const {parentQuestionId} = state.currentProject.surveyQuestions[questionId];
-    return parentQuestionId === -1 ? questionId : getParentId(parentQuestionId);
+    const {parentQuestionId} = state.currentProject.surveyQuestions[state.selectedQuestionId];
+    return parentQuestionId === -1 ? state.selectedQuestionId : getParentId(parentQuestionId);
   }
   
   // INIT COLLECTION EFFECT
@@ -62,12 +62,12 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
         const plotters = await plottersRes.json();
         const stats = await statsRes.json();
         const imageryList = Array.isArray(imageryListRaw)
-          ? imageryListRaw.map((image, i) => ({
-            ...image,
-            visible: i === 0,
-            institutionId: project.institution,
-          }))
-          : [];
+              ? imageryListRaw.map((image, i) => ({
+                ...image,
+                visible: i === 0,
+                institutionId: project.institution,
+              }))
+              : [];
         // Initialize map on HTML ID
         const mapConf = mercator.createMap(
           "image-analysis-pane",
@@ -92,7 +92,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
         // select Imagery and make it render on the map
         const defaultImagery =
               (project?.imageryId && imageryList.find(im => im.id === project.imageryId)) ||
-                imageryList[0] || null;
+              imageryList[0] || null;
         const firstQuestionId = Object.keys(project.surveyQuestions).reduce((minId, currentId) => {
           const currentOrder = project.surveyQuestions[currentId].cardOrder ?? Infinity;
           const minOrder = project.surveyQuestions[minId].cardOrder ?? Infinity;
@@ -155,6 +155,39 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
       }
     }
   }, [state.mapConfig, state.plotList]);
+  
+  const syncRef = useRef(false);
+  
+  useEffect(()=>{
+    let {mapConfig, selectedQuestionId, selectedSampleIds} = state;
+    if (!mapConfig) return;
+
+    const layer = mercator.getLayerById(mapConfig, "currentSamples");
+    const clickSelect = mercator.getInteractionByTitle(mapConfig, "clickSelect");
+    if (!layer || !clickSelect) return;
+
+    const parentId = getParentId(selectedQuestionId);
+    const sampleIds = selectedSampleIds[parentId] ?? [];
+
+    const features = clickSelect.getFeatures().getArray();
+
+    const update = sampleIds.length === features.length && [...sampleIds].every((id)=>features.includes(id));
+    if(update) return;
+
+    syncRef.current = true;
+    try {
+      clickSelect.getFeatures().clear();
+      layer.getSource().getFeatures().forEach((f)=>{
+        sampleIds.includes(f.get("sampleId")) && clickSelect.getFeatures().push(f);
+      });
+
+    } finally {
+      syncRef.current = false;
+    }
+    
+    
+    
+  },[state.mapConfig, state.selectedQuestionId, state.selectedSampleIds]);
 
   // UPDATE MAP WHEN STATE CHANGES — Auto launch geodash
   useEffect(() => {
@@ -232,12 +265,12 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const newPlotValues = (newPlot, copyValues = true) => {
     const surveyQs = state.currentProject?.surveyQuestions || {};
     const firstQuestionId = Object.keys(surveyQs).length > 0
-      ? Object.keys(surveyQs).reduce((minId, currentId) => {
-        const currentOrder = surveyQs[currentId].cardOrder ?? Infinity;
-        const minOrder = surveyQs[minId].cardOrder ?? Infinity;
-        return currentOrder < minOrder ? currentId : minId;
-      })
-      : -1;
+          ? Object.keys(surveyQs).reduce((minId, currentId) => {
+            const currentOrder = surveyQs[currentId].cardOrder ?? Infinity;
+            const minOrder = surveyQs[minId].cardOrder ?? Infinity;
+            return currentOrder < minOrder ? currentId : minId;
+          })
+          : -1;
 
     return {
       newPlotInput: newPlot.visibleId,
@@ -249,9 +282,9 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
         : {},
       originalUserSamples: newPlot.samples
         ? copyValues
-          ? newPlot.samples.reduce((acc, cur) => ({ ...acc, [cur.id]: cur.savedAnswers || {} }), {})
-          : state.originalUserSamples
-        : {},
+        ? newPlot.samples.reduce((acc, cur) => ({ ...acc, [cur.id]: cur.savedAnswers || {} }), {})
+        : state.originalUserSamples
+      : {},
       userImages: newPlot.samples
         ? newPlot.samples.reduce(
           (acc, cur) => ({ ...acc, [cur.id]: copyValues ? cur.userImage || {} : {} }),
@@ -324,15 +357,15 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
           console.error(response);
           setState (prev => ({... prev, modal: {alert: {alertType: "Plot Data Retrieval Error", alertMessage: "Error retrieving plot data. See console for details."}}}));
         });}
-    );
+                );
   };
   
   // Functions
 
   const processModal = (message, callBack) => {
-     setState(prev => ({ ... prev, modalMessage: message }));
-     return Promise.resolve()
-       .then(() => callBack())
+    setState(prev => ({ ... prev, modalMessage: message }));
+    return Promise.resolve()
+      .then(() => callBack())
       .finally(() => setState(prev => ({... prev,  modalMessage: null })));};
 
   const reprocessPlotSimilarity = () => {
@@ -369,7 +402,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
 
     if (!mapConfig || !currentProject || selectedQuestionId == null) return;
     const sortedQuestions = Object.values(currentProject.surveyQuestions || {})
-      .sort((a, b) => (a.cardOrder ?? Infinity) - (b.cardOrder ?? Infinity));
+          .sort((a, b) => (a.cardOrder ?? Infinity) - (b.cardOrder ?? Infinity));
 
     const selectedQuestion = sortedQuestions[0];
     if (!selectedQuestion) return;
@@ -380,7 +413,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
           ? baseVisible.filter((s) => s.visibleId !== 1)
           : baseVisible;
 
-    mercator.disableSelection(mapConfig);
+    //    mercator.disableSelection(mapConfig);
     mercator.disableDrawing(mapConfig);
     mercator.removeLayerById(mapConfig, "currentSamples");
     mercator.removeLayerById(mapConfig, "drawLayer");
@@ -392,16 +425,18 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
       mercator.ceoMapStyles("geom", showSamples ? unansweredColor : "transparent"),
       9999
     );
-    
+
     mercator.enableSelection(
       mapConfig,
       "currentSamples",
-      (sampleId) => {
-        if (sampleId === -1) return;
-        console.log("setting sample Id", sampleId);
-        setState((s) => ({ ...s, selectedSampleId: sampleId}));
+      (sampleIds) => {
+        if (syncRef.current) return;
+        setState((s) => ({
+          ...s, selectedSampleIds: {
+            ...s.selectedSampleIds,
+            [getParentId(state.selectedQuestionId)]: sampleIds}}));
       }, 
-      state.selectedSampleIds
+      state.selectedSampleIds[getParentId(state.selectedQuestionId)] ?? []
     );
   };
   
@@ -409,7 +444,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
 
   const showProjectPlot = () => {
     const { currentPlot, mapConfig, currentProject, showBoundary} = state;
-    mercator.disableSelection(mapConfig);
+    //  mercator.disableSelection(mapConfig);
     mercator.removeLayerById(mapConfig, "currentPlots");
     mercator.removeLayerById(mapConfig, "currentPlot");
     mercator.removeLayerById(mapConfig, "currentSamples");
@@ -781,13 +816,13 @@ function ImageAnalysisPane({}) {
   const zoomToPlot = () => {
     console.log("zooming to plot", state.mapConfig);
     /*
-    state.mapConfig &&
-    mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36); */
+      state.mapConfig &&
+      mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36); */
   };
 
   const zoom = (level) => {
     state.mapConfig &&
-    mercator.setMapZoom(state.mapConfig, level);
+      mercator.setMapZoom(state.mapConfig, level);
   };
   
   return (
@@ -797,10 +832,10 @@ function ImageAnalysisPane({}) {
       </div>
       
       <div className="map-controls"
-        style={{position: 'absolute',
-          bottom: '3.5em',
-          right: '2vw',
-          zIndex: 1}}>
+           style={{position: 'absolute',
+                   bottom: '3.5em',
+                   right: '2vw',
+                   zIndex: 1}}>
         <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '0.8rem' }}>
           <input
             className="btn btn-outline-lightgreen btn-sm"
@@ -825,16 +860,16 @@ function ImageAnalysisPane({}) {
             <button
               className="btn btn-sm"
               style={{backgroundColor: 'white',
-                borderRadius: '25%',
-                margin: 'auto 0 auto auto'}}
+                      borderRadius: '25%',
+                      margin: 'auto 0 auto auto'}}
               onClick={() => zoom(1)}>
               <SvgIcon icon="plus" size="0.9rem" />
             </button>
             <button
               className="btn btn-sm"
               style={{backgroundColor: 'white',
-                borderRadius: '25%',
-                margin: 'auto 0 auto auto'}}
+                      borderRadius: '25%',
+                      margin: 'auto 0 auto auto'}}
               onClick={() => zoom(-1)}>
               <SvgIcon icon="minus" size="0.9rem" /></button>
           </div>

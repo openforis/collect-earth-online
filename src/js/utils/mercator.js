@@ -1324,6 +1324,21 @@ mercator.makeDragBoxSelect = (interactionTitle, layer, selectedFeatures, selecte
   return dragBox;
 };
 
+mercator.invertSelection = (mapConfig, selectedIds) => {
+  const clickSelect = mercator.getInteractionByTitle(mapConfig, "clickSelect");
+  const layer = mercator.getLayerById(mapConfig, "currentSamples");
+  if (!clickSelect || !layer) return;
+
+  console.log("inverting selection", selectedIds);
+  const collection = clickSelect.getFeatures();
+  collection.clear();
+  layer.getSource().getFeatures().forEach((f)=>{
+    selectedIds.includes(f.get("sampleId"))
+      && collection.push(f);
+  })
+
+};
+
 // [Side Effects]
 /*
 mercator.addAfterSelectionChange = (selectedFeatures, setSampleIds) => {
@@ -1343,15 +1358,13 @@ mercator.enableSelection = (mapConfig, layerId, onSelectionChange, initialIds = 
   const clickSelect = mercator.makeClickSelect("clickSelect", layer);
   const selectedFeatures = clickSelect.getFeatures();
 
-  const initialIdSet = new Set(initialIds);
-
   layer.getSource().getFeatures().forEach(f => {
-    initialIdSet.has(f.get("sampleId")) && selectedFeatures.push(f);
+    initialIds.includes(f.get("sampleId")) && selectedFeatures.push(f);
   });
 
   clickSelect.on("select", (e)=>{
     if (e.selected.length === 0 && e.deselected.length === 0) return;
-    onSelectionChange(selectedFeatures).getArray().map(f=>f.get("sampleId"));
+    onSelectionChange(selectedFeatures.getArray().map(f=>f.get("sampleId")));
   });
 
   const dragBoxSelect = mercator.makeDragBoxSelect("dragBoxSelect", layer, selectedFeatures);
@@ -1376,10 +1389,10 @@ mercator.enableSelection = (mapConfig, layerId, onSelectionChange, initialIds = 
 /*
 //TODO: INVESTIGATE THE FOLLOWING FOR CRUFT
 mercator.selectFeatures = (mapConfig, sampleIds) => {
-  const layer = mercator.getLayerById(mapConfig, "currentSamples");
-  const allSelect = mercator.makeClickSelect("clickSelect", layer);
-  const selectedFeatures = allSelect.getFeatures();
-  const allFeatures = layer.getSource().getFeatures();
+const layer = mercator.getLayerById(mapConfig, "currentSamples");
+const allSelect = mercator.makeClickSelect("clickSelect", layer);
+const selectedFeatures = allSelect.getFeatures();
+const allFeatures = layer.getSource().getFeatures();
 
   selectedFeatures.clear();
 
