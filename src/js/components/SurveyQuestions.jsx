@@ -155,7 +155,9 @@ export function SurveyQuestions ({
 
     // const parentId = getParent(questionId);
     // const sampleIds = getSelectedSampleIds(parentId);
+    
     const sampleIds = getSelectedSampleIds();
+    console.log("setting currentValue", selectedSampleIds, sampleIds);
     // console.log("set current value sample ids", sampleIds, parentId, questionId, currentId);
     if (!preview && !checkSelection(sampleIds, questionId)) return;
 
