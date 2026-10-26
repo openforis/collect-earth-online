@@ -273,7 +273,7 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
   }
 
   const editImageryBulk = (imageryIds, selectedVisibility) => {
-    if (confirm("Do you really want to edit the visibility for ALL the selected projects?")) {
+    if (confirm("Do you really want to edit the visibility for ALL the selected imagery?")) {
       fetch("/edit-imagery-bulk", {
         method: "POST",
         body: JSON.stringify({
@@ -288,10 +288,10 @@ export const ReviewInstitution = ({ institutionId, userId }) => {
       }).then((response) => {
         if (response.ok) {
           getImageryList();
-          alert(`The visibility of the selected projects has been changed to ${selectedVisibility}`);
+          alert(`The visibility of the selected imagery has been changed to ${selectedVisibility}`);
         } else {
           console.error(response);
-          alert("Error editing project visibility. See console for details.");
+          alert("Error editing imagery visibility. See console for details.");
         }
       });
     }
