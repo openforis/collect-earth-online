@@ -178,7 +178,7 @@ export const imageryOptions = [
       { key: "accessToken", display: "Access Token" },
       {
         key: "time",
-        display: "Default Time",
+        display: "Choose Mosaic",
         type: "select",
         options: [{ label: "Newest Available", value: "newest" }],
       },

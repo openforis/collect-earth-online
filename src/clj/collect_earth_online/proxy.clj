@@ -472,6 +472,15 @@
         (tfo-error-response e)))
     (data-response no-tfo-token-message {:status 400})))
 
+(defn preview-tfo-dates [{:keys [params]}]
+  (let [access-token (str/trim (str (:accessToken params)))]
+    (if (str/blank? access-token)
+      (data-response "Enter a Planet TFO access token to list its dates." {:status 400})
+      (try
+        (data-response (tfo-dates access-token))
+        (catch Exception e
+          (tfo-error-response e))))))
+
 (defn get-tfo-tiles [{:keys [params]}]
   (let [{:keys [x y z dataLayer band]} params
         access-token (tfo-access-token (tc/val->int (:imageryId params)))

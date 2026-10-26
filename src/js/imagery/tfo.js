@@ -21,11 +21,20 @@ const parseBody = (text) => {
   }
 };
 
+const readMosaics = async (response) => {
+  if (response.ok) return response.json();
+  const body = parseBody(await response.text().catch(() => ""));
+  throw new Error(
+    (typeof body === "string" && body) || `Unable to load TFO dates (HTTP ${response.status}).`
+  );
+};
+
 export const fetchTfoMosaics = (imageryId) =>
-  fetch(`/get-tfo-dates?imageryId=${imageryId}`).then(async (response) => {
-    if (response.ok) return response.json();
-    const body = parseBody(await response.text().catch(() => ""));
-    throw new Error(
-      (typeof body === "string" && body) || `Unable to load TFO dates (HTTP ${response.status}).`
-    );
-  });
+  fetch(`/get-tfo-dates?imageryId=${imageryId}`).then(readMosaics);
+
+export const fetchTfoMosaicsForToken = (accessToken) =>
+  fetch("/get-tfo-dates-for-token", {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify({ accessToken }),
+  }).then(readMosaics);

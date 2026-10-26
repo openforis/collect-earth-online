@@ -300,6 +300,9 @@
    [:get "/get-tfo-dates"]                  {:handler     #'proxy/get-tfo-dates
                                              :auth-type   :no-cross
                                              :auth-action :block}
+   [:post "/get-tfo-dates-for-token"]       {:handler     #'proxy/preview-tfo-dates
+                                             :auth-type   :admin
+                                             :auth-action :block}
    [:get  "/get-tfo-tiles"]                 {:handler     #'proxy/get-tfo-tiles
                                              :auth-type   :no-cross
                                              :auth-action :block}
