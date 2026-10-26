@@ -1295,7 +1295,7 @@ mercator.removeInteractionByTitle = (mapConfig, interactionTitle) => {
 // [Pure] Returns a new click select interaction with title =
 // interactionTitle that is associated with the passed in layer.
 mercator.makeClickSelect = (interactionTitle, layer) => {
-  const select = new Select({ layers: [layer] });
+  const select = new Select({ layers: [layer] , multi: true});
   select.set("title", interactionTitle);
   return select;
 };
@@ -1331,10 +1331,10 @@ mercator.invertSelection = (mapConfig, selectedIds) => {
 
   console.log("inverting selection", selectedIds);
   const collection = clickSelect.getFeatures();
-  collection.clear();
+  // collection.clear();
   layer.getSource().getFeatures().forEach((f)=>{
     selectedIds.includes(f.get("sampleId"))
-      && collection.push(f);
+      ? collection.push(f) : collection.remove(f);
   })
 
 };

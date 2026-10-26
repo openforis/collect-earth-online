@@ -75,8 +75,8 @@ export function SurveyQuestions ({
   }, [scrollToChildrenOf]);
 
   function getParent (questionId) {
-    let parentQuestionId = surveyData?.[questionId]?.parentQuestionId;
-    if (parentQuestionId === -1) {
+    let {parentQuestionId} = surveyData?.[questionId];
+    if ([-1, "-1"].includes(parentQuestionId)) {
       return questionId;
     } else {
       return getParent(parentQuestionId);
@@ -89,9 +89,9 @@ export function SurveyQuestions ({
     console.log("set selected question id", selectedQuestionId);
   }, [selectedQuestionId]);
   
-  const getSelectedSampleIds = () => {
+  const getSelectedSampleIds = (questionId = selectedQuestionId) => 
 
-    return selectedSampleIds[getParent(selectedQuestionId)] || [];
+        selectedSampleIds[getParent(selectedQuestionId)] || [];
     /*
     // If preview, return the ID of our 1 fake sample
     if (preview) return [selectedSampleId];
@@ -117,14 +117,16 @@ export function SurveyQuestions ({
 
     return list.map((f) => f.get("sampleId"));
     */
-  };
+;
 
   const checkSelection = (sampleIds, questionId) => {
-    console.log("checking selection", sampleIds, questionId);
     if (preview) return true;
     const q = surveyData?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
-    if (sampleIds.some((s) => !visibleIds.includes(s))) {
+    const invalid = sampleIds.filter((id) => !visibleIds.includes(id));
+    console.log("checking selection", sampleIds, questionId, q, visibleIds, (sampleIds.some((s) => !visibleIds.includes(s))), sampleIds.length, invalid);
+    // if (sampleIds.some((s) => !visibleIds.includes(s))) {
+    if (invalid.length) {
       setAppState((s) => ({
         ...s,
         modal: {
@@ -157,7 +159,7 @@ export function SurveyQuestions ({
     // const parentId = getParent(questionId);
     // const sampleIds = getSelectedSampleIds(parentId);
     
-    const sampleIds = getSelectedSampleIds();
+    const sampleIds = getSelectedSampleIds(questionId);
     console.log("setting currentValue", selectedSampleIds, sampleIds);
     // console.log("set current value sample ids", sampleIds, parentId, questionId, currentId);
     if (!preview && !checkSelection(sampleIds, questionId)) return;
@@ -225,16 +227,13 @@ export function SurveyQuestions ({
         };
         return acc;
       }, {});
-      console.log('setting current value', getSelectedSampleIds());
       return {
         ...prev,
-        selectedSampleIds: {... prev.selectedSampleIds, [getParent(questionId)] : getSelectedSampleIds()}, //getSelectedSampleIds(questionId),
         userSamples: { ...(prev.userSamples || {}), ...newSamples },
         userImages:  { ...(prev.userImages  || {}), ...newUserImages },
       }; 
     });
 
-    // syncOpenChildren(parentId, answerId, answerText);
     syncOpenChildren(questionId, answerId, answerText);
   };
 
@@ -629,7 +628,7 @@ export function SurveyQuestions ({
     if (surveyRule.questionIds.includes(questionIdToSet)) {
       const answeredQuestions = getAnsweredQuestions(surveyRule.questionIds, questionIdToSet);
       if (surveyRule.questionIds.length === lengthObject(answeredQuestions) + 1) {
-        const sampleIds = getSelectedSampleIds();
+        const sampleIds = getSelectedSampleIds(questionIdToSet);
         const answeredSampleIds = getAnsweredSampleIds(answeredQuestions);
         const commonSampleIds = answeredSampleIds.reduce(intersection, sampleIds);
         if (commonSampleIds.length > 0) {
@@ -678,7 +677,7 @@ export function SurveyQuestions ({
         ready(ansLen1, ruleLen1, ansLen2, ruleLen2) ||
           ready(ansLen2, ruleLen2, ansLen1, ruleLen1)
       ) {
-        const sampleIds = getSelectedSampleIds();
+        const sampleIds = getSelectedSampleIds(questionIdToSet);
         const answeredSampleIds1 = getAnsweredSampleIds(answeredQuestions1);
         const commonSampleIds1 = answeredSampleIds1.reduce(intersection, sampleIds);
         const answeredSampleIds2 = getAnsweredSampleIds(answeredQuestions2);
@@ -725,7 +724,7 @@ export function SurveyQuestions ({
     if (surveyRule.questionId1 === questionIdToSet && surveyRule.answerId1 === answerId) {
       const ques2 = currentProject?.surveyQuestions[surveyRule.questionId2];
       if (ques2.answered.some((ans) => ans.answerId === surveyRule.answerId2)) {
-        const ques1Ids = getSelectedSampleIds();
+        const ques1Ids = getSelectedSampleIds(questionIdToSet);
         const ques2Ids = ques2.answered
               .filter((ans) => ans.answerId === surveyRule.answerId2)
               .map((a) => a.sampleId);
@@ -845,21 +844,19 @@ export function SurveyQuestions ({
       const inverted = allIds.reduce((coll, f) => {
         return selectedSamples.includes(f) ? coll :  [... coll, f];
       }, []);
-      console.log("inverting selection", allIds, selectedSamples, inverted);
+      console.log("inverting selection", allIds, selectedSamples, inverted, selectedSampleIds);
       // const inverted = selectedSamples.length = 0 ? allIds
       // : allIds.filter(id => !sampleSet.has(id));
-      mercator.invertSelection(mapConfig, selectedSamples);
+      // mercator.invertSelection(mapConfig, selectedSamples);
       setAppState((s)=>({...s, selectedSampleIds: {... s.selectedSampleIds, [parentId]: inverted}}));
       
     };
     return (
       <>
         <button
-          onClick={invertHandler
-            /* mercator.invertSelectedFeatures(mapConfig, selectedSampleIds, invertedIds); */
-                  }
+          onClick={invertHandler}
           className={'btn filled'}>
-          {(selectedSampleIds[parentId] ?? []).length ? "Invert Sample Selection" : "Select All Samples"} 
+          {(selectedSampleIds[parentId] ?? []).length ? "Invert Sample Selection" : "Select All Samples"} :  {parentId}
         </button>
       </>);
   }

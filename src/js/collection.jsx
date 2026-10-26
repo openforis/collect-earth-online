@@ -27,9 +27,9 @@ import { outlineKML } from "./utils/kml";
 export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
-  function getParentId (questionId) {
+  function getParentId (questionId) {    
     const {parentQuestionId} = state.currentProject.surveyQuestions[state.selectedQuestionId];
-    return parentQuestionId === -1 ? state.selectedQuestionId : getParentId(parentQuestionId);
+    return [-1, "-1"].includes(parentQuestionId) ? state.selectedQuestionId : getParentId(parentQuestionId);
   }
   
   // INIT COLLECTION EFFECT
@@ -159,27 +159,32 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const syncRef = useRef(false);
   
   useEffect(()=>{
-    let {mapConfig, selectedQuestionId, selectedSampleIds} = state;
-    if (!mapConfig) return;
+    let {mapConfig, selectedQuestionId, selectedSampleIds, currentProject} = state;
+    if (!mapConfig || selectedQuestionId === null || !currentProject) return;
 
     const layer = mercator.getLayerById(mapConfig, "currentSamples");
     const clickSelect = mercator.getInteractionByTitle(mapConfig, "clickSelect");
     if (!layer || !clickSelect) return;
 
     const parentId = getParentId(selectedQuestionId);
-    const sampleIds = selectedSampleIds[parentId] ?? [];
+    const sampleIds = selectedSampleIds?.[parentId] ?? [];
 
-    const features = clickSelect.getFeatures().getArray();
+    const features = clickSelect.getFeatures();
+    const featureIds = features.getArray().map((f)=>f.get("sampleId"));
+    const update = sampleIds.length === featureIds.length &&
+          [...sampleIds].every((id)=>featureIds.includes(id));
 
-    const update = sampleIds.length === features.length && [...sampleIds].every((id)=>features.includes(id));
-    if(update) return;
-
+    // const update = sampleIds.length === features.length && [...sampleIds].every((id)=>features.includes(id));
+    if (update) return;
+    console.log("collection useffect fires, this one clears clickselect features");
     syncRef.current = true;
     try {
-      clickSelect.getFeatures().clear();
+      // clickSelect.getFeatures().clear();
+      features.clear();
       layer.getSource().getFeatures().forEach((f)=>{
         sampleIds.includes(f.get("sampleId")) && clickSelect.getFeatures().push(f);
       });
+      console.log("collection useffect fires, this one clears clickselect features", layer.getSource().getFeatures(), clickSelect.getFeatures());
 
     } finally {
       syncRef.current = false;
@@ -187,7 +192,10 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     
     
     
-  },[state.mapConfig, state.selectedQuestionId, state.selectedSampleIds]);
+  },[state.mapConfig,
+     
+     state.selectedQuestionId,
+     state.selectedSampleIds]);
 
   // UPDATE MAP WHEN STATE CHANGES — Auto launch geodash
   useEffect(() => {
@@ -218,9 +226,10 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
 
   // UPDATE MAP WHEN STATE CHANGES — samples redraw (question/answers/visibility)
   useEffect(() => {
+    console.log("collection useeffect fires for state.selectedQuestionId, updates sampleIds on",  (!state.currentPlot?.id || state.answerMode === "draw"));
     if (!state.currentPlot?.id || state.answerMode === "draw") return;
-    state.selectedQuestionId === getParentId(state.selectedQuestionId) &&
-      setState((s)=>({... s, selectedSampleIds : []}));
+     // state.selectedQuestionId === getParentId(state.selectedQuestionId) &&
+     //  setState((s)=>({... s, selectedSampleIds : {... s.selectedSampleIds, [state.selectedQuestionId] : []}}));
     
     const selectedQuestion = state.currentProject?.surveyQuestions?.[state.selectedQuestionId];
     if (selectedQuestion?.visible) {
@@ -425,7 +434,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
       mercator.ceoMapStyles("geom", showSamples ? unansweredColor : "transparent"),
       9999
     );
-
+    console.log("collection showplotsamples fires");
     mercator.enableSelection(
       mapConfig,
       "currentSamples",
