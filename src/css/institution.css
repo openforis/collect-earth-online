@@ -402,7 +402,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px
+    border-radius: 4px;
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
