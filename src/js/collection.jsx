@@ -29,7 +29,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
 
   function getParentId (questionId) {    
     const {parentQuestionId} = state.currentProject.surveyQuestions[state.selectedQuestionId];
-    return [-1, "-1"].includes(parentQuestionId) ? state.selectedQuestionId : getParentId(parentQuestionId);
+    return [-1, "-1"].includes(parentQuestionId) ? questionId : getParentId(parentQuestionId);
   }
   
   // INIT COLLECTION EFFECT
@@ -434,7 +434,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
       mercator.ceoMapStyles("geom", showSamples ? unansweredColor : "transparent"),
       9999
     );
-    console.log("collection showplotsamples fires");
+
     mercator.enableSelection(
       mapConfig,
       "currentSamples",

@@ -82,7 +82,7 @@ export function SurveyQuestions ({
       return getParent(parentQuestionId);
     }
   }
-
+ 
   
 
   useEffect(()=>{
@@ -90,34 +90,35 @@ export function SurveyQuestions ({
   }, [selectedQuestionId]);
   
   const getSelectedSampleIds = (questionId = selectedQuestionId) => 
+        
+        !selectedQuestionId ? [] :
+    selectedSampleIds[getParent(selectedQuestionId)] || []
+  /*
+  // If preview, return the ID of our 1 fake sample
+  if (preview) return [selectedSampleId];
+  //if a child, use selectedsampleids of parent
+  // what about if child of a child?
 
-        selectedSampleIds[getParent(selectedQuestionId)] || [];
-    /*
-    // If preview, return the ID of our 1 fake sample
-    if (preview) return [selectedSampleId];
-    //if a child, use selectedsampleids of parent
-    // what about if child of a child?
+  
 
-    
+  const answered = surveyData?.[questionId]?.answered || [];
+  const allFeatures = mercator.getAllFeatures(mapConfig, "currentSamples") || [];
+  const unansweredFeatures = keyDifference(answered, allFeatures);
+  const selectedSamples = mercator.getSelectedSamples(mapConfig);    
+  const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
 
-    const answered = surveyData?.[questionId]?.answered || [];
-    const allFeatures = mercator.getAllFeatures(mapConfig, "currentSamples") || [];
-    const unansweredFeatures = keyDifference(answered, allFeatures);
-    const selectedSamples = mercator.getSelectedSamples(mapConfig);    
-    const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
+  
+  //
+  
+  const list =
+  ((selectedFeatures.length === 0 && answered.length === 0) ||
+  lengthObject(userSamples) === 1)
+  ? allFeatures
+  : (selectedFeatures.length !== 0 ? selectedFeatures : unansweredFeatures);
 
-    
-    //
-    
-    const list =
-    ((selectedFeatures.length === 0 && answered.length === 0) ||
-    lengthObject(userSamples) === 1)
-    ? allFeatures
-    : (selectedFeatures.length !== 0 ? selectedFeatures : unansweredFeatures);
-
-    return list.map((f) => f.get("sampleId"));
-    */
-;
+  return list.map((f) => f.get("sampleId"));
+  */
+  ;
 
   const checkSelection = (sampleIds, questionId) => {
     if (preview) return true;
@@ -164,35 +165,34 @@ export function SurveyQuestions ({
     // console.log("set current value sample ids", sampleIds, parentId, questionId, currentId);
     if (!preview && !checkSelection(sampleIds, questionId)) return;
 
-    /*
-      if (!preview && !checkSelection(sampleIds, questionId)) return;
-      if (preview) {
+    if (!preview && !checkSelection(sampleIds, questionId)) return;
+    if (preview) {
       setPreviewUserSamples((prev) => {
-      const newSamples = sampleIds.reduce((acc, sampleId) => {
-      if (answerText == null) return acc;
-      const childIds = getChildQuestionIds(questionId);
-      const prevAnswers = prev?.[sampleId] || {};
-      const subQuestionsCleared = filterObject(
-      prevAnswers,
-      ([key]) => !childIds.includes(Number(key))
-      );
-      const newQuestion = { answerId };
-      if (answerText !== "") newQuestion.answer = answerText;
+        const newSamples = sampleIds.reduce((acc, sampleId) => {
+          if (answerText == null) return acc;
+          const childIds = getChildQuestionIds(questionId);
+          const prevAnswers = prev?.[sampleId] || {};
+          const subQuestionsCleared = filterObject(
+            prevAnswers,
+            ([key]) => !childIds.includes(Number(key))
+          );
+          const newQuestion = { answerId };
+          if (answerText !== "") newQuestion.answer = answerText;
+          
+          acc[sampleId] = {
+            ...subQuestionsCleared,
+            [questionId]: newQuestion,
+          };
+          return acc;
+        }, {});
 
-      acc[sampleId] = {
-      ...subQuestionsCleared,
-      [questionId]: newQuestion,
-      };
-      return acc;
-      }, {});
-
-      return { ...prev, ...newSamples };
+        return { ...prev, ...newSamples };
       });
 
       syncOpenChildren(questionId, answerId, answerText);
       return;
-      }
-    */
+    }
+    
 
     setAppState((prev) => {
       const childQuestionIds = getChildQuestionIds(questionId);
@@ -853,6 +853,7 @@ export function SurveyQuestions ({
     };
     return (
       <>
+        
         <button
           onClick={invertHandler}
           className={'btn filled'}>
@@ -872,7 +873,7 @@ export function SurveyQuestions ({
           </span>          
         </>
       }
-      headerBtn={<InvertSelectionButton/>}
+      headerBtn={ !preview && <InvertSelectionButton/> }
       infoText="View and answer survey questions for this plot"
     >
       {currentPlot?.flagged ? (
