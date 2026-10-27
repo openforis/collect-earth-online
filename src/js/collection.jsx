@@ -24,7 +24,7 @@ import { mercator } from "./utils/mercator";
 import { outlineKML } from "./utils/kml";
 
 
-export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
+function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
   function getParentId (questionId) {    
@@ -72,6 +72,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
                 institutionId: project.institution,
               }))
               : [];
+        
         // Initialize map on HTML ID
         const mapConf = mercator.createMap(
           "image-analysis-pane",
