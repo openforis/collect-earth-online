@@ -1279,10 +1279,13 @@ mapConfig.map
 // [Side Effects] Removes the interaction with title === interactionTitle from
 // mapConfig's map object.
 mercator.removeInteractionByTitle = (mapConfig, interactionTitle) => {
-  const interaction = mercator.getInteractionByTitle(mapConfig, interactionTitle);
-  if (interaction) {
-    mapConfig.map.removeInteraction(interaction);
-  }
+  // const interactions = mercator.getInteractionByTitle(mapConfig, interactionTitle);
+  const interactions = mapConfig.map.getInteractions().getArray()
+	.filter(i => i.get('title') === interactionTitle);
+  interactions.forEach(i => mapConfig.map.removeInteraction(i))
+  // if (interaction) {
+  //   mapConfig.map.removeInteraction(interaction);
+  // }
   return mapConfig;
 };
 
@@ -1310,10 +1313,8 @@ mercator.makeDragBoxSelect = (interactionTitle, layer, selectedFeatures, selecte
     selectedFeatures.clear();
   };
   const boxendAction = () => {
-    console.log("dragged a box!", selectedFeatures, selectedSampleIds);
     const extent = dragBox.getGeometry().getExtent();
     const selectFeatures = (feature) => {
-      console.log("selecting features")
       selectedFeatures.push(feature);
       return false;
     };
@@ -1324,36 +1325,24 @@ mercator.makeDragBoxSelect = (interactionTitle, layer, selectedFeatures, selecte
   return dragBox;
 };
 
-mercator.invertSelection = (mapConfig, selectedIds) => {
+mercator.selectFeatures = (mapConfig, featureIds) => {
   const clickSelect = mercator.getInteractionByTitle(mapConfig, "clickSelect");
   const layer = mercator.getLayerById(mapConfig, "currentSamples");
   if (!clickSelect || !layer) return;
-
-  console.log("inverting selection", selectedIds);
   const collection = clickSelect.getFeatures();
-  // collection.clear();
+  collection.clear();
   layer.getSource().getFeatures().forEach((f)=>{
-    selectedIds.includes(f.get("sampleId"))
-      ? collection.push(f) : collection.remove(f);
+    featureIds.includes(f.get("sampleId")) && collection.push(f);
   })
-
 };
 
-// [Side Effects]
-/*
-mercator.addAfterSelectionChange = (selectedFeatures, setSampleIds) => {
-  const afterSelectionChange = () => {
-    setSampleIds(
-      selectedFeatures.getArray().map((f)=>f.get("sampleId"))
-    );
-  };
-  selectedFeatures.on(["add", "remove"], afterSelectionChange);
-};
-*/
+
 // [Side Effects] Adds a click select interaction and a dragBox select interaction
 // to mapConfig's map object associated with the layer with id === layerId.
 // mercator.enableSelection = (mapConfig, layerId, setSampleIds, selectedSampleIds) => {
 mercator.enableSelection = (mapConfig, layerId, onSelectionChange, initialIds = []) => {
+  mercator.removeInteractionByTitle(mapConfig, "clickSelect");
+  mercator.removeInteractionByTitle(mapConfig, "dragBoxSelect");
   const layer = mercator.getLayerById(mapConfig, layerId);
   const clickSelect = mercator.makeClickSelect("clickSelect", layer);
   const selectedFeatures = clickSelect.getFeatures();
@@ -1371,13 +1360,6 @@ mercator.enableSelection = (mapConfig, layerId, onSelectionChange, initialIds = 
   dragBoxSelect.on("boxend", ()=>{
     onSelectionChange(selectedFeatures.getArray().map(f => f.get("sampleId")));
   });
-  // const dragBoxSelect = mercator.makeDragBoxSelect("dragBoxSelect", layer, selectedFeatures, selectedSampleIds);
-  /*
-  !selectedSampleIds.length ? null : layer.getSource().forEachFeature(f => {    
-    selectedSampleIds.includes(f.get("sampleId")) && selectedFeatures.push(f);
-    })
-    */
-  // mercator.addAfterSelectionChange(selectedFeatures, setSampleIds);
   
   mapConfig.map.addInteraction(clickSelect);
   mapConfig.map.addInteraction(dragBoxSelect);
@@ -1386,54 +1368,6 @@ mercator.enableSelection = (mapConfig, layerId, onSelectionChange, initialIds = 
   return mapConfig;
 };
 
-/*
-//TODO: INVESTIGATE THE FOLLOWING FOR CRUFT
-mercator.selectFeatures = (mapConfig, sampleIds) => {
-const layer = mercator.getLayerById(mapConfig, "currentSamples");
-const allSelect = mercator.makeClickSelect("clickSelect", layer);
-const selectedFeatures = allSelect.getFeatures();
-const allFeatures = layer.getSource().getFeatures();
-
-  selectedFeatures.clear();
-
-  allFeatures.forEach(f => { sampleIds.includes(f.get("sampleId")) && selectedFeatures.push(f) });
-
-};
-
-
-mercator.invertSelectedFeatures = (mapConfig, selectedSampleIds, invertedIds) => {
-  console.log('inverting selected features selected sample ids', selectedSampleIds, invertedIds);
-  
-  const layer = mercator.getLayerById(mapConfig, "currentSamples");
-  const clickSelect = mercator.getInteractionByTitle(mapConfig, "clickSelect");
-  const selectedFeatures = clickSelect.getFeatures();
-  const allFeatures = layer.getSource().getFeatures();
-  
-  allFeatures.forEach(f=> {
-    console.log('does sampleId exist in selectedSampleIds', f.get("sampleId"), selectedSampleIds.includes(f.get("sampleId")));
-  })
-  
-  allFeatures.forEach(f => {
-    const sampleId = f.get("sampleId");
-    //    const selected = selectedSampleIds.includes(sampleId);
-    invertedIds.includes(sampleId) && selectedFeatures.push(f);
-    //    selected ? selectedFeatures.remove(f) : selectedFeatures.push(f)
-  })
-
-};
-
-mercator.selectFeatures = (mapConfig, sampleIds) => {
-
-}
-//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-// [Side Effects] Removes the click select and dragBox select
-// interactions from mapConfig's map object.
-mercator.disableSelection = (mapConfig) => {
-  mercator.removeInteractionByTitle(mapConfig, "clickSelect");
-  mercator.removeInteractionByTitle(mapConfig, "dragBoxSelect");
-  return mapConfig;
-};
 
 /*****************************************************************************
  ***
@@ -1444,6 +1378,12 @@ mercator.disableSelection = (mapConfig) => {
 // [Pure] Returns a new Draw interaction with a type of drawTool
 // for the source. A function to remove features on right click is
 // added for layer.
+
+mercator.disableSelection = (mapConfig) => {
+  mercator.removeInteractionByTitle(mapConfig, "clickSelect");
+  mercator.removeInteractionByTitle(mapConfig, "dragBoxSelect");
+  return mapConfig;
+};
 mercator.makeDraw = (layer, source, drawTool) => {
   const removeFeature = (e) => {
     layer.getFeatures(e.pixel).then((features) => {
@@ -1694,7 +1634,6 @@ mercator.addPlotLayer = (mapConfig, plots, callback) => {
     9999
   );
   const clickHandler = (event) => {
-    console.log("clicked the map!");
     try {
       mapConfig.map.forEachFeatureAtPixel(
 	event.pixel,

@@ -28,8 +28,12 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
   function getParentId (questionId) {    
-    const {parentQuestionId} = state.currentProject.surveyQuestions[state.selectedQuestionId];
-    return [-1, "-1"].includes(parentQuestionId) ? questionId : getParentId(parentQuestionId);
+    const {parentQuestionId} = state.currentProject?.surveyQuestions[state.selectedQuestionId];
+    if([-1, "-1"].includes(parentQuestionId))  {
+      return questionId;
+    } else {
+      return getParentId(parentQuestionId);
+    };
   }
   
   // INIT COLLECTION EFFECT
@@ -176,10 +180,9 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
 
     // const update = sampleIds.length === features.length && [...sampleIds].every((id)=>features.includes(id));
     if (update) return;
-    console.log("collection useffect fires, this one clears clickselect features");
     syncRef.current = true;
     try {
-      // clickSelect.getFeatures().clear();
+
       features.clear();
       layer.getSource().getFeatures().forEach((f)=>{
         sampleIds.includes(f.get("sampleId")) && clickSelect.getFeatures().push(f);
@@ -193,9 +196,9 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     
     
   },[state.mapConfig,
-     
      state.selectedQuestionId,
-     state.selectedSampleIds]);
+     // state.selectedSampleIds
+    ]);
 
   // UPDATE MAP WHEN STATE CHANGES — Auto launch geodash
   useEffect(() => {
@@ -226,7 +229,6 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
 
   // UPDATE MAP WHEN STATE CHANGES — samples redraw (question/answers/visibility)
   useEffect(() => {
-    console.log("collection useeffect fires for state.selectedQuestionId, updates sampleIds on",  (!state.currentPlot?.id || state.answerMode === "draw"));
     if (!state.currentPlot?.id || state.answerMode === "draw") return;
      // state.selectedQuestionId === getParentId(state.selectedQuestionId) &&
      //  setState((s)=>({... s, selectedSampleIds : {... s.selectedSampleIds, [state.selectedQuestionId] : []}}));
@@ -422,7 +424,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
           ? baseVisible.filter((s) => s.visibleId !== 1)
           : baseVisible;
 
-    //    mercator.disableSelection(mapConfig);
+    mercator.disableSelection(mapConfig);
     mercator.disableDrawing(mapConfig);
     mercator.removeLayerById(mapConfig, "currentSamples");
     mercator.removeLayerById(mapConfig, "drawLayer");

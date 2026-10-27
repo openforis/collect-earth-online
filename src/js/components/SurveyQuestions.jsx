@@ -844,16 +844,15 @@ export function SurveyQuestions ({
       const inverted = allIds.reduce((coll, f) => {
         return selectedSamples.includes(f) ? coll :  [... coll, f];
       }, []);
-      console.log("inverting selection", allIds, selectedSamples, inverted, selectedSampleIds);
+      console.log("jsx inverting selection", allIds, selectedSamples, inverted, selectedSampleIds, selectedSampleIds[parentId]);
       // const inverted = selectedSamples.length = 0 ? allIds
       // : allIds.filter(id => !sampleSet.has(id));
-      // mercator.invertSelection(mapConfig, selectedSamples);
       setAppState((s)=>({...s, selectedSampleIds: {... s.selectedSampleIds, [parentId]: inverted}}));
-      
+      mercator.selectFeatures(mapConfig, inverted);
+      console.log("jsx inverted selection", allIds, selectedSamples, selectedSampleIds[parentId]);
     };
     return (
       <>
-        
         <button
           onClick={invertHandler}
           className={'btn filled'}>
