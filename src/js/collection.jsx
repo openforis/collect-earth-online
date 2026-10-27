@@ -178,26 +178,18 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     const update = sampleIds.length === featureIds.length &&
           [...sampleIds].every((id)=>featureIds.includes(id));
 
-    // const update = sampleIds.length === features.length && [...sampleIds].every((id)=>features.includes(id));
     if (update) return;
     syncRef.current = true;
     try {
-
       features.clear();
       layer.getSource().getFeatures().forEach((f)=>{
         sampleIds.includes(f.get("sampleId")) && clickSelect.getFeatures().push(f);
       });
-      console.log("collection useffect fires, this one clears clickselect features", layer.getSource().getFeatures(), clickSelect.getFeatures());
-
     } finally {
       syncRef.current = false;
     }
-    
-    
-    
   },[state.mapConfig,
      state.selectedQuestionId,
-     // state.selectedSampleIds
     ]);
 
   // UPDATE MAP WHEN STATE CHANGES — Auto launch geodash
@@ -207,7 +199,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     showProjectPlot();
 
     if (state.currentProject?.hasGeoDash && state.currentProject?.projectOptions?.autoLaunchGeoDash) {
-      // showGeoDash();
+      showGeoDash();
     }
 
     if (state.storedInterval) clearInterval(state.storedInterval);
@@ -230,8 +222,6 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   // UPDATE MAP WHEN STATE CHANGES — samples redraw (question/answers/visibility)
   useEffect(() => {
     if (!state.currentPlot?.id || state.answerMode === "draw") return;
-     // state.selectedQuestionId === getParentId(state.selectedQuestionId) &&
-     //  setState((s)=>({... s, selectedSampleIds : {... s.selectedSampleIds, [state.selectedQuestionId] : []}}));
     
     const selectedQuestion = state.currentProject?.surveyQuestions?.[state.selectedQuestionId];
     if (selectedQuestion?.visible) {
@@ -455,7 +445,7 @@ export function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
 
   const showProjectPlot = () => {
     const { currentPlot, mapConfig, currentProject, showBoundary} = state;
-    //  mercator.disableSelection(mapConfig);
+    mercator.disableSelection(mapConfig);
     mercator.removeLayerById(mapConfig, "currentPlots");
     mercator.removeLayerById(mapConfig, "currentPlot");
     mercator.removeLayerById(mapConfig, "currentSamples");
@@ -815,20 +805,20 @@ function ImageAnalysisPane({}) {
   const [state, setState] = useAtom(stateAtom);
   
   const toggleShowBoundary = () => {
-    console.log("toggle show boundary", state.showBoundary);
-    // setState (s => ({...s, showBoundary: !state.showBoundary}));
+    // console.log("toggle show boundary", state.showBoundary);
+    setState (s => ({...s, showBoundary: !state.showBoundary}));
   };
   
   const toggleShowSamples = () =>  {
-    console.log("toggle show samples", state.showSamples);
-    // setState (s=> ({...s, showSamples: !state.showSamples}));
+    // console.log("toggle show samples", state.showSamples);
+    setState (s=> ({...s, showSamples: !state.showSamples}));
   };
 
   const zoomToPlot = () => {
-    console.log("zooming to plot", state.mapConfig);
-    /*
+    // console.log("zooming to plot", state.mapConfig);
+
       state.mapConfig &&
-      mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36); */
+      mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36); 
   };
 
   const zoom = (level) => {

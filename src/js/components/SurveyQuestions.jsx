@@ -31,10 +31,7 @@ export function SurveyQuestions ({
     userSamples: globalUserSamples,
     selectedSampleIds
   } = useAtomValue(stateAtom);
-  const state = useAtomValue(stateAtom); //TODO: DELETE ME!
   const setAppState = useSetAtom(stateAtom);
-
-  
 
   // PREVIEW STATE HOOKS
   const [previewUserSamples, setPreviewUserSamples] = useAtom(previewUserSamplesAtom);
@@ -83,50 +80,16 @@ export function SurveyQuestions ({
     }
   }
  
-  
-
-  useEffect(()=>{
-    console.log("set selected question id", selectedQuestionId);
-  }, [selectedQuestionId]);
-  
   const getSelectedSampleIds = (questionId = selectedQuestionId) => 
-        
         !selectedQuestionId ? [] :
-    selectedSampleIds[getParent(selectedQuestionId)] || []
-  /*
-  // If preview, return the ID of our 1 fake sample
-  if (preview) return [selectedSampleId];
-  //if a child, use selectedsampleids of parent
-  // what about if child of a child?
-
-  
-
-  const answered = surveyData?.[questionId]?.answered || [];
-  const allFeatures = mercator.getAllFeatures(mapConfig, "currentSamples") || [];
-  const unansweredFeatures = keyDifference(answered, allFeatures);
-  const selectedSamples = mercator.getSelectedSamples(mapConfig);    
-  const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
-
-  
-  //
-  
-  const list =
-  ((selectedFeatures.length === 0 && answered.length === 0) ||
-  lengthObject(userSamples) === 1)
-  ? allFeatures
-  : (selectedFeatures.length !== 0 ? selectedFeatures : unansweredFeatures);
-
-  return list.map((f) => f.get("sampleId"));
-  */
-  ;
+    selectedSampleIds[getParent(selectedQuestionId)] || [];
 
   const checkSelection = (sampleIds, questionId) => {
     if (preview) return true;
     const q = surveyData?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
     const invalid = sampleIds.filter((id) => !visibleIds.includes(id));
-    console.log("checking selection", sampleIds, questionId, q, visibleIds, (sampleIds.some((s) => !visibleIds.includes(s))), sampleIds.length, invalid);
-    // if (sampleIds.some((s) => !visibleIds.includes(s))) {
+
     if (invalid.length) {
       setAppState((s) => ({
         ...s,
@@ -155,16 +118,7 @@ export function SurveyQuestions ({
   };
 
   const setCurrentValue = (questionId, answerId, answerText) => {
-    //TODO: DETERMINE IF QUESTION HAS A PARENT QUESTION ID, IF SO-- USE THAT VALUE TO GRAB 'SAMPLEIDS'
-
-    // const parentId = getParent(questionId);
-    // const sampleIds = getSelectedSampleIds(parentId);
-    
     const sampleIds = getSelectedSampleIds(questionId);
-    console.log("setting currentValue", selectedSampleIds, sampleIds);
-    // console.log("set current value sample ids", sampleIds, parentId, questionId, currentId);
-    if (!preview && !checkSelection(sampleIds, questionId)) return;
-
     if (!preview && !checkSelection(sampleIds, questionId)) return;
     if (preview) {
       setPreviewUserSamples((prev) => {
@@ -196,7 +150,6 @@ export function SurveyQuestions ({
 
     setAppState((prev) => {
       const childQuestionIds = getChildQuestionIds(questionId);
-      // const childQuestionIds = getChildQuestionIds(parentId);
       const newSamples = sampleIds.reduce((acc, sampleId) => {
         if (answerText == null) return acc;
         const prevSampleAnswers = prev.userSamples?.[sampleId] || {};
@@ -206,7 +159,6 @@ export function SurveyQuestions ({
         );
         const newQuestion = { answerId };
         if (answerText !== "") newQuestion.answer = answerText;
-        // acc[sampleId] = { ...subQuestionsCleared, [parentId]: newQuestion };
         acc[sampleId] = { ...subQuestionsCleared, [questionId]: newQuestion };
         return acc;
       }, {});
@@ -472,9 +424,7 @@ export function SurveyQuestions ({
                   fontWeight: isActive ? 'bold' : 'normal'
                 }}
                 className={`sq-pill ${isActive ? 'active' : ''}`}
-                onClick={() => {
-                  console.log("click a button!", q.id);
-                  validateAndSetCurrentValue(q.id, Number(id), a.answer, q);}}
+                onClick={() => validateAndSetCurrentValue(q.id, Number(id), a.answer, q)}
               >
                 <span className="dot" style={{ background: a.color }} />
                 {String(a.answer)}
@@ -821,7 +771,6 @@ export function SurveyQuestions ({
   };
 
   const validateAndSetCurrentValue = (questionIdToSet, answerId, answerText = null, previousAnswer = null) => {
-    console.log("validating and setting current value", questionIdToSet);
     const ruleError = rulesViolated(questionIdToSet, answerId, answerText);
     if (ruleError) {
       setCurrentValue(questionIdToSet, answerId, previousAnswer);
@@ -839,17 +788,12 @@ export function SurveyQuestions ({
     const selectedSamples = selectedSampleIds[parentId] || [];
     function invertHandler () {
       const allIds = (mercator.getAllFeatures(mapConfig, "currentSamples") || []).map(f => f.get("sampleId")) ;
-      // const sampleSet = new Set(selectedSamples);
-      
       const inverted = allIds.reduce((coll, f) => {
         return selectedSamples.includes(f) ? coll :  [... coll, f];
       }, []);
-      console.log("jsx inverting selection", allIds, selectedSamples, inverted, selectedSampleIds, selectedSampleIds[parentId]);
-      // const inverted = selectedSamples.length = 0 ? allIds
-      // : allIds.filter(id => !sampleSet.has(id));
+
       setAppState((s)=>({...s, selectedSampleIds: {... s.selectedSampleIds, [parentId]: inverted}}));
       mercator.selectFeatures(mapConfig, inverted);
-      console.log("jsx inverted selection", allIds, selectedSamples, selectedSampleIds[parentId]);
     };
     return (
       <>
@@ -1091,7 +1035,6 @@ export const DrawingTool = () => {
 
   // enter draw mode on mount
   useEffect(() => {
-    // setAnswerMode("draw", initialDrawTool);
     return () => setAnswerMode("answer");
   }, [mapConfig]);
 
