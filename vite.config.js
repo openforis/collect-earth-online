@@ -20,7 +20,7 @@ export default defineConfig({
     manifest: "manifest.json",
     chunkSizeWarningLimit: 9000,
     minify: false,
-    manifest: true,
+    cssCodeSplit: false,
     sourcemap: true,
     plugins: [
       nodePolyfills()
