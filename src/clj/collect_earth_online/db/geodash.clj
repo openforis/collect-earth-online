@@ -21,11 +21,19 @@
 
 (defonce last-initialized (atom 0))
 
+(defonce ^:private init-lock (Object.))
+
+(defn- stale? []
+  (> (- (System/currentTimeMillis) @last-initialized) max-age))
+
+;; Serializes Python initialization so concurrent first requests don't initialize at once.
 (defn- check-initialized []
-  (when (> (- (System/currentTimeMillis) @last-initialized) max-age)
-    (let [{:keys [ee-account ee-key-path]} (get-config :py-interop)]
-      (utils/initialize ee-account ee-key-path)
-      (reset! last-initialized (System/currentTimeMillis)))))
+  (when (stale?)
+    (locking init-lock
+      (when (stale?)
+        (let [{:keys [ee-account ee-key-path]} (get-config :py-interop)]
+          (utils/initialize ee-account ee-key-path)
+          (reset! last-initialized (System/currentTimeMillis)))))))
 
 (defn- parse-py-errors [e]
   (let [error-parts (as-> e %
@@ -113,4 +121,3 @@
         vis-params (tc/json->clj (:visParams params))
         vis-errors (utils/validateJSON img-path vis-params)]
     (data-response "" {:status 200})))
-

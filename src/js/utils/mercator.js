@@ -35,10 +35,10 @@ import { mapboxAttributionText } from "../imagery/mapbox-attribution";
 import { getCenter } from 'ol/extent';
 
 /** ****************************************************************************
- ***
- *** Top level namespace object
- ***
- *****************************************************************************/
+***
+*** Top level namespace object
+***
+*****************************************************************************/
 
 const mercator = {};
 
@@ -55,7 +55,7 @@ const mercator = {};
 // [Pure] Returns the passed in [longitude, latitude] values
 // reprojected to Web Mercator as [x, y].
 mercator.reprojectToMap = (longitude, latitude) =>
-  transform([Number(longitude), Number(latitude)], "EPSG:4326", "EPSG:3857");
+transform([Number(longitude), Number(latitude)], "EPSG:4326", "EPSG:3857");
 
 // [Pure] Returns the passed in [x, y] values reprojected to WGS84 as
 // [longitude, latitude].
@@ -200,8 +200,8 @@ const proxiedTileUrls = (requestEncoding, dimensions, imageryId) => {
   if (requestEncoding === "KVP") return { requestEncoding, urls: [base] };
 
   const dims = Object.keys(dimensions)
-    .map((name) => `&${name}={${name}}`)
-    .join("");
+	.map((name) => `&${name}={${name}}`)
+	.join("");
   return {
     requestEncoding: "REST",
     urls: [`${base}&TileMatrix={TileMatrix}&TileCol={TileCol}&TileRow={TileRow}${dims}`],
@@ -211,20 +211,20 @@ const proxiedTileUrls = (requestEncoding, dimensions, imageryId) => {
 // [Pure] Some servers advertise the OGC namespaces over https, which OL's
 // parser does not match.
 const normalizeCapabilitiesNamespace = (text) =>
-  text
-    .replace('xmlns="https://www.opengis.net/wmts/1.0"', 'xmlns="http://www.opengis.net/wmts/1.0"')
-    .replace(
-      'xmlns:ows="https://www.opengis.net/ows/1.1"',
-      'xmlns:ows="http://www.opengis.net/ows/1.1"'
-    );
+      text
+      .replace('xmlns="https://www.opengis.net/wmts/1.0"', 'xmlns="http://www.opengis.net/wmts/1.0"')
+      .replace(
+	'xmlns:ows="https://www.opengis.net/ows/1.1"',
+	'xmlns:ows="http://www.opengis.net/ows/1.1"'
+      );
 
 // [Side Effects] Swaps the source of an already-added layer, since the real
 // source is only available once the capabilities have loaded.
 const updateMapLayerSource = (mercator, imageryId, source) => {
   const layer = mercator.currentMap
-    .getLayers()
-    .getArray()
-    .find((l) => l.get("id") === imageryId);
+	.getLayers()
+	.getArray()
+	.find((l) => l.get("id") === imageryId);
   if (layer) layer.setSource(source);
 };
 
@@ -232,26 +232,26 @@ const updateMapLayerSource = (mercator, imageryId, source) => {
 // on the imagery over the server's default. Time defaults to yesterday because
 // today's imagery is usually not published yet.
 const buildWMTSDimensions = (dimensions = [], sourceConfig) =>
-  dimensions.reduce((acc, dim) => {
-    const configKey = dim.Identifier.toLowerCase();
-    let dimValue = sourceConfig[configKey] || dim.Default;
-    if (configKey === "time" && !sourceConfig[configKey]) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      dimValue = yesterday.toISOString().split("T")[0];
-    }
-    return { ...acc, [dim.Identifier]: dimValue };
-  }, {});
+      dimensions.reduce((acc, dim) => {
+	const configKey = dim.Identifier.toLowerCase();
+	let dimValue = sourceConfig[configKey] || dim.Default;
+	if (configKey === "time" && !sourceConfig[configKey]) {
+	  const yesterday = new Date();
+	  yesterday.setDate(yesterday.getDate() - 1);
+	  dimValue = yesterday.toISOString().split("T")[0];
+	}
+	return { ...acc, [dim.Identifier]: dimValue };
+      }, {});
 
 // [Pure] Wayback serves plain XYZ tiles behind a WMTS façade, so we rewrite its
 // template rather than building a tile grid.
 const buildWaybackSource = (layerCapabilities, attribution) => {
   const resourceUrl = layerCapabilities.ResourceURL.find((r) => r.resourceType === "tile")
-    .template.replace("{TileMatrixSet}", "default028mm")
-    .replace("/MapServer/tile/20512", "/MapServer/tile/10")
-    .replace("{TileMatrix}", "{z}")
-    .replace("{TileRow}", "{y}")
-    .replace("{TileCol}", "{x}");
+	.template.replace("{TileMatrixSet}", "default028mm")
+	.replace("/MapServer/tile/20512", "/MapServer/tile/10")
+	.replace("{TileMatrix}", "{z}")
+	.replace("{TileRow}", "{y}")
+	.replace("{TileCol}", "{x}");
   return new XYZ({ url: resourceUrl, attributions: attribution });
 };
 
@@ -376,7 +376,7 @@ mercator.createSource = (
     } else if (sourceConfig.type === "Planet") {
       return new XYZ({
         url:
-          `/get-tile?imageryId=${imageryId}` +
+        `/get-tile?imageryId=${imageryId}` +
           `&z={z}&x={x}&y={y}&tile={0-3}&month=${sourceConfig.month}` +
           `&year=${sourceConfig.year}`,
         attributions: attribution,
@@ -387,7 +387,7 @@ mercator.createSource = (
   } else if (type === "Planet") {
     return new XYZ({
       url:
-        "https://tiles{0-3}.planet.com/basemaps/v1/global_monthly_" +
+      "https://tiles{0-3}.planet.com/basemaps/v1/global_monthly_" +
         `${sourceConfig.year}_${sourceConfig.month}` +
         "_mosaic/gmap/{z}/{x}/{y}.png" +
         `?api_key=${sourceConfig.accessToken}`,
@@ -395,18 +395,17 @@ mercator.createSource = (
     });
   } else if (type === "PlanetTFO") {
     const dataLayer = (!sourceConfig.time || sourceConfig.time === "newest")
-      ? mercator.newestTFOLayer()
-      : sourceConfig.time;
-    console.log(institutionId);
+	  ? mercator.newestTFOLayer()
+	  : sourceConfig.time;
     return new XYZ({
       url:
-        "get-tfo-tiles?z={z}&x={x}&y={y}" +
+      "get-tfo-tiles?z={z}&x={x}&y={y}" +
         `&institutionId=${institutionId}` +
         `&dataLayer=${dataLayer}` +
         `&band=${sourceConfig.band}` +
         `&imageryId=${imageryId}`,
-       attributions: attribution,
-      });
+      attributions: attribution,
+    });
   } else if (type === "PlanetDaily") {
     // make ajax call to get layerid then add xyz layer
     const theJson = {
@@ -434,16 +433,16 @@ mercator.createSource = (
       .then((data) => {
         // arrange in ascending order of dates
         const sortedData = data
-          .filter(
-            (d) => d.hasOwnProperty("layerID") && d.layerID !== "null" && d.hasOwnProperty("date")
-          )
-          .sort((a, b) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            if (dateA < dateB) return -1;
-            if (dateA > dateB) return 1;
-            return 0;
-          });
+              .filter(
+		(d) => d.hasOwnProperty("layerID") && d.layerID !== "null" && d.hasOwnProperty("date")
+              )
+              .sort((a, b) => {
+		const dateA = new Date(a.date);
+		const dateB = new Date(b.date);
+		if (dateA < dateB) return -1;
+		if (dateA > dateB) return 1;
+		return 0;
+              });
         if (sortedData.length === 0) {
           messageSource.setUrl("img/source-not-found.png");
           alert(
@@ -452,13 +451,13 @@ mercator.createSource = (
         } else {
           const planetLayers = sortedData.map(
             (d) =>
-              new TileLayer({
-                source: new XYZ({
-                  url: "https://tiles0.planet.com/data/v1/layers/" + d.layerID + "/{z}/{x}/{y}.png",
-                  attributions: attribution,
-                }),
-                title: d.date,
-              })
+            new TileLayer({
+              source: new XYZ({
+                url: "https://tiles0.planet.com/data/v1/layers/" + d.layerID + "/{z}/{x}/{y}.png",
+                attributions: attribution,
+              }),
+              title: d.date,
+            })
           );
           // FIXME, dont use mercator.currentMap
           mercator.currentMap.removeLayer(messageSource);
@@ -521,7 +520,7 @@ mercator.createSource = (
       ...sourceConfig,
       cloudLessThan: type === "Sentinel2" ? parseInt(sourceConfig.cloudScore) : null,
       startDate:
-        sourceConfig.year +
+      sourceConfig.year +
         "-" +
         (sourceConfig.month.length === 1 ? "0" : "") +
         sourceConfig.month +
@@ -544,7 +543,7 @@ mercator.createSource = (
   } else if (type === "MapBoxRaster") {
     return new XYZ({
       url:
-        "https://api.mapbox.com/v4/" +
+      "https://api.mapbox.com/v4/" +
         sourceConfig.layerName +
         "/{z}/{x}/{y}.jpg90" +
         "?access_token=" +
@@ -555,7 +554,7 @@ mercator.createSource = (
   } else if (type === "MapBoxStatic") {
     return new XYZ({
       url:
-        "https://api.mapbox.com/styles/v1/" +
+      "https://api.mapbox.com/styles/v1/" +
         sourceConfig.userName +
         "/" +
         sourceConfig.mapStyleId +
@@ -568,7 +567,7 @@ mercator.createSource = (
   } else if (type === "OSM") {
     return new OSM();
   } else if (type === "WMTS") {
-      return createWMTSSource(sourceConfig, imageryId, attribution, true);
+    return createWMTSSource(sourceConfig, imageryId, attribution, true);
   } else {
     return new XYZ({ url: "img/source-not-found.png" });
   }
@@ -674,9 +673,9 @@ mercator.verifyLayerConfig = (layerConfig) => {
     const layerKeys = Object.keys(layerConfig);
     return (
       layerKeys.includes("title") &&
-      layerKeys.includes("extent") &&
-      layerKeys.includes("sourceConfig") &&
-      mercator.verifySourceConfig(layerConfig.sourceConfig)
+	layerKeys.includes("extent") &&
+	layerKeys.includes("sourceConfig") &&
+	mercator.verifySourceConfig(layerConfig.sourceConfig)
     );
   } else {
     return false;
@@ -685,25 +684,25 @@ mercator.verifyLayerConfig = (layerConfig) => {
 
 // [Pure] Predicate
 mercator.verifyLayerConfigs = (layerConfigs) =>
-  layerConfigs.every((layerConfig) => mercator.verifyLayerConfig(layerConfig));
+layerConfigs.every((layerConfig) => mercator.verifyLayerConfig(layerConfig));
 
 mercator.currentMap = null;
 
 // [Pure] Returns the first error message generated while testing the
 // input arguments or null if all tests pass.
 mercator.verifyMapInputs = (divName, centerCoords, zoomLevel, layerConfigs) =>
-  !mercator.verifyDivName(divName)
-    ? "Invalid divName -> " + divName
-    : !mercator.verifyCenterCoords(centerCoords)
-    ? "Invalid centerCoords -> " + centerCoords
-    : !mercator.verifyZoomLevel(zoomLevel)
-    ? "Invalid zoomLevel -> " + zoomLevel
-    : !mercator.verifyLayerConfigs(layerConfigs)
-    ? "Invalid layerConfigs -> " + layerConfigs
-    : null;
+!mercator.verifyDivName(divName)
+  ? "Invalid divName -> " + divName
+  : !mercator.verifyCenterCoords(centerCoords)
+  ? "Invalid centerCoords -> " + centerCoords
+  : !mercator.verifyZoomLevel(zoomLevel)
+  ? "Invalid zoomLevel -> " + zoomLevel
+  : !mercator.verifyLayerConfigs(layerConfigs)
+  ? "Invalid layerConfigs -> " + layerConfigs
+  : null;
 
 mercator.hasValidBounds = (latMin, latMax, lonMin, lonMax) =>
-  isNumber(latMin) &&
+isNumber(latMin) &&
   isNumber(latMax) &&
   isNumber(lonMin) &&
   isNumber(lonMax) &&
@@ -855,7 +854,7 @@ mercator.setVisibleLayer = (mapConfig, layerId) => {
   mapConfig.layers.forEach((layer) => {
     if (
       layer.getVisible() === true &&
-      (layer instanceof TileLayer || layer instanceof LayerGroup)
+	(layer instanceof TileLayer || layer instanceof LayerGroup)
     ) {
       layer.setVisible(false);
     }
@@ -868,11 +867,11 @@ mercator.setVisibleLayer = (mapConfig, layerId) => {
 
 // [Pure] Returns the map layer with id === layerId or null if no such layer exists.
 mercator.getLayerById = (mapConfig, layerId) =>
-  mapConfig.layers.getArray().find((layer) => layer.get("id") === layerId);
+mapConfig.layers.getArray().find((layer) => layer.get("id") === layerId);
 
 // [Pure] Returns the initial layerConfig for the map layer with id === layerId or null if no such layer exists.
 mercator.getLayerConfigById = (mapConfig, layerConfigId) =>
-  mapConfig.init.layerConfigs.find((layerConfig) => layerConfig.id === layerConfigId);
+mapConfig.init.layerConfigs.find((layerConfig) => layerConfig.id === layerConfigId);
 
 // FIXME: This function exposes several leaky abstractions. I need to rethink the createLayer->createSource workflow.
 //
@@ -941,9 +940,9 @@ mercator.zoomMapToExtent = (mapConfig, extent, padding) => {
       size: mapConfig.map.getSize(),
       padding: padding
         ? Array.isArray(padding)
-          ? padding
-          : [padding, padding, padding, padding]
-        : [16, 16, 16, 16],
+        ? padding
+        : [padding, padding, padding, padding]
+      : [16, 16, 16, 16],
     });
   } catch {
     mapConfig.view.fit(
@@ -952,9 +951,9 @@ mercator.zoomMapToExtent = (mapConfig, extent, padding) => {
         size: mapConfig.map.getSize(),
         padding: padding
           ? Array.isArray(padding)
-            ? padding
-            : [padding, padding, padding, padding]
-          : [16, 16, 16, 16],
+          ? padding
+          : [padding, padding, padding, padding]
+        : [16, 16, 16, 16],
       }
     );
   }
@@ -986,34 +985,34 @@ mercator.resize = (mapConfig) => {
 // specified radius, fillColor, borderColor, and borderWidth. text
 // is used to overlay text on the circle.
 mercator.getClusterStyle = (radius, fillColor, borderColor, borderWidth, text) =>
-  new Style({
-    image: new CircleStyle({
-      radius,
-      fill: fillColor ? new Fill({ color: fillColor }) : null,
-      stroke: new Stroke({
-        color: borderColor,
-        width: borderWidth,
-      }),
+new Style({
+  image: new CircleStyle({
+    radius,
+    fill: fillColor ? new Fill({ color: fillColor }) : null,
+    stroke: new Stroke({
+      color: borderColor,
+      width: borderWidth,
     }),
-    text: new StyleText({
-      text: (text || "").toString(),
-      fill: new Fill({ color: borderColor }),
-    }),
-  });
+  }),
+  text: new StyleText({
+    text: (text || "").toString(),
+    fill: new Fill({ color: borderColor }),
+  }),
+});
 
 // [Pure] Returns a style object that displays a solid point with
 // the specified radius and fillColor.
 mercator.getCircleStyle = (radius, fillColor, border) =>
-  new Style({
-    image: new CircleStyle({
-      radius,
-      fill: new Fill({ color: fillColor || "tansparent" }),
-      stroke: new Stroke({
-        color: border || "black",
-        width: border ? 3 : 2,
-      }),
+new Style({
+  image: new CircleStyle({
+    radius,
+    fill: new Fill({ color: fillColor || "tansparent" }),
+    stroke: new Stroke({
+      color: border || "black",
+      width: border ? 3 : 2,
     }),
-  });
+  }),
+});
 
 mercator.outlineStyle = new Style({
   fill: new Fill({
@@ -1033,23 +1032,23 @@ mercator.getGeomStyle = (
   pointFillColor = null,
   fillColor = null
 ) =>
-  new Style({
-    fill: new Fill({
-      color: fillColor || "rgba(255, 255, 255, 0)",
-    }),
+new Style({
+  fill: new Fill({
+    color: fillColor || "rgba(255, 255, 255, 0)",
+  }),
+  stroke: new Stroke({
+    color: lineColor,
+    width: lineWidth,
+  }),
+  image: new CircleStyle({
+    radius: pointRadius,
+    fill: new Fill({ color: pointFillColor || "rgba(255, 255, 255, 0)" }),
     stroke: new Stroke({
-      color: lineColor,
+      color: pointColor,
       width: lineWidth,
     }),
-    image: new CircleStyle({
-      radius: pointRadius,
-      fill: new Fill({ color: pointFillColor || "rgba(255, 255, 255, 0)" }),
-      stroke: new Stroke({
-        color: pointColor,
-        width: lineWidth,
-      }),
-    }),
-  });
+  }),
+});
 
 const ceoMapPresets = {
   black: "#000000",
@@ -1137,37 +1136,37 @@ mercator.parseGeoJson = (geoJson, reprojectToMap) => {
 };
 
 mercator.generateGeoJSON = (latMin, latMax, lonMin, lonMax) =>
-  mercator.hasValidBounds(latMin, latMax, lonMin, lonMax)
-    ? {
-        type: "Polygon",
-        coordinates: [
-          [
-            [lonMin, latMin],
-            [lonMin, latMax],
-            [lonMax, latMax],
-            [lonMax, latMin],
-            [lonMin, latMin],
-          ],
-        ],
-      }
-    : null;
+mercator.hasValidBounds(latMin, latMax, lonMin, lonMax)
+  ? {
+    type: "Polygon",
+    coordinates: [
+      [
+        [lonMin, latMin],
+        [lonMin, latMax],
+        [lonMax, latMax],
+        [lonMax, latMin],
+        [lonMin, latMin],
+      ],
+    ],
+  }
+: null;
 
 // [Pure] Returns a new vector source containing the passed in geometry.
 mercator.geometryToVectorSource = (geometry) =>
-  new VectorSource({
-    features: [new Feature({ geometry })],
-  });
+new VectorSource({
+  features: [new Feature({ geometry })],
+});
 
 // [Pure] Returns a new vector source containing the passed in geoms.
 mercator.geomArrayToVectorSource = (geoms) =>
-  new VectorSource({
-    features: geoms.map(
-      (geom) =>
-        new Feature({
-          geometry: mercator.parseGeoJson(geom, true),
-        })
-    ),
-  });
+new VectorSource({
+  features: geoms.map(
+    (geom) =>
+    new Feature({
+      geometry: mercator.parseGeoJson(geom, true),
+    })
+  ),
+});
 
 mercator.geometryToGeoJSON = (geometry, toProjection, fromProjection = null, decimals = 10) => {
   const format = new GeoJSON();
@@ -1192,15 +1191,15 @@ mercator.getPlotPolygon = (center, size, shape) => {
 // [Pure] Returns a new vector source containing the passed in plots.
 // Features are constructed from each plot using its id and center fields.
 mercator.plotsToVectorSource = (plots) =>
-  new VectorSource({
-    features: plots.map(
-      (plot) =>
-        new Feature({
-          plotId: plot.id,
-          geometry: mercator.parseGeoJson(plot.center, true)
-        })
-    ),
-  });
+new VectorSource({
+  features: plots.map(
+    (plot) =>
+    new Feature({
+      plotId: plot.id,
+      geometry: mercator.parseGeoJson(plot.center, true)
+    })
+  ),
+});
 
 // [Side Effects] Adds vector layers to the mapConfig's map based on plot
 // status and gives the flagged plots a red border.
@@ -1272,18 +1271,21 @@ mercator.addPlotOverviewLayers = (mapConfig, plots) => {
 // [Pure] Returns the map interaction with title === interactionTitle
 // or null if no such interaction exists.
 mercator.getInteractionByTitle = (mapConfig, interactionTitle) =>
-  mapConfig.map
-    .getInteractions()
-    .getArray()
-    .find((interaction) => interaction.get("title") === interactionTitle);
+mapConfig.map
+  .getInteractions()
+  .getArray()
+  .find((interaction) => interaction.get("title") === interactionTitle);
 
 // [Side Effects] Removes the interaction with title === interactionTitle from
 // mapConfig's map object.
 mercator.removeInteractionByTitle = (mapConfig, interactionTitle) => {
-  const interaction = mercator.getInteractionByTitle(mapConfig, interactionTitle);
-  if (interaction) {
-    mapConfig.map.removeInteraction(interaction);
-  }
+  // const interactions = mercator.getInteractionByTitle(mapConfig, interactionTitle);
+  const interactions = mapConfig.map.getInteractions().getArray()
+	.filter(i => i.get('title') === interactionTitle);
+  interactions.forEach(i => mapConfig.map.removeInteraction(i))
+  // if (interaction) {
+  //   mapConfig.map.removeInteraction(interaction);
+  // }
   return mapConfig;
 };
 
@@ -1296,14 +1298,15 @@ mercator.removeInteractionByTitle = (mapConfig, interactionTitle) => {
 // [Pure] Returns a new click select interaction with title =
 // interactionTitle that is associated with the passed in layer.
 mercator.makeClickSelect = (interactionTitle, layer) => {
-  const select = new Select({ layers: [layer] });
+  const select = new Select({ layers: [layer] , multi: true});
   select.set("title", interactionTitle);
   return select;
 };
 
-// [Pure] Returns a new dragBox select interaction with title =
+
+// [Pure] Returns a new dragBox select interaction with title
 // interactionTitle that is associated with the passed in layer.
-mercator.makeDragBoxSelect = (interactionTitle, layer, selectedFeatures) => {
+mercator.makeDragBoxSelect = (interactionTitle, layer, selectedFeatures, selectedSampleIds) => {
   const dragBox = new DragBox({ condition: platformModifierKeyOnly });
   dragBox.set("title", interactionTitle);
   const boxstartAction = () => {
@@ -1322,36 +1325,49 @@ mercator.makeDragBoxSelect = (interactionTitle, layer, selectedFeatures) => {
   return dragBox;
 };
 
-// [Side Effects]
-mercator.addAfterSelectionChange = (selectedFeatures, setSampleId) => {
-  const afterSelectionChange = () => {
-    setSampleId(
-      selectedFeatures.getLength() === 1 ? selectedFeatures.getArray()[0].get("sampleId") : -1
-    );
-  };
-  selectedFeatures.on(["add", "remove"], afterSelectionChange);
+mercator.selectFeatures = (mapConfig, featureIds) => {
+  const clickSelect = mercator.getInteractionByTitle(mapConfig, "clickSelect");
+  const layer = mercator.getLayerById(mapConfig, "currentSamples");
+  if (!clickSelect || !layer) return;
+  const collection = clickSelect.getFeatures();
+  collection.clear();
+  layer.getSource().getFeatures().forEach((f)=>{
+    featureIds.includes(f.get("sampleId")) && collection.push(f);
+  })
 };
+
 
 // [Side Effects] Adds a click select interaction and a dragBox select interaction
 // to mapConfig's map object associated with the layer with id === layerId.
-mercator.enableSelection = (mapConfig, layerId, setSampleId) => {
+// mercator.enableSelection = (mapConfig, layerId, setSampleIds, selectedSampleIds) => {
+mercator.enableSelection = (mapConfig, layerId, onSelectionChange, initialIds = []) => {
+  mercator.removeInteractionByTitle(mapConfig, "clickSelect");
+  mercator.removeInteractionByTitle(mapConfig, "dragBoxSelect");
   const layer = mercator.getLayerById(mapConfig, layerId);
   const clickSelect = mercator.makeClickSelect("clickSelect", layer);
   const selectedFeatures = clickSelect.getFeatures();
+
+  layer.getSource().getFeatures().forEach(f => {
+    initialIds.includes(f.get("sampleId")) && selectedFeatures.push(f);
+  });
+
+  clickSelect.on("select", (e)=>{
+    if (e.selected.length === 0 && e.deselected.length === 0) return;
+    onSelectionChange(selectedFeatures.getArray().map(f=>f.get("sampleId")));
+  });
+
   const dragBoxSelect = mercator.makeDragBoxSelect("dragBoxSelect", layer, selectedFeatures);
-  mercator.addAfterSelectionChange(selectedFeatures, setSampleId);
+  dragBoxSelect.on("boxend", ()=>{
+    onSelectionChange(selectedFeatures.getArray().map(f => f.get("sampleId")));
+  });
+  
   mapConfig.map.addInteraction(clickSelect);
   mapConfig.map.addInteraction(dragBoxSelect);
+
+
   return mapConfig;
 };
 
-// [Side Effects] Removes the click select and dragBox select
-// interactions from mapConfig's map object.
-mercator.disableSelection = (mapConfig) => {
-  mercator.removeInteractionByTitle(mapConfig, "clickSelect");
-  mercator.removeInteractionByTitle(mapConfig, "dragBoxSelect");
-  return mapConfig;
-};
 
 /*****************************************************************************
  ***
@@ -1362,6 +1378,12 @@ mercator.disableSelection = (mapConfig) => {
 // [Pure] Returns a new Draw interaction with a type of drawTool
 // for the source. A function to remove features on right click is
 // added for layer.
+
+mercator.disableSelection = (mapConfig) => {
+  mercator.removeInteractionByTitle(mapConfig, "clickSelect");
+  mercator.removeInteractionByTitle(mapConfig, "dragBoxSelect");
+  return mapConfig;
+};
 mercator.makeDraw = (layer, source, drawTool) => {
   const removeFeature = (e) => {
     layer.getFeatures(e.pixel).then((features) => {
@@ -1435,16 +1457,16 @@ mercator.changeDrawTool = (mapConfig, layerId, drawTool) => {
 // samples. Features are constructed from each sample using its id,
 // point, and geom fields.
 mercator.samplesToVectorSource = (samples) =>
-  new VectorSource({
-    features: samples.map(
-      (sample) =>
-        new Feature({
-          sampleId: sample.id,
-          visibleId: sample.visibleId,
-          geometry: mercator.parseGeoJson(sample.sampleGeom, true),
-        })
-    ),
-  });
+new VectorSource({
+  features: samples.map(
+    (sample) =>
+    new Feature({
+      sampleId: sample.id,
+      visibleId: sample.visibleId,
+      geometry: mercator.parseGeoJson(sample.sampleGeom, true),
+    })
+  ),
+});
 
 // [Pure] Returns an ol.Collection containing the features selected by
 // the currently enabled click select and dragBox select interactions.
@@ -1527,7 +1549,7 @@ mercator.disableDragBoxDraw = (mapConfig) => {
 // [Pure] Returns the extent of the rectangle drawn by the passed-in
 // dragBox in lat/lon coords (EPSG:4326).
 mercator.getDragBoxExtent = (dragBox) =>
-  dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
+dragBox.getGeometry().clone().transform("EPSG:3857", "EPSG:4326").getExtent();
 
 /*****************************************************************************
  ***
@@ -1550,25 +1572,25 @@ mercator.addOverlay = (mapConfig, overlayTitle, element) => {
 // [Pure] Returns the map overlay with id === overlayTitle or null if
 // no such overlay exists.
 mercator.getOverlayByTitle = (mapConfig, overlayTitle) =>
-  mapConfig.map.getOverlayById(overlayTitle);
+mapConfig.map.getOverlayById(overlayTitle);
 
 // [Pure] Returns a new ol.source.Cluster given the unclusteredSource and clusterDistance.
 mercator.makeClusterSource = (unclusteredSource, clusterDistance) =>
-  new Cluster({
-    source: unclusteredSource,
-    distance: clusterDistance,
-  });
+new Cluster({
+  source: unclusteredSource,
+  distance: clusterDistance,
+});
 
 // [Pure] Returns true if the feature is a cluster, false otherwise.
 mercator.isCluster = (feature) =>
-  feature && feature.get("features") && feature.get("features").length > 0;
+feature && feature.get("features") && feature.get("features").length > 0;
 
 // [Pure] Returns the minimum extent that bounds all of the
 // subfeatures in the passed in clusterFeature.
 mercator.getClusterExtent = (clusterFeature) => {
   const clusterPoints = clusterFeature
-    .get("features")
-    .map((subFeature) => subFeature.getGeometry().getCoordinates());
+	.get("features")
+	.map((subFeature) => subFeature.getGeometry().getCoordinates());
   return new LineString(clusterPoints).getExtent();
 };
 
@@ -1613,23 +1635,23 @@ mercator.addPlotLayer = (mapConfig, plots, callback) => {
   );
   const clickHandler = (event) => {
     try {
-    mapConfig.map.forEachFeatureAtPixel(
-      event.pixel,
-      (feature) => {
-        if (mercator.isCluster(feature)) {
-          if (feature.get("features").length > 1) {
-            mercator.zoomMapToExtent(mapConfig, mercator.getClusterExtent(feature));
-          }
-          // / Disable due to miss coordinated plot_id vs plotId
-          else {
+      mapConfig.map.forEachFeatureAtPixel(
+	event.pixel,
+	(feature) => {
+          if (mercator.isCluster(feature)) {
+            if (feature.get("features").length > 1) {
+              mercator.zoomMapToExtent(mapConfig, mercator.getClusterExtent(feature));
+            }
+            // / Disable due to miss coordinated plot_id vs plotId
+            else {	      
               mercator.removeLayerById(mapConfig, "currentPlots");
               mapConfig.map.un("click", clickHandler);
               callback.call(null, feature);
+            }
           }
-        }
-      },
-      { hitTolerance: 10 }
-    );
+	},
+	{ hitTolerance: 10 }
+      );
     }
     catch (error) {
       console.err(error);
@@ -1693,15 +1715,15 @@ mercator.getCentroid = (geoJson, reprojectToMap) => {
  *****************************************************************************/
 
 mercator.asPolygonFeature = (feature) =>
-  feature.getGeometry().getType() === "Circle"
+feature.getGeometry().getType() === "Circle"
   ? new Feature({ geometry: fromCircle(feature.getGeometry())})
   : feature;
 
 mercator.calculateGeoJsonArea = (geoJson) =>
-  mercator.calculateArea(mercator.parseGeoJson(geoJson, false));
+mercator.calculateArea(mercator.parseGeoJson(geoJson, false));
 
 mercator.getKMLFromFeatures = (features) => 
-  new KML().writeFeatures(features, { featureProjection: "EPSG:3857" });
+new KML().writeFeatures(features, { featureProjection: "EPSG:3857" });
 
 /*****************************************************************************
  ***
