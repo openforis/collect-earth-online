@@ -419,7 +419,6 @@ text-underline-position: from-font;
 .search-bar {
     display: flex;
     height: 42px;
-    padding: 10px;
     align-items: center;
     border-radius: 4px;
     border: 1px solid var(--Neutral-Soft-gray, #E1E1E1);

@@ -26,10 +26,11 @@ export function SurveyQuestions ({
     currentProject,
     currentPlot,
     mapConfig,
+    selectedQuestionId,
     selectedSampleId: globalSelectedId,
-    userSamples: globalUserSamples
+    userSamples: globalUserSamples,
+    selectedSampleIds
   } = useAtomValue(stateAtom);
-
   const setAppState = useSetAtom(stateAtom);
 
   // PREVIEW STATE HOOKS
@@ -41,11 +42,11 @@ export function SurveyQuestions ({
     return preview ? surveyQuestions : currentProject?.surveyQuestions;
   }, [preview, surveyQuestions, currentProject?.surveyQuestions]);
   const userSamples = preview
-    ? previewUserSamples
-    : globalUserSamples;
+        ? previewUserSamples
+        : globalUserSamples;
   const selectedSampleId = preview
-    ? previewSelectedId
-    : globalSelectedId;
+        ? previewSelectedId
+        : globalSelectedId;
   const [openTopId, setOpenTopId] = useState(1);
   // Children are expanded by default once visible (parent answered);
   // this only tracks the ones the user collapsed.
@@ -56,8 +57,6 @@ export function SurveyQuestions ({
   const entries = (obj = {}) => Object.entries(obj || {});
   const visibleAnswers = (q) => entries(q.answers).filter(([, a]) => !a?.hide);
 
-  useEffect(() => {
-  }, [surveyData, userSamples]);
 
   useEffect(() => {
     setCollapsedChildIds({});
@@ -72,31 +71,26 @@ export function SurveyQuestions ({
     setScrollToChildrenOf(null);
   }, [scrollToChildrenOf]);
 
-  const getSelectedSampleIds = (questionId) => {
-    // If preview, return the ID of our 1 fake sample
-    if (preview) return [selectedSampleId];
-    
-    const answered = surveyData?.[questionId]?.answered || [];
-    const allFeatures = mercator.getAllFeatures(mapConfig, "currentSamples") || [];
-    const unansweredFeatures = keyDifference(answered, allFeatures);
-    const selectedSamples = mercator.getSelectedSamples(mapConfig);
-    const selectedFeatures = selectedSamples ? selectedSamples.getArray() : [];
-
-    const list =
-      ((selectedFeatures.length === 0 && answered.length === 0) ||
-        lengthObject(userSamples) === 1)
-        ? allFeatures
-        : (selectedFeatures.length !== 0 ? selectedFeatures : unansweredFeatures);
-
-    return list.map((f) => f.get("sampleId"));
-  };
+  function getParent (questionId) {
+    let {parentQuestionId} = surveyData?.[questionId];
+    if ([-1, "-1"].includes(parentQuestionId)) {
+      return questionId;
+    } else {
+      return getParent(parentQuestionId);
+    }
+  }
+ 
+  const getSelectedSampleIds = (questionId = selectedQuestionId) => 
+        !selectedQuestionId ? [] :
+    selectedSampleIds[getParent(selectedQuestionId)] || [];
 
   const checkSelection = (sampleIds, questionId) => {
     if (preview) return true;
-    
     const q = surveyData?.[questionId];
     const visibleIds = (q?.visible || []).map((v) => v.id);
-    if (sampleIds.some((s) => !visibleIds.includes(s))) {
+    const invalid = sampleIds.filter((id) => !visibleIds.includes(id));
+
+    if (invalid.length) {
       setAppState((s) => ({
         ...s,
         modal: {
@@ -126,7 +120,6 @@ export function SurveyQuestions ({
   const setCurrentValue = (questionId, answerId, answerText) => {
     const sampleIds = getSelectedSampleIds(questionId);
     if (!preview && !checkSelection(sampleIds, questionId)) return;
-
     if (preview) {
       setPreviewUserSamples((prev) => {
         const newSamples = sampleIds.reduce((acc, sampleId) => {
@@ -139,7 +132,7 @@ export function SurveyQuestions ({
           );
           const newQuestion = { answerId };
           if (answerText !== "") newQuestion.answer = answerText;
-
+          
           acc[sampleId] = {
             ...subQuestionsCleared,
             [questionId]: newQuestion,
@@ -153,6 +146,8 @@ export function SurveyQuestions ({
       syncOpenChildren(questionId, answerId, answerText);
       return;
     }
+    
+
     setAppState((prev) => {
       const childQuestionIds = getChildQuestionIds(questionId);
       const newSamples = sampleIds.reduce((acc, sampleId) => {
@@ -167,32 +162,30 @@ export function SurveyQuestions ({
         acc[sampleId] = { ...subQuestionsCleared, [questionId]: newQuestion };
         return acc;
       }, {});
-
       if (!Object.keys(newSamples).length) return prev;
-
       const newUserImages = sampleIds.reduce((acc, sampleId) => {
         acc[sampleId] = {
           id: prev.currentImagery.id,
           attributes:
-            prev.currentImagery?.sourceConfig?.type === "PlanetDaily"
-              ? {
-                ...prev.imageryAttributes,
-                imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(
-                  prev.mapConfig,
-                  prev.currentImagery.id
-                ),
-              }
-              : prev.imageryAttributes,
+          prev.currentImagery?.sourceConfig?.type === "PlanetDaily"
+            ? {
+              ...prev.imageryAttributes,
+              imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(
+                prev.mapConfig,
+                prev.currentImagery.id
+              ),
+            }
+          : prev.imageryAttributes,
         };
         return acc;
       }, {});
-
       return {
         ...prev,
         userSamples: { ...(prev.userSamples || {}), ...newSamples },
         userImages:  { ...(prev.userImages  || {}), ...newUserImages },
-      };
+      }; 
     });
+
     syncOpenChildren(questionId, answerId, answerText);
   };
 
@@ -210,10 +203,10 @@ export function SurveyQuestions ({
   };
 
   const getDescendantIds = (questionId) =>
-    childrenOf(questionId, surveyData).reduce(
-      (acc, child) => [...acc, child.id, ...getDescendantIds(child.id)],
-      []
-    );
+        childrenOf(questionId, surveyData).reduce(
+          (acc, child) => [...acc, child.id, ...getDescendantIds(child.id)],
+          []
+        );
 
   const syncOpenChildren = (questionId, answerId, answerText) => {
     if (answerText == null) return;
@@ -246,18 +239,18 @@ export function SurveyQuestions ({
   };
 
   const childrenOf = (parentId, data) =>
-    mapObjectArray(
-      data || {},
-      ([id, q]) => ({ id: Number(id), ...q })
-    )
-      .filter(q => q.parentQuestionId === parentId && !q.hideQuestion)
-      .sort((a, b) => (a.cardOrder ?? 1e9) - (b.cardOrder ?? 1e9));
+        mapObjectArray(
+          data || {},
+          ([id, q]) => ({ id: Number(id), ...q })
+        )
+        .filter(q => q.parentQuestionId === parentId && !q.hideQuestion)
+        .sort((a, b) => (a.cardOrder ?? 1e9) - (b.cardOrder ?? 1e9));
 
   const getAnswerForSample = (qId, sampleId) => {
     const us = userSamples?.[sampleId]?.[qId];
     if (us) return { answerId: Number(us.answerId), answer: us.answer };
     const a = (currentProject?.surveyQuestions?.[qId]?.answered || [])
-      .find(x => Number(x.sampleId) === Number(sampleId));
+          .find(x => Number(x.sampleId) === Number(sampleId));
     return a ? { answerId: Number(a.answerId), answer: a.answerText } : null;
   };
 
@@ -267,8 +260,8 @@ export function SurveyQuestions ({
     if (!q) return false;
     if (q.componentType === 'input') {
       const val = q.dataType === 'number'
-        ? (ansObj.answer ?? '').toString().trim()
-        : (ansObj.answer ?? '').toString().trim();
+            ? (ansObj.answer ?? '').toString().trim()
+            : (ansObj.answer ?? '').toString().trim();
       // number: must be non-empty and not NaN; text: non-empty string
       if (q.dataType === 'number') return val !== '' && !Number.isNaN(Number(val));
       return val.length > 0;
@@ -317,7 +310,7 @@ export function SurveyQuestions ({
       const us = userSamples?.[selectedSampleId]?.[questionId];
       if (us) return { answerId: toNum(us.answerId), answer: us.answer };
       const fromSurvey = (currentProject?.surveyQuestions?.[questionId]?.answered || [])
-        .find(a => a.sampleId === selectedSampleId);
+            .find(a => a.sampleId === selectedSampleId);
       if (fromSurvey) return { answerId: toNum(fromSurvey.answerId), answer: fromSurvey.answerText };
     }
     const anyAnswers = (currentProject?.surveyQuestions?.[questionId]?.answered || [])[0];
@@ -357,16 +350,17 @@ export function SurveyQuestions ({
   };
 
   // RENDERING FUNCTIONS
-  const renderQuestionNode = (question, depth = 0) => {
+  const renderQuestionNode = (question, depth = 0, parentId = null) => {
     const isOpen =
-      depth === 0
-        ? openTopId === question.id
-        : !collapsedChildIds[question.id];
+          depth === 0
+          ? openTopId === question.id
+          : !collapsedChildIds[question.id];
 
     const children = childrenOf(question.id, surveyData).filter(isChildVisible);
     const status = getQuestionStatus(question.id);
 
     const handleToggle = () => {
+      
       if (depth === 0) {
         setOpenTopId(prev => (prev === question.id ? null : question.id));
       } else {
@@ -374,6 +368,7 @@ export function SurveyQuestions ({
       }
       setAppState(s => ({ ...s, selectedQuestionId: question.id }));
     };
+    
     return (
       <div key={question.id} className={`sq-item ${isOpen ? 'open' : ''} ${depth ? 'sq-item--child' : ''} depth-${depth}`}>
         <button className="sq-item-head" onClick={handleToggle}>
@@ -396,13 +391,13 @@ export function SurveyQuestions ({
 
         {isOpen && (
           <>
-            <AnswerUI q={question} />
+            <AnswerUI q={question} p={parentId}/>
             {children.length > 0 && (
               <div
                 className="sq-children"
                 ref={(el) => { childrenRefs.current[question.id] = el; }}
               >
-                {children.map(child => renderQuestionNode(child, depth + 1))}
+                {children.map(child => renderQuestionNode(child, depth + 1, question.id))}
               </div>
             )}
           </>
@@ -412,7 +407,7 @@ export function SurveyQuestions ({
   };
 
   const renderers = {
-    button: (q) => {
+    button: (q) => {      
       const current = getCurrentAnswer(q.id);
       const opts = visibleAnswers(q);
       return (
@@ -429,7 +424,7 @@ export function SurveyQuestions ({
                   fontWeight: isActive ? 'bold' : 'normal'
                 }}
                 className={`sq-pill ${isActive ? 'active' : ''}`}
-                onClick={() => validateAndSetCurrentValue(q.id, Number(id), a.answer)}
+                onClick={() => validateAndSetCurrentValue(q.id, Number(id), a.answer, q)}
               >
                 <span className="dot" style={{ background: a.color }} />
                 {String(a.answer)}
@@ -450,7 +445,7 @@ export function SurveyQuestions ({
                 type="radio"
                 name={`q-${q.id}`}
                 checked={current ? Number(current.answerId) === Number(id) : false}
-                onChange={() => validateAndSetCurrentValue(q.id, Number(id), a.answer)}
+                onChange={() => validateAndSetCurrentValue(q.id, Number(id), a.answer, q)}
               />
               <span>{String(a.answer)}</span>
             </label>
@@ -471,7 +466,7 @@ export function SurveyQuestions ({
               const selectedId = e.target.value;
               if (selectedId === '') return;
               const ans = q.answers[selectedId];
-              if (ans) validateAndSetCurrentValue(q.id, Number(selectedId), ans.answer);
+              if (ans) validateAndSetCurrentValue(q.id, Number(selectedId), ans.answer, q);
             }}
           >
             <option value="">Select</option>
@@ -495,9 +490,9 @@ export function SurveyQuestions ({
             type={q.dataType}
             placeholder={val || q.questionLabel}
             defaultValue={val}
-            onBlur={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value)}
+            onBlur={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value, q)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') validateAndSetCurrentValue(q.id, 0, e.currentTarget.value);
+              if (e.key === 'Enter') validateAndSetCurrentValue(q.id, 0, e.currentTarget.value, q);
             }}
           />
         </div>
@@ -505,9 +500,9 @@ export function SurveyQuestions ({
     },
   };
 
-  const AnswerUI = ({ q }) => {
+  const AnswerUI = ({ q, p }) => {
     const render = renderers[q.componentType];
-    return render ? render(q) : null;
+    return render ? render(q, p) : null;
   };
 
   // MEMOIZATION
@@ -560,26 +555,26 @@ export function SurveyQuestions ({
   };
 
   const sumAnsweredQuestionsPerSample = (answeredQuestions, sampleId) =>
-    Object.entries(answeredQuestions).reduce((acc, [qId, aq]) => {
-      const answer = aq.answered.find((ans) => ans.sampleId === sampleId);
-      const answeredVal = Number(answer.answerText || aq.answers[answer.answerId].answer || 0);
-      return acc + answeredVal;
-    }, 0);
+        Object.entries(answeredQuestions).reduce((acc, [qId, aq]) => {
+          const answer = aq.answered.find((ans) => ans.sampleId === sampleId);
+          const answeredVal = Number(answer.answerText || aq.answers[answer.answerId].answer || 0);
+          return acc + answeredVal;
+        }, 0);
 
   const getAnsweredQuestions = (ruleQuestions, questionIdToSet) =>
-    filterObject(currentProject?.surveyQuestions, ([sqId, sq]) => {
-      const numSqId = Number(sqId);
-      return (
-        ruleQuestions.includes(numSqId) && sq.answered.length > 0 && numSqId !== questionIdToSet
-      );
-    });
+        filterObject(currentProject?.surveyQuestions, ([sqId, sq]) => {
+          const numSqId = Number(sqId);
+          return (
+            ruleQuestions.includes(numSqId) && sq.answered.length > 0 && numSqId !== questionIdToSet
+          );
+        });
 
   const getAnsweredSampleIds = (answeredQuestions) =>
-    mapObjectArray(answeredQuestions, ([_sqId, aq]) => aq.answered.map((a) => a.sampleId));
+        mapObjectArray(answeredQuestions, ([_sqId, aq]) => aq.answered.map((a) => a.sampleId));
 
   const checkRuleSumOfAnswers = (surveyRule, questionIdToSet, answerId, answerText) => {
     const answerVal = !isNaN(Number(answerText)) ?
-      Number(answerText) : Number(getSurveyAnswerText(questionIdToSet, answerId));
+          Number(answerText) : Number(getSurveyAnswerText(questionIdToSet, answerId));
     if (surveyRule.questionIds.includes(questionIdToSet)) {
       const answeredQuestions = getAnsweredQuestions(surveyRule.questionIds, questionIdToSet);
       if (surveyRule.questionIds.length === lengthObject(answeredQuestions) + 1) {
@@ -588,8 +583,8 @@ export function SurveyQuestions ({
         const commonSampleIds = answeredSampleIds.reduce(intersection, sampleIds);
         if (commonSampleIds.length > 0) {
           const invalidSum = commonSampleIds
-            .map((sampleId) => sumAnsweredQuestionsPerSample(answeredQuestions, sampleId))
-            .find((s) => s + answerVal !== surveyRule.validSum);
+                .map((sampleId) => sumAnsweredQuestionsPerSample(answeredQuestions, sampleId))
+                .find((s) => s + answerVal !== surveyRule.validSum);
           if (invalidSum || invalidSum === 0) {
             const { question } = currentProject?.surveyQuestions[questionIdToSet];
             return `Sum of answers validation failed.\r\n\nSum for questions [${surveyRule.questionIds
@@ -613,7 +608,7 @@ export function SurveyQuestions ({
 
   const checkRuleMatchingSums = (surveyRule, questionIdToSet, answerId, answerText) => {
     const answerVal =
-      Number(answerText) || Number(getSurveyAnswerText(questionIdToSet, answerId));
+          Number(answerText) || Number(getSurveyAnswerText(questionIdToSet, answerId));
     if (surveyRule.questionIds1.concat(surveyRule.questionIds2).includes(questionIdToSet)) {
       const answeredQuestions1 = getAnsweredQuestions(
         surveyRule.questionIds1,
@@ -642,12 +637,12 @@ export function SurveyQuestions ({
           const q1Value = surveyRule.questionIds1.includes(questionIdToSet) ? answerVal : 0;
           const q2Value = surveyRule.questionIds2.includes(questionIdToSet) ? answerVal : 0;
           const invalidSum = commonSampleIds
-            .map((sampleId) => {
-              const sum1 = sumAnsweredQuestionsPerSample(answeredQuestions1, sampleId);
-              const sum2 = sumAnsweredQuestionsPerSample(answeredQuestions2, sampleId);
-              return [sum1, sum2];
-            })
-            .find((sums) => sums[0] + q1Value !== sums[1] + q2Value);
+                .map((sampleId) => {
+                  const sum1 = sumAnsweredQuestionsPerSample(answeredQuestions1, sampleId);
+                  const sum2 = sumAnsweredQuestionsPerSample(answeredQuestions2, sampleId);
+                  return [sum1, sum2];
+                })
+                .find((sums) => sums[0] + q1Value !== sums[1] + q2Value);
           if (invalidSum) {
             const { question } = currentProject?.surveyQuestions[questionIdToSet];
             return (
@@ -681,8 +676,8 @@ export function SurveyQuestions ({
       if (ques2.answered.some((ans) => ans.answerId === surveyRule.answerId2)) {
         const ques1Ids = getSelectedSampleIds(questionIdToSet);
         const ques2Ids = ques2.answered
-          .filter((ans) => ans.answerId === surveyRule.answerId2)
-          .map((a) => a.sampleId);
+              .filter((ans) => ans.answerId === surveyRule.answerId2)
+              .map((a) => a.sampleId);
         const commonSampleIds = intersection(ques1Ids, ques2Ids);
         if (commonSampleIds.length > 0) {
           return `Incompatible answers validation failed.\r\n\nAnswer "${getSurveyAnswerText(
@@ -703,10 +698,11 @@ export function SurveyQuestions ({
     } else if (surveyRule.questionId2 === questionIdToSet && surveyRule.answerId2 === answerId) {
       const ques1 = currentProject?.surveyQuestions[surveyRule.questionId1];
       if (ques1.answered.some((ans) => ans.answerId === surveyRule.answerId1)) {
-        const ques2Ids = getSelectedSampleIds(questionIdToSet);
+        const ques2Ids = getSelectedSampleIds();
+
         const ques1Ids = ques1.answered
-          .filter((ans) => ans.answerId === surveyRule.answerId1)
-          .map((a) => a.sampleId);
+              .filter((ans) => ans.answerId === surveyRule.answerId1)
+              .map((a) => a.sampleId);
         const commonSampleIds = intersection(ques1Ids, ques2Ids);
         if (commonSampleIds.length > 0) {
           return `Incompatible answers validation failed.\r\n\nAnswer "${getSurveyAnswerText(
@@ -730,7 +726,7 @@ export function SurveyQuestions ({
   };
 
   const formatErrorText = (answerList) =>
-    answerList.map((ans, idx, arr) => `answer "${getSurveyAnswerText(ans[0], ans[1])}" for question "${getSurveyQuestionText(ans[0])}"`);
+        answerList.map((ans, idx, arr) => `answer "${getSurveyAnswerText(ans[0], ans[1])}" for question "${getSurveyQuestionText(ans[0])}"`);
 
   const checkRuleMultipleIncompatibleAnswers = (surveyRule, questionIdToSet, answerId, _answerText) => {
     const surveyQuestions = currentProject?.surveyQuestions;
@@ -743,7 +739,7 @@ export function SurveyQuestions ({
     });
     const incompatQuestion = surveyQuestions[incompatQuestionId];
     const incompatAnswer = (incompatQuestion.answered.some((a) => a.answerId == incompatAnswerId) ||
-      (incompatQuestionId == questionIdToSet && incompatAnswerId == answerId));
+                            (incompatQuestionId == questionIdToSet && incompatAnswerId == answerId));
 
     if (ruleAnswerList.length === answeredQuestionsList.length && incompatAnswer) {
       const answerText = surveyQuestions[questionIdToSet].answers[answerId].answer;
@@ -767,10 +763,10 @@ export function SurveyQuestions ({
     return (
       currentProject?.surveyRules &&
         currentProject?.surveyRules
-          .map((surveyRule) =>
-            ruleFunctions[surveyRule.ruleType](surveyRule, questionIdToSet, answerId, answerText)
-          )
-          .find((msg) => msg)
+        .map((surveyRule) =>
+          ruleFunctions[surveyRule.ruleType](surveyRule, questionIdToSet, answerId, answerText)
+        )
+        .find((msg) => msg)
     );
   };
 
@@ -786,18 +782,41 @@ export function SurveyQuestions ({
       setCurrentValue(questionIdToSet, answerId, answerText);
     }
   };
+
+  function InvertSelectionButton () {
+    const parentId = getParent(selectedQuestionId);;
+    const selectedSamples = selectedSampleIds[parentId] || [];
+    function invertHandler () {
+      const allIds = (mercator.getAllFeatures(mapConfig, "currentSamples") || []).map(f => f.get("sampleId")) ;
+      const inverted = allIds.reduce((coll, f) => {
+        return selectedSamples.includes(f) ? coll :  [... coll, f];
+      }, []);
+
+      setAppState((s)=>({...s, selectedSampleIds: {... s.selectedSampleIds, [parentId]: inverted}}));
+      mercator.selectFeatures(mapConfig, inverted);
+    };
+    return (
+      <>
+        <button
+          onClick={invertHandler}
+          className={'btn filled'}>
+          {(selectedSampleIds[parentId] ?? []).length ? "Invert Sample Selection" : "Select All Samples"} :  {parentId}
+        </button>
+      </>);
+  }
   
   return (
     <SidebarCard
-      showHeader={showHeader}
+      showHeader={showHeader}      
       title={
         <>
           SURVEY{" "}
           <span className="sq-subtitle">
             {`${validatedCount}/${totalTop} questions answered`}
-          </span>
+          </span>          
         </>
       }
+      headerBtn={ !preview && <InvertSelectionButton/> }
       infoText="View and answer survey questions for this plot"
     >
       {currentPlot?.flagged ? (
@@ -957,7 +976,7 @@ export const DrawingTool = () => {
     const type = currentProject.type;
     const samples = currentPlot?.samples || [];
     const visibleSamples =
-      type === "simplified" ? samples.filter((s) => s.visibleId !== 1) : samples;
+          type === "simplified" ? samples.filter((s) => s.visibleId !== 1) : samples;
 
     mercator.disableDrawing(mapConfig);
     mercator.removeLayerById(mapConfig, "currentSamples");
@@ -978,8 +997,8 @@ export const DrawingTool = () => {
     mercator.disableDrawing(mapConfig);
     const allFeatures = mercator.getAllFeatures(mapConfig, "drawLayer") || [];
     const existingIds = allFeatures
-      .map((f) => f.get("sampleId"))
-      .filter((id) => id);
+          .map((f) => f.get("sampleId"))
+          .filter((id) => id);
 
     const getMax = (arr) => Math.max(0, ...existingIds, ...arr.map((s) => s.id));
 
@@ -1016,7 +1035,6 @@ export const DrawingTool = () => {
 
   // enter draw mode on mount
   useEffect(() => {
-    // setAnswerMode("draw", initialDrawTool);
     return () => setAnswerMode("answer");
   }, [mapConfig]);
 
@@ -1055,7 +1073,7 @@ export const DrawingTool = () => {
       const dbSamples = (prev.currentPlot?.samples || []).filter((s) => s.visibleId != null);
       const keep = new Set(dbSamples.map((s) => s.id));
       const pick = (obj) =>
-        Object.fromEntries(Object.entries(obj || {}).filter(([id]) => keep.has(Number(id))));
+            Object.fromEntries(Object.entries(obj || {}).filter(([id]) => keep.has(Number(id))));
 
       return {
         ...prev,
