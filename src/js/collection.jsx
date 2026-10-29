@@ -28,7 +28,7 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
   function getParentId (questionId) {    
-    const {parentQuestionId} = state.currentProject?.surveyQuestions[state.selectedQuestionId];
+    const {parentQuestionId} = state.currentProject?.surveyQuestions[questionId];
     if([-1, "-1"].includes(parentQuestionId))  {
       return questionId;
     } else {

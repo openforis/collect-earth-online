@@ -786,8 +786,9 @@ export function SurveyQuestions ({
   function InvertSelectionButton () {
     const parentId = getParent(selectedQuestionId);;
     const selectedSamples = selectedSampleIds[parentId] || [];
+    const allIds = (mercator.getAllFeatures(mapConfig, "currentSamples") || []).map(f => f.get("sampleId")) ;
     function invertHandler () {
-      const allIds = (mercator.getAllFeatures(mapConfig, "currentSamples") || []).map(f => f.get("sampleId")) ;
+      
       const inverted = allIds.reduce((coll, f) => {
         return selectedSamples.includes(f) ? coll :  [... coll, f];
       }, []);
@@ -800,7 +801,9 @@ export function SurveyQuestions ({
         <button
           onClick={invertHandler}
           className={'btn filled'}>
-          {(selectedSampleIds[parentId] ?? []).length ? "Invert Sample Selection" : "Select All Samples"} :  {parentId}
+          {(selectedSampleIds[parentId] ?? []).length === allIds.length ? "Clear Selection"
+           : (selectedSampleIds[parentId] ?? []).length ? "Invert Sample Selection"
+           : "Select All Samples"}
         </button>
       </>);
   }
