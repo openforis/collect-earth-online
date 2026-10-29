@@ -6,6 +6,7 @@ import { mapImageryLibraryAtom, activeMapLayerIdsAtom } from '../state/map';
 import { NewMap } from '../components/NewMap';
 import SvgIcon from '../components/svg/SvgIcon';
 import { InfoTooltip } from '../components/PageComponents';
+import { groupImageryByVisibility } from '../utils/generalUtils';
 
 export const ImageryStep = ({ imageryList = [] }) => {
 //  const [previewId, setPreviewId] = useState("");
@@ -36,15 +37,20 @@ export const ImageryStep = ({ imageryList = [] }) => {
     setActiveMapLayers(new Set(previewArray));
   }, [previewId, setActiveMapLayers]);
 
-  const groupedImagery = (imageryList || []).reduce((acc, img) => {
-    const vis = img.visibility || 'public';
-    if (!acc[vis]) acc[vis] = [];
-    acc[vis].push(img);
-    return acc;
-  }, {});
+  const imageryGroups = groupImageryByVisibility(imageryList);
+
+  const imageryOptionGroups = imageryGroups
+    .filter(({ items }) => items.length > 0)
+    .map(({ type, label, items }) => (
+      <optgroup key={type} label={label}>
+        {items.map(img => (
+          <option key={img.id} value={img.id}>{img.title}</option>
+        ))}
+      </optgroup>
+    ));
 
   const VisibilitySection = ({ title, type, tooltip }) => {
-    const items = groupedImagery[type] || [];        
+    const items = imageryGroups.find((group) => group.type === type)?.items || [];
     return (
       <div className="visibility-section" style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
@@ -106,9 +112,7 @@ export const ImageryStep = ({ imageryList = [] }) => {
               onChange={(e) => setPreviewId(e.target.value)}
             >
               <option value="">Select imagery to preview</option>
-              {imageryList.map(img => (
-                <option key={img.id} value={img.id}>{img.title}</option>
-              ))}
+              {imageryOptionGroups}
             </select>
           </section>
 
@@ -124,9 +128,7 @@ export const ImageryStep = ({ imageryList = [] }) => {
               }}
             >
               <option value="" disabled>Select a base map</option>
-              {imageryList.map(img => (
-                <option key={img.id} value={img.id}>{img.title}</option>
-              ))}
+              {imageryOptionGroups}
             </select>
           </section>
 

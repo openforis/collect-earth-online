@@ -60,7 +60,8 @@
 
 .metrics-table {
   width: 100%;
-  border-collapse: collapsed;
+  border-collapse: collapse;
+}
 
 .metrics-table th,
 .metrics-table td {

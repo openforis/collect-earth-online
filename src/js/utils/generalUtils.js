@@ -154,3 +154,20 @@ export function isValidJSON(str) {
     return false;
   }
 }
+
+export const IMAGERY_VISIBILITY_GROUPS = [
+  { type: "platform", label: "CEO Platform Imagery" },
+  { type: "private", label: "Institution Imagery" },
+  { type: "public", label: "Public Imagery" },
+];
+
+export function groupImageryByVisibility(imageryList) {
+  const byTitle = (a, b) =>
+    (a.title || "").localeCompare(b.title || "", undefined, { numeric: true, sensitivity: "base" });
+  return IMAGERY_VISIBILITY_GROUPS.map((group) => ({
+    ...group,
+    items: (imageryList || [])
+      .filter((imagery) => (imagery.visibility || "public") === group.type)
+      .sort(byTitle),
+  }));
+}
