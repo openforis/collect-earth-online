@@ -2,61 +2,75 @@ import React, { useContext, useState, useEffect } from "react";
 
 import { EditorContext } from "../constants";
 import SvgIcon from "../../components/svg/SvgIcon";
+import { fetchTfoMosaics, tfoLabel } from "../../imagery/tfo";
 
 
 export default function BasemapSelector() {
-  const { widget, widgetDesign, setWidgetDesign, getWidgetDesign, imagery, getInstitutionImagery, institutionId } =
+  const { widgetDesign, setWidgetDesign, getWidgetDesign, imagery, getInstitutionImagery, institutionId } =
         useContext(EditorContext);
   const [TFOLayers, setTFOLayers] = useState([]);
+  const [tfoError, setTfoError] = useState(null);
   const [imageryType, setImageryType] = useState("");
   const [basemap, setBasemap] = useState(imagery.filter((i)=>i.id === getWidgetDesign("basemapId")));
+  const basemapId = getWidgetDesign("basemapId");
 
   function tfoDateSelector(){
-    const options = (
-      tfoLayers || []).map(
-        (l)=>{
-          const name = l.slice(34, l.length - 7); 
-          return (
-            <option
-              value={l}
-              key={name}
-            >
-              {name}
-            </option>);}
-      );    
+    const options = (TFOLayers || []).map(
+      (l) => (
+        <option
+          value={l}
+          key={l}
+        >
+          {tfoLabel(l)}
+        </option>)
+    );
     return (
       <div>
-        <label htmlFor="tfo-layer">Select Date:</label> 
+        <label htmlFor="tfo-layer">Select Date:</label>
         <select
           className="form-control"
           id="tfo-layer"
-          onChange={(e)=>{            
+          onChange={(e)=>{
             setWidgetDesign("basemapTFODate", e.target.value);
           }}
           value={
-            getWidgetDesign("basemapTFODate")}         
-        >          
+            getWidgetDesign("basemapTFODate") || "newest"}
+        >
+          <option value="newest">Newest available</option>
           {options}
         </select>
+        {tfoError && <div style={{ color: "red", fontSize: ".85em" }}>{tfoError}</div>}
       </div>);
   }
-  
+
   const getTFOLayers = () => {
-    fetch("/get-tfo-dates")
-      .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    const keepOrUseNewest = (layers) => {
+      const current = getWidgetDesign("basemapTFODate");
+      if (!current || (current !== "newest" && !layers.includes(current))) {
+        setWidgetDesign("basemapTFODate", "newest");
+      }
+    };
+    fetchTfoMosaics(basemapId)
       .then((layers) => {
         setTFOLayers(layers);
-        setWidgetDesign("basemapTFODate", widget[0].basemapTFODate);        
+        setTfoError(null);
+        keepOrUseNewest(layers);
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        console.error(error);
+        setTFOLayers([]);
+        setTfoError(error.message);
+        keepOrUseNewest([]);
+      });
   };
-  
+
   useEffect(()=> {
+    if (!imageryType) return;
     setWidgetDesign("basemapType", imageryType);
     (imageryType === "PlanetTFO") ?
-      getTFOLayers() 
+      getTFOLayers()
       : setWidgetDesign("basemapTFODate", null);
-  }, [imageryType]);
+  }, [imageryType, basemapId]);
   
   useEffect(()=>{
     setImageryType((imagery || []).filter((i)=> i.id === getWidgetDesign("basemapId"))[0]?.sourceConfig.type);

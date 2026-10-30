@@ -135,13 +135,6 @@ const sendGEERequest = (theJson, sourceConfig, imageryId, attribution) => {
   return geeSource;
 };
 
-const newestTFOLayer = () => {
-  const latestDate = new Date(new Date().setDate(1));
-  const month = latestDate.getMonth().toString().padStart(2, "0");
-  const dateMonth = `${latestDate.getFullYear()}-${month}`;
-  return `planet_medres_normalized_analytic_${dateMonth}_mosaic`;
-}
-
 // Helper for Sentinel formatting
 const formatDateISO = (date) => date.toISOString().split('T')[0];
 
@@ -184,10 +177,9 @@ export const createImageryLayer = (config) => {
       });
 
     case "PlanetTFO":
-      const dataLayer = (sourceConfig.time === "newest") ? newestTFOLayer() : sourceConfig.time;
       return new TileLayer({
         source: new XYZ({
-          url: `get-tfo-tiles?z={z}&x={x}&y={y}&dataLayer=${dataLayer}&band=${sourceConfig.band}&imageryId=${imageryId}`,
+          url: `get-tfo-tiles?z={z}&x={x}&y={y}&dataLayer=${sourceConfig.time || "newest"}&band=${sourceConfig.band || "rgb"}&imageryId=${imageryId}`,
           attributions: attribution,
         }),
         properties: { id: imageryId }

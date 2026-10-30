@@ -4,17 +4,14 @@
             [clojure.xml       :as xml]
             [clj-http.client   :as client]
             [triangulum.type-conversion :as tc]
-            [triangulum.database        :refer [call-sql]]
             [triangulum.utils           :as u]
-            [triangulum.config          :refer [get-config]]
             [collect-earth-online.db.imagery :refer [get-imagery-source-config]]
             [triangulum.response        :refer [data-response]]))
 
 ;;; Cache options
 
-(def ^:private cache-max-age     (* 24 60 60 1000)) ; Once a day
-(def ^:private tfo-layer-cache (atom nil))
-(def ^:private cached-time       (atom nil))
+(def ^:private tfo-cache-max-age  (* 60 60 1000))
+(def ^:private tfo-layer-cache    (atom {}))
 (def ^:private wmts-cache-max-age (* 60 60 1000)) ; one hour
 (def ^:private wmts-capabilities-cache (atom {})) ; {imagery-id {:raw xml :public xml :time ms}}
 (def ^:private wmts-tile-source-cache (atom {}))
@@ -42,24 +39,96 @@
    (swap! wmts-tile-source-cache dissoc imagery-id)))
 
 
-(defn- reset-cache! [layers]
-  (reset! cached-time (System/currentTimeMillis))
-  (reset! tfo-layer-cache layers))
+(def ^:private tfo-mosaics-url   "https://api.planet.com/basemaps/v1/mosaics")
+(def ^:private tfo-tiles-url     "https://tiles.planet.com/basemaps/v1/planet-tiles")
+(def ^:private tfo-mosaic-prefix "planet_medres_normalized_analytic_")
+(def ^:private tfo-page-size     100)
+(def ^:private tfo-max-pages     20)
 
-(defn- valid-cache? []
-  (and (some? @tfo-layer-cache)
-       (< (- (System/currentTimeMillis) @cached-time) cache-max-age)))
+(defn- tfo-error [status message]
+  (ex-info message {:status status}))
 
-;;; Fill cache
+(defn- fetch-tfo-mosaics
+  "Returns every normalized analytic mosaic the access token can see, following all result pages."
+  [access-token]
+  (loop [page 1
+         acc  []]
+    (let [{:keys [status body]} (client/get tfo-mosaics-url
+                                            {:query-params     {:name__contains (str/replace tfo-mosaic-prefix #"_$" "")
+                                                                :_page_size     tfo-page-size
+                                                                :_page          page
+                                                                :api_key        access-token}
+                                             :throw-exceptions false})]
+      (cond
+        (contains? #{401 403} status)
+        (throw (tfo-error 403 (str "Planet rejected the access token saved with this imagery. "
+                                   "Check that it belongs to an active Tropical Forest Observatory subscription.")))
 
-(defn tfo-dates []
-  (as-> (client/get (str "https://api.planet.com/basemaps/v1/mosaics?_page_size=150&api_key=" (get-config :proxy :nicfi-key))) $
-    (:body $)
-    (json/read-str $ :key-fn keyword)
-    (:mosaics $)
-    (map :name $)
-    (filterv #(str/includes? % "normalized") $)
-    (reverse $)))
+        (not= 200 status)
+        (throw (tfo-error 502 (str "Planet returned an unexpected response (HTTP " status
+                                   ") while listing TFO mosaics.")))
+
+        :else
+        (let [{:keys [mosaics _links]} (json/read-str body :key-fn keyword)
+              acc                      (into acc mosaics)]
+          (if (and (seq (:_next _links)) (< page tfo-max-pages))
+            (recur (inc page) acc)
+            acc))))))
+
+(defn- tfo-mosaic-names
+  "Mosaic names, newest first. Planet does not document the order of its list, so sort by date."
+  [mosaics]
+  (->> mosaics
+       (filter #(str/starts-with? (str (:name %)) tfo-mosaic-prefix))
+       (sort-by (juxt #(str (:last_acquired %)) #(str (:first_acquired %)) #(str (:name %)))
+                #(compare %2 %1))
+       (map :name)
+       (distinct)
+       (vec)))
+
+(defn- tfo-dates
+  "Mosaic names (newest first) visible to the access token. Cached per token for an hour.
+  Concurrent callers share one request to Planet and failures are never cached."
+  [access-token]
+  (let [now   (System/currentTimeMillis)
+        entry (-> (swap! tfo-layer-cache
+                         (fn [cache]
+                           (let [cached (get cache access-token)]
+                             (if (and cached (< (- now (:time cached)) tfo-cache-max-age))
+                               cache
+                               (assoc cache access-token
+                                      {:time   now
+                                       :layers (delay
+                                                 (let [names (tfo-mosaic-names (fetch-tfo-mosaics access-token))]
+                                                   (if (empty? names)
+                                                     (throw (tfo-error 404 (str "No TFO mosaics are available for the access token "
+                                                                                "saved with this imagery.")))
+                                                     names)))})))))
+                  (get access-token))]
+    (try
+      @(:layers entry)
+      (catch Exception e
+        (swap! tfo-layer-cache
+               (fn [cache]
+                 (if (identical? entry (get cache access-token))
+                   (dissoc cache access-token)
+                   cache)))
+        (throw e)))))
+
+(defn- tfo-mosaic-name
+  "Turns the dataLayer sent by the client into a Planet mosaic name. A blank dataLayer or \"newest\"
+  resolves to the newest mosaic the token can see. Short names that older versions of CEO saved
+  (2021-09, 2015-12_2016-05) are expanded to the full mosaic name."
+  [access-token data-layer]
+  (cond
+    (or (str/blank? data-layer) (contains? #{"newest" "undefined" "null"} data-layer))
+    (first (tfo-dates access-token))
+
+    (re-matches #"\d{4}-\d{2}(_\d{4}-\d{2})?" data-layer)
+    (str tfo-mosaic-prefix data-layer "_mosaic")
+
+    :else
+    data-layer))
 
 ;;; Utils
 
@@ -379,21 +448,66 @@
     ;; TODO check JSON for errors and parse (front end) using "&EXCEPTIONS=application/json"
     (client/get url)))
 
-(defn get-tfo-dates [& _]
-  (when-not (valid-cache?)
-    (reset-cache! (tfo-dates)))
-  (data-response @tfo-layer-cache))
+(defn- tfo-access-token
+  "The accessToken saved in source_config of a PlanetTFO imagery, or nil."
+  [imagery-id]
+  (let [{:keys [type accessToken]} (get-imagery-source-config imagery-id)]
+    (when (and (= "PlanetTFO" type) (not (str/blank? accessToken)))
+      accessToken)))
+
+(defn- tfo-error-response [e]
+  (if-let [status (:status (ex-data e))]
+    (data-response (ex-message e) {:status status})
+    (do (println "Planet TFO request failed:" (ex-message e))
+        (data-response "Unable to reach Planet to load TFO imagery." {:status 502}))))
+
+(def ^:private no-tfo-token-message
+  "This imagery does not have a Planet TFO access token.")
+
+(defn get-tfo-dates [{:keys [params]}]
+  (if-let [access-token (tfo-access-token (tc/val->int (:imageryId params)))]
+    (try
+      (data-response (tfo-dates access-token))
+      (catch Exception e
+        (tfo-error-response e)))
+    (data-response no-tfo-token-message {:status 400})))
+
+(defn preview-tfo-dates [{:keys [params]}]
+  (let [access-token (str/trim (str (:accessToken params)))]
+    (if (str/blank? access-token)
+      (data-response "Enter a Planet TFO access token to list its dates." {:status 400})
+      (try
+        (data-response (tfo-dates access-token))
+        (catch Exception e
+          (tfo-error-response e))))))
 
 (defn get-tfo-tiles [{:keys [params]}]
   (let [{:keys [x y z dataLayer band]} params
-        institution-id (tc/val->int (:institutionId params))
-        imagery-id     (tc/val->int (:imageryId params))
-        access-token   (->> institution-id
-                            (call-sql "get_tfo_imagery_by_institution" imagery-id)
-                            (first)
-                            (:source_config)
-                            (tc/jsonb->clj)
-                            (:accessToken))]
-    (client/get (format "https://tiles.planet.com/basemaps/v1/planet-tiles/%s/gmap/%s/%s/%s.png?proc=%s&api_key=%s"
-                        dataLayer z x y band access-token)
-                {:as :stream})))
+        access-token (tfo-access-token (tc/val->int (:imageryId params)))
+        proc         (when-not (contains? #{"" "undefined" "null"} (str band)) (str band))]
+    (cond
+      (nil? access-token)
+      (data-response no-tfo-token-message {:status 400})
+
+      (not (and (every? #(re-matches #"\d+" (str %)) [x y z])
+                (re-matches #"[\w-]*" (str dataLayer))
+                (or (nil? proc) (re-matches #"\w+" proc))))
+      (data-response "Invalid TFO tile request." {:status 400})
+
+      :else
+      (try
+        (let [mosaic                        (tfo-mosaic-name access-token (str dataLayer))
+              {:keys [status headers body]} (client/get (str tfo-tiles-url "/" mosaic "/gmap/" z "/" x "/" y ".png")
+                                                        {:query-params     (cond-> {:api_key access-token}
+                                                                             proc (assoc :proc proc))
+                                                         :as               :stream
+                                                         :throw-exceptions false})]
+          (if (= 200 status)
+            {:status  200
+             :headers (cond-> {"Content-Type" (get headers "Content-Type" "image/png")}
+                        (get headers "Cache-Control") (assoc "Cache-Control" (get headers "Cache-Control")))
+             :body    body}
+            (do (when body (.close ^java.io.Closeable body))
+                (data-response "TFO tile unavailable." {:status status}))))
+        (catch Exception e
+          (tfo-error-response e))))))
