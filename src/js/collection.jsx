@@ -27,15 +27,16 @@ import { outlineKML } from "./utils/kml";
 function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
+  /*
   function getParentId (questionId) {    
-    const {parentQuestionId} = state.currentProject?.surveyQuestions[state.selectedQuestionId];
+    const {parentQuestionId} = state.currentProject?.surveyQuestions[questionId];
     if([-1, "-1"].includes(parentQuestionId))  {
       return questionId;
     } else {
       return getParentId(parentQuestionId);
     };
   }
-  
+  */
   // INIT COLLECTION EFFECT
   useEffect(() => {
     window.name = "_ceo_collection";
@@ -171,20 +172,20 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     const clickSelect = mercator.getInteractionByTitle(mapConfig, "clickSelect");
     if (!layer || !clickSelect) return;
 
-    const parentId = getParentId(selectedQuestionId);
-    const sampleIds = selectedSampleIds?.[parentId] ?? [];
+    // const parentId = getParentId(selectedQuestionId);
+    // const sampleIds = selectedSampleIds?.[parentId] ?? [];
 
     const features = clickSelect.getFeatures();
     const featureIds = features.getArray().map((f)=>f.get("sampleId"));
-    const update = sampleIds.length === featureIds.length &&
-          [...sampleIds].every((id)=>featureIds.includes(id));
+    const update = selectedSampleIds.length === featureIds.length &&
+          [...selectedSampleIds].every((id)=>featureIds.includes(id));
 
     if (update) return;
     syncRef.current = true;
     try {
       features.clear();
       layer.getSource().getFeatures().forEach((f)=>{
-        sampleIds.includes(f.get("sampleId")) && clickSelect.getFeatures().push(f);
+        selectedSampleIds.includes(f.get("sampleId")) && clickSelect.getFeatures().push(f);
       });
     } finally {
       syncRef.current = false;
@@ -433,12 +434,15 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
       "currentSamples",
       (sampleIds) => {
         if (syncRef.current) return;
-        setState((s) => ({
+        setState((s) => ({...s, selectedSampleIds: sampleIds}));
+        /*
+          setState((s) => ({
           ...s, selectedSampleIds: {
             ...s.selectedSampleIds,
             [getParentId(state.selectedQuestionId)]: sampleIds}}));
+        */
       }, 
-      state.selectedSampleIds[getParentId(state.selectedQuestionId)] ?? []
+      state.selectedSampleIds
     );
   };
   

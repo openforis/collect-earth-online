@@ -71,6 +71,7 @@ export function SurveyQuestions ({
     setScrollToChildrenOf(null);
   }, [scrollToChildrenOf]);
 
+  /*
   function getParent (questionId) {
     let {parentQuestionId} = surveyData?.[questionId];
     if ([-1, "-1"].includes(parentQuestionId)) {
@@ -79,11 +80,12 @@ export function SurveyQuestions ({
       return getParent(parentQuestionId);
     }
   }
- 
+  */
+  /*
   const getSelectedSampleIds = (questionId = selectedQuestionId) => 
         !selectedQuestionId ? [] :
     selectedSampleIds[getParent(selectedQuestionId)] || [];
-
+*/
   const checkSelection = (sampleIds, questionId) => {
     if (preview) return true;
     const q = surveyData?.[questionId];
@@ -118,7 +120,8 @@ export function SurveyQuestions ({
   };
 
   const setCurrentValue = (questionId, answerId, answerText) => {
-    const sampleIds = getSelectedSampleIds(questionId);
+    // const sampleIds = getSelectedSampleIds(questionId);
+    const sampleIds = selectedSampleIds;
     if (!preview && !checkSelection(sampleIds, questionId)) return;
     if (preview) {
       setPreviewUserSamples((prev) => {
@@ -391,7 +394,7 @@ export function SurveyQuestions ({
 
         {isOpen && (
           <>
-            <AnswerUI q={question} p={parentId}/>
+            <AnswerUI q={question} />
             {children.length > 0 && (
               <div
                 className="sq-children"
@@ -500,9 +503,9 @@ export function SurveyQuestions ({
     },
   };
 
-  const AnswerUI = ({ q, p }) => {
+  const AnswerUI = ({ q }) => {
     const render = renderers[q.componentType];
-    return render ? render(q, p) : null;
+    return render ? render(q) : null;
   };
 
   // MEMOIZATION
@@ -578,7 +581,8 @@ export function SurveyQuestions ({
     if (surveyRule.questionIds.includes(questionIdToSet)) {
       const answeredQuestions = getAnsweredQuestions(surveyRule.questionIds, questionIdToSet);
       if (surveyRule.questionIds.length === lengthObject(answeredQuestions) + 1) {
-        const sampleIds = getSelectedSampleIds(questionIdToSet);
+        const sampleIds = selectedSampleIds;
+        // const sampleIds = getSelectedSampleIds(questionIdToSet);
         const answeredSampleIds = getAnsweredSampleIds(answeredQuestions);
         const commonSampleIds = answeredSampleIds.reduce(intersection, sampleIds);
         if (commonSampleIds.length > 0) {
@@ -627,7 +631,8 @@ export function SurveyQuestions ({
         ready(ansLen1, ruleLen1, ansLen2, ruleLen2) ||
           ready(ansLen2, ruleLen2, ansLen1, ruleLen1)
       ) {
-        const sampleIds = getSelectedSampleIds(questionIdToSet);
+        const sampleIds = selectedSampleIds;
+        // const sampleIds = getSelectedSampleIds(questionIdToSet);
         const answeredSampleIds1 = getAnsweredSampleIds(answeredQuestions1);
         const commonSampleIds1 = answeredSampleIds1.reduce(intersection, sampleIds);
         const answeredSampleIds2 = getAnsweredSampleIds(answeredQuestions2);
@@ -674,7 +679,8 @@ export function SurveyQuestions ({
     if (surveyRule.questionId1 === questionIdToSet && surveyRule.answerId1 === answerId) {
       const ques2 = currentProject?.surveyQuestions[surveyRule.questionId2];
       if (ques2.answered.some((ans) => ans.answerId === surveyRule.answerId2)) {
-        const ques1Ids = getSelectedSampleIds(questionIdToSet);
+        const ques1Ids = selectedSampleIds;
+        // const ques1Ids = getSelectedSampleIds(questionIdToSet);
         const ques2Ids = ques2.answered
               .filter((ans) => ans.answerId === surveyRule.answerId2)
               .map((a) => a.sampleId);
@@ -698,7 +704,8 @@ export function SurveyQuestions ({
     } else if (surveyRule.questionId2 === questionIdToSet && surveyRule.answerId2 === answerId) {
       const ques1 = currentProject?.surveyQuestions[surveyRule.questionId1];
       if (ques1.answered.some((ans) => ans.answerId === surveyRule.answerId1)) {
-        const ques2Ids = getSelectedSampleIds();
+        const ques2Ids = selectedSampleIds;
+        // const ques2Ids = getSelectedSampleIds();
 
         const ques1Ids = ques1.answered
               .filter((ans) => ans.answerId === surveyRule.answerId1)
@@ -784,15 +791,17 @@ export function SurveyQuestions ({
   };
 
   function InvertSelectionButton () {
-    const parentId = getParent(selectedQuestionId);;
-    const selectedSamples = selectedSampleIds[parentId] || [];
+    // const parentId = getParent(selectedQuestionId);;
+    // const selectedSamples = selectedSampleIds[parentId] || [];
+    const selectedSamples = selectedSampleIds;
+    const allIds = (mercator.getAllFeatures(mapConfig, "currentSamples") || []).map(f => f.get("sampleId")) ;
     function invertHandler () {
-      const allIds = (mercator.getAllFeatures(mapConfig, "currentSamples") || []).map(f => f.get("sampleId")) ;
       const inverted = allIds.reduce((coll, f) => {
         return selectedSamples.includes(f) ? coll :  [... coll, f];
       }, []);
 
-      setAppState((s)=>({...s, selectedSampleIds: {... s.selectedSampleIds, [parentId]: inverted}}));
+      setAppState((s)=>({...s, selectedSampleIds: inverted}));
+      // setAppState((s)=>({...s, selectedSampleIds: {... s.selectedSampleIds, [parentId]: inverted}}));
       mercator.selectFeatures(mapConfig, inverted);
     };
     return (
@@ -800,7 +809,12 @@ export function SurveyQuestions ({
         <button
           onClick={invertHandler}
           className={'btn filled'}>
-          {(selectedSampleIds[parentId] ?? []).length ? "Invert Sample Selection" : "Select All Samples"} :  {parentId}
+          {/*(selectedSampleIds[parentId] ?? []).length === allIds.length ? "Clear Selection"
+           : (selectedSampleIds[parentId] ?? []).length ? "Invert Sample Selection"
+           : "Select All Samples"*/
+          selectedSampleIds.length === allIds.length ? "Clear Selection"
+           : selectedSampleIds.length ? "Invert Sample Selection"
+           : "Select All Samples"}
         </button>
       </>);
   }
