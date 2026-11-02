@@ -100,10 +100,8 @@ function ProjectCard ({project, mapConfig}) {
           </div>
         </div>
         <div className="primary-button"
-          onClick={() => {
-            console.log("visit project!", project);
-            window.location.href =
-                             `/collection?projectId=${project.id}&institutionId=${project.institutionId}`;}}>
+          onClick={() => window.location.href =
+                   `/collection?projectId=${project.id}&institutionId=${project.institutionId}`} >
           <div>
             <span>Visit Project</span>
             <SvgIcon icon="chevronRight" size="1.2rem"/>
