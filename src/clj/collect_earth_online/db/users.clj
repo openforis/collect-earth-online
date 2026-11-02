@@ -10,6 +10,7 @@
             [triangulum.type-conversion :as tc]
             [triangulum.config          :refer [get-config]]
             [triangulum.email           :refer [email? send-mail get-base-url]]
+            [triangulum.logging         :refer [log-str]]
             [triangulum.response        :refer [data-response]]))
 
 (defn- get-login-errors [user]
@@ -211,19 +212,49 @@
            (data-response))
       (data-response []))))
 
+(defn- send-role-assignment-emails! [institution-id assignments]
+  (when (seq assignments)
+    (let [institution-name (:name (first (call-sql "select_institution_by_id" institution-id -1)))
+          institution-url  (str (str/replace (str (get-base-url)) #"/+$" "")
+                                "/review-institution?institutionId=" institution-id)
+          timestamp        (-> (DateTimeFormatter/ofPattern "yyyy/MM/dd HH:mm:ss")
+                               (.format (LocalDateTime/now)))]
+      (future
+        (doseq [{:keys [email role]} assignments]
+          (try
+            (send-mail email nil nil "User Role Assignment"
+                       (format (str "Dear %s,\n\n"
+                                    "You have been assigned the role of %s for %s on %s.\n\n"
+                                    "To access the institution page, simply click the following link:\n\n"
+                                    "%s\n\n"
+                                    "Kind Regards,\n"
+                                    "  The CEO Team")
+                               email role institution-name timestamp institution-url)
+                       :text)
+            (catch Exception e
+              (log-str "Failed to send the role assignment email to " email ": " (ex-message e)))))))))
+
+(defn- assign-institution-role! [institution-id current-roles account-id role]
+  (let [email (:email (first (call-sql "get_user_by_id" account-id)))]
+    (cond
+      (nil? email)
+      {:message (str "User with id " account-id " not found.")}
+
+      (= role (get current-roles account-id))
+      {:message (str email " already has role " role ".")}
+
+      (or (sql-primitive (call-sql "update_institution_user_role" institution-id account-id role))
+          (sql-primitive (call-sql "add_institution_user" institution-id account-id role)))
+      {:message  (str email " has been assigned role " role ".")
+       :assigned {:email email :role role}}
+
+      :else
+      {:message (str "Could not assign role " role " to " email ".")})))
+
 (defn update-institution-role [{:keys [params]}]
   (let [account-ids      (mapv tc/val->int (or (:accountIds params) []))
         institution-id   (tc/val->int (:institutionId params))
-        institution-role (:institutionRole params)
-        assign!          (fn [account-id role]
-                           (let [email (:email (first (call-sql "get_user_by_id" account-id)))]
-                             (if (nil? email)
-                               (str "User with id " account-id " not found.")
-                               (let [updated? (sql-primitive (call-sql "update_institution_user_role"
-                                                                       institution-id account-id role))]
-                                 (when-not updated?
-                                   (call-sql "add_institution_user" institution-id account-id role))
-                                 (str email " has been assigned role " role ".")))))]
+        institution-role (:institutionRole params)]
     (cond
       (= institution-role "not-member")
       (data-response
@@ -236,7 +267,13 @@
                      (str "User " email " has been removed.")))))
              account-ids))
       (seq account-ids)
-      (data-response (mapv #(assign! % institution-role) account-ids))
+      (let [current-roles (into {}
+                                (map (juxt :user_id :institution_role))
+                                (call-sql "get_all_users_by_institution_id" institution-id))
+            results       (mapv #(assign-institution-role! institution-id current-roles % institution-role)
+                                account-ids)]
+        (send-role-assignment-emails! institution-id (keep :assigned results))
+        (data-response (mapv :message results)))
 
       :else
       (data-response "No accountIds were provided."))))
@@ -248,20 +285,20 @@
       {:email email :reason "User does not exist in CEO"}
       :else
       (try
-        (let [user-id (:user_id user)
-              res (call-sql "add_institution_user" institution-id user-id role)]
-          (if res nil {:email email :reason "Unknown database error"}))
-        (catch Exception e
+        (if (sql-primitive (call-sql "add_institution_user" institution-id (:user_id user) role))
+          {:email email :role role}
+          {:email email :reason "Unknown database error"})
+        (catch Exception _
           {:email email :reason "User is already assigned to this institution"})))))
 
 (defn add-user-to-institution [{:keys [params]}]
-  (let [{:keys [newUsers institutionId]} params]
+  (let [{:keys [newUsers institutionId]} params
+        institution-id (tc/val->int institutionId)]
     (if (empty? newUsers)
       (data-response [] {:status 200})
-      (let [failures (->> newUsers
-                          (map #(process-user institutionId %))
-                          (remove nil?)
-                          (doall))]
+      (let [results  (mapv #(process-user institution-id %) newUsers)
+            failures (filterv :reason results)]
+        (send-role-assignment-emails! institution-id (remove :reason results))
         (data-response failures {:status (if (seq failures) 400 200)})))))
 
 (defn request-institution-membership [{:keys [params session]}]
