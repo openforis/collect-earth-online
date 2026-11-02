@@ -363,6 +363,7 @@ export const NewImagery = ({
           value={imageryParams[o.key] || ""}
           onChange={(e) => setImageryParams((prev) => ({ ...prev, [o.key]: e.target.value }))}
           placeholder="Enter"
+          {...o.options}
         />
       ) : o.type === "select" ? (
         <select
@@ -383,6 +384,7 @@ export const NewImagery = ({
           value={imageryParams[o.key] || ""}
           onChange={(e) => setImageryParams((prev) => ({ ...prev, [o.key]: e.target.value }))}
           placeholder="Enter"
+          {...o.options}
         />
       )}
     </div>

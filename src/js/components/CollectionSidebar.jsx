@@ -5,6 +5,7 @@ import _ from "lodash";
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { stateAtom } from '../utils/constants';
+import { asPercentage } from "../utils/generalUtils";
 import { mercator } from "../utils/mercator";
 import { SurveyQuestions, DrawingTool } from "./SurveyQuestions.jsx";
 import { Sidebar, SidebarCard } from "./Sidebar";
@@ -266,7 +267,13 @@ export const NewPlotNavigation = ({userEmail}) => {
       const { seconds, timedPlots } = currentUser;
       return (seconds / timedPlots).toFixed(2);
     };
-    
+    const hasAssignedPlots = currentUserStats?.assigned > 0;
+    const myPlots = hasAssignedPlots ? currentUserStats.assigned : totalPlots;
+    const myRemainingPlots = hasAssignedPlots
+      ? Math.max(currentUserStats.assigned - currentUserStats.analyzed - currentUserStats.flagged, 0)
+      : unanalyzedPlots;
+    const withPercent = (value) => `${value} (${asPercentage(value, myPlots)}%)`;
+
     return (
       <>
         <div
@@ -321,11 +328,15 @@ export const NewPlotNavigation = ({userEmail}) => {
                 <label className="stats-header m-0 mr-3">My Statistics</label>
                 <div className="stats-row">
                   <label className="m-0 mr-3">--Analyzed</label>
-                  <span>{currentUserStats.analyzed}</span>
+                  <span>{withPercent(currentUserStats.analyzed)}</span>
                 </div>
                 <div className="stats-row">
                   <label className="m-0 mr-3">--Flagged</label>
-                  <span>{currentUserStats.flagged}</span>
+                  <span>{withPercent(currentUserStats.flagged)}</span>
+                </div>
+                <div className="stats-row">
+                  <label className="m-0 mr-3">--Remaining Plots</label>
+                  <span>{withPercent(myRemainingPlots)}</span>
                 </div>
                 <div className="stats-row">
                   <label className="m-0 mr-3">--My Average Time</label>

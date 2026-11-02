@@ -869,7 +869,7 @@
 (defn- prepare-file-name [project-name data-type]
   (str/join "-"
             ["ceo"
-             (str/replace project-name #"[ |,]" "-")
+             (str/replace project-name #"[ |,;]" "-")
              data-type
              "data"
              (.format (SimpleDateFormat. "YYYY-MM-dd") (Date.))]))
