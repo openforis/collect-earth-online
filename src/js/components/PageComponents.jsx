@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import ReactMarkdown from 'react-markdown';
@@ -13,6 +13,50 @@ import "../../css/custom.css";
 
 
 import '../../css/navsidebar.css';
+
+// Keeps a CSS custom property on <html> equal to an element's rendered height, so
+// page layout can offset fixed bars with var(--x) instead of hardcoded pixels.
+// Returns a cleanup function. Use it directly from class components; function
+// components should use the useHeightAsCssVar hook below.
+export function trackHeightAsCssVar(element, cssVar, { ignore } = {}) {
+  if (!element) return () => {};
+  const root = document.documentElement;
+  let frame = null;
+
+  const update = () => {
+    if (ignore && ignore(element)) return;
+    const next = `${Math.ceil(element.getBoundingClientRect().height)}px`;
+    const previous = getComputedStyle(root).getPropertyValue(cssVar).trim();
+    if (next === previous) return;
+    root.style.setProperty(cssVar, next);
+    // OpenLayers (v6) only re-measures its maps on window resize, so announce the
+    // layout change. Deferred a frame to stay out of React's commit phase.
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+  };
+
+  update();
+  const observer = new ResizeObserver(update);
+  observer.observe(element);
+  return () => {
+    observer.disconnect();
+    cancelAnimationFrame(frame);
+    root.style.removeProperty(cssVar);
+  };
+}
+
+export function useHeightAsCssVar(ref, cssVar, options) {
+  // Layout effect so the variable is set before the first paint (no visible jump).
+  useLayoutEffect(() => trackHeightAsCssVar(ref.current, cssVar, options), [ref, cssVar]);
+}
+
+// While the collapsed (mobile) menu is open the navbar grows to show it. That menu
+// should overlay the page rather than push it down, so don't report that height.
+export const isMobileNavMenuOpen = (nav) => {
+  const toggler = nav.querySelector(".navbar-toggler");
+  const togglerVisible = toggler && getComputedStyle(toggler).display !== "none";
+  return Boolean(togglerVisible && nav.querySelector(".navbar-collapse.show, .navbar-collapse.collapsing"));
+};
 
 export function LogOutButton({ userName, uri }) {
   const fullUri = uri + window.location.search;
@@ -220,6 +264,8 @@ export function NavTopBar ({version, userName, userId, children}) {
   const [page, setPage] = useState("");
   const uri = window.location.pathname;
   const loggedOut = !userName || userName === "guest";
+  const navRef = useRef(null);
+  useHeightAsCssVar(navRef, "--navbar-height", { ignore: isMobileNavMenuOpen });
 
   function autoShowHelpMenu (page) {
     const autoShowPages = ["home"];
@@ -271,16 +317,15 @@ export function NavTopBar ({version, userName, userId, children}) {
       <nav
         className="navbar navbar-expand-lg navbar-light fixed-top py-0"
         id="main-nav"
+        ref={navRef}
         style={{ backgroundColor: "white", borderBottom: "1px solid black" }}
       >
         <a className="navbar-brand pt-1 pb-1" href="/home">
           <div className="d-flex flex-column align-items-center justify-content-center">
             <img
               alt="Home"
-              className="img-fluid"
               id="ceo-site-logo"
               src="/img/ceo-logo.png"
-              style={{ maxHeight: "40px" }}
             />
             <div className="badge badge-pill badge-light" style={{ fontSize: "0.6rem" }}>
               Version: {version}
@@ -914,6 +959,8 @@ export function PromptModal({title, inputs, callBack, closePrompt}) {
 export const BreadCrumbs = ({crumbs, sidebar}) => {  
   const [state, setState] = useAtom(stateAtom);
   const { breadCrumbs } = state;
+  const barRef = useRef(null);
+  useHeightAsCssVar(barRef, "--breadcrumb-height");
   
   const getCrumbData = (message, promise) => {
     setState((s) => ({... s, modalMessage: message}), () =>
@@ -966,6 +1013,7 @@ export const BreadCrumbs = ({crumbs, sidebar}) => {
   return (
     <div id="breadcrumb-bar"
          className="flex-row"
+         ref={barRef}
          style={{marginLeft: sidebar? '100px' : 'inherit'}}>
       <div
         style={{cursor: "pointer"}}

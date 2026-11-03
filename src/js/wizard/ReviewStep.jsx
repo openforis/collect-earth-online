@@ -9,6 +9,7 @@ import SvgIcon from '../components/svg/SvgIcon';
 import SurveyRule from '../survey/SurveyRule';
 import { SurveyQuestions } from '../components/SurveyQuestions';
 import { NewMap } from '../components/NewMap';
+import { groupImageryByVisibility } from '../utils/generalUtils';
 
 import "../../css/project-wizard.css";
 
@@ -101,11 +102,18 @@ export default function ReviewStep ({imageryList = [], projectId, institutionId}
           </div>
         </div>
         <b >Imagery Used:</b>
-        {selectedImagery.map((i)=>{
-          return (
-            <p> {imageryList[0] ? imageryList.filter(({id})=> id === i)[0]?.title : null} </p>
-          );
-        })}
+        {groupImageryByVisibility(imageryList.filter(({ id }) => (selectedImagery || []).includes(id)))
+          .filter(({ items }) => items.length > 0)
+          .map(({ type, label, items }) => (
+            <div key={type}>
+              <p><i>{label}</i></p>
+              {items.map((imagery) => (
+                <p key={imagery.id}>
+                  {imagery.title}{imagery.id === selectedImagery[0] && " (default)"}
+                </p>
+              ))}
+            </div>
+          ))}
       </div>
     );
   }

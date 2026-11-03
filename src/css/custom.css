@@ -1,5 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap');
 
+:root {
+    --navbar-logo-height: 56px;
+    --navbar-height: 80px;
+    --breadcrumb-height: 0px;
+    --page-top: calc(var(--navbar-height) + var(--breadcrumb-height));
+}
+
+#ceo-site-logo {
+    height: var(--navbar-logo-height);
+    width: auto;
+}
+
 /**********/
 /* Colors */
 /**********/
@@ -84,7 +96,12 @@
     cursor: pointer;
 }
 .full-height {
-    height: calc(100vh - 60px);
+    height: calc(100vh - var(--page-top));
+}
+
+.full-height-dynamic {
+    height: calc(100vh - var(--page-top));
+    height: calc(100dvh - var(--page-top));
 }
 .full-width {
     right: 0;
@@ -548,8 +565,6 @@ a:hover {
 
 #image-analysis-pane {
     position: relative;
-    height: calc(100% - 56px);
-    top: 56px;
 }
 
 
@@ -905,7 +920,7 @@ input:checked + .switch-slider:before {
 body {
     /* margin-left: 1rem; */
     font-family: 'Public Sans', sans-serif;
-    margin-top: 60px;
+    padding-top: var(--page-top);
     overflow-x: hidden;
 }
 
@@ -1194,7 +1209,7 @@ body {
 }
 
 .toggle-sidebar {
-    top: 140px;
+    top: 1.25rem;
     right: -30px;
     width: 30px;
     height: 30px;
@@ -1344,7 +1359,7 @@ body {
     background: var(--Neutral-White, #FFF);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     position: fixed;
-    top: 56px;
+    top: var(--navbar-height);
     /* left: 100px; */
     width: 100%;
     z-index: 90;

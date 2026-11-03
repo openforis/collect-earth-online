@@ -41,6 +41,8 @@ export const stateAtom = atom({
   unansweredColor: "black",
   selectedQuestionId: -1,
   selectedSampleId: -1,
+  selectedSampleIds: [],
+    // selectedSampleIds: {},
   userSamples: {},
   originalUserSamples: {},
   userEmail: "",

@@ -1,14 +1,17 @@
-import React from "react";
+import React, { useRef } from "react";
 import ReactDOM from "react-dom";
 import _ from "lodash";
 
-import { LoadingModal, BreadCrumbs } from "./components/PageComponents";
+import {
+  LoadingModal,
+  BreadCrumbs,
+  useHeightAsCssVar,
+} from "./components/PageComponents";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 
-import { tfoLayers } from "./imagery/imageryOptions";
+import { fetchTfoMosaics, resolveTfoTime, tfoLabel } from "./imagery/tfo";
 import {
-  last,
   everyObject,
   findObject,
   firstEntry,
@@ -101,7 +104,6 @@ class SimpleCollection extends React.Component {
       showSidebar: false,
       modalMessage: null,
       navigationMode: "unanalyzed",
-      myHeight: 0,
       isMobile: false,
       localeText:
         localeLanguages[
@@ -199,7 +201,6 @@ class SimpleCollection extends React.Component {
     window.scrollTo(0, 0);
     this.setState(
       {
-        myHeight: window.innerHeight - 60,
         isMobile: window.innerWidth < 992, // Not sure where 992 came from but it matches the media query.
       },
       () => setTimeout(() => mercator.resize(this.state.mapConfig), 50)
@@ -670,7 +671,7 @@ class SimpleCollection extends React.Component {
     };
 
     return (
-      <div className="row" style={{ height: this.state.myHeight }}>
+      <div className="row full-height-dynamic">
         {this.state.modal?.alert &&
          <Modal title={this.state.modal.alert.alertType}
                 onClose={()=>{this.setState({modal: null});}}>
@@ -1036,16 +1037,16 @@ export class PlanetTFOMenu extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedTime:
-        this.props.sourceConfig.time === "newest"
-          ? last(tfoLayers)
-          : this.props.sourceConfig.time,
+      selectedTime: this.props.sourceConfig.time || "newest",
       selectedBand: this.props.sourceConfig.band,
+      tfoLayers: [],
+      loadError: null,
     };
   }
 
   componentDidMount() {
     this.updatePlanetLayer();
+    this.getTFOLayers();
   }
 
   componentDidUpdate(prevProps) {
@@ -1054,9 +1055,27 @@ export class PlanetTFOMenu extends React.Component {
     }
   }
 
+  getTFOLayers = () => {
+    fetchTfoMosaics(this.props.thisImageryId)
+      .then((layers) => {
+        this.setState(
+          {
+            tfoLayers: layers,
+            loadError: null,
+            selectedTime: resolveTfoTime(this.state.selectedTime, layers),
+          },
+          this.updatePlanetLayer
+        );
+      })
+      .catch((error) => {
+        console.error(error);
+        this.setState({ loadError: error.message });
+      });
+  };
+
   updateImageryInformation = () => {
     if (this.props.visible) {
-      this.props.setImageryAttribution(` | ${this.state.selectedTime} Mosaic`);
+      this.props.setImageryAttribution(` | ${tfoLabel(this.state.selectedTime)} Mosaic`);
       this.props.setImageryAttributes({
         time: this.state.selectedTime,
       });
@@ -1090,12 +1109,19 @@ export class PlanetTFOMenu extends React.Component {
             onChange={(e) => this.setState({ selectedTime: e.target.value })}
             value={this.state.selectedTime}
           >
-            {tfoLayers.map((time) => (
-              <option key={time} value={time}>
-                {time}
-              </option>
-            ))}
+            {this.state.tfoLayers.length === 0 ? (
+              <option value={this.state.selectedTime}>{tfoLabel(this.state.selectedTime)}</option>
+            ) : (
+              this.state.tfoLayers.map((time) => (
+                <option key={time} value={time}>
+                  {tfoLabel(time)}
+                </option>
+              ))
+            )}
           </select>
+          {this.state.loadError && (
+            <p className="mb-0" style={{ color: "red" }}>{this.state.loadError}</p>
+          )}
         </div>
         <div className="slide-container">
           <div id="radio-group">
@@ -1140,15 +1166,19 @@ export class PlanetTFOMenu extends React.Component {
 }
 
 function NavigationBar({ children }) {
+  const navRef = useRef(null);
+  useHeightAsCssVar(navRef, "--navbar-height");
+
   return (
     <>
       <nav
         className="navbar navbar-expand-lg navbar-light fixed-top py-0"
         id="main-nav"
+        ref={navRef}
         style={{ backgroundColor: "white", borderBottom: "1px solid black" }}
       >
         <a className="navbar-brand pt-1 pb-1" href="/home">
-          <img alt="Home" className="img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
+          <img alt="Home" id="ceo-site-logo" src="/img/ceo-logo.png" />
         </a>
         {/* <a className="nav-link" href="/collection">Desktop</a> */}
       </nav>

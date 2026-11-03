@@ -202,19 +202,22 @@ export const PlotStep = ({ imageryList = [] }) => {
         </Modal>
       )}
 
-      <div
-        className={`wizard-sidebar${plotDesignLocked ? ' is-locked' : ''}`}
-        inert={plotDesignLocked ? '' : undefined}
-      >
+      <div className="wizard-sidebar">
         {plotDesignLocked && (
           <div className="wizard-card mb-2 text-secondary small" style={{ fontWeight: '500' }}>
-            Plot design, assignments and quality control come from the template.
-            Uncheck "Use template plot design" in Project Overview to change them.
+            Plot design comes from the template.
+            Uncheck "Use template plot design" in Project Overview to change it.
           </div>
         )}
-        <ExistingPlotsCard />
-        <PlotGenerationCard />
-        <PlotSimilarityCard plotIdList={plotIdList} />
+        {/* Only the plot design is locked to the template; assignments and QA/QC stay editable. */}
+        <div
+          className={plotDesignLocked ? 'is-locked' : undefined}
+          inert={plotDesignLocked ? '' : undefined}
+        >
+          <ExistingPlotsCard />
+          <PlotGenerationCard />
+          <PlotSimilarityCard plotIdList={plotIdList} />
+        </div>
         <AssignPlotsCard totalPlots={totalPlotsCalculated} institutionUserList={institutionUsers}/>
         <QualityControlCard totalPlots={totalPlotsCalculated} institutionUserList={institutionUsers}/>
       </div>

@@ -1,6 +1,10 @@
 import React from "react";
 
-import { LogOutButton } from "../components/PageComponents";
+import {
+  LogOutButton,
+  trackHeightAsCssVar,
+  isMobileNavMenuOpen,
+} from "../components/PageComponents";
 
 export default class GeoDashNavigationBar extends React.Component {
   constructor(props) {
@@ -9,6 +13,17 @@ export default class GeoDashNavigationBar extends React.Component {
       addDialog: false,
       copyDialog: false,
     };
+    this.navRef = React.createRef();
+  }
+
+  componentDidMount() {
+    this.stopTrackingNavHeight = trackHeightAsCssVar(this.navRef.current, "--navbar-height", {
+      ignore: isMobileNavMenuOpen,
+    });
+  }
+
+  componentWillUnmount() {
+    if (this.stopTrackingNavHeight) this.stopTrackingNavHeight();
   }
 
   closeDialogs = () =>
@@ -26,10 +41,11 @@ export default class GeoDashNavigationBar extends React.Component {
         <nav
           className="navbar navbar-expand-lg navbar-light fixed-top py-0"
           id="geodash-nav"
+          ref={this.navRef}
           style={{ backgroundColor: "white" }}
         >
           <a className="navbar-brand pt-1 pb-1" href="home">
-            <img alt="Home" className="img-fluid" id="ceo-site-logo" src="/img/ceo-logo.png" />
+            <img alt="Home" id="ceo-site-logo" src="/img/ceo-logo.png" />
           </a>
           <button
             className="navbar-toggler"

@@ -69,6 +69,15 @@ export const ProjectsTab = ({
         width: "160px",
         selector: (row) => row.createdDate,
         sortable: true,
+        // Default sort: most recent first (applied via defaultSortFieldId / defaultSortAsc on the table)
+        id: "createdDate",
+        // Dates are "YYYY-MM-DD" strings, so they compare correctly as text.
+        // Rows without a date (e.g. drafts) are treated as the oldest.
+        sortFunction: (rowA, rowB) => {
+          const a = rowA.createdDate || "";
+          const b = rowB.createdDate || "";
+          return a < b ? -1 : a > b ? 1 : 0;
+        },
         cell: (row) =>
           row.createdDate
             ? row.createdDate
@@ -255,6 +264,8 @@ export const ProjectsTab = ({
         data={filteredProjects}
         selectableRows
         onSelectedRowsChange={({ selectedRows }) => setSelectedRows(selectedRows)}
+        defaultSortFieldId="createdDate"
+        defaultSortAsc={false}
         pagination
         paginationPerPage={100}
         paginationRowsPerPageOptions={[25, 50, 100, 250]}

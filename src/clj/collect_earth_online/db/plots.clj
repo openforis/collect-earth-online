@@ -367,7 +367,8 @@
    imagery-ids review-mode? project-type
    used-kml used-geodash]
   (if user-plot
-    (if (= project-type "simplified")
+    (if (or  review-mode?
+             (= project-type "simplified"))
       (call-sql "insert_user_plot"
                 plot-id
                 user-id
@@ -376,12 +377,13 @@
                 (when-not review-mode? (Timestamp. collection-start))
                 imagery-ids
                 used-kml
-                used-geodash)
+                used-geodash
+                review-mode?)
       (call-sql "update_user_plot"
                 user-plot
                 confidence
                 confidence-comment
-                (when-not review-mode? (Timestamp. collection-start))
+                (Timestamp. collection-start)
                 imagery-ids
                 used-kml
                 used-geodash))
@@ -393,7 +395,8 @@
               (when-not review-mode? (Timestamp. collection-start))
               imagery-ids
               used-kml
-              used-geodash)))
+              used-geodash
+              false)))
 
 (defn add-user-samples
   "{:params {:projectId :int-str
@@ -434,7 +437,8 @@
                                 (map (fn [{:keys [sampleGeom]}]
                                        (call-sql "delete_samples_by_geom" plot-id (tc/json->jsonb sampleGeom)))
                                      new-plot-samples)))
-                             (when (= project-type "regular")
+                             (when (and (not review-mode?)
+                                        (= project-type "regular"))
                                (call-sql "delete_user_plot_by_plot" plot-id user-id)
                                (call-sql "delete_samples_by_plot" plot-id))
                              (reduce (fn [acc {:keys [id visibleId sampleGeom]}]
@@ -467,7 +471,7 @@
                   plot-id
                   (tc/clj->jsonb (set/rename-keys user-samples id-translation))
                   (tc/clj->jsonb (set/rename-keys user-images id-translation))))
-      (when (not= project-type "simplified")
+      (when (and (not review-mode?) (not= project-type "simplified"))
         (call-sql "delete_user_plot_by_plot" plot-id user-id)))
     (unlock-plots user-id)
     (data-response "")))

@@ -92,6 +92,7 @@ export const SidebarCard = ({
   onInfoClick,
   infoPopup,
   showHeader = true,
+  headerBtn
 }) => {
   const [open, setOpen] = useState(defaultOpen);
   const {showInfoModal} = useAtomValue(stateAtom);
@@ -124,7 +125,7 @@ export const SidebarCard = ({
 	 )}
          <span className="sidebar-title">{title}</span>
          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-           
+           {headerBtn}
            {collapsible && (
              <button
                className="sidebar-collapse-button"

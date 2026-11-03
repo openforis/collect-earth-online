@@ -39,7 +39,7 @@ export function Login ({returnurl}) {
            {loginAtom.modal.alert.alertMessage}
          </Modal>}
 
-        <div className="card card-darkgreen" style={{top: '3rem'}}>
+        <div className="card card-darkgreen">
           <div className="card-header card-header-lightgreen">Sign into your account</div>
           <div className="card-body">
             <form

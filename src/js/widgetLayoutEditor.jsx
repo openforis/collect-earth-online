@@ -24,6 +24,7 @@ import { EditorContext, graphWidgetList, gridRowHeight, mapWidgetList } from "./
 import { isValidJSON } from "./utils/generalUtils";
 import { getNextInSequence, last } from "./utils/sequence";
 import BasemapSelector from "./geodash/form/BasemapSelector";
+import { tfoLabel } from "./imagery/tfo";
 import Modal from "./components/Modal";
 import { BreadCrumbs, NavigationBar } from "./components/PageComponents";
 
@@ -490,9 +491,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             onChange={(e) => this.updateTitle(e.target.value)}
             placeholder={
               this.getWidgetDesign("basemapTFODate") ?
-                "Planet TFO " +
-                this.getWidgetDesign("basemapTFODate").slice(
-                  34, this.getWidgetDesign("basemapTFODate").length - 7)
+                "Planet TFO " + tfoLabel(this.getWidgetDesign("basemapTFODate"))
                 : "Enter Title"}
             type="text"
             value={this.state.title}
@@ -561,7 +560,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             projectTemplateList={projectTemplateList}
           />
         )}
-        <div className="container-fluid" style={{ paddingTop: "67px" }}>
+        <div className="container-fluid">
           <div className="d-flex align-items-center justify-content-between my-3">
             <h2 className="mb-0">Geo-Dash</h2>
             <div className="d-flex" style={{ gap: ".5rem" }}>
