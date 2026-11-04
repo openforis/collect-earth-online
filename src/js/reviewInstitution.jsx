@@ -502,6 +502,10 @@ export const InstitutionDescription = () => {
           </div>
         )}
         <p className="inst-desc-text">{institution.description}</p>
+        <p className="inst-desc-text">Instititution Page: <span style={
+          {textDecorationLine: 'underline', cursor: 'pointer'}
+        }onClick={()=>window.open(institution?.url)
+                 }>{institution?.url}</span></p>
       </div>
     </div>
   );
