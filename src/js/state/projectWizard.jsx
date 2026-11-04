@@ -45,6 +45,8 @@ const projectWizardDb = {
   projectSource: null,
   projectId: -1,
   projectDraftId: -1,
+  draftSaving: false,
+  projectSaving: false,
   templateProjectId: -1,
   templateProjectName: '',
   useTemplatePlots: false,
@@ -157,7 +159,9 @@ export const event_ids = {
   availability: 'availability',
   projectSource: 'projectSource',
   successResponse: 'successReponse',
-  draftSuccess:'draftSuccess', 
+  draftSuccess:'draftSuccess',
+  draftSaving: 'draftSaving',
+  projectSaving: 'projectSaving',
   overview: {projectName: 'overview.projectName',
     projectDescription: 'overview.projectDescription',
     projectType: 'overview.projectType',
@@ -264,6 +268,8 @@ export const sub_ids = {
   errors: 'errors',
   projectId : 'projectId',
   projectDraftId: 'projectDraftId',
+  draftSaving: 'draftSaving',
+  projectSaving: 'projectSaving',
   currentStep: 'currentStep',
   modal: 'modal',
   projectSource: 'projectSource',
@@ -373,6 +379,8 @@ export const effects = {};
 regSub(sub_ids.projectId, sub_ids.projectId);
 regSub(sub_ids.currentStep, sub_ids.currentStep);
 regSub(sub_ids.modal, sub_ids.modal);
+regSub(sub_ids.draftSaving, sub_ids.draftSaving);
+regSub(sub_ids.projectSaving, sub_ids.projectSaving);
 regSub(sub_ids.projectSource, sub_ids.projectSource);
 regSub(sub_ids.errors, sub_ids.errors);
 regSub(sub_ids.successResponse, sub_ids.successResponse);
@@ -979,7 +987,15 @@ regEvent(event_ids.importProject, ({ draftDb }, project) => {
   draftDb[sub_ids.invalidSteps] = errors ? errors.map(([step]) => step) : [];
 });
 
+regEvent(event_ids.draftSaving, ({ draftDb }, saving) => {
+  draftDb[sub_ids.draftSaving] = saving;
+});
+
 regEvent(event_ids.saveDraft, ({ draftDb }) => {
+  // The draft id only exists once the create request returns, so ignore clicks while a
+  // save is in flight; otherwise each click would create another draft.
+  if (current(draftDb[sub_ids.draftSaving])) return;
+
   const institutionId = Number(current(draftDb[sub_ids.institutionId]));
   const form = buildProject(draftDb, sub_ids);
   const useTemplateWidgets = current(draftDb[sub_ids.overview.useTemplateWidgets]);
@@ -1020,7 +1036,8 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
       .catch((message) => {
         console.log('create project draft errors', message);
         dispatch([event_ids.errors, [['server', draftErrors(message)]]]);
-      });
+      })
+      .finally(() => dispatch([event_ids.draftSaving, false]));
   }
 
   function saveProjectDraft () {
@@ -1048,16 +1065,26 @@ regEvent(event_ids.saveDraft, ({ draftDb }) => {
       .catch((message) => {
         console.log('update project draft errors', message);
         dispatch([event_ids.errors, [['server', draftErrors(message)]]]);
-      });
+      })
+      .finally(() => dispatch([event_ids.draftSaving, false]));
   }
 
+  draftDb[sub_ids.draftSaving] = true;
   projectDraftId > 0
     ? saveProjectDraft()
-    : createProjectDraft();           
+    : createProjectDraft();
 });
 
 
+regEvent(event_ids.projectSaving, ({ draftDb }, saving) => {
+  draftDb[sub_ids.projectSaving] = saving;
+});
+
 regEvent(event_ids.saveProject, ({ draftDb }, acceptTos, overwrite) => {
+  // Ignore repeat clicks while a create/update request is in flight; concurrent updates
+  // can each delete and regenerate the plots and leave duplicates behind.
+  if (current(draftDb[sub_ids.projectSaving])) return;
+
   const institutionId = Number(current(draftDb[sub_ids.institutionId]));
   const useTemplateWidgets = current(draftDb[sub_ids.overview.useTemplateWidgets]);
   const useTemplatePlots = current(draftDb[sub_ids.overview.useTemplatePlots]);
@@ -1093,6 +1120,8 @@ regEvent(event_ids.saveProject, ({ draftDb }, acceptTos, overwrite) => {
         }
       })
       .catch((message) => {
+        // A successful update redirects, so only failures re-enable the buttons.
+        dispatch([event_ids.projectSaving, false]);
         dispatch([event_ids.errors, [['server', [message]]]]);;
       });
   }
@@ -1140,10 +1169,18 @@ regEvent(event_ids.saveProject, ({ draftDb }, acceptTos, overwrite) => {
           return Promise.reject(data[1]);
         }
       })
-      .catch((message) => dispatch([event_ids.errors, [['server', [message]]]]));
+      .catch((message) => {
+        dispatch([event_ids.projectSaving, false]);
+        dispatch([event_ids.errors, [['server', [message]]]]);
+      });
   }
-  errors ? dispatch([event_ids.errors, errors]) :
-    (existingProjectId > 0) ? updateProject() : createProject();
+
+  if (errors) {
+    dispatch([event_ids.errors, errors]);
+    return;
+  }
+  draftDb[sub_ids.projectSaving] = true;
+  (existingProjectId > 0) ? updateProject() : createProject();
 });
 
 regEvent(event_ids.publishProject, ({ draftDb }) => {
