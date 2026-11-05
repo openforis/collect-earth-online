@@ -194,6 +194,11 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
      state.selectedQuestionId,
     ]);
 
+  useEffect(() => {
+    if (!state.currentPlot?.id) return;
+    showProjectPlot();
+  }, [state.showBoundary]);
+
   // UPDATE MAP WHEN STATE CHANGES — Auto launch geodash
   useEffect(() => {
     if (!state.currentPlot?.id) return;
@@ -211,7 +216,7 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     }
 
     updateMapImagery();
-  }, [state.currentPlot?.id, state.showBoundary, state.currentProject?.hasGeoDash, state.currentProject?.projectOptions?.autoLaunchGeoDash, state.currentProject?.type]);
+  }, [state.currentPlot?.id, state.currentProject?.hasGeoDash, state.currentProject?.projectOptions?.autoLaunchGeoDash, state.currentProject?.type]);
 
   // GET PLOT DATA WHEN NEEDED - When getNewPlot changes to true, request plot data
   useEffect(() => {
