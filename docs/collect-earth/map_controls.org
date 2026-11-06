@@ -24,6 +24,6 @@
  -- Clear Selection: If all plot samples are selected, clears plot selection (as an inversion of 'all' is 'none')
  -- Invert Sample Selection: If multiple (but not all) samples are selected, inverts the selection so that those samples which weren't selected are now selected, and those that were selected are now deselected. 
 
- -- TODO: re-zoom, hide boundary, and hide samples do not work on project splash (change 'hide samples' to 'hide plots'?)
+
 
  
