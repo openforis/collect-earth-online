@@ -1,0 +1,29 @@
+* Map Controls
+ -- Shift and drag a box: zoom into box as bounds
+ -- Single click and drag: pan
+ -- Scroll up: zoom out
+ -- Scroll down: zoom in
+ -- Double click: zoom in one level
+* Sample Selection
+ -- by default, no samples are selected.
+
+* Map Controls Buttons:
+ -- +: zoom in
+ -- -: zoom out
+ -- Re-Zoom: return view to project plot AOI
+ -- Hide Boundary: toggles visiblity of plot boundary
+ -- Hide Samples: toggles visibility of plot samples. does not clear answers.
+
+* Collection Page Controls:
+ -- Ctrl + Click and drag: draw box multiselect
+ -- Shift + Click: add to selection
+ -- Shift + Click and Drag: zoom to drawn box
+ -- Click a sample: clear selection and add sample to selection
+ -- click the map, not a sample: clear selection
+ -- Select All Samples: adds all samples of current plot to selection (technically inverts an empty list to a list that includes the sample ids of all plot samples)
+ -- Clear Selection: If all plot samples are selected, clears plot selection (as an inversion of 'all' is 'none')
+ -- Invert Sample Selection: If multiple (but not all) samples are selected, inverts the selection so that those samples which weren't selected are now selected, and those that were selected are now deselected. 
+
+
+
+ 
