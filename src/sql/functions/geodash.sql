@@ -32,7 +32,7 @@ CREATE OR REPLACE FUNCTION add_project_widget(_project_id integer, _widget jsonb
 $$ LANGUAGE SQL;
 
 -- Updates a project_widget from the database
-CREATE OR REPLACE FUNCTION update_project_widget_by_widget_id(_project_id, integer, _widget_id integer, _widget jsonb)
+CREATE OR REPLACE FUNCTION update_project_widget_by_widget_id(_project_id integer, _widget_id integer, _widget jsonb)
  RETURNS void AS $$
 
     UPDATE project_widgets

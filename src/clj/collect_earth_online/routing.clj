@@ -231,9 +231,7 @@
    [:get  "/get-plot-disagreement"]            {:handler     (validate plots/get-plot-disagreement)
                                                 :auth-type   :admin
                                                 :auth-action :block}
-   [:get  "/get-plot-sample-geom"]             {:handler     (validate plots/get-plot-sample-geom)
-                                                :auth-type   :user
-                                                :auth-action :block}
+   [:get  "/get-plot-sample-geom"]             {:handler     (validate plots/get-plot-sample-geom)}
    [:get  "/get-plotters"]                     {:handler     (validate plots/get-plotters)
                                                 :auth-type   :collect
                                                 :auth-action :block}
@@ -294,9 +292,7 @@
    [:post "/geo-dash/delete-widget"]        {:handler geodash/delete-dashboard-widget-by-id
                                              :auth-type   :admin
                                              :auth-action :block}
-   [:post "/geo-dash/gateway-request"]      {:handler geodash/gateway-request
-                                             :auth-type :collect
-                                             :auth-action :block}
+   [:post "/geo-dash/gateway-request"]      {:handler geodash/gateway-request}
    [:get "/geo-dash/validate-vis-params"]   {:handler geodash/validate-vis-params}
    [:post "/geo-dash/update-widget"]        {:handler geodash/update-dashboard-widget-by-id
                                              :auth-type :admin
