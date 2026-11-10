@@ -283,14 +283,18 @@
 
    ;; GeoDash API
    [:get  "/geo-dash/get-project-widgets"]  {:handler geodash/get-project-widgets}
-   [:post "/geo-dash/copy-project-widgets"] {:handler geodash/copy-project-widgets}
+   [:post "/geo-dash/copy-project-widgets"] {:handler geodash/copy-project-widgets
+                                             :auth-type   :admin
+                                             :auth-action :block}
    [:post "/geo-dash/create-widget"]        {:handler geodash/create-dashboard-widget-by-id
-                                             :auth-type :admin
+                                             :auth-type   :admin
                                              :auth-action :block}
    [:post "/geo-dash/delete-widget"]        {:handler geodash/delete-dashboard-widget-by-id
-                                             :auth-type :admin
+                                             :auth-type   :admin
                                              :auth-action :block}
-   [:post "/geo-dash/gateway-request"]      {:handler geodash/gateway-request}
+   [:post "/geo-dash/gateway-request"]      {:handler geodash/gateway-request
+                                             :auth-type :collect
+                                             :auth-action :block}
    [:get "/geo-dash/validate-vis-params"]   {:handler geodash/validate-vis-params}
    [:post "/geo-dash/update-widget"]        {:handler geodash/update-dashboard-widget-by-id
                                              :auth-type :admin
