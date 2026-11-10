@@ -159,17 +159,20 @@ CREATE OR REPLACE FUNCTION get_user_stats(_user_id integer)
  ) AS $$
 
     WITH users_plots as (
-        SELECT plot_uid,
-            p.*,
-            (CASE WHEN collection_time IS NULL OR collection_start IS NULL THEN 0
-                ELSE EXTRACT(EPOCH FROM (collection_time - collection_start)) END) as seconds
+        SELECT pl.plot_uid,
+            p.project_uid,
+            p."name",
+            p.description,
+            p.availability,
+            p.institution_rid,
+            (CASE WHEN up.collection_time IS NULL OR up.collection_start IS NULL THEN 0
+                ELSE EXTRACT(EPOCH FROM (up.collection_time - up.collection_start)) END) as seconds
         FROM user_plots up
         INNER JOIN plots pl
-            ON up.plot_rid = plot_uid
+            ON up.plot_rid = pl.plot_uid
         INNER JOIN projects p
-            ON pl.project_rid = project_uid
-        INNER JOIN users u
-            ON up.user_rid = _user_id
+            ON pl.project_rid = p.project_uid
+        WHERE up.user_rid = _user_id
     ), user_totals as (
         SELECT COUNT(DISTINCT project_uid)::int as proj_count,
             COUNT(DISTINCT plot_uid)::int as plot_count

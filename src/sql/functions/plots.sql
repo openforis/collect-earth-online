@@ -403,43 +403,96 @@ CREATE OR REPLACE FUNCTION plot_in_project(_plot_id integer, _project_id integer
 
 $$ LANGUAGE SQL;
 
--- Returns the plot's existing sample with the given geometry, or creates the
--- sample if the plot has none like it. Saving collection never deletes or
--- replaces samples: answers are tied to sample ids, so replacing a sample
--- would delete every other collector's answers on it (ON DELETE CASCADE).
--- Geometries match within 1e-7 degrees (about 1 cm) because the client gets
--- coordinates rounded by ST_AsGeoJSON and sends them back that way.
-CREATE OR REPLACE FUNCTION find_or_create_plot_sample(_project_id integer, _plot_id integer, _visible_id integer, _sample_geom jsonb)
- RETURNS integer AS $$
+-- True if another collector or an admin review answered the sample.
+CREATE OR REPLACE FUNCTION sample_answered_by_others(_sample_id integer, _user_id integer)
+ RETURNS boolean AS $$
 
-    WITH new_sample AS (
-        SELECT ST_SetSRID(ST_GeomFromGeoJSON(_sample_geom), 4326) AS geom
-    ), existing AS (
-        SELECT s.sample_uid
-        FROM samples s, new_sample n
-        WHERE s.plot_rid = _plot_id
-            AND plot_in_project(_plot_id, _project_id)
-            AND GeometryType(s.sample_geom) = GeometryType(n.geom)
-            AND ST_HausdorffDistance(s.sample_geom, n.geom) < 1e-7
-        ORDER BY ST_HausdorffDistance(s.sample_geom, n.geom), s.sample_uid
-        LIMIT 1
-    ), created AS (
-        INSERT INTO samples
-            (plot_rid, visible_id, sample_geom)
-        SELECT _plot_id,
-            coalesce(_visible_id, (SELECT get_next_sample_id(_plot_id))),
-            n.geom
-        FROM new_sample n
-        WHERE plot_in_project(_plot_id, _project_id)
-            AND NOT EXISTS (SELECT 1 FROM existing)
-        RETURNING sample_uid
+    SELECT EXISTS (
+        SELECT 1
+        FROM sample_values sv
+        INNER JOIN user_plots up
+            ON up.user_plot_uid = sv.user_plot_rid
+        WHERE sv.sample_rid = _sample_id
+            AND (up.user_rid <> _user_id OR up.admin_review IS TRUE)
     )
 
-    SELECT sample_uid FROM existing
-    UNION ALL
-    SELECT sample_uid FROM created
-
 $$ LANGUAGE SQL;
+
+-- Saves a plot's drawn samples; never deletes or reshapes samples others answered.
+CREATE OR REPLACE FUNCTION save_plot_samples(
+    _project_id     integer,
+    _plot_id        integer,
+    _user_id        integer,
+    _allow_changes  boolean,
+    _samples        jsonb
+ ) RETURNS TABLE (client_id text, sample_id integer) AS $$
+DECLARE
+    _s          jsonb;
+    _geom       geometry;
+    _found      integer;
+    _claimed    integer[] := '{}';
+BEGIN
+    IF NOT plot_in_project(_plot_id, _project_id) THEN
+        RETURN;
+    END IF;
+
+    FOR _s IN SELECT value FROM jsonb_array_elements(_samples) LOOP
+        _geom := ST_SetSRID(ST_GeomFromGeoJSON(_s->>'sampleGeom'), 4326);
+        _found := NULL;
+
+        -- Match by id.
+        IF (_s->>'id') ~ '^[0-9]+$' THEN
+            SELECT s.sample_uid INTO _found
+            FROM samples s
+            WHERE s.sample_uid = (_s->>'id')::integer
+                AND s.plot_rid = _plot_id
+                AND s.sample_uid <> ALL (_claimed);
+
+            IF _found IS NOT NULL
+               AND NOT (GeometryType(_geom) = (SELECT GeometryType(sample_geom) FROM samples WHERE sample_uid = _found)
+                        AND ST_HausdorffDistance(_geom, (SELECT sample_geom FROM samples WHERE sample_uid = _found)) < 1e-7) THEN
+                IF _allow_changes AND NOT sample_answered_by_others(_found, _user_id) THEN
+                    UPDATE samples SET sample_geom = _geom WHERE sample_uid = _found;
+                ELSE
+                    _found := NULL;
+                END IF;
+            END IF;
+        END IF;
+
+        -- Else match by shape (within 1e-7 degrees).
+        IF _found IS NULL THEN
+            SELECT s.sample_uid INTO _found
+            FROM samples s
+            WHERE s.plot_rid = _plot_id
+                AND s.sample_uid <> ALL (_claimed)
+                AND GeometryType(s.sample_geom) = GeometryType(_geom)
+                AND ST_HausdorffDistance(s.sample_geom, _geom) < 1e-7
+            ORDER BY ST_HausdorffDistance(s.sample_geom, _geom), s.sample_uid
+            LIMIT 1;
+        END IF;
+
+        IF _found IS NULL THEN
+            INSERT INTO samples (plot_rid, visible_id, sample_geom)
+            VALUES (_plot_id,
+                    coalesce((_s->>'visibleId')::integer, get_next_sample_id(_plot_id)),
+                    _geom)
+            RETURNING sample_uid INTO _found;
+        END IF;
+
+        _claimed := _claimed || _found;
+        client_id := _s->>'id';
+        sample_id := _found;
+        RETURN NEXT;
+    END LOOP;
+
+    IF _allow_changes THEN
+        DELETE FROM samples s
+        WHERE s.plot_rid = _plot_id
+            AND s.sample_uid <> ALL (_claimed)
+            AND NOT sample_answered_by_others(s.sample_uid, _user_id);
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Select samples for a plot.
 CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id integer)
@@ -619,10 +672,13 @@ CREATE OR REPLACE FUNCTION update_user_plot(
    RETURNING user_plot_uid
 $$ LANGUAGE SQL;
 
+-- The collector's own record; skips admin reviews stored under their id.
 CREATE OR REPLACE FUNCTION get_user_plot(_plot_id integer, _user_id integer)
 RETURNS integer AS $$
   SELECT user_plot_uid FROM user_plots
-  WHERE plot_rid = _plot_id AND user_rid = _user_id
+  WHERE plot_rid = _plot_id
+    AND user_rid = _user_id
+    AND admin_review IS NOT TRUE
 
 $$ LANGUAGE SQL;
 
@@ -630,13 +686,14 @@ $$ LANGUAGE SQL;
 --  RESETTING COLLECTION
 --
 
--- For clearing user plots for a single plot
+-- Clears a collector's own record for a plot, keeping admin reviews.
 CREATE OR REPLACE FUNCTION delete_user_plot_by_plot(_project_id integer, _plot_id integer, _user_id integer)
  RETURNS void AS $$
 
     DELETE FROM user_plots
     WHERE plot_rid = _plot_id
         AND user_rid = _user_id
+        AND admin_review IS NOT TRUE
         AND plot_in_project(_plot_id, _project_id)
 
 $$ LANGUAGE SQL;

@@ -399,6 +399,7 @@
                 imagery-ids
                 used-kml
                 used-geodash))
+    ;; A review save stays a review even when the collector has no own record.
     (call-sql "insert_user_plot"
               plot-id
               user-id
@@ -408,7 +409,7 @@
               imagery-ids
               used-kml
               used-geodash
-              false)))
+              (boolean review-mode?))))
 
 (defn- save-user-samples!
   "Does the work of add-user-samples. Only call it once the plot is known to
@@ -432,25 +433,22 @@
         used-geodash       (:usedGeodash params)
         user-id            (if review-mode? current-user-id session-user-id)
         imagery-ids        (tc/clj->jsonb (:imageryIds params))
-        ;; When drawing is allowed, the client sends every sample on the plot, and samples it
-        ;; drew have temporary IDs. Each one is matched to the plot's existing sample with the
-        ;; same geometry, or created if it's new, and the user's answers are moved to that ID.
-        ;; Existing samples are never deleted or replaced: answers are tied to sample IDs, so
-        ;; replacing a sample would delete every other collector's answers on it.
+        ;; Maps client sample ids to saved ones.
         id-translation     (when new-plot-samples
-                             (when (and (not review-mode?)
-                                        (= project-type "regular"))
-                               (call-sql "delete_user_plot_by_plot" project-id plot-id user-id))
-                             (reduce (fn [acc {:keys [id visibleId sampleGeom]}]
-                                       (let [sample-id (sql-primitive (call-sql "find_or_create_plot_sample"
-                                                                                {:log? false}
-                                                                                project-id
-                                                                                plot-id
-                                                                                visibleId
-                                                                                (tc/json->jsonb sampleGeom)))]
-                                         (assoc acc (str id) (str sample-id))))
-                                     {}
-                                     new-plot-samples))
+                             (let [allow-changes? (and (not review-mode?)
+                                                       (= project-type "regular"))]
+                               (when allow-changes?
+                                 (call-sql "delete_user_plot_by_plot" project-id plot-id user-id))
+                               (->> (call-sql "save_plot_samples"
+                                              {:log? false}
+                                              project-id
+                                              plot-id
+                                              user-id
+                                              allow-changes?
+                                              (tc/clj->jsonb new-plot-samples))
+                                    (map (fn [{:keys [client_id sample_id]}]
+                                           [client_id (str sample_id)]))
+                                    (into {}))))
         user-plot         (sql-primitive (call-sql "get_user_plot" plot-id user-id))]
     (if (some seq (vals user-samples))
       (let [user-plot-id (sql-primitive
