@@ -332,7 +332,9 @@
                                                :auth-type   :metrics
                                                :auth-action :block}
    [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}
-   [:post "/gcloud-listener"]                 {:handler gcloud/gcloud-handler}
+   [:post "/gcloud-listener"]                 {:handler gcloud/gcloud-handler
+                                               :auth-type   :admin
+                                               :auth-action :block}
    [:get  "/open-socket"]                     {:handler sse/sse-handler}
    [:post "/crumb-data"]                      {:handler crumb-data}
    [:get  "/get-blog-feed"]                   {:handler rss/get-blog-feed}
