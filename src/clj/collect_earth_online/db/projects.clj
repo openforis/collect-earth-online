@@ -1075,7 +1075,7 @@
 
 (defn create-shape-files!
   [{:keys [params]}]
-  (let [project-id (:projectId params)
+  (let [project-id (tc/val->int (:projectId params))
         zip-file (external-file/zip-shape-files project-id)
         file-name (last (str/split zip-file #"/"))]
     (if zip-file

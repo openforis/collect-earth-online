@@ -101,7 +101,8 @@ CREATE OR REPLACE FUNCTION update_institution_imagery(
     _title            text,
     _attribution      text,
     _is_proxied       boolean,
-    _source_config    jsonb
+    _source_config    jsonb,
+    _institution_id   integer
  ) RETURNS integer AS $$
 
     UPDATE imagery
@@ -110,6 +111,7 @@ CREATE OR REPLACE FUNCTION update_institution_imagery(
         is_proxied = _is_proxied,
         source_config = _source_config
     WHERE imagery_uid = _imagery_id
+    AND institution_rid = _institution_id
     RETURNING imagery_uid
 
 $$ LANGUAGE SQL;

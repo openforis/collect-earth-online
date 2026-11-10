@@ -90,7 +90,8 @@
                   imagery-title
                   imagery-attribution
                   is-proxied?
-                  source-config)
+                  source-config
+                  institution-id)
         (when add-to-all-projects?
           (call-sql "add_imagery_to_all_institution_projects" imagery-id))
         (data-response "")))))
@@ -101,10 +102,6 @@
         institution-id (tc/val->int (:institutionId params))]
     (call-sql "update_imagery_visibility" imagery-id visibility institution-id)
     (data-response "")))
-
-(defn archive-institution-imagery [{:keys [params]}]
-  (call-sql "archive_imagery" (tc/val->int (:imageryId params)))
-  (data-response ""))
 
 (defn bulk-archive-institution-imagery [{:keys [params]}]
   (let [imagery-ids (cstr/join "," (:imageryIds params))

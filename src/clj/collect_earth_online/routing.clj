@@ -128,7 +128,7 @@
    [:get  "/get-template-by-id"]             {:handler projects/get-template-by-id}
    [:get  "/get-project-stats"]              {:handler projects/get-project-stats}
    [:get "/create-shape-files"]              {:handler     projects/create-shape-files!
-                                              :auth-type   :user
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:get  "/get-project-draft-by-id"]        {:handler     projects/get-project-draft-by-id
                                               :auth-type   :user
@@ -149,7 +149,7 @@
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/delete-draft-projects-bulk"]     {:handler     projects/delete-draft-projects-bulk!
-                                              :auth-tupe   :admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:post "/delete-projects-bulk"]           {:handler     (validate projects/delete-projects-bulk!)
                                               :auth-type   :admin
@@ -266,10 +266,6 @@
                                                 :auth-type   :admin
                                                 :auth-action :block}
    [:post "/edit-imagery-bulk"]                {:handler     (validate imagery/bulk-update-imagery-visibility)
-                                                :auth-type   :admin
-                                                :auth-action :block}
-
-   [:post "/archive-institution-imagery"]      {:handler     (validate imagery/archive-institution-imagery)
                                                 :auth-type   :admin
                                                 :auth-action :block}
    [:post "/bulk-archive-institution-imagery"] {:handler     (validate imagery/bulk-archive-institution-imagery)
