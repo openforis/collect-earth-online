@@ -123,10 +123,16 @@
    [:get  "/get-highlight-projects"]         {:handler projects/get-highlight-projects}
    [:get  "/get-institution-projects"]       {:handler projects/get-institution-projects}
    [:get  "/get-institution-dash-projects"]  {:handler projects/get-institution-dash-projects}
-   [:get  "/get-project-by-id"]              {:handler projects/get-project-by-id}
+   [:get  "/get-project-by-id"]              {:handler projects/get-project-by-id
+                                              :auth-type   :collect
+                                              :auth-action :block}
    [:get  "/get-template-projects"]          {:handler projects/get-template-projects}
-   [:get  "/get-template-by-id"]             {:handler projects/get-template-by-id}
-   [:get  "/get-project-stats"]              {:handler projects/get-project-stats}
+   [:get  "/get-template-by-id"]             {:handler projects/get-template-by-id
+                                              :auth-type   :user
+                                              :auth-action :block}
+   [:get  "/get-project-stats"]              {:handler projects/get-project-stats
+                                              :auth-type   :collect
+                                              :auth-action :block}
    [:get "/create-shape-files"]              {:handler     projects/create-shape-files!
                                               :auth-type   :admin
                                               :auth-action :block}
@@ -199,7 +205,9 @@
    [:get "/qaqc-plot"]                       {:handler     #'qaqc/get-qaqc-plot
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get "/sot-example"]                     {:handler #'qaqc/get-sot-example}
+   [:get "/sot-example"]                     {:handler #'qaqc/get-sot-example
+                                              :auth-type   :admin
+                                              :auth-action :block}
    [:post "/disable-users"]                  {:handler #'qaqc/disable-users
                                               :auth-type   :admin
                                               :auth-action :block}
@@ -220,12 +228,16 @@
    [:get  "/get-collection-plot"]              {:handler     (validate plots/get-collection-plot)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-plot-disagreement"]            {:handler     (validate plots/get-plot-disagreement)}
+   [:get  "/get-plot-disagreement"]            {:handler     (validate plots/get-plot-disagreement)
+                                                :auth-type   :admin
+                                                :auth-action :block}
    [:get  "/get-plot-sample-geom"]             {:handler     (validate plots/get-plot-sample-geom)}
    [:get  "/get-plotters"]                     {:handler     (validate plots/get-plotters)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-project-plots"]                {:handler     (validate plots/get-project-plots)}
+   [:get  "/get-project-plots"]                {:handler     (validate plots/get-project-plots)
+                                                :auth-type   :collect
+                                                :auth-action :block}
    [:post "/add-user-samples"]                 {:handler     (validate plots/add-user-samples)
                                                 :auth-type   :collect
                                                 :auth-action :block}
