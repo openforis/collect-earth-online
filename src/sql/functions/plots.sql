@@ -503,12 +503,6 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id intege
     saved_answers jsonb
  ) AS $$
 
-    WITH assigned_count AS (
-        SELECT count(*) as user_count
-        FROM plot_assignments
-        WHERE plot_rid = _plot_id
-    )
-
     SELECT
         sample_uid,
         visible_id,
@@ -517,9 +511,15 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id intege
     FROM samples s
     LEFT JOIN plot_assignments pa
         ON s.plot_rid = pa.plot_rid
-    LEFT JOIN user_plots up
-        ON s.plot_rid = up.plot_rid
-        AND (pa.user_rid = up.user_rid OR (SELECT user_count FROM assigned_count) = 0)
+    LEFT JOIN LATERAL (
+        SELECT user_plot_uid
+        FROM user_plots
+        WHERE plot_rid = _plot_id
+            AND user_rid = _user_id
+            AND admin_review IS NOT TRUE
+        ORDER BY collection_time DESC NULLS LAST, user_plot_uid DESC
+        LIMIT 1
+    ) up ON TRUE
     LEFT JOIN sample_values sv
         ON sample_uid = sv.sample_rid
         AND user_plot_uid = sv.user_plot_rid
