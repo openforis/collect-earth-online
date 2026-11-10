@@ -141,7 +141,7 @@
   (cond (nil? user)
         "There is no user with that email address."
 
-        (not= reset-key (:reset_key user))
+        (or (nil? reset-key) (not= reset-key (:reset_key user)))
         (str "Invalid reset key for user " email ".")
 
         (< (count password) 8)
