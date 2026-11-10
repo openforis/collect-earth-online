@@ -1475,6 +1475,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Returns the given project ids that belong to the institution
+CREATE OR REPLACE FUNCTION select_institution_project_ids(_institution_id integer, _project_ids_text TEXT)
+ RETURNS TABLE (project_id integer) AS $$
+
+    SELECT project_uid
+    FROM projects
+    WHERE institution_rid = _institution_id
+        AND project_uid = ANY(string_to_array(_project_ids_text, ',')::INTEGER[])
+
+$$ LANGUAGE SQL;
+
 -- Questions to be ignored
 CREATE OR REPLACE FUNCTION get_input_question_ids(_project_uid INTEGER)
 RETURNS JSONB AS $$

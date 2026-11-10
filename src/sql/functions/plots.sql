@@ -389,18 +389,55 @@ CREATE OR REPLACE FUNCTION get_next_sample_id(_plot_id integer)
 
 $$ LANGUAGE SQL;
 
--- Create project plot sample with no external file data
-CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _visible_id integer, _sample_geom jsonb)
+-- Returns true if the plot belongs to the project. Routes authorize on the
+-- project, so plot-level writes must check the plot is part of it.
+CREATE OR REPLACE FUNCTION plot_in_project(_plot_id integer, _project_id integer)
+ RETURNS boolean AS $$
+
+    SELECT EXISTS (
+        SELECT 1
+        FROM plots
+        WHERE plot_uid = _plot_id
+            AND project_rid = _project_id
+    )
+
+$$ LANGUAGE SQL;
+
+-- Returns the plot's existing sample with the given geometry, or creates the
+-- sample if the plot has none like it. Saving collection never deletes or
+-- replaces samples: answers are tied to sample ids, so replacing a sample
+-- would delete every other collector's answers on it (ON DELETE CASCADE).
+-- Geometries match within 1e-7 degrees (about 1 cm) because the client gets
+-- coordinates rounded by ST_AsGeoJSON and sends them back that way.
+CREATE OR REPLACE FUNCTION find_or_create_plot_sample(_project_id integer, _plot_id integer, _visible_id integer, _sample_geom jsonb)
  RETURNS integer AS $$
 
-    INSERT INTO samples
-        (plot_rid, visible_id, sample_geom)
-    VALUES (
-        _plot_id,
-        coalesce(_visible_id, (SELECT get_next_sample_id(_plot_id))),
-        ST_SetSRID(ST_GeomFromGeoJSON(_sample_geom), 4326)
+    WITH new_sample AS (
+        SELECT ST_SetSRID(ST_GeomFromGeoJSON(_sample_geom), 4326) AS geom
+    ), existing AS (
+        SELECT s.sample_uid
+        FROM samples s, new_sample n
+        WHERE s.plot_rid = _plot_id
+            AND plot_in_project(_plot_id, _project_id)
+            AND GeometryType(s.sample_geom) = GeometryType(n.geom)
+            AND ST_HausdorffDistance(s.sample_geom, n.geom) < 1e-7
+        ORDER BY ST_HausdorffDistance(s.sample_geom, n.geom), s.sample_uid
+        LIMIT 1
+    ), created AS (
+        INSERT INTO samples
+            (plot_rid, visible_id, sample_geom)
+        SELECT _plot_id,
+            coalesce(_visible_id, (SELECT get_next_sample_id(_plot_id))),
+            n.geom
+        FROM new_sample n
+        WHERE plot_in_project(_plot_id, _project_id)
+            AND NOT EXISTS (SELECT 1 FROM existing)
+        RETURNING sample_uid
     )
-    RETURNING sample_uid
+
+    SELECT sample_uid FROM existing
+    UNION ALL
+    SELECT sample_uid FROM created
 
 $$ LANGUAGE SQL;
 
@@ -475,6 +512,7 @@ $$ LANGUAGE SQL;
 --
 -- Flag plot
 CREATE OR REPLACE FUNCTION flag_plot(
+    _project_id integer,
     _plot_id integer,
     _user_id integer,
     _collection_start timestamp,
@@ -488,17 +526,19 @@ CREATE OR REPLACE FUNCTION flag_plot(
         WHERE user_rid = _user_id
           AND plot_rid = _plot_id
         LIMIT 1
-    );
+    )
+      AND plot_in_project(_plot_id, _project_id);
 
     DELETE FROM user_plots
     WHERE user_rid = _user_id
-      AND plot_rid = _plot_id;
+      AND plot_rid = _plot_id
+      AND plot_in_project(_plot_id, _project_id);
 
     INSERT INTO user_plots (
         user_rid, plot_rid, flagged, collection_start, collection_time, flagged_reason
-    ) VALUES (
-        _user_id, _plot_id, true, _collection_start, NOW(), _flagged_reason
-    );
+    )
+    SELECT _user_id, _plot_id, true, _collection_start, NOW(), _flagged_reason
+    WHERE plot_in_project(_plot_id, _project_id);
 
     SELECT _plot_id;
 
@@ -591,20 +631,13 @@ $$ LANGUAGE SQL;
 --
 
 -- For clearing user plots for a single plot
-CREATE OR REPLACE FUNCTION delete_user_plot_by_plot(_plot_id integer, _user_id integer)
+CREATE OR REPLACE FUNCTION delete_user_plot_by_plot(_project_id integer, _plot_id integer, _user_id integer)
  RETURNS void AS $$
 
     DELETE FROM user_plots
     WHERE plot_rid = _plot_id
         AND user_rid = _user_id
-
-$$ LANGUAGE SQL;
-
--- For clearing samples for a single plot
-CREATE OR REPLACE FUNCTION delete_samples_by_plot(_plot_id integer)
- RETURNS void AS $$
-
-    DELETE FROM samples WHERE plot_rid = _plot_id
+        AND plot_in_project(_plot_id, _project_id)
 
 $$ LANGUAGE SQL;
 
@@ -613,13 +646,6 @@ CREATE OR REPLACE FUNCTION delete_samples_by_visible_id(_plot_id integer, _visib
     DELETE FROM samples
     WHERE plot_rid=_plot_id
       AND visible_id=_visible_id
-$$ LANGUAGE SQL;
-
-CREATE OR REPLACE FUNCTION delete_samples_by_geom(_plot_id integer, _geom jsonb)
- RETURNS VOID AS $$
-    DELETE FROM samples
-    WHERE sample_geom = ST_GeomFromGeoJSON(_geom)
-      AND plot_rid = _plot_id
 $$ LANGUAGE SQL;
 
 -- For clearing all plots in a project
