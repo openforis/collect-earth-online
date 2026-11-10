@@ -231,7 +231,9 @@
    [:get  "/get-plot-disagreement"]            {:handler     (validate plots/get-plot-disagreement)
                                                 :auth-type   :admin
                                                 :auth-action :block}
-   [:get  "/get-plot-sample-geom"]             {:handler     (validate plots/get-plot-sample-geom)}
+   [:get  "/get-plot-sample-geom"]             {:handler     (validate plots/get-plot-sample-geom)
+                                                :auth-type   :user
+                                                :auth-action :block}
    [:get  "/get-plotters"]                     {:handler     (validate plots/get-plotters)
                                                 :auth-type   :collect
                                                 :auth-action :block}
