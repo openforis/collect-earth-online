@@ -399,7 +399,6 @@
                 imagery-ids
                 used-kml
                 used-geodash))
-    ;; A review save stays a review even when the collector has no own record.
     (call-sql "insert_user_plot"
               plot-id
               user-id
@@ -433,22 +432,27 @@
         used-geodash       (:usedGeodash params)
         user-id            (if review-mode? current-user-id session-user-id)
         imagery-ids        (tc/clj->jsonb (:imageryIds params))
-        ;; Maps client sample ids to saved ones.
+        ;; Creates drawn samples (no visibleId), once each.
         id-translation     (when new-plot-samples
-                             (let [allow-changes? (and (not review-mode?)
-                                                       (= project-type "regular"))]
-                               (when allow-changes?
-                                 (call-sql "delete_user_plot_by_plot" project-id plot-id user-id))
-                               (->> (call-sql "save_plot_samples"
-                                              {:log? false}
-                                              project-id
-                                              plot-id
-                                              user-id
-                                              allow-changes?
-                                              (tc/clj->jsonb new-plot-samples))
-                                    (map (fn [{:keys [client_id sample_id]}]
-                                           [client_id (str sample_id)]))
-                                    (into {}))))
+                             (when (and (not review-mode?)
+                                        (= project-type "regular"))
+                               (call-sql "delete_user_plot_by_plot" project-id plot-id user-id))
+                             (reduce (fn [acc {:keys [id visibleId sampleGeom]}]
+                                       (if visibleId
+                                         acc
+                                         (let [geom      (tc/json->jsonb sampleGeom)
+                                               sample-id (or (sql-primitive (call-sql "select_plot_sample_by_geom"
+                                                                                      {:log? false}
+                                                                                      plot-id
+                                                                                      geom))
+                                                             (sql-primitive (call-sql "create_project_plot_sample"
+                                                                                      {:log? false}
+                                                                                      project-id
+                                                                                      plot-id
+                                                                                      geom)))]
+                                           (assoc acc (str id) (str sample-id)))))
+                                     {}
+                                     new-plot-samples))
         user-plot         (sql-primitive (call-sql "get_user_plot" plot-id user-id))]
     (if (some seq (vals user-samples))
       (let [user-plot-id (sql-primitive

@@ -403,96 +403,32 @@ CREATE OR REPLACE FUNCTION plot_in_project(_plot_id integer, _project_id integer
 
 $$ LANGUAGE SQL;
 
--- True if another collector or an admin review answered the sample.
-CREATE OR REPLACE FUNCTION sample_answered_by_others(_sample_id integer, _user_id integer)
- RETURNS boolean AS $$
+-- A sample of the plot with the same shape (within 1e-7 degrees), if any.
+CREATE OR REPLACE FUNCTION select_plot_sample_by_geom(_plot_id integer, _sample_geom jsonb)
+ RETURNS integer AS $$
 
-    SELECT EXISTS (
-        SELECT 1
-        FROM sample_values sv
-        INNER JOIN user_plots up
-            ON up.user_plot_uid = sv.user_plot_rid
-        WHERE sv.sample_rid = _sample_id
-            AND (up.user_rid <> _user_id OR up.admin_review IS TRUE)
-    )
+    SELECT sample_uid
+    FROM samples, ST_SetSRID(ST_GeomFromGeoJSON(_sample_geom), 4326) AS g
+    WHERE plot_rid = _plot_id
+        AND GeometryType(sample_geom) = GeometryType(g)
+        AND ST_HausdorffDistance(sample_geom, g) < 1e-7
+    ORDER BY ST_HausdorffDistance(sample_geom, g), sample_uid
+    LIMIT 1
 
 $$ LANGUAGE SQL;
 
--- Saves a plot's drawn samples; never deletes or reshapes samples others answered.
-CREATE OR REPLACE FUNCTION save_plot_samples(
-    _project_id     integer,
-    _plot_id        integer,
-    _user_id        integer,
-    _allow_changes  boolean,
-    _samples        jsonb
- ) RETURNS TABLE (client_id text, sample_id integer) AS $$
-DECLARE
-    _s          jsonb;
-    _geom       geometry;
-    _found      integer;
-    _claimed    integer[] := '{}';
-BEGIN
-    IF NOT plot_in_project(_plot_id, _project_id) THEN
-        RETURN;
-    END IF;
+-- Creates a drawn sample with the next visible id.
+CREATE OR REPLACE FUNCTION create_project_plot_sample(_project_id integer, _plot_id integer, _sample_geom jsonb)
+ RETURNS integer AS $$
 
-    FOR _s IN SELECT value FROM jsonb_array_elements(_samples) LOOP
-        _geom := ST_SetSRID(ST_GeomFromGeoJSON(_s->>'sampleGeom'), 4326);
-        _found := NULL;
+    INSERT INTO samples (plot_rid, visible_id, sample_geom)
+    SELECT _plot_id,
+        coalesce(get_next_sample_id(_plot_id), 1),
+        ST_SetSRID(ST_GeomFromGeoJSON(_sample_geom), 4326)
+    WHERE plot_in_project(_plot_id, _project_id)
+    RETURNING sample_uid
 
-        -- Match by id.
-        IF (_s->>'id') ~ '^[0-9]+$' THEN
-            SELECT s.sample_uid INTO _found
-            FROM samples s
-            WHERE s.sample_uid = (_s->>'id')::integer
-                AND s.plot_rid = _plot_id
-                AND s.sample_uid <> ALL (_claimed);
-
-            IF _found IS NOT NULL
-               AND NOT (GeometryType(_geom) = (SELECT GeometryType(sample_geom) FROM samples WHERE sample_uid = _found)
-                        AND ST_HausdorffDistance(_geom, (SELECT sample_geom FROM samples WHERE sample_uid = _found)) < 1e-7) THEN
-                IF _allow_changes AND NOT sample_answered_by_others(_found, _user_id) THEN
-                    UPDATE samples SET sample_geom = _geom WHERE sample_uid = _found;
-                ELSE
-                    _found := NULL;
-                END IF;
-            END IF;
-        END IF;
-
-        -- Else match by shape (within 1e-7 degrees).
-        IF _found IS NULL THEN
-            SELECT s.sample_uid INTO _found
-            FROM samples s
-            WHERE s.plot_rid = _plot_id
-                AND s.sample_uid <> ALL (_claimed)
-                AND GeometryType(s.sample_geom) = GeometryType(_geom)
-                AND ST_HausdorffDistance(s.sample_geom, _geom) < 1e-7
-            ORDER BY ST_HausdorffDistance(s.sample_geom, _geom), s.sample_uid
-            LIMIT 1;
-        END IF;
-
-        IF _found IS NULL THEN
-            INSERT INTO samples (plot_rid, visible_id, sample_geom)
-            VALUES (_plot_id,
-                    coalesce((_s->>'visibleId')::integer, get_next_sample_id(_plot_id)),
-                    _geom)
-            RETURNING sample_uid INTO _found;
-        END IF;
-
-        _claimed := _claimed || _found;
-        client_id := _s->>'id';
-        sample_id := _found;
-        RETURN NEXT;
-    END LOOP;
-
-    IF _allow_changes THEN
-        DELETE FROM samples s
-        WHERE s.plot_rid = _plot_id
-            AND s.sample_uid <> ALL (_claimed)
-            AND NOT sample_answered_by_others(s.sample_uid, _user_id);
-    END IF;
-END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE SQL;
 
 -- Select samples for a plot.
 CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id integer)
