@@ -5,11 +5,19 @@
             [collect-earth-online.db.institutions :refer [is-inst-admin?]]
             [triangulum.response :refer [data-response]]))
 
-(defn- clean-source [source-config]
-  (let [image-type (:type source-config)]
-    (cond-> source-config
-      (#{"GeoServer" "SecureWatch"} image-type) (dissoc source-config :geoserverParams)
-      (#{"Planet" "PlanetTFO"}      image-type) (dissoc source-config :accessToken))))
+(defn- clean-source [{:keys [type geoserverParams] :as source-config}]
+  (case type
+    ("GeoServer" "SecureWatch") (dissoc source-config :geoserverParams :geoserverUrl)
+    ("Planet" "PlanetTFO")      (dissoc source-config :accessToken)
+    "WMTS"                      (-> source-config
+                                    (dissoc :accessToken :geoserverUrl)
+                                    (assoc :geoserverParams (when (map? geoserverParams)
+                                                              (select-keys geoserverParams [:LAYERS]))))
+    source-config))
+
+;; WMTS and PlanetTFO always load through the server, even when not proxied.
+(defn- server-side-source? [is-proxied {:keys [type]}]
+  (or is-proxied (contains? #{"WMTS" "PlanetTFO"} type)))
 
 (defn- prepare-imagery [imagery inst-admin?]
   (mapv (fn [{:keys [imagery_id institution_id visibility title attribution extent is_proxied source_config created_date institution_name]}]
@@ -21,9 +29,9 @@
              :attribution  attribution
              :extent       (tc/jsonb->clj extent)
              :isProxied    is_proxied
-             :sourceConfig (if (or inst-admin? (not is_proxied))
-                             source-config
-                             (clean-source source-config))
+             :sourceConfig (if (and (not inst-admin?) (server-side-source? is_proxied source-config))
+                             (clean-source source-config)
+                             source-config)
              :createdDate  created_date
              :institutionName institution_name}))
         imagery))
