@@ -119,7 +119,5 @@
   (check-initialized)
   (let [img-path (:imgPath params)
         vis-params (tc/json->clj (:visParams params))
-        ;; TODO: Fix this route
-        ;; vis-errors (utils/validateJSON img-path vis-params)
-        ]
+        vis-errors (utils/validateJSON img-path vis-params)]
     (data-response "" {:status 200})))
