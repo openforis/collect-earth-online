@@ -1,4 +1,6 @@
 (ns collect-earth-online.generators.external-file
+  (:import [java.nio.file Files FileVisitOption]
+           [java.util UUID])
   (:require [clojure.string     :as str]
             [clojure.set        :as set]
             [clojure.java.io    :as io]
@@ -31,18 +33,22 @@
        (filter #(= ext (peek (str/split % #"\."))))
        (first)))
 
+;; A vector is passed as-is, so values with spaces stay one argument.
+(defn- sh-args [cmd]
+  (if (string? cmd) (parse-as-sh-cmd cmd) cmd))
+
 (defn- sh-wrapper [dir env & commands]
   (sh/with-sh-dir dir
     (sh/with-sh-env (merge {:PATH path-env} env)
       (doseq [cmd commands]
-        (let [{:keys [exit err]} (apply sh/sh (parse-as-sh-cmd cmd))]
+        (let [{:keys [exit err]} (apply sh/sh (sh-args cmd))]
           (when-not (= 0 exit)
             (pu/init-throw  err)))))))
 
 (defn- sh-wrapper-stdout [dir env cmd]
   (sh/with-sh-dir dir
     (sh/with-sh-env (merge {:PATH path-env} env)
-      (let [{:keys [exit err out]} (apply sh/sh (parse-as-sh-cmd cmd))]
+      (let [{:keys [exit err out]} (apply sh/sh (sh-args cmd))]
         (if (= 0 exit)
           out
           (pu/init-throw  err))))))
@@ -55,6 +61,17 @@
           (when-not (= 0 exit)
             (pu/init-throw err)))))))
 
+(defn remove-dir! [dir]
+  (sh-wrapper tmp-dir {} ["rm" "-rf" dir]))
+
+(defn- new-tmp-dir [prefix]
+  (str tmp-dir "/ceo-tmp-" prefix "-" (UUID/randomUUID) "/"))
+
+(defn- reject-symlinks! [dir]
+  (with-open [paths (Files/walk (.toPath (io/file dir)) (make-array FileVisitOption 0))]
+    (when (some #(Files/isSymbolicLink %) (iterator-seq (.iterator paths)))
+      (pu/init-throw "The uploaded archive contains symbolic links."))))
+
 ;;;
 ;;; Load Information
 ;;;
@@ -62,11 +79,13 @@
 (defmulti get-file-data (fn [distribution _ _ _] (keyword distribution)))
 
 (defmethod get-file-data :shp [_ design-type ext-file folder-name]
-  (sh-wrapper folder-name {} (str "7z e -y " ext-file " -o" design-type))
-  (let [[info body-text _] (-> (sh-wrapper-stdout (str folder-name design-type)
+  (sh-wrapper folder-name {} ["7z" "e" "-y" ext-file (str "-o" design-type)])
+  (reject-symlinks! (str folder-name design-type))
+  (let [shp-file           (or (find-file-by-ext (str folder-name design-type) "shp")
+                               (pu/init-throw "The zip file does not contain a .shp file."))
+        [info body-text _] (-> (sh-wrapper-stdout (str folder-name design-type)
                                                   {}
-                                                  (str "shp2pgsql -s 4326 -t 2D -D "
-                                                       (find-file-by-ext (str folder-name design-type) "shp")))
+                                                  ["shp2pgsql" "-s" "4326" "-t" "2D" "-D" (str "./" shp-file)])
                                (str/split #"stdin;\n|\n\\\."))
         geom-key    (keyword (str design-type "_geom"))
         header-keys (as-> info i
@@ -186,39 +205,44 @@
                            (str/join "', '" (map #(clean-header-text % design-type) invalid-headers))
                            "'")))))
 
-(defn load-external-data! [project-id distribution file-name file-base64 design-type primary-key]  
+;; The uploaded file name is never used on disk.
+(def ^:private upload-ext {"csv" ".csv" "geojson" ".geojson" "shp" ".zip"})
+
+(defn load-external-data! [project-id distribution file-name file-base64 design-type primary-key]
   (when (#{"csv" "shp" "geojson"} distribution)
-    (let [folder-name (str tmp-dir "/ceo-tmp-" project-id "/")
-          saved-file  (pu/write-file-part-base64 file-name
-                                                 file-base64
-                                                 folder-name
-                                                 (str "project-" project-id "-" design-type))]
-      (pu/try-catch-throw #(let [[headers body] (get-file-data distribution design-type saved-file folder-name)]                             
-                             (when-not (seq body)
-                               (pu/init-throw  (str "The " design-type " file contains no rows of data.")))
+    (let [folder-name (new-tmp-dir project-id)
+          saved-file  (when file-name
+                        (pu/write-file-part-base64 file-base64
+                                                   folder-name
+                                                   (str "project-" project-id "-" design-type (upload-ext distribution))))]
+      (try
+        (pu/try-catch-throw #(let [[headers body] (get-file-data distribution design-type saved-file folder-name)]
+                               (when-not (seq body)
+                                 (pu/init-throw  (str "The " design-type " file contains no rows of data.")))
 
-                             (check-headers headers primary-key design-type)
+                               (check-headers headers primary-key design-type)
 
-                             (let [duplicates (->> body
-                                                   (group-by (apply juxt primary-key))
-                                                   (filter (fn [[_ v]] (> (count v) 1))))]
-                               (when (seq duplicates)
-                                 (pu/init-throw  (str "The " design-type " file contains duplicate primary keys. "
-                                                      (count duplicates)
-                                                      " duplicates exists. The first 10 are:\n"
-                                                      (->> duplicates
-                                                           (map (fn [[k _]]
-                                                                  (str "["
-                                                                       (str/join ", "
-                                                                                 (->> k
-                                                                                      (zipmap primary-key)
-                                                                                      (map (fn [[k2 v2]]
-                                                                                             (str (name k2) ": " v2)))))
-                                                                       "]")))
-                                                           (take 10)
-                                                           (str/join "\n"))))))
-                             body)
-                          (str (str/capitalize design-type) " " distribution " file failed to load.")))))
+                               (let [duplicates (->> body
+                                                     (group-by (apply juxt primary-key))
+                                                     (filter (fn [[_ v]] (> (count v) 1))))]
+                                 (when (seq duplicates)
+                                   (pu/init-throw  (str "The " design-type " file contains duplicate primary keys. "
+                                                        (count duplicates)
+                                                        " duplicates exists. The first 10 are:\n"
+                                                        (->> duplicates
+                                                             (map (fn [[k _]]
+                                                                    (str "["
+                                                                         (str/join ", "
+                                                                                   (->> k
+                                                                                        (zipmap primary-key)
+                                                                                        (map (fn [[k2 v2]]
+                                                                                               (str (name k2) ": " v2)))))
+                                                                         "]")))
+                                                             (take 10)
+                                                             (str/join "\n"))))))
+                               body)
+                            (str (str/capitalize design-type) " " distribution " file failed to load."))
+        (finally (remove-dir! folder-name))))))
 
 (defn- clj->pg-json
   [clj]
@@ -343,25 +367,16 @@
                 (str "7z a "  folder-name "/files" ".zip " folder-name "/*"))
     (str folder-name "files.zip")))
 
-(defn remove-old-dir
-  [dir-name]
-  (try
-    (sh-wrapper tmp-dir {} (str "rm -rf ceo-tmp-" dir-name))
-    (catch Exception e
-      (println "Directory doesn't exist"))))
-
 (defn unzip-project
-  "Unzips a zip file on /tmp folder."
-  [file-name file-base64]
-  (let [file-without-ext (first (clojure.string/split file-name #"\."))
-        _                (remove-old-dir file-without-ext)
-        output-dir       (str tmp-dir 
-                              "/ceo-tmp-"
-                              file-without-ext
-                              "/")
-        saved-file       (pu/write-file-part-base64 file-name
-                                                    file-base64
-                                                    output-dir
-                                                    file-without-ext)]
-    (sh-wrapper tmp-dir {} (str "unzip " (str output-dir file-name) " -d " output-dir))
-    output-dir))
+  "Unzips an uploaded .cep into a new temp folder and returns the folder.
+   The caller removes it with remove-dir!."
+  [file-base64]
+  (let [output-dir (new-tmp-dir "cep")]
+    (try
+      (pu/write-file-part-base64 file-base64 output-dir "project.cep")
+      (sh-wrapper output-dir {} ["unzip" "project.cep"])
+      (reject-symlinks! output-dir)
+      output-dir
+      (catch Exception e
+        (remove-dir! output-dir)
+        (throw e)))))

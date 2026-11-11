@@ -1,6 +1,6 @@
 (ns collect-earth-online.generators.ce-project.reader
   (:require [clojure.java.io :as io]
-            [collect-earth-online.generators.external-file     :refer [unzip-project]]
+            [collect-earth-online.generators.external-file     :refer [unzip-project remove-dir!]]
             [collect-earth-online.generators.ce-project.idml   :as idml]
             [collect-earth-online.generators.ce-project.plots  :as plots]
             [collect-earth-online.generators.ce-project.report :as report]
@@ -16,9 +16,9 @@
   "Unzips the upload with external-file/unzip-project and returns the folder.
    unzip-project throws (via part-utils/init-throw) with unzip's stderr when
    the archive can't be extracted; that becomes a readable 400 instead of a 500."
-  [file-name file-b64]
+  [file-b64]
   (try
-    (unzip-project file-name file-b64)
+    (unzip-project file-b64)
     (catch clojure.lang.ExceptionInfo _
       (throw (report/fatal "The uploaded file is not a valid .cep (zip) archive.")))))
  
@@ -70,8 +70,11 @@
   ([file-name file-b64] (import-cep file-name file-b64 {}))
   ([file-name file-b64 opts]
    (try
-     {:status 200
-      :body   (cep-dir->project (unzip file-name file-b64) opts)}
+     (let [dir (unzip file-b64)]
+       (try
+         {:status 200
+          :body   (cep-dir->project dir opts)}
+         (finally (remove-dir! dir))))
      (catch clojure.lang.ExceptionInfo e
        (if (report/fatal? e)
          {:status 400 :body {:message (ex-message e)}}

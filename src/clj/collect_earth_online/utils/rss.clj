@@ -1,8 +1,7 @@
 (ns collect-earth-online.utils.rss
-  (:require [clojure.data.xml :as xml]
-            [clj-http.client :as client]
-            [clojure.string :refer [split]]
-            [triangulum.type-conversion :as tc]
+  (:require [clojure.data.xml    :as xml]
+            [clj-http.client     :as client]
+            [triangulum.config   :refer [get-config]]
             [triangulum.response :refer [data-response]]))
 
 
@@ -16,12 +15,12 @@
      (fn [m {:keys [tag content]}] 
        (if-let [tag-content (get m tag)] 
          (assoc m tag (conj (flatten [tag-content]) (first content)))
-         (assoc m tag (first content)))
-       ) {:img img-src} (remove (fn [{:keys [tag]}] (= tag :encoded)) xml-item))))
+         (assoc m tag (first content))))
+     {:img img-src} (remove (fn [{:keys [tag]}] (= tag :encoded)) xml-item))))
 
-(defn get-blog-feed [{:keys [query-params]}]
-  (let [url (get query-params "url")
-        limit (tc/val->int (get query-params "limit" 3))
+(defn get-blog-feed [_]
+  (let [url   (get-config :blog :url)
+        limit 7
         blogs (->> url client/get
                    :body xml/parse-str
                    :content first :content

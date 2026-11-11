@@ -136,9 +136,7 @@ export default function Highlights ({userId, userRole}) {
   const [appState, setAppState] = useAtom(stateAtom);
 
   function getBlogs () {
-    const blogUrl = "http://collect.earth/feed";
-    const blogLimit = 7;
-    fetch(`/get-blog-feed?url=${blogUrl}&limit=${blogLimit}`)
+    fetch(`/get-blog-feed`)
       .then((response)=> (response.ok? response.json() : Promise.reject(response)))
       .then((data) => {
         if (data.length > 0) {
