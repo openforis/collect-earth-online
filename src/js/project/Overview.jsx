@@ -7,7 +7,6 @@ import { filterObject } from "../utils/sequence";
 import { ProjectContext } from "./constants";
 import { stateAtom } from "../utils/constants";
 import Modal from "../components/Modal";
-import SSEClient from "../socket";
 
 export function Overview(props) {
   const {
@@ -65,9 +64,6 @@ export function Overview(props) {
               onClose={()=>{setAppState(prev => ({ ... prev, modal: null}));}}>
          {state.modal.alert.alertMessage}
        </Modal>}
-      <SSEClient onmessage={(event) => {
-        setAppState (s=> ({...s, modal: {alert: {alertMessage: event.data}}}));
-      }} />
       <div className="form-group">
         <label htmlFor="project-name">Project Type</label>
         <select

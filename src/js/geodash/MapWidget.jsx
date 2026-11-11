@@ -6,6 +6,7 @@ import { XYZ } from "ol/source";
 import { Style, Stroke } from "ol/style";
 
 import { mercator } from "../utils/mercator";
+import { gatewayFetch } from "../utils/gatewayFetch";
 
 import SvgIcon from "../components/svg/SvgIcon";
 
@@ -52,7 +53,7 @@ export default class MapWidget extends React.Component {
   /// API
 
   fetchSourceUrl = async (postObject) => {
-    const res = await fetch("/geo-dash/gateway-request", {
+    const res = await gatewayFetch("/geo-dash/gateway-request", {
       method: "POST",
       headers: {
         Accept: "application/json",
