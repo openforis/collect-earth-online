@@ -1075,7 +1075,7 @@
 
 (defn create-shape-files!
   [{:keys [params]}]
-  (let [project-id (:projectId params)
+  (let [project-id (tc/val->int (:projectId params))
         zip-file (external-file/zip-shape-files project-id)
         file-name (last (str/split zip-file #"/"))]
     (if zip-file
@@ -1363,17 +1363,34 @@
 
 (defn download-projects-bulk
   [{:keys [params]}]
-  (let [project-ids    (clojure.string/split (:projectIds params) #",")
+  (let [project-ids    (->> (clojure.string/split (str (:projectIds params)) #",")
+                            (map tc/val->int)
+                            (filter pos?)
+                            (distinct))
         institution-id (tc/val->int (:institutionId params))
-        file-types     (clojure.string/split (:fileTypes params) #",")
-        zip-file       (external-file/bulk-download-zip institution-id
-                                                        project-ids
-                                                        file-types
-                                                        file-types-actions)]
-    (if zip-file
-      {:headers {"Content-Type"        "application/zip"
-                 "Content-Disposition" (str "attachment; filename=files.zip")}
-       :body    (io/file zip-file)
-       :status  200}
-      {:status 500
-       :body   "Error generating shape files."})))
+        ;; The route only checks that the caller administers institutionId, so
+        ;; every requested project must belong to that institution.
+        own-ids        (->> (call-sql "select_institution_project_ids"
+                                      institution-id
+                                      (clojure.string/join "," project-ids))
+                            (map :project_id)
+                            (set))
+        file-types     (clojure.string/split (str (:fileTypes params)) #",")]
+    (cond
+      (empty? project-ids)
+      (data-response "No projects were selected." {:status 400})
+
+      (not= (set project-ids) own-ids)
+      (data-response "One or more projects do not belong to this institution." {:status 403})
+
+      :else
+      (if-let [zip-file (external-file/bulk-download-zip institution-id
+                                                         project-ids
+                                                         file-types
+                                                         file-types-actions)]
+        {:headers {"Content-Type"        "application/zip"
+                   "Content-Disposition" (str "attachment; filename=files.zip")}
+         :body    (io/file zip-file)
+         :status  200}
+        {:status 500
+         :body   "Error generating shape files."}))))

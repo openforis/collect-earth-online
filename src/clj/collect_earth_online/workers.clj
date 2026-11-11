@@ -8,6 +8,12 @@
 (defn- expired? [last-mod-time]
   (> (- (System/currentTimeMillis) last-mod-time) expires-in))
 
+;; Like file-seq, but never descends into a symlinked directory.
+(defn- tree-without-links [dir]
+  (tree-seq #(and (.isDirectory %) (not (java.nio.file.Files/isSymbolicLink (.toPath %))))
+            #(seq (.listFiles %))
+            dir))
+
 (defn- delete-tmp []
   (log-str "Removing temp files.")
   (let [tmp-dir (System/getProperty "java.io.tmpdir")
@@ -16,7 +22,7 @@
                               (expired? (.lastModified %)))
                         (.listFiles (io/file tmp-dir)))]
     (doseq [d    dirs
-            file (reverse (file-seq d))]
+            file (reverse (tree-without-links d))]
       (io/delete-file file))))
 
 (defn start-clean-up-service! []

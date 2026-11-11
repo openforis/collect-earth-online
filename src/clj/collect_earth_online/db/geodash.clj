@@ -99,13 +99,13 @@
 (defn update-dashboard-widget-by-id [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
         [widget-id widget] (split-widget-json (:widgetJSON params))]
-    (call-sql "update_project_widget_by_widget_id" widget-id widget)
+    (call-sql "update_project_widget_by_widget_id" project-id widget-id widget)
     (data-response (return-widgets project-id))))
 
 (defn delete-dashboard-widget-by-id [{:keys [params]}]
   (let [project-id (tc/val->int (:projectId params))
         [widget-id _] (split-widget-json (:widgetJSON params))]
-    (call-sql "delete_project_widget_by_widget_id" widget-id)
+    (call-sql "delete_project_widget_by_widget_id" project-id widget-id)
     (data-response (return-widgets project-id))))
 
 (defn copy-project-widgets [{:keys [params]}]

@@ -25,6 +25,18 @@
   (/ (tc/val->float (apply + coll))
      (count coll)))
 
+(defn- plot-in-project?
+  "Routes authorize on projectId, so a plotId must belong to that project
+   before anything is written for it."
+  [plot-id project-id]
+  (boolean
+   (and (pos? plot-id)
+        (pos? project-id)
+        (sql-primitive (call-sql "plot_in_project" {:log? false} plot-id project-id)))))
+
+(defn- plot-not-in-project []
+  (data-response "The plot does not belong to this project." {:status 403}))
+
 (defn pred-idx-nav
   "returns the next or previous datum of an array 
    proximal to an array datum that matches a predicate.
@@ -396,20 +408,11 @@
               imagery-ids
               used-kml
               used-geodash
-              false)))
+              (boolean review-mode?))))
 
-(defn add-user-samples
-  "{:params {:projectId :int-str
-             :plotId :int-str
-             :currentUserId :int-str?
-             :inReviewMode :bool
-             :confidence :int-str?
-             :confidenceComment :string
-             :collectionStart :long-str
-             :userSamples {}
-             :projectType ['simplified' 'regular]
-             :imageryIds :jsonb}
-    :session {:userId :int-str?}}"
+(defn- save-user-samples!
+  "Does the work of add-user-samples. Only call it once the plot is known to
+   belong to the project: the let below already deletes and creates samples."
   [{:keys [params session]}]
   (let [project-id         (tc/val->int (:projectId params))
         plot-id            (tc/val->int (:plotId params))
@@ -429,25 +432,25 @@
         used-geodash       (:usedGeodash params)
         user-id            (if review-mode? current-user-id session-user-id)
         imagery-ids        (tc/clj->jsonb (:imageryIds params))
-        ;; Samples created in the UI have IDs starting with 1. When the new sample is created
-        ;; in Postgres, it gets different ID.  The user sample ID needs to be updated to match.
+        ;; Creates drawn samples (no visibleId), once each.
         id-translation     (when new-plot-samples
-                             (when (= project-type "simplified")
-                               (doall
-                                (map (fn [{:keys [sampleGeom]}]
-                                       (call-sql "delete_samples_by_geom" plot-id (tc/json->jsonb sampleGeom)))
-                                     new-plot-samples)))
                              (when (and (not review-mode?)
                                         (= project-type "regular"))
-                               (call-sql "delete_user_plot_by_plot" plot-id user-id)
-                               (call-sql "delete_samples_by_plot" plot-id))
+                               (call-sql "delete_user_plot_by_plot" project-id plot-id user-id))
                              (reduce (fn [acc {:keys [id visibleId sampleGeom]}]
-                                       (let [new-id (sql-primitive (call-sql "create_project_plot_sample"
-                                                                             {:log? false}
-                                                                             plot-id
-                                                                             visibleId
-                                                                             (tc/json->jsonb sampleGeom)))]
-                                         (assoc acc (str id) (str new-id))))
+                                       (if visibleId
+                                         acc
+                                         (let [geom      (tc/json->jsonb sampleGeom)
+                                               sample-id (or (sql-primitive (call-sql "select_plot_sample_by_geom"
+                                                                                      {:log? false}
+                                                                                      plot-id
+                                                                                      geom))
+                                                             (sql-primitive (call-sql "create_project_plot_sample"
+                                                                                      {:log? false}
+                                                                                      project-id
+                                                                                      plot-id
+                                                                                      geom)))]
+                                           (assoc acc (str id) (str sample-id)))))
                                      {}
                                      new-plot-samples))
         user-plot         (sql-primitive (call-sql "get_user_plot" plot-id user-id))]
@@ -472,9 +475,27 @@
                   (tc/clj->jsonb (set/rename-keys user-samples id-translation))
                   (tc/clj->jsonb (set/rename-keys user-images id-translation))))
       (when (and (not review-mode?) (not= project-type "simplified"))
-        (call-sql "delete_user_plot_by_plot" plot-id user-id)))
+        (call-sql "delete_user_plot_by_plot" project-id plot-id user-id)))
     (unlock-plots user-id)
     (data-response "")))
+
+(defn add-user-samples
+  "{:params {:projectId :int-str
+             :plotId :int-str
+             :currentUserId :int-str?
+             :inReviewMode :bool
+             :confidence :int-str?
+             :confidenceComment :string
+             :collectionStart :long-str
+             :userSamples {}
+             :projectType ['simplified' 'regular]
+             :imageryIds :jsonb}
+    :session {:userId :int-str?}}"
+  [{:keys [params] :as request}]
+  (if (plot-in-project? (tc/val->int (:plotId params))
+                        (tc/val->int (:projectId params)))
+    (save-user-samples! request)
+    (plot-not-in-project)))
 
 (defn flag-plot
   "{:params  {:projectId :int-str
@@ -494,12 +515,16 @@
                               (is-proj-admin? user-id project-id nil))
         collection-start (tc/val->long (:collectionStart params))
         flagged-reason   (:flaggedReason params)]
-    (call-sql "flag_plot"
-              plot-id
-              (if review-mode? current-user-id user-id)
-              (when-not review-mode? (Timestamp. collection-start))
-              flagged-reason)
-    (unlock-plots user-id)
-    (data-response "")))
+    (if-not (plot-in-project? plot-id project-id)
+      (plot-not-in-project)
+      (do
+        (call-sql "flag_plot"
+                  project-id
+                  plot-id
+                  (if review-mode? current-user-id user-id)
+                  (when-not review-mode? (Timestamp. collection-start))
+                  flagged-reason)
+        (unlock-plots user-id)
+        (data-response "")))))
 
 

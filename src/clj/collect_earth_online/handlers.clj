@@ -22,9 +22,9 @@
       :super   (= 1 user-id)
       :collect (can-collect? user-id project-id token-key)
       :token   (can-collect? -99 project-id token-key)
-      :admin   (cond
-                 (pos? project-id)     (is-proj-admin? user-id project-id token-key)
-                 (pos? institution-id) (is-inst-admin? user-id institution-id))
+      :admin   (and (or (pos? project-id) (pos? institution-id))
+                    (or (not (pos? project-id))     (is-proj-admin? user-id project-id nil))
+                    (or (not (pos? institution-id)) (is-inst-admin? user-id institution-id)))
       :no-cross (no-cross-traffic? headers)
       :metrics (show-metrics-user user-id)
       true)))

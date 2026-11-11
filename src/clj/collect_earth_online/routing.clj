@@ -123,12 +123,18 @@
    [:get  "/get-highlight-projects"]         {:handler projects/get-highlight-projects}
    [:get  "/get-institution-projects"]       {:handler projects/get-institution-projects}
    [:get  "/get-institution-dash-projects"]  {:handler projects/get-institution-dash-projects}
-   [:get  "/get-project-by-id"]              {:handler projects/get-project-by-id}
+   [:get  "/get-project-by-id"]              {:handler projects/get-project-by-id
+                                              :auth-type   :collect
+                                              :auth-action :block}
    [:get  "/get-template-projects"]          {:handler projects/get-template-projects}
-   [:get  "/get-template-by-id"]             {:handler projects/get-template-by-id}
-   [:get  "/get-project-stats"]              {:handler projects/get-project-stats}
-   [:get "/create-shape-files"]              {:handler     projects/create-shape-files!
+   [:get  "/get-template-by-id"]             {:handler projects/get-template-by-id
                                               :auth-type   :user
+                                              :auth-action :block}
+   [:get  "/get-project-stats"]              {:handler projects/get-project-stats
+                                              :auth-type   :collect
+                                              :auth-action :block}
+   [:get "/create-shape-files"]              {:handler     projects/create-shape-files!
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:get  "/get-project-draft-by-id"]        {:handler     projects/get-project-draft-by-id
                                               :auth-type   :user
@@ -149,7 +155,7 @@
                                               :auth-type   :user
                                               :auth-action :block}
    [:post "/delete-draft-projects-bulk"]     {:handler     projects/delete-draft-projects-bulk!
-                                              :auth-tupe   :admin
+                                              :auth-type   :admin
                                               :auth-action :block}
    [:post "/delete-projects-bulk"]           {:handler     (validate projects/delete-projects-bulk!)
                                               :auth-type   :admin
@@ -199,7 +205,9 @@
    [:get "/qaqc-plot"]                       {:handler     #'qaqc/get-qaqc-plot
                                               :auth-type   :admin
                                               :auth-action :block}
-   [:get "/sot-example"]                     {:handler #'qaqc/get-sot-example}
+   [:get "/sot-example"]                     {:handler #'qaqc/get-sot-example
+                                              :auth-type   :admin
+                                              :auth-action :block}
    [:post "/disable-users"]                  {:handler #'qaqc/disable-users
                                               :auth-type   :admin
                                               :auth-action :block}
@@ -220,12 +228,16 @@
    [:get  "/get-collection-plot"]              {:handler     (validate plots/get-collection-plot)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-plot-disagreement"]            {:handler     (validate plots/get-plot-disagreement)}
+   [:get  "/get-plot-disagreement"]            {:handler     (validate plots/get-plot-disagreement)
+                                                :auth-type   :admin
+                                                :auth-action :block}
    [:get  "/get-plot-sample-geom"]             {:handler     (validate plots/get-plot-sample-geom)}
    [:get  "/get-plotters"]                     {:handler     (validate plots/get-plotters)
                                                 :auth-type   :collect
                                                 :auth-action :block}
-   [:get  "/get-project-plots"]                {:handler     (validate plots/get-project-plots)}
+   [:get  "/get-project-plots"]                {:handler     (validate plots/get-project-plots)
+                                                :auth-type   :collect
+                                                :auth-action :block}
    [:post "/add-user-samples"]                 {:handler     (validate plots/add-user-samples)
                                                 :auth-type   :collect
                                                 :auth-action :block}
@@ -262,14 +274,7 @@
    [:post "/update-institution-imagery"]       {:handler     imagery/update-institution-imagery
                                                 :auth-type   :admin
                                                 :auth-action :block}
-   [:post "/update-imagery-visibility"]        {:handler     (validate imagery/update-imagery-visibility)
-                                                :auth-type   :admin
-                                                :auth-action :block}
    [:post "/edit-imagery-bulk"]                {:handler     (validate imagery/bulk-update-imagery-visibility)
-                                                :auth-type   :admin
-                                                :auth-action :block}
-
-   [:post "/archive-institution-imagery"]      {:handler     (validate imagery/archive-institution-imagery)
                                                 :auth-type   :admin
                                                 :auth-action :block}
    [:post "/bulk-archive-institution-imagery"] {:handler     (validate imagery/bulk-archive-institution-imagery)
@@ -278,12 +283,20 @@
 
    ;; GeoDash API
    [:get  "/geo-dash/get-project-widgets"]  {:handler geodash/get-project-widgets}
-   [:post "/geo-dash/copy-project-widgets"] {:handler geodash/copy-project-widgets}
-   [:post "/geo-dash/create-widget"]        {:handler geodash/create-dashboard-widget-by-id}
-   [:post "/geo-dash/delete-widget"]        {:handler geodash/delete-dashboard-widget-by-id}
+   [:post "/geo-dash/copy-project-widgets"] {:handler geodash/copy-project-widgets
+                                             :auth-type   :admin
+                                             :auth-action :block}
+   [:post "/geo-dash/create-widget"]        {:handler geodash/create-dashboard-widget-by-id
+                                             :auth-type   :admin
+                                             :auth-action :block}
+   [:post "/geo-dash/delete-widget"]        {:handler geodash/delete-dashboard-widget-by-id
+                                             :auth-type   :admin
+                                             :auth-action :block}
    [:post "/geo-dash/gateway-request"]      {:handler geodash/gateway-request}
    [:get "/geo-dash/validate-vis-params"]   {:handler geodash/validate-vis-params}
-   [:post "/geo-dash/update-widget"]        {:handler geodash/update-dashboard-widget-by-id}
+   [:post "/geo-dash/update-widget"]        {:handler geodash/update-dashboard-widget-by-id
+                                             :auth-type :admin
+                                             :auth-action :block}
    ;; Proxy Routes
    [:get  "/get-tile"]                      {:handler     proxy/proxy-imagery
                                              :auth-type   :no-cross
@@ -319,7 +332,9 @@
                                                :auth-type   :metrics
                                                :auth-action :block}
    [:get  "/metrics/get-project-count"]       {:handler     (validate metrics/get-project-count)}
-   [:post "/gcloud-listener"]                 {:handler gcloud/gcloud-handler}
+   [:post "/gcloud-listener"]                 {:handler gcloud/gcloud-handler
+                                               :auth-type   :admin
+                                               :auth-action :block}
    [:get  "/open-socket"]                     {:handler sse/sse-handler}
    [:post "/crumb-data"]                      {:handler crumb-data}
    [:get  "/get-blog-feed"]                   {:handler rss/get-blog-feed}

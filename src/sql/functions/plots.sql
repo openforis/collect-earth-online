@@ -389,17 +389,43 @@ CREATE OR REPLACE FUNCTION get_next_sample_id(_plot_id integer)
 
 $$ LANGUAGE SQL;
 
--- Create project plot sample with no external file data
-CREATE OR REPLACE FUNCTION create_project_plot_sample(_plot_id integer, _visible_id integer, _sample_geom jsonb)
+-- Returns true if the plot belongs to the project. Routes authorize on the
+-- project, so plot-level writes must check the plot is part of it.
+CREATE OR REPLACE FUNCTION plot_in_project(_plot_id integer, _project_id integer)
+ RETURNS boolean AS $$
+
+    SELECT EXISTS (
+        SELECT 1
+        FROM plots
+        WHERE plot_uid = _plot_id
+            AND project_rid = _project_id
+    )
+
+$$ LANGUAGE SQL;
+
+-- A sample of the plot with the same shape (within 1e-7 degrees), if any.
+CREATE OR REPLACE FUNCTION select_plot_sample_by_geom(_plot_id integer, _sample_geom jsonb)
  RETURNS integer AS $$
 
-    INSERT INTO samples
-        (plot_rid, visible_id, sample_geom)
-    VALUES (
-        _plot_id,
-        coalesce(_visible_id, (SELECT get_next_sample_id(_plot_id))),
+    SELECT sample_uid
+    FROM samples, ST_SetSRID(ST_GeomFromGeoJSON(_sample_geom), 4326) AS g
+    WHERE plot_rid = _plot_id
+        AND GeometryType(sample_geom) = GeometryType(g)
+        AND ST_HausdorffDistance(sample_geom, g) < 1e-7
+    ORDER BY ST_HausdorffDistance(sample_geom, g), sample_uid
+    LIMIT 1
+
+$$ LANGUAGE SQL;
+
+-- Creates a drawn sample with the next visible id.
+CREATE OR REPLACE FUNCTION create_project_plot_sample(_project_id integer, _plot_id integer, _sample_geom jsonb)
+ RETURNS integer AS $$
+
+    INSERT INTO samples (plot_rid, visible_id, sample_geom)
+    SELECT _plot_id,
+        coalesce(get_next_sample_id(_plot_id), 1),
         ST_SetSRID(ST_GeomFromGeoJSON(_sample_geom), 4326)
-    )
+    WHERE plot_in_project(_plot_id, _project_id)
     RETURNING sample_uid
 
 $$ LANGUAGE SQL;
@@ -413,12 +439,6 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id intege
     saved_answers jsonb
  ) AS $$
 
-    WITH assigned_count AS (
-        SELECT count(*) as user_count
-        FROM plot_assignments
-        WHERE plot_rid = _plot_id
-    )
-
     SELECT
         sample_uid,
         visible_id,
@@ -427,9 +447,15 @@ CREATE OR REPLACE FUNCTION select_plot_samples(_plot_id integer, _user_id intege
     FROM samples s
     LEFT JOIN plot_assignments pa
         ON s.plot_rid = pa.plot_rid
-    LEFT JOIN user_plots up
-        ON s.plot_rid = up.plot_rid
-        AND (pa.user_rid = up.user_rid OR (SELECT user_count FROM assigned_count) = 0)
+    LEFT JOIN LATERAL (
+        SELECT user_plot_uid
+        FROM user_plots
+        WHERE plot_rid = _plot_id
+            AND user_rid = _user_id
+            AND admin_review IS NOT TRUE
+        ORDER BY collection_time DESC NULLS LAST, user_plot_uid DESC
+        LIMIT 1
+    ) up ON TRUE
     LEFT JOIN sample_values sv
         ON sample_uid = sv.sample_rid
         AND user_plot_uid = sv.user_plot_rid
@@ -475,6 +501,7 @@ $$ LANGUAGE SQL;
 --
 -- Flag plot
 CREATE OR REPLACE FUNCTION flag_plot(
+    _project_id integer,
     _plot_id integer,
     _user_id integer,
     _collection_start timestamp,
@@ -488,17 +515,19 @@ CREATE OR REPLACE FUNCTION flag_plot(
         WHERE user_rid = _user_id
           AND plot_rid = _plot_id
         LIMIT 1
-    );
+    )
+      AND plot_in_project(_plot_id, _project_id);
 
     DELETE FROM user_plots
     WHERE user_rid = _user_id
-      AND plot_rid = _plot_id;
+      AND plot_rid = _plot_id
+      AND plot_in_project(_plot_id, _project_id);
 
     INSERT INTO user_plots (
         user_rid, plot_rid, flagged, collection_start, collection_time, flagged_reason
-    ) VALUES (
-        _user_id, _plot_id, true, _collection_start, NOW(), _flagged_reason
-    );
+    )
+    SELECT _user_id, _plot_id, true, _collection_start, NOW(), _flagged_reason
+    WHERE plot_in_project(_plot_id, _project_id);
 
     SELECT _plot_id;
 
@@ -579,10 +608,13 @@ CREATE OR REPLACE FUNCTION update_user_plot(
    RETURNING user_plot_uid
 $$ LANGUAGE SQL;
 
+-- The collector's own record; skips admin reviews stored under their id.
 CREATE OR REPLACE FUNCTION get_user_plot(_plot_id integer, _user_id integer)
 RETURNS integer AS $$
   SELECT user_plot_uid FROM user_plots
-  WHERE plot_rid = _plot_id AND user_rid = _user_id
+  WHERE plot_rid = _plot_id
+    AND user_rid = _user_id
+    AND admin_review IS NOT TRUE
 
 $$ LANGUAGE SQL;
 
@@ -590,21 +622,15 @@ $$ LANGUAGE SQL;
 --  RESETTING COLLECTION
 --
 
--- For clearing user plots for a single plot
-CREATE OR REPLACE FUNCTION delete_user_plot_by_plot(_plot_id integer, _user_id integer)
+-- Clears a collector's own record for a plot, keeping admin reviews.
+CREATE OR REPLACE FUNCTION delete_user_plot_by_plot(_project_id integer, _plot_id integer, _user_id integer)
  RETURNS void AS $$
 
     DELETE FROM user_plots
     WHERE plot_rid = _plot_id
         AND user_rid = _user_id
-
-$$ LANGUAGE SQL;
-
--- For clearing samples for a single plot
-CREATE OR REPLACE FUNCTION delete_samples_by_plot(_plot_id integer)
- RETURNS void AS $$
-
-    DELETE FROM samples WHERE plot_rid = _plot_id
+        AND admin_review IS NOT TRUE
+        AND plot_in_project(_plot_id, _project_id)
 
 $$ LANGUAGE SQL;
 
@@ -613,13 +639,6 @@ CREATE OR REPLACE FUNCTION delete_samples_by_visible_id(_plot_id integer, _visib
     DELETE FROM samples
     WHERE plot_rid=_plot_id
       AND visible_id=_visible_id
-$$ LANGUAGE SQL;
-
-CREATE OR REPLACE FUNCTION delete_samples_by_geom(_plot_id integer, _geom jsonb)
- RETURNS VOID AS $$
-    DELETE FROM samples
-    WHERE sample_geom = ST_GeomFromGeoJSON(_geom)
-      AND plot_rid = _plot_id
 $$ LANGUAGE SQL;
 
 -- For clearing all plots in a project

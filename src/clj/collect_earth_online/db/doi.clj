@@ -1,5 +1,3 @@
-
-
 (ns collect-earth-online.db.doi
   (:require [clj-http.client                               :as http]
             [clojure.data.json                             :as json]
