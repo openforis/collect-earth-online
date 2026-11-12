@@ -13,16 +13,16 @@
             [triangulum.logging         :refer [log-str]]
             [triangulum.response        :refer [data-response]]))
 
-;; Returns [status message] when the login must be refused.
+;; Returns [status reason message] when the login must be refused.
 (defn- get-login-errors [email user]
   (cond (sql-primitive (call-sql "password_reset_required" {:log? false} email))
-        [403 "We have rotated every password after a security update, please reset your password."]
+        [403 "password-reset-required" "We have rotated every password after a security update, please reset your password."]
 
         (nil? user)
-        [401 "Invalid email/password combination."]
+        [401 "invalid-credentials" "Invalid email/password combination."]
 
         (not (:verified user))
-        [403 "You have not verified your email. Please check your email for a link to verify your account, or click the forgot password link below to generate a new email."]))
+        [403 "email-not-verified" "You have not verified your email. Please check your email for a link to verify your account, or click the forgot password link below to generate a new email."]))
 
 (defn login [{:keys [params]}]
   (let [{:keys [email password]} params
@@ -31,8 +31,8 @@
                    :userName      email
                    :acceptedTOS   (:accept_tos user)
                    :userRole      (if (:administrator user) "admin" "user")}]
-    (if-let [[status error-msg] (get-login-errors email user)]
-      (data-response error-msg {:status status})
+    (if-let [[status reason message] (get-login-errors email user)]
+      (data-response {:reason reason :message message} {:status status})
       (data-response "" {:session user-info}))))
 
 (defn- get-register-errors [email password password-confirmation]

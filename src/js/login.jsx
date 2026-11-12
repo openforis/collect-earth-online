@@ -20,12 +20,14 @@ export function Login ({returnurl}) {
       body: JSON.stringify(loginAtom),
     })
       .then((response) => Promise.all([response.ok, response.json()]))
-      .then(([ok, message]) => {
+      .then(([ok, error]) => {
         if (ok) {
           window.location = returnurl === "" ? "/home" : returnurl;
         } else {
           setAppState ((s) => ({... s, userEmail: loginAtom.email}));
-          setLoginAtom ((s) => ({...s , modal: {alert: {alertType: "Login Error", alertMessage: message}}}));
+          setLoginAtom ((s) => ({...s , modal: error?.reason === "password-reset-required"
+                                 ? {resetRequest: {message: error.message, email: s.email, sending: false}}
+                                 : {alert: {alertType: "Login Error", alertMessage: error?.message}}}));
         }
       })
       .catch((err) => {
@@ -34,12 +36,47 @@ export function Login ({returnurl}) {
       });
   };
 
+  const requestPasswordReset = (email) => {
+    setLoginAtom ((s) => ({...s, modal: {resetRequest: {...s.modal.resetRequest, sending: true}}}));
+    fetch("/password-request", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({email}),
+    })
+      .then((response) => Promise.all([response.ok, response.json()]))
+      .then(([ok, message]) => {
+        setLoginAtom ((s) => ({...s, modal: {alert: ok && message === ""
+                                             ? {alertType: "Password Reset Request", alertMessage: `A password reset link has been sent to ${email}.`}
+                                             : {alertType: "Password Reset Error", alertMessage: message}}}));
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoginAtom ((s) => ({...s, modal: {alert: {alertType: "Password Reset Error", alertMessage: "Unable to send the reset link. Please try again."}}}));
+      });
+  };
+
+  const closeModal = () => setLoginAtom ((s) => ({...s, modal: null}));
+
   return (
       <div className="d-flex justify-content-center">
         {loginAtom.modal?.alert &&
          <Modal title={loginAtom.modal.alert.alertType}
-                onClose={()=>{setLoginAtom ((s) => ({...s, modal: null}));}}>
+                onClose={closeModal}>
            {loginAtom.modal.alert.alertMessage}
+         </Modal>}
+
+        {loginAtom.modal?.resetRequest &&
+         <Modal title="Password Reset Required"
+                closeText="Cancel"
+                confirmText="Reset password"
+                confirmDisabled={loginAtom.modal.resetRequest.sending}
+                onClose={closeModal}
+                onConfirm={() => requestPasswordReset(loginAtom.modal.resetRequest.email)}>
+           {loginAtom.modal.resetRequest.message}
+           <p className="mt-3 mb-0">Email: <strong>{loginAtom.modal.resetRequest.email}</strong></p>
          </Modal>}
 
         <div className="card card-darkgreen">
