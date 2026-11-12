@@ -20,15 +20,18 @@ export function Login ({returnurl}) {
       body: JSON.stringify(loginAtom),
     })
       .then((response) => Promise.all([response.ok, response.json()]))
-      .then((data) => {
-        if (data[0] && data[1] === "") {
+      .then(([ok, message]) => {
+        if (ok) {
           window.location = returnurl === "" ? "/home" : returnurl;
         } else {
           setAppState ((s) => ({... s, userEmail: loginAtom.email}));
-          setLoginAtom ((s) => ({...s , modal: {alert: {alertType: "Login Error", alertMessage: data[1]}}}));
+          setLoginAtom ((s) => ({...s , modal: {alert: {alertType: "Login Error", alertMessage: message}}}));
         }
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log(err);
+        setLoginAtom ((s) => ({...s , modal: {alert: {alertType: "Login Error", alertMessage: "Unable to log in. Please try again."}}}));
+      });
   };
 
   return (

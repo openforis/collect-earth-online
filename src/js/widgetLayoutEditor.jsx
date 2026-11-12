@@ -503,17 +503,36 @@ class WidgetLayoutEditor extends React.PureComponent {
     );
   };
 
+  // widget-action is excluded from dragging (draggableCancel below), so clicks reach the button.
   containerButtons = (widget) => (
     <div className="d-flex" style={{ gap: ".5rem" }}>
-      <div onClick={() => this.copyWidget(widget)} title="Copy Widget">
-        <SvgIcon color="currentColor" cursor="pointer" icon="copy" size="1.5rem" />
-      </div>
-      <div onClick={() => this.editWidgetDesign(widget)} title="Edit Widget">
-        <SvgIcon color="currentColor" cursor="pointer" icon="edit" size="1.5rem" />
-      </div>
-      <div onClick={() => this.removeLayoutItem(widget.id)} title="Delete Widget">
-        <SvgIcon color="currentColor" cursor="pointer" icon="trash" size="1.5rem" />
-      </div>
+      <button
+        className="btn p-0 widget-action"
+        onClick={() => this.copyWidget(widget)}
+        style={{ color: "inherit" }}
+        title="Copy Widget"
+        type="button"
+      >
+        <SvgIcon color="currentColor" icon="copy" size="1.5rem" />
+      </button>
+      <button
+        className="btn p-0 widget-action"
+        onClick={() => this.editWidgetDesign(widget)}
+        style={{ color: "inherit" }}
+        title="Edit Widget"
+        type="button"
+      >
+        <SvgIcon color="currentColor" icon="edit" size="1.5rem" />
+      </button>
+      <button
+        className="btn p-0 widget-action"
+        onClick={() => this.removeLayoutItem(widget.id)}
+        style={{ color: "inherit" }}
+        title="Delete Widget"
+        type="button"
+      >
+        <SvgIcon color="currentColor" icon="trash" size="1.5rem" />
+      </button>
     </div>
   );
 
@@ -583,6 +602,7 @@ class WidgetLayoutEditor extends React.PureComponent {
             {widgets.length > 0 ? (
               <ReactGridLayout
                 cols={12}
+                draggableCancel=".widget-action"
                 onLayoutChange={this.onLayoutChange}
                 resizeHandles={["e", "s", "se"]}
                 rowHeight={gridRowHeight}

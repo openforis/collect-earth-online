@@ -248,8 +248,18 @@ CREATE OR REPLACE FUNCTION update_password(_email text, _password text)
     UPDATE users
     SET password = crypt(_password, gen_salt('bf')),
         reset_key = NULL,
-        verified = TRUE
+        verified = TRUE,
+        password_reset_required = FALSE,
+        password_changed_at = now()
     WHERE email = _email
+
+$$ LANGUAGE SQL;
+
+-- Returns true if the user must set a new password before logging in.
+CREATE OR REPLACE FUNCTION password_reset_required(_email text)
+ RETURNS boolean AS $$
+
+    SELECT coalesce((SELECT password_reset_required FROM users WHERE email = _email), FALSE)
 
 $$ LANGUAGE SQL;
 
