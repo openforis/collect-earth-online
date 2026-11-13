@@ -144,8 +144,7 @@ export function SurveyQuestions ({
         }, {});
 
         return { ...prev, ...newSamples };
-      });
-
+      });      
       syncOpenChildren(questionId, answerId, answerText);
       return;
     }
@@ -193,6 +192,7 @@ export function SurveyQuestions ({
   };
 
   const getOpenChildren = (questionId, answerId, answerText) => {
+    console.log("getting open children", questionId, answerId);
     const parent = surveyData?.[questionId];
     if (!parent) return [];
 
@@ -205,18 +205,20 @@ export function SurveyQuestions ({
     });
   };
 
-  const getDescendantIds = (questionId) =>
+  const getDescendantIds = (questionId) =>        
         childrenOf(questionId, surveyData).reduce(
           (acc, child) => [...acc, child.id, ...getDescendantIds(child.id)],
           []
         );
 
   const syncOpenChildren = (questionId, answerId, answerText) => {
+    console.log("syncing open children", questionId, answerId, answerText);
     if (answerText == null) return;
 
     const descendants = getDescendantIds(questionId);
+    console.log("syncing open children descendants", descendants);
     setCollapsedChildIds((prev) => _.omit(prev, descendants));
-
+    console.log("syncing open children open children", getOpenChildren(questionId, answerId, answerText));
     if (getOpenChildren(questionId, answerId, answerText).length > 0) {
       setScrollToChildrenOf(questionId);
     }

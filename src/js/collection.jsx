@@ -38,7 +38,23 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   }
   */
   // INIT COLLECTION EFFECT
+  const syncRef = useRef(false);
+  const selectRef = useRef(null);
+useEffect(() => {
+  if (!state.mapConfig || !state.currentPlot?.id || state.answerMode === "draw") return;
+  if (selectRef.current === state.currentPlot.id) return;
+  if ((state.selectedSampleIds ?? []).length > 0) return;
+
+  const features = mercator.getAllFeatures(state.mapConfig, "currentSamples") || [];
+  if (features.length === 1) {
+    setState((s) => ({ ...s, selectedSampleIds: [features[0].get("sampleId")] }));
+  }
+  
+  selectRef.current = state.currentPlot.id;
+}, [state.mapConfig, state.currentPlot?.id, state.answerMode]);
+  
   useEffect(() => {
+
     window.name = "_ceo_collection";
     const beforeUnload = (e) => {};
     window.addEventListener("beforeunload", beforeUnload, { capture: true });
@@ -116,7 +132,6 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
             console.error("setVisibleLayer failed", e);
           }
         }
-
         // set state
         setState(s => ({
           ...s,
@@ -162,12 +177,12 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     }
   }, [state.mapConfig, state.plotList]);
   
-  const syncRef = useRef(false);
-  
-  useEffect(()=>{
+
+/*  
+  useEffect(()=>{    
     let {mapConfig, selectedQuestionId, selectedSampleIds, currentProject} = state;
     if (!mapConfig || selectedQuestionId === null || !currentProject) return;
-
+    
     const layer = mercator.getLayerById(mapConfig, "currentSamples");
     const clickSelect = mercator.getInteractionByTitle(mapConfig, "clickSelect");
     if (!layer || !clickSelect) return;
@@ -178,8 +193,7 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     const features = clickSelect.getFeatures();
     const featureIds = features.getArray().map((f)=>f.get("sampleId"));
     const update = selectedSampleIds.length === featureIds.length &&
-          [...selectedSampleIds].every((id)=>featureIds.includes(id));
-
+          [...selectedSampleIds].every((id)=>featureIds.includes(id));    
     if (update) return;
     syncRef.current = true;
     try {
@@ -193,8 +207,9 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   },[state.mapConfig,
      state.selectedQuestionId,
     ]);
-
+*/
   // UPDATE MAP WHEN STATE CHANGES — Auto launch geodash
+  
   useEffect(() => {
     if (!state.currentPlot?.id) return;
 
@@ -215,6 +230,7 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
 
   // GET PLOT DATA WHEN NEEDED - When getNewPlot changes to true, request plot data
   useEffect(() => {
+
     if(state.getNewPlot) {
       getPlotData(state.newPlotId || -999, state.navDirection);
       setState(s => ({...s, getNewPlot: false}));
@@ -395,6 +411,7 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   
   
   const showPlotSamples = () => {
+    
     const {
       mapConfig,
       unansweredColor,
@@ -415,7 +432,7 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     const visibleSamples = type === "simplified"
           ? baseVisible.filter((s) => s.visibleId !== 1)
           : baseVisible;
-
+    
     mercator.disableSelection(mapConfig);
     mercator.disableDrawing(mapConfig);
     mercator.removeLayerById(mapConfig, "currentSamples");
@@ -428,7 +445,14 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
       mercator.ceoMapStyles("geom", showSamples ? unansweredColor : "transparent"),
       9999
     );
-
+    const initialIds =
+          (state.selectedSampleIds ?? []).length > 0
+          ? state.selectedSampleIds
+          : (() => {
+            const f = mercator.getAllFeatures(mapConfig, "currentSamples") || [];
+            return f.length === 1 ? [f[0].get("sampleId")] : [];
+          })();
+    
     mercator.enableSelection(
       mapConfig,
       "currentSamples",
@@ -442,8 +466,9 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
             [getParentId(state.selectedQuestionId)]: sampleIds}}));
         */
       }, 
-      state.selectedSampleIds
+      initialIds
     );
+    setState((s)=>({...s, selectedSampleIds: initialIds}));
   };
   
   const zoomToPlot = () => mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36);
