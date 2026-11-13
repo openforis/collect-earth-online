@@ -52,7 +52,7 @@ export function SurveyQuestions ({
   // this only tracks the ones the user collapsed.
   const [collapsedChildIds, setCollapsedChildIds] = useState({});
   const [scrollToChildrenOf, setScrollToChildrenOf] = useState(null);
-  // Note shown under a question saying which samples the last answer went to.
+  // note on where the last answer went
   const [answerNotice, setAnswerNotice] = useState(null);
   const childrenRefs = useRef({});
 
@@ -92,77 +92,52 @@ export function SurveyQuestions ({
         !selectedQuestionId ? [] :
     selectedSampleIds[getParent(selectedQuestionId)] || [];
 */
-  // sampleIds: the samples this answer is written to (see getTargetSampleIds).
+  // sample answers with questionId set and clearedIds removed
+  const answerSample = (answers, questionId, answerId, answerText, clearedIds) => ({
+    ...filterObject(answers || {}, ([key]) => !clearedIds.includes(Number(key))),
+    [questionId]: answerText === "" ? { answerId } : { answerId, answer: answerText },
+  });
+
+  // imagery recorded with an answer
+  const answerImagery = (state) => ({
+    id: state.currentImagery.id,
+    attributes: state.currentImagery?.sourceConfig?.type === "PlanetDaily"
+      ? {
+        ...state.imageryAttributes,
+        imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(
+          state.mapConfig,
+          state.currentImagery.id
+        ),
+      }
+      : state.imageryAttributes,
+  });
+
+  // sampleIds from resolveTargetSampleIds
   const setCurrentValue = (questionId, answerId, answerText, sampleIds) => {
+    if (answerText == null || sampleIds.length === 0) return;
+
+    const clearedIds = getChildQuestionIds(questionId);
+    const answered = (allAnswers) => Object.fromEntries(
+      sampleIds.map((sampleId) => [
+        sampleId,
+        answerSample(allAnswers?.[sampleId], questionId, answerId, answerText, clearedIds),
+      ])
+    );
+
     if (preview) {
-      setPreviewUserSamples((prev) => {
-        const newSamples = sampleIds.reduce((acc, sampleId) => {
-          if (answerText == null) return acc;
-          const childIds = getChildQuestionIds(questionId);
-          const prevAnswers = prev?.[sampleId] || {};
-          const subQuestionsCleared = filterObject(
-            prevAnswers,
-            ([key]) => !childIds.includes(Number(key))
-          );
-          const newQuestion = { answerId };
-          if (answerText !== "") newQuestion.answer = answerText;
-          
-          acc[sampleId] = {
-            ...subQuestionsCleared,
-            [questionId]: newQuestion,
-          };
-          return acc;
-        }, {});
-
-        return { ...prev, ...newSamples };
-      });
-
-      syncOpenChildren(questionId, answerId, answerText);
-      return;
-    }
-    
-
-    setAppState((prev) => {
-      const childQuestionIds = getChildQuestionIds(questionId);
-      const newSamples = sampleIds.reduce((acc, sampleId) => {
-        if (answerText == null) return acc;
-        const prevSampleAnswers = prev.userSamples?.[sampleId] || {};
-        const subQuestionsCleared = filterObject(
-          prevSampleAnswers,
-          ([key]) => !childQuestionIds.includes(Number(key))
-        );
-        const newQuestion = { answerId };
-        if (answerText !== "") newQuestion.answer = answerText;
-        acc[sampleId] = { ...subQuestionsCleared, [questionId]: newQuestion };
-        return acc;
-      }, {});
-      if (!Object.keys(newSamples).length) return prev;
-      const newUserImages = sampleIds.reduce((acc, sampleId) => {
-        acc[sampleId] = {
-          id: prev.currentImagery.id,
-          attributes:
-          prev.currentImagery?.sourceConfig?.type === "PlanetDaily"
-            ? {
-              ...prev.imageryAttributes,
-              imageryDatePlanetDaily: mercator.getTopVisiblePlanetLayerDate(
-                prev.mapConfig,
-                prev.currentImagery.id
-              ),
-            }
-          : prev.imageryAttributes,
-        };
-        return acc;
-      }, {});
-      return {
+      setPreviewUserSamples((prev) => ({ ...prev, ...answered(prev) }));
+    } else {
+      setAppState((prev) => ({
         ...prev,
-        // Answering a question selects it, so the map recolors the samples by
-        // it right away (child questions are often answered without clicking
-        // their header).
+        // select the answered question so the map recolors by it
         selectedQuestionId: questionId,
-        userSamples: { ...(prev.userSamples || {}), ...newSamples },
-        userImages:  { ...(prev.userImages  || {}), ...newUserImages },
-      };
-    });
+        userSamples: { ...(prev.userSamples || {}), ...answered(prev.userSamples) },
+        userImages: {
+          ...(prev.userImages || {}),
+          ...Object.fromEntries(sampleIds.map((sampleId) => [sampleId, answerImagery(prev)])),
+        },
+      }));
+    }
 
     syncOpenChildren(questionId, answerId, answerText);
   };
@@ -199,7 +174,7 @@ export function SurveyQuestions ({
 
   const plotSampleIds = () => (currentPlot?.samples || []).map((s) => Number(s.id));
 
-  // Selected samples that belong to the current plot (the selection can outlive a plot).
+  // selected samples in the current plot
   const selectedInPlot = () => {
     const inPlot = new Set(plotSampleIds());
     return (Array.isArray(selectedSampleIds) ? selectedSampleIds : [])
@@ -207,8 +182,7 @@ export function SurveyQuestions ({
       .filter((id) => inPlot.has(id));
   };
 
-  // Samples the sidebar reflects: the preview's single sample, the samples
-  // selected on the map, or every sample in the plot when nothing is selected.
+  // preview sample, map selection, or whole plot if nothing is selected
   const relevantSampleIds = () => {
     if (preview) return selectedSampleId != null ? [Number(selectedSampleId)] : [];
     const selected = selectedInPlot();
@@ -235,40 +209,46 @@ export function SurveyQuestions ({
     return allowed.length === 0 || allowed.includes(Number(parentAns.answerId));
   };
 
-  // Show a child question when at least one of the samples can answer it.
+  // visible if any of the samples can answer it
   const isChildVisible = (child, sampleIds = relevantSampleIds()) =>
         sampleIds.some((sampleId) => isSampleEligible(child.id, sampleId));
 
   const showSelectionError = (alertMessage) =>
         setAppState((s) => ({ ...s, modal: { alert: { alertType: "Selection Error", alertMessage } } }));
 
-  // Samples an answer to this question is written to: the selected samples, or
-  // every sample in the plot when none are selected
-  const getTargetSampleIds = (questionId) => {
-    if (preview) return [selectedSampleId];
+  // samples an answer goes to: { sampleIds } or { error }
+  const resolveTargetSampleIds = (questionId) => {
+    if (preview) return { sampleIds: [selectedSampleId] };
 
+    const question = surveyData?.[questionId];
+    const parent = surveyData?.[question?.parentQuestionId];
+    const noneSelected = selectedInPlot().length === 0;
     const pool = relevantSampleIds();
-    if (pool.length === 0) {
-      showSelectionError("There are no samples in this plot to answer.");
-      return null;
-    }
+    const eligible = pool.filter((sampleId) => isSampleEligible(questionId, sampleId));
+    const targets = noneSelected && pool.length > 1
+      ? eligible.filter((sampleId) => !isSampleAnswered(questionId, getAnswerForSample(questionId, sampleId)))
+      : eligible;
 
-    const targets = pool.filter((sampleId) => isSampleEligible(questionId, sampleId));
-    if (targets.length === 0) {
-      const question = surveyData?.[questionId];
-      const parent = surveyData?.[question?.parentQuestionId];
-      const where = selectedInPlot().length > 0 ? "selected samples" : "samples in this plot";
-      showSelectionError(
-        `None of the ${where} have the question "${question?.question}".`
-          + (parent ? ` It only applies to samples with a matching answer to "${parent.question}".` : "")
-      );
-      return null;
+    if (pool.length === 0) {
+      return { error: "There are no samples in this plot to answer." };
     }
-    return targets;
+    if (eligible.length === 0) {
+      const where = noneSelected ? "samples in this plot" : "selected samples";
+      return {
+        error: `None of the ${where} have the question "${question?.question}".`
+          + (parent ? ` It only applies to samples with a matching answer to "${parent.question}".` : ""),
+      };
+    }
+    if (targets.length === 0) {
+      return {
+        error: `All samples with the question "${question?.question}" already have an answer.`
+          + " Select the samples you want to change.",
+      };
+    }
+    return { sampleIds: targets };
   };
 
-  // "N of M selected" ("N of M samples" when nothing is selected) when only part
-  // of the samples an answer would go to have this question.
+  // "N of M selected" badge when only some samples have the question
   const selectionScope = (questionId) => {
     if (preview) return null;
     const pool = relevantSampleIds();
@@ -278,23 +258,33 @@ export function SurveyQuestions ({
     return `${eligible} of ${pool.length} ${selectedInPlot().length > 0 ? "selected" : "samples"}`;
   };
 
-  // Says where an answer went when that isn't simply "the selected samples".
-  const noteWhereApplied = (questionId, targetCount) => {
-    if (preview) return setAnswerNotice(null);
-    const noneSelected = selectedInPlot().length === 0;
-    const poolCount = relevantSampleIds().length;
+  // note text for where an answer went, null if nothing to say
+  const describeWhereApplied = (questionId, targetCount) => {
+    if (preview || plotSampleIds().length <= 1) return null;
+
+    const pool = relevantSampleIds();
+    const poolCount = pool.length;
     const skipped = poolCount - targetCount;
 
-    let text = null;
-    if (noneSelected) {
-      text = skipped > 0
-        ? `No samples were selected, so this was applied to the ${targetCount} of ${poolCount} samples that have this question.`
-        : `No samples were selected, so this was applied to ${poolCount === 1 ? "the plot's only sample" : `all ${poolCount} samples`}.`;
-    } else if (skipped > 0) {
-      text = `Applied to ${targetCount} of ${poolCount} selected samples. `
-        + `${skipped} ${skipped === 1 ? "doesn't" : "don't"} have this question.`;
+    if (selectedInPlot().length > 0) {
+      return skipped > 0
+        ? `Applied to ${targetCount} of ${poolCount} selected samples. `
+          + `${skipped} ${skipped === 1 ? "doesn't" : "don't"} have this question.`
+        : null;
     }
-    setAnswerNotice(text ? { questionId, text } : null);
+
+    const prefix = "No samples were selected, so this was applied to";
+    const eligibleCount = pool.filter((sampleId) => isSampleEligible(questionId, sampleId)).length;
+    if (targetCount === poolCount) return `${prefix} all ${poolCount} samples.`;
+    if (targetCount === eligibleCount) {
+      return `${prefix} the ${targetCount} of ${poolCount} samples that have this question.`;
+    }
+    // some samples already had an answer
+    const which = targetCount === 1 ? "1 sample" : `${targetCount} samples`;
+    const condition = eligibleCount < poolCount
+      ? `that ${targetCount === 1 ? "has" : "have"} this question and no answer yet`
+      : "with no answer yet";
+    return `${prefix} the ${which} ${condition}. Select samples to change existing answers.`;
   };
 
   const childrenOf = (parentId, data) =>
@@ -310,7 +300,7 @@ export function SurveyQuestions ({
     return us ? { answerId: Number(us.answerId), answer: us.answer } : null;
   };
 
-  // Every sample's answer to a question, read from the live userSamples.
+  // every sample's answer to a question
   const sampleAnswers = (questionId) =>
         Object.entries(userSamples || {})
         .filter(([, answers]) => answers?.[questionId])
@@ -340,11 +330,9 @@ export function SurveyQuestions ({
     if (visibleArr.length === 0) return 'none';
     const visibleIds = visibleArr.map(v => Number(v.id));
 
-    let answeredCount = 0;
-    for (const sid of visibleIds) {
-      const ans = getAnswerForSample(questionId, sid);
-      if (isSampleAnswered(questionId, ans)) answeredCount++;
-    }
+    const answeredCount = visibleIds
+          .filter((sid) => isSampleAnswered(questionId, getAnswerForSample(questionId, sid)))
+          .length;
     if (answeredCount === 0) return 'none';
     if (answeredCount === visibleIds.length) return 'complete';
     return 'partial';
@@ -357,7 +345,7 @@ export function SurveyQuestions ({
     // if this question itself has no answers yet, it's 'none' regardless of children
     if (base === 'none') return 'none';
 
-    // Status is plot-wide, so it must not depend on the current selection.
+    // status is plot-wide, not selection-based
     const statusSampleIds = preview ? relevantSampleIds() : plotSampleIds();
     const children = childrenOf(questionId, surveyData)
           .filter((child) => isChildVisible(child, statusSampleIds));
@@ -370,8 +358,7 @@ export function SurveyQuestions ({
     return 'partial';
   };
 
-  // The answer shown for a question: the one shared by every relevant sample
-  // that can answer it. Null when those samples differ or any is unanswered.
+  // answer shared by all relevant eligible samples, else null
   const getCurrentAnswer = (questionId) => {
     const sampleIds = relevantSampleIds()
           .filter((sampleId) => isSampleEligible(questionId, sampleId));
@@ -451,7 +438,7 @@ export function SurveyQuestions ({
           <span className="sq-text">{question.question}{question.required && (
             <span style={{ color: 'red' }}>*</span>)}</span>
           {scope && (
-            <span className="sq-scope" title="Answers only apply to the selected samples that have this question">
+            <span className="sq-scope" title="Answers skip samples that don't have this question">
               {scope}
             </span>
           )}
@@ -555,9 +542,7 @@ export function SurveyQuestions ({
     input: (q) => {
       const current = getCurrentAnswer(q.id);
       const val = current?.answer ?? '';
-      // Only write edited text: a focus/blur alone would otherwise rewrite the
-      // shown value to every target sample (the whole plot when none are
-      // selected), clearing their child answers.
+      // only write edited text, a bare blur would overwrite the targets
       const submit = (value) => {
         if (value !== String(val)) validateAndSetCurrentValue(q.id, 0, value, q);
       };
@@ -591,14 +576,10 @@ export function SurveyQuestions ({
       .sort((a, b) => (a.cardOrder ?? 1e9) - (b.cardOrder ?? 1e9));
   }, [surveyData]);
 
-  const { validatedCount, totalTop } = useMemo(() => {
-    const total = parents.length;
-    let validated = 0;
-    for (const p of parents) {
-      if (getQuestionStatus(p.id) === 'complete') validated++;
-    }
-    return { validatedCount: validated, totalTop: total };
-  }, [parents, currentProject?.surveyQuestions, userSamples, currentPlot?.samples, selectedSampleId]);
+  const { validatedCount, totalTop } = useMemo(() => ({
+    validatedCount: parents.filter((p) => getQuestionStatus(p.id) === 'complete').length,
+    totalTop: parents.length,
+  }), [parents, currentProject?.surveyQuestions, userSamples, currentPlot?.samples, selectedSampleId]);
 
 
   // SURVEY RULES
@@ -832,7 +813,7 @@ export function SurveyQuestions ({
     }
   };
 
-  // targetSampleIds: the samples the answer will be written to.
+  // targetSampleIds: samples receiving the answer
   const rulesViolated = (questionIdToSet, answerId, answerText, targetSampleIds) => {
     const ruleFunctions = {
       "text-match": checkRuleTextMatch,
@@ -853,8 +834,8 @@ export function SurveyQuestions ({
   };
 
   const validateAndSetCurrentValue = (questionIdToSet, answerId, answerText = null, previousAnswer = null) => {
-    const sampleIds = getTargetSampleIds(questionIdToSet);
-    if (!sampleIds) return;
+    const { sampleIds, error } = resolveTargetSampleIds(questionIdToSet);
+    if (error) return showSelectionError(error);
     const ruleError = rulesViolated(questionIdToSet, answerId, answerText, sampleIds);
     if (ruleError) {
       setCurrentValue(questionIdToSet, answerId, previousAnswer, sampleIds);
@@ -864,7 +845,10 @@ export function SurveyQuestions ({
       }));
     } else {
       setCurrentValue(questionIdToSet, answerId, answerText, sampleIds);
-      if (answerText != null) noteWhereApplied(questionIdToSet, sampleIds.length);
+      if (answerText != null) {
+        const text = describeWhereApplied(questionIdToSet, sampleIds.length);
+        setAnswerNotice(text ? { questionId: questionIdToSet, text } : null);
+      }
     }
   };
 

@@ -139,7 +139,7 @@
     font-weight: 600;
 }
 
-/* "N of M selected" on a question only part of the selection can answer */
+/* partial-scope badge */
 .sq-scope {
   flex-shrink: 0;
   font-size: 12px;
@@ -151,7 +151,7 @@
   white-space: nowrap;
 }
 
-/* Note saying which samples the last answer went to */
+/* where-the-answer-went note */
 .sq-notice {
   margin: 0 1rem 0.75rem;
   padding: 6px 10px;

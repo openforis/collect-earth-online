@@ -27,16 +27,6 @@ import { outlineKML } from "./utils/kml";
 function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
-  /*
-  function getParentId (questionId) {    
-    const {parentQuestionId} = state.currentProject?.surveyQuestions[questionId];
-    if([-1, "-1"].includes(parentQuestionId))  {
-      return questionId;
-    } else {
-      return getParentId(parentQuestionId);
-    };
-  }
-  */
   // INIT COLLECTION EFFECT
   useEffect(() => {
     window.name = "_ceo_collection";
