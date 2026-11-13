@@ -52,6 +52,8 @@ export function SurveyQuestions ({
   // this only tracks the ones the user collapsed.
   const [collapsedChildIds, setCollapsedChildIds] = useState({});
   const [scrollToChildrenOf, setScrollToChildrenOf] = useState(null);
+  // Note shown under a question saying which samples the last answer went to.
+  const [answerNotice, setAnswerNotice] = useState(null);
   const childrenRefs = useRef({});
 
   const entries = (obj = {}) => Object.entries(obj || {});
@@ -61,6 +63,10 @@ export function SurveyQuestions ({
   useEffect(() => {
     setCollapsedChildIds({});
   }, [currentPlot?.id]);
+
+  useEffect(() => {
+    setAnswerNotice(null);
+  }, [selectedSampleIds, currentPlot?.id]);
 
   useEffect(() => {
     if (scrollToChildrenOf == null) return;
@@ -86,43 +92,8 @@ export function SurveyQuestions ({
         !selectedQuestionId ? [] :
     selectedSampleIds[getParent(selectedQuestionId)] || [];
 */
-  const checkSelection = (sampleIds, questionId) => {
-    if (preview) return true;
-    const q = surveyData?.[questionId];
-    const visibleIds = (q?.visible || []).map((v) => v.id);
-    const invalid = sampleIds.filter((id) => !visibleIds.includes(id));
-
-    if (invalid.length) {
-      setAppState((s) => ({
-        ...s,
-        modal: {
-          alert: {
-            alertType: "Selection Error",
-            alertMessage: "Invalid Selection. Try selecting the question before answering."
-          }
-        }
-      }));
-      return false;
-    }
-
-    if (sampleIds.length === 0) {
-      setAppState((s) => ({
-        ...s,
-        modal: { alert: {
-          alertType: "Selection Error",
-          alertMessage: "Please select at least one sample before choosing an answer."
-        }}
-      }));
-      return false;
-    }
-
-    return true;
-  };
-
-  const setCurrentValue = (questionId, answerId, answerText) => {
-    // const sampleIds = getSelectedSampleIds(questionId);
-    const sampleIds = selectedSampleIds;
-    if (!preview && !checkSelection(sampleIds, questionId)) return;
+  // sampleIds: the samples this answer is written to (see getTargetSampleIds).
+  const setCurrentValue = (questionId, answerId, answerText, sampleIds) => {
     if (preview) {
       setPreviewUserSamples((prev) => {
         const newSamples = sampleIds.reduce((acc, sampleId) => {
@@ -184,9 +155,13 @@ export function SurveyQuestions ({
       }, {});
       return {
         ...prev,
+        // Answering a question selects it, so the map recolors the samples by
+        // it right away (child questions are often answered without clicking
+        // their header).
+        selectedQuestionId: questionId,
         userSamples: { ...(prev.userSamples || {}), ...newSamples },
         userImages:  { ...(prev.userImages  || {}), ...newUserImages },
-      }; 
+      };
     });
 
     syncOpenChildren(questionId, answerId, answerText);
@@ -222,23 +197,104 @@ export function SurveyQuestions ({
     }
   };
 
-  // is this child eligible to show given the parent's current answer?
-  const isChildVisible = (child) => {
-    const parentId = child.parentQuestionId;
-    if (parentId == null || parentId < 0) return false;
+  const plotSampleIds = () => (currentPlot?.samples || []).map((s) => Number(s.id));
 
+  // Selected samples that belong to the current plot (the selection can outlive a plot).
+  const selectedInPlot = () => {
+    const inPlot = new Set(plotSampleIds());
+    return (Array.isArray(selectedSampleIds) ? selectedSampleIds : [])
+      .map(Number)
+      .filter((id) => inPlot.has(id));
+  };
+
+  // Samples the sidebar reflects: the preview's single sample, the samples
+  // selected on the map, or every sample in the plot when nothing is selected.
+  const relevantSampleIds = () => {
+    if (preview) return selectedSampleId != null ? [Number(selectedSampleId)] : [];
+    const selected = selectedInPlot();
+    return selected.length > 0 ? selected : plotSampleIds();
+  };
+
+  // is sample elegible to answer the question
+  const isSampleEligible = (questionId, sampleId) => {
+    const q = surveyData?.[questionId];
+    if (!q) return false;
+    const pid = q.parentQuestionId;
+    if (pid == null || Number(pid) < 0) return true;
+
+    const parentId = Number(pid);
     const parent = surveyData?.[parentId];
-    if (!parent) return false;
-
-    const parentAns = getCurrentAnswer(parentId);
-    if (!parentAns) return false;
+    const parentAns = userSamples?.[sampleId]?.[parentId];
+    if (!parent || !parentAns || !isSampleEligible(parentId, sampleId)) return false;
 
     if (parent.componentType === 'input') {
       return String(parentAns.answer ?? '').length > 0;
     }
 
-    const allowed = Array.isArray(child.parentAnswerIds) ? child.parentAnswerIds : [];
+    const allowed = Array.isArray(q.parentAnswerIds) ? q.parentAnswerIds : [];
     return allowed.length === 0 || allowed.includes(Number(parentAns.answerId));
+  };
+
+  // Show a child question when at least one of the samples can answer it.
+  const isChildVisible = (child, sampleIds = relevantSampleIds()) =>
+        sampleIds.some((sampleId) => isSampleEligible(child.id, sampleId));
+
+  const showSelectionError = (alertMessage) =>
+        setAppState((s) => ({ ...s, modal: { alert: { alertType: "Selection Error", alertMessage } } }));
+
+  // Samples an answer to this question is written to: the selected samples, or
+  // every sample in the plot when none are selected
+  const getTargetSampleIds = (questionId) => {
+    if (preview) return [selectedSampleId];
+
+    const pool = relevantSampleIds();
+    if (pool.length === 0) {
+      showSelectionError("There are no samples in this plot to answer.");
+      return null;
+    }
+
+    const targets = pool.filter((sampleId) => isSampleEligible(questionId, sampleId));
+    if (targets.length === 0) {
+      const question = surveyData?.[questionId];
+      const parent = surveyData?.[question?.parentQuestionId];
+      const where = selectedInPlot().length > 0 ? "selected samples" : "samples in this plot";
+      showSelectionError(
+        `None of the ${where} have the question "${question?.question}".`
+          + (parent ? ` It only applies to samples with a matching answer to "${parent.question}".` : "")
+      );
+      return null;
+    }
+    return targets;
+  };
+
+  // "N of M selected" ("N of M samples" when nothing is selected) when only part
+  // of the samples an answer would go to have this question.
+  const selectionScope = (questionId) => {
+    if (preview) return null;
+    const pool = relevantSampleIds();
+    if (pool.length === 0) return null;
+    const eligible = pool.filter((sampleId) => isSampleEligible(questionId, sampleId)).length;
+    if (eligible === pool.length) return null;
+    return `${eligible} of ${pool.length} ${selectedInPlot().length > 0 ? "selected" : "samples"}`;
+  };
+
+  // Says where an answer went when that isn't simply "the selected samples".
+  const noteWhereApplied = (questionId, targetCount) => {
+    if (preview) return setAnswerNotice(null);
+    const noneSelected = selectedInPlot().length === 0;
+    const poolCount = relevantSampleIds().length;
+    const skipped = poolCount - targetCount;
+
+    let text = null;
+    if (noneSelected) {
+      text = skipped > 0
+        ? `No samples were selected, so this was applied to the ${targetCount} of ${poolCount} samples that have this question.`
+        : `No samples were selected, so this was applied to ${poolCount === 1 ? "the plot's only sample" : `all ${poolCount} samples`}.`;
+    } else if (skipped > 0) {
+      text = `Applied to ${targetCount} of ${poolCount} selected samples. `
+        + `${skipped} ${skipped === 1 ? "doesn't" : "don't"} have this question.`;
+    }
+    setAnswerNotice(text ? { questionId, text } : null);
   };
 
   const childrenOf = (parentId, data) =>
@@ -251,11 +307,18 @@ export function SurveyQuestions ({
 
   const getAnswerForSample = (qId, sampleId) => {
     const us = userSamples?.[sampleId]?.[qId];
-    if (us) return { answerId: Number(us.answerId), answer: us.answer };
-    const a = (currentProject?.surveyQuestions?.[qId]?.answered || [])
-          .find(x => Number(x.sampleId) === Number(sampleId));
-    return a ? { answerId: Number(a.answerId), answer: a.answerText } : null;
+    return us ? { answerId: Number(us.answerId), answer: us.answer } : null;
   };
+
+  // Every sample's answer to a question, read from the live userSamples.
+  const sampleAnswers = (questionId) =>
+        Object.entries(userSamples || {})
+        .filter(([, answers]) => answers?.[questionId])
+        .map(([sampleId, answers]) => ({
+          sampleId: Number(sampleId),
+          answerId: Number(answers[questionId].answerId),
+          answerText: answers[questionId].answer,
+        }));
 
   const isSampleAnswered = (qId, ansObj) => {
     if (!ansObj) return false;
@@ -265,11 +328,9 @@ export function SurveyQuestions ({
       const val = q.dataType === 'number'
             ? (ansObj.answer ?? '').toString().trim()
             : (ansObj.answer ?? '').toString().trim();
-      // number: must be non-empty and not NaN; text: non-empty string
       if (q.dataType === 'number') return val !== '' && !Number.isNaN(Number(val));
       return val.length > 0;
     }
-    // buttons/radio/dropdown: require a concrete answerId
     return ansObj.answerId !== null && ansObj.answerId !== undefined;
   };
 
@@ -296,7 +357,10 @@ export function SurveyQuestions ({
     // if this question itself has no answers yet, it's 'none' regardless of children
     if (base === 'none') return 'none';
 
-    const children = childrenOf(questionId, surveyData).filter(isChildVisible);
+    // Status is plot-wide, so it must not depend on the current selection.
+    const statusSampleIds = preview ? relevantSampleIds() : plotSampleIds();
+    const children = childrenOf(questionId, surveyData)
+          .filter((child) => isChildVisible(child, statusSampleIds));
     if (children.length === 0) return base;
     const childStatuses = children.map(child => getQuestionStatus(child.id));
     // complete only if this question AND all visible descendants are complete
@@ -306,24 +370,20 @@ export function SurveyQuestions ({
     return 'partial';
   };
 
-  // Gets answers for a question depending on the userSample
+  // The answer shown for a question: the one shared by every relevant sample
+  // that can answer it. Null when those samples differ or any is unanswered.
   const getCurrentAnswer = (questionId) => {
-    const toNum = (v) => (v == null ? v : Number(v));
-    if (selectedSampleId != null && selectedSampleId >= 0) {
-      const us = userSamples?.[selectedSampleId]?.[questionId];
-      if (us) return { answerId: toNum(us.answerId), answer: us.answer };
-      const fromSurvey = (currentProject?.surveyQuestions?.[questionId]?.answered || [])
-            .find(a => a.sampleId === selectedSampleId);
-      if (fromSurvey) return { answerId: toNum(fromSurvey.answerId), answer: fromSurvey.answerText };
-    }
-    const anyAnswers = (currentProject?.surveyQuestions?.[questionId]?.answered || [])[0];
-    if (anyAnswers) {
-      return {
-        answerId: toNum(anyAnswers.answerId), answer: anyAnswers.answerText
-      }
-    };
-    const first = Object.values(userSamples || {}).find(sample => sample?.[questionId]);
-    return first ? { answerId: toNum(first[questionId].answerId), answer: first[questionId].answer } : null;
+    const sampleIds = relevantSampleIds()
+          .filter((sampleId) => isSampleEligible(questionId, sampleId));
+    const answers = sampleIds.map((sampleId) => userSamples?.[sampleId]?.[questionId]);
+    const [first] = answers;
+    if (!first) return null;
+
+    const allSame = answers.every((a) =>
+      a
+        && Number(a.answerId) === Number(first.answerId)
+        && (a.answer ?? '') === (first.answer ?? ''));
+    return allSame ? { answerId: Number(first.answerId), answer: first.answer } : null;
   };
 
   
@@ -359,8 +419,9 @@ export function SurveyQuestions ({
           ? openTopId === question.id
           : !collapsedChildIds[question.id];
 
-    const children = childrenOf(question.id, surveyData).filter(isChildVisible);
+    const children = childrenOf(question.id, surveyData).filter((child) => isChildVisible(child));
     const status = getQuestionStatus(question.id);
+    const scope = selectionScope(question.id);
 
     const handleToggle = () => {
       
@@ -389,12 +450,20 @@ export function SurveyQuestions ({
           </span>
           <span className="sq-text">{question.question}{question.required && (
             <span style={{ color: 'red' }}>*</span>)}</span>
+          {scope && (
+            <span className="sq-scope" title="Answers only apply to the selected samples that have this question">
+              {scope}
+            </span>
+          )}
           <SvgIcon icon={isOpen ? "upCaret" : "downCaret"} size="1rem" />
         </button>
 
         {isOpen && (
           <>
             <AnswerUI q={question} />
+            {answerNotice?.questionId === question.id && (
+              <div className="sq-notice" role="status">{answerNotice.text}</div>
+            )}
             {children.length > 0 && (
               <div
                 className="sq-children"
@@ -486,6 +555,12 @@ export function SurveyQuestions ({
     input: (q) => {
       const current = getCurrentAnswer(q.id);
       const val = current?.answer ?? '';
+      // Only write edited text: a focus/blur alone would otherwise rewrite the
+      // shown value to every target sample (the whole plot when none are
+      // selected), clearing their child answers.
+      const submit = (value) => {
+        if (value !== String(val)) validateAndSetCurrentValue(q.id, 0, value, q);
+      };
       return (
         <div className="sq-input-wrap">
           <input
@@ -493,9 +568,9 @@ export function SurveyQuestions ({
             type={q.dataType}
             placeholder={val || q.questionLabel}
             defaultValue={val}
-            onBlur={(e) => validateAndSetCurrentValue(q.id, 0, e.target.value, q)}
+            onBlur={(e) => submit(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') validateAndSetCurrentValue(q.id, 0, e.currentTarget.value, q);
+              if (e.key === 'Enter') submit(e.currentTarget.value);
             }}
           />
         </div>
@@ -523,7 +598,7 @@ export function SurveyQuestions ({
       if (getQuestionStatus(p.id) === 'complete') validated++;
     }
     return { validatedCount: validated, totalTop: total };
-  }, [parents, currentProject?.surveyQuestions, userSamples]);
+  }, [parents, currentProject?.surveyQuestions, userSamples, currentPlot?.samples, selectedSampleId]);
 
 
   // SURVEY RULES
@@ -535,7 +610,7 @@ export function SurveyQuestions ({
 
   const getSurveyAnswerText = (questionId, answerId) => {
     const { surveyQuestions } = currentProject;
-    return _.get(surveyQuestions, [questionId, "answered", answerId, "answerText"], "");
+    return _.get(surveyQuestions, [questionId, "answers", answerId, "answer"], "");
   };
 
   const checkRuleTextMatch = (surveyRule, questionIdToSet, _answerId, answerText) => {
@@ -559,29 +634,31 @@ export function SurveyQuestions ({
 
   const sumAnsweredQuestionsPerSample = (answeredQuestions, sampleId) =>
         Object.entries(answeredQuestions).reduce((acc, [qId, aq]) => {
-          const answer = aq.answered.find((ans) => ans.sampleId === sampleId);
-          const answeredVal = Number(answer.answerText || aq.answers[answer.answerId].answer || 0);
+          const answer = userSamples?.[sampleId]?.[qId];
+          const answeredVal = Number(answer?.answer || aq.answers?.[answer?.answerId]?.answer || 0);
           return acc + answeredVal;
         }, 0);
 
   const getAnsweredQuestions = (ruleQuestions, questionIdToSet) =>
-        filterObject(currentProject?.surveyQuestions, ([sqId, sq]) => {
+        filterObject(currentProject?.surveyQuestions, ([sqId]) => {
           const numSqId = Number(sqId);
           return (
-            ruleQuestions.includes(numSqId) && sq.answered.length > 0 && numSqId !== questionIdToSet
+            ruleQuestions.includes(numSqId)
+              && sampleAnswers(numSqId).length > 0
+              && numSqId !== questionIdToSet
           );
         });
 
   const getAnsweredSampleIds = (answeredQuestions) =>
-        mapObjectArray(answeredQuestions, ([_sqId, aq]) => aq.answered.map((a) => a.sampleId));
+        mapObjectArray(answeredQuestions, ([sqId]) => sampleAnswers(Number(sqId)).map((a) => a.sampleId));
 
-  const checkRuleSumOfAnswers = (surveyRule, questionIdToSet, answerId, answerText) => {
+  const checkRuleSumOfAnswers = (surveyRule, questionIdToSet, answerId, answerText, targetSampleIds) => {
     const answerVal = !isNaN(Number(answerText)) ?
           Number(answerText) : Number(getSurveyAnswerText(questionIdToSet, answerId));
     if (surveyRule.questionIds.includes(questionIdToSet)) {
       const answeredQuestions = getAnsweredQuestions(surveyRule.questionIds, questionIdToSet);
       if (surveyRule.questionIds.length === lengthObject(answeredQuestions) + 1) {
-        const sampleIds = selectedSampleIds;
+        const sampleIds = targetSampleIds;
         // const sampleIds = getSelectedSampleIds(questionIdToSet);
         const answeredSampleIds = getAnsweredSampleIds(answeredQuestions);
         const commonSampleIds = answeredSampleIds.reduce(intersection, sampleIds);
@@ -610,7 +687,7 @@ export function SurveyQuestions ({
     }
   };
 
-  const checkRuleMatchingSums = (surveyRule, questionIdToSet, answerId, answerText) => {
+  const checkRuleMatchingSums = (surveyRule, questionIdToSet, answerId, answerText, targetSampleIds) => {
     const answerVal =
           Number(answerText) || Number(getSurveyAnswerText(questionIdToSet, answerId));
     if (surveyRule.questionIds1.concat(surveyRule.questionIds2).includes(questionIdToSet)) {
@@ -631,7 +708,7 @@ export function SurveyQuestions ({
         ready(ansLen1, ruleLen1, ansLen2, ruleLen2) ||
           ready(ansLen2, ruleLen2, ansLen1, ruleLen1)
       ) {
-        const sampleIds = selectedSampleIds;
+        const sampleIds = targetSampleIds;
         // const sampleIds = getSelectedSampleIds(questionIdToSet);
         const answeredSampleIds1 = getAnsweredSampleIds(answeredQuestions1);
         const commonSampleIds1 = answeredSampleIds1.reduce(intersection, sampleIds);
@@ -675,13 +752,13 @@ export function SurveyQuestions ({
     }
   };
 
-  const checkRuleIncompatibleAnswers = (surveyRule, questionIdToSet, answerId, _answerText) => {
+  const checkRuleIncompatibleAnswers = (surveyRule, questionIdToSet, answerId, _answerText, targetSampleIds) => {
     if (surveyRule.questionId1 === questionIdToSet && surveyRule.answerId1 === answerId) {
-      const ques2 = currentProject?.surveyQuestions[surveyRule.questionId2];
-      if (ques2.answered.some((ans) => ans.answerId === surveyRule.answerId2)) {
-        const ques1Ids = selectedSampleIds;
+      const ques2Answers = sampleAnswers(surveyRule.questionId2);
+      if (ques2Answers.some((ans) => ans.answerId === surveyRule.answerId2)) {
+        const ques1Ids = targetSampleIds;
         // const ques1Ids = getSelectedSampleIds(questionIdToSet);
-        const ques2Ids = ques2.answered
+        const ques2Ids = ques2Answers
               .filter((ans) => ans.answerId === surveyRule.answerId2)
               .map((a) => a.sampleId);
         const commonSampleIds = intersection(ques1Ids, ques2Ids);
@@ -702,12 +779,12 @@ export function SurveyQuestions ({
         return null;
       }
     } else if (surveyRule.questionId2 === questionIdToSet && surveyRule.answerId2 === answerId) {
-      const ques1 = currentProject?.surveyQuestions[surveyRule.questionId1];
-      if (ques1.answered.some((ans) => ans.answerId === surveyRule.answerId1)) {
-        const ques2Ids = selectedSampleIds;
+      const ques1Answers = sampleAnswers(surveyRule.questionId1);
+      if (ques1Answers.some((ans) => ans.answerId === surveyRule.answerId1)) {
+        const ques2Ids = targetSampleIds;
         // const ques2Ids = getSelectedSampleIds();
 
-        const ques1Ids = ques1.answered
+        const ques1Ids = ques1Answers
               .filter((ans) => ans.answerId === surveyRule.answerId1)
               .map((a) => a.sampleId);
         const commonSampleIds = intersection(ques1Ids, ques2Ids);
@@ -740,12 +817,9 @@ export function SurveyQuestions ({
     const { answers, incompatQuestionId, incompatAnswerId } = surveyRule;
     const ruleAnswerList = Object.entries(answers);
 
-    const answeredQuestionsList = ruleAnswerList.filter((answer) => {
-      const question = surveyQuestions[answer[0]];
-      return question.answered.some((a) => a.answerId == answer[1]);
-    });
-    const incompatQuestion = surveyQuestions[incompatQuestionId];
-    const incompatAnswer = (incompatQuestion.answered.some((a) => a.answerId == incompatAnswerId) ||
+    const answeredQuestionsList = ruleAnswerList.filter((answer) =>
+      sampleAnswers(Number(answer[0])).some((a) => a.answerId == answer[1]));
+    const incompatAnswer = (sampleAnswers(Number(incompatQuestionId)).some((a) => a.answerId == incompatAnswerId) ||
                             (incompatQuestionId == questionIdToSet && incompatAnswerId == answerId));
 
     if (ruleAnswerList.length === answeredQuestionsList.length && incompatAnswer) {
@@ -758,7 +832,8 @@ export function SurveyQuestions ({
     }
   };
 
-  const rulesViolated = (questionIdToSet, answerId, answerText) => {
+  // targetSampleIds: the samples the answer will be written to.
+  const rulesViolated = (questionIdToSet, answerId, answerText, targetSampleIds) => {
     const ruleFunctions = {
       "text-match": checkRuleTextMatch,
       "numeric-range": checkRuleNumericRange,
@@ -771,28 +846,29 @@ export function SurveyQuestions ({
       currentProject?.surveyRules &&
         currentProject?.surveyRules
         .map((surveyRule) =>
-          ruleFunctions[surveyRule.ruleType](surveyRule, questionIdToSet, answerId, answerText)
+          ruleFunctions[surveyRule.ruleType](surveyRule, questionIdToSet, answerId, answerText, targetSampleIds)
         )
         .find((msg) => msg)
     );
   };
 
   const validateAndSetCurrentValue = (questionIdToSet, answerId, answerText = null, previousAnswer = null) => {
-    const ruleError = rulesViolated(questionIdToSet, answerId, answerText);
+    const sampleIds = getTargetSampleIds(questionIdToSet);
+    if (!sampleIds) return;
+    const ruleError = rulesViolated(questionIdToSet, answerId, answerText, sampleIds);
     if (ruleError) {
-      setCurrentValue(questionIdToSet, answerId, previousAnswer);
+      setCurrentValue(questionIdToSet, answerId, previousAnswer, sampleIds);
       setAppState((s) => ({
         ...s,
         modal: {alert: {alertType: "Collection Error", alertMessage: ruleError}}
       }));
     } else {
-      setCurrentValue(questionIdToSet, answerId, answerText);
+      setCurrentValue(questionIdToSet, answerId, answerText, sampleIds);
+      if (answerText != null) noteWhereApplied(questionIdToSet, sampleIds.length);
     }
   };
 
   function InvertSelectionButton () {
-    // const parentId = getParent(selectedQuestionId);;
-    // const selectedSamples = selectedSampleIds[parentId] || [];
     const selectedSamples = selectedSampleIds;
     const allIds = (mercator.getAllFeatures(mapConfig, "currentSamples") || []).map(f => f.get("sampleId")) ;
     function invertHandler () {
@@ -809,10 +885,8 @@ export function SurveyQuestions ({
         <button
           onClick={invertHandler}
           className={'btn filled'}>
-          {/*(selectedSampleIds[parentId] ?? []).length === allIds.length ? "Clear Selection"
-           : (selectedSampleIds[parentId] ?? []).length ? "Invert Sample Selection"
-           : "Select All Samples"*/
-          selectedSampleIds.length === allIds.length ? "Clear Selection"
+          {
+            selectedSampleIds.length === allIds.length ? "Clear Selection"
            : selectedSampleIds.length ? "Invert Sample Selection"
            : "Select All Samples"}
         </button>

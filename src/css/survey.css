@@ -139,6 +139,29 @@
     font-weight: 600;
 }
 
+/* "N of M selected" on a question only part of the selection can answer */
+.sq-scope {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2d6f74;
+  background: #ebf7f7;
+  border-radius: 10px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+/* Note saying which samples the last answer went to */
+.sq-notice {
+  margin: 0 1rem 0.75rem;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #2d6f74;
+  background: #ebf7f7;
+  border-left: 3px solid #2d6f74;
+  border-radius: 4px;
+}
+
 .sq-chevron {
   font-size: 16px;
   transition: transform 0.15s ease;
