@@ -1,7 +1,7 @@
 (ns collect-earth-online.utils.rss
   (:require [clojure.data.xml    :as xml]
             [clj-http.client     :as client]
-            [clojure.sptring     :refer [split]]
+            [clojure.string      :refer [split]]
             [triangulum.config   :refer [get-config]]
             [triangulum.response :refer [data-response]]))
 
