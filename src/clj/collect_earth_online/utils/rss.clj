@@ -1,13 +1,22 @@
 (ns collect-earth-online.utils.rss
   (:require [clojure.data.xml    :as xml]
             [clj-http.client     :as client]
-            [clojure.string      :refer [split]]
+            [clojure.string      :refer [split replace]]
             [triangulum.config   :refer [get-config]]
             [triangulum.response :refer [data-response]]))
 
 
 (defn- get-xml-items [xml] (filter (fn [{tag :tag}] (= tag :item)) xml))
- 
+
+(defn sanitize-html [html]
+  (-> html
+      (replace #"(?is)<script.*?>.*?</script>" "")
+      (replace #"(?is)<style.*?>.*?</style>" "")
+      (replace #"(?is)<iframe.*?>.*?</iframe>" "")
+      (replace #"(?i)\s+on\w+\s*=\s*\"[^\"]*\"" "")
+      (replace #"(?i)\s+on\w+\s*=\s*'[^']*'" "")
+      (replace #"(?i)javascript:" "")))
+
 (defn- format-xml-item [{xml-item :content}]
   (let [img-regex #"<img(.*?) />"
         src-regex #"src=\"(.*?)\""
@@ -17,7 +26,7 @@
        (if-let [tag-content (get m tag)]
          (assoc m tag (conj (flatten [tag-content]) (first content)))         
          (if (= tag :description)
-           (assoc m tag (-> content first (split #"/>") last)) 
+           (assoc m tag (-> content first (split #"<img .* />") rest first)) 
            (assoc m tag (first content)))))
      {:img img-src} (remove (fn [{:keys [tag]}] (= tag :encoded)) xml-item))))
 
