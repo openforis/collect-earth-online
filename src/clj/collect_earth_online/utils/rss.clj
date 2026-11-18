@@ -1,6 +1,7 @@
 (ns collect-earth-online.utils.rss
   (:require [clojure.data.xml    :as xml]
             [clj-http.client     :as client]
+            [clojure.sptring     :refer [split]]
             [triangulum.config   :refer [get-config]]
             [triangulum.response :refer [data-response]]))
 
@@ -12,10 +13,12 @@
         src-regex #"src=\"(.*?)\""
         img-src (when-let [img (->> xml-item (filter #(= :description (:tag %))) first :content first (re-seq img-regex) first second)] (->> img (re-seq src-regex) first second))]    
     (reduce 
-     (fn [m {:keys [tag content]}] 
-       (if-let [tag-content (get m tag)] 
-         (assoc m tag (conj (flatten [tag-content]) (first content)))
-         (assoc m tag (first content))))
+     (fn [m {:keys [tag content]}]       
+       (if-let [tag-content (get m tag)]
+         (assoc m tag (conj (flatten [tag-content]) (first content)))         
+         (if (= tag :description)
+           (assoc m tag (-> content first (split #"/>") last)) 
+           (assoc m tag (first content)))))
      {:img img-src} (remove (fn [{:keys [tag]}] (= tag :encoded)) xml-item))))
 
 (defn get-blog-feed [_]
@@ -29,5 +32,4 @@
     (data-response (if limit
                      (take limit blogs)
                      blogs))))
-
-
+  
