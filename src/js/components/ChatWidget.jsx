@@ -1,8 +1,9 @@
 import React, { Suspense, lazy, memo, useEffect, useRef } from "react";
 import { useAtom } from "jotai";
 import "../../css/chat-widget.css";
-import { chatWidgetAtom } from "../state/chatWidget";
+import { CHAT_HIDDEN_PREFERENCE, chatWidgetAtom } from "../state/chatWidget";
 import { CHAT_ERROR_MESSAGE, CHAT_STATUS_ENDPOINT, askAssistant } from "../utils/chatAdapter";
+import { setPreference } from "../utils/preferences";
 
 // Deep Chat is large, so it only loads the first time the chat is opened.
 const DeepChat = lazy(() => import("deep-chat-react").then((m) => ({ default: m.DeepChat })));
@@ -79,7 +80,7 @@ const CloseIcon = ({ size = 22 }) => (
 
 // Floating help chat; placement="raised" lifts it above bars pinned to the bottom of the page.
 const ChatWidget = ({ placement }) => {
-  const [{ enabled, open, loaded }, setState] = useAtom(chatWidgetAtom);
+  const [{ enabled, hidden, open, loaded }, setState] = useAtom(chatWidgetAtom);
   const launcherRef = useRef(null);
   const chatRef = useRef(null);
 
@@ -112,7 +113,7 @@ const ChatWidget = ({ placement }) => {
     .join(" ");
 
   return enabled && (
-    <div className={className}>
+    <div className={className} hidden={hidden}>
       <section aria-label="CEO Assistant" className="ceo-chat-panel" hidden={!open} id="ceo-chat-panel" role="dialog">
         <header className="ceo-chat-header">
           <div>
@@ -139,6 +140,23 @@ const ChatWidget = ({ placement }) => {
         {open ? <CloseIcon /> : <ChatIcon />}
       </button>
     </div>
+  );
+};
+
+// Navbar item that shows or hides the chat bubble on every page.
+export const ChatToggleNavItem = () => {
+  const [{ enabled, hidden }, setState] = useAtom(chatWidgetAtom);
+  const toggle = () => {
+    setPreference(CHAT_HIDDEN_PREFERENCE, !hidden);
+    setState((s) => ({ ...s, hidden: !hidden, open: false }));
+  };
+
+  return enabled && (
+    <li className="nav-item">
+      <button className="nav-link border-0 bg-transparent" onClick={toggle} type="button">
+        {hidden ? "Show chatbot" : "Hide chatbot"}
+      </button>
+    </li>
   );
 };
 
