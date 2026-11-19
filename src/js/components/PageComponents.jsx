@@ -6,6 +6,7 @@ import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 import SvgIcon from "./svg/SvgIcon";
+import ChatWidget, { ChatToggleNavItem } from "./ChatWidget";
 import { getLanguage, capitalizeFirst } from "../utils/generalUtils";
 import { getPreference, setPreference } from "../utils/preferences";
 import { stateAtom } from "../utils/constants";
@@ -368,6 +369,7 @@ export function NavTopBar ({version, userName, userId, children}) {
                 </a>
               </li>
             )}
+            <ChatToggleNavItem />
           </ul>
           <ul className="navbar-nav mr-0" id="login-info">
             <LogOutButton uri={uri} userName={userName} />
@@ -394,11 +396,12 @@ export function NavTopBar ({version, userName, userId, children}) {
   );
 }
 
-export function NavigationBar ({children, version, userName, userId, fxns}) {
+export function NavigationBar ({children, version, userName, userId, fxns, chatPlacement}) {
   return(
     <>
       {fxns && <NavSideBar tab={fxns.tab.get} setTab={fxns.tab.set} userId={userId}/>}
       <NavTopBar children={children} version={version} userName={userName} userId={userId}/>
+      <ChatWidget placement={chatPlacement}/>
     </>
   );
 }

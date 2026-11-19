@@ -81,6 +81,7 @@
     "@svgr/core": "^8.0.0",
     "@tanstack/react-table": "^8.10.0",
     "airbnb-prop-types": "^2.16.0",
+    "deep-chat-react": "^2.5.1",
     "highcharts": "^9.1.0",
     "highcharts-react-official": "^3.0.0",
     "jotai": "^2.18.1",

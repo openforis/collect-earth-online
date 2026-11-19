@@ -98,7 +98,7 @@ const ProjectWizard = ({userId, userName, version, institutionId, draftId, proje
   return (
     <div className="project-wizard-container">
       {modal && <ProjectWizardModal/>}
-      <NavigationBar userId={userId} userName={userName} version={version}>
+      <NavigationBar chatPlacement="raised" userId={userId} userName={userName} version={version}>
         <BreadCrumbs
           crumbs={[
             {display: "Institution",

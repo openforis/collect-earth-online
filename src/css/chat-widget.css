@@ -1,0 +1,145 @@
+/* Floating help chat (src/js/components/ChatWidget.jsx) */
+
+.ceo-chat {
+  --ceo-chat-right: 24px;
+  --ceo-chat-bottom: 24px;
+  --ceo-chat-green: #1F7067;
+  --ceo-chat-green-hover: #185a53;
+}
+
+/* Sits above bottom bars and the Mapbox logo (home, collection, project wizard). */
+.ceo-chat--raised {
+  --ceo-chat-bottom: 96px;
+}
+
+/* Above the navbar (1030) and help overlay (1000), below Bootstrap modals (1040+). */
+.ceo-chat-launcher,
+.ceo-chat-panel {
+  position: fixed;
+  z-index: 1035;
+  right: var(--ceo-chat-right);
+}
+
+.ceo-chat-launcher {
+  bottom: var(--ceo-chat-bottom);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  color: #fff;
+  background: var(--ceo-chat-green);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.15s;
+}
+
+.ceo-chat-launcher:hover {
+  background: var(--ceo-chat-green-hover);
+  transform: scale(1.05);
+}
+
+.ceo-chat-launcher:focus-visible,
+.ceo-chat-close:focus-visible {
+  outline: 3px solid #A0CAC6;
+  outline-offset: 2px;
+}
+
+.ceo-chat-panel {
+  bottom: calc(var(--ceo-chat-bottom) + 68px);
+  display: flex;
+  flex-direction: column;
+  width: 380px;
+  height: 560px;
+  max-height: calc(100vh - var(--ceo-chat-bottom) - 100px);
+  overflow: hidden;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+}
+
+.ceo-chat-panel[hidden] {
+  display: none;
+}
+
+.ceo-chat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px 12px 16px;
+  color: #fff;
+  text-align: left;
+  background: var(--ceo-chat-green);
+}
+
+.ceo-chat-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.ceo-chat-header p {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.ceo-chat-close {
+  display: flex;
+  padding: 4px;
+  color: #fff;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ceo-chat-body {
+  flex: 1;
+  min-height: 0;
+}
+
+.ceo-chat-body deep-chat {
+  display: block;
+  height: 100%;
+}
+
+.ceo-chat-loading {
+  margin: 0;
+  padding: 16px;
+  color: #767575;
+}
+
+/* Phones: the open chat fills the screen. */
+@media (max-width: 576px) {
+  .ceo-chat-panel {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    height: auto;
+    max-height: none;
+    border-radius: 0;
+  }
+
+  .ceo-chat--open .ceo-chat-launcher {
+    display: none;
+  }
+
+  .ceo-chat-launcher {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* No yellow hover bar (custom.css) on the navbar's Show/Hide chatbot item. */
+#main-nav .nav-item.ceo-chat-toggle:hover {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
