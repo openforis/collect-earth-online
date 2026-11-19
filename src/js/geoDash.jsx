@@ -17,6 +17,7 @@ import { mercator } from "./utils/mercator";
 import { isArray, isNumber } from "./utils/generalUtils";
 import { gridRowHeight } from "./geodash/constants";
 
+import ChatWidget from "./components/ChatWidget";
 import Modal from "./components/Modal";
 import {BreadCrumbs} from "./components/PageComponents";
 
@@ -278,6 +279,7 @@ export function pageInit(params, session) {
           }]}
 
       />
+      <ChatWidget />
     </>
     ,
     document.getElementById("app")

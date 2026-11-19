@@ -975,7 +975,7 @@ function QuitMenu({ institutionId, projectId, toggleQuitModal }) {
 
 export function pageInit(params, session) {
   ReactDOM.render(
-    <NavigationBar userId={session.userId} userName={session.userName} version={session.versionDeployed}>
+    <NavigationBar chatPlacement="raised" userId={session.userId} userName={session.userName} version={session.versionDeployed}>
       <BreadCrumbs
         crumbs={[
           {display: "Institution",

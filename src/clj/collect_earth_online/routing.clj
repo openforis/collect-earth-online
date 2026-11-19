@@ -1,5 +1,6 @@
 (ns collect-earth-online.routing
   (:require [collect-earth-online.api                          :refer [validate]]
+            [collect-earth-online.chat                         :as chat]
             [collect-earth-online.generators.ce-project.reader :as ce-project]
             [collect-earth-online.gcloud                       :as gcloud]
             [collect-earth-online.sse                          :as sse]
@@ -317,6 +318,12 @@
                                              :auth-type   :admin
                                              :auth-action :block}
    [:get  "/get-tfo-tiles"]                 {:handler     #'proxy/get-tfo-tiles
+                                             :auth-type   :no-cross
+                                             :auth-action :block}
+
+   ;; Help Chat
+   [:get  "/chat-status"]                   {:handler chat/chat-status}
+   [:post "/chat"]                          {:handler     chat/chat
                                              :auth-type   :no-cross
                                              :auth-action :block}
 

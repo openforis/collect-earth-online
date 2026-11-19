@@ -95,7 +95,7 @@ function Home ({ userId, userName, version }) {
   }
   
   return (
-    <NavigationBar userId={userId} userName={userName} version={version}
+    <NavigationBar chatPlacement="raised" userId={userId} userName={userName} version={version}
                    fxns={{tab: {get: tab, set: setTab}}}>
       <HomeModal modal={appState.modal}/>  
       <HomeTabs tab={tab}  userId={userId} userRole={null}/>

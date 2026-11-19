@@ -7,6 +7,7 @@ import {
   BreadCrumbs,
   useHeightAsCssVar,
 } from "./components/PageComponents";
+import ChatWidget from "./components/ChatWidget";
 import Modal from "./components/Modal";
 import SvgIcon from "./components/svg/SvgIcon";
 
@@ -1183,6 +1184,7 @@ function NavigationBar({ children }) {
         {/* <a className="nav-link" href="/collection">Desktop</a> */}
       </nav>
       {children}
+      <ChatWidget />
     </>
   );
 }
