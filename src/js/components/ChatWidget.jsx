@@ -39,10 +39,9 @@ const MESSAGE_STYLES = {
 };
 
 // Options are constants: Deep Chat resets the conversation whenever it re-renders.
-const IMAGE_UPLOADS = { files: { acceptedFormats: ".png,.jpg,.jpeg,.gif,.webp", maxNumberOfFiles: 2 } };
 const CONNECT = { handler: askAssistant };
 const ERROR_MESSAGES = { displayServiceErrorMessages: true, overrides: { default: CHAT_ERROR_MESSAGE } };
-const INTRO_MESSAGE = { text: "Hi! Ask me anything about using Collect Earth Online. You can also attach a screenshot." };
+const INTRO_MESSAGE = { text: "Hi! Ask me anything about using Collect Earth Online." };
 const TEXT_INPUT = { placeholder: { text: "Ask a question…" } };
 
 const focusInput = (chat) => chat?.focusInput?.();
@@ -54,9 +53,7 @@ const ChatConversation = memo(({ chatRef }) => (
       ref={chatRef}
       auxiliaryStyle={SHADOW_CSS}
       connect={CONNECT}
-      dragAndDrop
       errorMessages={ERROR_MESSAGES}
-      images={IMAGE_UPLOADS}
       introMessage={INTRO_MESSAGE}
       messageStyles={MESSAGE_STYLES}
       onComponentRender={focusInput}
@@ -152,7 +149,7 @@ export const ChatToggleNavItem = () => {
   };
 
   return enabled && (
-    <li className="nav-item">
+    <li className="nav-item ceo-chat-toggle">
       <button className="nav-link border-0 bg-transparent" onClick={toggle} type="button">
         {hidden ? "Show chatbot" : "Hide chatbot"}
       </button>

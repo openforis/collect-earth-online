@@ -136,3 +136,10 @@
     height: 48px;
   }
 }
+
+/* No yellow hover bar (custom.css) on the navbar's Show/Hide chatbot item. */
+#main-nav .nav-item.ceo-chat-toggle:hover {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
