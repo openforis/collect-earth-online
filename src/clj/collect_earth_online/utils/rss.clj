@@ -32,7 +32,7 @@
 
 (defn get-blog-feed [_]
   (let [url   (get-config :blog :url)
-        limit 7
+        limit (-> (get-config :blog) (get :limit 7))
         blogs (->> url client/get
                    :body xml/parse-str
                    :content first :content
