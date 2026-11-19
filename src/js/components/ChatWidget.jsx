@@ -26,7 +26,7 @@ const CHAT_STYLE = {
   height: "100%",
   border: "none",
   borderRadius: 0,
-  fontFamily: "'Public Sans', sans-serif", // any non-default font stops Deep Chat loading Google Fonts
+  fontFamily: "'Public Sans', sans-serif",
   fontSize: "0.95rem",
 };
 
@@ -38,7 +38,7 @@ const MESSAGE_STYLES = {
   html: { shared: { bubble: { backgroundColor: "transparent", padding: 0 } } },
 };
 
-// Options are constants: Deep Chat resets the conversation whenever it re-renders.
+// resets the conversation whenever it re-renders.
 const CONNECT = { handler: askAssistant };
 const ERROR_MESSAGES = { displayServiceErrorMessages: true, overrides: { default: CHAT_ERROR_MESSAGE } };
 const INTRO_MESSAGE = { text: "Hi! Ask me anything about using Collect Earth Online." };
@@ -75,7 +75,6 @@ const CloseIcon = ({ size = 22 }) => (
   </svg>
 );
 
-// Floating help chat; placement="raised" lifts it above bars pinned to the bottom of the page.
 const ChatWidget = ({ placement }) => {
   const [{ enabled, hidden, open, loaded }, setState] = useAtom(chatWidgetAtom);
   const launcherRef = useRef(null);
