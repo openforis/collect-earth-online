@@ -482,13 +482,14 @@ export const InstitutionDescription = () => {
   const [state] = useAtom(institutionPageAtom);
   const institution = state?.institutionDetails || {};
   if (!institution?.description) return null;
+  const cleanUrl = institution?.url.match(/^https?:\/\//i) ? institution?.url : `http://${institution?.url}`;
 
   return (
     <div className="inst-desc-container">
       <div className="inst-desc-box">
         <div className="inst-desc-title">
           <span style={{textDecorationLine: 'underline', cursor: 'pointer'}}
-                onClick={()=>window.open(institution?.url)}
+               onClick={()=>window.open(cleanUrl)}
           >{institution?.name}</span>
         </div>
 
@@ -504,7 +505,7 @@ export const InstitutionDescription = () => {
         <p className="inst-desc-text">{institution.description}</p>
         <p className="inst-desc-text">Instititution Page: <span style={
           {textDecorationLine: 'underline', cursor: 'pointer'}
-        }onClick={()=>window.open(institution?.url)
+        }onClick={()=>window.open(cleanUrl)
                  }>{institution?.url}</span></p>
       </div>
     </div>
