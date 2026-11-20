@@ -15,7 +15,6 @@ import { safeLength } from "./utils/sequence";
 
 import '../css/institution.css';
 
-
 export const ReviewInstitution = ({ institutionId, userId }) => {
   const [state, setState] = useAtom(institutionPageAtom);
   const setIsAdmin = (isAdmin) => setState((s) => ({ ...s, isAdmin }));
@@ -552,32 +551,32 @@ export const SidebarTabs = ({
       .catch(() => {
         console.error("Error deleting the institution");
       });
-  }
+  };
 
   const onSaveInstitution = (params) => {
     onUpdateInstitution(params);
     setShowUpdateInstitution(false);
-  }
+  };
 
   const onCloseEditInstitution = () => {
     setShowUpdateInstitution(false);
-  }
+  };
 
   const onDeleteInstitution = () => {
     archiveInstitution();
     setShowDeleteInstitution(false);
-  }
+  };
   
   const onCloseDeleteInstitution = () => {
     setShowDeleteInstitution(false);
-  }
+  };
 
 
   return (
     <div className="sidebar-tabs" style={{left: '100px'}}>
       <div className="sidebar-header">
         <div className="sidebar-header-left">
-          <SvgIcon icon="folder" size="1.2rem" />
+          <SvgIcon icon="folder" size="1.2rem" color="var(--Navy-Teal)"/>
           <span className="sidebar-title">{institutionName}</span>
         </div>
 
@@ -651,7 +650,8 @@ export const SidebarTabs = ({
             </div>
 
             {tab.badge > 0 && (
-              <span className="sidebar-badge">{tab.badge}</span>
+              <span className="sidebar-badge"
+                    style={{backgroundColor:"var(--Navy-Teal)"}}>{tab.badge}</span>
             )}
           </button>
         );

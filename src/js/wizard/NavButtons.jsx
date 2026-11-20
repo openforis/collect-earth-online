@@ -51,15 +51,15 @@ export const NavButtons = () => {
             {stepIdx > 0 &&
               (<button
                  className={'btn btn-sm'}
-                 style={{backgroundColor: "#2d6f74",
-                   color: "#fff"}}
+                 style={{backgroundColor: "var(--Navy-Teal)",
+                         color: "var(--Primary-White)"}}
                  onClick={()=>navBackHandler()}
               >Back</button>)}
             {!isEditing &&
               (<button
                  className={'btn btn-sm'}
-                 style={{backgroundColor: "#2d6f74",
-                   color: "#fff"}}
+                 style={{backgroundColor: "var(--Navy-Teal)",
+                         color: "var(--Primary-White)"}}
                  disabled={draftSaving}
                  onClick={()=>saveDraftHandler()}
               >{draftSaving ? 'Saving...' : 'Save Draft'}</button>)}
@@ -69,8 +69,8 @@ export const NavButtons = () => {
                 currentStep === 'review' ?
                   saveProjectHandler() : 
                   continueHandler()}
-              style={{backgroundColor: "#2d6f74",
-                color: "#fff"}}
+              style={{backgroundColor: "var(--Navy-Teal)",
+                      color: "var(--Primary-White)"}}
             >{continueLabel(currentStep, isEditing)}</button>
           </div>);
 };
@@ -109,7 +109,8 @@ export const ProjectWizardNavigator = () => {
             >
               {((activeSteps.map(({id})=>id).indexOf(currentStep) > index)
                 && !invalidSteps.includes(id)) ?
-                (<SvgIcon icon='checkFilled' size='1.2rem' style={{marginTop: '.2rem'}}/>) :
+               (<SvgIcon icon='checkFilled' size='1.2rem' color="var(--Navy-Teal)"
+                         style={{marginTop: '.2rem'}}/>) :
                 (<span className={currentStep === id && "selected"}
                 >{index + 1}</span>)}
 

@@ -807,6 +807,7 @@ export function SurveyQuestions ({
     return (
       <>
         <button
+          style={{backgroundColor:"var(--Navy-Teal)"}}
           onClick={invertHandler}
           className={'btn filled'}>
           {/*(selectedSampleIds[parentId] ?? []).length === allIds.length ? "Clear Selection"

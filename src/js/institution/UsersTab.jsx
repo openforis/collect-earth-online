@@ -31,7 +31,7 @@ export const UsersTab = ({
         sortable: true,
         grow: 2,
         cell: (row) => (
-          <span style={{ color: "#2f615e", fontWeight: 500 }}>{row.email}</span>
+          <span style={{ color: "var(--Navy-Teal)", fontWeight: 500 }}>{row.email}</span>
         ),
       },
       {

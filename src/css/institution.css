@@ -1,3 +1,5 @@
+@import "./colors.css";
+
 .inst-desc-container {
   margin-left: 22vw;
   padding: 2rem 2rem 0 2rem;
@@ -5,9 +7,9 @@
 }
 
 .inst-desc-box {
-  border: 1px solid #cce0dc;
+  border: 1px solid var(--Primary-Light-Teal);
   border-radius: 6px;
-  background: #f9fcfb;
+  background: var(--Primary-White);
   padding: 1.5rem 2rem;
   font-family: inherit;
 }
@@ -17,7 +19,7 @@
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  color: #1a3c36;
+  color: var(--Primary-Black);
   margin-bottom: 0.75rem;
 }
 
@@ -35,7 +37,7 @@
 }
 
 .inst-desc-text {
-  color: #4a4a4a;
+  color: var(--Primary-Black);
   font-size: 1rem;
   line-height: 1.6;
   margin: 0;
@@ -50,8 +52,8 @@
   left: 0;
   bottom: 0;
   width: 22vw;
-  background: #f7f9f8;
-  border-right: 1px solid #dcdedc;
+  background: var(--Primary-White);
+  border-right: 1px solid var(--Primary-Light-Teal);
   box-sizing: border-box;
 }
 
@@ -60,7 +62,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  border-bottom: 1px solid #dcdedc;
+  border-bottom: 1px solid var(--Primary-Light-Teal);
 }
 
 .sidebar-header-left {
@@ -80,10 +82,10 @@
   position: absolute;
   top: 28px;
   right: 0;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--Primary-White);
+  border: 1px solid var(--Primary-Light-Teal);
   border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px var(--Primary-Black);
   width: 190px;
   z-index: 50;
 }
@@ -94,12 +96,12 @@
   gap: 8px;
   padding: 8px 12px;
   width: 100%;
-  background: white;
+  background: var(--Primary-White);
   border: none;
   cursor: pointer;
   font-size: 14px;
   text-align: left;
-  color: #1a1a1a;
+  color: var(--Primary-Black);
 }
 
 .sidebar-tab {
@@ -109,8 +111,8 @@
   gap: 0.75rem;
   padding: 10px 16px;
   border: none;
-  background-color: #f7f9f8;
-  color: #000;
+  background-color: var(--Primary-White);
+  color: var(--Primary-Black);
   cursor: pointer;
   width: 100%;
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -118,7 +120,7 @@
 }
 
 .sidebar-tab.active {
-  background-color: #e6efef;
+  background-color: var(--Primary-Light-Teal);
 }
 
 .sidebar-tab-indicator {
@@ -127,7 +129,7 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background-color: #2f615e;
+  background-color: var(--Navy-Teal);
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
 }
@@ -148,8 +150,8 @@
 }
 
 .sidebar-badge {
-  background: #3d7f7a;
-  color: #fff;
+  background: var(--Navy-Teal);
+  color: var(--Primary-White);
   border-radius: 10px;
   padding: 2px 8px;
   font-size: 0.75rem;
@@ -173,7 +175,7 @@
 .tab-title {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #2f615e;
+  color: var(--Navy-Teal);
   margin: 0;
 }
 
@@ -182,9 +184,9 @@
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  background: #2f615e;
+  background: var(--Navy-Teal);
   border: none;
-  color: white;
+  color: var(--Primary-White);
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9rem;
@@ -192,13 +194,13 @@
 }
 
 .filled-button:hover {
-  background: #284f4d;
+  background: var(--Navy-Teal);
 }
 
 .outlined-btn {
-  border: 1px solid #3d7f7a;
-  color: #3d7f7a;
-  background: white;
+  border: 1px solid var(--Navy-Teal);
+  color: var(--Navy-Teal);
+  background: var(--Primary-White);
   border-radius: 4px;
   padding: 4px 10px;
   cursor: pointer;
@@ -206,7 +208,7 @@
 }
 
 .outlined-btn:hover {
-  background: #f3f8f7;
+  background: var(--Primary-Light-Teal);
 }
 
 .tab-filter {
@@ -218,7 +220,7 @@
 
 .tab-filter input {
   padding: 8px 10px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--Primary-Light-Teal);
   border-radius: 6px;
   font-size: 0.95rem;
   width: 100%;
@@ -258,12 +260,12 @@
 }
 
 .required {
-  color: red;
+  color: var(--Ochre);
 }
 
 .remove-user-btn {
-  border: 1px solid #c62828;
-  background: white;
+  border: 1px solid var(--Ochre);
+  background: var(--Primary-White);
   padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
@@ -274,8 +276,8 @@
 }
 
 .add-user-btn {
-  background: #2f615e;
-  color: white;
+  background: var(--Navy-Teal);
+  color: var(--Primary-White);
   border: none;
   padding: 10px 16px;
   border-radius: 6px;
@@ -288,7 +290,7 @@
 }
 
 .add-user-btn:hover {
-  background: #284f4d;
+  background: var(--Navy-Teal);
 }
 
 .bulk-actions {
@@ -304,17 +306,17 @@
 }
 
 .bulk-actions-trigger.active {
-  background: #f2f5f4;
+  background: var(--Primary-Light-Teal);
 }
 
 .bulk-actions-dropdown {
   position: absolute;
   top: 110%;
   left: 0;
-  background: #fff;
-  border: 1px solid #dcdedc;
+  background: var(--Primary-White);
+  border: 1px solid var(--Primary-Light-Teal);
   border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px var(--Primary-Black);
   padding: 0.75rem 1rem;
   z-index: 10;
   width: 350px;
@@ -348,9 +350,9 @@
 }
 
 .btn-outlined-green {
-  border: 1px solid #3d7f7a;
-  background: #fff;
-  color: #3d7f7a;
+  border: 1px solid var(--Navy-Teal);
+  background: var(--Primary-White);
+  color: var(--Navy-Teal);
   font-weight: 500;
   padding: 6px 14px;
   border-radius: 6px;
@@ -370,9 +372,9 @@
 }
 
 .btn-filled-green {
-  background: #3d7f7a;
-  color: #fff;
-  border: 1px solid #3d7f7a;
+  background: var(--Navy-Teal);
+  color: var(--Primary-White);
+  border: 1px solid var(--Navy-Teal);
   font-weight: 500;
   padding: 6px 14px;
   border-radius: 6px;
@@ -380,9 +382,9 @@
 }
 
 .btn-outlined-gray {
-  border: 1px solid #c4c7c5;
-  background: #fff;
-  color: #1a1a1a;
+  border: 1px solid var(--Primary-Light-Teal);
+  background: var(--Primary-White);
+  color: var(--Primary-Black);
   font-weight: 500;
   padding: 6px 14px;
   border-radius: 6px;
@@ -390,7 +392,7 @@
 }
 
 .edit-button {
-    color: #FEC65B;
+    color: var(--Ochre);
     margin: 1px;
     border: 1px solid;
     padding: 4px;

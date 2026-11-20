@@ -3,8 +3,8 @@
 #highlights-tab {
     height: 167vh ;
     width: 100%;
-    font-family: "Public-Sans";
-    background-color: var(--Primary-Light-Green, #E9F1F0) !important;
+    font-family: "Lexend";
+    background-color: var(--Primary-Light-Teal) !important;
 }
 
 .header {
@@ -16,8 +16,8 @@
     gap: 16px;
     align-self: stretch;
     border-radius: 8px;
-    border-bottom: 1px solid var(--Neutral-Soft-gray, #E1E1E1);
-    background: var(--Neutral-White, #FFF);
+    border-bottom: 1px solid var(--Primary-Light-Teal);
+    background: var(--Primary-White);
 }
 
 .header-row {
@@ -34,9 +34,9 @@
 }
 
 .header-link span {
-    color: var(--Primary-Standard-Green, #1F7067);
+    color: var(--Navy-Teal);
     text-align: justify;
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 14px;
     font-style: normal;
     font-weight: 600;
@@ -45,11 +45,11 @@
 }
 
 .header-title {
-    color: var(--Neutral-Black, #000);
+    color: var(--Primary-Black);
     font-feature-settings: 'liga' off, 'clig' off;
 
     /* Header/H4 */
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 18px;
     font-style: normal;
     font-weight: 600;
@@ -57,11 +57,11 @@
 }
 
 .header-subtitle {
-    color: var(--Neutral-Md-Gray, #767575);
+    color: var(--Navy-Teal);
     font-feature-settings: 'liga' off, 'clig' off;
 
     /* Paragraph/Small */
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 14px;
     font-style: normal;
     font-weight: 400;
@@ -75,7 +75,7 @@
     align-items: flex-start;
     gap: 24px;
     align-self: stretch;
-    background: var(--Primary-Light-Green, #E9F1F0);
+    background: var(--Primary-Light-Teal);
 }
 
 .highlights {
@@ -110,11 +110,11 @@
 }
 
 .highlight-subtitle {
-    color: var(--Neutral-Md-Gray, #767575);
+    color: var(--Primary-Light-Teal);
     font-feature-settings: 'liga' off, 'clig' off;
 
     /* Paragraph/Small */
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 14px;
     font-style: normal;
     font-weight: 400;
@@ -122,11 +122,11 @@
 }
 
 .highlight-title span {
-    color: var(--Neutral-Black, #000);
+    color: var(--Primary-Black);
     font-feature-settings: 'liga' off, 'clig' off;
 
     /* Header/H4 */
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 18px;
     font-style: normal;
     font-weight: 600;
@@ -134,7 +134,7 @@
 }
 
 .highlight-link {
-    color: var(--Primary-Standard-Green, #1F7067);
+    /* color: var(--Primary-Standard-Green, #1F7067); */
     cursor: pointer;
     display: flex;
     gap: 4px;
@@ -143,9 +143,9 @@
 
 .highlight-link span {
     cursor: pointer;
-    color: var(--Primary-Standard-Green, #1F7067);
+    color: var(--Navy-Teal);
     text-align: justify;
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 14px;
     font-style: normal;
     font-weight: 600;
@@ -177,8 +177,8 @@
     align-items: flex-start;
     align-self: stretch;
     border-radius: 8px;
-    border: 1px solid var(--Primary-Highlight-Green, #A0CAC6);
-    background: #FFF;
+    border: 1px solid var(--Primary-Highlight-Teal);
+    background: var(--Primary-White);
     width: 100%;
 }
 
@@ -198,21 +198,21 @@
     align-items: flex-start;
     gap: 10px;
     align-self: stretch;
-    background: #FFF;}
+    background: var(--Primary-White);}
 
 .blog-date {
-    color: #FFF; /* this keeps the calendar svg looking pretty */
+    color: var(--Primary-White); /* this keeps the calendar svg looking pretty */
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
 .blog-date span {
-    color: #6A7282;
+    color: var(--Navy-Teal);
     font-feature-settings: 'liga' off, 'clig' off;
 
     /* Paragraph/Small */
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 14px;
     font-style: normal;
     font-weight: 400;
@@ -236,13 +236,13 @@
 
 .blog-title svg {
     cursor: pointer;
-    color: var(--Primary-Standard-Green, #1F7067);
+    color: var(--Navy-Teal);
 }
 
 .blog-title span {
-    color: var(--Neutral-Black, #000);
+    color: var(--Primary-Black);
     font-feature-settings: 'liga' off, 'clig' off;
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 16px;
     font-style: normal;
     font-weight: 600;
@@ -254,12 +254,12 @@
     -webkit-line-clamp: 2;
     align-self: stretch;
     overflow: hidden;
-    color: var(--Neutral-Black, #000);
+    color: var(--Primary-Black);
     font-feature-settings: 'liga' off, 'clig' off;
     text-overflow: ellipsis;
 
     /* Paragraph/Small */
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 14px;
     font-style: normal;
     font-weight: 400;
@@ -285,15 +285,15 @@
     align-items: center;
     gap: 10px;
     border-radius: 8px;
-    background: var(--Primary-Light-Green, #E9F1F0);
+    background: var(--MistGreen);
     cursor: pointer;
     min-width: fit-content;
 }
 
 .tag span {
-    color: var(--Primary-Main-Green, #07443D);
+    color: var(--DarkGreen);
     font-feature-settings: 'liga' off, 'clig' off;
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 12px;
     font-style: normal;
     font-weight: 600;
@@ -335,8 +335,8 @@
     gap: 16px;
     align-self: stretch;
     border-radius: 4px;
-    border: 1px solid var(--Primary-Highlight-Green, #A0CAC6);
-    background: var(--Neutral-White, #FFF);}
+    border: 1px solid var(--LightBlue);
+    background: var(--Primary-White);}
 
 .ghost-button {
     display: flex;
@@ -345,8 +345,8 @@
     align-items: center;
     gap: 8px;
     border-radius: 4px;
-    border: 1px solid var(--Primary-Standard-Green, #1F7067);
-    background: var(--Neutral-White, #FFF);
+    border: 1px solid var(--Navy-Teal);
+    background: var(--Primary-White);
     cursor: pointer;
 }
 
@@ -356,15 +356,15 @@
     justify-content: center;
     align-items: center;
     gap: 8px;
-    color: var(--Primary-Standard-Green, #1F7067);}
+    color: var(--Navy-Teal);}
 
 
 .ghost-button div span {
 
-    color: var(--Primary-Standard-Green, #1F7067);
+    color: var(--Navy-Teal);
 
     /* Buttons/Light */
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 14px;
     font-style: normal;
     font-weight: 500;
@@ -378,8 +378,7 @@
     justify-content: center;
     align-items: center;
     border-radius: 4px;
-    background: var(--Primary-Standard-Green, #1F7067);
-
+    background: var(--Navy-Teal);
 }
 
 .primary-button div {
@@ -391,10 +390,10 @@
 }
 
 .primary-button div span {
-    color: var(--Neutral-White, #FFF);
+    color: var(--Primary-White);
 
     /* Buttons/Light */
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 14px;
     font-style: normal;
     font-weight: 500;
@@ -403,7 +402,7 @@
 }
 
 .primary-button div svg {
-    fill: var(--Neutral-White, #FFF);
+    fill: var(--Primary-White);
 }
 
 .project-info {
@@ -415,9 +414,9 @@
 }
 
 .project-title  {
-    color: var(--Neutral-Black, #000);
+    color: var(--Navy-Teal);
     font-feature-settings: 'liga' off, 'clig' off;
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 16px;
     font-style: normal;
     font-weight: 600;
@@ -429,12 +428,12 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color:#FFF;
+    color:var(--Primary-White);
 }
 .project-attribution span {
-    color: var(--Primary-Main-Green, #07443D);
+    color: var(--Navy-Teal);
     font-feature-settings: 'liga' off, 'clig' off;
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 14px;
     font-style: normal;
     font-weight: 600;
@@ -456,12 +455,12 @@
     -webkit-line-clamp: 2;
     align-self: stretch;
     overflow: hidden;
-    color: var(--Neutral-Black, #000);
+    color: var(--Primary-Black);
     font-feature-settings: 'liga' off, 'clig' off;
     text-overflow: ellipsis;
 
     /* Paragraph/Small */
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 14px;
     font-style: normal;
     font-weight: 400;
@@ -476,11 +475,11 @@
 }
 
 .expand-description span {
-    color: var(--Primary-Standard-Green, #1F7067);
+    color: var(--Navy-Teal);
     font-feature-settings: 'liga' off, 'clig' off;
 
     /* Link/Default */
-    font-family: "Public Sans";
+    font-family: "Lexend";
     font-size: 14px;
     font-style: normal;
     font-weight: 500;
@@ -512,8 +511,8 @@ height: 42px;
 padding: 10px 187px 10px 16px;
 align-items: center;
 border-radius: 4px;
-border: 1px solid var(--Neutral-Soft-gray, #E1E1E1);
-background: var(--Neutral-Light-gray, #F6F6F6);
+border: 1px solid var(--Primary-Light-Teal);
+background: var(--Primary-Light-Teal);
 margin-bottom: 2rem;
 width: 100%;}
 
@@ -529,7 +528,7 @@ width: 100%;
 color: var(--Neutral-Md-Gray, #767575);
 
 /* Standard Input Label/Small */
-font-family: "Public Sans";
+font-family: "Lexend";
 font-size: 14px;
 font-style: normal;
 font-weight: 500;
@@ -561,9 +560,9 @@ height: 44px;
 justify-content: center;
 align-items: center;
 border-radius: 4px;
-background: var(--Primary-Standard-Green, #1F7067);
+background: var(--Navy-Teal);
 cursor: pointer;
-color: white;
+color: var(--Primary-White);
 }
 
 .create-institution-label {
@@ -578,10 +577,10 @@ gap: 8px;}
 }
 
 .create-institution-label span {
-color: var(--Neutral-White, #FFF);
+color: var(--Primary-White);
 
 /* Buttons/Light */
-font-family: "Public Sans";
+font-family: "Lexend";
 font-size: 14px;
 font-style: normal;
 font-weight: 500;
@@ -595,11 +594,11 @@ align-items: center;
 gap: 4px;}
 
 .sort-by label {
-color: var(--Neutral-Black, #000);
+color: var(--Navy-Teal);
 font-feature-settings: 'liga' off, 'clig' off;
 
 /* Label/xs */
-font-family: "Public Sans";
+font-family: "Lexend";
 font-size: 14px;
 font-style: normal;
 font-weight: 600;
@@ -613,13 +612,13 @@ line-height: 14px; /* 100% */
 
 #collect-earth {
     height: 1000vh;
-    background-color: var(--Primary-Light-Green);
+    background-color: var(--Navy-Teal);
 }
 
 #collect-tab {
     display: inline-block;
     width: 100vw;
-    background-color: var(--Primary-Light-Green);
+    background-color: var(--Primary-Light-Teal);
     height: 100vh;
     
 }
