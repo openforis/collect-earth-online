@@ -85,4 +85,7 @@
  :collect-earth-online.gcs-integration/bucket-url   ""
  :collect-earth-online.gcs-integration/api-url      ""
  :collect-earth-online.gc-integration/topic-name    "table_jobs-sub"
+
+ :collect-earth-online.blog/url                    ""
+ :collect-earth-online.blog/limit                  7
  }
