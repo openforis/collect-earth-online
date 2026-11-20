@@ -64,7 +64,7 @@ of project visibility`;
           return a.localeCompare(b);
         },
         cell: (row) => (
-          <span style={{ color: "#2f615e", fontWeight: 600 }}>{row.title}</span>
+          <span style={{ color: "var(--Navy-Teal)", fontWeight: 600 }}>{row.title}</span>
         ),
       },
       {

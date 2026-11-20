@@ -84,7 +84,7 @@ export const ImageryStep = ({ imageryList = [] }) => {
                   <SvgIcon 
                     icon={isSelected ? "checkboxChecked" : "checkboxUnchecked"} 
                     size="1.2rem" 
-                    color={isSelected ? "#2d6f74" : "#ccc"} 
+                    color={isSelected ? "var(--Navy-Teal)" : "var(--Primary-Light-Teal)"} 
                   />
                   <label style={{ fontSize: '0.85rem', cursor: 'pointer' }}>{img.title}</label>
                 </div>

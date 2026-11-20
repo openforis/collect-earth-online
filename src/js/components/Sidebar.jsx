@@ -71,8 +71,8 @@ export const SidebarTabs = ({ tabs, activeTab, onChange }) => (
           border: "none",
           padding: "8px 0",
           fontWeight: 600,
-          color: activeTab === id ? "#1b5e20" : "#666",
-          borderBottom: activeTab === id ? "3px solid #1b5e20" : "3px solid transparent",
+          color: activeTab === id ? "#var(--DeepBlue)" : "var(--Navy-Teal)",
+          borderBottom: activeTab === id ? "3px solid var(--DeepBlue)" : "3px solid transparent",
           cursor: "pointer",
           transition: "color 0.2s ease, border-color 0.2s ease",
         }}
