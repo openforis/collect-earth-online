@@ -394,7 +394,7 @@ text-underline-position: from-font;
     justify-content: center;
     align-items: center;
     border-radius: 4px;
-    background: var(--Primary-Highlight-Teal);
+    background: var(--Navy-Teal);
     gap: 1rem;
     padding: 1rem;
 
