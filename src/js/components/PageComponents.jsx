@@ -13,6 +13,7 @@ import "../../css/custom.css";
 
 
 import '../../css/navsidebar.css';
+import '../../css/colors.css';
 
 // Keeps a CSS custom property on <html> equal to an element's rendered height, so
 // page layout can offset fixed bars with var(--x) instead of hardcoded pixels.
@@ -76,7 +77,8 @@ export function LogOutButton({ userName, uri }) {
   ) : (
     <>
       <li className="nav-item my-auto" id="username">
-        <span className="nav-link disabled">{userName}</span>
+        <span style={{color: "var(--Primary-White)"}}
+              className="nav-link disabled">{userName}</span>
       </li>
       <button className="btn btn-outline-red btn-sm" onClick={logout} type="button">
         Logout
@@ -248,7 +250,7 @@ export function NavSideBar ({tab, setTab, userId}) {
             style={tab === tabkey
                    ? {backgroundColor: "#001A19",
                       width: "100px",
-                      borderLeft: "8px solid #15C1AE"}
+                      borderLeft: "8px solid var(--OpenForisBlue)"}
                    : null}>
             <NavTab icon={icon} clickHandler={clickHandler} title={title} tabkey={tabkey}/>
           </div>
@@ -318,7 +320,7 @@ export function NavTopBar ({version, userName, userId, children}) {
         className="navbar navbar-expand-lg navbar-light fixed-top py-0"
         id="main-nav"
         ref={navRef}
-        style={{ backgroundColor: "white", borderBottom: "1px solid black" }}
+        style={{ backgroundColor: "var(--Navy-Teal)", borderBottom: "1px solid black" }}
       >
         <a className="navbar-brand pt-1 pb-1" href="/home">
           <div className="d-flex flex-column align-items-center justify-content-center">
@@ -344,11 +346,11 @@ export function NavTopBar ({version, userName, userId, children}) {
           <span className="navbar-toggler-icon" />
         </button>
         <div className="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul className="navbar-nav mr-auto">
+          <ul className="navbar-nav ml-auto">
             {[
-              { page: "CEO", link: "/home" },
-              { page: "Home", link: "https://collect.earth/" },
-              { page: "About", link: "https://collect.earth/about/" },
+              /* { page: "CEO", link: "/home" }, */
+              /* { page: "Home", link: "https://collect.earth/" }, */
+              /* { page: "About", link: "https://collect.earth/about/" }, */
               { page: "Support", link: "https://collect.earth/ceo-guides" },
               { page: "Blog", link: "https://collect.earth/blog" },
             ].map(({ page, link }) => (
@@ -356,14 +358,16 @@ export function NavTopBar ({version, userName, userId, children}) {
                 key={page}
                 className={"nav-item" + (page === "CEO" && uri === "/home" && " active")}
               >
-                <a className="nav-link" href={link}>
+                <a className="nav-link" href={link}
+                   style={{color: "var(--Primary-White)"}}>
                   {page}
                 </a>
               </li>
             ))}
             {!loggedOut && (
               <li className={"nav-item" + (uri === "/account" && " active")}>
-                <a className="nav-link" href={"/account?accountId=" + userId}>
+                <a className="nav-link" href={"/account?accountId=" + userId}
+                   style={{color: "var(--Primary-White)"}}>
                   Account
                 </a>
               </li>

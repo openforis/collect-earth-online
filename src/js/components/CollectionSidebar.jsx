@@ -421,13 +421,16 @@ export const NewPlotNavigation = ({userEmail}) => {
               value={newPlotId}
               onChange={(e) => setAppState((s) => ({ ...s, newPlotId: e.target.value }))}
             />
-            <button className="btn outline" onClick={() => navToPlot("previous")}>
+            <button className="btn outline" onClick={() => navToPlot("previous")}
+                    style={{borderColor:"var(--Navy-Teal)", color: "var(--Navy-Teal)"}}>
               <SvgIcon icon="leftArrow" size="0.9rem" />
             </button>
-            <button className="btn outline" onClick={() => navToPlot("next")}>
+            <button className="btn outline" onClick={() => navToPlot("next")}
+                    style={{borderColor:"var(--Navy-Teal)", color: "var(--Navy-Teal)"}}>
               <SvgIcon icon="rightArrow" size="0.9rem" />
             </button>
-            <label className="btn filled" onClick={navToPlotId}>
+            <label className="btn filled" onClick={navToPlotId}
+                   style={{backgroundColor: "var(--Navy-Teal)"}}>
               Go To Plot
             </label>
           </div>
@@ -442,7 +445,8 @@ export const NewPlotNavigation = ({userEmail}) => {
         <div className="sidebar-plot-navigation">
           <button
             className="btn filled"
-            style={{ width: "max-content" }}
+            style={{ width: "max-content" ,
+                     backgroundColor: "var(--Navy-Teal)"}}
             onClick={() => navToPlot("next")}
           >
             Start Collecting
@@ -630,26 +634,31 @@ export const ExternalTools = () => {
       infoText="Access external applications like GeoDash, Google Earth, and GEE Script"
     >
       <div className="ext-grid">
-        <button className="ext-btn" onClick={downloadKML}>
+        <button className="ext-btn" onClick={downloadKML}
+                style={{borderColor:"var(--Navy-Teal)", color: "var(--Navy-Teal)"}}>
           <span>Download Plot KML</span>
         </button>
 
         {currentProject?.projectOptions?.showGEEScript ?
-          <button className="ext-btn" onClick={loadGEEScript}>
+         <button className="ext-btn" onClick={loadGEEScript}
+                 style={{borderColor:"var(--Navy-Teal)", color: "var(--Navy-Teal)"}}>
             <span>Go To GEE Script</span>
           </button>
           : <></>}
 
-        <button className="ext-btn" onClick={showGeoDash}>
+        <button className="ext-btn" onClick={showGeoDash}
+        style={{borderColor:"var(--Navy-Teal)", color: "var(--Navy-Teal)"}}>
           <span>Open GeoDash</span>
         </button>
 
-        <button className="ext-btn" onClick={openInGoogleEarth}>
+        <button className="ext-btn" onClick={openInGoogleEarth}
+        style={{borderColor:"var(--Navy-Teal)", color: "var(--Navy-Teal)"}}>
           <span>Go To Google Earth Web</span>
         </button>
 
         {currentProject.learningMaterial ?
-          <button className="ext-btn" onClick={toggleLearningMaterial}>
+         <button className="ext-btn" onClick={toggleLearningMaterial}
+                 style={{borderColor:"var(--Navy-Teal)", color: "var(--Navy-Teal)"}}>
             <span>Learning Material</span>
           </button>
           : <></>}
@@ -913,12 +922,14 @@ export const SidebarFooter = ({ processModal }) => {
   return (
     <div className="sidebar-footer-buttons">
       {!collecting &&
-        <button className="btn outline"
+       <button className="btn outline"
+          style={{borderColor:"var(--Navy-Teal)", color: "var(--Navy-Teal)"}}
           onClick={clearAll}>
           Clear All
         </button>}
       {!collecting &&
-        <button className="btn outline"
+       <button className="btn outline"
+         style={{borderColor:"var(--Navy-Teal)", color: "var(--Navy-Teal)"}}
           onClick={toggleFlagged}>
           {currentPlot.flagged ? "Unflag Plot" : "Flag Plot"}
         </button>}
@@ -926,7 +937,8 @@ export const SidebarFooter = ({ processModal }) => {
         onClick={() => setAppState(s => ({...s, showQuitModal: !s.showQuitModal}))}
       >Exit</button>
       {!collecting &&
-        <button className="btn filled"
+       <button className="btn filled"
+         style={{backgroundColor:"var(--Navy-Teal)"}}
           onClick={postValuesToDB}>
           Save & Continue
         </button>}

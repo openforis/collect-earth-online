@@ -892,7 +892,7 @@ function MapControls({}) {
     };
     return (
       <input
-        className="btn btn-outline-lightgreen btn-sm"
+        className="btn btn-outline-darkgreen btn-sm"
         onClick={() => {state.currentPlot.id > 0 ? zoomToPlot() : zoomToProjectAOI();}}
         type="button"
         value="Re-Zoom"
@@ -902,9 +902,9 @@ function MapControls({}) {
   
   return (
     <div className="pl-0 pr-0 full-height" id="image-analysis-pane">
-      <div className="row" id="imagery-info" style={{ justifyContent: "center" }}>
-        <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{state.imageryAttribution}</p>
-      </div>
+      {/* <div className="row" id="imagery-info" style={{ justifyContent: "center" }}> */}
+      {/*   <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{state.imageryAttribution}</p> */}
+      {/* </div> */}
       
       <div className="map-controls"
            style={{position: 'absolute',
