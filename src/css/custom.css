@@ -31,11 +31,12 @@
 /***********/
 /* General */
 /***********/
+
 .srd td {
     border-collapse: collapse;
     border: 2px solid rgb(200, 200, 200);
     letter-spacing: 1px;
-    font-family: 'Public Sans', sans-serif;
+    font-family: 'Lexend', sans-serif;
     font-size: 0.8rem;
     padding: 5px;
     text-align: center;
@@ -135,7 +136,7 @@
 h1,
 h2,
 h3 {
-    font-family: 'Public Sans', sans-serif;
+    font-family: 'Lexend', sans-serif;
 }
 h1,
 h2 {
@@ -239,10 +240,10 @@ h4 {
     color: white;
 }
 .btn-outline-lightgreen {
-    color: var(--lightgreen);
+    color: var(--Primary-Highlight-Teal);
     background-color: white;
     background-image: none;
-    border-color: var(--lightgreen);
+    border-color: var(--Primary-Highlight-Teal);
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
@@ -254,18 +255,18 @@ h4 {
 }
 
 .btn-outline-darkgreen {
-    color: var(--darkgreen);
-    background-color: white;
+    color: var(--Navy-Teal);
+    background-color: var(--Primary-White);
     background-image: none;
-    border-color: var(--darkgreen);
+    border-color: var(--Navy-Teal);
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-outline-darkgreen:hover {
     color: #ffff;
-    background-color: var(--darkgreen);
-    border-color: var(--darkgreen);
+    background-color: var(--Navy-Teal);
+    border-color: var(--Navy-Teal);
 }
 
 .btn-outline-lightgray {
@@ -296,18 +297,18 @@ h4 {
     border-color: var(--darkgray-hover);
 }
 .btn-outline-yellow {
-    color: #f1c00f;
-    background-color: white;
+    color: var(--Ochre);
+    background-color: var(--Primary-Black);
     background-image: none;
-    border-color: var(--yellow);
+    border-color: var(--Ochre);
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-outline-yellow:hover {
-    color: white;
-    background-color: var(--yellow);
-    border-color: var(--yellow);
+    color: var(--Primary-Black);
+    background-color: var(--Ochre);
+    border-color: var(--Ochre);
 }
 .btn-outline-red {
     color: #c42121;
@@ -347,10 +348,10 @@ h4 {
 /* Links */
 /*********/
 a {
-    color: var(--lightgreen);
+    color: var(--Navy-Teal);
 }
 a:hover {
-    color: var(--lightgreen-hover);
+    color: var(--LightBlue);
     text-decoration: none;
 }
 
@@ -647,7 +648,7 @@ a.ol-popup-closer.close {
 }
 .ol-overlay-container .cTitle h1 {
     color: white;
-    font-family: 'Public Sans', sans-serif;
+    font-family: 'Lexend', sans-serif;
     font-size: 1rem;
     padding: 0.6rem;
     margin-bottom: 0;
@@ -675,7 +676,7 @@ h2.header {
     background: var(--darkgreen);
     margin: 0 -15px 10px -15px;
     padding: 1rem;
-    font-family: 'Public Sans', sans-serif;
+    font-family: 'Lexend', sans-serif;
     font-size: 1.1rem;
     font-weight: 500;
 }
@@ -697,7 +698,7 @@ h2.header {
 }
 .modal-title {
     font-size: 1rem;
-    font-family: 'Public Sans', sans-serif;
+    font-family: 'Lexend', sans-serif;
     color: black;
 }
 .modal-footer {
@@ -919,7 +920,7 @@ input:checked + .switch-slider:before {
 
 body {
     /* margin-left: 1rem; */
-    font-family: 'Public Sans', sans-serif;
+    font-family: 'Lexend', sans-serif;
     padding-top: var(--page-top);
     overflow-x: hidden;
 }

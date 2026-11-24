@@ -564,7 +564,7 @@ export const SurveyQuestionsStep = () => {
             onClick={addQuestion}
             style={{
               width: '100%',
-              backgroundColor: '#2d6f74',
+              backgroundColor: 'var(--Navy-Teal)',
               color: '#fff',
               marginTop: '15px',
               display: 'flex',

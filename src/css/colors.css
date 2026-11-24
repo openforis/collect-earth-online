@@ -4,8 +4,12 @@
 
 
 :root {
+
+    /* TODO: replace/remove unused of the following */
+    /* vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv */
+   
     --Neutral-Soft-gray: #E1E1E1;
-    --Neutral-White: #FFF;
+
     --Primary-Light-Green: #E9F1F0;
     --Primary-Standard-Green: #1F7067;
     --Neutral-Md-Gray: #767575;
@@ -14,4 +18,32 @@
     --Brand-Teal: #356A72;
     --Primary-Highlight-Green: #A0CAC6;
     --Primary-Red: #c62828;
+    /* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
+
+
+    /* TODO: devise domain-style names for the following */
+    /* vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv */
+    --OpenForisBlue: #1770DD;
+    --ForestGreen:   #72AE23;
+    --Charcoal:      #3C3C3C;
+    --Neutral-White: #FFFFFF;
+
+    --Primary-Blue:  #1770DD;
+    --Primary-Green: #72AE23;
+    --Primary-Black: #3C3C3C;
+    --Primary-White: #FFFFFF;
+
+    --Primary-Light-Teal: #E8EEF0;
+    --LightBlue:     #259CEA;
+    --PaleGreen:     #B8D691;
+    --MistGreen:     #E4E6BD;
+
+    --Primary-Highlight-Teal: #A0CAC6;
+    
+    --DarkGreen:     #4C7E0B;
+    --DeepBlue:      #1B6A99;
+    --Navy-Teal:     #134E63;
+    --Ochre:         #DEA73A;
+
+    /*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
 }

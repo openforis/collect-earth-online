@@ -44,7 +44,8 @@ function Blogs ({blogs}) {
                     <SvgIcon icon="chevronRight" size="1.2rem" color="#1F7067"/>
                   </div>
                 </div>
-                <div className="blog-subtitle">{blog.description}</div>
+                <div className="blog-subtitle"
+                     dangerouslySetInnerHTML={{__html: blog.description}}></div>
                 {blog.category?.length > 0 &&
                   <div className="tags">
                     {blog.category.map((tag)=> {

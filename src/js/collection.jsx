@@ -162,9 +162,6 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     const clickSelect = mercator.getInteractionByTitle(mapConfig, "clickSelect");
     if (!layer || !clickSelect) return;
 
-    // const parentId = getParentId(selectedQuestionId);
-    // const sampleIds = selectedSampleIds?.[parentId] ?? [];
-
     const features = clickSelect.getFeatures();
     const featureIds = features.getArray().map((f)=>f.get("sampleId"));
     const update = selectedSampleIds.length === featureIds.length &&
@@ -184,6 +181,21 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
      state.selectedQuestionId,
     ]);
 
+  useEffect(() => {
+    if (!state.mapConfig) return;
+    if (!state.currentProject) return;
+
+    state.currentPlot?.id ? showProjectPlot()
+      : mercator.getLayerById(state.mapConfig, 'currentAOI').setVisible(state.showBoundary);
+   
+  }, [state.showBoundary]);
+
+  useEffect(() => {
+    if (!state.mapConfig) return;
+    if (state.currentPlot?.id > 0) return;
+    mercator.getLayerById(state.mapConfig, 'currentPlots').setVisible(state.showSamples);
+  }, [state.showSamples]);
+
   // UPDATE MAP WHEN STATE CHANGES — Auto launch geodash
   useEffect(() => {
     if (!state.currentPlot?.id) return;
@@ -201,7 +213,7 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     }
 
     updateMapImagery();
-  }, [state.currentPlot?.id, state.showBoundary, state.currentProject?.hasGeoDash, state.currentProject?.projectOptions?.autoLaunchGeoDash, state.currentProject?.type]);
+  }, [state.currentPlot?.id, state.currentProject?.hasGeoDash, state.currentProject?.projectOptions?.autoLaunchGeoDash, state.currentProject?.type]);
 
   // GET PLOT DATA WHEN NEEDED - When getNewPlot changes to true, request plot data
   useEffect(() => {
@@ -428,8 +440,8 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
         /*
           setState((s) => ({
           ...s, selectedSampleIds: {
-            ...s.selectedSampleIds,
-            [getParentId(state.selectedQuestionId)]: sampleIds}}));
+          ...s.selectedSampleIds,
+          [getParentId(state.selectedQuestionId)]: sampleIds}}));
         */
       }, 
       state.selectedSampleIds
@@ -757,7 +769,7 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
           </div>
         )}
         <div className="d-flex flex-column flex-grow-1">
-          <ImageAnalysisPane />
+          <MapControls />
         </div>
         <div className="col-lg-4 col-md-4 d-flex flex-column border-left full-height">
           <CollectionSidebar processModal={processModal} userEmail={userEmail}></CollectionSidebar>
@@ -788,36 +800,90 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   );
 };
 
-function ImageAnalysisPane({}) {
+function MapControls({}) {
   const [state, setState] = useAtom(stateAtom);
   
-  const toggleShowBoundary = () => {
-    // console.log("toggle show boundary", state.showBoundary);
-    setState (s => ({...s, showBoundary: !state.showBoundary}));
-  };
-  
-  const toggleShowSamples = () =>  {
-    // console.log("toggle show samples", state.showSamples);
-    setState (s=> ({...s, showSamples: !state.showSamples}));
-  };
-
-  const zoomToPlot = () => {
-    // console.log("zooming to plot", state.mapConfig);
-
+  const ZoomBtns = () => {
+    function zoom (level) {
       state.mapConfig &&
-      mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36); 
+        mercator.setMapZoom(state.mapConfig, level);
+    };
+
+    return (
+      <div className="d-flex flex-column" style={{ gap: '2px' }}>
+        <button
+          className="btn btn-sm"
+          style={{backgroundColor: 'white',
+                  borderRadius: '25%',
+                  margin: 'auto 0 auto auto'}}
+          onClick={() => zoom(1)}>
+          <SvgIcon icon="plus" size="0.9rem" />
+        </button>
+        <button
+          className="btn btn-sm"
+          style={{backgroundColor: 'white',
+                  borderRadius: '25%',
+                  margin: 'auto 0 auto auto'}}
+          onClick={() => zoom(-1)}>
+          <SvgIcon icon="minus" size="0.9rem" /></button>
+
+      </div>
+    );
   };
 
-  const zoom = (level) => {
-    state.mapConfig &&
-      mercator.setMapZoom(state.mapConfig, level);
+  const ToggleShowBoundaryBtn = () => {
+    function toggleShowBoundary () {
+      setState (s => ({...s, showBoundary: !state.showBoundary}));
+    };
+    return (
+      <input
+        className={`btn btn-outline-${state.showBoundary ? "red" : "lightgreen"} btn-sm`} 
+        onClick={toggleShowBoundary}
+        type="button"
+        value={`${state.showBoundary ? "Hide" : "Show"} Boundary`}
+      />
+    );
+  };
+
+  const ToggleShowSamplesBtn = () => {
+    function toggleShowSamples () {
+      setState (s=> ({...s, showSamples: !state.showSamples}));
+    };
+    return(
+      <input
+        className={`btn btn-outline-${state.showSamples ? "red" : "lightgreen"} btn-sm`}
+
+        onClick={toggleShowSamples}
+        type="button"
+        value={(state.showSamples ? "Hide" : "Show") + " " +  (state.currentPlot?.id > 0 ? 'Samples' : 'Plots')}
+      />
+    );
+  };
+
+  const ReZoomBtn = () => {
+    function zoomToPlot () {
+      state.mapConfig &&
+        mercator.zoomMapToLayer(state.mapConfig, "currentPlot", 36); 
+    };
+    function zoomToProjectAOI () {
+      state.mapConfig &&
+        mercator.zoomMapToLayer(state.mapConfig, "currentAOI", 48);
+    };
+    return (
+      <input
+        className="btn btn-outline-darkgreen btn-sm"
+        onClick={() => {state.currentPlot.id > 0 ? zoomToPlot() : zoomToProjectAOI();}}
+        type="button"
+        value="Re-Zoom"
+      />
+    );
   };
   
   return (
     <div className="pl-0 pr-0 full-height" id="image-analysis-pane">
-      <div className="row" id="imagery-info" style={{ justifyContent: "center" }}>
-        <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{state.imageryAttribution}</p>
-      </div>
+      {/* <div className="row" id="imagery-info" style={{ justifyContent: "center" }}> */}
+      {/*   <p style={{ fontSize: ".9rem", marginBottom: "0" }}>{state.imageryAttribution}</p> */}
+      {/* </div> */}
       
       <div className="map-controls"
            style={{position: 'absolute',
@@ -825,42 +891,10 @@ function ImageAnalysisPane({}) {
                    right: '2vw',
                    zIndex: 1}}>
         <div className="ExternalTools__geo-buttons d-flex flex-column" id="plot-nav" style={{ gap: '0.8rem' }}>
-          <input
-            className="btn btn-outline-lightgreen btn-sm"
-            onClick={zoomToPlot}
-            type="button"
-            value="Re-Zoom"
-          />
-          <input
-            className={`btn btn-outline-${state.showSamples ? "red" : "lightgreen"} btn-sm`}
-
-            onClick={toggleShowSamples}
-            type="button"
-            value={`${state.showSamples ? "Hide" : "Show"} Samples`}
-          />
-          <input
-            className={`btn btn-outline-${state.showBoundary ? "red" : "lightgreen"} btn-sm`} 
-            onClick={toggleShowBoundary}
-            type="button"
-            value={`${state.showBoundary ? "Hide" : "Show"} Boundary`}
-          />
-          <div className="d-flex flex-column" style={{ gap: '2px' }}>
-            <button
-              className="btn btn-sm"
-              style={{backgroundColor: 'white',
-                      borderRadius: '25%',
-                      margin: 'auto 0 auto auto'}}
-              onClick={() => zoom(1)}>
-              <SvgIcon icon="plus" size="0.9rem" />
-            </button>
-            <button
-              className="btn btn-sm"
-              style={{backgroundColor: 'white',
-                      borderRadius: '25%',
-                      margin: 'auto 0 auto auto'}}
-              onClick={() => zoom(-1)}>
-              <SvgIcon icon="minus" size="0.9rem" /></button>
-          </div>
+          {<ReZoomBtn/>}
+          {<ToggleShowSamplesBtn/>}
+          {<ToggleShowBoundaryBtn/>}
+          {<ZoomBtns/>}
         </div>
       </div>
     </div>

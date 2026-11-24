@@ -921,7 +921,8 @@ export class PlotDesign extends React.Component {
                   }
                   value={plotDistribution}
                 >
-                  {Object.entries(spatialDistributionOptions).map(([key, options]) => (
+                  {/* {Object.entries(spatialDistributionOptions).map(([key, options]) => ( */}
+                  {Object.entries(plotOptions).map(([key, options]) => (
                     <option key={key} value={key}>
                       {options.display}
                     </option>

@@ -36,7 +36,7 @@
   padding: 16px;
   border-radius: 6px;
   border: 1px solid #ddd;
-  font-family: 'Public Sans', sans-serif;
+  font-family: 'Lexend', sans-serif;
 }
 
 .sidebar-header {
@@ -48,6 +48,7 @@
 }
 
 .sidebar-title {
+  color: var(--Navy-Teal);
   font-weight: bold;
   font-size: 16px;
   text-transform: uppercase;
@@ -104,7 +105,7 @@
 
 .sidebar-slider {
   position: absolute;
-  background-color: #ccc;
+  background-color: var(--Primary-Light-Teal);
   border-radius: 20px;
   top: 0; left: 0; right: 0; bottom: 0;
   transition: 0.2s;
@@ -118,13 +119,13 @@
   width: 12px;
   top: 4px;
   left: 4px;
-  background-color: #fff;
+  background-color: var(--Primary-White);
   transition: 0.2s;
   border-radius: 50%;
 }
 
 .sidebar-switch input:checked + .sidebar-slider {
-  background-color: #3D7F7A;
+  background-color: var(--Navy-Teal);
 }
 
 .sidebar-switch input:checked + .sidebar-slider:before {
@@ -137,7 +138,7 @@
   justify-content: center;
   gap: 8px;
   padding: 12px 16px;
-  background-color: #fff;
+  background-color: var(--Primary-White);
 }
 
 .sidebar-footer-buttons btn {
@@ -185,31 +186,31 @@
 
 .btn.outline {
   background-color: transparent;
-  border: 1px solid #3D7F7A;
-  color: #3D7F7A;
+  border: 1px solid var(--Navy-Teal);
+  color: var(--Primary-White);
 }
 
 .btn.filled {
-  background-color: #3D7F7A;
-  color: white;
+  background-color: var(--Navy-Teal);
+  color: var(--Primary-White);
   border: none;
 }
 
 .sidebar-card {
-  background: #fff;
+  background: var(--Primary-White);
   border: 1px solid var(--Primary-Highlight-Green);
   border-radius: 8px;
   padding: 1rem;
-  font-family: 'Public Sans', sans-serif;
+  font-family: 'Lexend', sans-serif;
   margin: 0px 16px;
 }
 
 .sidebar-info-button {
-  border: 1px solid #fff;
+  border: 1px solid var(--Primary-White);
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--Primary-White);
   font-weight: 700;
   cursor: pointer;
 }
@@ -226,8 +227,8 @@
   justify-content: center;
   gap: 10px;
   padding: 6px 7px;
-  border: 1px solid #3D7F7A;
-  color: #3D7F7A;
+  border: 1px solid var(--Navy-Teal);
+  color: varl(--Navy-Teal);
   background: transparent;
   border-radius: 4px;
   font-size: 15px;
@@ -241,8 +242,8 @@
 }
 
 .ext-btn:hover {
-  background: rgba(45, 111, 116, 0.06);
-  border-color: #3D7F7A;
+  background: var(--Navy-Teal);
+  border-color: var(--Navy-Teal);
 }
 
 
@@ -250,7 +251,7 @@
     /* transform: translateX(-100%); */
     position: absolute;
     z-index: 1;
-    background: white;
+    background: var(--Primary-White);
 
 }
 
