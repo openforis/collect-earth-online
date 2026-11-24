@@ -93,6 +93,21 @@
    [:post "/account"]                        {:handler     users/update-account
                                               :auth-type   :user
                                               :auth-action :block}
+   [:get  "/get-two-factor-status"]          {:handler     users/get-two-factor-status
+                                              :auth-type   :user
+                                              :auth-action :block}
+   [:get  "/get-two-factor-key"]             {:handler     users/get-two-factor-key
+                                              :auth-type   :user
+                                              :auth-action :block}
+   [:post "/setup-two-factor"]               {:handler     users/setup-two-factor
+                                              :auth-type   :user
+                                              :auth-action :block}
+   [:post "/enable-two-factor"]              {:handler     users/enable-two-factor
+                                              :auth-type   :user
+                                              :auth-action :block}
+   [:post "/disable-two-factor"]             {:handler     users/disable-two-factor
+                                              :auth-type   :user
+                                              :auth-action :block}
    [:post "/login"]                          {:handler users/login}
    [:post "/logout"]                         {:handler users/logout}
    [:post "/update-user-institution-role"]   {:handler     users/update-institution-role

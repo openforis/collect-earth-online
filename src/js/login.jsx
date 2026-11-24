@@ -5,9 +5,21 @@ import { stateAtom } from "./utils/constants";
 import { NavigationBar, BreadCrumbs } from "./components/PageComponents";
 import Modal from "./components/Modal";
 
+// Only redirect to pages on this site, never to other origins or javascript: URLs.
+const sameOriginUrl = (url) => {
+  try {
+    const target = new URL (url, window.location.origin);
+    return target.origin === window.location.origin ? target.href : "/home";
+  } catch (e) {
+    return "/home";
+  }
+};
+
 export function Login ({returnurl}) {
   const [loginAtom, setLoginAtom] = useState ({email: "",
                                                password: "",
+                                               otpCode: "",
+                                               otpRequired: false,
                                                modal: null});
   const setAppState = useSetAtom (stateAtom);
   const requestLogin = () => {
@@ -17,15 +29,21 @@ export function Login ({returnurl}) {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(loginAtom),
+      body: JSON.stringify({email: loginAtom.email,
+                            password: loginAtom.password,
+                            otpCode: loginAtom.otpCode}),
     })
       .then((response) => Promise.all([response.ok, response.json()]))
       .then(([ok, error]) => {
         if (ok) {
-          window.location = returnurl === "" ? "/home" : returnurl;
+          window.location = returnurl === "" ? "/home" : sameOriginUrl (returnurl);
+        } else if (error?.reason === "otp-required") {
+          setLoginAtom ((s) => ({...s, otpRequired: true}));
         } else {
           setAppState ((s) => ({... s, userEmail: loginAtom.email}));
-          setLoginAtom ((s) => ({...s , modal: error?.reason === "password-reset-required"
+          setLoginAtom ((s) => ({...s ,
+                                 otpCode: "",
+                                 modal: error?.reason === "password-reset-required"
                                  ? {resetRequest: {message: error.message, email: s.email, sending: false}}
                                  : {alert: {alertType: "Login Error", alertMessage: error?.message}}}));
         }
@@ -95,7 +113,7 @@ export function Login ({returnurl}) {
                   id="email"
                   onChange={(e) => {
                     e.persist ();
-                    setLoginAtom((s) => ({...s,  email: e.target.value }));
+                    setLoginAtom((s) => ({...s,  email: e.target.value, otpCode: "", otpRequired: false }));
 		  }}
                   placeholder="Enter email"
                   type="email"
@@ -116,6 +134,27 @@ export function Login ({returnurl}) {
                   value={loginAtom.password}
                 />
               </div>
+              {loginAtom.otpRequired &&
+               <div className="form-group">
+                 <label htmlFor="otp-code">Authentication code</label>
+                 <input
+                   autoComplete="one-time-code"
+                   autoFocus
+                   className="form-control"
+                   id="otp-code"
+                   inputMode="numeric"
+                   onChange={(e) => {
+                     e.persist ();
+                     setLoginAtom ((s) => ({...s, otpCode: e.target.value.replace (/\D/g, "").slice (0, 6)}));
+                   }}
+                   placeholder="6-digit code"
+                   type="text"
+                   value={loginAtom.otpCode}
+                 />
+                 <small className="form-text text-muted">
+                   Two-factor authentication is on for this account. Enter the code shown in your authenticator app.
+                 </small>
+               </div>}
               <div className="d-flex justify-content-between align-items-center">
                 <a href="/password-request">Forgot your password?</a>
                 <button className="btn btn-darkgreen" type="submit">
