@@ -5,31 +5,73 @@
            java.time.format.DateTimeFormatter
            java.time.LocalDateTime
            java.util.UUID)
-  (:require [clojure.string             :as str]
-            [triangulum.database        :refer [call-sql sql-primitive]]
-            [triangulum.type-conversion :as tc]
-            [triangulum.config          :refer [get-config]]
-            [triangulum.email           :refer [email? send-mail get-base-url]]
-            [triangulum.logging         :refer [log-str]]
-            [triangulum.response        :refer [data-response]]))
+  (:require [clojure.string                 :as str]
+            [collect-earth-online.utils.otp :as otp]
+            [triangulum.database            :refer [call-sql sql-primitive]]
+            [triangulum.type-conversion     :as tc]
+            [triangulum.config              :refer [get-config]]
+            [triangulum.email               :refer [email? send-mail get-base-url]]
+            [triangulum.logging             :refer [log-str]]
+            [triangulum.response            :refer [data-response]]))
 
-(defn- get-login-errors [user]
-  (cond (nil? user)
-        "Invalid email/password combination."
+;; 2FA code attempts per email, to limit guessing.
+(def ^:private otp-attempts     (atom {}))
+(def ^:private max-otp-attempts 5)
+(def ^:private otp-lockout-ms   (* 15 60 1000))
+
+;; Counts the attempt atomically and returns false once the limit is reached.
+(defn- allow-otp-attempt! [email]
+  (let [now             (System/currentTimeMillis)
+        [before after]  (swap-vals! otp-attempts update email
+                                    (fn [{:keys [tries since] :as attempts}]
+                                      (cond (or (nil? attempts) (>= (- now since) otp-lockout-ms))
+                                            {:tries 1 :since now}
+
+                                            (< tries max-otp-attempts)
+                                            (update attempts :tries inc)
+
+                                            :else
+                                            attempts)))]
+    (not= (get before email) (get after email))))
+
+(defn- clear-otp-attempts! [email]
+  (swap! otp-attempts dissoc email))
+
+(defn- get-otp-errors [email otp-secret otp-code]
+  (cond (str/blank? otp-code)
+        [401 "otp-required" "Enter the 6-digit code from your authenticator app."]
+
+        (not (allow-otp-attempt! email))
+        [429 "otp-locked" "Too many invalid authentication codes. Please wait 15 minutes and try again."]
+
+        (not (otp/valid-code? otp-secret otp-code))
+        [401 "invalid-otp" "Invalid authentication code. Please check your authenticator app and try again."]))
+
+;; Returns [status reason message] when the login must be refused.
+(defn- get-login-errors [email user otp-code]
+  (cond (sql-primitive (call-sql "password_reset_required" {:log? false} email))
+        [403 "password-reset-required" "We have rotated every password after a security update, please reset your password."]
+
+        (nil? user)
+        [401 "invalid-credentials" "Invalid email/password combination."]
 
         (not (:verified user))
-        "You have not verified your email. Please check your email for a link to verify your account, or click the forgot password link below to generate a new email."))
+        [403 "email-not-verified" "You have not verified your email. Please check your email for a link to verify your account, or click the forgot password link below to generate a new email."]
+
+        (:otp_secret user)
+        (get-otp-errors email (:otp_secret user) otp-code)))
 
 (defn login [{:keys [params]}]
-  (let [{:keys [email password]} params
+  (let [{:keys [email password otpCode]} params
         user      (first (call-sql "check_login" {:log? false} email password))
         user-info {:userId        (:user_id user)
                    :userName      email
                    :acceptedTOS   (:accept_tos user)
                    :userRole      (if (:administrator user) "admin" "user")}]
-    (if-let [error-msg (get-login-errors user)]
-      (data-response error-msg)
-      (data-response "" {:session user-info}))))
+    (if-let [[status reason message] (get-login-errors email user (str otpCode))]
+      (data-response {:reason reason :message message} {:status status})
+      (do (clear-otp-attempts! email)
+          (data-response "" {:session user-info})))))
 
 (defn- get-register-errors [email password password-confirmation]
   (cond (sql-primitive (call-sql "email_taken" email -1))
@@ -119,6 +161,67 @@
         (when-not (str/blank? password)
           (call-sql "update_password" {:log? false} updated-email password))
         (data-response "" {:session {:userName updated-email}})))))
+
+(defn- get-user-otp [user-id]
+  (first (call-sql "get_user_otp" {:log? false} user-id)))
+
+(defn- get-user-email [user-id]
+  (:email (first (call-sql "get_user_by_id" user-id))))
+
+(defn- valid-password? [user-id password]
+  (let [password (str password)]
+    (and (not (str/blank? password))
+         (seq (call-sql "check_login" {:log? false} (get-user-email user-id) password)))))
+
+(defn- otp-key-response [user-id secret]
+  (data-response {:secret secret
+                  :uri    (otp/otpauth-uri (get-user-email user-id) secret)}))
+
+(defn get-two-factor-status [{:keys [session]}]
+  (data-response {:enabled (some? (:otp_secret (get-user-otp (:userId session -1))))}))
+
+(defn get-two-factor-key [{:keys [session]}]
+  (let [user-id (:userId session -1)]
+    (if-let [secret (:otp_secret (get-user-otp user-id))]
+      (otp-key-response user-id secret)
+      (data-response "Two-factor authentication is not enabled." {:status 400}))))
+
+(defn setup-two-factor [{:keys [session]}]
+  (let [user-id (:userId session -1)
+        secret  (otp/generate-secret)]
+    (if (sql-primitive (call-sql "set_user_otp_pending_secret" {:log? false} user-id secret))
+      (otp-key-response user-id secret)
+      (data-response "Two-factor authentication is already enabled." {:status 400}))))
+
+(defn enable-two-factor [{:keys [params session]}]
+  (let [user-id        (:userId session -1)
+        pending-secret (:otp_pending_secret (get-user-otp user-id))]
+    (cond (not (valid-password? user-id (:currentPassword params)))
+          (data-response "Invalid current password." {:status 400})
+
+          (nil? pending-secret)
+          (data-response "Please start the two-factor authentication setup again." {:status 400})
+
+          (not (otp/valid-code? pending-secret (:otpCode params)))
+          (data-response "Invalid authentication code. Please check your authenticator app and try again." {:status 400})
+
+          (sql-primitive (call-sql "enable_user_otp" {:log? false} user-id pending-secret))
+          (data-response "")
+
+          :else
+          (data-response "Please start the two-factor authentication setup again." {:status 400}))))
+
+(defn disable-two-factor [{:keys [params session]}]
+  (let [user-id (:userId session -1)]
+    (cond (not (valid-password? user-id (:currentPassword params)))
+          (data-response "Invalid current password." {:status 400})
+
+          (not (otp/valid-code? (:otp_secret (get-user-otp user-id)) (:otpCode params)))
+          (data-response "Invalid authentication code. Please check your authenticator app and try again." {:status 400})
+
+          :else
+          (do (call-sql "disable_user_otp" user-id)
+              (data-response "")))))
 
 (defn password-request [{:keys [params]}]
   (let [reset-key (str (UUID/randomUUID))

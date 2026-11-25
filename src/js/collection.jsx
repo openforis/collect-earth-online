@@ -27,16 +27,6 @@ import { outlineKML } from "./utils/kml";
 function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   const [state, setState] = useAtom(stateAtom);
 
-  /*
-    function getParentId (questionId) {    
-    const {parentQuestionId} = state.currentProject?.surveyQuestions[questionId];
-    if([-1, "-1"].includes(parentQuestionId))  {
-    return questionId;
-    } else {
-    return getParentId(parentQuestionId);
-    };
-    }
-  */
   // INIT COLLECTION EFFECT
   useEffect(() => {
     window.name = "_ceo_collection";
@@ -171,9 +161,6 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
     const layer = mercator.getLayerById(mapConfig, "currentSamples");
     const clickSelect = mercator.getInteractionByTitle(mapConfig, "clickSelect");
     if (!layer || !clickSelect) return;
-
-    // const parentId = getParentId(selectedQuestionId);
-    // const sampleIds = selectedSampleIds?.[parentId] ?? [];
 
     const features = clickSelect.getFeatures();
     const featureIds = features.getArray().map((f)=>f.get("sampleId"));
@@ -567,19 +554,11 @@ function Collection ({ projectId, acceptTOS, plotId, userEmail }) {
   };
 
   const updateQuestionStatus = () => {
-    const { userSamples } = state;
     const newSurveyQuestions = mapObject(
       state.currentProject.surveyQuestions,
       ([questionId, question]) => {
         const visible = calcVisibleSamples(Number(questionId)) || [];
-        const answered = visible
-              .filter((vs) => userSamples[vs.id][questionId])
-              .map((vs) => ({
-                sampleId: vs.id,
-                answerId: Number(userSamples[vs.id][questionId].answerId),
-                answerText: userSamples[vs.id][questionId].answer,
-              }));
-        return [questionId, { ...question, visible, answered }];
+        return [questionId, { ...question, visible }];
       }
     );
     

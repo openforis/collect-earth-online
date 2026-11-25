@@ -129,10 +129,11 @@ CREATE OR REPLACE FUNCTION check_login(_email text, _password text)
     user_id          integer,
     administrator    boolean,
     verified         boolean,
-    accept_tos       text
+    accept_tos       text,
+    otp_secret       text
  ) AS $$
 
-    SELECT user_uid, administrator, verified, accept_tos
+    SELECT user_uid, administrator, verified, accept_tos, otp_secret
     FROM users
     WHERE email = _email
         AND password = crypt(_password, password)
@@ -248,8 +249,18 @@ CREATE OR REPLACE FUNCTION update_password(_email text, _password text)
     UPDATE users
     SET password = crypt(_password, gen_salt('bf')),
         reset_key = NULL,
-        verified = TRUE
+        verified = TRUE,
+        password_reset_required = FALSE,
+        password_changed_at = now()
     WHERE email = _email
+
+$$ LANGUAGE SQL;
+
+-- Returns true if the user must set a new password before logging in.
+CREATE OR REPLACE FUNCTION password_reset_required(_email text)
+ RETURNS boolean AS $$
+
+    SELECT coalesce((SELECT password_reset_required FROM users WHERE email = _email), FALSE)
 
 $$ LANGUAGE SQL;
 
@@ -258,6 +269,57 @@ CREATE OR REPLACE FUNCTION user_verified(_user_id integer)
 
     UPDATE users
     SET verified = TRUE
+    WHERE user_uid = _user_id
+
+$$ LANGUAGE SQL;
+
+-- Returns the OTP keys for a user
+CREATE OR REPLACE FUNCTION get_user_otp(_user_id integer)
+ RETURNS table (
+    otp_secret            text,
+    otp_pending_secret    text
+ ) AS $$
+
+    SELECT otp_secret, otp_pending_secret
+    FROM users
+    WHERE user_uid = _user_id
+        AND _user_id > 0
+
+$$ LANGUAGE SQL;
+
+-- Stores a new OTP key until the user confirms it
+CREATE OR REPLACE FUNCTION set_user_otp_pending_secret(_user_id integer, _otp_secret text)
+ RETURNS boolean AS $$
+
+    UPDATE users
+    SET otp_pending_secret = _otp_secret
+    WHERE user_uid = _user_id
+        AND otp_secret IS NULL
+    RETURNING TRUE
+
+$$ LANGUAGE SQL;
+
+-- Turns on 2FA with the confirmed OTP key
+CREATE OR REPLACE FUNCTION enable_user_otp(_user_id integer, _otp_secret text)
+ RETURNS boolean AS $$
+
+    UPDATE users
+    SET otp_secret = otp_pending_secret,
+        otp_pending_secret = NULL
+    WHERE user_uid = _user_id
+        AND otp_secret IS NULL
+        AND otp_pending_secret = _otp_secret
+    RETURNING TRUE
+
+$$ LANGUAGE SQL;
+
+-- Turns off 2FA
+CREATE OR REPLACE FUNCTION disable_user_otp(_user_id integer)
+ RETURNS void AS $$
+
+    UPDATE users
+    SET otp_secret = NULL,
+        otp_pending_secret = NULL
     WHERE user_uid = _user_id
 
 $$ LANGUAGE SQL;
