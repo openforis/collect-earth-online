@@ -206,25 +206,25 @@ h4 {
     color: var(--lightgreen-hover);
 }
 .btn-lightgreen {
-    background-color: var(--lightgreen);
+    background-color: var(--Primary-Light-Teal);
     color: white;
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-lightgreen:hover {
-    background-color: var(--lightgreen-hover);
+    background-color: var(--Primary-Light-Teal);
     color: white;
 }
 .btn-darkgreen {
-    background-color: var(--darkgreen);
+    background-color: var(--Navy-Teal);
     color: white;
     -webkit-transition: background-color 50ms linear;
     -ms-transition: background-color 50ms linear;
     transition: background-color 50ms linear;
 }
 .btn-darkgreen:hover {
-    background-color: var(--darkgreen);
+    background-color: var(--Navy-Teal);
     color: white;
 }
 
@@ -363,7 +363,7 @@ a:hover {
     margin-top: 1rem;
     margin-bottom: 1rem;
     font-size: 1rem;
-    border-color: var(--lightgreen);
+    border-color: var(--Primary-Light-Teal);
 }
 
 .card-darkgreen {
@@ -371,12 +371,12 @@ a:hover {
     margin-top: 1rem;
     margin-bottom: 1rem;
     font-size: 1rem;
-    border-color: var(--darkgreen);
+    border-color: var(--Navy-Teal);
 }
 
 .card-header-lightgreen {
     color: white;
-    background-color: var(--darkgreen);
+    background-color: var(--Navy-Teal);
     text-align: center;
     font-size: 1.1rem;
     font-weight: 500;

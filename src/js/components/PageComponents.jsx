@@ -320,7 +320,7 @@ export function NavTopBar ({version, userName, userId, children}) {
         className="navbar navbar-expand-lg navbar-light fixed-top py-0"
         id="main-nav"
         ref={navRef}
-        style={{ backgroundColor: "var(--Navy-Teal)", borderBottom: "1px solid black" }}
+        style={{ backgroundColor: "var(--Primary-LightTeal)", borderBottom: "1px solid black" }}
       >
         <a className="navbar-brand pt-1 pb-1" href="/home">
           <div className="d-flex flex-column align-items-center justify-content-center">
